@@ -32,8 +32,11 @@ from graphscope.gsctl.impl import list_procedures
 from graphscope.gsctl.impl import switch_context
 from graphscope.gsctl.impl import update_procedure
 from graphscope.gsctl.utils import TreeDisplay
+from graphscope.gsctl.utils import err
+from graphscope.gsctl.utils import info
 from graphscope.gsctl.utils import is_valid_file_path
 from graphscope.gsctl.utils import read_yaml_file
+from graphscope.gsctl.utils import succ
 
 
 @click.group()
@@ -73,7 +76,7 @@ def use():
 
 @cli.command()
 def ls():  # noqa: F811
-    """Display schema, stored procedure, and job informations"""
+    """Display schema, stored procedure, and job information"""
     tree = TreeDisplay()
     # context
     current_context = get_current_context()
@@ -96,10 +99,8 @@ def ls():  # noqa: F811
         jobs = list_jobs()
         tree.create_job_node(using_graph, jobs)
     except Exception as e:
-        click.secho(f"Failed to display graph information: {str(e)}", fg="red")
+        err(f"Failed to display graph information: {str(e)}")
     else:
-        message = f"Using graph {using_graph.name}, to switch back to the global, run `gsctl use global`.\n"
-        click.secho(message, fg="green")
         tree.show(graph_identifier=current_context.context)
 
 
@@ -113,7 +114,7 @@ def ls():  # noqa: F811
 def procedure(filename):
     """Create a stored procedure from file"""
     if not is_valid_file_path(filename):
-        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        err(f"Invalid file: {filename}")
         return
     current_context = get_current_context()
     graph_name = current_context.context
@@ -123,11 +124,9 @@ def procedure(filename):
         procedure["bound_graph"] = graph_name
         create_procedure(graph_name, procedure)
     except Exception as e:
-        click.secho(f"Failed to create stored procedure: {str(e)}", fg="red")
+        err(f"Failed to create stored procedure: {str(e)}")
     else:
-        click.secho(
-            f"Create stored procedure {procedure['name']} successfully.", fg="green"
-        )
+        succ(f"Create stored procedure {procedure['name']} successfully.")
 
 
 @delete.command()
@@ -139,9 +138,9 @@ def procedure(identifier):  # noqa: F811
     try:
         delete_procedure_by_name(graph_name, identifier)
     except Exception as e:
-        click.secho(f"Failed to delete stored procedure: {str(e)}", fg="red")
+        err(f"Failed to delete stored procedure: {str(e)}")
     else:
-        click.secho(f"Delete stored procedure {identifier} successfully.", fg="green")
+        succ(f"Delete stored procedure {identifier} successfully.")
 
 
 @update.command()
@@ -154,7 +153,7 @@ def procedure(identifier):  # noqa: F811
 def procedure(filename):  # noqa: F811
     """Update a stored procedure from file"""
     if not is_valid_file_path(filename):
-        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        err(f"Invalid file: {filename}")
         return
     current_context = get_current_context()
     graph_name = current_context.context
@@ -164,11 +163,9 @@ def procedure(filename):  # noqa: F811
         procedure["bound_graph"] = graph_name
         update_procedure(graph_name, procedure)
     except Exception as e:
-        click.secho(f"Failed to update stored procedure: {str(e)}", fg="red")
+        err(f"Failed to update stored procedure: {str(e)}")
     else:
-        click.secho(
-            f"Update stored procedure {procedure['name']} successfully.", fg="green"
-        )
+        succ(f"Update stored procedure {procedure['name']} successfully.")
 
 
 @create.command()
@@ -181,7 +178,7 @@ def procedure(filename):  # noqa: F811
 def loaderjob(filename):  # noqa: F811
     """Create a dataloading job from file"""
     if not is_valid_file_path(filename):
-        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        err(f"Invalid file: {filename}")
         return
     current_context = get_current_context()
     graph_name = current_context.context
@@ -191,9 +188,9 @@ def loaderjob(filename):  # noqa: F811
         config["graph"] = graph_name
         jobid = create_dataloading_job(graph_name, config)
     except Exception as e:
-        click.secho(f"Failed to create a job: {str(e)}", fg="red")
+        err(f"Failed to create a job: {str(e)}")
     else:
-        click.secho(f"Create job {jobid} successfully.", fg="green")
+        succ(f"Create job {jobid} successfully.")
 
 
 @delete.command()
@@ -203,9 +200,9 @@ def job(identifier):  # noqa: F811
     try:
         delete_job_by_id(identifier)
     except Exception as e:
-        click.secho(f"Failed to delete job {identifier}: {str(e)}", fg="red")
+        err(f"Failed to delete job {identifier}: {str(e)}")
     else:
-        click.secho(f"Delete job {identifier} successfully.", fg="green")
+        succ(f"Delete job {identifier} successfully.")
 
 
 @desc.command()
@@ -215,9 +212,9 @@ def job(identifier):  # noqa: F811
     try:
         job = get_job_by_id(identifier)
     except Exception as e:
-        click.secho(f"Failed to get job: {str(e)}", fg="red")
+        err(f"Failed to get job: {str(e)}")
     else:
-        click.secho(yaml.dump(job.to_dict()))
+        info(yaml.dump(job.to_dict()))
 
 
 @desc.command()
@@ -229,26 +226,26 @@ def procedure(identifier):  # noqa: F811
     try:
         procedures = list_procedures(graph_name)
     except Exception as e:
-        click.secho(f"Failed to list procedures: {str(e)}", fg="red")
+        err(f"Failed to list procedures: {str(e)}")
     else:
         if not procedures:
-            click.secho(f"No stored procedures found on {graph_name}.", fg="blue")
+            info(f"No stored procedures found on {graph_name}.")
             return
         specific_procedure_exist = False
         for procedure in procedures:
             if identifier == procedure.name:
-                click.secho(yaml.dump(procedure.to_dict()))
+                info(yaml.dump(procedure.to_dict()))
                 specific_procedure_exist = True
                 break
         if not specific_procedure_exist:
-            click.secho(f"Procedure {identifier} not found on {graph_name}.", fg="red")
+            err(f"Procedure {identifier} not found on {graph_name}.")
 
 
-@use.command(name="global")
+@use.command(name="GLOBAL")
 def _global():
     """Switch back to the global scope"""
     switch_context("global")
-    click.secho("Using context global.", fg="green")
+    click.secho("Using GLOBAL", fg="green")
 
 
 if __name__ == "__main__":

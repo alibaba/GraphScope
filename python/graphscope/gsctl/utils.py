@@ -58,16 +58,40 @@ def terminal_display(data):
         )
 
 
+def info(message: str, bold=False, fg=None):
+    click.secho(message, bold=bold, fg=fg)
+
+
+def warning(message: str, bold=False):
+    click.secho("[WARNING] ", nl=False, fg="yellow", bold=True)
+    click.secho(message, bold=bold)
+
+
+def succ(message: str, bold=False):
+    click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
+    click.secho(message, bold=bold)
+
+
+def err(message: str, bold=False):
+    click.secho("[FAILED] ", nl=False, fg="red", bold=True)
+    click.secho(message, bold=bold)
+
+
 class TreeDisplay(object):
     def __init__(self):
         self.tree = Tree()
         self.root_identifier = "GRAPH"
         self.tree.create_node(identifier=self.root_identifier)
 
-    def create_graph_node(self, graph):
+    def create_graph_node(self, graph, recursive=True):
         # graph name must be unique
-        self.tree.create_node(identifier=graph.name, parent=self.root_identifier)
-        self.create_schema_node(graph)
+        self.tree.create_node(
+            tag=f"identifier: {graph.name}",
+            identifier=graph.name,
+            parent=self.root_identifier,
+        )
+        if recursive:
+            self.create_schema_node(graph)
 
     def create_schema_node(self, graph):
         schema_identifier = f"{graph.name}_schema"

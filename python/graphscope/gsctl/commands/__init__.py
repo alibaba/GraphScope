@@ -29,6 +29,8 @@ from graphscope.gsctl.config import Context
 from graphscope.gsctl.config import load_gs_config
 from graphscope.gsctl.config import logo
 from graphscope.gsctl.impl import connect_coordinator
+from graphscope.gsctl.utils import err
+from graphscope.gsctl.utils import info
 
 
 def get_command_collection(context: Context):
@@ -40,13 +42,14 @@ def get_command_collection(context: Context):
     # build graphscope locally.
     if context is None:
         if len(sys.argv) == 1:
-            click.secho(logo, fg="green", bold=True)
+            info(logo, fg="green", bold=True)
+            click.secho("Currently, gsctl hasn't connect to any service.", fg="yellow")
             message = """
-Currently, gsctl hasn't connect to any service, you can use gsctl as an utility script.
+you can use gsctl as an utility script.
 Or you can connect to a launched GraphScopoe service by `gsctl connect --coordinator-endpoint <address>`.
-See more detailed informations at https://graphscope.io/docs/utilities/gs.
+See more detailed information at https://graphscope.io/docs/utilities/gs.
             """
-            click.secho(message, fg="green")
+            info(message)
         return commands
 
     if context.is_expired():
@@ -55,14 +58,14 @@ See more detailed informations at https://graphscope.io/docs/utilities/gs.
             response = connect_coordinator(context.coordinator_endpoint)
             solution = response.solution
         except Exception as e:
-            click.secho(
+            err(
                 "Failed to connect to coordinator at {0}: {1}".format(
                     context.coordinator_endpoint, str(e)
-                ),
-                fg="red",
+                )
             )
-            click.secho("Please check the availability of the service.", fg="red")
-            click.secho("Fall back to the default commands.", fg="red")
+            info(
+                "Please check the availability of the service, fall back to the default commands."
+            )
             return commands
         else:
             # check consistency
@@ -76,14 +79,14 @@ See more detailed informations at https://graphscope.io/docs/utilities/gs.
 
     if context.flex == "INTERACTIVE":
         if context.context == "global":
-            if len(sys.argv) == 1:
-                message = f"Using global, to change to a specific graph context, run `gsctl use graph <graph_identifier>`.\n"
-                click.secho(message, fg="green")
+            info("Using GLOBAL.", fg="green", bold=True)
+            info(
+                "Run `gsctl use GRAPH <graph_identifier>` to switch to a specific graph context.\n"
+            )
             commands = click.CommandCollection(sources=[common, interactive])
         else:
-            if len(sys.argv) == 1:
-                message = f"Using graph {context.context}, to switch back to the global, run `gsctl use global`.\n"
-                click.secho(message, fg="green")
+            info(f"Using GRAPH {context.context}.", fg="green", bold=True)
+            info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
             commands = click.CommandCollection(sources=[common, interactive_graph])
     elif context.flex == "GRAPHSCOPE_INSIGHT":
         if context.context == "global":
