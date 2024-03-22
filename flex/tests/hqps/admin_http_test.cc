@@ -304,7 +304,8 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
     CHECK(res->status == 200) << "delete procedure failed: " << res->body;
   }
   //-----6. call procedure on deleted procedure------------------------------
-  // Should return fail.
+  // Should return success, since the procedure will be deleted when restart
+  // the service.
   if (procedures.size() > 0) {
     auto proc_name = get_file_name_from_path(procedures[0]);
     auto call_proc_payload =
@@ -427,7 +428,7 @@ int main(int argc, char** argv) {
                      procedure_paths);
   LOG(INFO) << "run procedure tests done";
   run_get_node_status(cli);
-  test_delete_graph(cli,graph_name);
+  test_delete_graph(cli, graph_name);
   LOG(INFO) << "test delete graph done";
   return 0;
 }
