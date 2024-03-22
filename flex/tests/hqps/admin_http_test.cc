@@ -17,6 +17,8 @@
 #include <string>
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/third_party/httplib.h"
+#include "flex/utils/yaml_utils.h"
+#include "nlohmann/json.hpp"
 #include "yaml-cpp/yaml.h"
 
 #include "glog/logging.h"
@@ -82,10 +84,13 @@ std::string insert_raw_csv_dir(const std::string& raw_csv_dir,
     LOG(FATAL) << "load import file failed: " << e.what();
   }
   node["loading_config"]["data_source"]["location"] = raw_csv_dir;
-  YAML::Emitter emitter;
-  emitter << YAML::DoubleQuoted << YAML::Flow << YAML::BeginSeq << node;
-  std::string json(emitter.c_str() + 1);
-  return json;
+  auto json = gs::get_json_string_from_yaml(node);
+  if (json.ok()) {
+    return json.value();
+  } else {
+    LOG(FATAL) << "get json string from yaml failed: "
+               << json.status().error_message();
+  }
 }
 
 void run_builtin_graph_test(
@@ -123,7 +128,11 @@ void run_builtin_graph_test(
       query.mutable_query_name()->set_name(query_name);
       auto res = query_client.Post("/v1/query", query.SerializeAsString(),
                                    "text/plain");
-      CHECK(res->status != 200) << "call procedure should fail: " << res->body;
+      CHECK(res->status != 200);
+      LOG(INFO) << "call procedure response: " << res->body;
+      // find failed in res->body
+      CHECK(res->body.find("failed") != std::string::npos)
+          << "call procedure should fail: " << res->body;
     }
   }
   //-------3.restart service
@@ -170,10 +179,12 @@ void run_graph_tests(httplib::Client& cli, const std::string& graph_name,
     LOG(FATAL) << "load schema file failed: " << e.what();
   }
 
-  YAML::Emitter emitter;
-  emitter << YAML::DoubleQuoted << YAML::Flow << YAML::BeginSeq << node;
-  std::string json(emitter.c_str() + 1);
-  auto res = cli.Post("/v1/graph/", json, "application/json");
+  auto json_str = gs::get_json_string_from_yaml(node);
+  if (!json_str.ok()) {
+    LOG(FATAL) << "get json string from yaml failed: "
+               << json_str.status().error_message();
+  }
+  auto res = cli.Post("/v1/graph/", json_str.value(), "application/json");
   if (res->status != 200) {
     LOG(FATAL) << "create graph failed: " << res->body;
   }
@@ -207,7 +218,8 @@ void run_graph_tests(httplib::Client& cli, const std::string& graph_name,
 
   //----3. load graph-----------------------------------
   res = cli.Post("/v1/graph/" + graph_name + "/dataloading",
-                 insert_raw_csv_dir(raw_data_dir, import_path), "text/plain");
+                 insert_raw_csv_dir(raw_data_dir, import_path),
+                 "application/json");
   if (res->status != 200) {
     LOG(FATAL) << "load graph failed: " << res->body;
   }
@@ -292,8 +304,7 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
     CHECK(res->status == 200) << "delete procedure failed: " << res->body;
   }
   //-----6. call procedure on deleted procedure------------------------------
-  // Should return success, since the procedure will be deleted when restart
-  // the service.
+  // Should return fail.
   if (procedures.size() > 0) {
     auto proc_name = get_file_name_from_path(procedures[0]);
     auto call_proc_payload =
@@ -416,7 +427,7 @@ int main(int argc, char** argv) {
                      procedure_paths);
   LOG(INFO) << "run procedure tests done";
   run_get_node_status(cli);
-  test_delete_graph(cli, graph_name);
+  test_delete_graph(cli,graph_name);
   LOG(INFO) << "test delete graph done";
   return 0;
 }
