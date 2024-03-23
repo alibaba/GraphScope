@@ -37,7 +37,6 @@ def cli():
         from dev import cli as dev_cli
 
         dev_cli()
-
     from graphscope.gsctl.commands import get_command_collection
     from graphscope.gsctl.config import get_current_context
 

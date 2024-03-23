@@ -25,6 +25,9 @@ from graphscope.gsctl.config import get_current_context
 from graphscope.gsctl.config import load_gs_config
 from graphscope.gsctl.impl import connect_coordinator
 from graphscope.gsctl.impl import disconnect_coordinator
+from graphscope.gsctl.utils import err
+from graphscope.gsctl.utils import info
+from graphscope.gsctl.utils import succ
 
 
 @click.group()
@@ -33,49 +36,50 @@ def cli():
     pass
 
 
-@click.command()
+@cli.command()
 @click.option(
+    "-c",
     "--coordinator-endpoint",
-    help="Coordinator endpoint which gsctl connect to, e.g. http://127.0.0.1:9527",
+    help="Coordinator endpoint, e.g. http://127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to the launched coordinator
+    """Connect to a launched coordinator
 
-    By default, it will read context from  ~/.graphscope/config. If '--coordinator-endpoint'
-    is specified, use it as the current context and override the config file.
+    By default, it will read context from  ~/.gsctl. If '--coordinator-endpoint'
+    is specified, use it as the current context and override the configuration file.
     """
     if coordinator_endpoint is None:
         context = get_current_context()
         if context is None:
-            click.secho(
-                "No available context found, try to connect to coordinator with --coordinator-endpoint",
-                fg="blue",
+            err(
+                "No available context found, try to connect by `gsctl conenct --coordinator-endpoint <addr>`."
             )
             return
         coordinator_endpoint = context.coordinator_endpoint
     # connect
     try:
-        connect_coordinator(coordinator_endpoint)
+        resp = connect_coordinator(coordinator_endpoint)
     except Exception as e:
-        click.secho(f"Unable to connect to server: {str(e)}", fg="red")
+        err(f"Unable to connect to server: {str(e)}")
     else:
-        click.secho(f"Coordinator at {coordinator_endpoint} connected.", fg="green")
+        succ(
+            f"Connected to {coordinator_endpoint}, coordinator is serving with {resp.solution} mode.\n"
+        )
+        info("Try 'gsctl --help' for help.")
 
 
-@click.command()
+@cli.command()
 def close():
-    """Close the connection from the coordinator"""
+    """Disconnect from coordinator"""
     try:
         context = disconnect_coordinator()
     except Exception as e:
-        click.secho(f"Disconnect to server failed: {str(e)}", fg="red")
+        err(f"Disconnect from coordinator failed: {str(e)}")
     else:
         if context is not None:
-            click.secho(f"Coordinator disconnected: {context.to_dict()}.", fg="green")
-
-
-cli.add_command(connect)
-cli.add_command(close)
+            info(f"Disconnecting from the context: {context.to_dict()}")
+            succ("Coordinator service disconnected.\n")
+            info("Try 'gsctl --help' for help.")
 
 
 if __name__ == "__main__":
