@@ -21,13 +21,14 @@
 #include "flex/engines/http_server/actor_system.h"
 #include "flex/engines/http_server/handler/admin_http_handler.h"
 #include "flex/engines/http_server/handler/hqps_http_handler.h"
+#include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
 
 #include <yaml-cpp/yaml.h>
+#include <boost/process.hpp>
 
 namespace server {
-
 /* Stored service configuration, read from engine_config.yaml
  */
 struct ServiceConfig {
@@ -44,8 +45,9 @@ struct ServiceConfig {
   bool dpdk_mode;
   bool enable_thread_resource_pool;
   unsigned external_thread_num;
-  bool start_admin_service;  // Whether to start the admin service or only start
-                             // the query service.
+  bool start_admin_service;  // Whether to start the admin service or only
+                             // start the query service.
+  bool start_compiler;
 
   // Those has not default value
   std::string default_graph;
@@ -57,6 +59,8 @@ struct ServiceConfig {
 class HQPSService {
  public:
   static const std::string DEFAULT_GRAPH_NAME;
+  static const std::string DEFAULT_INTERACTIVE_HOME;
+  static const std::string COMPILER_SERVER_CLASS_NAME;
   static HQPSService& get();
   ~HQPSService();
 
@@ -81,12 +85,20 @@ class HQPSService {
   // for each request.
   seastar::future<> stop_query_actors();
 
+  bool is_actors_running() const;
+
   // Actually create new actors with a different scope_id,
   // Because we don't know whether the previous scope_id can be reused.
   void start_query_actors();
 
+  bool start_compiler_subprocess(const std::string& graph_schema_path = "");
+
+  bool stop_compiler_subprocess();
+
  private:
   HQPSService() = default;
+
+  std::string find_interactive_class_path();
 
  private:
   std::unique_ptr<actor_system> actor_sys_;
@@ -94,8 +106,10 @@ class HQPSService {
   std::unique_ptr<hqps_http_handler> query_hdl_;
   std::atomic<bool> running_{false};
   std::atomic<bool> initialized_{false};
+  std::mutex mtx_;
 
   ServiceConfig service_config_;
+  boost::process::child compiler_process_;
 };
 
 }  // namespace server

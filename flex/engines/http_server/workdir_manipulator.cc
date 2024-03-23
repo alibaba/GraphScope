@@ -742,6 +742,30 @@ std::string WorkDirManipulator::GetGraphIndicesDir(
   return get_graph_dir(graph_name) + "/" + GRAPH_INDICES_DIR_NAME;
 }
 
+std::string WorkDirManipulator::GetLogDir() {
+  auto log_dir = workspace + "/logs/";
+  if (!std::filesystem::exists(log_dir)) {
+    std::filesystem::create_directory(log_dir);
+  }
+  return log_dir;
+}
+
+std::string WorkDirManipulator::GetCompilerLogFile() {
+  // with timestamp
+  auto time_stamp = std::to_string(
+      std::chrono::system_clock::now().time_since_epoch().count());
+  auto log_path = GetLogDir() + "/compiler.log";
+  // Check if the log file exists
+  if (std::filesystem::exists(log_path)) {
+    // Backup the previous log file
+    std::string backupPath = GetLogDir() + "/compiler.log." + time_stamp;
+    std::filesystem::rename(log_path, backupPath);
+    std::cout << "Backed up the previous log file to: " << backupPath
+              << std::endl;
+  }
+  return log_path;
+}
+
 std::string WorkDirManipulator::get_graph_indices_file(
     const std::string& graph_name) {
   return get_graph_dir(graph_name) + GRAPH_INDICES_DIR_NAME + "/" +
