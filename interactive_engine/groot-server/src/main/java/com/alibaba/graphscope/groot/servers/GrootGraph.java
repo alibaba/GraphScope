@@ -59,15 +59,17 @@ public class GrootGraph {
             }
 
             boolean writeHAEnabled = CommonConfig.WRITE_HA_ENABLED.get(conf);
-
+            LeaderLatch latch;
             if (writeHAEnabled && roleType == RoleType.STORE) {
                 int nodeID = CommonConfig.NODE_IDX.get(conf);
                 String latchPath = ZkConfig.ZK_BASE_PATH.get(conf) + "/store/leader/" + nodeID;
                 CuratorFramework curator = CuratorUtils.makeCurator(conf);
+                curator.start();
                 try {
                     while (true) {
-                        LeaderLatch latch = new LeaderLatch(curator, latchPath);
+                        latch = new LeaderLatch(curator, latchPath);
                         latch.start();
+                        logger.info("latch id: {}, is leader: {}, participants: {}, state: {}, is leader: {}", latch.getId(), latch.getLeader(), latch.getParticipants(), latch.getState(), latch.hasLeadership());
                         latch.await();
                         // Sleep 5s before check the lock to prevent the leader has not
                         // released the resource yet.
@@ -77,7 +79,7 @@ public class GrootGraph {
                             break;
                         }
                         latch.close();
-                        logger.info("LOCK is unavailable, the leader may not exited");
+                        logger.info("LOCK is unavailable, the leader may still exists");
                         // The leader has lost connection but still alive,
                         // give it another chance
                         Thread.sleep(60000);
@@ -86,7 +88,7 @@ public class GrootGraph {
                     logger.error("Exception while leader election", e);
                     throw e;
                 }
-                curator.close();
+//                curator.close();
             }
         }
         NodeLauncher launcher = new NodeLauncher(node);
