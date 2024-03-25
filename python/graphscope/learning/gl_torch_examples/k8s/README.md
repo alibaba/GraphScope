@@ -5,7 +5,7 @@
 We use [Kubeflow](https://github.com/kubeflow/training-operator) to deploy **GLT** jobs on K8s clusters. Make sure Kubeflow is installed before running the following examples.
 
 ### 2. Launch a GraphScope cluster on k8s and start training.
-`client.yaml` is an example of launching GLTorch jobs with a default setting, 2 parameter-servers and 2 workers, using pytorch-operator.
+`client.yaml` is an example of launching GLTorch jobs with a default setting, 2 servers and 2 workers, using pytorch-operator.
 `client.py` is the GLT training script example, and `k8s_launch.py` is the script to launch the GraphScope k8s cluster and the client jobs.
 
 First, please specify the corresponding file paths in the `gs.graphlearn_torch`:
