@@ -73,14 +73,14 @@ public class MatchTest {
                     + "  GraphLogicalMultiMatch(input=[null],"
                     + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=false,"
                     + " tables=[person]}], alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
+                    + " opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[c], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + " alias=[_], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[VERTEX])\n"
                     + "]}])",
@@ -108,13 +108,13 @@ public class MatchTest {
                     + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=true,"
                     + " tables=[software, person]}], alias=[b], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + " alias=[_], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[a], opt=[VERTEX])\n"
                     + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[c], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + " alias=[_], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[b], opt=[VERTEX])\n"
                     + "]}])",
@@ -137,12 +137,12 @@ public class MatchTest {
                 "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]], opt=[END])\n"
+                    + " alias=[c], fusedFilter=[[=(_.name, _UTF-8'marko')]], opt=[END])\n"
                     + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[knows]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight,"
-                    + " 1.0E0)]], opt=[OUT])\n"
+                    + " tables=[knows]}], alias=[_], fusedFilter=[[=(_.weight, 1.0E0)]],"
+                    + " opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[END])\n"
+                    + " alias=[_], opt=[END])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
                     + " alias=[b])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
@@ -157,7 +157,7 @@ public class MatchTest {
         Assert.assertEquals(
                 "GraphLogicalProject(n=[n], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[n], fusedFilter=[[=(DEFAULT.age, ?0)]], opt=[VERTEX])",
+                        + " alias=[n], fusedFilter=[[=(_.age, ?0)]], opt=[VERTEX])",
                 match.explain().trim());
     }
 
@@ -190,8 +190,8 @@ public class MatchTest {
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[OTHER])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[DEFAULT], opt=[BOTH])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
+                    + " opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[VERTEX])\n"
                     + "]}])\n"
@@ -200,7 +200,7 @@ public class MatchTest {
                     + " alias=[c], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[knows]}]," // `knows` is inferred
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])\n"
                         + "], matchOpt=[INNER])",
@@ -310,7 +310,7 @@ public class MatchTest {
         Assert.assertEquals(
                 "GraphLogicalProject($f0=[_UTF-8'小明'], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], fusedFilter=[[=(DEFAULT.name, _UTF-8'小明')]], opt=[VERTEX])",
+                        + " alias=[a], fusedFilter=[[=(_.name, _UTF-8'小明')]], opt=[VERTEX])",
                 node.explain().trim());
         Assert.assertEquals(
                 SqlTypeName.CHAR,
@@ -344,12 +344,12 @@ public class MatchTest {
                 "GraphLogicalProject(a=[a], c=[c], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], fusedFilter=[[=(DEFAULT.name, ?0)]], opt=[END])\n"
+                    + " alias=[c], fusedFilter=[[=(_.name, ?0)]], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[knows]}], alias=[b]," // `knows` is inferred
                         + " opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], fusedFilter=[[=(DEFAULT.name, ?0)]], opt=[VERTEX])\n"
+                        + " alias=[a], fusedFilter=[[=(_.name, ?0)]], opt=[VERTEX])\n"
                         + "], matchOpt=[INNER])",
                 node.explain().trim());
     }
@@ -361,8 +361,8 @@ public class MatchTest {
         Assert.assertEquals(
                 "GraphLogicalProject(a=[a], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
-                        + " _UTF-8'marko.*')]], opt=[VERTEX])",
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(_.name,"
+                        + " _UTF-8'^marko.*')]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -373,8 +373,8 @@ public class MatchTest {
         Assert.assertEquals(
                 "GraphLogicalProject(a=[a], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
-                        + " _UTF-8'.*marko')]], opt=[VERTEX])",
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(_.name,"
+                        + " _UTF-8'.*marko$')]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -385,7 +385,7 @@ public class MatchTest {
         Assert.assertEquals(
                 "GraphLogicalProject(a=[a], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(_.name,"
                         + " _UTF-8'.*marko.*')]], opt=[VERTEX])",
                 node.explain().trim());
     }
@@ -405,7 +405,7 @@ public class MatchTest {
                     + " alias=[b], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[knows]}]," // `knows` is inferred
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])\n"
                         + "], matchOpt=[INNER])\n"
@@ -414,14 +414,14 @@ public class MatchTest {
                         + " tables=[person]}], alias=[c], opt=[OTHER])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
                         + " tables=[knows]}]," // `knows` is inferred
-                        + " alias=[DEFAULT], opt=[BOTH])\n"
+                        + " alias=[_], opt=[BOTH])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])\n"
                         + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[b], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
                         + " tables=[knows]}]," // `knows` is inferred
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[c], opt=[VERTEX])\n"
                         + "]}])",

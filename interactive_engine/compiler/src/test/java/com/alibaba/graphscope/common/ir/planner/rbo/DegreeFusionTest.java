@@ -49,14 +49,14 @@ public class DegreeFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
-                        + " values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='cnt',"
+                        + " values=[[{operands=[_], aggFunction=COUNT, alias='cnt',"
                         + " distinct=false}]])\n"
                         + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "    GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(DegreeFusionRule.ExpandGetVDegreeFusionRule.Config.DEFAULT);
@@ -64,12 +64,12 @@ public class DegreeFusionTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
-                        + " values=[[{operands=[DEFAULT], aggFunction=$SUM0, alias='cnt',"
+                        + " values=[[{operands=[_], aggFunction=$SUM0, alias='cnt',"
                         + " distinct=false}]])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT], physicalOpt=[DEGREE])\n"
+                        + " alias=[_], opt=[OUT], physicalOpt=[DEGREE])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -90,12 +90,12 @@ public class DegreeFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
-                        + " values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='cnt',"
+                        + " values=[[{operands=[_], aggFunction=COUNT, alias='cnt',"
                         + " distinct=false}]])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(DegreeFusionRule.ExpandDegreeFusionRule.Config.DEFAULT);
@@ -103,12 +103,12 @@ public class DegreeFusionTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
-                        + " values=[[{operands=[DEFAULT], aggFunction=$SUM0, alias='cnt',"
+                        + " values=[[{operands=[_], aggFunction=$SUM0, alias='cnt',"
                         + " distinct=false}]])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT], physicalOpt=[DEGREE])\n"
+                        + " alias=[_], opt=[OUT], physicalOpt=[DEGREE])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 }

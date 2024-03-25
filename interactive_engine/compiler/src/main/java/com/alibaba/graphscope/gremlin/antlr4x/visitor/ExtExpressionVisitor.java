@@ -14,33 +14,29 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.cypher.antlr4.visitor;
+package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
 import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
+import com.alibaba.graphscope.common.antlr4.Utils;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
-import com.alibaba.graphscope.grammar.CypherGSParser;
+import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
+import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.calcite.avatica.util.TimeUnit;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -49,28 +45,32 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.NlsString;
 import org.apache.commons.lang3.ObjectUtils;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
-    private final GraphBuilderVisitor parent;
-    private final ExprUniqueAliasInfer aliasInfer;
+/**
+ * Although we have uniformly defined expression syntax through file 'ExprGS', antlr only allows resource reuse rather than generated code. Therefore, we need to repeatedly reimplement related visitors for Gremlin to build the Calcite layer's expression structure from antlr trees.
+ */
+public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult> {
     private final GraphBuilder builder;
-    // generate param id for each unique param name, and record the param id to param name mappings
-    private final ParamManager paramManager;
+    private final ExprUniqueAliasInfer aliasInfer;
 
-    public ExpressionVisitor(GraphBuilderVisitor parent) {
-        this.parent = Objects.requireNonNull(parent);
-        this.aliasInfer = Objects.requireNonNull(parent.getAliasInfer());
-        this.builder = parent.getGraphBuilder();
-        this.paramManager = new ParamManager();
+    public ExtExpressionVisitor(GraphBuilder builder, ExprUniqueAliasInfer aliasInfer) {
+        this.builder = Objects.requireNonNull(builder);
+        this.aliasInfer = Objects.requireNonNull(aliasInfer);
     }
 
     @Override
-    public ExprVisitorResult visitOC_OrExpression(CypherGSParser.OC_OrExpressionContext ctx) {
+    public ExprVisitorResult visitTraversalMethod_expr(
+            GremlinGSParser.TraversalMethod_exprContext ctx) {
+        return visitOC_Expression(ctx.oC_Expression());
+    }
+
+    @Override
+    public ExprVisitorResult visitOC_OrExpression(GremlinGSParser.OC_OrExpressionContext ctx) {
         if (ObjectUtils.isEmpty(ctx.oC_AndExpression())) {
             throw new IllegalArgumentException("and expression should not be empty");
         }
@@ -82,7 +82,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_AndExpression(CypherGSParser.OC_AndExpressionContext ctx) {
+    public ExprVisitorResult visitOC_AndExpression(GremlinGSParser.OC_AndExpressionContext ctx) {
         if (ObjectUtils.isEmpty(ctx.oC_NotExpression())) {
             throw new IllegalArgumentException("operands should not be empty in 'AND' operator");
         }
@@ -94,7 +94,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_NotExpression(CypherGSParser.OC_NotExpressionContext ctx) {
+    public ExprVisitorResult visitOC_NotExpression(GremlinGSParser.OC_NotExpressionContext ctx) {
         ExprVisitorResult operand =
                 visitOC_NullPredicateExpression(ctx.oC_NullPredicateExpression());
         List<TerminalNode> notNodes = ctx.NOT();
@@ -107,12 +107,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_ComparisonExpression(
-            CypherGSParser.OC_ComparisonExpressionContext ctx) {
+            GremlinGSParser.OC_ComparisonExpressionContext ctx) {
         List<SqlOperator> operators = new ArrayList<>();
         List<ExprVisitorResult> operands = new ArrayList<>();
         operands.add(
                 visitOC_StringOrListPredicateExpression(ctx.oC_StringOrListPredicateExpression()));
-        for (CypherGSParser.OC_PartialComparisonExpressionContext partialCtx :
+        for (GremlinGSParser.OC_PartialComparisonExpressionContext partialCtx :
                 ctx.oC_PartialComparisonExpression()) {
             operands.add(
                     visitOC_StringOrListPredicateExpression(
@@ -128,7 +128,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_StringOrListPredicateExpression(
-            CypherGSParser.OC_StringOrListPredicateExpressionContext ctx) {
+            GremlinGSParser.OC_StringOrListPredicateExpressionContext ctx) {
         List<ExprVisitorResult> operands =
                 Lists.newArrayList(
                         visitOC_AddOrSubtractOrBitManipulationExpression(
@@ -174,7 +174,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_NullPredicateExpression(
-            CypherGSParser.OC_NullPredicateExpressionContext ctx) {
+            GremlinGSParser.OC_NullPredicateExpressionContext ctx) {
         ExprVisitorResult operand = visitOC_ComparisonExpression(ctx.oC_ComparisonExpression());
         List<SqlOperator> operators = Lists.newArrayList();
         if (ctx.IS() != null && ctx.NOT() != null && ctx.NULL() != null) {
@@ -187,12 +187,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_AddOrSubtractOrBitManipulationExpression(
-            CypherGSParser.OC_AddOrSubtractOrBitManipulationExpressionContext ctx) {
+            GremlinGSParser.OC_AddOrSubtractOrBitManipulationExpressionContext ctx) {
         if (ObjectUtils.isEmpty(ctx.oC_MultiplyDivideModuloExpression())) {
             throw new IllegalArgumentException("multiply or divide expression should not be empty");
         }
         List<SqlOperator> operators =
-                com.alibaba.graphscope.common.antlr4.Utils.getOperators(
+                Utils.getOperators(
                         ctx.children, ImmutableList.of("+", "-", "&", "|", "^", "<<", ">>"), false);
         return binaryCall(
                 operators,
@@ -203,10 +203,10 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_MultiplyDivideModuloExpression(
-            CypherGSParser.OC_MultiplyDivideModuloExpressionContext ctx) {
-        if (ObjectUtils.isEmpty(ctx.oC_UnaryAddOrSubtractExpression())) {
-            throw new IllegalArgumentException("power expression should not be empty");
-        }
+            GremlinGSParser.OC_MultiplyDivideModuloExpressionContext ctx) {
+        Preconditions.checkArgument(
+                ObjectUtils.isNotEmpty(ctx.oC_UnaryAddOrSubtractExpression()),
+                "bit manipulation expression should not be empty");
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("*", "/", "%"), false);
         return binaryCall(
@@ -218,7 +218,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_UnaryAddOrSubtractExpression(
-            CypherGSParser.OC_UnaryAddOrSubtractExpressionContext ctx) {
+            GremlinGSParser.OC_UnaryAddOrSubtractExpressionContext ctx) {
         ExprVisitorResult operand = visitOC_ListOperatorExpression(ctx.oC_ListOperatorExpression());
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("-", "+"), true);
@@ -227,7 +227,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_PropertyOrLabelsExpression(
-            CypherGSParser.OC_PropertyOrLabelsExpressionContext ctx) {
+            GremlinGSParser.OC_PropertyOrLabelsExpressionContext ctx) {
         if (ctx.oC_PropertyLookup() == null) {
             return visitOC_Atom(ctx.oC_Atom());
         } else {
@@ -251,26 +251,25 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_ParenthesizedExpression(
-            CypherGSParser.OC_ParenthesizedExpressionContext ctx) {
+            GremlinGSParser.OC_ParenthesizedExpressionContext ctx) {
         return visitOC_Expression(ctx.oC_Expression());
     }
 
     @Override
-    public ExprVisitorResult visitOC_Variable(CypherGSParser.OC_VariableContext ctx) {
+    public ExprVisitorResult visitOC_Variable(GremlinGSParser.OC_VariableContext ctx) {
         String aliasName = ctx.getText();
         return new ExprVisitorResult(builder.variable(aliasName));
     }
 
     @Override
     public ExprVisitorResult visitOC_PatternPredicate(
-            CypherGSParser.OC_PatternPredicateContext ctx) {
-        RelNode subQuery =
-                parent.visitOC_RelationshipsPattern(ctx.oC_RelationshipsPattern()).build();
-        return new ExprVisitorResult(RexSubQuery.exists(subQuery));
+            GremlinGSParser.OC_PatternPredicateContext ctx) {
+        throw new UnsupportedOperationException(
+                "pattern predicate is unsupported in gremlin expression");
     }
 
     @Override
-    public ExprVisitorResult visitOC_Literal(CypherGSParser.OC_LiteralContext ctx) {
+    public ExprVisitorResult visitOC_Literal(GremlinGSParser.OC_LiteralContext ctx) {
         if (ctx.StringLiteral() != null) {
             return new ExprVisitorResult(
                     builder.literal(LiteralVisitor.INSTANCE.visitTerminal(ctx.StringLiteral())));
@@ -283,7 +282,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_ListLiteral(CypherGSParser.OC_ListLiteralContext ctx) {
+    public ExprVisitorResult visitOC_ListLiteral(GremlinGSParser.OC_ListLiteralContext ctx) {
         List<ExprVisitorResult> operands =
                 ctx.oC_Expression().stream()
                         .map(k -> visitOC_Expression(k))
@@ -303,7 +302,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_MapLiteral(CypherGSParser.OC_MapLiteralContext ctx) {
+    public ExprVisitorResult visitOC_MapLiteral(GremlinGSParser.OC_MapLiteralContext ctx) {
         List<String> keys =
                 ctx.oC_PropertyKeyName().stream()
                         .map(k -> k.getText())
@@ -335,36 +334,26 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_Parameter(CypherGSParser.OC_ParameterContext ctx) {
-        String paramName = ctx.oC_SymbolicName().getText();
-        int paramIndex = this.paramManager.generate(paramName);
-        GraphRexBuilder rexBuilder = (GraphRexBuilder) builder.getRexBuilder();
-        RexDynamicParam dynamicParam = rexBuilder.makeGraphDynamicParam(paramName, paramIndex);
-        paramManager.addIdToName(dynamicParam.getIndex(), paramName);
-        return new ExprVisitorResult(dynamicParam);
-    }
-
-    @Override
-    public ExprVisitorResult visitOC_BooleanLiteral(CypherGSParser.OC_BooleanLiteralContext ctx) {
+    public ExprVisitorResult visitOC_BooleanLiteral(GremlinGSParser.OC_BooleanLiteralContext ctx) {
         return new ExprVisitorResult(
                 builder.literal(LiteralVisitor.INSTANCE.visitOC_BooleanLiteral(ctx)));
     }
 
     @Override
-    public ExprVisitorResult visitOC_IntegerLiteral(CypherGSParser.OC_IntegerLiteralContext ctx) {
+    public ExprVisitorResult visitOC_IntegerLiteral(GremlinGSParser.OC_IntegerLiteralContext ctx) {
         return new ExprVisitorResult(
                 builder.literal(LiteralVisitor.INSTANCE.visitOC_IntegerLiteral(ctx)));
     }
 
     @Override
-    public ExprVisitorResult visitOC_DoubleLiteral(CypherGSParser.OC_DoubleLiteralContext ctx) {
+    public ExprVisitorResult visitOC_DoubleLiteral(GremlinGSParser.OC_DoubleLiteralContext ctx) {
         return new ExprVisitorResult(
                 builder.literal(LiteralVisitor.INSTANCE.visitOC_DoubleLiteral(ctx)));
     }
 
     @Override
     public ExprVisitorResult visitOC_AggregateFunctionInvocation(
-            CypherGSParser.OC_AggregateFunctionInvocationContext ctx) {
+            GremlinGSParser.OC_AggregateFunctionInvocationContext ctx) {
         List<RexNode> variables =
                 ctx.oC_Expression().stream()
                         .map(k -> visitOC_Expression(k).getExpr())
@@ -403,8 +392,8 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_ScalarFunctionInvocation(
-            CypherGSParser.OC_ScalarFunctionInvocationContext ctx) {
-        List<CypherGSParser.OC_ExpressionContext> exprCtx = ctx.oC_Expression();
+            GremlinGSParser.OC_ScalarFunctionInvocationContext ctx) {
+        List<GremlinGSParser.OC_ExpressionContext> exprCtx = ctx.oC_Expression();
         String functionName = ctx.getChild(0).getText();
         switch (functionName.toUpperCase()) {
             case "LABELS":
@@ -476,7 +465,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_CountAny(CypherGSParser.OC_CountAnyContext ctx) {
+    public ExprVisitorResult visitOC_CountAny(GremlinGSParser.OC_CountAnyContext ctx) {
         String alias = aliasInfer.infer();
         RelBuilder.AggCall aggCall = builder.count();
         return new ExprVisitorResult(
@@ -485,13 +474,13 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_CaseExpression(CypherGSParser.OC_CaseExpressionContext ctx) {
+    public ExprVisitorResult visitOC_CaseExpression(GremlinGSParser.OC_CaseExpressionContext ctx) {
         ExprVisitorResult inputExpr =
                 ctx.oC_InputExpression() == null
                         ? null
                         : visitOC_InputExpression(ctx.oC_InputExpression());
         List<RexNode> operands = Lists.newArrayList();
-        for (CypherGSParser.OC_CaseAlternativeContext whenThen : ctx.oC_CaseAlternative()) {
+        for (GremlinGSParser.OC_CaseAlternativeContext whenThen : ctx.oC_CaseAlternative()) {
             Preconditions.checkArgument(
                     whenThen.oC_Expression().size() == 2,
                     "whenThen expression should have 2 parts");
@@ -553,35 +542,6 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                 ? operand
                 : new ExprVisitorResult(
                         operand.getAggCalls(), builder.call(operators.get(0), operand.getExpr()));
-    }
-
-    private class ParamManager {
-        private final AtomicInteger idGenerator;
-        private Map<String, Integer> paramNameToIdMap;
-        private Map<Integer, String> paramIdToNameMap;
-
-        public ParamManager() {
-            this.idGenerator = new AtomicInteger();
-            this.paramNameToIdMap = Maps.newHashMap();
-            this.paramIdToNameMap = Maps.newHashMap();
-        }
-
-        public int generate(@Nullable String paramName) {
-            Integer paramId = paramNameToIdMap.get(paramName);
-            if (paramId == null) {
-                paramId = idGenerator.getAndIncrement();
-                paramNameToIdMap.put(paramName, paramId);
-            }
-            return paramId;
-        }
-
-        public void addIdToName(int paramId, String paramName) {
-            paramIdToNameMap.put(paramId, paramName);
-        }
-    }
-
-    public Map<Integer, String> getDynamicParams() {
-        return Collections.unmodifiableMap(paramManager.paramIdToNameMap);
     }
 
     private RexLiteral createIntervalLiteral(String fieldName) {

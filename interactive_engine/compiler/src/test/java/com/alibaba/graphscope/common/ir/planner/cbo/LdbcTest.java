@@ -63,7 +63,7 @@ public class LdbcTest {
                     + " distinct=false}]])\n"
                     + "    GraphLogicalProject(f=[f], len=[k.~len], isAppend=[false])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[ISLOCATEDIN]}],"
-                    + " alias=[DEFAULT], startAlias=[PATTERN_VERTEX$5], opt=[OUT],"
+                    + " alias=[_], startAlias=[PATTERN_VERTEX$5], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[WORKAT]}],"
                     + " alias=[PATTERN_VERTEX$5], startAlias=[f], opt=[OUT],"
@@ -72,21 +72,21 @@ public class LdbcTest {
                     + " tables=[ISLOCATEDIN]}], alias=[city], startAlias=[f], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
                     + "            GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[ISLOCATEDIN]}], alias=[DEFAULT], startAlias=[PATTERN_VERTEX$9],"
+                    + " tables=[ISLOCATEDIN]}], alias=[_], startAlias=[PATTERN_VERTEX$9],"
                     + " opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "              GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[STUDYAT]}], alias=[PATTERN_VERTEX$9], startAlias=[f], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
                     + "                GraphLogicalGetV(tableConfig=[{isAll=false,"
-                    + " tables=[PERSON]}], alias=[f], fusedFilter=[[AND(=(DEFAULT.firstName,"
-                    + " _UTF-8'Mikhail'), <>(DEFAULT.id, 1939))]], opt=[END])\n"
+                    + " tables=[PERSON]}], alias=[f], fusedFilter=[[AND(=(_.firstName,"
+                    + " _UTF-8'Mikhail'), <>(_.id, 1939))]], opt=[END])\n"
                     + "                 "
                     + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[KNOWS]}], alias=[DEFAULT], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[1], fetch=[3], path_opt=[ARBITRARY], result_opt=[END_V],"
                     + " alias=[k], start_alias=[p])\n"
                     + "                    GraphLogicalSource(tableConfig=[{isAll=false,"
-                    + " tables=[PERSON]}], alias=[p], opt=[VERTEX], uniqueKeyFilters=[=(DEFAULT.id,"
+                    + " tables=[PERSON]}], alias=[p], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
                     + " 1939)])",
                 after.explain().trim());
     }
@@ -124,14 +124,14 @@ public class LdbcTest {
                     + " imageFile=[message.imageFile],"
                     + " postOrCommentCreationDate=[message.creationDate], isAppend=[false])\n"
                     + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST, COMMENT]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[<(DEFAULT.creationDate,"
-                    + " 20130301000000000)]], opt=[START], physicalOpt=[ITSELF])\n"
+                    + " alias=[_], fusedFilter=[[<(_.creationDate, 20130301000000000)]],"
+                    + " opt=[START], physicalOpt=[ITSELF])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
                     + " alias=[message], startAlias=[friend], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
                     + " alias=[friend], startAlias=[p], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[p], opt=[VERTEX], uniqueKeyFilters=[=(DEFAULT.id, 1939)])",
+                    + " alias=[p], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 1939)])",
                 after.explain().trim());
     }
 
@@ -176,35 +176,34 @@ public class LdbcTest {
                     + " distinct=false}, {operands=[messageY], aggFunction=COUNT, alias='yCount',"
                     + " distinct=false}]])\n"
                     + "      GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[COUNTRY]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.name, _UTF-8'Laos')]], opt=[END],"
+                    + " alias=[_], fusedFilter=[[=(_.name, _UTF-8'Laos')]], opt=[END],"
                     + " physicalOpt=[ITSELF])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[ISLOCATEDIN]}], alias=[countryX], startAlias=[messageX], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
                     + "          GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST,"
-                    + " COMMENT]}], alias=[DEFAULT], fusedFilter=[[AND(>=(DEFAULT.creationDate,"
-                    + " 20100505013715278), <=(DEFAULT.creationDate, 20130604130807720))]],"
-                    + " opt=[START], physicalOpt=[ITSELF])\n"
+                    + " COMMENT]}], alias=[_], fusedFilter=[[AND(>=(_.creationDate,"
+                    + " 20100505013715278), <=(_.creationDate, 20130604130807720))]], opt=[START],"
+                    + " physicalOpt=[ITSELF])\n"
                     + "            GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[HASCREATOR]}], alias=[messageX], startAlias=[otherP], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
                     + "              GraphPhysicalGetV(tableConfig=[{isAll=false,"
-                    + " tables=[COUNTRY]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.name,"
+                    + " tables=[COUNTRY]}], alias=[_], fusedFilter=[[=(_.name,"
                     + " _UTF-8'United_States')]], opt=[END], physicalOpt=[ITSELF])\n"
                     + "                GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[ISLOCATEDIN]}], alias=[countryY], startAlias=[messageY], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
                     + "                  GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST,"
-                    + " COMMENT]}], alias=[DEFAULT], fusedFilter=[[AND(>=(DEFAULT.creationDate,"
-                    + " 20100505013715278), <=(DEFAULT.creationDate, 20130604130807720))]],"
-                    + " opt=[START], physicalOpt=[ITSELF])\n"
+                    + " COMMENT]}], alias=[_], fusedFilter=[[AND(>=(_.creationDate,"
+                    + " 20100505013715278), <=(_.creationDate, 20130604130807720))]], opt=[START],"
+                    + " physicalOpt=[ITSELF])\n"
                     + "                    GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[HASCREATOR]}], alias=[messageY], startAlias=[otherP], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
                     + "                      GraphPhysicalGetV(tableConfig=[{isAll=false,"
-                    + " tables=[COUNTRY]}], alias=[DEFAULT], fusedFilter=[[AND(<>(DEFAULT.name,"
-                    + " _UTF-8'Laos'), <>(DEFAULT.name, _UTF-8'United_States'))]], opt=[END],"
-                    + " physicalOpt=[ITSELF])\n"
+                    + " tables=[COUNTRY]}], alias=[_], fusedFilter=[[AND(<>(_.name, _UTF-8'Laos'),"
+                    + " <>(_.name, _UTF-8'United_States'))]], opt=[END], physicalOpt=[ITSELF])\n"
                     + "                        GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[ISPARTOF]}], alias=[countryCity], startAlias=[city], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
@@ -215,12 +214,12 @@ public class LdbcTest {
                     + " tables=[PERSON]}], alias=[otherP], opt=[END])\n"
                     + "                             "
                     + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[KNOWS]}], alias=[DEFAULT], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
-                    + " alias=[DEFAULT], start_alias=[person])\n"
+                    + " alias=[_], start_alias=[person])\n"
                     + "                               "
                     + " GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(DEFAULT.id, 1939)])",
+                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 1939)])",
                 after.explain().trim());
     }
 
@@ -243,16 +242,15 @@ public class LdbcTest {
                     + " distinct=false}]])\n"
                     + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASTAG]}],"
                     + " alias=[tag], startAlias=[post], opt=[OUT], physicalOpt=[VERTEX])\n"
-                    + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[AND(>=(DEFAULT.creationDate,"
-                    + " 20100111014617581), <=(DEFAULT.creationDate, 20130604130807720))]],"
-                    + " opt=[START], physicalOpt=[ITSELF])\n"
+                    + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}], alias=[_],"
+                    + " fusedFilter=[[AND(>=(_.creationDate, 20100111014617581), <=(_.creationDate,"
+                    + " 20130604130807720))]], opt=[START], physicalOpt=[ITSELF])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
                     + " alias=[post], startAlias=[friend], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
                     + " alias=[friend], startAlias=[person], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(DEFAULT.id, 168944)])",
+                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 168944)])",
                 after.explain().trim());
     }
 
@@ -286,24 +284,23 @@ public class LdbcTest {
                     + " projFields=[[ALL, ALL]])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[CONTAINEROF]}],"
                     + " alias=[forum], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
-                    + "        CommonTableScan(table=[[common#1911980499]])\n"
+                    + "        CommonTableScan(table=[[common#-1186040689]])\n"
                     + "      GraphLogicalGetV(tableConfig=[{isAll=false, tables=[FORUM]}],"
                     + " alias=[forum], opt=[START])\n"
                     + "        GraphLogicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
                     + " alias=[hasMember], startAlias=[other], opt=[IN])\n"
-                    + "          CommonTableScan(table=[[common#1911980499]])\n"
-                    + "common#1911980499:\n"
+                    + "          CommonTableScan(table=[[common#-1186040689]])\n"
+                    + "common#-1186040689:\n"
                     + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
                     + " alias=[post], startAlias=[other], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
                     + " alias=[other], opt=[END])\n"
                     + "    GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[KNOWS]}], alias=[DEFAULT], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
                     + " alias=[k], start_alias=[person])\n"
                     + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(DEFAULT.id,"
-                    + " 2199023378950)])",
+                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 2199023378950)])",
                 com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
 
@@ -333,8 +330,8 @@ public class LdbcTest {
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASTAG]}],"
                     + " alias=[otherTag], startAlias=[post], opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "        GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[TAG]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.name,"
-                    + " _UTF-8'North_German_Confederation')]], opt=[END], physicalOpt=[ITSELF])\n"
+                    + " alias=[_], fusedFilter=[[=(_.name, _UTF-8'North_German_Confederation')]],"
+                    + " opt=[END], physicalOpt=[ITSELF])\n"
                     + "          GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASTAG]}],"
                     + " alias=[tag], startAlias=[post], opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "            GraphPhysicalExpand(tableConfig=[{isAll=false,"
@@ -344,12 +341,12 @@ public class LdbcTest {
                     + " alias=[other], opt=[END])\n"
                     + "               "
                     + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[KNOWS]}], alias=[DEFAULT], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
-                    + " alias=[DEFAULT], start_alias=[person])\n"
+                    + " alias=[_], start_alias=[person])\n"
                     + "                  GraphLogicalSource(tableConfig=[{isAll=false,"
-                    + " tables=[PERSON]}], alias=[person], opt=[VERTEX],"
-                    + " uniqueKeyFilters=[=(DEFAULT.id, 2199023382370)])",
+                    + " tables=[PERSON]}], alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
+                    + " 2199023382370)])",
                 after.explain().trim());
     }
 
@@ -391,8 +388,7 @@ public class LdbcTest {
                     + " tables=[HASCREATOR]}], alias=[message], startAlias=[person], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
                     + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(DEFAULT.id,"
-                    + " 2199023382370)])",
+                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 2199023382370)])",
                 after.explain().trim());
     }
 
@@ -427,8 +423,8 @@ public class LdbcTest {
                     + " commentOrPostCreationDate=[message.creationDate], isAppend=[false])\n"
                     + "    LogicalFilter(condition=[<>(friend, person)])\n"
                     + "      GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST, COMMENT]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[<(DEFAULT.creationDate,"
-                    + " 20130301000000000)]], opt=[START], physicalOpt=[ITSELF])\n"
+                    + " alias=[_], fusedFilter=[[<(_.creationDate, 20130301000000000)]],"
+                    + " opt=[START], physicalOpt=[ITSELF])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[HASCREATOR]}], alias=[message], startAlias=[friend], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
@@ -436,12 +432,12 @@ public class LdbcTest {
                     + " alias=[friend], opt=[END])\n"
                     + "           "
                     + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[KNOWS]}], alias=[DEFAULT], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
-                    + " alias=[DEFAULT], start_alias=[person])\n"
+                    + " alias=[_], start_alias=[person])\n"
                     + "              GraphLogicalSource(tableConfig=[{isAll=false,"
-                    + " tables=[PERSON]}], alias=[person], opt=[VERTEX],"
-                    + " uniqueKeyFilters=[=(DEFAULT.id, 2199023382370)])",
+                    + " tables=[PERSON]}], alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
+                    + " 2199023382370)])",
                 after.explain().trim());
     }
 
@@ -479,26 +475,26 @@ public class LdbcTest {
                     + " organizationWorkFromYear]}], values=[[]])\n"
                     + "    LogicalFilter(condition=[<>(person, friend)])\n"
                     + "      GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[COUNTRY]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.name, _UTF-8'Kazakhstan')]],"
-                    + " opt=[END], physicalOpt=[ITSELF])\n"
+                    + " alias=[_], fusedFilter=[[=(_.name, _UTF-8'Kazakhstan')]], opt=[END],"
+                    + " physicalOpt=[ITSELF])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[ISLOCATEDIN]}], alias=[DEFAULT], startAlias=[company], opt=[OUT],"
+                    + " tables=[ISLOCATEDIN]}], alias=[_], startAlias=[company], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
                     + "          GraphLogicalGetV(tableConfig=[{isAll=false, tables=[COMPANY]}],"
                     + " alias=[company], opt=[END])\n"
                     + "            GraphLogicalExpand(tableConfig=[{isAll=false, tables=[WORKAT]}],"
-                    + " alias=[workAt], startAlias=[friend], fusedFilter=[[<(DEFAULT.workFrom,"
-                    + " 2013)]], opt=[OUT])\n"
+                    + " alias=[workAt], startAlias=[friend], fusedFilter=[[<(_.workFrom, 2013)]],"
+                    + " opt=[OUT])\n"
                     + "              GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
                     + " alias=[friend], opt=[END])\n"
                     + "               "
                     + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[KNOWS]}], alias=[DEFAULT], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
-                    + " alias=[DEFAULT], start_alias=[person])\n"
+                    + " alias=[_], start_alias=[person])\n"
                     + "                  GraphLogicalSource(tableConfig=[{isAll=false,"
-                    + " tables=[PERSON]}], alias=[person], opt=[VERTEX],"
-                    + " uniqueKeyFilters=[=(DEFAULT.id, 2199023382370)])",
+                    + " tables=[PERSON]}], alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
+                    + " 2199023382370)])",
                 after.explain().trim());
     }
 
@@ -532,8 +528,8 @@ public class LdbcTest {
                     + " distinct=true}, {operands=[comment], aggFunction=COUNT, alias='replyCount',"
                     + " distinct=true}]])\n"
                     + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[TAGCLASS]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.name, _UTF-8'Organisation')]],"
-                    + " opt=[END], physicalOpt=[ITSELF])\n"
+                    + " alias=[_], fusedFilter=[[=(_.name, _UTF-8'Organisation')]], opt=[END],"
+                    + " physicalOpt=[ITSELF])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[ISSUBCLASSOF]}], alias=[baseTagClass],"
                     + " startAlias=[PATTERN_VERTEX$9], opt=[OUT], physicalOpt=[VERTEX])\n"
@@ -554,7 +550,7 @@ public class LdbcTest {
                     + " opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "                  GraphLogicalSource(tableConfig=[{isAll=false,"
                     + " tables=[PERSON]}], alias=[PATTERN_VERTEX$0], opt=[VERTEX],"
-                    + " uniqueKeyFilters=[=(DEFAULT.id, 2199023382370)])",
+                    + " uniqueKeyFilters=[=(_.id, 2199023382370)])",
                 after.explain().trim());
     }
 }

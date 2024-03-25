@@ -43,7 +43,7 @@ public class FilterPushDownTest {
         Assert.assertEquals(
                 "GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[y], fusedFilter=[[=(DEFAULT.weight, 1.0E0)]], opt=[OUT])\n"
+                    + " alias=[y], fusedFilter=[[=(_.weight, 1.0E0)]], opt=[OUT])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
@@ -92,13 +92,13 @@ public class FilterPushDownTest {
         Assert.assertEquals(
                 "GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[z], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                    + " alias=[z], fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                     + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[END])\n"
+                    + " alias=[_], opt=[END])\n"
                     + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                    + " alias=[DEFAULT])\n"
+                    + " alias=[_])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
@@ -144,8 +144,7 @@ public class FilterPushDownTest {
                     + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                     + " alias=[y], opt=[OUT])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[x], fusedFilter=[[OR(=(DEFAULT.age, 10), =(DEFAULT.age, 20))]],"
-                    + " opt=[VERTEX])\n"
+                    + " alias=[x], fusedFilter=[[OR(=(_.age, 10), =(_.age, 20))]], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
     }
@@ -242,13 +241,13 @@ public class FilterPushDownTest {
                 "LogicalJoin(condition=[=(x, x)], joinType=[inner])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[y], fusedFilter=[[=(DEFAULT.weight, 10)]], opt=[OUT])\n"
+                    + " alias=[y], fusedFilter=[[=(_.weight, 10)]], opt=[OUT])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[z], fusedFilter=[[=(DEFAULT.weight, 20)]], opt=[OUT])\n"
+                    + " alias=[z], fusedFilter=[[=(_.weight, 20)]], opt=[OUT])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
@@ -285,7 +284,7 @@ public class FilterPushDownTest {
                     + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
                     + " opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]], opt=[VERTEX])\n"
+                    + " alias=[a], fusedFilter=[[=(_.name, _UTF-8'marko')]], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
     }

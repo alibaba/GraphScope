@@ -110,7 +110,15 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                         (context -> {
                             Bytecode byteCode =
                                     (Bytecode) message.getArgs().get(Tokens.ARGS_GREMLIN);
-                            String script = getScript(byteCode);
+                            String language =
+                                    FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
+                            // hack ways to remove quote in expr, so we can use ANTLR to perform
+                            // syntax checking
+                            boolean removeQuoteInExpr =
+                                    language.equals(GremlinCalciteScriptEngineFactory.LANGUAGE_NAME)
+                                            ? true
+                                            : false;
+                            String script = getScript(byteCode, removeQuoteInExpr);
                             long queryId = idGenerator.generateId();
                             String queryName = idGenerator.generateName(queryId);
                             IrMeta irMeta = metaQueryCallback.beforeExec();
@@ -119,8 +127,6 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             QueryTimeoutConfig timeoutConfig =
                                     new QueryTimeoutConfig(
                                             FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs));
-                            String language =
-                                    FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
                             switch (language) {
                                 case AntlrGremlinScriptEngineFactory.LANGUAGE_NAME:
                                     Traversal traversal =
@@ -192,7 +198,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
         }
     }
 
-    private String getScript(Bytecode byteCode) {
+    private String getScript(Bytecode byteCode, boolean removeQuoteInExpr) {
         String script = GroovyTranslator.of("g").translate(byteCode).getScript();
         // remove type cast from original script, g.V().has("age",P.gt((int) 30))
         List<String> typeCastStrs =
@@ -200,6 +206,48 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
         for (String type : typeCastStrs) {
             script = script.replaceAll(type, "");
         }
+        if (removeQuoteInExpr) {
+            String exprPattern = "expr(";
+            int exprIdx = script.indexOf(exprPattern);
+            if (exprIdx < 0) {
+                return script;
+            }
+            int i;
+            for (i = exprIdx + exprPattern.length();
+                    i < script.length() && !isQuote(script.charAt(i));
+                    ++i)
+                ;
+            if (i == script.length()) {
+                return script;
+            }
+            int leftQuoteIdx = i;
+            int leftBraceCnt = 1;
+            for (; i < script.length() && leftBraceCnt != 0; ++i) {
+                if (script.charAt(i) == '(') {
+                    ++leftBraceCnt;
+                } else if (script.charAt(i) == ')') {
+                    --leftBraceCnt;
+                }
+            }
+            if (i == script.length()) {
+                return script;
+            }
+            while (i > leftQuoteIdx && !isQuote(script.charAt(i))) {
+                --i;
+            }
+            if (i == leftQuoteIdx) {
+                return script;
+            }
+            int rightQuoteIdx = i;
+            script =
+                    script.substring(0, leftQuoteIdx)
+                            + script.substring(leftQuoteIdx + 1, rightQuoteIdx)
+                            + script.substring(rightQuoteIdx + 1);
+        }
         return script;
+    }
+
+    private boolean isQuote(char ch) {
+        return ch == '\'' || ch == '\"';
     }
 }

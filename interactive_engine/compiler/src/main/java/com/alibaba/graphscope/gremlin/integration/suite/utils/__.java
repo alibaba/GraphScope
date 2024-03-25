@@ -27,6 +27,7 @@ package com.alibaba.graphscope.gremlin.integration.suite.utils;
 
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
+import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -125,5 +126,9 @@ public class __ {
 
     public static <A> GraphTraversal<?, ?> identity() {
         return start().identity();
+    }
+
+    public static GraphTraversal<?, Vertex> expr(final String expr, ExprStep.Type type) {
+        return ((IrCustomizedTraversal) start()).expr(expr, type);
     }
 }
