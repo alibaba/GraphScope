@@ -19,35 +19,31 @@
 import click
 import yaml
 
-from graphscope.gsctl.impl import connect_coordinator
-from graphscope.gsctl.impl import create_dataloading_job
-from graphscope.gsctl.impl import create_graph
-from graphscope.gsctl.impl import create_procedure
+from graphscope.gsctl.impl import create_edge_type
+from graphscope.gsctl.impl import create_groot_dataloading_job
+from graphscope.gsctl.impl import create_vertex_type
 from graphscope.gsctl.impl import delete_alert_receiver_by_id
 from graphscope.gsctl.impl import delete_alert_rule_by_name
-from graphscope.gsctl.impl import delete_graph_by_name
+from graphscope.gsctl.impl import delete_edge_type
 from graphscope.gsctl.impl import delete_job_by_id
-from graphscope.gsctl.impl import delete_procedure_by_name
-from graphscope.gsctl.impl import disconnect_coordinator
+from graphscope.gsctl.impl import delete_vertex_type
+from graphscope.gsctl.impl import get_datasource
 from graphscope.gsctl.impl import get_deployment_info
 from graphscope.gsctl.impl import get_job_by_id
 from graphscope.gsctl.impl import get_node_status
-from graphscope.gsctl.impl import get_schema_by_name
-from graphscope.gsctl.impl import get_service_status
+from graphscope.gsctl.impl import import_datasource
+from graphscope.gsctl.impl import import_groot_schema
 from graphscope.gsctl.impl import list_alert_messages
 from graphscope.gsctl.impl import list_alert_receivers
 from graphscope.gsctl.impl import list_alert_rules
-from graphscope.gsctl.impl import list_graphs
+from graphscope.gsctl.impl import list_groot_graph
 from graphscope.gsctl.impl import list_jobs
-from graphscope.gsctl.impl import list_procedures
 from graphscope.gsctl.impl import register_receiver
-from graphscope.gsctl.impl import restart_service
-from graphscope.gsctl.impl import start_service
-from graphscope.gsctl.impl import stop_service
+from graphscope.gsctl.impl import unbind_edge_datasource
+from graphscope.gsctl.impl import unbind_vertex_datasource
 from graphscope.gsctl.impl import update_alert_messages
 from graphscope.gsctl.impl import update_alert_receiver_by_id
 from graphscope.gsctl.impl import update_alert_rule
-from graphscope.gsctl.impl import update_procedure
 from graphscope.gsctl.utils import is_valid_file_path
 from graphscope.gsctl.utils import read_yaml_file
 from graphscope.gsctl.utils import terminal_display
@@ -60,19 +56,19 @@ def cli():
 
 @cli.group()
 def create():
-    """Create a resource(graph, procedure) from a file"""
+    """Create a resource from a file"""
     pass
 
 
 @cli.group()
 def delete():
-    """Delete a resource(graph, procedure) by name"""
+    """Delete a resource by name"""
     pass
 
 
 @cli.group()
 def update():
-    """Update a resource(procedure) from a file"""
+    """Update a resource from a file"""
     pass
 
 
@@ -88,24 +84,6 @@ def get():
     pass
 
 
-@cli.group()
-def start():
-    """Start database service on a certain graph"""
-    pass
-
-
-@cli.group()
-def stop():
-    """Stop database service"""
-    pass
-
-
-@cli.group()
-def restart():
-    """Restart database service on current graph"""
-    pass
-
-
 @get.command()
 def graph():
     """Display graphs in database"""
@@ -114,21 +92,30 @@ def graph():
         if not graphs:
             click.secho("no graph found in database.", fg="blue")
             return
-        head = ["NAME", "STORE TYPE", "VERTEX TYPE SIZE", "EDGE TYPE SIZE"]
+        head = [
+            "NAME",
+            "CREATION_TIME",
+            "VERTEX TYPE SIZE",
+            "EDGE TYPE SIZE",
+            "GREMLIN ENDPOINT",
+            "GRPC ENDPOINT",
+        ]
         data = [head]
         for g in graphs:
             data.append(
                 [
                     g.name,
-                    g.store_type,
-                    len(g.var_schema.vertex_types),
-                    len(g.var_schema.edge_types),
+                    g.creation_time,
+                    len(g.var_schema.vertices),
+                    len(g.var_schema.edges),
+                    g.gremlin_interface.gremlin_endpoint,
+                    g.gremlin_interface.grpc_endpoint,
                 ]
             )
         terminal_display(data)
 
     try:
-        graphs = list_graphs()
+        graphs = list_groot_graph()
     except Exception as e:
         click.secho(f"Failed to list graphs: {str(e)}", fg="red")
     else:
@@ -140,7 +127,7 @@ def graph():
 def graph(graph_name):  # noqa: F811
     """Show details of graphs"""
     try:
-        graphs = list_graphs()
+        graphs = list_groot_graph()
     except Exception as e:
         click.secho(f"Failed to list graphs: {str(e)}", fg="red")
     else:
@@ -160,41 +147,281 @@ def graph(graph_name):  # noqa: F811
             click.secho('graph "{0}" not found.'.format(graph_name), fg="blue")
 
 
+@create.command
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to create a schema",
+)
+def schema(filename):  # noqa: F811
+    """Batch import schema into database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        schema = read_yaml_file(filename)
+        # only one graph supported int groot
+        import_groot_schema("placeholder", schema)
+    except Exception as e:
+        click.secho(f"Failed to import schema: {str(e)}", fg="red")
+    else:
+        click.secho("Import schema successfully.", fg="green")
+
+
+@create.command
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to create a vertex type",
+)
+def vtype(filename):  # noqa: F811
+    """Create a new vertex type in database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        vtype = read_yaml_file(filename)
+        # only one graph supported in groot
+        create_vertex_type("placeholder", vtype)
+    except Exception as e:
+        click.secho(f"Failed to create vertex type: {str(e)}", fg="red")
+    else:
+        click.secho(
+            f"Create vertex type {vtype['type_name']} successfully.", fg="green"
+        )
+
+
+@delete.command()
+@click.argument("vertex_type", required=True)
+def vtype(vertex_type):  # noqa: F811
+    """Delete a vertex type in database"""
+    try:
+        delete_vertex_type("placeholder", vertex_type)
+    except Exception as e:
+        click.secho(f"Failed to delete vertex type {vertex_type}: {str(e)}", fg="red")
+    else:
+        click.secho(f"Delete vertex type {vertex_type} successfully.", fg="green")
+
+
+@delete.command()
+@click.argument("edge_type", required=True)
+@click.option(
+    "-s",
+    "--source_vertex_type",
+    required=True,
+    help="Source vertex type of the edge",
+)
+@click.option(
+    "-d",
+    "--destination_vertex_type",
+    required=True,
+    help="Destination vertex type of the edge",
+)
+def etype(edge_type, source_vertex_type, destination_vertex_type):  # noqa: F811
+    """Delete an edge type in database"""
+    try:
+        etype_full_name = (
+            f"({source_vertex_type})-[{edge_type}]->({destination_vertex_type})"
+        )
+        delete_edge_type(
+            "placeholder", edge_type, source_vertex_type, destination_vertex_type
+        )
+    except Exception as e:
+        click.secho(
+            f"Failed to delete edge type {etype_full_name}: {str(e)}",
+            fg="red",
+        )
+    else:
+        click.secho(
+            f"Delete edge type {etype_full_name} successfully.",
+            fg="green",
+        )
+
+
+@create.command
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to create an edge type",
+)
+def etype(filename):  # noqa: F811
+    """Create a new edge type in database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        etype = read_yaml_file(filename)
+        # only one graph supported in groot
+        create_edge_type("placeholder", etype)
+    except Exception as e:
+        click.secho(f"Failed to create edge type: {str(e)}", fg="red")
+    else:
+        click.secho(f"Create edge type {etype['type_name']} successfully.", fg="green")
+
+
+@create.command
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to bind data source to the graph",
+)
+def datasource(filename):  # noqa: F811
+    """Bind data source to the graph"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        datasource = read_yaml_file(filename)
+        # only one graph supported int groot
+        import_datasource("placeholder", datasource)
+    except Exception as e:
+        click.secho(f"Failed to import data source: {str(e)}", fg="red")
+    else:
+        click.secho("Import data source successfully.", fg="green")
+
+
+@get.command()
+def datasource():  # noqa: F811
+    """Display data source on graph"""
+
+    def _construct_and_display_data(datasource):
+        if not datasource.vertices_datasource and not datasource.edges_datasource:
+            click.secho("no data source bound on the graph.", fg="blue")
+            return
+
+        head = [
+            "TYPE NAME",
+            "SOURCE VERTEX TYPE",
+            "DESTINATION VERTEX TYPE",
+            "DATA SOURCE TYPE",
+            "LOCATION",
+        ]
+        data = [head]
+        if datasource.vertices_datasource:
+            for v_datasource in datasource.vertices_datasource:
+                data.append(
+                    [
+                        v_datasource.type_name,
+                        "-",
+                        "-",
+                        v_datasource.data_source,
+                        v_datasource.location,
+                    ]
+                )
+        if datasource.edges_datasource:
+            for e_datasource in datasource.edges_datasource:
+                data.append(
+                    [
+                        e_datasource.type_name,
+                        e_datasource.source_vertex,
+                        e_datasource.destination_vertex,
+                        e_datasource.data_source,
+                        e_datasource.location,
+                    ]
+                )
+
+        terminal_display(data)
+
+    try:
+        # only one graph supported int groot
+        datasource = get_datasource("placeholder")
+    except Exception as e:
+        click.secho(f"Failed to list data source: {str(e)}", fg="red")
+    else:
+        _construct_and_display_data(datasource)
+
+
+@describe.command()
+def datasource():  # noqa: F811
+    """Show details of data source"""
+    try:
+        # only one graph supported int groot
+        datasource = get_datasource("placeholder")
+    except Exception as e:
+        click.secho(f"Failed to get data source: {str(e)}", fg="red")
+    else:
+        if not datasource.vertices_datasource and not datasource.edges_datasource:
+            click.secho("no data source bound on the graph.", fg="blue")
+            return
+        click.secho(yaml.dump(datasource.to_dict()))
+
+
+@delete.command()
+@click.argument("vertex_type", required=True)
+def vdatasource(vertex_type):  # noqa: F811
+    """Unbind data source on vertex type"""
+    try:
+        unbind_vertex_datasource("placeholder", vertex_type)
+    except Exception as e:
+        click.secho(
+            f"Failed to unbind data source on {vertex_type}: {str(e)}", fg="red"
+        )
+    else:
+        click.secho(f"Unbind data source on {vertex_type} successfully.", fg="green")
+
+
+@delete.command()
+@click.argument("edge_type", required=True)
+@click.option(
+    "-s",
+    "--source_vertex_type",
+    required=True,
+    help="Source vertex type of the edge",
+)
+@click.option(
+    "-d",
+    "--destination_vertex_type",
+    required=True,
+    help="Destination vertex type of the edge",
+)
+def edatasource(edge_type, source_vertex_type, destination_vertex_type):  # noqa: F811
+    """Unbind data source on edge type"""
+    try:
+        etype_full_name = (
+            f"({source_vertex_type})-[{edge_type}]->({destination_vertex_type})"
+        )
+        unbind_edge_datasource(
+            "placeholder", edge_type, source_vertex_type, destination_vertex_type
+        )
+    except Exception as e:
+        click.secho(
+            f"Failed to unbind data source on {etype_full_name}: {str(e)}",
+            fg="red",
+        )
+    else:
+        click.secho(
+            f"Unbind data source on {etype_full_name} successfully.",
+            fg="green",
+        )
+
+
 @create.command()
 @click.option(
     "-f",
     "--filename",
     required=True,
-    help="Path of yaml file to use to create a graph",
+    help="Path of yaml file to use to create a job",
 )
-def graph(filename):  # noqa: F811
-    """Create a new graph in database, with the provided schema file"""
+def job(filename):  # noqa: F811
+    """Create a dataloading job in database"""
     if not is_valid_file_path(filename):
         click.secho("Invalid file: {0}".format(filename), fg="blue")
         return
     try:
-        graph = read_yaml_file(filename)
-        create_graph(graph)
+        config = read_yaml_file(filename)
+        jobid = create_groot_dataloading_job("placeholder", config)
     except Exception as e:
-        click.secho(f"Failed to create graph: {str(e)}", fg="red")
+        click.secho(f"Failed to create a job: {str(e)}", fg="red")
     else:
-        click.secho(f"Create graph {graph['name']} successfully.", fg="green")
-
-
-@delete.command()
-@click.argument("graph_name", required=True)
-def graph(graph_name):  # noqa: F811
-    """Delete a graph by name in database"""
-    try:
-        delete_graph_by_name(graph_name)
-    except Exception as e:
-        click.secho(f"Failed to delete graph {graph_name}: {str(e)}", fg="red")
-    else:
-        click.secho(f"Delete graph {graph_name} successfully.", fg="green")
+        click.secho(f"Create job {jobid} successfully.", fg="green")
 
 
 @get.command()
-def job():
+def job():  # noqa: F81
     """Display jobs in database"""
 
     def _construct_and_display_data(jobs):
@@ -235,27 +462,6 @@ def job(job_id):  # noqa: F811
         click.secho(yaml.dump(job.to_dict()))
 
 
-@create.command()
-@click.option(
-    "-f",
-    "--filename",
-    required=True,
-    help="Path of yaml file to use to create a graph",
-)
-def job(filename):  # noqa: F811
-    """Create a dataloading job in database"""
-    if not is_valid_file_path(filename):
-        click.secho("Invalid file: {0}".format(filename), fg="blue")
-        return
-    try:
-        config = read_yaml_file(filename)
-        jobid = create_dataloading_job(config["graph"], config)
-    except Exception as e:
-        click.secho(f"Failed to create a job: {str(e)}", fg="red")
-    else:
-        click.secho(f"Create job {jobid} successfully.", fg="green")
-
-
 @delete.command()
 @click.argument("job_id", required=True)
 def job(job_id):  # noqa: F811
@@ -266,158 +472,6 @@ def job(job_id):  # noqa: F811
         click.secho(f"Failed to delete job {job_id}: {str(e)}", fg="red")
     else:
         click.secho(f"Delete job {job_id} successfully.", fg="green")
-
-
-@create.command()
-@click.option(
-    "-g",
-    "--graph_name",
-    required=True,
-    help="Create a stored procedure on a certain graph",
-)
-@click.option(
-    "-f",
-    "--filename",
-    required=True,
-    help="Path of yaml file to use to create a procedure",
-)
-def procedure(graph_name, filename):
-    """Create a stored procedure on a certain graph"""
-    if not is_valid_file_path(filename):
-        click.secho("Invalid file: {0}".format(filename), fg="blue")
-        return
-    try:
-        procedure = read_yaml_file(filename)
-        # overwrite graph name
-        procedure["bound_graph"] = graph_name
-        create_procedure(graph_name, procedure)
-    except Exception as e:
-        click.secho(f"Failed to create stored procedure: {str(e)}", fg="red")
-    else:
-        click.secho(
-            f"Create stored procedure {procedure['name']} successfully.", fg="green"
-        )
-
-
-@get.command()
-@click.option(
-    "-g",
-    "--graph_name",
-    required=True,
-    help="List stored procedures on a certain graph",
-)
-def procedure(graph_name):  # noqa: F811
-    """Display stored procedures in database"""
-
-    def _construct_and_display_data(procedures):
-        if not procedures:
-            click.secho(f"no stored procedure found on {graph_name}.", fg="blue")
-            return
-        head = ["NAME", "BOUND_GRAPH", "TYPE", "ENABLE", "RUNNABLE", "DESCRIPTION"]
-        data = [head]
-        for procedure in procedures:
-            data.append(
-                [
-                    procedure.name,
-                    procedure.bound_graph,
-                    procedure.type,
-                    str(procedure.enable),
-                    str(procedure.runnable),
-                    procedure.description,
-                ]
-            )
-        terminal_display(data)
-
-    try:
-        procedures = list_procedures(graph_name)
-    except Exception as e:
-        click.secho(f"Failed to list stored procedures: {str(e)}", fg="red")
-    else:
-        _construct_and_display_data(procedures)
-
-
-@describe.command()
-@click.argument("procedure_name", required=False)
-@click.option(
-    "-g",
-    "--graph_name",
-    required=True,
-    help="Describe stored procedures on a certain graph",
-)
-def procedure(procedure_name, graph_name):  # noqa: F811
-    """Show details of stored procedure"""
-    try:
-        procedures = list_procedures(graph_name)
-    except Exception as e:
-        click.secho(f"Failed to list procedures: {str(e)}", fg="red")
-    else:
-        if not procedures:
-            click.secho(f"no stored procedures found on {graph_name}.", fg="blue")
-            return
-        specific_procedure_exist = False
-        for procedure in procedures:
-            if procedure_name is not None and procedure.name != procedure_name:
-                continue
-            # display
-            click.secho(yaml.dump(procedure.to_dict()))
-            if procedure_name is not None and procedure.name == procedure_name:
-                specific_procedure_exist = True
-        if procedure_name is not None and not specific_procedure_exist:
-            click.secho(
-                f"procedure {procedure_name} not found on {graph_name}.", fg="blue"
-            )
-
-
-@update.command()
-@click.option(
-    "-g",
-    "--graph_name",
-    required=True,
-    help="Update a stored procedure on a certain graph",
-)
-@click.option(
-    "-f",
-    "--filename",
-    required=True,
-    help="Path of yaml file to use to update a procedure",
-)
-def procedure(graph_name, filename):  # noqa: F811
-    """Update a stored procedure on a certain graph"""
-    if not is_valid_file_path(filename):
-        click.secho("Invalid file: {0}".format(filename), fg="blue")
-        return
-    try:
-        procedure = read_yaml_file(filename)
-        # overwrite graph name
-        procedure["bound_graph"] = graph_name
-        update_procedure(graph_name, procedure)
-    except Exception as e:
-        click.secho(f"Failed to update stored procedure: {str(e)}", fg="red")
-    else:
-        click.secho(
-            f"Update stored procedure {procedure['name']} successfully.", fg="green"
-        )
-
-
-@delete.command()
-@click.argument("procedure_name", required=True)
-@click.option(
-    "-g",
-    "--graph_name",
-    required=True,
-    help="Delete a stored procedure on a certain graph",
-)
-def procedure(graph_name, procedure_name):  # noqa: F811
-    """Delete a procedure on a certain graph in database"""
-    try:
-        delete_procedure_by_name(graph_name, procedure_name)
-    except Exception as e:
-        click.secho(f"Failed to delete stored procedure: {str(e)}", fg="red")
-    else:
-        click.secho(
-            f"Delete stored procedure {procedure_name} on {graph_name} successfully.",
-            fg="green",
-        )
 
 
 @get.command()
@@ -451,72 +505,6 @@ def node():
         click.secho(f"Failed to get node status: {str(e)}", fg="red")
     else:
         _construct_and_display_data(nodes)
-
-
-@get.command
-def service():
-    """Display service status in database"""
-
-    def _construct_and_display_data(status):
-        head = ["STATUS", "SERVING_GRAPH", "CYPHER_ENDPOINT", "HQPS_ENDPOINT"]
-        data = [head]
-        data.append(
-            [
-                status.status,
-                status.graph_name,
-                status.sdk_endpoints.cypher,
-                status.sdk_endpoints.hqps,
-            ]
-        )
-        terminal_display(data)
-
-    try:
-        status = get_service_status()
-    except Exception as e:
-        click.secho(f"Failed to get service status: {str(e)}", fg="red")
-    else:
-        _construct_and_display_data(status)
-
-
-@stop.command
-def service():  # noqa: F811
-    """Stop database service"""
-    try:
-        stop_service()
-    except Exception as e:
-        click.secho(f"Failed to stop service: {str(e)}", fg="red")
-    else:
-        click.secho("Service stopped.", fg="green")
-
-
-@start.command
-@click.option(
-    "-g",
-    "--graph_name",
-    required=True,
-    help="Start service on a certain graph",
-)
-def service(graph_name):  # noqa: F811
-    """Start database service on a certain graph"""
-    try:
-        start_service(graph_name)
-    except Exception as e:
-        click.secho(
-            f"Failed to start service on graph {graph_name}: {str(e)}", fg="red"
-        )
-    else:
-        click.secho(f"Start service on graph {graph_name} successfully", fg="green")
-
-
-@restart.command
-def service():  # noqa: F811
-    """Restart database service on current graph"""
-    try:
-        restart_service()
-    except Exception as e:
-        click.secho(f"Failed to restart service: {str(e)}", fg="red")
-    else:
-        click.secho("Service restarted.", fg="green")
 
 
 @get.command()
@@ -721,7 +709,6 @@ def alertreceiver(filename):  # noqa: F811
         return
     try:
         receiver = read_yaml_file(filename)
-        print(receiver)
         register_receiver(receiver)
     except Exception as e:
         click.secho(f"Failed to create alert receiver: {str(e)}", fg="red")

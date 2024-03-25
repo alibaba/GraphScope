@@ -53,7 +53,7 @@ public class ExpressionTest {
     @Test
     public void variable_1_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable((String) null);
-        Assert.assertEquals("DEFAULT", node.toString());
+        Assert.assertEquals("_", node.toString());
     }
 
     // a
@@ -79,7 +79,7 @@ public class ExpressionTest {
     public void variable_4_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable(null, "name");
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.CHAR);
-        Assert.assertEquals("DEFAULT.name", node.toString());
+        Assert.assertEquals("_.name", node.toString());
     }
 
     // a.age
@@ -191,8 +191,7 @@ public class ExpressionTest {
                                 builder.variable(null, "name"),
                                 builder.literal("^marko"));
         Assert.assertEquals(SqlTypeName.BOOLEAN, regex.getType().getSqlTypeName());
-        Assert.assertEquals(
-                "POSIX REGEX CASE SENSITIVE(DEFAULT.name, _UTF-8'^marko')", regex.toString());
+        Assert.assertEquals("POSIX REGEX CASE SENSITIVE(_.name, _UTF-8'^marko')", regex.toString());
     }
 
     @Test
@@ -205,8 +204,7 @@ public class ExpressionTest {
                                 builder.variable(null, "id"),
                                 builder.literal("age"),
                                 builder.variable(null, "age"));
-        Assert.assertEquals(
-                "MAP(_UTF-8'id', DEFAULT.id, _UTF-8'age', DEFAULT.age)", map.toString());
+        Assert.assertEquals("MAP(_UTF-8'id', _.id, _UTF-8'age', _.age)", map.toString());
         // key type is string while value type is bigint
         Assert.assertEquals("(CHAR(3), BIGINT) MAP", map.getType().toString());
     }

@@ -215,36 +215,70 @@ class JavaApp(AppAssets):
 
     # Override is_compatible to make sure type params of graph consists with java app.
     def is_compatible(self, graph):
-        splited = graph.template_str.split("<")
+        # The GraphTemplate can be vineyard::ArrowFragment<OID_T,VID_T, VERTEX_MAP_T, COMPACT>
+        # or gs::ArrowProjectedFragment<OID_T,VID_T,VDATA_T,EDATA_T, VERTEX_MAP_T, COMPACT>
         java_app_type_params = self.frag_param_str.split(",")
-        num_type_params = 0
-        if len(splited) != 2:
-            raise Exception(
-                "Unrecoginizable graph template str: {}".format(graph.template_str)
-            )
-        if splited[0] == "vineyard::ArrowFragment":
+        if graph.template_str.find("vineyard::ArrowFragment") != -1:
             if self.java_app_type.find("property") == -1:
                 logger.error("Expected property app")
                 return False
             if len(java_app_type_params) != 1:
                 logger.error("Expected one type params.")
                 return False
-            num_type_params = 1
-        if splited[1] == "gs::ArrowProjectedFragment":
+            # Get the OID_T from the graph template string
+            split_parts = graph.template_str.split("<")
+            if len(split_parts) > 1:
+                type_parts = split_parts[1].split(",")
+                if len(type_parts) > 0:
+                    oid_t = type_parts[0].strip()
+                else:
+                    raise Exception(
+                        "Error format graph template str: {}".format(graph.template_str)
+                    )
+            else:
+                raise Exception(
+                    "Error format graph template str: {}".format(graph.template_str)
+                )
+            if not _type_param_consistent(oid_t, java_app_type_params[0]):
+                return False
+            return True
+        elif graph.template_str.find("gs::ArrowProjectedFragment") != -1:
             if self.java_app_type.find("simple") == -1:
                 logger.error("Expected simple app")
                 return False
             if len(java_app_type_params) != 4:
                 logger.error("Expected 4 type params")
                 return False
-            num_type_params = 4
-        graph_actual_type_params = splited[1][:-1].split(",")
-        for i in range(0, num_type_params):
-            graph_actual_type_param = graph_actual_type_params[i]
-            java_app_type_param = java_app_type_params[i]
-            if not _type_param_consistent(graph_actual_type_param, java_app_type_param):
-                return False
-        return True
+            split_parts = graph.template_str.split("<")
+            if len(split_parts) > 1:
+                type_parts = split_parts[1].split(",")
+                cpp_graph_type = []
+                if (
+                    len(type_parts) > 3
+                ):  # Check if there are at least 4 parts to extract
+                    cpp_graph_type = type_parts[:4]
+                    logger.info("found type param {}".format(cpp_graph_type))
+                else:
+                    raise Exception(
+                        "Error format graph template str: {}".format(graph.template_str)
+                    )
+                for i in range(0, 4):
+                    logger.info(
+                        "checking type param {},{},{}".format(
+                            i, cpp_graph_type[i], java_app_type_params[i]
+                        )
+                    )
+                    if not _type_param_consistent(
+                        cpp_graph_type[i], java_app_type_params[i]
+                    ):
+                        return False
+                return True
+            else:
+                raise Exception("Expect least {}".format(graph.template_str))
+        else:
+            raise Exception(
+                "Unrecoginizable graph template str: {}".format(graph.template_str)
+            )
 
     def _pack_jar(self, full_jar_path: str):
         garfile = InMemoryZip()

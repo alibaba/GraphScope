@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.integration.resultx;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
@@ -34,15 +36,17 @@ import java.util.stream.Collectors;
 
 public class GremlinTestResultProcessor extends GremlinResultProcessor {
     public GremlinTestResultProcessor(
+            Configs configs,
             Context ctx,
-            QueryStatusCallback statusCallback,
             RecordParser recordParser,
-            ResultSchema resultSchema) {
-        super(ctx, statusCallback, recordParser, resultSchema);
+            ResultSchema resultSchema,
+            QueryStatusCallback statusCallback,
+            QueryTimeoutConfig timeoutConfig) {
+        super(configs, ctx, recordParser, resultSchema, statusCallback, timeoutConfig);
     }
 
     @Override
-    public void onNext(IrResult.Record record) {
+    protected void processRecord(IrResult.Record record) {
         List<Object> results = recordParser.parseFrom(record);
         if (resultSchema.isGroupBy && !results.isEmpty()) {
             if (results.stream().anyMatch(k -> !(k instanceof Map))) {
@@ -65,7 +69,7 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     }
 
     @Override
-    public void onCompleted() {
+    protected void finishRecord() {
         List<Object> results = Lists.newArrayList();
         if (resultSchema.isGroupBy) {
             results.add(new DefaultRemoteTraverser(reducer, 1L));

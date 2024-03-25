@@ -16,11 +16,13 @@ class GrootGraph(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, name=None, directed=None, creation_time=None, _schema=None, gremlin_interface=None):  # noqa: E501
+    def __init__(self, name=None, type=None, directed=None, creation_time=None, _schema=None, gremlin_interface=None):  # noqa: E501
         """GrootGraph - a model defined in OpenAPI
 
         :param name: The name of this GrootGraph.  # noqa: E501
         :type name: str
+        :param type: The type of this GrootGraph.  # noqa: E501
+        :type type: str
         :param directed: The directed of this GrootGraph.  # noqa: E501
         :type directed: bool
         :param creation_time: The creation_time of this GrootGraph.  # noqa: E501
@@ -32,6 +34,7 @@ class GrootGraph(Model):
         """
         self.openapi_types = {
             'name': str,
+            'type': str,
             'directed': bool,
             'creation_time': str,
             '_schema': GrootSchema,
@@ -40,6 +43,7 @@ class GrootGraph(Model):
 
         self.attribute_map = {
             'name': 'name',
+            'type': 'type',
             'directed': 'directed',
             'creation_time': 'creation_time',
             '_schema': 'schema',
@@ -47,6 +51,7 @@ class GrootGraph(Model):
         }
 
         self._name = name
+        self._type = type
         self._directed = directed
         self._creation_time = creation_time
         self.__schema = _schema
@@ -83,6 +88,33 @@ class GrootGraph(Model):
         """
 
         self._name = name
+
+    @property
+    def type(self) -> str:
+        """Gets the type of this GrootGraph.
+
+
+        :return: The type of this GrootGraph.
+        :rtype: str
+        """
+        return self._type
+
+    @type.setter
+    def type(self, type: str):
+        """Sets the type of this GrootGraph.
+
+
+        :param type: The type of this GrootGraph.
+        :type type: str
+        """
+        allowed_values = ["GrootGraph"]  # noqa: E501
+        if type not in allowed_values:
+            raise ValueError(
+                "Invalid value for `type` ({0}), must be one of {1}"
+                .format(type, allowed_values)
+            )
+
+        self._type = type
 
     @property
     def directed(self) -> bool:

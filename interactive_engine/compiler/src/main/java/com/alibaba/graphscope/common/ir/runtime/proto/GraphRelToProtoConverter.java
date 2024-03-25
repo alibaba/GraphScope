@@ -18,6 +18,8 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
+import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalDedupBy;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
@@ -49,19 +51,20 @@ import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 public class GraphRelToProtoConverter extends GraphShuttle {
     private static final Logger logger = LoggerFactory.getLogger(GraphRelToProtoConverter.class);
@@ -71,11 +74,23 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     private GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder;
     private final boolean isPartitioned;
     private boolean preCacheEdgeProps;
+    private final IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons;
+    private final int depth;
 
     public GraphRelToProtoConverter(
             boolean isColumnId,
             Configs configs,
-            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder) {
+            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
+            IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons) {
+        this(isColumnId, configs, physicalBuilder, relToCommons, 0);
+    }
+
+    public GraphRelToProtoConverter(
+            boolean isColumnId,
+            Configs configs,
+            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
+            IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons,
+            int depth) {
         this.isColumnId = isColumnId;
         this.rexBuilder = GraphPlanner.rexBuilderFactory.apply(configs);
         this.graphConfig = configs;
@@ -86,6 +101,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         // currently, since the store doesn't support get properties from edges, we always need to
         // precache edge properties.
         this.preCacheEdgeProps = true;
+        this.relToCommons = relToCommons;
+        this.depth = depth;
     }
 
     @Override
@@ -644,9 +661,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalPlan.newBuilder();
 
         RelNode left = join.getLeft();
-        left.accept(new GraphRelToProtoConverter(isColumnId, graphConfig, leftPlanBuilder));
+        left.accept(
+                new GraphRelToProtoConverter(
+                        isColumnId, graphConfig, leftPlanBuilder, this.relToCommons, depth + 1));
         RelNode right = join.getRight();
-        right.accept(new GraphRelToProtoConverter(isColumnId, graphConfig, rightPlanBuilder));
+        right.accept(
+                new GraphRelToProtoConverter(
+                        isColumnId, graphConfig, rightPlanBuilder, this.relToCommons, depth + 1));
         if (isPartitioned) {
 
             Map<Integer, Set<GraphNameOrId>> leftTagColumns =
@@ -670,6 +691,53 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setJoin(joinBuilder));
         physicalBuilder.addPlan(oprBuilder.build());
         return join;
+    }
+
+    @Override
+    public RelNode visit(LogicalUnion union) {
+        List<CommonTableScan> commons = relToCommons.get(union);
+        if (ObjectUtils.isNotEmpty(commons)) {
+            // add commons before union
+            GraphAlgebraPhysical.PhysicalPlan.Builder commonPlanBuilder =
+                    GraphAlgebraPhysical.PhysicalPlan.newBuilder();
+            for (int i = commons.size() - 1; i >= 0; --i) {
+                RelNode commonRel = ((CommonOptTable) commons.get(i).getTable()).getCommon();
+                commonRel.accept(
+                        new GraphRelToProtoConverter(
+                                isColumnId,
+                                graphConfig,
+                                commonPlanBuilder,
+                                this.relToCommons,
+                                depth + 1));
+            }
+            physicalBuilder.addAllPlan(commonPlanBuilder.getPlanList());
+        } else if (this.depth == 0) {
+            // add a dummy root if the root union does not have any common sub-plans
+            physicalBuilder.addPlan(
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                            .setOpr(
+                                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                            .setRoot(GraphAlgebraPhysical.Root.newBuilder())));
+        }
+        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.Union.Builder unionBuilder = GraphAlgebraPhysical.Union.newBuilder();
+        for (RelNode input : union.getInputs()) {
+            GraphAlgebraPhysical.PhysicalPlan.Builder inputPlanBuilder =
+                    GraphAlgebraPhysical.PhysicalPlan.newBuilder();
+            input.accept(
+                    new GraphRelToProtoConverter(
+                            isColumnId,
+                            graphConfig,
+                            inputPlanBuilder,
+                            this.relToCommons,
+                            depth + 1));
+            unionBuilder.addSubPlans(inputPlanBuilder);
+        }
+        oprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setUnion(unionBuilder));
+        physicalBuilder.addPlan(oprBuilder.build());
+        return union;
     }
 
     private List<RexGraphVariable> getLeftRightVariables(RexNode condition) {

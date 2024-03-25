@@ -32,8 +32,9 @@ class DeploymentInfo(BaseModel):
     cluster_type: Optional[StrictStr] = None
     version: Optional[StrictStr] = None
     solution: Optional[StrictStr] = None
+    creation_time: Optional[StrictStr] = None
     graphs_info: Optional[Dict[str, DeploymentInfoGraphsInfoValue]] = None
-    __properties: ClassVar[List[str]] = ["name", "cluster_type", "version", "solution", "graphs_info"]
+    __properties: ClassVar[List[str]] = ["name", "cluster_type", "version", "solution", "creation_time", "graphs_info"]
 
     @field_validator('cluster_type')
     def cluster_type_validate_enum(cls, value):
@@ -117,6 +118,7 @@ class DeploymentInfo(BaseModel):
             "cluster_type": obj.get("cluster_type"),
             "version": obj.get("version"),
             "solution": obj.get("solution"),
+            "creation_time": obj.get("creation_time"),
             "graphs_info": dict(
                 (_k, DeploymentInfoGraphsInfoValue.from_dict(_v))
                 for _k, _v in obj["graphs_info"].items()

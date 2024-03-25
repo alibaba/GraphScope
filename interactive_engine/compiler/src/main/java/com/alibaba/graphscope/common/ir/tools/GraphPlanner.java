@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.planner.GraphHepPlanner;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
@@ -146,7 +147,7 @@ public class GraphPlanner {
             } else if (logicalPlan.getRegularQuery() != null) {
                 String physicalOpt = FrontendConfig.PHYSICAL_OPT_CONFIG.get(graphConfig);
                 if ("proto".equals(physicalOpt.toLowerCase())) {
-                    logger.info("physical type is proto");
+                    logger.debug("physical type is proto");
                     try (GraphRelProtoPhysicalBuilder physicalBuilder =
                             new GraphRelProtoPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
                         return physicalBuilder.build();
@@ -154,7 +155,7 @@ public class GraphPlanner {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    logger.info("physical type is ffi");
+                    logger.debug("physical type is ffi");
                     try (PhysicalBuilder physicalBuilder =
                             new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
                         return physicalBuilder.build();
@@ -235,7 +236,7 @@ public class GraphPlanner {
                                 hepBuilder.addRuleInstance(
                                         k.withRelBuilderFactory(graphBuilderFactory).toRule());
                             });
-                    return new HepPlanner(hepBuilder.build());
+                    return new GraphHepPlanner(hepBuilder.build());
                 case CBO:
                 default:
                     throw new UnsupportedOperationException(
@@ -292,7 +293,10 @@ public class GraphPlanner {
         Configs extraConfigs = createExtraConfigs(args.length > 4 ? args[4] : null);
         StoredProcedureMeta procedureMeta =
                 new StoredProcedureMeta(
-                        extraConfigs, logicalPlan.getOutputType(), logicalPlan.getDynamicParams());
+                        extraConfigs,
+                        query,
+                        logicalPlan.getOutputType(),
+                        logicalPlan.getDynamicParams());
         StoredProcedureMeta.Serializer.perform(procedureMeta, new FileOutputStream(args[3]));
     }
 }

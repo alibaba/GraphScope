@@ -20,24 +20,34 @@ SERVER_BIN=${FLEX_HOME}/build/bin/interactive_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
 # 
-if [ ! $# -eq 3 ]; then
-  echo "only receives: $# args, need 4"
-  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <ENGINE_CONFIG>"
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+  echo "Receives: $# args, need 3 or 4 args"
+  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <ENGINE_CONFIG> [TEST_TYPE(cypher/gremlin/all)]"
   exit 1
 fi
 
 INTERACTIVE_WORKSPACE=$1
 GRAPH_NAME=$2
 ENGINE_CONFIG_PATH=$3
+if [ $# -eq 4 ]; then
+  TEST_TYPE=$4
+else
+  TEST_TYPE="cypher" # default run cypher tests
+fi
+
+# check TEST_TYPE is valid
+if [ ${TEST_TYPE} != "cypher" ] && [ ${TEST_TYPE} != "gremlin" ] && [ ${TEST_TYPE} != "all" ]; then
+  echo "TEST_TYPE: ${TEST_TYPE} not supported, use cypher or gremlin"
+  exit 1
+else
+  echo "TEST_TYPE: ${TEST_TYPE}"
+fi
+
 if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} not exists"
   exit 1
 fi
-# check graph is ldbc or movies
-if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ] && [ ${GRAPH_NAME} != "graph_algo" ]; then
-  echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies or ldbc"
-  exit 1
-fi
+
 if [ ! -d ${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME} ]; then
   echo "GRAPH: ${GRAPH_NAME} not exists"
   exit 1
@@ -158,19 +168,55 @@ run_graph_algo_test(){
   popd
 }
 
+run_cypher_test(){
+  # check graph is ldbc or movies
+  if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ] && [ ${GRAPH_NAME} != "graph_algo" ]; then
+    echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies or ldbc"
+    exit 1
+  fi
+  if [ "${GRAPH_NAME}" == "ldbc" ]; then
+    run_ldbc_test
+    run_simple_test
+  elif [ "${GRAPH_NAME}" == "movies" ]; then
+    run_movie_test
+  elif [ "${GRAPH_NAME}" == "graph_algo" ]; then
+    run_graph_algo_test
+  else
+    echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies, ldbc or graph_algo"
+  fi
+}
+
+
+run_gremlin_test(){
+  if [ "${GRAPH_NAME}" != "modern_graph" ]; then
+    echo "GRAPH_NAME: ${GRAPH_NAME} not supported, only support modern_graph"
+    exit 1
+  fi
+  echo "run gremlin test"
+  pushd ${GIE_HOME}/compiler
+  cmd="mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.standard.calcite.IrGremlinTest"
+  echo "Start gremlin test: ${cmd}"
+  ${cmd}
+  info "Finish gremlin test"
+  popd
+}
+
 kill_service
 start_engine_service
 start_compiler_service
-# if GRAPH_NAME equals ldbc
-if [ "${GRAPH_NAME}" == "ldbc" ]; then
-  run_ldbc_test
-  run_simple_test
-elif [ "${GRAPH_NAME}" == "movies" ]; then
-  run_movie_test
-elif [ "${GRAPH_NAME}" == "graph_algo" ]; then
-  run_graph_algo_test
+
+
+if [ "${TEST_TYPE}" == "cypher" ]; then
+  run_cypher_test
+elif [ "${TEST_TYPE}" == "gremlin" ]; then
+  info "run gremlin test"
+  run_gremlin_test
+elif [ "${TEST_TYPE}" == "all" ]; then
+  run_cypher_test
+  run_gremlin_test
 else
-  echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies, ldbc or graph_algo"
+  echo "TEST_TYPE: ${TEST_TYPE} not supported, use cypher/gremlin/all"
+  exit 1
 fi
 
 kill_service

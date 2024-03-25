@@ -19,7 +19,6 @@ package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
-import com.alibaba.graphscope.gremlin.antlr4.GenericLiteralVisitor;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.collect.ImmutableList;
 
@@ -44,9 +43,7 @@ public class WherePredicateVisitor extends ExpressionVisitor {
                 propertyKey,
                 visitTraversalMethod_whereby(
                         builder,
-                        (String)
-                                GenericLiteralVisitor.getInstance()
-                                        .visitGenericLiteral(ctx.genericLiteral()),
+                        (String) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()),
                         whereByRing.next()));
     }
 
@@ -57,9 +54,7 @@ public class WherePredicateVisitor extends ExpressionVisitor {
                 propertyKey,
                 visitTraversalMethod_whereby(
                         builder,
-                        (String)
-                                GenericLiteralVisitor.getInstance()
-                                        .visitGenericLiteral(ctx.genericLiteral()),
+                        (String) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()),
                         whereByRing.next()));
     }
 
@@ -70,9 +65,7 @@ public class WherePredicateVisitor extends ExpressionVisitor {
                 propertyKey,
                 visitTraversalMethod_whereby(
                         builder,
-                        (String)
-                                GenericLiteralVisitor.getInstance()
-                                        .visitGenericLiteral(ctx.genericLiteral()),
+                        (String) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()),
                         whereByRing.next()));
     }
 
@@ -83,9 +76,7 @@ public class WherePredicateVisitor extends ExpressionVisitor {
                 propertyKey,
                 visitTraversalMethod_whereby(
                         builder,
-                        (String)
-                                GenericLiteralVisitor.getInstance()
-                                        .visitGenericLiteral(ctx.genericLiteral()),
+                        (String) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()),
                         whereByRing.next()));
     }
 
@@ -96,9 +87,7 @@ public class WherePredicateVisitor extends ExpressionVisitor {
                 propertyKey,
                 visitTraversalMethod_whereby(
                         builder,
-                        (String)
-                                GenericLiteralVisitor.getInstance()
-                                        .visitGenericLiteral(ctx.genericLiteral()),
+                        (String) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()),
                         whereByRing.next()));
     }
 
@@ -109,9 +98,7 @@ public class WherePredicateVisitor extends ExpressionVisitor {
                 propertyKey,
                 visitTraversalMethod_whereby(
                         builder,
-                        (String)
-                                GenericLiteralVisitor.getInstance()
-                                        .visitGenericLiteral(ctx.genericLiteral()),
+                        (String) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()),
                         whereByRing.next()));
     }
 
@@ -191,17 +178,18 @@ public class WherePredicateVisitor extends ExpressionVisitor {
             GremlinGSParser.TraversalMethod_wherebyContext byCtx) {
         if (byCtx == null || byCtx.getChildCount() == 3) { // by()
             return builder.variable(tag);
-        } else if (byCtx.stringLiteral() != null) {
+        } else if (byCtx.StringLiteral() != null) {
             return builder.variable(
-                    tag, GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+                    tag, (String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
         } else if (byCtx.traversalMethod_values() != null) {
             return builder.variable(
                     tag,
-                    GenericLiteralVisitor.getStringLiteral(
-                            byCtx.traversalMethod_values().stringLiteral()));
+                    (String)
+                            LiteralVisitor.INSTANCE.visit(
+                                    byCtx.traversalMethod_values().StringLiteral()));
         } else if (byCtx.nestedTraversal() != null) {
             return Utils.convertExprToPair(
-                            new NestedTraversalVisitor(builder, tag)
+                            new NestedTraversalRexVisitor(builder, tag, byCtx)
                                     .visitNestedTraversal(byCtx.nestedTraversal()))
                     .getValue0();
         }

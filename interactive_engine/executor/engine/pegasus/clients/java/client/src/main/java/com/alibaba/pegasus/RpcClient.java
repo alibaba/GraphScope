@@ -23,7 +23,10 @@ import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
 
 import io.grpc.Status;
+import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +49,12 @@ public class RpcClient {
                 channels.stream()
                         .map(k -> JobServiceGrpc.newStub(k.getChannel()))
                         .collect(Collectors.toList());
+    }
+
+    void configureClientInterceptor(
+            OpenTelemetry openTelemetry, NettyChannelBuilder nettyChannelBuilder) {
+        GrpcTelemetry grpcTelemetry = GrpcTelemetry.create(openTelemetry);
+        nettyChannelBuilder.intercept(grpcTelemetry.newClientInterceptor());
     }
 
     public void submit(JobRequest jobRequest, ResultProcessor processor, long rpcTimeoutMS) {
@@ -84,7 +93,11 @@ public class RpcClient {
             if (finished.get()) {
                 return;
             }
-            processor.process(jobResponse);
+            try {
+                processor.process(jobResponse);
+            } catch (Throwable t) {
+                onError(t);
+            }
         }
 
         @Override
@@ -101,7 +114,11 @@ public class RpcClient {
         public void onCompleted() {
             if (counter.decrementAndGet() == 0) {
                 logger.info("finish get job response from all servers");
-                processor.finish();
+                try {
+                    processor.finish();
+                } catch (Throwable t) {
+                    onError(t);
+                }
             }
         }
     }
