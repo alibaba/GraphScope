@@ -13,11 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 
-from kubernetes import client
-from kubernetes import config
-from utils import fill_params_in_yaml
-from utils import launch_client
-
 import graphscope as gs
 from graphscope.dataset import load_ogbn_arxiv
 
@@ -59,18 +54,9 @@ glt_graph = gs.graphlearn_torch(
         "num_test": 0.1,
     },
     master_id=0,
+    num_clients=params["NUM_CLIENT_NODES"],
+    manifest_path="client.yaml",
+    client_folder_path="./",
 )
-
-params["MASTER_ADDR"] = glt_graph.master_addr
-params["NUM_WORKER_REPLICAS"] = params["NUM_CLIENT_NODES"] - 1
-
-# start the client process
-config.load_kube_config()
-# fill the parameters in the client.yaml
-pytorch_job_manifest = fill_params_in_yaml("client.yaml", params)
-# create the CustomObjectsApi instance
-api_instance = client.CustomObjectsApi()
-# launch the client process
-launch_client(api_instance, pytorch_job_manifest)
 
 print("Exiting...")

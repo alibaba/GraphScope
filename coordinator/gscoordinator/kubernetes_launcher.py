@@ -69,6 +69,7 @@ from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import delegate_command_to_pod
 from gscoordinator.utils import parse_as_glog_level
+from gscoordinator.utils import replace_string_in_dict
 from gscoordinator.utils import run_kube_cp_command
 
 logger = logging.getLogger("graphscope")
@@ -87,6 +88,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._api_client = resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._apps_api = kube_client.AppsV1Api(self._api_client)
+        self._pytorchjobs_api = kube_client.CustomObjectsApi()
         self._resource_object = ResourceManager(self._api_client)
 
         self._config: Config = config
@@ -1346,7 +1348,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             container = GRAPHLEARN_CONTAINER_NAME
             sub_cmd = f"python3 -m gscoordinator.launch_graphlearn {handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
-            logger.debug("launching learning server: %s", " ".join(cmd))
+            # logger.debug("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
                 shlex.split(cmd),
                 stdout=subprocess.PIPE,
@@ -1388,7 +1390,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
         ports = self._engine_cluster.get_graphlearn_torch_ports(
             self._graphlearn_torch_start_port
         )
-        logger.info(f"ports: {ports}")
         if handle["master_id"] != -1:
             handle["master_addr"] = pod_ip_list[handle["master_id"]]
         else:
@@ -1396,7 +1397,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         handle["server_client_master_port"] = ports[0]
         server_list = [f"{pod_ip_list[0]}:{ports[i]}" for i in range(4)]
 
-        handle = base64.b64encode(
+        server_handle = base64.b64encode(
             json.dumps(handle).encode("utf-8", errors="ignore")
         ).decode("utf-8", errors="ignore")
 
@@ -1406,9 +1407,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
             container = GRAPHLEARN_TORCH_CONTAINER_NAME
             sub_cmd = f"env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
                 python3 -m gscoordinator.launch_graphlearn_torch \
-                {handle} {config} {pod_index}"
+                {server_handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
-            logger.debug("launching learning server: %s", " ".join(cmd))
+            # logger.debug("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
                 shlex.split(cmd),
                 stdout=subprocess.PIPE,
@@ -1435,7 +1436,78 @@ class KubernetesClusterLauncher(AbstractLauncher):
         # update the port usage record
         self._graphlearn_torch_start_port += len(pod_name_list)
 
-        # parse the service hosts and ports
+        # prepare config map for client scripts
+        config_map = kube_client.V1ConfigMap(
+            api_version="v1",
+            kind="ConfigMap",
+            metadata=kube_client.V1ObjectMeta(
+                name="graphlearn-torch-client-config",
+                namespace=self._namespace,
+            ),
+            data=handle["client_content"],
+        )
+        self._core_api.create_namespaced_config_map(self._namespace, config_map)
+
+        # prepare the manifest
+        pytorch_job_manifest = replace_string_in_dict(
+            handle["manifest"], "${MASTER_ADDR}", handle["master_addr"]
+        )
+        # parse the pytorchjob yaml
+        group = pytorch_job_manifest["apiVersion"].split("/")[0]
+        version = pytorch_job_manifest["apiVersion"].split("/")[1]
+        name = pytorch_job_manifest["metadata"]["name"]
+        namespace = pytorch_job_manifest["metadata"]["namespace"]
+        plural = "pytorchjobs"  # This is PyTorchJob CRD's plural name
+
+        try:
+            # create PyTorchJob
+            api_response = self._pytorchjobs_api.create_namespaced_custom_object(
+                group=group,
+                version=version,
+                namespace=namespace,
+                plural=plural,
+                body=pytorch_job_manifest,
+            )
+            print(api_response)
+        except K8SApiException as e:
+            print(
+                f"Exception when calling CustomObjectsApi->create_namespaced_custom_object: {e}"
+            )
+
+        # set Watcher to monitor the state of the PyTorchJob
+        w = kube_watch.Watch()
+
+        # loop checking the state of PyTorchJob
+        for event in w.stream(
+            self._pytorchjobs_api.list_namespaced_custom_object,
+            group,
+            version,
+            namespace,
+            plural,
+        ):
+            pytorch_job = event["object"]
+            if pytorch_job.get("metadata", {}).get("name") == name:
+                status = pytorch_job.get("status", {})
+                if status:  # check status existence
+                    conditions = status.get("conditions", [])
+                    for condition in conditions:
+                        if (
+                            condition.get("type") == "Succeeded"
+                            and condition.get("status") == "True"
+                        ):
+                            print(f"PyTorchJob {name} has succeeded!")
+                            w.stop()
+                            break
+                        elif (
+                            condition.get("type") == "Failed"
+                            and condition.get("status") == "True"
+                        ):
+                            print(f"PyTorchJob {name} has failed!")
+                            w.stop()
+                            break
+
+        self.close_graphlearn_torch_client(group, name, version, plural, namespace)
+
         return server_list
 
     def create_learning_instance(self, object_id, handle, config, learning_backend):
@@ -1523,6 +1595,39 @@ class KubernetesClusterLauncher(AbstractLauncher):
             except Exception:  # pylint: disable=broad-except
                 logger.exception("Failed to terminate graphlearn torch server")
         self._graphlearn_torch_instance_processes[object_id].clear()
+
+    def close_graphlearn_torch_client(self, group, name, version, plural, namespace):
+        # clear PyTorchJob
+        print(f"Deleting PyTorchJob {name}...")
+        try:
+            response = self._pytorchjobs_api.delete_namespaced_custom_object(
+                group=group,
+                name=name,
+                version=version,
+                plural=plural,
+                namespace=namespace,
+                body=kube_client.V1DeleteOptions(
+                    propagation_policy="Foreground",
+                ),
+            )
+            print(f"PyTorchJob {name} deleted. Response: {response}")
+        except K8SApiException as e:
+            print(
+                f"Exception when calling CustomObjectsApi->delete_namespaced_custom_object: {e}"
+            )
+
+        try:
+            response = self._core_api.delete_namespaced_config_map(
+                name="graphlearn-torch-client-config",
+                namespace=self._namespace,
+            )
+            print(
+                f"ConfigMap graphlearn-torch-client-config deleted. Response: {response}"
+            )
+        except K8SApiException as e:
+            print(
+                f"Exception when calling CoreV1Api->delete_namespaced_config_map: {e}"
+            )
 
 
 class ResourceManager(object):

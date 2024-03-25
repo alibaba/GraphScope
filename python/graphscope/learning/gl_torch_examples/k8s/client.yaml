@@ -1,7 +1,7 @@
 apiVersion: "kubeflow.org/v1"
 kind: PyTorchJob
 metadata:
-  name: pytorch-simple
+  name: graphlearn-torch-client
   namespace: default
 spec:
   pytorchReplicaSpecs:
@@ -18,15 +18,20 @@ spec:
                 - bash
                 - -c
                 - |- 
-                  python3 client.py --node_rank 0 --master_addr ${MASTER_ADDR} --num_server_nodes ${NUM_SERVER_NODES} --num_client_nodes ${NUM_CLIENT_NODES}
+                  python3 /workspace/client.py --node_rank 0 --master_addr ${MASTER_ADDR} --num_server_nodes ${NUM_SERVER_NODES} --num_client_nodes ${NUM_CLIENT_NODES}
               volumeMounts:
               - mountPath: /dev/shm
                 name: cache-volume
+              - mountPath: /workspace
+                name: client-volume
           volumes:
             - name: cache-volume
               emptyDir:
                 medium: Memory
                 sizeLimit: "8G"
+            - name: client-volume
+              configMap:
+                name: graphlearn-torch-client-config
     Worker:
       replicas: ${NUM_WORKER_REPLICAS}
       restartPolicy: OnFailure
@@ -40,10 +45,10 @@ spec:
                 - bash
                 - -c
                 - |-
-                  python3 client.py --node_rank $((${MY_POD_NAME: -1}+1)) --master_addr ${MASTER_ADDR} --group_master ${GROUP_MASTER} --num_server_nodes ${NUM_SERVER_NODES} --num_client_nodes ${NUM_CLIENT_NODES}
+                  python3 /workspace/client.py --node_rank $((${MY_POD_NAME: -1}+1)) --master_addr ${MASTER_ADDR} --group_master ${GROUP_MASTER} --num_server_nodes ${NUM_SERVER_NODES} --num_client_nodes ${NUM_CLIENT_NODES}
               env:
                 - name: GROUP_MASTER
-                  value: pytorch-simple-master-0
+                  value: graphlearn-torch-client-master-0
                 - name: MY_POD_NAME
                   valueFrom:
                     fieldRef:
@@ -51,8 +56,13 @@ spec:
               volumeMounts:
               - mountPath: /dev/shm
                 name: cache-volume
+              - mountPath: /workspace
+                name: client-volume
           volumes:
             - name: cache-volume
               emptyDir:
                 medium: Memory
                 sizeLimit: "8G"
+            - name: client-volume
+              configMap:
+                name: graphlearn-torch-client-config

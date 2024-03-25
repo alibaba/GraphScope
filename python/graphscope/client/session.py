@@ -1336,8 +1336,13 @@ class Session(object):
         edge_dir="out",
         random_node_split=None,
         master_id=-1,
+        num_clients=1,
+        manifest_path=None,
+        client_folder_path="./",
     ):
         from graphscope.learning.gl_torch_graph import GLTorchGraph
+        from graphscope.learning.utils import fill_params_in_yaml
+        from graphscope.learning.utils import read_folder_files_content
 
         handle = {
             "vineyard_socket": self._engine_config["vineyard_socket"],
@@ -1345,8 +1350,15 @@ class Session(object):
             "fragments": graph.fragments,
             "master_id": master_id,  # -1 means local mode
             "num_servers": len(graph.fragments),
-            "num_clients": 1,
+            "num_clients": num_clients,
         }
+        manifest_params = {
+            "NUM_CLIENT_NODES": handle["num_clients"],
+            "NUM_SERVER_NODES": handle["num_servers"],
+            "NUM_WORKER_REPLICAS": handle["num_clients"] - 1,
+        }
+        handle["manifest"] = fill_params_in_yaml(manifest_path, manifest_params)
+        handle["client_content"] = read_folder_files_content(client_folder_path)
 
         handle = base64.b64encode(
             json.dumps(handle).encode("utf-8", errors="ignore")
@@ -1371,7 +1383,7 @@ class Session(object):
             config,
             message_pb2.LearningBackend.GRAPHLEARN_TORCH,
         )
-        logger.info(f"endpoints: {endpoints}")
+
         g = GLTorchGraph(endpoints)
         self._learning_instance_dict[graph.vineyard_id] = g
         graph._attach_learning_instance(g)
@@ -1675,6 +1687,9 @@ def graphlearn_torch(
     edge_dir="out",
     random_node_split=None,
     master_id=-1,
+    num_clients=1,
+    manifest_path=None,
+    client_folder_path="./",
 ):
     assert graph is not None, "graph cannot be None"
     assert (
@@ -1690,4 +1705,7 @@ def graphlearn_torch(
         edge_dir,
         random_node_split,
         master_id,
+        num_clients,
+        manifest_path,
+        client_folder_path,
     )  # pylint: disable=protected-access
