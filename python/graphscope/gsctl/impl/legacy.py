@@ -51,8 +51,6 @@ def create_groot_dataloading_job(graph_name: str, job_config: dict) -> str:
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.LegacyApi(api_client)
-        a = GrootDataloadingJobConfig.from_dict(job_config)
-        print(a)
         return api_instance.create_groot_dataloading_job(
             graph_name, GrootDataloadingJobConfig.from_dict(job_config)
         )
