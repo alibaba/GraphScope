@@ -497,3 +497,6 @@ pegasus:
 secondary:
   enabled: false
   storeDataPath: "./data_secondary"
+
+backup:
+  enabled: false

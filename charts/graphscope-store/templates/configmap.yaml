@@ -82,6 +82,9 @@ data:
     store.data.secondary.path={{ .Values.secondary.storeDataPath }}
     store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
 
+
+    write.ha.enabled={{ .Values.backup.enabled }}
+
     ## Extra Config
     {{- if .Values.extraConfig }}
     {{- $config_list := regexSplit ";" .Values.extraConfig -1 }}

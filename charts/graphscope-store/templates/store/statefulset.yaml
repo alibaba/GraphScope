@@ -135,6 +135,14 @@ spec:
           {{- if .Values.store.resources }}
           resources: {{- toYaml .Values.store.resources | nindent 12 }}
           {{- end }}
+          readinessProbe:
+            failureThreshold: 5
+            tcpSocket:
+              port: gaia-rpc
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
           volumeMounts:
             - name: data
               mountPath: {{ .Values.storeDataPath }}
