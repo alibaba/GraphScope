@@ -113,7 +113,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
         "Graph schema file is expected, but not exists: " + schema_file));
   }
   // read schema file and output to string
-  auto schema_str_res = gs::get_string_from_yaml(schema_file);
+  auto schema_str_res = gs::get_json_string_from_yaml(schema_file);
   if (!schema_str_res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
@@ -197,7 +197,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::ListGraphs() {
       }
     }
   }
-  auto json_str = gs::get_string_from_yaml(yaml_list);
+  auto json_str = gs::get_json_string_from_yaml(yaml_list);
   if (!json_str.ok()) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::InternalError,
@@ -1090,7 +1090,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
     }
   }
   // dump to json
-  auto res = gs::get_string_from_yaml(yaml_list);
+  auto res = gs::get_json_string_from_yaml(yaml_list);
   if (!res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::InternalError,
@@ -1126,7 +1126,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
     }
   }
   // dump to json
-  auto res = gs::get_string_from_yaml(yaml_list);
+  auto res = gs::get_json_string_from_yaml(yaml_list);
   if (!res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::InternalError,

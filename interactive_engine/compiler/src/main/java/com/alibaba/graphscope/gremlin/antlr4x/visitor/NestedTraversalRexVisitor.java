@@ -21,7 +21,6 @@ import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
-import com.alibaba.graphscope.gremlin.antlr4.GenericLiteralVisitor;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -77,8 +76,9 @@ public class NestedTraversalRexVisitor extends GremlinGSBaseVisitor<RexNode> {
             GremlinGSParser.TraversalMethodContext cur = iterator.next();
             if (cur.traversalMethod_as() != null) {
                 alias =
-                        GenericLiteralVisitor.getStringLiteral(
-                                cur.traversalMethod_as().stringLiteral());
+                        (String)
+                                LiteralVisitor.INSTANCE.visit(
+                                        cur.traversalMethod_as().StringLiteral());
             }
         }
         if (alias != null) {

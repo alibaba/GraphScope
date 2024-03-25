@@ -56,6 +56,36 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     GraphInferTypes.FIRST_KNOWN,
                     GraphOperandTypes.MINUS_OPERATOR);
 
+    public static final SqlBinaryOperator BIT_AND =
+            new SqlMonotonicBinaryOperator(
+                    "&",
+                    SqlKind.BIT_AND,
+                    40,
+                    true,
+                    ReturnTypes.ARG0,
+                    GraphInferTypes.FIRST_KNOWN,
+                    GraphOperandTypes.NUMERIC_NUMERIC);
+
+    public static final SqlBinaryOperator BIT_OR =
+            new SqlMonotonicBinaryOperator(
+                    "|",
+                    SqlKind.BIT_OR,
+                    40,
+                    true,
+                    ReturnTypes.ARG0,
+                    GraphInferTypes.FIRST_KNOWN,
+                    GraphOperandTypes.NUMERIC_NUMERIC);
+
+    public static final SqlBinaryOperator BIT_XOR =
+            new SqlMonotonicBinaryOperator(
+                    "^",
+                    SqlKind.BIT_XOR,
+                    40,
+                    true,
+                    ReturnTypes.ARG0,
+                    GraphInferTypes.FIRST_KNOWN,
+                    GraphOperandTypes.NUMERIC_NUMERIC);
+
     public static final SqlBinaryOperator MULTIPLY =
             new SqlMonotonicBinaryOperator(
                     "*",
@@ -113,6 +143,24 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     SqlKind.OTHER_FUNCTION,
                     ReturnTypes.DOUBLE_NULLABLE,
                     null,
+                    GraphOperandTypes.NUMERIC_NUMERIC,
+                    SqlFunctionCategory.NUMERIC);
+
+    public static final SqlFunction BIT_LEFT_SHIFT =
+            new SqlFunction(
+                    "<<",
+                    SqlKind.OTHER_FUNCTION,
+                    ReturnTypes.ARG0,
+                    GraphInferTypes.FIRST_KNOWN,
+                    GraphOperandTypes.NUMERIC_NUMERIC,
+                    SqlFunctionCategory.NUMERIC);
+
+    public static final SqlFunction BIT_RIGHT_SHIFT =
+            new SqlFunction(
+                    ">>",
+                    SqlKind.OTHER_FUNCTION,
+                    ReturnTypes.ARG0,
+                    GraphInferTypes.FIRST_KNOWN,
                     GraphOperandTypes.NUMERIC_NUMERIC,
                     SqlFunctionCategory.NUMERIC);
 

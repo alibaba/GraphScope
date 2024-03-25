@@ -52,11 +52,17 @@ import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSour
 import com.alibaba.graphscope.gremlin.result.processor.AbstractResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.pegasus.RpcClient;
-import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
@@ -102,6 +108,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected final QueryIdGenerator idGenerator;
     protected final QueryCache queryCache;
     protected final ExecutionClient executionClient;
+    Tracer tracer;
 
     public IrStandardOpProcessor(
             Configs configs,
@@ -130,6 +137,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
         this.executionClient = executionClient;
+        this.tracer = GlobalOpenTelemetry.getTracer("compiler");
     }
 
     @Override
@@ -152,6 +160,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         String jobName = idGenerator.generateName(jobId);
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
+        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
         GremlinExecutor.LifeCycle lifeCycle;
         switch (language) {
@@ -162,18 +171,21 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 gremlinExecutorSupplier,
                                 bindingsSupplier,
                                 irMeta,
-                                statusCallback);
+                                statusCallback,
+                                timeoutConfig);
                 break;
             case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
                 lifeCycle =
                         new LifeCycleSupplier(
+                                        configs,
                                         ctx,
                                         queryCache,
                                         executionClient,
                                         jobId,
                                         jobName,
                                         irMeta,
-                                        statusCallback)
+                                        statusCallback,
+                                        timeoutConfig)
                                 .get();
                 break;
             default:
@@ -185,11 +197,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             evalFuture.handle(
                     (v, t) -> {
                         metaQueryCallback.afterExec(irMeta);
-                        if (t != null) {
-                            statusCallback.onEnd(false, null);
-                            if (v instanceof AbstractResultProcessor) {
-                                ((AbstractResultProcessor) v).cancel();
-                            }
+                        // TimeoutException has been handled in ResultProcessor, skip it here
+                        if (t != null && !(t instanceof TimeoutException)) {
+                            statusCallback.onEnd(false, t.getMessage());
                             Optional<Throwable> possibleTemporaryException =
                                     determineIfTemporaryException(t);
                             if (possibleTemporaryException.isPresent()) {
@@ -225,19 +235,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                             "Timeout during script evaluation"
                                                                 + " triggered by"
                                                                 + " TimedInterruptCustomizerProvider")
-                                                    .statusAttributeException(t)
-                                                    .create());
-                                } else if (t instanceof TimeoutException) {
-                                    errorMessage =
-                                            String.format(
-                                                    "Script evaluation exceeded the configured"
-                                                            + " threshold for request [%s]",
-                                                    msg);
-                                    statusCallback.getQueryLogger().warn(errorMessage, t);
-                                    ctx.writeAndFlush(
-                                            ResponseMessage.build(msg)
-                                                    .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
-                                                    .statusMessage(t.getMessage())
                                                     .statusAttributeException(t)
                                                     .create());
                                 } else if (t instanceof MultipleCompilationErrorsException
@@ -306,8 +303,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
             BindingSupplier bindingsSupplier,
             IrMeta irMeta,
-            QueryStatusCallback statusCallback) {
-        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
+            QueryStatusCallback statusCallback,
+            QueryTimeoutConfig timeoutConfig) {
         return GremlinExecutor.LifeCycle.build()
                 .evaluationTimeoutOverride(timeoutConfig.getExecutionTimeoutMS())
                 .beforeEval(
@@ -335,7 +332,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     processTraversal(
                                             traversal,
                                             new GremlinResultProcessor(
-                                                    ctx, traversal, statusCallback, timeoutConfig),
+                                                    configs,
+                                                    ctx,
+                                                    traversal,
+                                                    statusCallback,
+                                                    timeoutConfig),
                                             irMeta,
                                             timeoutConfig,
                                             statusCallback.getQueryLogger());
@@ -350,7 +351,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     // add script argument to print with ir plan
     protected void processTraversal(
             Traversal traversal,
-            ResultProcessor resultProcessor,
+            AbstractResultProcessor resultProcessor,
             IrMeta irMeta,
             QueryTimeoutConfig timeoutConfig,
             QueryLogger queryLogger)
@@ -367,7 +368,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         long jobId = queryLogger.getQueryId();
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
-        queryLogger.info("ir plan {}", irPlan.getPlanAsJson());
+        queryLogger.info("Submitted query");
+        // Too verbose, since all identical queries produce identical plans, it's no need to print
+        // every plan in production.
+        String irPlanStr = irPlan.getPlanAsJson();
+        queryLogger.debug("ir plan {}", irPlanStr);
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
         irPlan.close();
 
@@ -388,8 +393,22 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
-
-        this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+        Span outgoing =
+                tracer.spanBuilder("/evalOpInternal").setSpanKind(SpanKind.CLIENT).startSpan();
+        try (Scope scope = outgoing.makeCurrent()) {
+            outgoing.setAttribute("query.id", queryLogger.getQueryId());
+            outgoing.setAttribute("query.statement", queryLogger.getQuery());
+            outgoing.setAttribute("query.plan.logical", irPlanStr);
+            this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+            // request results from remote engine service in blocking way
+            resultProcessor.request();
+        } catch (Throwable t) {
+            outgoing.setStatus(StatusCode.ERROR, "Submit failed!");
+            outgoing.recordException(t);
+            throw t;
+        } finally {
+            outgoing.end();
+        }
     }
 
     private Configs getQueryConfigs(Traversal traversal) {

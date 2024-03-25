@@ -48,6 +48,7 @@ gremlin_test:
 	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.standard.IrGremlinTest
 
 gremlin_calcite_test:
+	export GREMLIN_SCRIPT_LANGUAGE_NAME=antlr_gremlin_calcite && \
 	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.standard.calcite.IrGremlinTest
 
 run:
