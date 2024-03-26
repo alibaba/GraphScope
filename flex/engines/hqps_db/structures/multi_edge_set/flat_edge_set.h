@@ -565,7 +565,7 @@ class FlatEdgeSet {
 template <typename VID_T, typename LabelT, typename EDATA_T>
 class SingleLabelEdgeSetBuilder {
  public:
-  using ele_tuple_t = std::tuple<Direction, VID_T, VID_T, EDATA_T>;
+  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T, Direction>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using result_t = SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>;
 
@@ -596,7 +596,7 @@ class SingleLabelEdgeSetBuilder {
 template <typename VID_T, typename LabelT, typename EDATA_T>
 class SingleLabelEdgeSetIter {
  public:
-  using ele_tuple_t = std::tuple<Direction, VID_T, VID_T, EDATA_T>;
+  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T, Direction>;
   using self_type_t = SingleLabelEdgeSetIter<VID_T, LabelT, EDATA_T>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using data_tuple_t = ele_tuple_t;
@@ -618,9 +618,9 @@ class SingleLabelEdgeSetIter {
   VID_T GetSrc() const {
     auto dir = get_direction();
     if (dir == Direction::Out) {
-      return std::get<1>(vec_[ind_]);
+      return std::get<0>(vec_[ind_]);
     } else if (dir == Direction::In) {
-      return std::get<2>(vec_[ind_]);
+      return std::get<1>(vec_[ind_]);
     } else {
       LOG(FATAL) << "Unknown direction: " << dir;
     }
@@ -640,15 +640,15 @@ class SingleLabelEdgeSetIter {
   VID_T GetDst() const {
     auto dir = get_direction();
     if (dir == Direction::Out) {
-      return std::get<2>(vec_[ind_]);
-    } else if (dir == Direction::In) {
       return std::get<1>(vec_[ind_]);
+    } else if (dir == Direction::In) {
+      return std::get<0>(vec_[ind_]);
     } else {
       LOG(FATAL) << "Unknown direction: " << dir;
     }
   }
 
-  VID_T GetOther() const { return std::get<2>(vec_[ind_]); }
+  VID_T GetOther() const { return std::get<1>(vec_[ind_]); }
 
   LabelT GetDstLabel() const {
     auto dir = get_direction();
@@ -661,7 +661,7 @@ class SingleLabelEdgeSetIter {
     }
   }
 
-  const EDATA_T& GetData() const { return std::get<3>(vec_[ind_]); }
+  const EDATA_T& GetData() const { return std::get<2>(vec_[ind_]); }
 
   const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
@@ -689,7 +689,7 @@ class SingleLabelEdgeSetIter {
   inline const self_type_t* operator->() const { return this; }
 
  private:
-  inline Direction get_direction() const { return std::get<0>(vec_[ind_]); }
+  inline Direction get_direction() const { return std::get<3>(vec_[ind_]); }
   const std::vector<ele_tuple_t>& vec_;
   size_t ind_;
   const std::array<LabelT, 3>& label_triplet_;
@@ -700,7 +700,7 @@ class SingleLabelEdgeSetIter {
 template <typename VID_T, typename LabelT, typename EDATA_T>
 class SingleLabelEdgeSet {
  public:
-  using ele_tuple_t = std::tuple<Direction, VID_T, VID_T, EDATA_T>;
+  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T, Direction>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using iterator = SingleLabelEdgeSetIter<VID_T, LabelT, EDATA_T>;
   using self_type_t = SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>;
@@ -766,7 +766,7 @@ class SingleLabelEdgeSet {
         auto repeat_times = repeat_array[i];
         for (size_t j = 0; j < repeat_times; ++j) {
           CHECK(cur_ind < tuples.size());
-          std::get<0>(tuples[cur_ind]) = std::get<0>(std::get<3>(vec_[i]));
+          std::get<0>(tuples[cur_ind]) = std::get<0>(std::get<2>(vec_[i]));
           cur_ind += 1;
         }
       }
