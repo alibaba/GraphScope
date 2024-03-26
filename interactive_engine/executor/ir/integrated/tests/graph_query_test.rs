@@ -48,6 +48,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -139,6 +140,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let project_opr = pb::Project {

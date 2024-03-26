@@ -903,6 +903,7 @@ impl From<pb::EdgeExpand> for physical_pb::EdgeExpand {
             params: edge.params,
             alias: edge.alias.map(|tag| tag.try_into().unwrap()),
             expand_opt: edge.expand_opt,
+            is_optional: edge.is_optional,
         }
     }
 }
@@ -925,6 +926,7 @@ impl From<pb::PathExpand> for physical_pb::PathExpand {
             path_opt: path.path_opt,
             result_opt: path.result_opt,
             condition: path.condition,
+            is_optional: path.is_optional,
         }
     }
 }

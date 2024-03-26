@@ -2467,6 +2467,7 @@ mod test {
             expand_opt: 0,
             alias: Some("here".into()),
             meta_data: None,
+            is_optional: false,
         };
         plan.append_operator_as_node(expand.into(), vec![1])
             .unwrap();
@@ -2545,6 +2546,7 @@ mod test {
             expand_opt: 1,
             alias: Some("e".into()),
             meta_data: None,
+            is_optional: false,
         };
         plan.append_operator_as_node(expand.into(), vec![1])
             .unwrap();
@@ -2691,6 +2693,7 @@ mod test {
             expand_opt: 1,
             alias: Some("b".into()),
             meta_data: None,
+            is_optional: false,
         };
         opr_id = plan
             .append_operator_as_node(expand.into(), vec![opr_id as NodeId])
@@ -2873,6 +2876,7 @@ mod test {
             expand_opt: 0,
             alias: Some("a".into()),
             meta_data: None,
+            is_optional: false,
         };
         plan.append_operator_as_node(expand.into(), vec![1])
             .unwrap();
@@ -2886,6 +2890,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         plan.append_operator_as_node(expand.into(), vec![2])
             .unwrap();
@@ -2950,6 +2955,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let oprid = plan
             .append_operator_as_node(expand.into(), vec![0])
@@ -3182,6 +3188,7 @@ mod test {
             expand_opt: 1,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let subtask = plan
             .append_operator_as_node(expand.into(), vec![])
@@ -3319,6 +3326,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let filter = pb::Select { predicate: Some(str_to_expr_pb("@.age > 10".to_string()).unwrap()) };
 
@@ -3419,6 +3427,7 @@ mod test {
             expand_opt: 0,
             alias: Some("o".into()),
             meta_data: None,
+            is_optional: false,
         };
 
         let root_id = plan
@@ -3497,6 +3506,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let root_id = plan
             .append_operator_as_node(expand.into(), vec![])
