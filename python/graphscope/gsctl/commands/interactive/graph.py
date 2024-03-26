@@ -52,7 +52,7 @@ def create():
 
 @cli.group()
 def delete():
-    """Delete stored procedure, loader job by id"""
+    """Delete stored procedure, loader job by identifier"""
     pass
 
 
@@ -64,7 +64,7 @@ def update():
 
 @cli.group()
 def desc():
-    """Show details of job status and stored procedure by id"""
+    """Show details of job status and stored procedure by identifier"""
     pass
 
 
@@ -132,7 +132,7 @@ def procedure(filename):
 @delete.command()
 @click.argument("identifier", required=True)
 def procedure(identifier):  # noqa: F811
-    """Delete a stored procedure by id, see identifier with `ls` command"""
+    """Delete a stored procedure, see identifier with `ls` command"""
     current_context = get_current_context()
     graph_name = current_context.context
     try:
@@ -196,7 +196,7 @@ def loaderjob(filename):  # noqa: F811
 @delete.command()
 @click.argument("identifier", required=True)
 def job(identifier):  # noqa: F811
-    """Cancel a job by id, see identifier with `ls` command"""
+    """Cancel a job, see identifier with `ls` command"""
     try:
         delete_job_by_id(identifier)
     except Exception as e:
@@ -208,7 +208,7 @@ def job(identifier):  # noqa: F811
 @desc.command()
 @click.argument("identifier", required=True)
 def job(identifier):  # noqa: F811
-    """Show details of job by id, see identifier with `ls` command"""
+    """Show details of job, see identifier with `ls` command"""
     try:
         job = get_job_by_id(identifier)
     except Exception as e:
@@ -220,7 +220,7 @@ def job(identifier):  # noqa: F811
 @desc.command()
 @click.argument("identifier", required=True)
 def procedure(identifier):  # noqa: F811
-    """Show details of stored procedure by id, see identifier with `ls` command"""
+    """Show details of stored procedure, see identifier with `ls` command"""
     current_context = get_current_context()
     graph_name = current_context.context
     try:
