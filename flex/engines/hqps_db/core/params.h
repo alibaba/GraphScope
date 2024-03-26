@@ -354,7 +354,12 @@ enum JoinKind {
   LeftOuterJoin = 3,
 };
 
-enum Direction { Out = 0, In = 1, Both = 2 };
+enum Direction {
+  Out = 0,
+  In = 1,
+  Both = 2,
+  Unknown = 3,
+};
 enum VOpt {
   Start = 0,   // The start vertex of current expanded edge.
   End = 1,     // the ending vertex of this expanding.
