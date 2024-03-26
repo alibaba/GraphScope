@@ -208,6 +208,8 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect
 }
 
 /// An OptionalExpandOrIntersect operator to expand neighbor
+/// e.g., based on a->b, we intersect optional edges of a-(opt)->c and b-(opt)->c,
+/// then the results could be either matches of a->b->c + a->c if there exits matches of c, or just a->b, where the match for c is a Object::None.
 struct OptionalExpandOrIntersect<E: Entry> {
     start_v_tag: Option<KeyId>,
     edge_or_end_v_tag: KeyId,
@@ -225,29 +227,22 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for OptionalExpandOrI
         match entry.get_type() {
             EntryType::Vertex => {
                 let id = entry.id();
-                let mut iter = self
-                    .stmt
-                    .exec(id)?
-                    .map(|e| {
-                        if let Some(vertex) = e.as_vertex() {
-                            vertex.id() as ID
-                        } else if let Some(edge) = e.as_edge() {
-                            edge.get_other_id() as ID
-                        } else {
-                            unreachable!()
-                        }
-                    })
-                    .peekable();
-                if iter.peek().is_none() {
-                    // if no neighbors found, append columns with an empty IntersectionEntry (without changing head)
-                    let columns = input.get_columns_mut();
-                    columns.insert(
-                        self.edge_or_end_v_tag as usize,
-                        DynEntry::new(IntersectionEntry::default()),
-                    );
-                    Ok(Some(input))
-                } else if let Some(pre_entry) = input.get_mut(Some(self.edge_or_end_v_tag)) {
+                let iter = self.stmt.exec(id)?.map(|e| {
+                    if let Some(vertex) = e.as_vertex() {
+                        vertex.id() as ID
+                    } else if let Some(edge) = e.as_edge() {
+                        edge.get_other_id() as ID
+                    } else {
+                        unreachable!()
+                    }
+                });
+                if let Some(pre_entry) = input.get_mut(Some(self.edge_or_end_v_tag)) {
                     // the case of expansion and intersection
+                    // The behavior of intersection is to intersect with the previous intersection:
+                    // 1. if the previous intersection is empty, return an record with the intersected vertex as an empty IntersectionEntry
+                    // 2. if the previous intersection is not empty, intersect with the current neighbor_iter
+                    // 2.1 if the intersected result is empty, return an record with the intersected vertex as an empty IntersectionEntry
+                    // 2.2 if the intersected result is not empty, return an record with the intersected vertex
                     let pre_intersection = pre_entry
                         .as_any_mut()
                         .downcast_mut::<IntersectionEntry>()
@@ -256,20 +251,25 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for OptionalExpandOrI
                                 "entry  is not a intersection in ExpandOrIntersect"
                             ))
                         })?;
-                    pre_intersection.intersect(iter);
-                    Ok(Some(input))
-                } else {
-                    // the case of expansion only
-                    let neighbors_intersection = IntersectionEntry::from_iter(iter);
-                    if neighbors_intersection.is_empty() {
-                        Ok(None)
-                    } else {
-                        // append columns without changing head
-                        let columns = input.get_columns_mut();
-                        columns
-                            .insert(self.edge_or_end_v_tag as usize, DynEntry::new(neighbors_intersection));
+                    if pre_intersection.is_empty() {
+                        // do nothing as the previous intersection is already an empty IntersectionEntry, denoting None
                         Ok(Some(input))
+                    } else {
+                        let mut pre_intersection_clone = pre_intersection.clone();
+                        pre_intersection_clone.intersect(iter);
+                        if pre_intersection_clone.is_empty() {
+                            Ok(Some(input))
+                        } else {
+                            *pre_intersection = pre_intersection_clone;
+                            Ok(Some(input))
+                        }
                     }
+                } else {
+                    let neighbors_intersection = IntersectionEntry::from_iter(iter);
+                    // append columns without changing head
+                    let columns = input.get_columns_mut();
+                    columns.insert(self.edge_or_end_v_tag as usize, DynEntry::new(neighbors_intersection));
+                    Ok(Some(input))
                 }
             }
             _ => Err(FnExecError::unsupported_error(&format!(
