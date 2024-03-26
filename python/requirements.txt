@@ -7,8 +7,9 @@ msgpack>=1.0.5
 mypy-protobuf>=3.4.0
 neo4j==5.10.0
 nest_asyncio
-networkx==2.8.0;python_version>="3.8"
-networkx==2.6.0;python_version<"3.8"
+networkx==3.2.1;python_version>="3.12"
+networkx==2.6.0;python_version=="3.7"
+networkx==2.8.8;python_version<="3.11"
 numpy
 orjson
 packaging
