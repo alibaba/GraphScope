@@ -102,8 +102,7 @@ public class SnapshotManagerTest {
 
         LogService mockLogService = mock(LogService.class);
         SnapshotManager snapshotManager =
-                new SnapshotManager(
-                        configs, mockMetaStore, mockLogService, mockWriteSnapshotIdNotifier);
+                new SnapshotManager(configs, mockMetaStore, mockWriteSnapshotIdNotifier);
         snapshotManager.start();
 
         assertEquals(snapshotManager.getQueueOffsets(), queueOffsets);
