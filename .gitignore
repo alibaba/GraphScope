@@ -100,4 +100,6 @@ flex/interactive/examples/sf0.1-raw/
 flex/interactive/.running
 flex/interactive/.env
 
+flex/**/*.so
+
 **/.cache/
