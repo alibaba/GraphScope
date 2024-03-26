@@ -1524,6 +1524,45 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
   return gs::Result<seastar::sstring>(std::move(res));
 }
 
+// get all procedures for graph, all set to disabled.
+gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
+    const std::string& graph_name,
+    const std::vector<std::string>& runnable_procedures) {
+  YAML::Node yaml_list;
+  auto plugin_dir = get_graph_plugin_dir(graph_name);
+  // iterate all .yamls in plugin_dir
+  if (std::filesystem::exists(plugin_dir)) {
+    for (const auto& entry : std::filesystem::directory_iterator(plugin_dir)) {
+      if (entry.path().extension() == ".yaml") {
+        auto procedure_yaml_file = entry.path().string();
+        try {
+          auto procedure_yaml_node = YAML::LoadFile(procedure_yaml_file);
+          procedure_yaml_node["enable"] = false;
+          procedure_yaml_node["runnable"] = false;
+          procedure_yaml_node["bound_graph"] = graph_name;
+          auto proc_name = procedure_yaml_node["name"].as<std::string>();
+          if (std::find(runnable_procedures.begin(), runnable_procedures.end(),
+                        proc_name) != runnable_procedures.end()) {
+            // only add the procedure yaml file that is in
+            // runnable_procedures.
+            procedure_yaml_node["runnable"] = true;
+          }
+          yaml_list.push_back(procedure_yaml_node);
+        } catch (const std::exception& e) {
+          LOG(ERROR) << "Fail to load procedure yaml file: "
+                     << procedure_yaml_file << ", error: " << e.what();
+          return gs::Result<seastar::sstring>(gs::Status(
+              gs::StatusCode::InternalError,
+              "Fail to load procedure yaml file: " + procedure_yaml_file +
+                  ", error: " + e.what()));
+        }
+      }
+    }
+  }
+  FLEX_AUTO(res, get_json_sstring_from_yaml(yaml_list));
+  return gs::Result<seastar::sstring>(std::move(res));
+}
+
 gs::Result<seastar::sstring> WorkDirManipulator::get_procedure_yaml(
     const std::string& graph_name, const std::string& procedure_name) {
   auto procedure_yaml_file =
