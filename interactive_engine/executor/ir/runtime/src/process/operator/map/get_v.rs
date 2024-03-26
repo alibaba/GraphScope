@@ -57,8 +57,22 @@ impl GetVertexOperator {
 
 impl FilterMapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        if let Some(entry) = input.get(self.start_tag) {
-            if let Some(e) = entry.as_edge() {
+        let entry_type =
+            if let Some(entry) = input.get(self.start_tag) { entry.get_type() } else { return Ok(None) };
+        match entry_type {
+            EntryType::Edge => {
+                let e = input
+                    .get(self.start_tag)
+                    .ok_or_else(|| {
+                        FnExecError::unexpected_data_error(&format!("get of Edge failed in {:?}", self))
+                    })?
+                    .as_edge()
+                    .ok_or_else(|| {
+                        FnExecError::unexpected_data_error(&format!(
+                            "entry is not an edge in GetV {:?}",
+                            self
+                        ))
+                    })?;
                 let (id, label) = match self.opt {
                     VOpt::Start => (e.src_id, e.get_src_label()),
                     VOpt::End => (e.dst_id, e.get_dst_label()),
@@ -72,7 +86,8 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                 } else {
                     Ok(None)
                 }
-            } else if let Some(graph_path) = entry.as_graph_path() {
+            }
+            EntryType::Path => {
                 // we check VOpt here:
                 // for `Other`, we treat it as to get_other_id() in the Edge within the Path (in which case is expanding the path with a adj vertex)
                 // for `End`, we treat it as to get EndV() in the Path (in which case is getting the end vertex from the path)
@@ -117,6 +132,18 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                         }
                     }
                     VOpt::End => {
+                        let graph_path = input
+                            .get(self.start_tag)
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!(
+                                    "get_mut of GraphPath failed in {:?}",
+                                    self
+                                ))
+                            })?
+                            .as_graph_path()
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!("entry is not a path in GetV"))
+                            })?;
                         let path_end_vertex = graph_path
                             .get_path_end()
                             .as_vertex()
@@ -135,13 +162,13 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                         self.opt
                     )))?,
                 }
-            } else {
-                Err(FnExecError::unexpected_data_error(
-                    "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
-                ))?
             }
-        } else {
-            Ok(None)
+            _ => Err(FnExecError::unexpected_data_error(
+                &format!(
+                "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry, while the entry is {:?}",
+                entry_type
+                )
+            ))?,
         }
     }
 }
