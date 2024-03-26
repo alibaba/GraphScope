@@ -22,7 +22,7 @@ import click
 
 from graphscope.gsctl.commands.common import cli as common
 from graphscope.gsctl.commands.dev import cli as dev
-from graphscope.gsctl.commands.insight.glob import cli as insight
+from graphscope.gsctl.commands.insight.graph import cli as insight_graph
 from graphscope.gsctl.commands.interactive.glob import cli as interactive
 from graphscope.gsctl.commands.interactive.graph import cli as interactive_graph
 from graphscope.gsctl.config import Context
@@ -91,7 +91,6 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
                 info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
             commands = click.CommandCollection(sources=[common, interactive_graph])
     elif context.flex == "GRAPHSCOPE_INSIGHT":
-        if context.context == "global":
-            commands = click.CommandCollection(sources=[common, insight])
+        commands = click.CommandCollection(sources=[common, insight_graph])
 
     return commands
