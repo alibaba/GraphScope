@@ -30,11 +30,11 @@ public class SnapshotInfo implements Comparable<SnapshotInfo> {
         this.ddlSnapshotId = ddlSnapshotId;
     }
 
-    public long getSnapshotId() {
+    public long getSI() {
         return snapshotId;
     }
 
-    public long getDdlSnapshotId() {
+    public long getDdlSI() {
         return ddlSnapshotId;
     }
 

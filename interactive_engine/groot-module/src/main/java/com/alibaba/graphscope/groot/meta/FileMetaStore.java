@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
@@ -59,10 +58,10 @@ public class FileMetaStore implements MetaStore {
 
     @Override
     public boolean exists(String path) {
-        String realPath = pathWith(path, 0);
-        return Files.exists(new File(this.workingDir, realPath).toPath());
+        File file0 = new File(workingDir, pathWith(path, 0));
+        File file1 = new File(workingDir, pathWith(path, 1));
+        return file0.exists() || file1.exists();
     }
-
 
     private SimpleImmutableEntry<Long, byte[]> readEntry(String path) throws IOException {
         File file = new File(this.workingDir, path);
@@ -80,11 +79,11 @@ public class FileMetaStore implements MetaStore {
                 if (realCrc != crc) {
                     throw new IOException("Checksum mismatch for " + file.getAbsolutePath());
                 }
-
             }
         }
         return new SimpleImmutableEntry<>(timestamp, res);
     }
+
     @Override
     public byte[] read(String path) throws IOException {
         long timestamp0 = 0, timestamp1 = 0;
@@ -112,7 +111,7 @@ public class FileMetaStore implements MetaStore {
         } else if (res1 != null) {
             return res1;
         } else {
-            throw new IOException("File maybe corrected: " + path);
+            throw new IOException("File maybe corrupted: " + path);
         }
     }
 

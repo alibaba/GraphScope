@@ -131,8 +131,8 @@ public class KafkaProcessor {
             for (int i = 0; i < QUEUE_COUNT; i++) {
                 offsets.add(-1L);
             }
-            byte[] b = this.objectMapper.writeValueAsBytes(offsets);
-            this.metaStore.write(QUEUE_OFFSETS_PATH, b);
+            //            byte[] b = this.objectMapper.writeValueAsBytes(offsets);
+            //            this.metaStore.write(QUEUE_OFFSETS_PATH, b);
         } else {
             byte[] offsetBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
             offsets = objectMapper.readValue(offsetBytes, new TypeReference<>() {});
@@ -144,6 +144,13 @@ public class KafkaProcessor {
                     String.format(
                             "recovered queueCount %d, expect %d", offsets.size(), QUEUE_COUNT);
             throw new IllegalStateException(msg);
+        }
+
+        long recoveredOffset = offsets.get(0);
+        try (LogReader ignored = logService.createReader(storeId, recoveredOffset + 1)) {
+        } catch (Exception e) {
+            throw new IOException(
+                    "recovered queue [0] offset [" + recoveredOffset + "] is not available", e);
         }
     }
 
@@ -181,7 +188,7 @@ public class KafkaProcessor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
+        // -1 stands for poll from latest
         try (LogReader reader = logService.createReader(storeId, -1)) {
             while (!shouldStop) {
                 ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
@@ -236,6 +243,7 @@ public class KafkaProcessor {
     }
 
     public void replayWAL() throws IOException {
+        // Only has one queue per store
         long queueOffset = queueOffsetsRef.get().get(0);
         long replayFrom = queueOffset + 1;
         logger.info("replay WAL of queue#[{}] from offset [{}]", storeId, replayFrom);

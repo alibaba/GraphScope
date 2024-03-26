@@ -193,8 +193,8 @@ public class WriterAgent implements MetricsAgent {
                 this.totalWrite += batch.getSize();
                 if (this.consumeSI < batchSI) {
                     SnapshotInfo availSInfo = this.availSnapshotInfoRef.get();
-                    long availSI = Math.max(availSInfo.getSnapshotId(), batchSI - 1);
-                    long availDdlSI = Math.max(availSInfo.getDdlSnapshotId(), consumeDdlSnapshotId);
+                    long availSI = Math.max(availSInfo.getSI(), batchSI - 1);
+                    long availDdlSI = Math.max(availSInfo.getDdlSI(), consumeDdlSnapshotId);
                     this.consumeSI = batchSI;
                     this.availSnapshotInfoRef.set(new SnapshotInfo(availSI, availDdlSI));
                     this.commitExecutor.execute(this::asyncCommit);
@@ -216,9 +216,9 @@ public class WriterAgent implements MetricsAgent {
 
     private void asyncCommit() {
         SnapshotInfo snapshotInfo = this.availSnapshotInfoRef.get();
-        long curSI = snapshotInfo.getSnapshotId();
+        long curSI = snapshotInfo.getSI();
         if (curSI > this.lastCommitSI) {
-            long ddlSnapshotId = snapshotInfo.getDdlSnapshotId();
+            long ddlSnapshotId = snapshotInfo.getDdlSI();
             List<Long> queueOffsets = new ArrayList<>(this.consumedQueueOffsets);
             try {
                 // logger.info("commit SI {}, last DDL SI {}", availSnapshotId, ddlSnapshotId);
