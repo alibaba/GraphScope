@@ -91,15 +91,11 @@ public class WriterAgent implements MetricsAgent {
         metricsCollector.register(this, this::updateMetrics);
     }
 
-    /** should be called once, before start */
-    public void init(long availSnapshotId) {
-        this.availSnapshotInfoRef.set(new SnapshotInfo(availSnapshotId, availSnapshotId));
-    }
-
     public void start() {
         this.lastCommitSI = -1L;
         this.consumeSI = 0L;
         this.consumeDdlSnapshotId = 0L;
+        this.availSnapshotInfoRef.set(new SnapshotInfo(0, 0));
 
         this.shouldStop = false;
         this.bufferQueue = new SnapshotSortQueue(this.configs, this.metaService);

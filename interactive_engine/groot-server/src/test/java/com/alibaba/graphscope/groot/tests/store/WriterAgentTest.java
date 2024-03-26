@@ -53,7 +53,6 @@ public class WriterAgentTest {
                         mockMetaService,
                         mockSnapshotCommitter,
                         new MetricsCollector(configs));
-        writerAgent.init(0L);
 
         writerAgent.start();
 
