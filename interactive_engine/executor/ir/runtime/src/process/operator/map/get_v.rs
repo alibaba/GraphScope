@@ -64,9 +64,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
             EntryType::Edge => {
                 let e = input
                     .get(self.start_tag)
-                    .ok_or_else(|| {
-                        FnExecError::Unreachable 
-                    })?
+                    .ok_or_else(|| FnExecError::Unreachable)?
                     .as_edge()
                     .ok_or_else(|| {
                         FnExecError::unexpected_data_error(&format!(
@@ -135,9 +133,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     VOpt::End => {
                         let graph_path = input
                             .get(self.start_tag)
-                            .ok_or_else(|| {
-                               FnExecError::Unreachable 
-                            })?
+                            .ok_or_else(|| FnExecError::Unreachable )?
                             .as_graph_path()
                             .ok_or_else(|| {
                                 FnExecError::unexpected_data_error(&format!("entry is not a path in GetV"))
@@ -164,9 +160,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
             EntryType::Object => {
                 let obj = input
                 .get(self.start_tag)
-                .ok_or_else(|| {
-                   FnExecError::Unreachable 
-                })?
+                .ok_or_else(|| FnExecError::Unreachable)?
                     .as_object()
                     .ok_or_else(|| FnExecError::Unreachable)?;
                 if Object::None.eq(obj) {

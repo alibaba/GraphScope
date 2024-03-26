@@ -48,6 +48,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -58,6 +59,7 @@ mod test {
             path_opt,
             result_opt,
             condition: None,
+            is_optional: false,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -98,6 +100,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -108,6 +111,7 @@ mod test {
             path_opt: 0,
             result_opt: 1,
             condition: str_to_expr_pb("@.name == \"marko\"".to_string()).ok(),
+            is_optional: false,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -138,6 +142,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let getv = pb::GetV {
@@ -156,6 +161,7 @@ mod test {
             path_opt: 0,
             result_opt: if is_whole_path { 1 } else { 0 },
             condition: None,
+            is_optional: false,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -896,6 +902,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -906,6 +913,7 @@ mod test {
             path_opt: 0, // Arbitrary
             result_opt,
             condition: None,
+            is_optional: false,
         };
 
         let project_opr = pb::Project {
@@ -978,6 +986,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -988,6 +997,7 @@ mod test {
             path_opt: 0, // Arbitrary
             result_opt,
             condition: None,
+            is_optional: false,
         };
 
         let unfold_opr = pb::Unfold { tag: None, alias: None, meta_data: None };
@@ -1098,6 +1108,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -1108,6 +1119,7 @@ mod test {
             path_opt: 1,   // Simple
             result_opt: 2, // AllVE
             condition: None,
+            is_optional: false,
         };
 
         let path_end = pb::GetV {

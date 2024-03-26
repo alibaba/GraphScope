@@ -68,11 +68,27 @@ mod test {
     }
 
     fn get_out_edge(alias: Option<common_pb::NameOrId>) -> pb::EdgeExpand {
-        pb::EdgeExpand { v_tag: None, direction: 0, params: None, expand_opt: 0, alias, meta_data: None }
+        pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: None,
+            expand_opt: 0,
+            alias,
+            meta_data: None,
+            is_optional: false,
+        }
     }
 
     fn get_in_edge(alias: Option<common_pb::NameOrId>) -> pb::EdgeExpand {
-        pb::EdgeExpand { v_tag: None, direction: 1, params: None, expand_opt: 0, alias, meta_data: None }
+        pb::EdgeExpand {
+            v_tag: None,
+            direction: 1,
+            params: None,
+            expand_opt: 0,
+            alias,
+            meta_data: None,
+            is_optional: false,
+        }
     }
 
     fn get_out_knows(alias: Option<common_pb::NameOrId>) -> pb::EdgeExpand {
@@ -83,6 +99,7 @@ mod test {
             expand_opt: 0,
             alias,
             meta_data: None,
+            is_optional: false,
         }
     }
 
@@ -94,6 +111,7 @@ mod test {
             expand_opt: 0,
             alias,
             meta_data: None,
+            is_optional: false,
         }
     }
 
@@ -105,6 +123,7 @@ mod test {
             expand_opt: 0,
             alias,
             meta_data: None,
+            is_optional: false,
         }
     }
 
@@ -116,6 +135,7 @@ mod test {
             expand_opt: 0,
             alias,
             meta_data: None,
+            is_optional: false,
         }
     }
 
