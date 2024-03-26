@@ -27,21 +27,42 @@ from typing import List, Union
 
 import psutil
 
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE, CREATION_TIME,
-                                             DATASET_WORKSPACE, INSTANCE_NAME,
-                                             SOLUTION, WORKSPACE)
+from gs_flex_coordinator.core.config import (
+    CLUSTER_TYPE,
+    CREATION_TIME,
+    DATASET_WORKSPACE,
+    INSTANCE_NAME,
+    SOLUTION,
+    WORKSPACE,
+)
 from gs_flex_coordinator.core.insight import init_groot_client
 from gs_flex_coordinator.core.interactive import init_hqps_client
 from gs_flex_coordinator.core.scheduler import schedule
-from gs_flex_coordinator.core.utils import (GraphInfo, decode_datetimestr,
-                                            encode_datetime, get_current_time)
-from gs_flex_coordinator.models import (DataSource, DeploymentInfo,
-                                        EdgeDataSource, EdgeType, Graph,
-                                        GrootDataloadingJobConfig, GrootGraph,
-                                        GrootSchema, JobStatus, ModelSchema,
-                                        NodeStatus, Procedure, SchemaMapping,
-                                        ServiceStatus, StartServiceRequest,
-                                        VertexDataSource, VertexType)
+from gs_flex_coordinator.core.utils import (
+    GraphInfo,
+    decode_datetimestr,
+    encode_datetime,
+    get_current_time,
+)
+from gs_flex_coordinator.models import (
+    DataSource,
+    DeploymentInfo,
+    EdgeDataSource,
+    EdgeType,
+    Graph,
+    GrootDataloadingJobConfig,
+    GrootGraph,
+    GrootSchema,
+    JobStatus,
+    ModelSchema,
+    NodeStatus,
+    Procedure,
+    SchemaMapping,
+    ServiceStatus,
+    StartServiceRequest,
+    VertexDataSource,
+    VertexType,
+)
 from gs_flex_coordinator.version import __version__
 
 
@@ -86,15 +107,16 @@ class ClientWrapper(object):
 
     def _sync_graphs_info_impl(self):
         if SOLUTION == "INTERACTIVE":
-            rlts = {}
-            for g in self.list_graphs():
-                if g.name in self._graphs_info:
-                    rlts[g.name] = self._graphs_info[g.name]
-                else:
-                    rlts[g.name] = GraphInfo(name=g.name, creation_time=CREATION_TIME)
-            self._graphs_info = rlts
+            graphs = self.list_graphs()
         elif SOLUTION == "GRAPHSCOPE_INSIGHT":
-            pass
+            graphs = self.list_groot_graph()
+        rlts = {}
+        for g in graphs:
+            if g.name in self._graphs_info:
+                rlts[g.name] = self._graphs_info[g.name]
+            else:
+                rlts[g.name] = GraphInfo(name=g.name, creation_time=CREATION_TIME)
+        self._graphs_info = rlts
 
     def _initialize_client(self):
         service_initializer = {
@@ -122,7 +144,9 @@ class ClientWrapper(object):
         return GrootSchema.from_dict(self._client.get_groot_schema(graph_name))
 
     def import_groot_schema(self, graph_name: str, schema: GrootSchema) -> str:
-        return self._client.import_groot_schema(graph_name, schema.to_dict())
+        rlt = self._client.import_groot_schema(graph_name, schema.to_dict())
+        self._graphs_info[INSTANCE_NAME].update_time = get_current_time()
+        return rlt
 
     def get_current_graph(self) -> GrootGraph:
         return self._client.get_current_graph()
@@ -141,15 +165,27 @@ class ClientWrapper(object):
         return rlt
 
     def create_vertex_type(self, graph_name: str, vtype: VertexType) -> str:
+        if SOLUTION == "GRAPHSCOPE_INSIGHT":
+            graph_name = INSTANCE_NAME
         vtype_dict = vtype.to_dict()
-        return self._client.create_vertex_type(graph_name, vtype_dict)
+        rlt = self._client.create_vertex_type(graph_name, vtype_dict)
+        self._graphs_info[graph_name].update_time = get_current_time()
+        return rlt
 
     def create_edge_type(self, graph_name: str, etype: EdgeType) -> str:
+        if SOLUTION == "GRAPHSCOPE_INSIGHT":
+            graph_name = INSTANCE_NAME
         etype_dict = etype.to_dict()
-        return self._client.create_edge_type(graph_name, etype_dict)
+        rlt = self._client.create_edge_type(graph_name, etype_dict)
+        self._graphs_info[graph_name].update_time = get_current_time()
+        return rlt
 
     def delete_vertex_type(self, graph_name: str, vertex_type: str) -> str:
-        return self._client.delete_vertex_type(graph_name, vertex_type)
+        if SOLUTION == "GRAPHSCOPE_INSIGHT":
+            graph_name = INSTANCE_NAME
+        rlt = self._client.delete_vertex_type(graph_name, vertex_type)
+        self._graphs_info[graph_name].update_time = get_current_time()
+        return rlt
 
     def delete_edge_type(
         self,
@@ -158,9 +194,13 @@ class ClientWrapper(object):
         source_vertex_type: str,
         destination_vertex_type: str,
     ) -> str:
-        return self._client.delete_edge_type(
+        if SOLUTION == "GRAPHSCOPE_INSIGHT":
+            graph_name = INSTANCE_NAME
+        rlt = self._client.delete_edge_type(
             graph_name, edge_type, source_vertex_type, destination_vertex_type
         )
+        self._graphs_info[graph_name].update_time = get_current_time()
+        return rlt
 
     def delete_graph_by_name(self, graph_name: str) -> str:
         rlt = self._client.delete_graph_by_name(graph_name)

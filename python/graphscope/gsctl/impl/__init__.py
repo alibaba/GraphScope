@@ -43,6 +43,7 @@ from graphscope.gsctl.impl.graph import get_schema_by_name
 from graphscope.gsctl.impl.graph import list_graphs
 from graphscope.gsctl.impl.job import create_dataloading_job
 from graphscope.gsctl.impl.job import delete_job_by_id
+from graphscope.gsctl.impl.job import get_dataloading_config
 from graphscope.gsctl.impl.job import get_job_by_id
 from graphscope.gsctl.impl.job import list_jobs
 from graphscope.gsctl.impl.legacy import create_groot_dataloading_job
@@ -56,3 +57,4 @@ from graphscope.gsctl.impl.service import get_service_status
 from graphscope.gsctl.impl.service import restart_service
 from graphscope.gsctl.impl.service import start_service
 from graphscope.gsctl.impl.service import stop_service
+from graphscope.gsctl.impl.utils import switch_context
