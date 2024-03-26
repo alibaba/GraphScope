@@ -15,6 +15,7 @@
 
 use std::convert::TryInto;
 
+use dyn_type::Object;
 use graph_proxy::apis::GraphElement;
 use graph_proxy::apis::{get_graph, DynDetails, GraphPath, QueryParams, Vertex};
 use graph_proxy::utils::expr::eval_pred::EvalPred;
@@ -64,7 +65,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                 let e = input
                     .get(self.start_tag)
                     .ok_or_else(|| {
-                        FnExecError::unexpected_data_error(&format!("get of Edge failed in {:?}", self))
+                        FnExecError::Unreachable 
                     })?
                     .as_edge()
                     .ok_or_else(|| {
@@ -135,10 +136,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                         let graph_path = input
                             .get(self.start_tag)
                             .ok_or_else(|| {
-                                FnExecError::unexpected_data_error(&format!(
-                                    "get_mut of GraphPath failed in {:?}",
-                                    self
-                                ))
+                               FnExecError::Unreachable 
                             })?
                             .as_graph_path()
                             .ok_or_else(|| {
@@ -161,6 +159,26 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                         "Wired opt in GetVertexOperator for GraphPath: {:?}",
                         self.opt
                     )))?,
+                }
+            }
+            EntryType::Object => {
+                let obj = input
+                .get(self.start_tag)
+                .ok_or_else(|| {
+                   FnExecError::Unreachable 
+                })?
+                    .as_object()
+                    .ok_or_else(|| FnExecError::Unreachable)?;
+                if Object::None.eq(obj) {
+                    input.append(Object::None, self.alias);
+                    return Ok(Some(input));
+                } else {
+                    Err(FnExecError::unexpected_data_error(
+                        &format!(
+                        "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry, while the entry is {:?}",
+                        entry_type
+                        )
+                    ))?
                 }
             }
             _ => Err(FnExecError::unexpected_data_error(
@@ -264,6 +282,20 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         .is_none()
                     {
                         return Ok(None);
+                    }
+                }
+                EntryType::Object => {
+                    let obj = entry
+                        .as_object()
+                        .ok_or_else(|| FnExecError::Unreachable)?;
+                    if Object::None.eq(obj) {
+                        input.append(Object::None, self.alias);
+                        return Ok(Some(input));
+                    } else {
+                        Err(FnExecError::unexpected_data_error(&format!(
+                            "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
+                            entry
+                        )))?
                     }
                 }
                 _ => Err(FnExecError::unexpected_data_error(&format!(
