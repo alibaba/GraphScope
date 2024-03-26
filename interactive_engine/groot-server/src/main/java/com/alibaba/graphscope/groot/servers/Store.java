@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.discovery.*;
@@ -22,6 +23,7 @@ import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.servers.ir.IrServiceProducer;
 import com.alibaba.graphscope.groot.store.*;
@@ -60,7 +62,8 @@ public class Store extends NodeBase {
         this.metaService = new DefaultMetaService(configs);
         MetricsCollector metricsCollector = new MetricsCollector(configs);
         this.storeService = new StoreService(configs, this.metaService, metricsCollector);
-        SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
+        RoleClients<SnapshotCommitClient> snapshotCommitter =
+                new RoleClients<>(channelManager, RoleType.COORDINATOR, SnapshotCommitClient::new);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         LogService logService = LogServiceFactory.makeLogService(configs);
 
