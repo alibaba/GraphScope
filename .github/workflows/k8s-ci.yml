@@ -530,6 +530,7 @@ jobs:
 
           # run test
           cd ${GITHUB_WORKSPACE}/python
+          sleep infinity
           python3 -m pytest -d --tx popen//python=python3 \
                             -s -vvv \
                             ./graphscope/tests/kubernetes/test_demo_script.py \
