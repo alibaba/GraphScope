@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use dyn_type::Object;
 use graph_proxy::apis::{DynDetails, Element, Vertex};
 use ir_common::generated::physical as pb;
 use ir_common::KeyId;
@@ -59,13 +60,19 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                     .ok_or_else(|| {
                         FnExecError::unexpected_data_error("downcast intersection entry in UnfoldOperator")
                     })?;
-                let mut res = Vec::with_capacity(intersection.len());
-                for item in intersection.iter().cloned() {
-                    let mut new_entry = input.clone();
-                    new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
-                    res.push(new_entry);
+                let len = intersection.len();
+                if len == 0 {
+                    input.append(Object::None, self.alias);
+                    Ok(Box::new(vec![input].into_iter()))
+                } else {
+                    let mut res = Vec::with_capacity(len);
+                    for item in intersection.iter().cloned() {
+                        let mut new_entry = input.clone();
+                        new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
+                        res.push(new_entry);
+                    }
+                    Ok(Box::new(res.into_iter()))
                 }
-                Ok(Box::new(res.into_iter()))
             }
             EntryType::Collection => {
                 let entry = input.get(self.tag).unwrap();

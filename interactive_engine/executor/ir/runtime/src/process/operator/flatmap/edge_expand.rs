@@ -85,6 +85,20 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
                     let curr_path = graph_path.clone();
                     Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
                 }
+                EntryType::Object => {
+                    let obj = entry
+                        .as_object()
+                        .ok_or_else(|| FnExecError::Unreachable)?;
+                    if Object::None.eq(obj) {
+                        input.append(Object::None, self.alias);
+                        Ok(Box::new(vec![input].into_iter()))
+                    } else {
+                        Err(FnExecError::unexpected_data_error(&format!(
+                            "Cannot Expand from current entry {:?}",
+                            entry
+                        )))?
+                    }
+                }
                 _ => Err(FnExecError::unexpected_data_error(&format!(
                     "Cannot Expand from current entry {:?}",
                     entry
@@ -159,8 +173,22 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for OptionalEdgeExpandO
                     }
                 }
                 EntryType::Path => Err(FnExecError::unsupported_error(
-                    "Do not support Optional Edge Expand in Path entry",
+                    "Have not supported Optional Edge Expand in Path entry yet",
                 ))?,
+                EntryType::Object => {
+                    let obj = entry
+                        .as_object()
+                        .ok_or_else(|| FnExecError::Unreachable)?;
+                    if Object::None.eq(obj) {
+                        input.append(Object::None, self.alias);
+                        Ok(Box::new(vec![input].into_iter()))
+                    } else {
+                        Err(FnExecError::unexpected_data_error(&format!(
+                            "Cannot Expand from current entry {:?}",
+                            entry
+                        )))?
+                    }
+                }
                 _ => Err(FnExecError::unexpected_data_error(&format!(
                     "Cannot Expand from current entry {:?}",
                     entry
