@@ -52,7 +52,8 @@ class Table {
                            const std::string& snapshot_dir,
                            const std::vector<std::string>& col_name,
                            const std::vector<PropertyType>& property_types,
-                           const std::vector<StorageStrategy>& strategies_, bool force);
+                           const std::vector<StorageStrategy>& strategies_,
+                           bool force);
 
   void touch(const std::string& name, const std::string& work_dir);
 

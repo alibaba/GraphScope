@@ -1,5 +1,10 @@
 file(GLOB_RECURSE UTILS_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
 
+if (NOT BUILD_ODPS_FRAGMENT_LOADER)
+        list(REMOVE_ITEM UTILS_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/odps_client.cc")
+endif()
+
+
 add_library(flex_utils SHARED ${UTILS_SRC_FILES})
 if (ARROW_SHARED_LIB)
         target_link_libraries(flex_utils ${ARROW_SHARED_LIB})
