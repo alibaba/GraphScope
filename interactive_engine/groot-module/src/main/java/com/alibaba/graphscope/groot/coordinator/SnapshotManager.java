@@ -235,7 +235,7 @@ public class SnapshotManager {
         byte[] writeBytes = this.metaStore.read(WRITE_SNAPSHOT_ID_PATH);
         long writeSI = objectMapper.readValue(writeBytes, Long.class);
         logger.info("Recovered write snapshot id {}", writeSI);
-        if (querySI.getSI() > writeSI) {
+        if (querySI.getSnapshotId() > writeSI) {
             String msg = String.format("Recovered querySI %s > writeSI %s", querySI, writeSI);
             throw new IllegalStateException(msg);
         }
@@ -266,7 +266,7 @@ public class SnapshotManager {
         this.storeToSnapshotInfo.compute(
                 storeId,
                 (k, v) ->
-                        (v != null && v.getSI() >= snapshotId)
+                        (v != null && v.getSnapshotId() >= snapshotId)
                                 ? v
                                 : new SnapshotInfo(snapshotId, ddlSnapshotId));
         this.storeToOffsets.compute(
@@ -289,7 +289,7 @@ public class SnapshotManager {
 
     public void addSnapshotListener(long snapshotId, SnapshotListener snapshotListener) {
         synchronized (this.querySnapshotLock) {
-            if (querySnapshotInfo.getSI() >= snapshotId) {
+            if (querySnapshotInfo.getSnapshotId() >= snapshotId) {
                 snapshotListener.onSnapshotAvailable();
                 return;
             }
@@ -303,7 +303,7 @@ public class SnapshotManager {
         this.listeners.add(listener);
         SnapshotInfo querySI = this.querySnapshotInfo;
         try {
-            listener.snapshotAdvanced(querySI.getSI(), querySI.getDdlSI());
+            listener.snapshotAdvanced(querySI.getSnapshotId(), querySI.getDdlSnapshotId());
         } catch (Exception e) {
             logger.error("error occurred when notify listeners", e);
         }
@@ -319,15 +319,15 @@ public class SnapshotManager {
             return;
         }
         SnapshotInfo receivedSIInfo = Collections.min(this.storeToSnapshotInfo.values());
-        if (receivedSIInfo.getSI() <= this.querySnapshotInfo.getSI()) {
+        if (receivedSIInfo.getSnapshotId() <= this.querySnapshotInfo.getSnapshotId()) {
             logger.warn("Received SI vs. current: {}, {}", receivedSIInfo, querySnapshotInfo);
             return;
         }
         synchronized (this.querySnapshotLock) {
-            long receivedSI = receivedSIInfo.getSI();
-            long receivedDdlSI = receivedSIInfo.getDdlSI();
-            long currentSI = this.querySnapshotInfo.getSI();
-            long currentDdlSI = this.querySnapshotInfo.getDdlSI();
+            long receivedSI = receivedSIInfo.getSnapshotId();
+            long receivedDdlSI = receivedSIInfo.getDdlSnapshotId();
+            long currentSI = this.querySnapshotInfo.getSnapshotId();
+            long currentDdlSI = this.querySnapshotInfo.getDdlSnapshotId();
             if (receivedSI <= currentSI) {
                 logger.warn("Received SI vs. current: {}, {}", receivedSIInfo, querySnapshotInfo);
                 return;
@@ -343,8 +343,8 @@ public class SnapshotManager {
                 logger.error("update querySnapshotInfo failed", e);
                 return;
             }
-            long newSnapshotId = receivedSIInfo.getSI();
-            long newDdlSnapshotId = receivedSIInfo.getDdlSI();
+            long newSnapshotId = receivedSIInfo.getSnapshotId();
+            long newDdlSnapshotId = receivedSIInfo.getDdlSnapshotId();
             NavigableMap<Long, List<SnapshotListener>> listenersToTrigger =
                     this.snapshotToListeners.headMap(newSnapshotId, true);
             for (Map.Entry<Long, List<SnapshotListener>> listenerEntry :
