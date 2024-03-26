@@ -164,8 +164,12 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     .as_object()
                     .ok_or_else(|| FnExecError::Unreachable)?;
                 if Object::None.eq(obj) {
+                    if self.query_labels.is_empty() {
                     input.append(Object::None, self.alias);
                     return Ok(Some(input));
+                    } else {
+                        return Ok(None);
+                    }
                 } else {
                     Err(FnExecError::unexpected_data_error(
                         &format!(
@@ -283,8 +287,16 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         .as_object()
                         .ok_or_else(|| FnExecError::Unreachable)?;
                     if Object::None.eq(obj) {
-                        input.append(Object::None, self.alias);
-                        return Ok(Some(input));
+                        if let Some(_predicate) = &self.query_params.filter {
+                            // TODO: eval by predicate instead of directly regarding it as false
+                            // let res = predicate
+                            //     .eval_bool(Some(&input))
+                            //     .map_err(|e| FnExecError::from(e))?;
+                            return Ok(None);
+                        } else {
+                            input.append(Object::None, self.alias);
+                            return Ok(Some(input));
+                        }
                     } else {
                         Err(FnExecError::unexpected_data_error(&format!(
                             "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
