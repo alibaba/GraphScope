@@ -5,7 +5,7 @@ directories:
     logs: logs
     conf: conf
 log_level: INFO
-default_graph: modern_graph
+default_graph: ldbc
 compute_engine:
   type: hiactor
   workers:
@@ -13,24 +13,19 @@ compute_engine:
   thread_num_per_worker: 1
   store:
     type: cpp-mcsr
-  metadata_store:
-    type: file # file/sqlite/etcd
 compiler:
+  physical:
+    opt:
+      config: proto # default is ffi
   planner:
     is_on: true
-    opt: RBO
+    opt: CBO
     rules:
       - FilterIntoJoinRule
       - FilterMatchRule
       - NotMatchToAntiJoinRule
-  meta:
-    reader:
-      schema:
-        uri: http://localhost:7777/v1/service/status
-        interval: 1000 # ms
-      statistics:
-        uri: http://localhost:7777/v1/graph/%s/statistics
-        interval: 86400000 # ms
+      - ExtendIntersectRule
+      - ExpandGetVFusionRule
   endpoint:
     default_listen_address: localhost
     bolt_connector:

@@ -589,7 +589,7 @@ class FlatEdgeSet {
 template <typename VID_T, typename LabelT, typename EDATA_T>
 class SingleLabelEdgeSetBuilder {
  public:
-  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T>;
+  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T, Direction>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using result_t = SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>;
 
@@ -599,44 +599,35 @@ class SingleLabelEdgeSetBuilder {
   static constexpr bool is_general_vertex_set_builder = false;
 
   SingleLabelEdgeSetBuilder(const std::array<LabelT, 3>& label_triplet,
-                            std::vector<std::string> prop_names,
-                            const std::vector<Direction>& direction)
-      : label_triplet_(label_triplet),
-        prop_names_(prop_names),
-        old_direction_(direction) {}
+                            std::vector<std::string> prop_names)
+      : label_triplet_(label_triplet), prop_names_(prop_names) {}
 
   // There could be null record.
-  void Insert(const index_ele_tuple_t& tuple) {
-    vec_.push_back(std::get<1>(tuple));
-    new_directions.push_back(old_direction_[std::get<0>(tuple)]);
-  }
+  void Insert(const index_ele_tuple_t& tuple) { Insert(std::get<1>(tuple)); }
+
+  void Insert(const ele_tuple_t& ele_tuple) { vec_.push_back(ele_tuple); }
 
   result_t Build() {
-    return result_t(std::move(vec_), std::move(label_triplet_), prop_names_,
-                    std::move(new_directions));
+    return result_t(std::move(vec_), std::move(label_triplet_), prop_names_);
   }
 
  private:
   std::vector<ele_tuple_t> vec_;
   std::array<LabelT, 3> label_triplet_;
   std::vector<std::string> prop_names_;
-  const std::vector<Direction>& old_direction_;
-  std::vector<Direction> new_directions;
 };
 
 template <typename VID_T, typename LabelT, typename EDATA_T>
 class SingleLabelEdgeSetIter {
  public:
-  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T>;
+  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T, Direction>;
   using self_type_t = SingleLabelEdgeSetIter<VID_T, LabelT, EDATA_T>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using data_tuple_t = ele_tuple_t;
-  SingleLabelEdgeSetIter(const std::vector<Direction>& dir,
-                         const std::vector<ele_tuple_t>& vec, size_t ind,
+  SingleLabelEdgeSetIter(const std::vector<ele_tuple_t>& vec, size_t ind,
                          const std::array<LabelT, 3>& label_triplet,
                          const std::vector<std::string>& prop_names)
-      : dir_(dir),
-        vec_(vec),
+      : vec_(vec),
         ind_(ind),
         label_triplet_(label_triplet),
         prop_names_(prop_names) {}
@@ -722,8 +713,7 @@ class SingleLabelEdgeSetIter {
   inline const self_type_t* operator->() const { return this; }
 
  private:
-  inline Direction get_direction() const { return dir_[ind_]; }
-  const std::vector<Direction>& dir_;
+  inline Direction get_direction() const { return std::get<3>(vec_[ind_]); }
   const std::vector<ele_tuple_t>& vec_;
   size_t ind_;
   const std::array<LabelT, 3>& label_triplet_;
@@ -734,7 +724,7 @@ class SingleLabelEdgeSetIter {
 template <typename VID_T, typename LabelT, typename EDATA_T>
 class SingleLabelEdgeSet {
  public:
-  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T>;
+  using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T, Direction>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using iterator = SingleLabelEdgeSetIter<VID_T, LabelT, EDATA_T>;
   using self_type_t = SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>;
@@ -751,29 +741,17 @@ class SingleLabelEdgeSet {
 
   SingleLabelEdgeSet(std::vector<ele_tuple_t>&& vec,
                      std::array<LabelT, 3>&& label_triplet,
-                     std::vector<std::string> prop_names, Direction direction)
+                     std::vector<std::string> prop_names)
       : vec_(std::move(vec)),
         label_triplet_(std::move(label_triplet)),
-        prop_names_(prop_names) {
-    directions_.resize(vec_.size(), direction);
-  }
-
-  SingleLabelEdgeSet(std::vector<ele_tuple_t>&& vec,
-                     std::array<LabelT, 3>&& label_triplet,
-                     std::vector<std::string> prop_names,
-                     std::vector<Direction>&& direction)
-      : vec_(std::move(vec)),
-        label_triplet_(std::move(label_triplet)),
-        prop_names_(prop_names),
-        directions_(std::move(direction)) {}
+        prop_names_(prop_names) {}
 
   iterator begin() const {
-    return iterator(directions_, vec_, 0, label_triplet_, prop_names_);
+    return iterator(vec_, 0, label_triplet_, prop_names_);
   }
 
   iterator end() const {
-    return iterator(directions_, vec_, vec_.size(), label_triplet_,
-                    prop_names_);
+    return iterator(vec_, vec_.size(), label_triplet_, prop_names_);
   }
 
   std::vector<LabelKey> GetLabelVec() const {
@@ -794,8 +772,7 @@ class SingleLabelEdgeSet {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       res.emplace_back(std::get<1>(cur_ind_ele));
     }
-    return SingleLabelEdgeSet(std::move(res), label_triplet_, prop_names_,
-                              directions_);
+    return SingleLabelEdgeSet(std::move(res), label_triplet_, prop_names_);
   }
 
   // we assume edata_t is tuple
@@ -909,9 +886,8 @@ class SingleLabelEdgeSet {
     }
 
     auto copy_label_triplet = label_triplet_;
-    auto copied_directions = directions_;
     return self_type_t(std::move(new_vec), std::move(copy_label_triplet),
-                       prop_names_, std::move(copied_directions));
+                       prop_names_);
   }
 
   void Repeat(std::vector<offset_t>& cur_offset,
@@ -940,14 +916,13 @@ class SingleLabelEdgeSet {
   }
 
   builder_t CreateBuilder() const {
-    return builder_t(label_triplet_, prop_names_, directions_);
+    return builder_t(label_triplet_, prop_names_);
   }
 
  private:
   std::vector<ele_tuple_t> vec_;
   std::array<label_t, 3> label_triplet_;
   std::vector<std::string> prop_names_;
-  std::vector<Direction> directions_;
 };
 }  // namespace gs
 
