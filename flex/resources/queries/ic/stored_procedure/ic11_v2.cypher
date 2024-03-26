@@ -1,6 +1,10 @@
-MATCH (p:PERSON {id: $personId})-[:KNOWS*1..3]-(friend:PERSON)-[wa:WORKAT]->(com:ORGANISATION)-[:ISLOCATEDIN]->(:PLACE {name: $countryName}) 
+MATCH (p:PERSON {id: $personId})-[:KNOWS*1..3]-(friend:PERSON)
 WHERE 
     p <> friend 
+WITH DISTINCT friend AS friend
+
+MATCH(friend)-[wa:WORKAT]->(com:ORGANISATION)-[:ISLOCATEDIN]->(:PLACE {name: $countryName}) 
+WHERE 
     AND wa.workFrom < $workFromYear
 WITH DISTINCT 
     friend as friend, 
