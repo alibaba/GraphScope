@@ -83,9 +83,9 @@ public class FrontendRpcTest {
         SchemaClient client = mock(SchemaClient.class);
         when(clients.getClient(0)).thenReturn(client);
 
-        SchemaWriter schemaWriter = new SchemaWriter(clients);
-        schemaWriter.submitBatchDdl(
-                "test_req", "test_session", DdlRequestBatch.newBuilder().build());
+        clients.getClient(0)
+                .submitBatchDdl(
+                        "test_req", "test_session", DdlRequestBatch.newBuilder().build().toProto());
         verify(client)
                 .submitBatchDdl(
                         "test_req", "test_session", DdlRequestBatch.newBuilder().build().toProto());

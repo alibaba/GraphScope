@@ -61,17 +61,17 @@ public class Frontend extends NodeBase {
     private static final Logger logger = LoggerFactory.getLogger(Frontend.class);
 
     private CuratorFramework curator;
-    private NodeDiscovery discovery;
-    private ChannelManager channelManager;
-    private MetaService metaService;
-    private RpcServer rpcServer;
-    private RpcServer serviceServer;
-    private ClientService clientService;
-    private AbstractService graphService;
+    private final NodeDiscovery discovery;
+    private final ChannelManager channelManager;
+    private final MetaService metaService;
+    private final RpcServer rpcServer;
+    private final RpcServer serviceServer;
+    private final ClientService clientService;
+    private final AbstractService graphService;
 
-    private SnapshotCache snapshotCache;
+    private final SnapshotCache snapshotCache;
 
-    private GraphWriter graphWriter;
+    private final GraphWriter graphWriter;
 
     public Frontend(Configs configs) {
         super(configs);
@@ -97,12 +97,10 @@ public class Frontend extends NodeBase {
                 new MetricsAggregator(
                         configs, frontendMetricsCollectClients, storeMetricsCollectClients);
 
-        StoreIngestClients storeIngestClients =
-                new StoreIngestClients(this.channelManager, RoleType.STORE, StoreIngestClient::new);
-        SchemaWriter schemaWriter =
-                new SchemaWriter(
-                        new RoleClients<>(
-                                this.channelManager, RoleType.COORDINATOR, SchemaClient::new));
+        RoleClients<FrontendStoreClient> frontendStoreClients =
+                new RoleClients<>(this.channelManager, RoleType.STORE, FrontendStoreClient::new);
+        RoleClients<SchemaClient> schemaWriter =
+                new RoleClients<>(this.channelManager, RoleType.COORDINATOR, SchemaClient::new);
 
         BatchDdlClient batchDdlClient =
                 new BatchDdlClient(new DdlExecutors(), snapshotCache, schemaWriter);
@@ -113,7 +111,7 @@ public class Frontend extends NodeBase {
                 new ClientService(
                         snapshotCache,
                         metricsAggregator,
-                        storeIngestClients,
+                        frontendStoreClients,
                         this.metaService,
                         batchDdlClient);
 

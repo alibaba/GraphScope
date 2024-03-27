@@ -280,8 +280,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpand(physicalExpand);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
+        // TODO: Currently we use the row type of ExpandE as the output row type of the fused
+        // ExpandV, as desired by the engine implementation.
+        // This would be refactored in the future.
         oprBuilder.addAllMetaData(
-                Utils.physicalProtoRowType(physicalExpand.getRowType(), isColumnId));
+                Utils.physicalProtoRowType(
+                        physicalExpand.getFusedExpand().getRowType(), isColumnId));
         if (isPartitioned) {
             addRepartitionToAnother(physicalExpand.getStartAlias().getAliasId());
         }

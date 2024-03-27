@@ -26,7 +26,7 @@ public class ZkConfig {
             Config.intConfig("zk.connection.timeout.ms", 1000);
 
     public static final Config<Integer> ZK_SESSION_TIMEOUT_MS =
-            Config.intConfig("zk.session.timeout.ms", 10000);
+            Config.intConfig("zk.session.timeout.ms", 30000);
 
     public static final Config<Integer> ZK_BASE_SLEEP_MS =
             Config.intConfig("zk.base.sleep.ms", 1000);
