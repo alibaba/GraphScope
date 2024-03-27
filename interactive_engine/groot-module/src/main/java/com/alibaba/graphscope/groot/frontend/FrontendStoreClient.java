@@ -22,13 +22,13 @@ import io.grpc.stub.StreamObserver;
 
 import java.util.Map;
 
-public class StoreIngestClient extends RpcClient {
+public class FrontendStoreClient extends RpcClient {
 
-    private final StoreIngestGrpc.StoreIngestStub stub;
+    private final FrontendStoreServiceGrpc.FrontendStoreServiceStub stub;
 
-    public StoreIngestClient(ManagedChannel channel) {
+    public FrontendStoreClient(ManagedChannel channel) {
         super(channel);
-        this.stub = StoreIngestGrpc.newStub(channel);
+        this.stub = FrontendStoreServiceGrpc.newStub(channel);
     }
 
     public void storeIngest(
@@ -99,6 +99,25 @@ public class StoreIngestClient extends RpcClient {
                     @Override
                     public void onNext(ReopenSecondaryResponse value) {
                         callback.onCompleted(null);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        callback.onError(t);
+                    }
+
+                    @Override
+                    public void onCompleted() {}
+                });
+    }
+
+    public void getStoreState(CompletionCallback<GetStoreStateResponse> callback) {
+        this.stub.getState(
+                GetStoreStateRequest.newBuilder().build(),
+                new StreamObserver<>() {
+                    @Override
+                    public void onNext(GetStoreStateResponse value) {
+                        callback.onCompleted(value);
                     }
 
                     @Override
