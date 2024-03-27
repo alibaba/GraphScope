@@ -97,7 +97,7 @@ graphscope-darwin-py3:
 		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		rm -rf build && \
 		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
-		pip3 install delocate && \
+		pip3 install delocate==0.10.7 && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
@@ -231,6 +231,7 @@ graphscope-client-darwin-py3:
 		cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 		make graphlearn_shared -j`nproc` && \
 		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:/usr/local/lib:${GRAPHSCOPE_HOME}/lib:$$DYLD_LIBRARY_PATH && \
+		export DYLD_LIBRARY_PATH=$$(dirname $$(python3 -c "import torch; print(torch.__file__)"))/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../../python && \
 		py=$$(python3 -V 2>&1 | awk '{print $$2}' | awk -F '.' '{print $$1$$2}') && \
 		pip3 install ${PIP_ARGS} -U pip && \

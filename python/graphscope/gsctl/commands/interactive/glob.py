@@ -139,7 +139,7 @@ def graph(filename):  # noqa: F811
 @delete.command()
 @click.argument("graph_identifier", required=True)
 def graph(graph_identifier):  # noqa: F811
-    """Delete a graph by identifier, see graph identifier with `ls` command"""
+    """Delete a graph, see graph identifier with `ls` command"""
     try:
         delete_graph_by_name(graph_identifier)
     except Exception as e:

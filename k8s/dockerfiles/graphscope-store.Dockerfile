@@ -34,6 +34,11 @@ ARG ENABLE_COORDINATOR=false
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# shanghai zoneinfo
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo '$TZ' > /etc/timezone
+
 RUN apt-get update -y && \
     apt-get install -y sudo default-jdk dnsutils tzdata \
         libjemalloc-dev libunwind-dev binutils less python3 python3-pip && \

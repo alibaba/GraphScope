@@ -21,9 +21,10 @@ import "groot/sdk/model.proto";
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
-service StoreIngest {
+service FrontendStoreService {
   rpc storeIngest(IngestDataRequest) returns(IngestDataResponse);
   rpc storeClearIngest(ClearIngestRequest) returns(ClearIngestResponse);
   rpc compactDB(CompactDBRequest) returns(CompactDBResponse);
   rpc reopenSecondary(ReopenSecondaryRequest) returns (ReopenSecondaryResponse);
+  rpc GetState(GetStoreStateRequest) returns (GetStoreStateResponse);
 }

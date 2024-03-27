@@ -63,7 +63,8 @@ hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
       max_group_id_(max_group_id),
       group_inc_step_(group_inc_step),
       shard_concurrency_(shard_concurrency),
-      executor_idx_(0) {
+      executor_idx_(0),
+      is_cancelled_(false) {
   executor_refs_.reserve(shard_concurrency_);
   hiactor::scope_builder builder;
   builder.set_shard(hiactor::local_shard_id())
@@ -87,8 +88,13 @@ seastar::future<> hqps_ic_handler::cancel_current_scope() {
         LOG(INFO) << "Cancel IC scope successfully!";
         // clear the actor refs
         executor_refs_.clear();
+        is_cancelled_ = true;
         return seastar::make_ready_future<>();
       });
+}
+
+bool hqps_ic_handler::is_current_scope_cancelled() const {
+  return is_cancelled_;
 }
 
 bool hqps_ic_handler::create_actors() {
@@ -114,6 +120,7 @@ bool hqps_ic_handler::create_actors() {
   for (unsigned i = 0; i < shard_concurrency_; ++i) {
     executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
   }
+  is_cancelled_ = false;  // locked outside
   return true;
 }
 
@@ -166,7 +173,8 @@ hqps_adhoc_query_handler::hqps_adhoc_query_handler(
       max_group_id_(max_group_id),
       group_inc_step_(group_inc_step),
       shard_concurrency_(shard_concurrency),
-      executor_idx_(0) {
+      executor_idx_(0),
+      is_cancelled_(false) {
   executor_refs_.reserve(shard_concurrency_);
   {
     hiactor::scope_builder builder;
@@ -213,8 +221,13 @@ seastar::future<> hqps_adhoc_query_handler::cancel_current_scope() {
         executor_refs_.clear();
         codegen_actor_refs_.clear();
         LOG(INFO) << "Clear actor refs successfully!";
+        is_cancelled_ = true;
         return seastar::make_ready_future<>();
       });
+}
+
+bool hqps_adhoc_query_handler::is_current_scope_cancelled() const {
+  return is_cancelled_;
 }
 
 bool hqps_adhoc_query_handler::create_actors() {
@@ -255,6 +268,7 @@ bool hqps_adhoc_query_handler::create_actors() {
             hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
     codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
   }
+  is_cancelled_ = false;
   return true;
 }
 
@@ -378,6 +392,11 @@ uint16_t hqps_http_handler::get_port() const { return http_port_; }
 
 bool hqps_http_handler::is_running() const { return running_.load(); }
 
+bool hqps_http_handler::is_actors_running() const {
+  return !ic_handler_->is_current_scope_cancelled() &&
+         !adhoc_query_handler_->is_current_scope_cancelled();
+}
+
 void hqps_http_handler::start() {
   auto fut = seastar::alien::submit_to(
       *seastar::alien::internal::default_instance, 0, [this] {
@@ -409,15 +428,30 @@ void hqps_http_handler::stop() {
 
 seastar::future<> hqps_http_handler::stop_query_actors() {
   // First cancel the scope.
-  return ic_handler_->cancel_current_scope()
-      .then([this] {
-        LOG(INFO) << "Cancel ic scope";
-        return adhoc_query_handler_->cancel_current_scope();
-      })
-      .then([] {
-        LOG(INFO) << "Cancel adhoc scope";
-        return seastar::make_ready_future<>();
-      });
+  if (ic_handler_->is_current_scope_cancelled()) {
+    LOG(INFO) << "IC scope has been cancelled!";
+    if (adhoc_query_handler_->is_current_scope_cancelled()) {
+      LOG(INFO) << "Adhoc scope has been cancelled!";
+      return seastar::make_ready_future<>();
+    } else {
+      return adhoc_query_handler_->cancel_current_scope();
+    }
+  } else {
+    return ic_handler_->cancel_current_scope()
+        .then([this] {
+          LOG(INFO) << "Cancel ic scope";
+          if (adhoc_query_handler_->is_current_scope_cancelled()) {
+            LOG(INFO) << "Adhoc scope has been cancelled!";
+            return seastar::make_ready_future<>();
+          } else {
+            return adhoc_query_handler_->cancel_current_scope();
+          }
+        })
+        .then([] {
+          LOG(INFO) << "Cancel adhoc scope";
+          return seastar::make_ready_future<>();
+        });
+  }
 }
 
 void hqps_http_handler::start_query_actors() {
