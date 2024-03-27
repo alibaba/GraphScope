@@ -845,7 +845,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     private GraphAlgebra.QueryParams.Builder defaultQueryParams() {
         GraphAlgebra.QueryParams.Builder paramsBuilder = GraphAlgebra.QueryParams.newBuilder();
-        // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as default.
+        // todo: currently no sample rate fused into tableScan, so directly set 1.0 as default.
         paramsBuilder.setSampleRatio(1.0);
         return paramsBuilder;
     }
