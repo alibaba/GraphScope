@@ -145,6 +145,10 @@ class WorkDirManipulator {
 
   static std::string GetGraphIndicesDir(const std::string& graph_name);
 
+  static std::string GetLogDir();
+
+  static std::string GetCompilerLogFile();
+
  private:
   static gs::Result<seastar::sstring> create_procedure_sanity_check(
       const nlohmann::json& json);
