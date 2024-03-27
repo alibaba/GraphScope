@@ -112,7 +112,6 @@ public class GaiaEngine implements ExecutorEngine {
                     logger.warn("Unexpected node joined: {}", node);
                 }
             }
-            this.engineNodes.putAll(nodes);
             if (this.engineNodes.size() == this.nodeCount) {
                 String peerViewString =
                         engineNodes.values().stream()
