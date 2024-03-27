@@ -93,12 +93,14 @@ public class GraphRelOptimizer {
             // apply rules of 'FilterPushDown' before the match optimization
             relPlanner.setRoot(before);
             RelNode relOptimized = relPlanner.findBestExp();
-            RelNode matchOptimized = relOptimized.accept(new MatchOptimizer(ioProcessor));
+            if (config.getOpt() == PlannerConfig.Opt.CBO) {
+                relOptimized = relOptimized.accept(new MatchOptimizer(ioProcessor));
+            }
             // apply rules of 'FieldTrim' after the match optimization
             if (config.getRules().contains(FieldTrimRule.class.getSimpleName())) {
-                matchOptimized = FieldTrimRule.trim(ioProcessor.getBuilder(), matchOptimized);
+                relOptimized = FieldTrimRule.trim(ioProcessor.getBuilder(), relOptimized);
             }
-            physicalPlanner.setRoot(matchOptimized);
+            physicalPlanner.setRoot(relOptimized);
             RelNode physicalOptimized = physicalPlanner.findBestExp();
             return physicalOptimized;
         }
