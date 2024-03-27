@@ -104,6 +104,14 @@ public class GaiaEngine implements ExecutorEngine {
     @Override
     public void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes) {
         if (role == RoleType.GAIA_ENGINE) {
+            for (Map.Entry<Integer, GrootNode> entry : nodes.entrySet()) {
+                GrootNode node = entry.getValue();
+                if (node.getRoleName().equals(RoleType.GAIA_ENGINE.getName())) {
+                    this.engineNodes.put(entry.getKey(), node);
+                } else {
+                    logger.warn("Unexpected node joined: {}", node);
+                }
+            }
             this.engineNodes.putAll(nodes);
             if (this.engineNodes.size() == this.nodeCount) {
                 String peerViewString =
