@@ -173,6 +173,16 @@
             <artifactId>opentelemetry-instrumentation-annotations</artifactId>
             <version>2.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-core</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-ext</artifactId>
+            <version>1.0.1</version>
+        </dependency>
     </dependencies>
 
     <profiles>

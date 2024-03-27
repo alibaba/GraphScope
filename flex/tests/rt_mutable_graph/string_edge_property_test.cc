@@ -61,13 +61,15 @@ class TestStringEdgeProperty {
     CHECK(db_.graph().get_lid(dst_label_, dst, dst_lid));
 
     {
-      auto graph_view = txn.GetOutgoingSingleGraphView<std::string_view>(
+      auto graph_view = txn.GetOutgoingGraphView<std::string_view>(
           src_label_, dst_label_, edge_label_);
-      auto oe = graph_view.get_edge(src_lid);
-      LOG(INFO) << oe.get_data() << "\n";
-      CHECK(oe.get_data() == "0.4")
-          << "Inconsistent value, Excepted : 0.4, Got " << oe.get_data()
-          << "\n";
+      auto oes = graph_view.get_edges(src_lid);
+      for (auto& oe : oes) {
+        LOG(INFO) << oe.get_data() << "\n";
+        CHECK(oe.get_data() == "0.4")
+            << "Inconsistent value, Excepted : 0.4, Got " << oe.get_data()
+            << "\n";
+      }
     }
     {
       auto graph_view = txn.GetIncomingGraphView<std::string_view>(
@@ -103,12 +105,14 @@ class TestStringEdgeProperty {
     }
     {
       auto txn = db_.GetReadTransaction();
-      auto graph_view = txn.GetOutgoingSingleGraphView<std::string_view>(
+      auto graph_view = txn.GetOutgoingGraphView<std::string_view>(
           src_label_, dst_label_, edge_label_);
-      auto oe = graph_view.get_edge(src_lid);
-      CHECK(oe.get_data() == "test")
-          << "Inconsistent value, Excepted: test, Got " << oe.get_data()
-          << "\n";
+      auto oes = graph_view.get_edges(src_lid);
+      for (auto& oe : oes) {
+        CHECK(oe.get_data() == "test")
+            << "Inconsistent value, Excepted: test, Got " << oe.get_data()
+            << "\n";
+      }
     }
     LOG(INFO) << "Finish test add edge\n";
   }

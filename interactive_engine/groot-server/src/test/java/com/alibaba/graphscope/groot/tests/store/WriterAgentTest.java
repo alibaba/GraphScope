@@ -21,7 +21,8 @@ import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.graphscope.groot.store.SnapshotCommitter;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.graphscope.groot.store.SnapshotCommitClient;
 import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.graphscope.groot.store.WriterAgent;
 
@@ -44,7 +45,7 @@ public class WriterAgentTest {
         MetaService mockMetaService = mock(MetaService.class);
         when(mockMetaService.getQueueCount()).thenReturn(1);
 
-        SnapshotCommitter mockSnapshotCommitter = mock(SnapshotCommitter.class);
+        RoleClients<SnapshotCommitClient> mockSnapshotCommitter = mock(RoleClients.class);
 
         WriterAgent writerAgent =
                 new WriterAgent(
@@ -53,7 +54,6 @@ public class WriterAgentTest {
                         mockMetaService,
                         mockSnapshotCommitter,
                         new MetricsCollector(configs));
-        writerAgent.init(0L);
 
         writerAgent.start();
 
@@ -63,6 +63,7 @@ public class WriterAgentTest {
 
         verify(mockStoreService, timeout(5000L).times(1)).batchWrite(storeDataBatch);
         verify(mockSnapshotCommitter, timeout(5000L).times(1))
+                .getClient(0)
                 .commitSnapshotId(0, 1L, 0L, Collections.singletonList(10L));
 
         writerAgent.stop();

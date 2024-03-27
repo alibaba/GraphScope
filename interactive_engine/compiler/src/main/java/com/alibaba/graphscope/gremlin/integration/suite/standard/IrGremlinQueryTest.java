@@ -17,7 +17,10 @@
 package com.alibaba.graphscope.gremlin.integration.suite.standard;
 
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
+import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
@@ -32,10 +35,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
@@ -124,6 +124,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
             get_g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX(
                     final Object v1Id);
 
+    public abstract Traversal<Edge, Edge> get_g_E_hasLabelXknowsX();
+
     // g.V().out().union(out(), in(), in()).count()
     public abstract Traversal<Vertex, Long> get_g_V_out_union_out_in_in_count();
 
@@ -145,9 +147,70 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long>
             get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count();
 
+    public abstract Traversal<Vertex, String> get_g_V_unionXout__inX_name();
+
+    public abstract Traversal<Vertex, Number>
+            get_g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX(
+                    final Object v1Id, final Object v2Id);
+
+    // g.V().hasLabel('person').as('a').select(expr(POWER(a.age, 2)))
+    public abstract Traversal<Vertex, Object> get_g_V_select_expr_power_age_by_2();
+
+    // g.V().hasLabel('person').as('a').select(expr(sum(a.age) * 2 / 3))
+    public abstract Traversal<Vertex, Object> get_g_V_select_expr_sum_age_mult_2_div_3();
+
+    // g.V().select(expr(2 ^ 3 * 2))
+    public abstract Traversal<Vertex, Object> get_g_V_select_expr_2_xor_3_mult_2_limit_1();
+
+    // g.V().hasLabel('person').as('a').where(expr(a.name = 'marko' and (a.age > 20 OR a.age <
+    // 10))).values('name')
+    public abstract Traversal<Vertex, Object>
+            get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_expr_power_age_by_2() {
+        // the expr test follows a sql-like expression syntax, which can only be opened when
+        // language type is antlr_gremlin_calcite
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal = get_g_V_select_expr_power_age_by_2();
+        printTraversalForm(traversal);
+        checkResults(Arrays.asList(841, 729, 1024, 1225), traversal);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_expr_sum_age_mult_2_div_3() {
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal = get_g_V_select_expr_sum_age_mult_2_div_3();
+        printTraversalForm(traversal);
+        Assert.assertEquals(82, traversal.next());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_expr_2_xor_3_mult_2() {
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal = get_g_V_select_expr_2_xor_3_mult_2_limit_1();
+        printTraversalForm(traversal);
+        Assert.assertEquals(4, traversal.next());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name() {
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal =
+                get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
+        printTraversalForm(traversal);
+        Assert.assertEquals("marko", traversal.next());
+    }
+
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_union_out_in_in_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Long> traversal = this.get_g_V_out_union_out_in_in_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(26, traversal.next().intValue());
@@ -156,6 +219,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_union_out_inXunion_out_outX_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported  in hqps
         Traversal<Vertex, Long> traversal = this.get_g_V_union_out_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(34, traversal.next().intValue());
@@ -164,6 +229,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_union_out_inXunion_out_outX_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Long> traversal = this.get_g_V_out_union_out_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(54, traversal.next().intValue());
@@ -172,6 +239,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_union_outXunion_out_outX_inXunion_out_outX_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported  in hqps
         Traversal<Vertex, Long> traversal =
                 this.get_g_V_out_union_outXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
@@ -181,6 +250,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_union_inXunion_out_outX_inXunion_out_outX_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Long> traversal =
                 this.get_g_V_union_inXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
@@ -190,10 +261,45 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_union_inXunion_out_outX_inXunion_out_outX_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Long> traversal =
                 this.get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(104, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_unionXout__inX_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
+        final Traversal<Vertex, String> traversal = get_g_V_unionXout__inX_name();
+        printTraversalForm(traversal);
+        checkResults(
+                new HashMap<String, Long>() {
+                    {
+                        put("marko", 3L);
+                        put("lop", 3L);
+                        put("peter", 1L);
+                        put("ripple", 1L);
+                        put("josh", 3L);
+                        put("vadas", 1L);
+                    }
+                },
+                traversal);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
+        final Traversal<Vertex, Number> traversal =
+                get_g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX(
+                        convertToVertexId("marko"), convertToVertexId("vadas"));
+        printTraversalForm(traversal);
+        checkResults(Arrays.asList(3L, 1.9d, 1L), traversal);
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
@@ -363,6 +469,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_E_has_weight_0_5_f_label() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Edge, String> traversal = get_g_E_has_weight_0_5_f_label();
         printTraversalForm(traversal);
         Assert.assertEquals("knows", traversal.next());
@@ -609,6 +716,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_haslabel_union_identity_out_values() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Object> traversal = this.get_g_V_has_union_identity_out_values();
         this.printTraversalForm(traversal);
         int counter = 0;
@@ -773,6 +882,21 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertFalse(traversal.hasNext());
     }
 
+    @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    public void g_E_hasLabelXknowsX() {
+        // Hqps engine doesn't support scan from edge index scan.
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        final Traversal<Edge, Edge> traversal = get_g_E_hasLabelXknowsX();
+        printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            counter++;
+            Assert.assertEquals("knows", traversal.next().label());
+        }
+        Assert.assertEquals(2, counter);
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         // g.V().out().union(out(), in(), in()).count()
@@ -811,6 +935,60 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Long>
                 get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count() {
             return g.V().out().union(in().union(out(), out()), in().union(out(), out())).count();
+        }
+
+        @Override
+        public Traversal<Vertex, String> get_g_V_unionXout__inX_name() {
+            return g.V().union(out(), in()).values("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Number> get_g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX(
+                final Object v1Id, final Object v2Id) {
+            return g.V(v1Id, v2Id)
+                    .union(
+                            outE().count(),
+                            inE().count(),
+                            (Traversal) outE().values("weight").sum());
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_select_expr_power_age_by_2() {
+            return ((IrCustomizedTraversal) g.V().hasLabel("person"))
+                    .as("a")
+                    .select(
+                            com.alibaba.graphscope.gremlin.integration.suite.utils.__.expr(
+                                    "POWER(a.age, 2)", ExprStep.Type.PROJECTION));
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_select_expr_sum_age_mult_2_div_3() {
+            return ((IrCustomizedTraversal) g.V().hasLabel("person"))
+                    .as("a")
+                    .select(
+                            com.alibaba.graphscope.gremlin.integration.suite.utils.__.expr(
+                                    "sum(a.age) * 2 / 3", ExprStep.Type.PROJECTION));
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_select_expr_2_xor_3_mult_2_limit_1() {
+            return ((IrCustomizedTraversal) g.V())
+                    .select(
+                            com.alibaba.graphscope.gremlin.integration.suite.utils.__.expr(
+                                    "2 ^ 3 * 2", ExprStep.Type.PROJECTION))
+                    .limit(1);
+        }
+
+        @Override
+        public Traversal<Vertex, Object>
+                get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name() {
+            return ((IrCustomizedTraversal) g.V().hasLabel("person"))
+                    .as("a")
+                    .where(
+                            com.alibaba.graphscope.gremlin.integration.suite.utils.__.expr(
+                                    "a.name = 'marko' and (a.age > 20 OR a.age < 10)",
+                                    ExprStep.Type.FILTER))
+                    .values("name");
         }
 
         @Override
@@ -1059,6 +1237,11 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Edge> get_g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX(
                 final Object v1Id) {
             return g.V(v1Id).outE().as("here").inV().has("name", "vadas").select("here");
+        }
+
+        @Override
+        public Traversal<Edge, Edge> get_g_E_hasLabelXknowsX() {
+            return g.E().hasLabel("knows");
         }
     }
 }

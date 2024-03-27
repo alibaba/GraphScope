@@ -44,7 +44,7 @@ public class QueryCacheTest {
         Assert.assertEquals(
                 "GraphLogicalProject(n=[n], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[n], fusedFilter=[[=(DEFAULT.name, _UTF-8'ma')]], opt=[VERTEX])",
+                    + " alias=[n], fusedFilter=[[=(_.name, _UTF-8'ma')]], opt=[VERTEX])",
                 key1.logicalPlan.explain().trim());
         QueryCache.Key key2 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
         QueryCache.Key key3 = cache.createKey("Match (n {age: 10}) Return n", Utils.schemaMeta);

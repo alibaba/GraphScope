@@ -19,8 +19,6 @@ package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
-import com.alibaba.graphscope.gremlin.Utils;
-import com.alibaba.graphscope.gremlin.antlr4.GenericLiteralVisitor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -37,10 +35,10 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
     @Override
     public PathExpandConfig.Builder visitTraversalMethod_out(
             GremlinGSParser.TraversalMethod_outContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        Preconditions.checkArgument(
-                labels != null && labels.length > 0, "arguments can not be empty in path expand");
-        String[] ranges = labels[0].split("\\.\\.");
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        Preconditions.checkArgument(!labels.isEmpty(), "hop range can not be empty in path expand");
+        String[] ranges = labels.get(0).split("\\.\\.");
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);
         // set path_opt and result_opt
@@ -56,10 +54,10 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
     @Override
     public PathExpandConfig.Builder visitTraversalMethod_in(
             GremlinGSParser.TraversalMethod_inContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        Preconditions.checkArgument(
-                labels != null && labels.length > 0, "arguments can not be empty in path expand");
-        String[] ranges = labels[0].split("\\.\\.");
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        Preconditions.checkArgument(!labels.isEmpty(), "hop range can not be empty in path expand");
+        String[] ranges = labels.get(0).split("\\.\\.");
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);
         // set path_opt and result_opt
@@ -75,10 +73,10 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
     @Override
     public PathExpandConfig.Builder visitTraversalMethod_both(
             GremlinGSParser.TraversalMethod_bothContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        Preconditions.checkArgument(
-                labels != null && labels.length > 0, "arguments can not be empty in path expand");
-        String[] ranges = labels[0].split("\\.\\.");
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        Preconditions.checkArgument(!labels.isEmpty(), "hop range can not be empty in path expand");
+        String[] ranges = labels.get(0).split("\\.\\.");
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);
         // set path_opt and result_opt
@@ -94,9 +92,8 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
     @Override
     public PathExpandConfig.Builder visitTraversalMethod_with(
             GremlinGSParser.TraversalMethod_withContext ctx) {
-        String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
-        Object optValue =
-                GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());
+        String optKey = (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral());
+        Object optValue = LiteralVisitor.INSTANCE.visit(ctx.oC_Literal());
         switch (optKey.toUpperCase()) {
             case "PATH_OPT":
                 return builder.pathOpt(
@@ -124,15 +121,12 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
         return nextWith;
     }
 
-    private LabelConfig getExpandLabelConfig(String[] labels) {
-        if (labels.length <= 1) {
+    private LabelConfig getExpandLabelConfig(List<String> parameters) {
+        if (parameters.size() <= 1) {
             return new LabelConfig(true);
         } else {
-            labels = Utils.removeStringEle(0, labels);
             LabelConfig expandLabels = new LabelConfig(false);
-            for (int i = 0; i < labels.length; ++i) {
-                expandLabels.addLabel(labels[i]);
-            }
+            parameters.subList(1, parameters.size()).forEach(expandLabels::addLabel);
             return expandLabels;
         }
     }

@@ -89,18 +89,16 @@ impl ExprToken for Token {
     fn precedence(&self) -> i32 {
         use crate::expr_parse::token::Token::*;
         match self {
-            Plus | Minus => 95,
-            Star | Slash | Percent => 100,
-            Power => 120,
-
-            Eq | Ne | Gt | Lt | Ge | Le | Within | Without | StartsWith | EndsWith | IsNull => 80,
-            And => 75,
-            Or => 70,
-            Not => 110,
-            BitLShift | BitRShift => 130,
-            BitAnd | BitOr => 140,
-
-            LBrace | RBrace => 0,
+            Power => 120,                                                          // 1.
+            Star | Slash | Percent => 110,                                         // 2.
+            Plus | Minus | BitLShift | BitRShift | BitAnd | BitOr | BitXor => 100, // 3.
+            Within | Without | StartsWith | EndsWith => 90,                        // 4.
+            Eq | Ne | Gt | Lt | Ge | Le => 80,                                     // 5.
+            IsNull => 70,                                                          // 6
+            Not => 60,                                                             // 7
+            And => 50,                                                             // 8.
+            Or => 40,                                                              // 9.
+            LBrace | RBrace => 0,                                                  // 10.
             _ => 200,
         }
     }
