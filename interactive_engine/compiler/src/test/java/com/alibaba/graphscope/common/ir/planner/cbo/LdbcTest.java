@@ -578,7 +578,6 @@ public class LdbcTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-        System.out.println(after.explain());
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[replyCount], sort1=[personId], dir0=[DESC], dir1=[ASC],"
                     + " fetch=[20])\n"
