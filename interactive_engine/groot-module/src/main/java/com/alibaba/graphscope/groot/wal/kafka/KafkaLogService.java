@@ -161,7 +161,7 @@ public class KafkaLogService implements LogService {
             try {
                 return AdminClient.create(adminConfig);
             } catch (Exception e) {
-                logger.warn("Error creating Kafka AdminClient", e);
+                logger.warn("Error creating Kafka AdminClient, servers: {}", servers, e);
                 Thread.sleep(10000);
             }
         }

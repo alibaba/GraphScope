@@ -107,7 +107,7 @@ public class GaiaEngine implements ExecutorEngine {
             this.engineNodes.putAll(nodes);
             if (this.engineNodes.size() == this.nodeCount) {
                 String peerViewString =
-                        nodes.values().stream()
+                        engineNodes.values().stream()
                                 .map(
                                         n ->
                                                 String.format(
