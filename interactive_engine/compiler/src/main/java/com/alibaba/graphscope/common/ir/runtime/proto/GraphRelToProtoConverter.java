@@ -20,6 +20,11 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.*;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalDedupBy;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
+import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
@@ -48,7 +53,6 @@ import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.rules.MultiJoin;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
@@ -214,7 +218,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.PathExpand.ExpandBase.Builder expandBaseBuilder =
                 GraphAlgebraPhysical.PathExpand.ExpandBase.newBuilder();
         RelNode fused = pxd.getFused();
-        RelDataType rowType;
         if (fused != null) {
             // the case that expand base is fused
             if (fused instanceof GraphPhysicalGetV) {
@@ -226,7 +229,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fusedGetV.getInput();
                     GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
                     expandBaseBuilder.setEdgeExpand(expand);
-                    rowType = fusedExpand.getRowType();
                 } else {
                     throw new UnsupportedOperationException(
                             "unsupported fused plan in path expand base: "
@@ -237,7 +239,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fused;
                 GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
                 expandBaseBuilder.setEdgeExpand(expand);
-                rowType = fusedExpand.getFusedExpand().getRowType();
             } else {
                 throw new UnsupportedOperationException(
                         "unsupported fused plan in path expand base");
@@ -249,7 +250,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             GraphAlgebraPhysical.GetV.Builder getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
             expandBaseBuilder.setEdgeExpand(expand);
             expandBaseBuilder.setGetV(getV);
-            rowType = pxd.getExpand().getRowType();
         }
         pathExpandBuilder.setBase(expandBaseBuilder);
         pathExpandBuilder.setPathOpt(Utils.protoPathOpt(pxd.getPathOpt()));
@@ -264,7 +264,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         }
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setPath(pathExpandBuilder));
-        oprBuilder.addAllMetaData(Utils.physicalProtoRowType(rowType, isColumnId));
         if (isPartitioned) {
             addRepartitionToAnother(pxd.getStartAlias().getAliasId());
         }
