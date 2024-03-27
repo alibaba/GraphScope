@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.common.ir.plan;
+package com.alibaba.graphscope.common.ir.planner.rbo;
 
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
@@ -12,7 +12,7 @@ import org.apache.calcite.rel.rules.CoreRules;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class HepPlannerTest {
+public class FilterPushDownTest {
     // Match(x:person)-[y:knows]->() Where y.weight = 1.0 -> Match(x:person)-[y:knows {weight: 1.0}]
     @Test
     public void push_filter_1_test() {

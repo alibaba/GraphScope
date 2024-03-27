@@ -133,7 +133,7 @@ public class GraphPhysicalExpand extends SingleRel {
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
                         "startAlias",
-                        fusedExpand.getStartAlias(),
+                        fusedExpand.getStartAlias().getAliasName(),
                         fusedExpand.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
                 .itemIf(
                         "fusedFilter",

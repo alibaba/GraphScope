@@ -52,13 +52,12 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -67,7 +66,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GraphRelToProtoConverter extends GraphShuttle {
-    private static final Logger logger = LoggerFactory.getLogger(GraphRelToProtoConverter.class);
     private final boolean isColumnId;
     private final RexBuilder rexBuilder;
     private final Configs graphConfig;
@@ -955,6 +953,11 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     @Override
     public RelNode visit(GraphLogicalMultiMatch match) {
+        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    }
+
+    @Override
+    public RelNode visit(MultiJoin join) {
         throw new UnsupportedOperationException("Unimplemented method 'visit'");
     }
 }

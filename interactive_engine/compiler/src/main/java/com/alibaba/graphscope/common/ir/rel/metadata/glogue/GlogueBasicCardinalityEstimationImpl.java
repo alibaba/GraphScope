@@ -1,19 +1,3 @@
-/*
- * Copyright 2024 Alibaba Group Holding Limited.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
@@ -37,26 +21,26 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
     private static Logger logger =
             LoggerFactory.getLogger(GlogueBasicCardinalityEstimationImpl.class);
 
-    public GlogueBasicCardinalityEstimationImpl(Glogue glogue, GlogueSchema schema) {
+    public GlogueBasicCardinalityEstimationImpl() {
         this.patternCardinality = new HashMap<Pattern, Double>();
-        create(glogue, schema);
     }
 
-    private GlogueBasicCardinalityEstimationImpl create(Glogue glogue, GlogueSchema schema) {
+    public GlogueBasicCardinalityEstimationImpl create(Glogue glogue, GlogueSchema schema) {
         Deque<Pattern> patternQueue = new ArrayDeque<>();
         List<Pattern> roots = glogue.getRoots();
         for (Pattern pattern : roots) {
             // single vertex pattern
             PatternVertex singleVertexPattern = pattern.getVertexSet().iterator().next();
-            if (singleVertexPattern.getVertexTypeIds().size() != 1) {
+            if (!singleVertexPattern.isDistinct()) {
                 throw new UnsupportedOperationException(
                         "In GlogueBasicCardinalityEstimationImpl creation, singleVertexPattern "
                                 + singleVertexPattern
-                                + " is not of basic type.");
+                                + " is not distinct.");
             }
             Integer vertexTypeId = singleVertexPattern.getVertexTypeIds().get(0);
             Double singleVertexPatternCount = schema.getVertexTypeCardinality(vertexTypeId);
             this.patternCardinality.put(pattern, singleVertexPatternCount);
+            logger.debug("root vertex pattern: " + pattern + ": " + singleVertexPatternCount);
             patternQueue.add(pattern);
         }
 
@@ -71,16 +55,24 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
                 if (this.containsPattern(newPattern)) {
                     // if the cardinality of the pattern is already computed previously, compute the
                     // pattern extension cost.
+                    logger.debug("pattern already computed: " + newPattern);
+                    // sort extend edges based on weights
                     Double extendStepWeight = estimateExtendWeight(schema, extendStep);
                     extendStep.setWeight(extendStepWeight);
                 } else {
                     // otherwise, compute the cardinality of the pattern, together with the pattern
                     // extension cost.
+                    logger.debug("extend step: " + extendStep.toString());
                     Pair<Double, Double> patternCountWithWeight =
                             estimatePatternCountWithExtendWeight(schema, patternCount, extendStep);
                     this.patternCardinality.put(newPattern, patternCountWithWeight.getValue0());
                     extendStep.setWeight(patternCountWithWeight.getValue1());
                     patternQueue.add(newPattern);
+                    logger.debug(
+                            "new pattern: "
+                                    + newPattern
+                                    + ": "
+                                    + patternCountWithWeight.getValue0());
                 }
             }
         }

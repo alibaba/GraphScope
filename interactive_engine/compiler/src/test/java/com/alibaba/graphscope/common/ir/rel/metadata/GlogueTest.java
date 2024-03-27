@@ -35,7 +35,7 @@ import java.util.Set;
 public class GlogueTest {
 
     static GlogueSchema g = GLogueSchemaTest.mockGlogueSchema();
-    static Glogue gl = new Glogue(g, 3);
+    static Glogue gl = new Glogue().create(g, 3);
     static Double delta = 0.00001;
     static Integer person = 0;
     static Integer software = 1;

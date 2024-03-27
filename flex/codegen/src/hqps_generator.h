@@ -472,8 +472,8 @@ class QueryGenerator {
       // Path Expand + GetV shall be always fused.
       case physical::PhysicalOpr::Operator::kPath: {
         physical::PhysicalOpr::MetaData meta_data;
-        LOG(INFO) << "Found a path operator";
         auto& path_op = opr.path();
+        LOG(INFO) << "Found a path operator: " << path_op.DebugString();
         if (FUSE_PATH_EXPAND_V && !path_op.has_alias() && (i + 1 < size)) {
           auto& next_op = plan_.plan(i + 1).opr();
           if (next_op.op_kind_case() ==

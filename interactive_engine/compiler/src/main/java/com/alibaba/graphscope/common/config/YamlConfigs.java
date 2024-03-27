@@ -76,6 +76,26 @@ public class YamlConfigs extends Configs {
                             }
                         })
                 .put(
+                        "physical.opt.config",
+                        (Configs configs) -> {
+                            if (configs.get("compiler.physical.opt.config") != null) {
+                                return configs.get("compiler.physical.opt.config");
+                            } else {
+                                return "ffi"; // default proto
+                            }
+                        }
+                )
+                .put(
+                        "graph.planner.cbo.glogue.schema",
+                        (Configs configs) -> {
+                            if (configs.get("compiler.planner.cbo.glogue.schema") != null) {
+                                return configs.get("compiler.planner.cbo.glogue.schema");
+                            } else {
+                                return null; // default default
+                            }
+                        }
+                )
+                .put(
                         "graph.stored.procedures",
                         (Configs configs) -> {
                             String workspace = configs.get("directories.workspace");

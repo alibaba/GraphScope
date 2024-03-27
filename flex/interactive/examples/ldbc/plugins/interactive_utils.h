@@ -42,6 +42,28 @@ void encode_ic1_result(const results::CollectiveResults& ic1_result,
     LOG(INFO) << result.DebugString();
   }
 }
+
+void encode_ic2_result(const results::CollectiveResults& ic2_result,
+                       Encoder& encoder) {
+  auto size = ic2_result.results_size();
+  for (int32_t i = 0; i < size; ++i) {
+    auto& result = ic2_result.results(i);
+    const auto& personId =
+        result.record().columns(0).entry().element().object().i32();
+    // auto& result = ic1_result.results(i);
+    // const auto& personId =
+    //     result.record().columns(0).entry().element().object().i32();
+    // const auto& personLastName =
+    //     result.record().columns(0).entry().element().object().str();
+    // const auto& person_distance =
+    //     result.record().columns(0).entry().element().object().i32();
+    // LOG(INFO) << "personId: " << personId
+    //           << " personLastName: " << personLastName
+    //           << " person_distance: " << person_distance;
+
+    LOG(INFO) << result.DebugString();
+  }
+}
 }  // namespace gs
 
 #endif  // FLEX_INTERACTIVE_EXAMPLES_LDBC_PLUGINS_INTERACTIVE_UTILS_H_

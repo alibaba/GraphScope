@@ -110,11 +110,13 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             CypherGSParser.OC_ComparisonExpressionContext ctx) {
         List<SqlOperator> operators = new ArrayList<>();
         List<ExprVisitorResult> operands = new ArrayList<>();
-        operands.add(visitOC_StringPredicateExpression(ctx.oC_StringPredicateExpression()));
+        operands.add(
+                visitOC_StringOrListPredicateExpression(ctx.oC_StringOrListPredicateExpression()));
         for (CypherGSParser.OC_PartialComparisonExpressionContext partialCtx :
                 ctx.oC_PartialComparisonExpression()) {
             operands.add(
-                    visitOC_StringPredicateExpression(partialCtx.oC_StringPredicateExpression()));
+                    visitOC_StringOrListPredicateExpression(
+                            partialCtx.oC_StringOrListPredicateExpression()));
             operators.addAll(
                     Utils.getOperators(
                             partialCtx.children,
@@ -125,8 +127,8 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_StringPredicateExpression(
-            CypherGSParser.OC_StringPredicateExpressionContext ctx) {
+    public ExprVisitorResult visitOC_StringOrListPredicateExpression(
+            CypherGSParser.OC_StringOrListPredicateExpressionContext ctx) {
         List<ExprVisitorResult> operands =
                 Lists.newArrayList(
                         visitOC_AddOrSubtractOrBitManipulationExpression(
@@ -161,6 +163,11 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             }
             operands.add(new ExprVisitorResult(builder.literal(regexPattern.toString())));
             operators.add(GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE);
+        } else if (ctx.IN() != null) {
+            operands.add(
+                    visitOC_AddOrSubtractOrBitManipulationExpression(
+                            ctx.oC_AddOrSubtractOrBitManipulationExpression(1)));
+            operators.add(GraphStdOperatorTable.IN);
         }
         return binaryCall(operators, operands);
     }
