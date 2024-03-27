@@ -47,6 +47,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
@@ -239,7 +240,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fused;
                 GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
                 expandBaseBuilder.setEdgeExpand(expand);
-                rowType = fusedExpand.getRowType();
+                rowType = fusedExpand.getFusedExpand().getRowType();
             } else {
                 throw new UnsupportedOperationException(
                         "unsupported fused plan in path expand base");
