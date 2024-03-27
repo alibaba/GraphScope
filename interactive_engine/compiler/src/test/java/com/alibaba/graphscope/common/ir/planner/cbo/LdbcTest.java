@@ -352,6 +352,65 @@ public class LdbcTest {
 
     // todo: fix issues in ldbc7: expand (with alias) + getV cannot be fused thus causing the
     // execution errors of extend intersect
+    @Test
+    public void ldbc7_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "MATCH (person:PERSON {id:"
+                                    + " 2199023382370})<-[:HASCREATOR]-(message)<-[like:LIKES]-(liker:PERSON),\n"
+                                    + "      (liker)-[:KNOWS]-(person)\n"
+                                    + "WITH liker, message, like.creationDate AS likeTime, person\n"
+                                    + "ORDER BY likeTime DESC, message.id ASC\n"
+                                    + "WITH liker, person, head(collect(message)) as message,"
+                                    + " head(collect(likeTime)) AS likeTime\n"
+                                    + "RETURN\n"
+                                    + "    liker.id AS personId,\n"
+                                    + "    liker.firstName AS personFirstName,\n"
+                                    + "    liker.lastName AS personLastName,\n"
+                                    + "    likeTime AS likeCreationDate,\n"
+                                    + "    message.id AS commentOrPostId\n"
+                                    + "ORDER BY\n"
+                                    + "    likeCreationDate DESC,\n"
+                                    + "    personId ASC\n"
+                                    + "LIMIT 20;",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalSort(sort0=[likeCreationDate], sort1=[personId], dir0=[DESC],"
+                    + " dir1=[ASC], fetch=[20])\n"
+                    + "  GraphLogicalProject(personId=[liker.id],"
+                    + " personFirstName=[liker.firstName], personLastName=[liker.lastName],"
+                    + " likeCreationDate=[likeTime], commentOrPostId=[message.id],"
+                    + " isAppend=[false])\n"
+                    + "    GraphLogicalAggregate(keys=[{variables=[liker, person], aliases=[liker,"
+                    + " person]}], values=[[{operands=[message], aggFunction=FIRST_VALUE,"
+                    + " alias='message', distinct=false}, {operands=[likeTime],"
+                    + " aggFunction=FIRST_VALUE, alias='likeTime', distinct=false}]])\n"
+                    + "      GraphLogicalSort(sort0=[likeTime], sort1=[message.id], dir0=[DESC],"
+                    + " dir1=[ASC])\n"
+                    + "        GraphLogicalProject(liker=[liker], message=[message],"
+                    + " likeTime=[like.creationDate], person=[person], isAppend=[false])\n"
+                    + "          MultiJoin(joinFilter=[=(liker, liker)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
+                    + " projFields=[[ALL, ALL]])\n"
+                    + "            GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[liker], opt=[START])\n"
+                    + "              GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[LIKES]}], alias=[like], startAlias=[message], opt=[IN])\n"
+                    + "                CommonTableScan(table=[[common#-1625147595]])\n"
+                    + "            GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
+                    + " alias=[liker], startAlias=[person], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + "              CommonTableScan(table=[[common#-1625147595]])\n"
+                    + "common#-1625147595:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
+                    + " alias=[message], startAlias=[person], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 2199023382370)])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+    }
 
     @Test
     public void ldbc8_test() {
