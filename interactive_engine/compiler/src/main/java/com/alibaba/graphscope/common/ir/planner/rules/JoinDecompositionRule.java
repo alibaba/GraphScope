@@ -39,8 +39,8 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
     private int getMaxVertexNum(Pattern pattern) {
         int maxVertexNum = pattern.getVertexNumber();
         for (PatternEdge edge : pattern.getEdgeSet()) {
-            if (edge.getDetails().getRange() != null) {
-                PathExpandRange range = edge.getDetails().getRange();
+            if (edge.getElementDetails().getRange() != null) {
+                PathExpandRange range = edge.getElementDetails().getRange();
                 int maxHop = range.getOffset() + range.getFetch() - 1;
                 maxVertexNum += (maxHop - 1);
             }
@@ -279,7 +279,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
             return;
         }
         PatternEdge probeEdge = probeEdges.get(edgeId);
-        PathExpandRange pxdRange = probeEdge.getDetails().getRange();
+        PathExpandRange pxdRange = probeEdge.getElementDetails().getRange();
         // try to split the path expand
         if (pxdRange != null) {
             int minHop = pxdRange.getOffset();
@@ -366,7 +366,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
             PathExpandRange newRange) {
         int randomId = UUID.randomUUID().hashCode();
         ElementDetails newDetails =
-                new ElementDetails(oldEdge.getDetails().getSelectivity(), newRange);
+                new ElementDetails(oldEdge.getElementDetails().getSelectivity(), newRange);
         return (oldEdge instanceof SinglePatternEdge)
                 ? new SinglePatternEdge(
                         newSrc,

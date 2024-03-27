@@ -44,7 +44,7 @@ public abstract class PatternEdge {
         return this.isBoth;
     }
 
-    public ElementDetails getDetails() {
+    public ElementDetails getElementDetails() {
         return elementDetails;
     }
 

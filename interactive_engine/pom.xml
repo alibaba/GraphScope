@@ -652,11 +652,6 @@
         <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>org.jgrapht</groupId>
-        <artifactId>jgrapht-core</artifactId>
-        <version>${jgrapht.version}</version>
-      </dependency>
-      <dependency>
         <groupId>io.opentelemetry</groupId>
         <artifactId>opentelemetry-bom</artifactId>
         <version>1.35.0</version>

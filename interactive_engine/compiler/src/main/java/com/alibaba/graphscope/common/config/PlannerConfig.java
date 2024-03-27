@@ -64,7 +64,7 @@ public class PlannerConfig {
         return GRAPH_PLANNER_CBO_GLOGUE_SIZE.get(configs);
     }
 
-    public GlogueSchema getGlogueSchema() {
+    public @Nullable GlogueSchema getGlogueSchema() {
         return glogueSchema;
     }
 
