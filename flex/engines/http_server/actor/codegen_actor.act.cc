@@ -43,14 +43,14 @@ seastar::future<query_result> codegen_actor::do_codegen(query_param&& param) {
   // plan
   auto& str = param.content;
   if (str.size() <= 0) {
-    LOG(INFO) << "Empty query";
+    VLOG(10) << "Empty query";
     return seastar::make_exception_future<query_result>(
         std::runtime_error("Empty query string"));
   }
 
   const char* str_data = str.data();
   size_t str_length = str.size();
-  LOG(INFO) << "Deserialize physical job request" << str_length;
+  VLOG(10) << "Deserialize physical job request" << str_length;
 
   physical::PhysicalPlan plan;
   bool ret = plan.ParseFromArray(str_data, str_length);
@@ -74,10 +74,10 @@ seastar::future<query_result> codegen_actor::do_codegen(query_param&& param) {
                 std::runtime_error("Fail to parse job id from codegen proxy"));
           }
           // 1. load and run.
-          LOG(INFO) << "Okay, try to run the query of lib path: "
-                    << job_id_and_lib_path.second
-                    << ", job id: " << job_id_and_lib_path.first
-                    << "local shard id: " << hiactor::local_shard_id();
+          VLOG(10) << "Okay, try to run the query of lib path: "
+                   << job_id_and_lib_path.second
+                   << ", job id: " << job_id_and_lib_path.first
+                   << "local shard id: " << hiactor::local_shard_id();
           return seastar::make_ready_future<query_result>(
               std::move(job_id_and_lib_path.second));
         });

@@ -12,35 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
-#define ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
-
-#include <boost/property_tree/json_parser.hpp>
-#include <seastar/http/httpd.hh>
-#include <string>
-#include "flex/engines/http_server/server_utils.h"
 #include "flex/engines/http_server/types.h"
-#include "flex/utils/service_utils.h"
+#include "flex/utils/result.h"
+#include "seastar/http/reply.hh"
+
+#ifndef ENGINES_HTTP_SERVER_SERVER_UTILS_H_
+#define ENGINES_HTTP_SERVER_SERVER_UTILS_H_
 
 namespace server {
+seastar::httpd::reply::status_type status_code_to_http_code(
+    gs::StatusCode code);
 
-class InteractiveAdminService;
-class admin_http_handler {
- public:
-  admin_http_handler(uint16_t http_port);
+seastar::future<std::unique_ptr<seastar::httpd::reply>>
+catch_exception_and_return_reply(std::unique_ptr<seastar::httpd::reply> rep,
+                                 std::exception_ptr ex);
 
-  void start();
-  void stop();
-
- private:
-  seastar::future<> set_routes();
-
- private:
-  const uint16_t http_port_;
-  seastar::httpd::http_server_control server_;
-};
+seastar::future<std::unique_ptr<seastar::httpd::reply>>
+return_reply_with_result(std::unique_ptr<seastar::httpd::reply> rep,
+                         admin_query_result&& result);
 
 }  // namespace server
 
-#endif  // ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
+#endif  // ENGINES_HTTP_SERVER_SERVER_UTILS_H_

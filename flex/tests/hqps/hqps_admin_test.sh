@@ -46,7 +46,6 @@ fi
 GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/movies/movies_schema.yaml
 GRAPH_BULK_LOAD_YAML=${GS_TEST_DIR}/flex/movies/movies_import.yaml
 RAW_CSV_FILES=${FLEX_HOME}/interactive/examples/movies/
-GRAPH_CSR_DATA_DIR=${HOME}/csr-data-dir/
 TEST_CYPHER_QUERIES="${FLEX_HOME}/interactive/examples/movies/0_get_user.cypher ${FLEX_HOME}/interactive/examples/movies/5_recommend_rule.cypher"
 
 
