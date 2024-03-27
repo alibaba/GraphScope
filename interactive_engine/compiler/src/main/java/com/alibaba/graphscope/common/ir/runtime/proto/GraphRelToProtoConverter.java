@@ -47,7 +47,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalUnion;
-import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
@@ -283,8 +282,10 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpand(physicalExpand);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
+        // TODO: Currently we use the row type of ExpandE as the output row type of the fused ExpandV, as desired by the engine implementation.
+        // This would be refactored in the future.
         oprBuilder.addAllMetaData(
-                Utils.physicalProtoRowType(physicalExpand.getRowType(), isColumnId));
+                Utils.physicalProtoRowType(physicalExpand.getFusedExpand().getRowType(), isColumnId));
         if (isPartitioned) {
             addRepartitionToAnother(physicalExpand.getStartAlias().getAliasId());
         }
