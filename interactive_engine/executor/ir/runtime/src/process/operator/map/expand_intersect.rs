@@ -45,7 +45,7 @@ struct ExpandOrIntersect<E: Entry> {
 /// An optimized entry implementation for intersection, which denotes a collection of vertices;
 /// Specifically, vertex_vec records the unique vertex ids in the collection,
 /// and count_vec records the number of the corresponding vertex, since duplicated vertices are allowed.
-#[derive(Debug, Clone, Hash, PartialEq, PartialOrd, Default)]
+#[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub struct IntersectionEntry {
     vertex_vec: Vec<ID>,
     count_vec: Vec<u32>,
@@ -71,9 +71,6 @@ impl IntersectionEntry {
 
     fn intersect<Iter: Iterator<Item = ID>>(&mut self, seeker: Iter) {
         let len = self.vertex_vec.len();
-        if len == 0 {
-            return;
-        }
         let mut s = vec![0; len];
         for vid in seeker {
             if let Ok(idx) = self
@@ -207,79 +204,6 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect
     }
 }
 
-/// An OptionalExpandOrIntersect operator to expand neighbor
-/// e.g., based on a->b, we intersect optional edges of a-(opt)->c and b-(opt)->c,
-/// then the results could be either matches of a->b->c + a->c if there exits matches of c, or just a->b, where the match for c is a Object::None.
-struct OptionalExpandOrIntersect<E: Entry> {
-    start_v_tag: Option<KeyId>,
-    edge_or_end_v_tag: KeyId,
-    stmt: Box<dyn Statement<ID, E>>,
-}
-
-impl<E: Entry + 'static> FilterMapFunction<Record, Record> for OptionalExpandOrIntersect<E> {
-    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        let entry = input.get(self.start_v_tag).ok_or_else(|| {
-            FnExecError::get_tag_error(&format!(
-                "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
-                self.start_v_tag, input
-            ))
-        })?;
-        match entry.get_type() {
-            EntryType::Vertex => {
-                let id = entry.id();
-                let iter = self.stmt.exec(id)?.map(|e| {
-                    if let Some(vertex) = e.as_vertex() {
-                        vertex.id() as ID
-                    } else if let Some(edge) = e.as_edge() {
-                        edge.get_other_id() as ID
-                    } else {
-                        unreachable!()
-                    }
-                });
-                if let Some(pre_entry) = input.get_mut(Some(self.edge_or_end_v_tag)) {
-                    // the case of expansion and intersection
-                    // The behavior of intersection is to intersect with the previous intersection:
-                    // 1. if the previous intersection is empty, return an record with the intersected vertex as an empty IntersectionEntry
-                    // 2. if the previous intersection is not empty, intersect with the current neighbor_iter
-                    // 2.1 if the intersected result is empty, return an record with the intersected vertex as an empty IntersectionEntry
-                    // 2.2 if the intersected result is not empty, return an record with the intersected vertex
-                    let pre_intersection = pre_entry
-                        .as_any_mut()
-                        .downcast_mut::<IntersectionEntry>()
-                        .ok_or_else(|| {
-                            FnExecError::unexpected_data_error(&format!(
-                                "entry  is not a intersection in ExpandOrIntersect"
-                            ))
-                        })?;
-                    if pre_intersection.is_empty() {
-                        // do nothing as the previous intersection is already an empty IntersectionEntry, denoting None
-                        Ok(Some(input))
-                    } else {
-                        let mut pre_intersection_clone = pre_intersection.clone();
-                        pre_intersection_clone.intersect(iter);
-                        if pre_intersection_clone.is_empty() {
-                            Ok(Some(input))
-                        } else {
-                            *pre_intersection = pre_intersection_clone;
-                            Ok(Some(input))
-                        }
-                    }
-                } else {
-                    let neighbors_intersection = IntersectionEntry::from_iter(iter);
-                    // append columns without changing head
-                    let columns = input.get_columns_mut();
-                    columns.insert(self.edge_or_end_v_tag as usize, DynEntry::new(neighbors_intersection));
-                    Ok(Some(input))
-                }
-            }
-            _ => Err(FnExecError::unsupported_error(&format!(
-                "expand or intersect entry {:?} of tag {:?} failed in ExpandOrIntersect",
-                entry, self.edge_or_end_v_tag
-            )))?,
-        }
-    }
-}
-
 impl FilterMapFuncGen for pb::EdgeExpand {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         let graph = graph_proxy::apis::get_graph().ok_or_else(|| FnGenError::NullGraphError)?;
@@ -303,25 +227,13 @@ impl FilterMapFuncGen for pb::EdgeExpand {
                 // Expand vertices with filters on edges.
                 // This can be regarded as a combination of EdgeExpand (with expand_opt as Edge) + GetV
                 let stmt = graph.prepare_explore_edge(direction, &query_params)?;
-                if self.is_optional {
-                    let edge_expand_operator =
-                        OptionalExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
-                    Ok(Box::new(edge_expand_operator))
-                } else {
-                    let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
-                    Ok(Box::new(edge_expand_operator))
-                }
+                let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
+                Ok(Box::new(edge_expand_operator))
             } else {
                 // Expand vertices without any filters
                 let stmt = graph.prepare_explore_vertex(direction, &query_params)?;
-                if self.is_optional {
-                    let edge_expand_operator =
-                        OptionalExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
-                    Ok(Box::new(edge_expand_operator))
-                } else {
-                    let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
-                    Ok(Box::new(edge_expand_operator))
-                }
+                let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
+                Ok(Box::new(edge_expand_operator))
             }
         }
     }
