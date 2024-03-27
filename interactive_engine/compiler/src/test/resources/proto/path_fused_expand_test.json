@@ -61,17 +61,24 @@
     "metaData": [{
       "type": {
         "graphType": {
-          "elementOpt": "EDGE",
           "graphDataType": [{
             "label": {
-              "srcLabel": 0,
-              "dstLabel": 0
             },
             "props": [{
               "propId": {
-                "name": "weight"
+                "name": "id"
               },
-              "type": "DOUBLE"
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
             }]
           }]
         }
