@@ -61,6 +61,8 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     private final AliasNameWithId startAlias;
 
+    private final boolean optional;
+
     protected GraphLogicalPathExpand(
             GraphOptCluster cluster,
             @Nullable List<RelHint> hints,
@@ -72,7 +74,8 @@ public class GraphLogicalPathExpand extends SingleRel {
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
             @Nullable String aliasName,
-            AliasNameWithId startAlias) {
+            AliasNameWithId startAlias,
+            boolean optional) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
@@ -86,6 +89,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
         this.startAlias = Objects.requireNonNull(startAlias);
+        this.optional = optional;
     }
 
     protected GraphLogicalPathExpand(
@@ -98,7 +102,8 @@ public class GraphLogicalPathExpand extends SingleRel {
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
             @Nullable String aliasName,
-            AliasNameWithId startAlias) {
+            AliasNameWithId startAlias,
+            boolean optional) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.expand = null;
         this.getV = null;
@@ -112,6 +117,35 @@ public class GraphLogicalPathExpand extends SingleRel {
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
         this.startAlias = Objects.requireNonNull(startAlias);
+        this.optional = optional;
+    }
+
+    public static GraphLogicalPathExpand create(
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            RelNode input,
+            RelNode expand,
+            RelNode getV,
+            @Nullable RexNode offset,
+            @Nullable RexNode fetch,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
+            String aliasName,
+            AliasNameWithId startAlias,
+            boolean optional) {
+        return new GraphLogicalPathExpand(
+                cluster,
+                hints,
+                input,
+                expand,
+                getV,
+                offset,
+                fetch,
+                resultOpt,
+                pathOpt,
+                aliasName,
+                startAlias,
+                optional);
     }
 
     public static GraphLogicalPathExpand create(
@@ -126,7 +160,7 @@ public class GraphLogicalPathExpand extends SingleRel {
             GraphOpt.PathExpandPath pathOpt,
             String aliasName,
             AliasNameWithId startAlias) {
-        return new GraphLogicalPathExpand(
+        return create(
                 cluster,
                 hints,
                 input,
@@ -137,7 +171,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                 resultOpt,
                 pathOpt,
                 aliasName,
-                startAlias);
+                startAlias,
+                false);
     }
 
     public static GraphLogicalPathExpand create(
@@ -151,6 +186,32 @@ public class GraphLogicalPathExpand extends SingleRel {
             GraphOpt.PathExpandPath pathOpt,
             String aliasName,
             AliasNameWithId startAlias) {
+        return create(
+                cluster,
+                hints,
+                input,
+                fused,
+                offset,
+                fetch,
+                resultOpt,
+                pathOpt,
+                aliasName,
+                startAlias,
+                false);
+    }
+
+    public static GraphLogicalPathExpand create(
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            RelNode input,
+            RelNode fused,
+            @Nullable RexNode offset,
+            @Nullable RexNode fetch,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
+            String aliasName,
+            AliasNameWithId startAlias,
+            boolean optional) {
         Preconditions.checkArgument(
                 resultOpt != GraphOpt.PathExpandResult.ALL_V_E,
                 "can not fuse expand with getV if result opt is set to " + resultOpt.name());
@@ -164,7 +225,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                 resultOpt,
                 pathOpt,
                 aliasName,
-                startAlias);
+                startAlias,
+                optional);
     }
 
     @Override
@@ -181,7 +243,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .itemIf(
                         "start_alias",
                         startAlias.getAliasName(),
-                        startAlias.getAliasName() != AliasInference.DEFAULT_NAME);
+                        startAlias.getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf("optional", optional, optional);
     }
 
     public String getAliasName() {
@@ -222,6 +285,10 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     public AliasNameWithId getStartAlias() {
         return startAlias;
+    }
+
+    public boolean isOptional() {
+        return optional;
     }
 
     @Override
@@ -271,7 +338,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                     getResultOpt(),
                     getPathOpt(),
                     getAliasName(),
-                    getStartAlias());
+                    getStartAlias(),
+                    isOptional());
         } else {
             return new GraphLogicalPathExpand(
                     (GraphOptCluster) getCluster(),
@@ -284,7 +352,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                     getResultOpt(),
                     getPathOpt(),
                     getAliasName(),
-                    getStartAlias());
+                    getStartAlias(),
+                    isOptional());
         }
     }
 

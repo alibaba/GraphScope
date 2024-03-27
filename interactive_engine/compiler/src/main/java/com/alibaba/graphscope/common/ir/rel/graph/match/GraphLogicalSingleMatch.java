@@ -18,10 +18,12 @@ package com.alibaba.graphscope.common.ir.rel.graph.match;
 
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
@@ -79,6 +81,16 @@ public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
             return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
+    }
+
+    @Override
+    public GraphLogicalSingleMatch copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        return new GraphLogicalSingleMatch(
+                (GraphOptCluster) getCluster(),
+                ImmutableList.of(),
+                inputs.get(0),
+                sentence,
+                matchOpt);
     }
 
     public RelNode getSentence() {
