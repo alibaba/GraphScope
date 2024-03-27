@@ -948,16 +948,19 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     @Override
     public RelNode visit(GraphLogicalSingleMatch match) {
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        throw new UnsupportedOperationException(
+                "converting logical match to physical plan is unsupported yet");
     }
 
     @Override
     public RelNode visit(GraphLogicalMultiMatch match) {
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        throw new UnsupportedOperationException(
+                "converting logical match to physical plan is unsupported yet");
     }
 
     @Override
     public RelNode visit(MultiJoin join) {
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        throw new UnsupportedOperationException(
+                "converting logical intersect to physical plan is unsupported yet");
     }
 }

@@ -22,11 +22,11 @@ import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.Map;
 
-public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
+public class FrontendStoreService extends FrontendStoreServiceGrpc.FrontendStoreServiceImplBase {
 
     private final StoreService storeService;
 
-    public StoreIngestService(StoreService storeService) {
+    public FrontendStoreService(StoreService storeService) {
         this.storeService = storeService;
     }
 
@@ -110,5 +110,21 @@ public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
                                         .asRuntimeException());
                     }
                 });
+    }
+
+    @Override
+    public void getState(
+            GetStoreStateRequest request, StreamObserver<GetStoreStateResponse> responseObserver) {
+        long[] spaces = this.storeService.getDiskStatus();
+        GetStoreStateResponse.Builder builder = GetStoreStateResponse.newBuilder();
+        PartitionStatePb state =
+                PartitionStatePb.newBuilder()
+                        .setTotalSpace(spaces[0])
+                        .setUsableSpace(spaces[1])
+                        .build();
+
+        builder.putPartitionStates(storeService.getStoreId(), state);
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
     }
 }

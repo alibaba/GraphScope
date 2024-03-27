@@ -578,6 +578,7 @@ public class LdbcTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        System.out.println(after.explain());
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[replyCount], sort1=[personId], dir0=[DESC], dir1=[ASC],"
                     + " fetch=[20])\n"
@@ -586,12 +587,14 @@ public class LdbcTest {
                     + " values=[[{operands=[tag.name], aggFunction=COLLECT, alias='tagNames',"
                     + " distinct=true}, {operands=[comment], aggFunction=COUNT, alias='replyCount',"
                     + " distinct=true}]])\n"
-                    + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[TAGCLASS]}],"
-                    + " alias=[_], fusedFilter=[[=(_.name, _UTF-8'Organisation')]], opt=[END],"
-                    + " physicalOpt=[ITSELF])\n"
-                    + "      GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[ISSUBCLASSOF]}], alias=[baseTagClass],"
-                    + " startAlias=[PATTERN_VERTEX$9], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[TAGCLASS]}],"
+                    + " alias=[baseTagClass], fusedFilter=[[=(_.name, _UTF-8'Organisation')]],"
+                    + " opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[ISSUBCLASSOF]}], alias=[_], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "], fetch=[7], path_opt=[ARBITRARY], result_opt=[END_V], alias=[_],"
+                    + " start_alias=[PATTERN_VERTEX$9])\n"
                     + "        GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASTYPE]}],"
                     + " alias=[PATTERN_VERTEX$9], startAlias=[tag], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"

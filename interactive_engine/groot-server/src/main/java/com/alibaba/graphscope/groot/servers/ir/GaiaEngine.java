@@ -59,11 +59,7 @@ public class GaiaEngine implements ExecutorEngine {
     @Override
     public void init() {
         Configs engineConfigs =
-                Configs.newBuilder(this.configs)
-                        .put(
-                                "worker.num",
-                                String.valueOf(CommonConfig.STORE_NODE_COUNT.get(this.configs)))
-                        .build();
+                Configs.newBuilder(configs).put("worker.num", String.valueOf(nodeCount)).build();
         byte[] configBytes = engineConfigs.toProto().toByteArray();
         this.pointer = GaiaLibrary.INSTANCE.initialize(configBytes, configBytes.length);
     }

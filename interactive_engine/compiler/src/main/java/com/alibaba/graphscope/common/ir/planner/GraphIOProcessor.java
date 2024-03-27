@@ -272,7 +272,7 @@ public class GraphIOProcessor {
                                             expandEdge.getDetails().getSelectivity(),
                                             new PathExpandRange(offset, fetch));
                             expandEdge =
-                                    expandEdge.isDistinct()
+                                    (expandEdge instanceof SinglePatternEdge)
                                             ? new SinglePatternEdge(
                                                     expandEdge.getSrcVertex(),
                                                     expandEdge.getDstVertex(),

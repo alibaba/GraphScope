@@ -352,7 +352,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
 
     private PatternVertex createNewVertex(PatternVertex oldVertex) {
         int randomId = UUID.randomUUID().hashCode();
-        return oldVertex.isDistinct()
+        return (oldVertex instanceof SinglePatternVertex)
                 ? new SinglePatternVertex(
                         oldVertex.getVertexTypeIds().get(0), randomId, new ElementDetails())
                 : new FuzzyPatternVertex(
@@ -367,7 +367,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
         int randomId = UUID.randomUUID().hashCode();
         ElementDetails newDetails =
                 new ElementDetails(oldEdge.getDetails().getSelectivity(), newRange);
-        return oldEdge.isDistinct()
+        return (oldEdge instanceof SinglePatternEdge)
                 ? new SinglePatternEdge(
                         newSrc,
                         newDst,

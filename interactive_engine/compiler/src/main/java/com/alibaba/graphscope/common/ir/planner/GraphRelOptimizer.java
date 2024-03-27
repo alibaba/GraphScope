@@ -80,8 +80,8 @@ public class GraphRelOptimizer {
     public @Nullable RelMetadataQuery createMetaDataQuery() {
         if (config.isOn() && config.getOpt() == PlannerConfig.Opt.CBO) {
             GlogueSchema g = config.getGlogueSchema();
-            Glogue gl = new Glogue().create(g, config.getGlogueSize());
-            GlogueQuery gq = new GlogueQuery(gl, g);
+            Glogue gl = new Glogue(g, config.getGlogueSize());
+            GlogueQuery gq = new GlogueQuery(gl);
             return new GraphRelMetadataQuery(
                     new GraphMetadataHandlerProvider(this.matchPlanner, gq, this.config));
         }
