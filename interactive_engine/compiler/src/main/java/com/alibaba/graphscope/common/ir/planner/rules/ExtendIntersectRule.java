@@ -118,7 +118,7 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                                             k.getEdgeTypeIds(),
                                             Utils.getExtendDirection(k, target),
                                             estimator.estimate(k, target),
-                                            k.getDetails().getRange());
+                                            k.getElementDetails().getRange());
                                 })
                         .collect(Collectors.toList());
         ExtendStep extendStep =

@@ -339,10 +339,10 @@ public class GraphIOProcessor {
                                                     .intValue();
                             ElementDetails newDetails =
                                     new ElementDetails(
-                                            expandEdge.getDetails().getSelectivity(),
+                                            expandEdge.getElementDetails().getSelectivity(),
                                             new PathExpandRange(offset, fetch));
                             expandEdge =
-                                    expandEdge.isDistinct()
+                                    (expandEdge instanceof SinglePatternEdge)
                                             ? new SinglePatternEdge(
                                                     expandEdge.getSrcVertex(),
                                                     expandEdge.getDstVertex(),

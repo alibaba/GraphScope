@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.common.ir.rel.metadata.schema;
 
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
@@ -14,11 +30,8 @@ import org.jgrapht.*;
 import org.jgrapht.graph.*;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.rmi.server.ExportException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +40,6 @@ public class GlogueSchema {
     private Graph<Integer, EdgeTypeId> schemaGraph;
     private HashMap<Integer, Double> vertexTypeCardinality;
     private HashMap<EdgeTypeId, Double> edgeTypeCardinality;
-
-    public GlogueSchema() {
-        this.schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
-    }
 
     public GlogueSchema(
             GraphSchema graphSchema,
@@ -53,83 +62,12 @@ public class GlogueSchema {
         this.edgeTypeCardinality = edgeTypeCardinality;
     }
 
-    public List<Integer> getVertexTypes() {
-        return List.copyOf(this.schemaGraph.vertexSet());
-    }
-
-    public List<EdgeTypeId> getEdgeTypes() {
-        return List.copyOf(this.schemaGraph.edgeSet());
-    }
-
-    public List<EdgeTypeId> getAdjEdgeTypes(Integer source) {
-        return List.copyOf(this.schemaGraph.edgesOf(source));
-    }
-
-    public List<EdgeTypeId> getEdgeTypes(Integer source, Integer target) {
-        return List.copyOf(this.schemaGraph.getAllEdges(source, target));
-    }
-
-    public Graph<Integer, EdgeTypeId> getSchemaGraph() {
-        return this.schemaGraph;
-    }
-
-    public Double getVertexTypeCardinality(Integer vertexType) {
-        return this.vertexTypeCardinality.get(vertexType);
-    }
-
-    public Double getEdgeTypeCardinality(EdgeTypeId edgeType) {
-        return this.edgeTypeCardinality.get(edgeType);
-    }
-
-    // modern graph schema
-    // person: label 0, statistics 3;
-    // software: label 1, statistics 4;
-    // person-knows->person: label 0, statistics 5;
-    // person-created->software: label 1, statistics 6;
-    public GlogueSchema DefaultGraphSchema() {
-        Map<String, GraphVertex> vertexList = Maps.newHashMap();
-        Map<String, GraphEdge> edgeList = Maps.newHashMap();
-
-        DefaultGraphVertex person =
-                new DefaultGraphVertex(0, "person", List.of(), List.of(), 0, -1);
-        DefaultGraphVertex software =
-                new DefaultGraphVertex(1, "software", List.of(), List.of(), 0, -1);
-        vertexList.put("person", person);
-        vertexList.put("software", software);
-        DefaultEdgeRelation knowsRelation = new DefaultEdgeRelation(person, person);
-        DefaultGraphEdge knows =
-                new DefaultGraphEdge(0, "knows", List.of(), List.of(knowsRelation), 0);
-        DefaultEdgeRelation createdRelation = new DefaultEdgeRelation(person, software);
-        DefaultGraphEdge created =
-                new DefaultGraphEdge(1, "created", List.of(), List.of(createdRelation), 0);
-        edgeList.put("knows", knows);
-        edgeList.put("created", created);
-
-        DefaultGraphSchema graphSchema =
-                new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
-        HashMap<Integer, Double> vertexTypeCardinality = new HashMap<Integer, Double>();
-        vertexTypeCardinality.put(0, 3.0);
-        vertexTypeCardinality.put(1, 4.0);
-
-        HashMap<EdgeTypeId, Double> edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
-        edgeTypeCardinality.put(new EdgeTypeId(0, 0, 0), 5.0);
-        edgeTypeCardinality.put(new EdgeTypeId(0, 1, 1), 6.0);
-
-        GlogueSchema g = new GlogueSchema(graphSchema, vertexTypeCardinality, edgeTypeCardinality);
-        return g;
-    }
-
-    public GlogueSchema SchemaFromFile(String schemaPath) {
-        Map<String, GraphVertex> vertexList = Maps.newHashMap();
-        Map<String, GraphEdge> edgeList = Maps.newHashMap();
-        HashMap<Integer, Double> vertexTypeCardinality = new HashMap<Integer, Double>();
-        HashMap<EdgeTypeId, Double> edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
-
-        // read schema from file
-        File file = new File(schemaPath);
-
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+    public static GlogueSchema fromFile(String schemaPath) throws IOException {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(schemaPath))) {
+            Map<String, GraphVertex> vertexList = Maps.newHashMap();
+            Map<String, GraphEdge> edgeList = Maps.newHashMap();
+            HashMap<Integer, Double> vertexTypeCardinality = new HashMap<Integer, Double>();
+            HashMap<EdgeTypeId, Double> edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 // seperate by comma
@@ -167,33 +105,43 @@ public class GlogueSchema {
                             new EdgeTypeId(srcLabelId, dstLabelId, labelId), statistics);
                 }
             }
-            bufferedReader.close();
-        } catch (NumberFormatException | IOException e) {
-            e.printStackTrace();
+            DefaultGraphSchema graphSchema =
+                    new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
+            return new GlogueSchema(graphSchema, vertexTypeCardinality, edgeTypeCardinality);
         }
-
-        DefaultGraphSchema graphSchema =
-                new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
-        GlogueSchema g = new GlogueSchema(graphSchema, vertexTypeCardinality, edgeTypeCardinality);
-        return g;
     }
 
-    public static void main(String[] args) throws URISyntaxException, ExportException {
-        GlogueSchema g =
-                new GlogueSchema()
-                        .SchemaFromFile(
-                                "/workspaces/GraphScope/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/ir/rel/metadata/schema/resource/ldbc1_statistics.txt");
-        for (Integer vertexType : g.getVertexTypes()) {
-            System.out.println(
-                    "cardinality of " + vertexType + ": " + g.getVertexTypeCardinality(vertexType));
+    public List<Integer> getVertexTypes() {
+        return List.copyOf(this.schemaGraph.vertexSet());
+    }
+
+    public List<EdgeTypeId> getEdgeTypes() {
+        return List.copyOf(this.schemaGraph.edgeSet());
+    }
+
+    public List<EdgeTypeId> getAdjEdgeTypes(Integer source) {
+        return List.copyOf(this.schemaGraph.edgesOf(source));
+    }
+
+    public List<EdgeTypeId> getEdgeTypes(Integer source, Integer target) {
+        return List.copyOf(this.schemaGraph.getAllEdges(source, target));
+    }
+
+    public Double getVertexTypeCardinality(Integer vertexType) {
+        Double cardinality = this.vertexTypeCardinality.get(vertexType);
+        if (cardinality == null) {
+            return 0.0;
+        } else {
+            return cardinality;
         }
-        for (EdgeTypeId edgeType : g.getEdgeTypes()) {
-            System.out.println(
-                    "cardinality of " + edgeType + ": " + g.getEdgeTypeCardinality(edgeType));
+    }
+
+    public Double getEdgeTypeCardinality(EdgeTypeId edgeType) {
+        Double cardinality = this.edgeTypeCardinality.get(edgeType);
+        if (cardinality == null) {
+            return 0.0;
+        } else {
+            return cardinality;
         }
-        System.out.println("edges of place");
-        g.getAdjEdgeTypes(0).forEach(System.out::println);
-        System.out.println("edges of person");
-        g.getAdjEdgeTypes(1).forEach(System.out::println);
     }
 }

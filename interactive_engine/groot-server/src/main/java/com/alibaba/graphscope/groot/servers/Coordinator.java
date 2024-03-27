@@ -73,7 +73,6 @@ public class Coordinator extends NodeBase {
         } else {
             this.curator = CuratorUtils.makeCurator(configs);
             this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
-            //            metaStore = new ZkMetaStore(configs, this.curator);
         }
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
@@ -87,9 +86,7 @@ public class Coordinator extends NodeBase {
         IngestorWriteSnapshotIdNotifier writeSnapshotIdNotifier =
                 new IngestorWriteSnapshotIdNotifier(configs, ingestorSnapshotClients);
 
-        LogService logService = LogServiceFactory.makeLogService(configs);
-        this.snapshotManager =
-                new SnapshotManager(configs, metaStore, logService, writeSnapshotIdNotifier);
+        this.snapshotManager = new SnapshotManager(configs, metaStore, writeSnapshotIdNotifier);
         DdlExecutors ddlExecutors = new DdlExecutors();
         RoleClients<IngestorWriteClient> ingestorWriteClients =
                 new RoleClients<>(this.channelManager, RoleType.FRONTEND, IngestorWriteClient::new);
@@ -145,6 +142,7 @@ public class Coordinator extends NodeBase {
                         idAllocateService,
                         backupService,
                         coordinatorSnapshotService);
+        LogService logService = LogServiceFactory.makeLogService(configs);
         this.logRecycler = new LogRecycler(configs, logService, this.snapshotManager);
         this.graphInitializer = new GraphInitializer(configs, this.curator, metaStore, logService);
     }

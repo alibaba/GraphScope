@@ -58,7 +58,7 @@ public class PrimitiveCountEstimator {
         for (Integer typeId : vertex.getVertexTypeIds()) {
             sum += gq.getRowCount(new Pattern(new SinglePatternVertex(typeId)));
         }
-        return sum * vertex.getDetails().getSelectivity();
+        return sum * vertex.getElementDetails().getSelectivity();
     }
 
     public double estimate(PatternEdge edge) {
@@ -75,15 +75,15 @@ public class PrimitiveCountEstimator {
         // vertex selectivity should be calculated in each hop if the filter condition is applied in
         // each hop
         return sum
-                * edge.getDetails().getSelectivity()
-                * src.getDetails().getSelectivity()
-                * dst.getDetails().getSelectivity();
+                * edge.getElementDetails().getSelectivity()
+                * src.getElementDetails().getSelectivity()
+                * dst.getElementDetails().getSelectivity();
     }
 
     // estimate the row count for each type id in the edge
     public double estimate(PatternEdge edge, EdgeTypeId typeId) {
         int minHop = 1, maxHop = 1;
-        PathExpandRange range = edge.getDetails().getRange();
+        PathExpandRange range = edge.getElementDetails().getRange();
         if (range != null) {
             minHop = range.getOffset();
             maxHop = range.getOffset() + range.getFetch() - 1;

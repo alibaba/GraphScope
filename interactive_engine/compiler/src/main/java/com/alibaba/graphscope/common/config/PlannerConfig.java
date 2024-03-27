@@ -2,6 +2,9 @@ package com.alibaba.graphscope.common.config;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,7 +18,7 @@ public class PlannerConfig {
     public static final Config<Integer> GRAPH_PLANNER_CBO_GLOGUE_SIZE =
             Config.intConfig("graph.planner.cbo.glogue.size", 3);
     public static final Config<String> GRAPH_PLANNER_CBO_GLOGUE_SCHEMA =
-            Config.stringConfig("graph.planner.cbo.glogue.schema", "");
+            Config.stringConfig("graph.planner.cbo.glogue.schema", ".");
     public static final Config<Integer> JOIN_MIN_PATTERN_SIZE =
             Config.intConfig("graph.planner.join.min.pattern.size", 5);
     public static final Config<Integer> JOIN_COST_FACTOR_1 =
@@ -25,16 +28,19 @@ public class PlannerConfig {
 
     private final Configs configs;
     private final List<String> rules;
-    private final GlogueSchema glogueSchema;
+    private final @Nullable GlogueSchema glogueSchema;
 
     public PlannerConfig(Configs configs) {
         this.configs = configs;
         this.rules = Utils.convertDotString(GRAPH_PLANNER_RULES.get(configs));
-        String schemaPath = GRAPH_PLANNER_CBO_GLOGUE_SCHEMA.get(configs);
-        this.glogueSchema =
-                schemaPath.isEmpty()
-                        ? new GlogueSchema().DefaultGraphSchema()
-                        : new GlogueSchema().SchemaFromFile(schemaPath);
+        try {
+            this.glogueSchema =
+                    (isOn() && getOpt() == Opt.CBO)
+                            ? GlogueSchema.fromFile(GRAPH_PLANNER_CBO_GLOGUE_SCHEMA.get(configs))
+                            : null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public enum Opt {
@@ -58,7 +64,7 @@ public class PlannerConfig {
         return GRAPH_PLANNER_CBO_GLOGUE_SIZE.get(configs);
     }
 
-    public GlogueSchema getGlogueSchema() {
+    public @Nullable GlogueSchema getGlogueSchema() {
         return glogueSchema;
     }
 

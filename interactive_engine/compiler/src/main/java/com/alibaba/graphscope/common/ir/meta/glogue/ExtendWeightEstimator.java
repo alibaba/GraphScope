@@ -65,10 +65,10 @@ public class ExtendWeightEstimator {
             pattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
             extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
             double weight = handler.handle(pattern);
-            if (edge.getDetails().getRange() != null) {
+            if (edge.getElementDetails().getRange() != null) {
                 // add path expand intermediate count
-                if (Double.compare(target.getDetails().getSelectivity(), 0.0d) != 0) {
-                    weight += (weight / target.getDetails().getSelectivity());
+                if (Double.compare(target.getElementDetails().getSelectivity(), 0.0d) != 0) {
+                    weight += (weight / target.getElementDetails().getSelectivity());
                 }
             }
             for (PatternVertex vertex : extendFromVertices) {

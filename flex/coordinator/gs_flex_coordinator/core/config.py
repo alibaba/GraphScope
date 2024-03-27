@@ -79,7 +79,7 @@ else:
 
 # kubernetes
 NAMESPACE = os.environ.get("NAMESPACE", "kubetask")
-INSTANCE_NAME = os.environ.get("INSTANCE_NAME", "demo")
+INSTANCE_NAME = os.environ.get("INSTANCE_NAME", "default-graph")
 
 
 # groot
