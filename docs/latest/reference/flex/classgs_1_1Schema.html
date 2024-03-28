@@ -191,13 +191,15 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:af620cf6aadd802b16ec3f087561a9a9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab486ac8c16da0ca7fc12b96a57e6f62c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ab486ac8c16da0ca7fc12b96a57e6f62c">SetPluginDir</a> (const std::string &amp;plugin_dir)</td></tr>
 <tr class="separator:ab486ac8c16da0ca7fc12b96a57e6f62c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93fd1f16c543c652d18b1ccfef3e7275"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a93fd1f16c543c652d18b1ccfef3e7275">RemovePlugin</a> (const std::string &amp;plugin_name)</td></tr>
+<tr class="separator:a93fd1f16c543c652d18b1ccfef3e7275"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af88e987c27bc6a0b3c8907b2de465ec8"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#af88e987c27bc6a0b3c8907b2de465ec8">GetPluginDir</a> () const</td></tr>
 <tr class="separator:af88e987c27bc6a0b3c8907b2de465ec8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:abed45d6f8db8a745a766d4aec2e49032"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1Schema.html">Schema</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#abed45d6f8db8a745a766d4aec2e49032">LoadFromYaml</a> (const std::string &amp;schema_config)</td></tr>
-<tr class="separator:abed45d6f8db8a745a766d4aec2e49032"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94fbf70f5cb55f6633f8480340d7ebb9"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1Result.html">Result</a>&lt; <a class="el" href="classgs_1_1Schema.html">Schema</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a94fbf70f5cb55f6633f8480340d7ebb9">LoadFromYaml</a> (const std::string &amp;schema_config)</td></tr>
+<tr class="separator:a94fbf70f5cb55f6633f8480340d7ebb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a96b0313afa0eb5e5c1198c2e41aba44c"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1Result.html">Result</a>&lt; <a class="el" href="classgs_1_1Schema.html">Schema</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a96b0313afa0eb5e5c1198c2e41aba44c">LoadFromYamlNode</a> (const YAML::Node &amp;schema_node)</td></tr>
 <tr class="separator:a96b0313afa0eb5e5c1198c2e41aba44c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -1363,8 +1365,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="abed45d6f8db8a745a766d4aec2e49032"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abed45d6f8db8a745a766d4aec2e49032">&#9670;&nbsp;</a></span>LoadFromYaml()</h2>
+<a id="a94fbf70f5cb55f6633f8480340d7ebb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94fbf70f5cb55f6633f8480340d7ebb9">&#9670;&nbsp;</a></span>LoadFromYaml()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1373,7 +1375,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1Schema.html">Schema</a> gs::Schema::LoadFromYaml </td>
+          <td class="memname"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; <a class="el" href="classgs_1_1Schema.html">Schema</a> &gt; gs::Schema::LoadFromYaml </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>schema_config</em></td><td>)</td>
@@ -1443,6 +1445,24 @@ Private Attributes</h2></td></tr>
           <td></td>
           <td>)</td>
           <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a93fd1f16c543c652d18b1ccfef3e7275"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a93fd1f16c543c652d18b1ccfef3e7275">&#9670;&nbsp;</a></span>RemovePlugin()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Schema::RemovePlugin </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>plugin_name</em></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">

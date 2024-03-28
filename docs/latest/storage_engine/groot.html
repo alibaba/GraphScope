@@ -1408,6 +1408,10 @@ Also remember the data path, ZK connect string as well as Kafka endpoint and top
 And use a different <code class="docutils literal notranslate"><span class="pre">zk.base.path</span></code> for each secondary instance to avoid conflict with each other when doing node discovery.</p>
 <p><code class="docutils literal notranslate"><span class="pre">storeGcIntervalMs</span></code> controls how often should the secondary perform a <code class="docutils literal notranslate"><span class="pre">try_catch_up_with_primary</span></code> call, default to <code class="docutils literal notranslate"><span class="pre">5000</span></code> which is 5 seconds.</p>
 </section>
+<section id="traces">
+<h3>Traces<a class="headerlink" href="#traces" title="Permalink to this heading">#</a></h3>
+<p>use <code class="docutils literal notranslate"><span class="pre">--set</span> <span class="pre">otel.enabled=true</span></code> to enable trace export.</p>
+</section>
 </section>
 </section>
 
@@ -1530,6 +1534,7 @@ And use a different <code class="docutils literal notranslate"><span class="pre"
 </ul>
 </li>
 <li><a class="reference internal" href="#secondary-instance">Secondary Instance</a></li>
+<li><a class="reference internal" href="#traces">Traces</a></li>
 </ul>
 </li>
 </ul>

@@ -168,6 +168,7 @@ var menudata={children:[
 {text:"c",url:"functions_type.html#index_c"},
 {text:"d",url:"functions_type.html#index_d"},
 {text:"e",url:"functions_type.html#index_e"},
+{text:"g",url:"functions_type.html#index_g"},
 {text:"i",url:"functions_type.html#index_i"},
 {text:"k",url:"functions_type.html#index_k"},
 {text:"l",url:"functions_type.html#index_l"},

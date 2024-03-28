@@ -69,6 +69,7 @@ $(function() {
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
+<a href="#define-members">Macros</a> &#124;
 <a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle">
 <div class="title">result.h File Reference</div>  </div>
@@ -149,11 +150,24 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Result.html">gs::Result&lt; T &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1is__gs__result__type.html">gs::is_gs_result_type&lt; T &gt;</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1is__gs__result__type_3_01Result_3_01T_01_4_01_4.html">gs::is_gs_result_type&lt; Result&lt; T &gt; &gt;</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespacegs"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html">gs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:abfede2fd3091ebb5b01dc280abe4b1ec"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="result_8h.html#abfede2fd3091ebb5b01dc280abe4b1ec">RETURN_IF_NOT_OK</a>(expr)</td></tr>
+<tr class="separator:abfede2fd3091ebb5b01dc280abe4b1ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a41e79b005382d5c5ef9d37aff3867d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="result_8h.html#a0a41e79b005382d5c5ef9d37aff3867d">ASSIGN_AND_RETURN_IF_NOT_OK</a>(var,  expr)</td></tr>
+<tr class="separator:a0a41e79b005382d5c5ef9d37aff3867d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af92a143f0ed83d6d37fdab95589ee248"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="result_8h.html#af92a143f0ed83d6d37fdab95589ee248">FLEX_AUTO</a>(var,  expr)&#160;&#160;&#160;<a class="el" href="result_8h.html#a0a41e79b005382d5c5ef9d37aff3867d">ASSIGN_AND_RETURN_IF_NOT_OK</a>(auto var, expr)</td></tr>
+<tr class="separator:af92a143f0ed83d6d37fdab95589ee248"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -180,7 +194,97 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="separator:a64cf1725c649a5e2bca41deb419a67bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a0a41e79b005382d5c5ef9d37aff3867d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a41e79b005382d5c5ef9d37aff3867d">&#9670;&nbsp;</a></span>ASSIGN_AND_RETURN_IF_NOT_OK</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ASSIGN_AND_RETURN_IF_NOT_OK</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">var, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">expr&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">  <span class="keyword">auto</span>&amp;&amp; FLEX_TMP_VAR = expr;                                                  \</div>
+<div class="line">  static_assert(::<a class="code" href="structgs_1_1is__gs__result__type.html">gs::is_gs_result_type</a>&lt;                                       \</div>
+<div class="line">                    <span class="keyword">typename</span> std::decay&lt;decltype(FLEX_TMP_VAR)&gt;::type&gt;::value, \</div>
+<div class="line">                <span class="stringliteral">&quot;The expression must return a Result type&quot;</span>);                   \</div>
+<div class="line">  if (!FLEX_TMP_VAR.ok()) {                                                    \</div>
+<div class="line">    return FLEX_TMP_VAR;                                                       \</div>
+<div class="line">  }                                                                            \</div>
+<div class="line">  var = std::forward&lt;decltype(FLEX_TMP_VAR)&gt;(FLEX_TMP_VAR).move_value()</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="af92a143f0ed83d6d37fdab95589ee248"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af92a143f0ed83d6d37fdab95589ee248">&#9670;&nbsp;</a></span>FLEX_AUTO</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define FLEX_AUTO</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">var, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">expr&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="result_8h.html#a0a41e79b005382d5c5ef9d37aff3867d">ASSIGN_AND_RETURN_IF_NOT_OK</a>(auto var, expr)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abfede2fd3091ebb5b01dc280abe4b1ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abfede2fd3091ebb5b01dc280abe4b1ec">&#9670;&nbsp;</a></span>RETURN_IF_NOT_OK</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RETURN_IF_NOT_OK</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">expr</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">  <span class="keywordflow">do</span> {                         \</div>
+<div class="line">    auto status = (expr);      \</div>
+<div class="line">    if (!status.ok()) {        \</div>
+<div class="line">      return status;           \</div>
+<div class="line">    }                          \</div>
+<div class="line">  } <span class="keywordflow">while</span> (0)</div>
+</div><!-- fragment -->
+</div>
+</div>
 </div><!-- contents -->
+<div class="ttc" id="astructgs_1_1is__gs__result__type_html"><div class="ttname"><a href="structgs_1_1is__gs__result__type.html">gs::is_gs_result_type</a></div><div class="ttdef"><b>Definition:</b> result.h:108</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">

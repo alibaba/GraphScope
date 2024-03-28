@@ -69,6 +69,7 @@ $(function() {
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">basic_fragment_loader.h File Reference</div>  </div>
@@ -162,11 +163,24 @@ Namespaces</h2></td></tr>
 <tr class="memitem:namespacegs"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html">gs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:af90be9bafb4e5ed67a92428e0f1c8a64"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64">gs::LoadingStatus</a> { <a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64aa2c94488cf2076543584c6a3f78556d1">gs::LoadingStatus::kLoading</a> = 0, 
+<a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64a203fd1cbf2cc2da5290b9734b777a95f">gs::LoadingStatus::kLoaded</a> = 1, 
+<a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64aa35452b6a10dcc9e07329c56b17310ad">gs::LoadingStatus::kCommited</a> = 2, 
+<a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64a25c2dc47991b3df171ed5192bcf70390">gs::LoadingStatus::kUnknown</a> = 3
+ }</td></tr>
+<tr class="separator:af90be9bafb4e5ed67a92428e0f1c8a64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:af49fc41c77e505cec5a0a7736daa1157"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:af49fc41c77e505cec5a0a7736daa1157"><td class="memTemplItemLeft" align="right" valign="top">TypedMutableCsrBase&lt; EDATA_T &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#af49fc41c77e505cec5a0a7736daa1157">gs::create_typed_csr</a> (EdgeStrategy es, PropertyType edge_property)</td></tr>
 <tr class="separator:af49fc41c77e505cec5a0a7736daa1157"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29bdd0eff1086c34a964059cddc688a1"><td class="memItemLeft" align="right" valign="top">std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a29bdd0eff1086c34a964059cddc688a1">gs::operator&lt;&lt;</a> (std::ostream &amp;os, const LoadingStatus &amp;status)</td></tr>
+<tr class="separator:a29bdd0eff1086c34a964059cddc688a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf060f557f8aec1c2b6ba523f2890b88"><td class="memItemLeft" align="right" valign="top">std::istream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#acf060f557f8aec1c2b6ba523f2890b88">gs::operator&gt;&gt;</a> (std::istream &amp;is, LoadingStatus &amp;status)</td></tr>
+<tr class="separator:acf060f557f8aec1c2b6ba523f2890b88"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->

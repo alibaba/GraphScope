@@ -689,3 +689,6 @@ And use a different `zk.base.path` for each secondary instance to avoid conflict
 
 `storeGcIntervalMs` controls how often should the secondary perform a `try_catch_up_with_primary` call, default to `5000` which is 5 seconds.
 
+### Traces
+
+use `--set otel.enabled=true` to enable trace export.

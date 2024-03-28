@@ -1907,6 +1907,20 @@ The response of the http request will be like</p></li>
 </section>
 </section>
 </section>
+<section id="enable-adminservice-in-development">
+<h2>Enable AdminService in development<a class="headerlink" href="#enable-adminservice-in-development" title="Permalink to this heading">#</a></h2>
+<p>To start admin service in development, use the command line argument <code class="docutils literal notranslate"><span class="pre">--enable-admin-service</span> <span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">${ENGINE_CONFIG}</span></code> specifies the configuration for interactive query engine, see <a class="reference external" href="https://graphscope.io/docs/flex/interactive/configuration">engine-configuration</a>. <code class="docutils literal notranslate"><span class="pre">${WORKSPACE}</span></code> points to the directory where interactive related data is maintaned.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/interactive_server<span class="w"> </span>-c<span class="w"> </span><span class="si">${</span><span class="nv">ENGINE_CONFIG</span><span class="si">}</span><span class="w"> </span>-w<span class="w"> </span><span class="si">${</span><span class="nv">WORKSPACE</span><span class="si">}</span><span class="w"> </span>--enable-admin-service<span class="w"> </span><span class="nb">true</span>
+</pre></div>
+</div>
+<section id="start-compiler-service">
+<h3>Start Compiler Service<a class="headerlink" href="#start-compiler-service" title="Permalink to this heading">#</a></h3>
+<p>The Compiler service could be started as a subprocess of the AdminService. This ensures that when switching graphs in the AdminService, the Compiler service also switches to the corresponding graph’s schema. This is the default behavior in the current Interactive.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/interactive_server<span class="w"> </span>-c<span class="w"> </span><span class="si">${</span><span class="nv">ENGINE_CONFIG</span><span class="si">}</span><span class="w"> </span>-w<span class="w"> </span><span class="si">${</span><span class="nv">WORKSPACE</span><span class="si">}</span><span class="w"> </span>--enable-admin-service<span class="w"> </span><span class="nb">true</span><span class="w"> </span>--start-compiler<span class="w"> </span><span class="nb">true</span>
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
         </article>
@@ -2074,6 +2088,10 @@ The response of the http request will be like</p></li>
 <li><a class="reference internal" href="#id59">Status Codes</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li><a class="reference internal" href="#enable-adminservice-in-development">Enable AdminService in development</a><ul>
+<li><a class="reference internal" href="#start-compiler-service">Start Compiler Service</a></li>
 </ul>
 </li>
 </ul>

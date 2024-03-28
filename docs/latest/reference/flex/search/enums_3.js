@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['statuscode_2554',['StatusCode',['../namespacegs.html#a64cf1725c649a5e2bca41deb419a67bd',1,'gs']]],
-  ['storagestrategy_2555',['StorageStrategy',['../namespacegs.html#ab0648a77c869a5dba149125848991be4',1,'gs']]]
+  ['memorystrategy_2645',['MemoryStrategy',['../namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d',1,'gs']]]
 ];

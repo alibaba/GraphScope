@@ -80,13 +80,14 @@ $(function() {
 , <a class="el" href="classgs_1_1TypedEmptyColumn.html#a0dc1eb3f71de89fe76aa9060da2e9715">gs::TypedEmptyColumn&lt; T &gt;</a>
 , <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a875b00bd13a382f6f2c44655a8dd227c">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1TypedRefColumn.html#a83bceba252053dd6ea7bb0b131c0de18">gs::TypedRefColumn&lt; T &gt;</a>
+, <a class="el" href="classgs_1_1TypedRefColumn_3_01GlobalId_01_4.html#a1b800ea579cf94c4fe26c70a9855e32f">gs::TypedRefColumn&lt; GlobalId &gt;</a>
 , <a class="el" href="classgs_1_1TypedRefColumn_3_01LabelKey_01_4.html#a1a581809b1e0903dfe96a7bafde1f897">gs::TypedRefColumn&lt; LabelKey &gt;</a>
 </li>
 <li>get_byte()
 : <a class="el" href="classgs_1_1Decoder.html#a64937d0b2080b8c84131f9fc164f8f79">gs::Decoder</a>
 </li>
 <li>get_column()
-: <a class="el" href="classgs_1_1Table.html#aa70f8c98b1845e06f8f2a590094e6fb6">gs::Table</a>
+: <a class="el" href="classgs_1_1Table.html#ab026ec65598d1c02758bb8ef4b0cfcdc">gs::Table</a>
 </li>
 <li>get_column_by_id()
 : <a class="el" href="classgs_1_1Table.html#abefb28c103f4ef35948e4a55692b4bb9">gs::Table</a>
@@ -203,6 +204,9 @@ $(function() {
 <li>get_keys()
 : <a class="el" href="classgs_1_1LFIndexer.html#afb2fcabbc0e791cf347d91188111a777">gs::LFIndexer&lt; INDEX_T &gt;</a>
 </li>
+<li>get_label_id()
+: <a class="el" href="structgs_1_1GlobalId.html#ab809fc523c53e2b7919f51c4a98e8ea2">gs::GlobalId</a>
+</li>
 <li>get_lid()
 : <a class="el" href="classgs_1_1MutablePropertyFragment.html#a2537a067f05c963d139532f3588ae54d">gs::MutablePropertyFragment</a>
 </li>
@@ -315,6 +319,9 @@ $(function() {
 <li>get_vertex_with_retries()
 : <a class="el" href="classgs_1_1InsertTransaction.html#a389b3941361e25616a8541f2acb217f4">gs::InsertTransaction</a>
 </li>
+<li>get_vid()
+: <a class="el" href="structgs_1_1GlobalId.html#aa6f5df485ea524a669a60b7abdbda7a5">gs::GlobalId</a>
+</li>
 <li>get_view()
 : <a class="el" href="classgs_1_1StringMapColumn.html#a2cb6c17ff6ec5a4bba2cdf639494549a">gs::StringMapColumn&lt; INDEX_T &gt;</a>
 , <a class="el" href="classgs_1_1TypedColumn.html#ac421d7d64c623ff0b24366118beb8994">gs::TypedColumn&lt; T &gt;</a>
@@ -322,6 +329,7 @@ $(function() {
 , <a class="el" href="classgs_1_1TypedEmptyColumn.html#a516c8fadc86271df524d5612cf050e8a">gs::TypedEmptyColumn&lt; T &gt;</a>
 , <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#aa9dae93b17ec205e45577881f5dd5007">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1TypedRefColumn.html#a3e38607d04bdf49ef35c024ff29958be">gs::TypedRefColumn&lt; T &gt;</a>
+, <a class="el" href="classgs_1_1TypedRefColumn_3_01GlobalId_01_4.html#ade0f13d2a57cbb14430b5e0bd025fb46">gs::TypedRefColumn&lt; GlobalId &gt;</a>
 , <a class="el" href="classgs_1_1TypedRefColumn_3_01LabelKey_01_4.html#a652b560f43d95632ebb9575e702dea1f">gs::TypedRefColumn&lt; LabelKey &gt;</a>
 </li>
 <li>GetApp()
@@ -400,16 +408,16 @@ $(function() {
 </li>
 <li>GetInCsr()
 : <a class="el" href="classgs_1_1DualCsr.html#a2e4a28b362919abfe0202f5c58082011">gs::DualCsr&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a298e4059fa8b6f888b35c3f98f5b2267">gs::DualCsr&lt; std::string_view &gt;</a>
-, <a class="el" href="classgs_1_1DualCsrBase.html#a4ba058618cca5b1398fd442febee6a13">gs::DualCsrBase</a>
+, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ad0bddf3d9925bf9e2316a917b0173ae2">gs::DualCsr&lt; std::string_view &gt;</a>
+, <a class="el" href="classgs_1_1DualCsrBase.html#a382041ce1ae26f8b80c72d9a3818a391">gs::DualCsrBase</a>
 </li>
 <li>GetIndex()
 : <a class="el" href="classgs_1_1ReadTransaction_1_1vertex__iterator.html#ab2e77501b526ae12be19a5ca2ee80985">gs::ReadTransaction::vertex_iterator</a>
 , <a class="el" href="classgs_1_1UpdateTransaction_1_1vertex__iterator.html#a44d6bc0622cb560059c0f5b734ceb395">gs::UpdateTransaction::vertex_iterator</a>
 </li>
 <li>GetInEdgeIterator()
-: <a class="el" href="classgs_1_1ReadTransaction.html#a7631d86b19dd6b9d180d976bc7b116e5">gs::ReadTransaction</a>
-, <a class="el" href="classgs_1_1UpdateTransaction.html#a4cc7da11e096eed71a0dfc0f459ce87e">gs::UpdateTransaction</a>
+: <a class="el" href="classgs_1_1ReadTransaction.html#a9eebcf196711f50091ee9ca515a33c9e">gs::ReadTransaction</a>
+, <a class="el" href="classgs_1_1UpdateTransaction.html#a25b74064c234a96765aad070f48aeeab">gs::UpdateTransaction</a>
 </li>
 <li>GetInsertTransaction()
 : <a class="el" href="classgs_1_1GraphDB.html#ac661fa2a35a317866e8ea8faee90dcce">gs::GraphDB</a>
@@ -434,13 +442,13 @@ $(function() {
 : <a class="el" href="classgs_1_1GraphDB.html#a81a8969946816a6b5a75b9804b91d254">gs::GraphDB</a>
 </li>
 <li>GetLFIndexer()
-: <a class="el" href="classgs_1_1BasicFragmentLoader.html#a98b4ee49cb1f9f0f77f5cebbac6368b5">gs::BasicFragmentLoader</a>
+: <a class="el" href="classgs_1_1BasicFragmentLoader.html#aed50834eb443a3b169dd7e286c4ca6de">gs::BasicFragmentLoader</a>
 </li>
 <li>GetMetaData()
 : <a class="el" href="classgs_1_1LoadingConfig.html#a89de7f49c43b311e020ea6bdb9ef29c7">gs::LoadingConfig</a>
 </li>
 <li>GetMethod()
-: <a class="el" href="classgs_1_1LoadingConfig.html#acc174b751ff6b7fd652ee29af72c3552">gs::LoadingConfig</a>
+: <a class="el" href="classgs_1_1LoadingConfig.html#a0976cabab09b1bccaa713777e3f9ba82">gs::LoadingConfig</a>
 </li>
 <li>GetNeighbor()
 : <a class="el" href="classgs_1_1ReadTransaction_1_1edge__iterator.html#afa5c44e31cf0ffbfb643791f2ea6ba72">gs::ReadTransaction::edge_iterator</a>
@@ -458,13 +466,13 @@ $(function() {
 , <a class="el" href="classgs_1_1ODPSTableRecordBatchSupplier.html#a5d3c6cf194d2a097dddc89c448365a90">gs::ODPSTableRecordBatchSupplier</a>
 </li>
 <li>GetOutCsr()
-: <a class="el" href="classgs_1_1DualCsr.html#ac5afae893a17311e038b386a319de0a5">gs::DualCsr&lt; EDATA_T &gt;</a>
+: <a class="el" href="classgs_1_1DualCsr.html#a80b6af2d4fce2958f88baeaa97e81109">gs::DualCsr&lt; EDATA_T &gt;</a>
 , <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a45f6339fd8c0ae63311e9e40190c1ba7">gs::DualCsr&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1DualCsrBase.html#a75937d3f5f5f70a44b564a7daa35863e">gs::DualCsrBase</a>
 </li>
 <li>GetOutEdgeIterator()
-: <a class="el" href="classgs_1_1ReadTransaction.html#acc339aa81c7e4442d9bf8a4ab9916109">gs::ReadTransaction</a>
-, <a class="el" href="classgs_1_1UpdateTransaction.html#aac3830f7fc1be541fde116ca91dd1f96">gs::UpdateTransaction</a>
+: <a class="el" href="classgs_1_1ReadTransaction.html#a65e88be15d4987893c077b3391c30b54">gs::ReadTransaction</a>
+, <a class="el" href="classgs_1_1UpdateTransaction.html#af05c7939ce179eaed9c35a2978c6a050">gs::UpdateTransaction</a>
 </li>
 <li>GetOutgoingEdges()
 : <a class="el" href="classgs_1_1ReadTransaction.html#a8cab307963eec93101fe6bdeabef408a">gs::ReadTransaction</a>
@@ -501,7 +509,7 @@ $(function() {
 : <a class="el" href="classgs_1_1LoadingConfig.html#ad0bb11beac6b5c806e8a1f782cd97525">gs::LoadingConfig</a>
 </li>
 <li>GetSession()
-: <a class="el" href="classgs_1_1GraphDB.html#a5ea79d10b442b147ac36d8e7518549a3">gs::GraphDB</a>
+: <a class="el" href="classgs_1_1GraphDB.html#a1ba886ae3621c9c4cda452a4f625d80d">gs::GraphDB</a>
 </li>
 <li>GetSingleEdgeInsertTransaction()
 : <a class="el" href="classgs_1_1GraphDB.html#ab041b51c1d052218e41761b9d2c5a962">gs::GraphDB</a>
@@ -549,13 +557,22 @@ $(function() {
 <li>GetVertexTable()
 : <a class="el" href="classgs_1_1BasicFragmentLoader.html#ae3cb6d88c3e8656958163d9e3930ea4c">gs::BasicFragmentLoader</a>
 </li>
+<li>gid_t
+: <a class="el" href="structgs_1_1GlobalId.html#a29b8616d10f9ba7e81a2879cd1bd7ea2">gs::GlobalId</a>
+</li>
+<li>global_id
+: <a class="el" href="structgs_1_1GlobalId.html#a40b935d0a192625927fdee8751b7bce8">gs::GlobalId</a>
+</li>
+<li>GlobalId()
+: <a class="el" href="structgs_1_1GlobalId.html#a8d035c1ea9b957bea6e05b21f13af7ae">gs::GlobalId</a>
+</li>
 <li>Goto()
 : <a class="el" href="classgs_1_1ReadTransaction_1_1vertex__iterator.html#a7c41c3ed4c99d0293c88597dfe5ff74e">gs::ReadTransaction::vertex_iterator</a>
 , <a class="el" href="classgs_1_1UpdateTransaction_1_1vertex__iterator.html#ae5a7a40ed63a74d6cf3b41d1d2ad20ea">gs::UpdateTransaction::vertex_iterator</a>
 </li>
 <li>graph()
 : <a class="el" href="classgs_1_1GraphDB.html#a82466a49520e17f4a6f9ddb83ccb4c34">gs::GraphDB</a>
-, <a class="el" href="classgs_1_1GraphDBSession.html#a8659a3941812e1ea3bbaefe44e7a9ef3">gs::GraphDBSession</a>
+, <a class="el" href="classgs_1_1GraphDBSession.html#a9325bd51cbd28b6604ed7ff833d867a2">gs::GraphDBSession</a>
 </li>
 <li>graph_
 : <a class="el" href="classgs_1_1CompactTransaction.html#aaa401a1973468ec9a6077bfb79bc71d5">gs::CompactTransaction</a>

@@ -410,12 +410,8 @@ pip3<span class="w"> </span>install<span class="w"> </span>--upgrade<span class=
 <li><p>Local Kubernetes cluster set-up tool (e.g. <a class="reference external" href="https://kind.sigs.k8s.io">Kind</a>)</p></li>
 </ul>
 <p>对于 Windows 和 macOS 的用户，可通过官方文档来安装上述依赖, 并在 Docker 中开启 Kubernetes 功能。
-对于 Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
-您也可以在 Windows 上安装 <a class="reference external" href="https://docs.microsoft.com/zh-cn/windows/wsl/install-win10">WSL2</a> 以使用脚本。</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># run the environment preparing script.</span>
-./scripts/install_deps.sh<span class="w"> </span>--k8s
-</pre></div>
-</div>
+对于 Ubuntu/CentOS Linux 发行版用户，你也可以使用 [Kind](<a class="reference external" href="https://kind.sigs.k8s.io">https://kind.sigs.k8s.io</a>) 部署一个本地的 k8s 集群，Kind 的安装和部署可以参考官网的 [Quick Start](<a class="reference external" href="https://kind.sigs.k8s.io/docs/user/quick-start/">https://kind.sigs.k8s.io/docs/user/quick-start/</a>)。
+您也可以在 Windows 上安装 <a class="reference external" href="https://docs.microsoft.com/zh-cn/windows/wsl/install-win10">WSL2</a> 来模拟 Linux 环境。</p>
 <p>接下来，我们只需要通过 <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a> 安装 GraphScope 客户端：</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires the latest pip</span>
 pip3<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip

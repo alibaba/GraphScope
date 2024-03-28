@@ -37,13 +37,8 @@ GraphScope 以 `Python 程序包 <https://pypi.org/project/graphscope>`_ 的形�
 - Local Kubernetes cluster set-up tool (e.g. `Kind <https://kind.sigs.k8s.io>`_)
 
 对于 Windows 和 macOS 的用户，可通过官方文档来安装上述依赖, 并在 Docker 中开启 Kubernetes 功能。
-对于 Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
-您也可以在 Windows 上安装 `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ 以使用脚本。
-
-.. code:: bash
-
-    # run the environment preparing script.
-    ./scripts/install_deps.sh --k8s
+对于 Ubuntu/CentOS Linux 发行版用户，你也可以使用 [Kind](https://kind.sigs.k8s.io) 部署一个本地的 k8s 集群，Kind 的安装和部署可以参考官网的 [Quick Start](https://kind.sigs.k8s.io/docs/user/quick-start/)。
+您也可以在 Windows 上安装 `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ 来模拟 Linux 环境。
 
 接下来，我们只需要通过 `pip <https://pip.pypa.io/en/stable/>`_ 安装 GraphScope 客户端：
 

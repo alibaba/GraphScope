@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['memorystrategy_2552',['MemoryStrategy',['../namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d',1,'gs']]]
+  ['edgestrategy_2643',['EdgeStrategy',['../namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8',1,'gs']]]
 ];
