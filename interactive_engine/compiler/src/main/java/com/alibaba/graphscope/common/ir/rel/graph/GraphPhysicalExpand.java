@@ -72,10 +72,10 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt,
             String aliasName) {
-        // build a new getV if a new aliasName is given, to make sure the derived row type is
-        // correct (which is derived by getV)
         GraphLogicalGetV newGetV = null;
         if (fusedGetV != null) {
+            // if fused to output vertices, build a new getV if a new aliasName is given, to make
+            // sure the derived row type is correct (which is derived by getV)
             if (fusedGetV.getAliasName().equals(aliasName)) {
                 newGetV = fusedGetV;
             } else {

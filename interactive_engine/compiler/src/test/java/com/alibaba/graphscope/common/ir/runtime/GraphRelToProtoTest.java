@@ -863,7 +863,7 @@ public class GraphRelToProtoTest {
         }
     }
 
-    // g.V().as("a").hasLabel("person").outE("knows").inV().as("a")
+    // g.V().hasLabel("person").outE("knows").inV().as("a")
     @Test
     public void expand_vertex_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -871,8 +871,7 @@ public class GraphRelToProtoTest {
                 builder.source(
                                 new SourceConfig(
                                         GraphOpt.Source.VERTEX,
-                                        new LabelConfig(false).addLabel("person"),
-                                        "a"))
+                                        new LabelConfig(false).addLabel("person")))
                         .expand(
                                 new ExpandConfig(
                                         GraphOpt.Expand.OUT,
@@ -881,25 +880,25 @@ public class GraphRelToProtoTest {
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
                                         new LabelConfig(false).addLabel("person"),
-                                        "b"))
+                                        "a"))
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[b], opt=[END])\n"
+                        + " alias=[a], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[a],"
                         + " opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -923,7 +922,7 @@ public class GraphRelToProtoTest {
         }
     }
 
-    // g.V().as("a").hasLabel("person").outE("knows").inV().as("b").has("age",10), can be fused into
+    // g.V().hasLabel("person").outE("knows").inV().as("a").has("age",10), can be fused into
     // GraphPhysicalExpand + GraphPhysicalGetV
     @Test
     public void expand_vertex_filter_test() throws Exception {
@@ -932,8 +931,7 @@ public class GraphRelToProtoTest {
                 builder.source(
                                 new SourceConfig(
                                         GraphOpt.Source.VERTEX,
-                                        new LabelConfig(false).addLabel("person"),
-                                        "a"))
+                                        new LabelConfig(false).addLabel("person")))
                         .expand(
                                 new ExpandConfig(
                                         GraphOpt.Expand.OUT,
@@ -942,7 +940,7 @@ public class GraphRelToProtoTest {
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
                                         new LabelConfig(false).addLabel("person"),
-                                        "b"))
+                                        "a"))
                         .filter(
                                 builder.call(
                                         GraphStdOperatorTable.EQUALS,
@@ -951,12 +949,12 @@ public class GraphRelToProtoTest {
                         .build();
 
         Assert.assertEquals(
-                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[b],"
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
                         + " fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);

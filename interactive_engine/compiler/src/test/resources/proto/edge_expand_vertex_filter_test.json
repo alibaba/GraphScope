@@ -2,7 +2,6 @@
   "plan": [{
     "opr": {
       "scan": {
-        "alias": 0,
         "params": {
           "tables": [{
             "id": 0
@@ -35,7 +34,8 @@
             }]
           }]
         }
-      }
+      },
+      "alias": -1
     }]
   }, {
     "opr": {
@@ -114,7 +114,7 @@
           },
           "sampleRatio": 1.0
         },
-        "alias": 1
+        "alias": 0
       }
     },
     "metaData": [{
@@ -141,8 +141,7 @@
             }]
           }]
         }
-      },
-      "alias": 1
+      }
     }]
   }, {
     "opr": {
