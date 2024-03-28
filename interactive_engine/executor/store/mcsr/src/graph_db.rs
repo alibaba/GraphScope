@@ -176,12 +176,11 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G
 
 pub struct Nbr<I> {
     pub neighbor: I,
-    pub offset: usize,
 }
 
 impl<I: IndexType> Clone for Nbr<I> {
     fn clone(&self) -> Self {
-        Nbr { neighbor: I::new(self.neighbor.index()), offset: self.offset }
+        Nbr { neighbor: I::new(self.neighbor.index()) }
     }
 }
 
@@ -220,7 +219,7 @@ impl<'a, I: IndexType> Iterator for NbrIter<'a, I> {
     type Item = &'a Nbr<I>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.begin == self.end {
+        if self.begin >= self.end {
             None
         } else {
             unsafe {
@@ -241,6 +240,100 @@ unsafe impl<'a, I: IndexType> Send for NbrIter<'a, I> {}
 
 unsafe impl<'a, I: IndexType> Sync for NbrIter<'a, I> {}
 
+pub struct NbrOffsetIter<'a, I> {
+    begin: *const Nbr<I>,
+    end: *const Nbr<I>,
+    offset_begin: *const usize,
+    offset_end: *const usize,
+    _marker: PhantomData<&'a Nbr<I>>,
+}
+
+impl<'a, I: IndexType> NbrOffsetIter<'a, I> {
+    pub fn new(
+        begin: *const Nbr<I>, end: *const Nbr<I>, offset_begin: *const usize, offset_end: *const usize,
+    ) -> Self {
+        Self { begin, end, offset_begin, offset_end, _marker: PhantomData }
+    }
+
+    pub fn new_empty() -> Self {
+        Self {
+            begin: ptr::null(),
+            end: ptr::null(),
+            offset_begin: ptr::null(),
+            offset_end: ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub fn empty(&self) -> bool {
+        self.begin == self.end && self.offset_begin == self.offset_end
+    }
+
+    pub fn new_single(begin: *const Nbr<I>, offset_begin: *const usize) -> Self {
+        if offset_begin == ptr::null() {
+            Self {
+                begin,
+                end: unsafe { begin.add(1) },
+                offset_begin: ptr::null(),
+                offset_end: ptr::null(),
+                _marker: PhantomData,
+            }
+        } else {
+            Self {
+                begin,
+                end: unsafe { begin.add(1) },
+                offset_begin,
+                offset_end: unsafe { offset_begin.add(1) },
+                _marker: PhantomData,
+            }
+        }
+    }
+
+    pub fn slice(self, from: usize, to: usize) -> Self {
+        let begin = unsafe { self.begin.offset(from as isize) };
+        let end = unsafe { self.begin.offset(to as isize) };
+        if self.offset_begin == ptr::null() {
+            Self { begin, end, offset_begin: ptr::null(), offset_end: ptr::null(), _marker: PhantomData }
+        } else {
+            let offset_begin = unsafe { self.offset_begin.offset(from as isize) };
+            let offset_end = unsafe { self.offset_end.offset(to as isize) };
+            Self { begin, end, offset_begin, offset_end, _marker: PhantomData }
+        }
+    }
+}
+
+impl<'a, I: IndexType> Iterator for NbrOffsetIter<'a, I> {
+    type Item = (&'a Nbr<I>, Option<&'a usize>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.begin == self.end {
+            None
+        } else {
+            unsafe {
+                let cur_nbr = self.begin;
+                let cur_offset = self.offset_begin;
+                self.begin = self.begin.offset(1);
+                if cur_offset != ptr::null() {
+                    self.offset_begin = self.offset_begin.offset(1);
+                    Some(((&*cur_nbr), Some(&*cur_offset)))
+                } else {
+                    Some(((&*cur_nbr), None))
+                }
+            }
+        }
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.begin = unsafe { self.begin.offset(n as isize) };
+        self.next()
+    }
+}
+
+unsafe impl<'a, I: IndexType> Send for NbrOffsetIter<'a, I> {}
+
+unsafe impl<'a, I: IndexType> Sync for NbrOffsetIter<'a, I> {}
+
 pub trait CsrTrait<I: IndexType>: Send + Sync {
     fn vertex_num(&self) -> I;
 
@@ -250,7 +343,11 @@ pub trait CsrTrait<I: IndexType>: Send + Sync {
 
     fn get_edges(&self, src: I) -> Option<NbrIter<'_, I>>;
 
-    fn get_all_edges<'a>(&'a self) -> Box<dyn Iterator<Item = (I, &'a Nbr<I>)> + 'a + Send>;
+    fn get_edges_with_offset(&self, src: I) -> Option<NbrOffsetIter<'_, I>>;
+
+    fn get_all_edges<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = (I, (&'a Nbr<I>, Option<&'a usize>))> + 'a + Send>;
 
     fn serialize(&self, path: &String);
 

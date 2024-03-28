@@ -490,6 +490,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     for pair in cols.iter() {
                         header.push((pair.1.clone(), pair.0.clone()));
                     }
+                    let has_property = if header.len() > 0 { true } else { false };
                     let mut edge_properties = ColTable::new(header.clone());
                     let mut property_offset = 0usize;
                     if self
@@ -498,6 +499,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     {
                         let mut ie_csr = SingleCsr::<I>::new();
                         let mut oe_csr = MutableCsr::<I>::new();
+                        ie_csr.set_offset(has_property);
+                        oe_csr.set_offset(has_property);
                         info!(
                             "ie_{}_{}_{}: resize: {} vertices, {} edges",
                             src_label_name,
@@ -546,6 +549,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     {
                         let mut ie_csr = MutableCsr::<I>::new();
                         let mut oe_csr = SingleCsr::<I>::new();
+                        ie_csr.set_offset(has_property);
+                        oe_csr.set_offset(has_property);
                         info!(
                             "ie_{}_{}_{}: resize: {} vertices, {} edges",
                             src_label_name,
@@ -591,6 +596,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     } else {
                         let mut ie_csr = MutableCsr::<I>::new();
                         let mut oe_csr = MutableCsr::<I>::new();
+                        ie_csr.set_offset(has_property);
+                        oe_csr.set_offset(has_property);
                         info!(
                             "ie_{}_{}_{}: resize: {} vertices, {} edges",
                             src_label_name,
