@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import static java.util.Objects.requireNonNull;
-
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
@@ -33,8 +31,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
-import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
+import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -43,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -71,6 +68,8 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -326,18 +325,11 @@ public class GraphBuilder extends RelBuilder {
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
         RelNode match =
-                (single.getInputs().isEmpty() && single instanceof GraphLogicalSource)
-                        ? single
-                        : GraphLogicalSingleMatch.create(
-                                (GraphOptCluster) cluster,
-                                null,
-                                null,
-                                single,
-                                (input == null) ? opt : GraphOpt.Match.INNER);
+                GraphLogicalSingleMatch.create((GraphOptCluster) cluster, null, input, single, opt);
         if (input == null) {
             push(match);
         } else {
-            push(match).join(getJoinRelType(opt), getJoinCondition(input, match));
+            replaceTop(match);
         }
         return this;
     }
@@ -374,13 +366,13 @@ public class GraphBuilder extends RelBuilder {
                 GraphLogicalMultiMatch.create(
                         (GraphOptCluster) cluster,
                         null,
-                        null,
+                        input,
                         sentences.get(0),
                         sentences.subList(1, sentences.size()));
         if (input == null) {
             push(match);
         } else {
-            push(match).join(getJoinRelType(GraphOpt.Match.INNER), getJoinCondition(input, match));
+            replaceTop(match);
         }
         return this;
     }
@@ -426,17 +418,6 @@ public class GraphBuilder extends RelBuilder {
                 && second instanceof GraphSchemaType
                 && ((GraphSchemaType) first).getScanOpt()
                         == ((GraphSchemaType) second).getScanOpt();
-    }
-
-    private JoinRelType getJoinRelType(GraphOpt.Match opt) {
-        switch (opt) {
-            case OPTIONAL:
-                return JoinRelType.LEFT;
-            case ANTI:
-                return JoinRelType.ANTI;
-            default:
-                return JoinRelType.INNER;
-        }
     }
 
     /**
