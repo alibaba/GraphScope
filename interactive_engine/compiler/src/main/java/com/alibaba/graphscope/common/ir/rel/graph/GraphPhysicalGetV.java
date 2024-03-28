@@ -30,10 +30,13 @@ import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 import java.util.Objects;
+
+import javax.annotation.Nullable;
 
 public class GraphPhysicalGetV extends SingleRel {
     private final GraphOpt.PhysicalGetVOpt physicalOpt;
@@ -95,6 +98,10 @@ public class GraphPhysicalGetV extends SingleRel {
 
     public GraphLogicalGetV getFusedGetV() {
         return fusedGetV;
+    }
+
+    public @Nullable ImmutableList<RexNode> getFilters() {
+        return fusedGetV.getFilters();
     }
 
     @Override
