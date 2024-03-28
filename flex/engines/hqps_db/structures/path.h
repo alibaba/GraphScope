@@ -297,6 +297,20 @@ class PathSet {
     return std::make_pair(general_set, std::move(offsets));
   }
 
+  void Repeat(std::vector<offset_t>& cur_offset,
+              std::vector<offset_t>& repeat_vec) {
+    std::vector<Path<VID_T, LabelT>> res;
+    CHECK(cur_offset.size() == repeat_vec.size() + 1);
+    for (size_t i = 0; i < repeat_vec.size(); ++i) {
+      for (size_t j = cur_offset[i]; j < cur_offset[i + 1]; ++j) {
+        for (size_t k = 0; k < repeat_vec[i]; ++k) {
+          res.push_back(paths_[j]);
+        }
+      }
+    }
+    res.swap(paths_);
+  }
+
   // project my self.
   template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>

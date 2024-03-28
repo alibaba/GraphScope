@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.plan;
+package com.alibaba.graphscope.common.ir.planner.rbo;
 
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;

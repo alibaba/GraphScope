@@ -21,7 +21,9 @@ import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,13 +123,13 @@ public abstract class Utils extends com.alibaba.graphscope.common.antlr4.Utils {
         List<RexNode> filters = new ArrayList<>();
         for (int i = 0; i < mapCtx.oC_PropertyKeyName().size(); ++i) {
             RexNode variable = builder.variable(null, mapCtx.oC_PropertyKeyName(i).getText());
-            filters.add(
-                    builder.call(
-                            GraphStdOperatorTable.EQUALS,
-                            variable,
-                            expressionVisitor
-                                    .visitOC_Expression(mapCtx.oC_Expression(i))
-                                    .getExpr()));
+            RexNode value = expressionVisitor.visitOC_Expression(mapCtx.oC_Expression(i)).getExpr();
+            if (value.getKind() == SqlKind.ARRAY_VALUE_CONSTRUCTOR) {
+                filters.add(
+                        builder.getRexBuilder().makeIn(variable, ((RexCall) value).getOperands()));
+            } else {
+                filters.add(builder.call(GraphStdOperatorTable.EQUALS, variable, value));
+            }
         }
         return filters;
     }

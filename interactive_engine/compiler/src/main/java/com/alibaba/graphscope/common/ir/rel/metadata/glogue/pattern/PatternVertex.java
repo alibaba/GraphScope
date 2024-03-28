@@ -35,7 +35,7 @@ public abstract class PatternVertex {
         return isomorphismChecker;
     }
 
-    public ElementDetails getDetails() {
+    public ElementDetails getElementDetails() {
         return details;
     }
 

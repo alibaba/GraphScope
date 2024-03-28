@@ -65,13 +65,9 @@ class PathExpand {
 
     auto cur_label = vertex_set.GetLabel();
 
-    std::vector<offset_t> offsets;
-    CompressedPathSet<vertex_id_t, label_id_t> path_set;
-    std::tie(path_set, offsets) = path_expand_from_single_label(
-        graph, cur_label, vertex_set.GetVertices(), range, edge_expand_opt,
-        get_v_opt);
-
-    return std::make_pair(std::move(path_set), std::move(offsets));
+    return path_expand_from_single_label(graph, cur_label,
+                                         vertex_set.GetVertices(), range,
+                                         edge_expand_opt, get_v_opt);
   }
 
   // PathExpand Path with multiple edge triplet.
@@ -799,10 +795,18 @@ class PathExpand {
 
     // create a copy of other_offsets.
     auto copied_other_offsets(other_offsets);
-    std::vector<label_id_t> labels_vec(range.limit_, src_label);
-    auto path_set = CompressedPathSet<vertex_id_t, label_id_t>(
-        std::move(other_vertices), std::move(other_offsets),
-        std::move(labels_vec), range.start_);
+    std::vector<Path<vertex_id_t, label_id_t>> paths;
+    {
+      std::vector<label_id_t> labels_vec(range.limit_, src_label);
+      // use compressed_path_set to generate all paths. We don't insert the
+      // CompressPathSet into context, since it is hard to be resized.
+      auto compressed_path_set = CompressedPathSet<vertex_id_t, label_id_t>(
+          std::move(other_vertices), std::move(other_offsets),
+          std::move(labels_vec), range.start_);
+      paths = compressed_path_set.get_all_valid_paths();
+    }
+
+    PathSet<vertex_id_t, label_id_t> path_set(std::move(paths));
 
     std::vector<std::vector<offset_t>> offset_amplify(
         range.limit_, std::vector<offset_t>(copied_other_offsets[0].size(), 0));

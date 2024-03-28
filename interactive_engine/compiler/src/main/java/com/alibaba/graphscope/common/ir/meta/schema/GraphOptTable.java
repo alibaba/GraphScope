@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.RelOptSchema;
@@ -52,11 +53,13 @@ public class GraphOptTable implements RelOptTable {
     private List<String> tableName;
     private RelOptSchema schema;
     private RelDataType dataType;
+    private final List<ImmutableBitSet> uniqueKeys;
 
     protected GraphOptTable(RelOptSchema schema, List<String> tableName, GraphElement element) {
         this.schema = schema;
         this.tableName = tableName;
         this.dataType = deriveType(element);
+        this.uniqueKeys = getUniqueKeys(element, dataType, schema);
     }
 
     private RelDataType deriveType(GraphElement element) {
@@ -105,6 +108,30 @@ public class GraphOptTable implements RelOptTable {
         } else {
             throw new IllegalArgumentException("element should be vertex or edge");
         }
+    }
+
+    private List<ImmutableBitSet> getUniqueKeys(
+            GraphElement element, RelDataType schemaType, RelOptSchema schema) {
+        boolean isColumnId =
+                (schema instanceof GraphOptSchema)
+                        ? ((GraphOptSchema) schema).getRootSchema().isColumnId()
+                        : false;
+        List<ImmutableBitSet> uniqueKeys = Lists.newArrayList();
+        List<GraphProperty> primaryKeyList = element.getPrimaryKeyList();
+        if (ObjectUtils.isNotEmpty(primaryKeyList)) {
+            for (GraphProperty property : primaryKeyList) {
+                for (int i = 0; i < schemaType.getFieldList().size(); ++i) {
+                    RelDataTypeField field = schemaType.getFieldList().get(i);
+                    if (field.getName().equals(property.getName())) {
+                        // todo: support unique key consisting of multiple columns, here we assume
+                        // there is only one column in a unique key
+                        uniqueKeys.add(ImmutableBitSet.of(isColumnId ? field.getIndex() : i));
+                        break;
+                    }
+                }
+            }
+        }
+        return uniqueKeys;
     }
 
     private RelDataType deriveType(GraphProperty property) {
@@ -163,13 +190,13 @@ public class GraphOptTable implements RelOptTable {
     // statistics
 
     @Override
-    public boolean isKey(ImmutableBitSet immutableBitSet) {
-        throw new UnsupportedOperationException("is key is unsupported yet in statistics");
+    public boolean isKey(ImmutableBitSet properties) {
+        return this.uniqueKeys.contains(properties);
     }
 
     @Override
     public @Nullable List<ImmutableBitSet> getKeys() {
-        throw new UnsupportedOperationException("get keys is unsupported yet in statistics");
+        return this.uniqueKeys;
     }
 
     @Override

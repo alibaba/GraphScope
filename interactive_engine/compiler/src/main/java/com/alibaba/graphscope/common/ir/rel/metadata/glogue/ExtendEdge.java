@@ -16,9 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PathExpandRange;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.google.common.collect.ImmutableList;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,18 +35,42 @@ public class ExtendEdge {
     private PatternDirection direction;
     // the weight of the extend edge, which indicates the cost to expand the edge.
     private Double weight;
+    // to denote the range of the path expand operator
+    private final @Nullable PathExpandRange range;
 
     public ExtendEdge(int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction) {
-        this.srcVertexOrder = srcVertexOrder;
-        this.edgeTypeIds = ImmutableList.of(edgeTypeId);
-        this.direction = direction;
+        this(srcVertexOrder, edgeTypeId, direction, null);
     }
 
     public ExtendEdge(
             int srcVertexOrder, List<EdgeTypeId> edgeTypeIds, PatternDirection direction) {
+        this(srcVertexOrder, edgeTypeIds, direction, null);
+    }
+
+    public ExtendEdge(
+            int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction, Double weight) {
+        this(srcVertexOrder, ImmutableList.of(edgeTypeId), direction, weight, null);
+    }
+
+    public ExtendEdge(
+            int srcVertexOrder,
+            List<EdgeTypeId> edgeTypeIds,
+            PatternDirection direction,
+            Double weight) {
+        this(srcVertexOrder, edgeTypeIds, direction, weight, null);
+    }
+
+    public ExtendEdge(
+            int srcVertexOrder,
+            List<EdgeTypeId> edgeTypeIds,
+            PatternDirection direction,
+            Double weight,
+            PathExpandRange range) {
         this.srcVertexOrder = srcVertexOrder;
         this.edgeTypeIds = edgeTypeIds;
         this.direction = direction;
+        this.weight = weight;
+        this.range = range;
     }
 
     public int getSrcVertexOrder() {
@@ -68,6 +95,10 @@ public class ExtendEdge {
 
     public Double getWeight() {
         return weight;
+    }
+
+    public @Nullable PathExpandRange getRange() {
+        return range;
     }
 
     @Override

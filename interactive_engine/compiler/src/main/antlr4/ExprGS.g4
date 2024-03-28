@@ -50,19 +50,19 @@ IS : ( 'I' | 'i' ) ( 'S' | 's' ) ;
 NULL : ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
 
 oC_ComparisonExpression
-                    :  oC_StringPredicateExpression ( SP? oC_PartialComparisonExpression )* ;
+                    :  oC_StringOrListPredicateExpression ( SP? oC_PartialComparisonExpression )* ;
 
 oC_PartialComparisonExpression
-                           :  ( '=' SP? oC_StringPredicateExpression )
-                               | ( '<>' SP? oC_StringPredicateExpression )
-                               | ( '<' SP? oC_StringPredicateExpression )
-                               | ( '>' SP? oC_StringPredicateExpression )
-                               | ( '<=' SP? oC_StringPredicateExpression )
-                               | ( '>=' SP? oC_StringPredicateExpression )
+                           :  ( '=' SP? oC_StringOrListPredicateExpression )
+                               | ( '<>' SP? oC_StringOrListPredicateExpression )
+                               | ( '<' SP? oC_StringOrListPredicateExpression )
+                               | ( '>' SP? oC_StringOrListPredicateExpression )
+                               | ( '<=' SP? oC_StringOrListPredicateExpression )
+                               | ( '>=' SP? oC_StringOrListPredicateExpression )
                                ;
 
-oC_StringPredicateExpression
-                         :  oC_AddOrSubtractOrBitManipulationExpression ( ( ( SP? STARTS SP? WITH ) | ( SP? ENDS SP? WITH ) | ( SP? CONTAINS ) ) SP? oC_AddOrSubtractOrBitManipulationExpression )? ;
+oC_StringOrListPredicateExpression
+                         :  oC_AddOrSubtractOrBitManipulationExpression ( ( ( SP? STARTS SP? WITH ) | ( SP? ENDS SP? WITH ) | ( SP? CONTAINS ) | ( SP? IN ) ) SP? oC_AddOrSubtractOrBitManipulationExpression )? ;
 
 STARTS : ( 'S' | 's' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'S' | 's' ) ;
 
@@ -71,6 +71,8 @@ ENDS : ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'D' | 'd' ) ( 'S' | 's' ) ;
 WITH : ( 'W' | 'w' ) ( 'I' | 'i' ) ( 'T' | 't' ) ( 'H' | 'h' ) ;
 
 CONTAINS : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'S' | 's' ) ;
+
+IN : ( 'I' | 'i' ) ( 'N' | 'n' ) ;
 
 oC_AddOrSubtractOrBitManipulationExpression
                 : oC_MultiplyDivideModuloExpression ( SP? ( '+' | '-' | | '&' | '|' | '^' | '<<' | '>>' ) SP? oC_MultiplyDivideModuloExpression )* ;

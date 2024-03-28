@@ -109,7 +109,7 @@ public class GraphPhysicalGetV extends SingleRel {
                 .item("alias", AliasInference.SIMPLE_NAME(fusedGetV.getAliasName()))
                 .itemIf(
                         "startAlias",
-                        fusedGetV.getStartAlias(),
+                        fusedGetV.getStartAlias().getAliasName(),
                         fusedGetV.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
                 .itemIf(
                         "fusedFilter",

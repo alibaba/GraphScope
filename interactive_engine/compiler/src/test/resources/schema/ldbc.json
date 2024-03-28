@@ -276,7 +276,7 @@
             "name": "id"
           },
           "data_type": 2,
-          "is_primary_key": false
+          "is_primary_key": true
         },
         {
           "key": {
@@ -720,6 +720,26 @@
           "src": {
             "id": 5,
             "name": "ORGANISATION"
+          },
+          "dst": {
+            "id": 0,
+            "name": "PLACE"
+          }
+        },
+        {
+          "src": {
+            "id": 2,
+            "name": "COMMENT"
+          },
+          "dst": {
+            "id": 0,
+            "name": "PLACE"
+          }
+        },
+        {
+          "src": {
+            "id": 3,
+            "name": "POST"
           },
           "dst": {
             "id": 0,
