@@ -313,8 +313,8 @@ def build_learning_engine():
         sys.path.insert(
             0, os.path.join(glt_root_path, "graphlearn_torch", "python", "utils")
         )
-        from build import glt_ext_module
-        from build import glt_v6d_ext_module
+        from build_glt import glt_ext_module
+        from build_glt import glt_v6d_ext_module
 
         ext_modules.append(
             glt_ext_module(

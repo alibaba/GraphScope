@@ -95,7 +95,7 @@ class OperatorLauncher(AbstractLauncher):
     def close_interactive_instance(self, object_id):
         pass
 
-    def close_learning_instance(self, object_id):
+    def close_learning_instance(self, object_id, learning_backend):
         pass
 
     def launch_etcd(self):

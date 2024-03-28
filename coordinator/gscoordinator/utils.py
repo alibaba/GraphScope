@@ -2113,3 +2113,15 @@ def check_server_ready(endpoint, server="gremlin"):
             raise TimeoutError(
                 f"{server.capitalize()} check query failed: {error_message}"
             )
+
+
+def replace_string_in_dict(dict_obj, old, new):
+    if isinstance(dict_obj, dict):
+        for key, value in dict_obj.items():
+            dict_obj[key] = replace_string_in_dict(value, old, new)
+    elif isinstance(dict_obj, list):
+        for index, item in enumerate(dict_obj):
+            dict_obj[index] = replace_string_in_dict(item, old, new)
+    elif isinstance(dict_obj, str):
+        return dict_obj.replace(old, new)
+    return dict_obj

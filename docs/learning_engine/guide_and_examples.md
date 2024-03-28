@@ -68,3 +68,15 @@ ho2 to train a PyG model using GraphScope on your local machine.
 ^^^^^^^^^^^^^^
 Training a Node Classification Model(PyG) on Your Local Machine
 ````
+
+````{panels}
+:header: text-center
+:column: col-lg-12 p-2
+
+```{link-button} tutorial_node_classification_pyg_k8s.html
+:text: Tutorial
+:classes: btn-block stretched-link
+```
+^^^^^^^^^^^^^^
+Tutorial: Training a Node Classification Model (PyG) on a K8S Cluster
+````
