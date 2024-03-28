@@ -5,22 +5,10 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "interactive_utils.h"
 
 namespace gs {
 // Auto generated expression class definition
-struct Query0expr0 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0expr0(int64_t personId) : personId(personId) {}
-
-  inline auto operator()(LabelKey label, int64_t id) const {
-    return ((label<WithIn> std::array<int64_t, 1>{1}) && (id == personId));
-  }
-
- private:
-  int64_t personId;
-};
 
 // Auto generated query class definition
 class Query0 : public AppBase {
@@ -33,11 +21,9 @@ class Query0 : public AppBase {
   Query0(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
   results::CollectiveResults Query(int64_t personId) const {
-    auto expr0 = gs::make_filter(Query0expr0(personId),
-                                 gs::PropertySelector<LabelKey>("label"),
-                                 gs::PropertySelector<int64_t>("id"));
-    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, 1, std::move(expr0));
+    auto ctx0 =
+        Engine::template ScanVertexWithOid<gs::AppendOpt::Persist, int64_t>(
+            graph, 1, std::vector<int64_t>{personId});
 
     auto edge_expand_opt0 = gs::make_edge_expand_multiv_opt(
         gs::Direction::In, std::vector<std::array<label_id_t, 3>>{
@@ -71,9 +57,9 @@ class Query0 : public AppBase {
                        gs::PropertySelector<grape::EmptyType>(""))});
     auto ctx5 = Engine::Sort(
         graph, std::move(ctx4), gs::Range(0, 20),
-        std::tuple{gs::OrderingPropPair<gs::SortOrder::DESC, 2, int64_t>(
-                       "creationDate"),
-                   gs::OrderingPropPair<gs::SortOrder::ASC, 2, int64_t>("id")});
+        std::tuple{
+            gs::OrderingPropPair<gs::SortOrder::DESC, 2, Date>("creationDate"),
+            gs::OrderingPropPair<gs::SortOrder::ASC, 2, int64_t>("id")});
     auto ctx6 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(ctx5),
         std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(3)>(
@@ -83,7 +69,7 @@ class Query0 : public AppBase {
                    gs::make_mapper_with_variable<INPUT_COL_ID(3)>(
                        gs::PropertySelector<std::string_view>("lastName")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
-                       gs::PropertySelector<int64_t>("creationDate")),
+                       gs::PropertySelector<Date>("creationDate")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
                        gs::PropertySelector<int64_t>("id")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
@@ -97,11 +83,7 @@ class Query0 : public AppBase {
 
     auto res = Query(var0);
     // dump results to string
-    std::string res_str = res.SerializeAsString();
-    // encode results to encoder
-    if (!res_str.empty()) {
-      encoder.put_string_view(res_str);
-    }
+    encode_ic8_result(res, encoder);
     return true;
   }
   // private members

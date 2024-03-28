@@ -766,6 +766,8 @@ struct to_string_impl<AppendOpt> {
       return "Persist";
     } else if (empty == AppendOpt::Temp) {
       return "Temp";
+    } else if (empty == AppendOpt::Replace) {
+      return "Replace";
     } else {
       throw std::runtime_error("Unknown AppendOpt");
     }

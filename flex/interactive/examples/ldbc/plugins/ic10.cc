@@ -8,33 +8,6 @@
 
 namespace gs {
 // Auto generated expression class definition
-struct Query0left_left_left_expr0 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0left_left_left_expr0(int64_t personId) : personId(personId) {}
-
-  inline auto operator()(LabelKey label, int64_t id) const {
-    return ((label<WithIn> std::array<int64_t, 1>{1}) && (id == personId));
-  }
-
- private:
-  int64_t personId;
-};
-
-struct Query0left_left_right_expr1 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0left_left_right_expr1() {}
-
-  inline auto operator()(LabelKey label) const {
-    return label<WithIn> std::array<int64_t, 1>{1};
-  }
-
- private:
-};
-
 struct Query0left_left_left_expr1 {
  public:
   using result_t = bool;
@@ -55,7 +28,7 @@ struct Query0left_left_left_expr2 {
   Query0left_left_left_expr2(int64_t month, int32_t month_0)
       : month(month), month_0(month_0) {}
 
-  inline auto operator()(Date var6, Date var7, Date var8, Date var9) const {
+  inline auto operator()(Day var6, Day var7, Day var8, Day var9) const {
     return gs::DateTimeExtractor<Interval::MONTH>::extract(var6) == month &&
                gs::DateTimeExtractor<Interval::DAY>::extract(var7) >= 21 ||
            gs::DateTimeExtractor<Interval::MONTH>::extract(var8) ==
@@ -66,32 +39,6 @@ struct Query0left_left_left_expr2 {
  private:
   int64_t month;
   int32_t month_0;
-};
-
-struct Query0left_right_expr1 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0left_right_expr1() {}
-
-  inline auto operator()(LabelKey label) const {
-    return label<WithIn> std::array<int64_t, 1>{1};
-  }
-
- private:
-};
-
-struct Query0right_expr1 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0right_expr1() {}
-
-  inline auto operator()(LabelKey label) const {
-    return label<WithIn> std::array<int64_t, 1>{1};
-  }
-
- private:
 };
 
 struct Query0left_left_left_expr3 {
@@ -116,21 +63,17 @@ class Query0 : public AppBase {
   using gid_t = typename gs::MutableCSRInterface::gid_t;
   // constructor
   Query0(const GraphDBSession& session) : graph(session) {}
-  // Query function for query class
-  results::CollectiveResults Query(int64_t personId, int64_t month) const {
-    auto left_left_left_expr0 =
-        gs::make_filter(Query0left_left_left_expr0(personId),
-                        gs::PropertySelector<LabelKey>("label"),
-                        gs::PropertySelector<int64_t>("id"));
+  results::CollectiveResults Query(int64_t personId, int32_t month) const {
+    // Query function for query class
     auto left_left_left_ctx0 =
-        Engine::template ScanVertex<gs::AppendOpt::Persist>(
-            graph, 1, std::move(left_left_left_expr0));
+        Engine::template ScanVertexWithOid<gs::AppendOpt::Persist, int64_t>(
+            graph, 1, std::vector<int64_t>{personId});
 
     auto left_left_left_edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
     auto left_left_left_get_v_opt0 = make_getv_opt(
-        gs::VOpt::Itself, std::array<label_id_t, 1>{(label_id_t) 1});
+        gs::VOpt::Other, std::array<label_id_t, 1>{(label_id_t) 1});
 
     auto left_left_left_path_opt2 = gs::make_path_expandv_opt(
         std::move(left_left_left_edge_expand_opt1),
@@ -153,30 +96,20 @@ class Query0 : public AppBase {
     auto left_left_right_edge_expand_opt0 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
     auto left_left_right_ctx1 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(0)>(
+        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
             graph, std::move(left_left_right_ctx0),
             std::move(left_left_right_edge_expand_opt0));
 
-    auto left_left_right_expr1 = gs::make_filter(
-        Query0left_left_right_expr1(), gs::PropertySelector<LabelKey>("label"));
-    auto left_left_right_get_v_opt1 =
-        make_getv_opt(gs::VOpt::Itself, std::array<label_id_t, 0>{},
-                      std::move(left_left_right_expr1));
-    auto left_left_right_ctx2 =
-        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
-            graph, std::move(left_left_right_ctx1),
-            std::move(left_left_right_get_v_opt1));
-
     auto left_left_left_ctx3 =
         Engine::template Join<0, 1, 0, 1, gs::JoinKind::AntiJoin>(
-            std::move(left_left_left_ctx2), std::move(left_left_right_ctx2));
-    auto left_left_left_expr3 = gs::make_filter(
+            std::move(left_left_left_ctx2), std::move(left_left_right_ctx1));
+    auto left_left_left_expr2 = gs::make_filter(
         Query0left_left_left_expr1(), gs::PropertySelector<GlobalId>("None"),
         gs::PropertySelector<GlobalId>("None"));
     auto left_left_left_ctx4 =
         Engine::template Select<INPUT_COL_ID(1), INPUT_COL_ID(0)>(
             graph, std::move(left_left_left_ctx3),
-            std::move(left_left_left_expr3));
+            std::move(left_left_left_expr2));
 
     auto left_left_left_ctx5 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(left_left_left_ctx4),
@@ -187,16 +120,16 @@ class Query0 : public AppBase {
                    gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
-                       gs::PropertySelector<Date>("birthday"))});
-    auto left_left_left_expr4 = gs::make_filter(
+                       gs::PropertySelector<Day>("birthday"))});
+    auto left_left_left_expr3 = gs::make_filter(
         Query0left_left_left_expr2(month, month),
-        gs::PropertySelector<Date>("None"), gs::PropertySelector<Date>("None"),
-        gs::PropertySelector<Date>("None"), gs::PropertySelector<Date>("None"));
+        gs::PropertySelector<Day>("None"), gs::PropertySelector<Day>("None"),
+        gs::PropertySelector<Day>("None"), gs::PropertySelector<Day>("None"));
     auto left_left_left_ctx6 =
         Engine::template Select<INPUT_COL_ID(3), INPUT_COL_ID(3),
                                 INPUT_COL_ID(3), INPUT_COL_ID(3)>(
             graph, std::move(left_left_left_ctx5),
-            std::move(left_left_left_expr4));
+            std::move(left_left_left_expr3));
 
     auto left_left_left_ctx7 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(left_left_left_ctx6),
@@ -211,28 +144,20 @@ class Query0 : public AppBase {
         std::tuple{GlobalIdSelector(), GlobalIdSelector(), GlobalIdSelector()});
 
     auto left_right_ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, 3, Filter<TruePredicate>());
+        graph, 1, Filter<TruePredicate>());
 
-    auto left_right_edge_expand_opt0 = gs::make_edge_expandv_opt(
-        gs::Direction::Out, (label_id_t) 0, (label_id_t) 1);
+    auto left_right_edge_expand_opt0 = gs::make_edge_expand_multiv_opt(
+        gs::Direction::In, std::vector<std::array<label_id_t, 3>>{
+                               std::array<label_id_t, 3>{2, 1, 0},
+                               std::array<label_id_t, 3>{3, 1, 0}});
     auto left_right_ctx1 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(0)>(
+        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
             graph, std::move(left_right_ctx0),
             std::move(left_right_edge_expand_opt0));
 
-    auto left_right_expr1 = gs::make_filter(
-        Query0left_right_expr1(), gs::PropertySelector<LabelKey>("label"));
-    auto left_right_get_v_opt1 =
-        make_getv_opt(gs::VOpt::Itself, std::array<label_id_t, 0>{},
-                      std::move(left_right_expr1));
-    auto left_right_ctx2 =
-        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
-            graph, std::move(left_right_ctx1),
-            std::move(left_right_get_v_opt1));
-
     auto left_left_left_ctx9 =
-        Engine::template Join<0, 1, gs::JoinKind::LeftOuterJoin>(
-            std::move(left_left_left_ctx8), std::move(left_right_ctx2));
+        Engine::template Join<0, 0, gs::JoinKind::LeftOuterJoin>(
+            std::move(left_left_left_ctx8), std::move(left_right_ctx1));
     GroupKey<0, grape::EmptyType> left_left_left_group_key10(
         gs::PropertySelector<grape::EmptyType>("None"));
 
@@ -272,20 +197,12 @@ class Query0 : public AppBase {
     auto right_edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 0, (label_id_t) 1);
     auto right_ctx3 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(2)>(
+        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(2)>(
             graph, std::move(right_ctx2), std::move(right_edge_expand_opt2));
-
-    auto right_expr3 = gs::make_filter(Query0right_expr1(),
-                                       gs::PropertySelector<LabelKey>("label"));
-    auto right_get_v_opt3 = make_getv_opt(
-        gs::VOpt::Itself, std::array<label_id_t, 0>{}, std::move(right_expr3));
-    auto right_ctx4 =
-        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
-            graph, std::move(right_ctx3), std::move(right_get_v_opt3));
 
     auto left_left_left_ctx11 =
         Engine::template Join<0, 2, 3, 0, gs::JoinKind::LeftOuterJoin>(
-            std::move(left_left_left_ctx10), std::move(right_ctx4));
+            std::move(left_left_left_ctx10), std::move(right_ctx3));
     GroupKey<0, grape::EmptyType> left_left_left_group_key14(
         gs::PropertySelector<grape::EmptyType>("None"));
 
@@ -334,7 +251,7 @@ class Query0 : public AppBase {
     // decoding params from decoder, and call real query func
     int64_t var0 = decoder.get_long();
 
-    int64_t var3 = decoder.get_long();
+    int32_t var3 = decoder.get_int();
 
     auto res = Query(var0, var3);
     // dump results to string

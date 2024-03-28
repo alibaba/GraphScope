@@ -225,6 +225,8 @@ static std::string decode_type_as_str(const codegen::DataType& data_type) {
     return "get_string()";
   case codegen::DataType::kBoolean:
     return "get_bool()";
+  case codegen::DataType::kDate:
+    return "get_long()";
   default:
     // LOG(FATAL) << "unknown data type" << static_cast<int>(data_type);
     throw std::runtime_error("unknown data type when decode type as str: " +

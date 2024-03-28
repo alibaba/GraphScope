@@ -5,23 +5,10 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "interactive_utils.h"
 
 namespace gs {
 // Auto generated expression class definition
-struct Query0expr0 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0expr0(std::string_view countryName) : countryName(countryName) {}
-
-  inline auto operator()(std::string_view name) const {
-    return (name == countryName);
-  }
-
- private:
-  std::string_view countryName;
-};
-
 struct Query0expr1 {
  public:
   using result_t = bool;
@@ -40,14 +27,14 @@ struct Query0expr2 {
  public:
   using result_t = bool;
   static constexpr bool filter_null = true;
-  Query0expr2(int64_t personId) : personId(personId) {}
+  Query0expr2(std::string_view countryName) : countryName(countryName) {}
 
-  inline auto operator()(LabelKey label, int64_t id) const {
-    return (label<WithIn> std::array<int64_t, 1>{1}) && (id == personId);
+  inline auto operator()(std::string_view name) const {
+    return name == countryName;
   }
 
  private:
-  int64_t personId;
+  std::string_view countryName;
 };
 
 struct Query0expr3 {
@@ -76,84 +63,73 @@ class Query0 : public AppBase {
   results::CollectiveResults Query(int64_t personId,
                                    std::string_view countryName,
                                    int32_t workFromYear) const {
-    auto expr0 =
-        gs::make_filter(Query0expr0(countryName),
-                        gs::PropertySelector<std::string_view>("name"));
-    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, 0, std::move(expr0));
+    auto ctx0 =
+        Engine::template ScanVertexWithOid<gs::AppendOpt::Persist, int64_t>(
+            graph, 1, std::vector<int64_t>{personId});
 
-    auto edge_expand_opt0 = gs::make_edge_expandv_opt(
-        gs::Direction::In, (label_id_t) 7, (label_id_t) 5);
-    auto ctx1 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
-            graph, std::move(ctx0), std::move(edge_expand_opt0));
-
-    auto expr2 = gs::make_filter(Query0expr1(workFromYear),
-                                 gs::PropertySelector<int32_t>("workFrom"));
-    auto edge_expand_opt1 = gs::make_edge_expande_opt<int32_t>(
-        gs::PropNameArray<int32_t>{"workFrom"}, gs::Direction::In,
-        (label_id_t) 10, (label_id_t) 1, std::move(expr2));
-    auto ctx2 =
-        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
-            graph, std::move(ctx1), std::move(edge_expand_opt1));
-
-    auto get_v_opt2 = make_getv_opt(gs::VOpt::Start,
-                                    std::array<label_id_t, 1>{(label_id_t) 1});
-    auto ctx3 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
-        graph, std::move(ctx2), std::move(get_v_opt2));
-    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
-    auto get_v_opt3 = make_getv_opt(gs::VOpt::Itself,
+    auto get_v_opt0 = make_getv_opt(gs::VOpt::Other,
                                     std::array<label_id_t, 1>{(label_id_t) 1});
 
-    auto path_opt5 = gs::make_path_expandv_opt(
-        std::move(edge_expand_opt4), std::move(get_v_opt3), gs::Range(1, 3));
-    auto ctx4 = Engine::PathExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(3)>(
-        graph, std::move(ctx3), std::move(path_opt5));
-    auto expr4 = gs::make_filter(Query0expr2(personId),
-                                 gs::PropertySelector<LabelKey>("label"),
-                                 gs::PropertySelector<int64_t>("id"));
-    auto get_v_opt6 = make_getv_opt(
-        gs::VOpt::Itself, std::array<label_id_t, 0>{}, std::move(expr4));
-    auto ctx5 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+    auto path_opt2 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt1), std::move(get_v_opt0), gs::Range(1, 3));
+    auto ctx1 = Engine::PathExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        graph, std::move(ctx0), std::move(path_opt2));
+    auto expr1 = gs::make_filter(Query0expr1(workFromYear),
+                                 gs::PropertySelector<int32_t>("workFrom"));
+    auto edge_expand_opt3 = gs::make_edge_expande_opt<int32_t>(
+        gs::PropNameArray<int32_t>{"workFrom"}, gs::Direction::Out,
+        (label_id_t) 10, (label_id_t) 5, std::move(expr1));
+    auto ctx2 =
+        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
+            graph, std::move(ctx1), std::move(edge_expand_opt3));
+
+    auto get_v_opt4 =
+        make_getv_opt(gs::VOpt::End, std::array<label_id_t, 1>{(label_id_t) 5});
+    auto ctx3 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx2), std::move(get_v_opt4));
+    auto edge_expand_opt5 = gs::make_edge_expandv_opt(
+        gs::Direction::Out, (label_id_t) 7, (label_id_t) 0);
+    auto ctx4 =
+        Engine::template EdgeExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(3)>(
+            graph, std::move(ctx3), std::move(edge_expand_opt5));
+
+    auto expr3 =
+        gs::make_filter(Query0expr2(countryName),
+                        gs::PropertySelector<std::string_view>("name"));
+    auto get_v_opt6 = make_getv_opt(gs::VOpt::Itself,
+                                    std::array<label_id_t, 1>{(label_id_t) 0},
+                                    std::move(expr3));
+    auto ctx5 = Engine::template GetV<gs::AppendOpt::Temp, INPUT_COL_ID(-1)>(
         graph, std::move(ctx4), std::move(get_v_opt6));
-    auto ctx6 = Engine::Project<PROJ_TO_NEW>(
-        graph, std::move(ctx5),
-        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(4)>(
-                       gs::PropertySelector<grape::EmptyType>("")),
-                   gs::make_mapper_with_variable<INPUT_COL_ID(3)>(
-                       gs::PropertySelector<grape::EmptyType>("")),
-                   gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
-                       gs::PropertySelector<grape::EmptyType>("")),
-                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
-                       gs::PropertySelector<grape::EmptyType>(""))});
-    auto expr5 =
+    auto expr4 =
         gs::make_filter(Query0expr3(), gs::PropertySelector<GlobalId>("None"),
                         gs::PropertySelector<GlobalId>("None"));
-    auto ctx7 = Engine::template Select<INPUT_COL_ID(0), INPUT_COL_ID(1)>(
-        graph, std::move(ctx6), std::move(expr5));
+    auto ctx6 = Engine::template Select<INPUT_COL_ID(0), INPUT_COL_ID(1)>(
+        graph, std::move(ctx5), std::move(expr4));
 
-    auto ctx8 = Engine::Project<PROJ_TO_NEW>(
-        graph, std::move(ctx7),
+    auto ctx7 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx6),
         std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(3)>(
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
                        gs::PropertySelector<int32_t>("workFrom"))});
-    auto ctx9 = Engine::template Dedup<0, 1, 2>(
-        graph, std::move(ctx8),
+    auto ctx8 = Engine::template Dedup<0, 1, 2>(
+        graph, std::move(ctx7),
         std::tuple{GlobalIdSelector(), GlobalIdSelector(), GlobalIdSelector()});
-    auto ctx10 = Engine::Sort(
-        graph, std::move(ctx9), gs::Range(0, 10),
+    auto ctx9 = Engine::Sort(
+        graph, std::move(ctx8), gs::Range(0, 10),
         std::tuple{
             gs::OrderingPropPair<gs::SortOrder::ASC, 2, int32_t>(""),
             gs::OrderingPropPair<gs::SortOrder::ASC, 0, int64_t>("id"),
             gs::OrderingPropPair<gs::SortOrder::DESC, 1, std::string_view>(
                 "name")});
-    auto ctx11 = Engine::Project<PROJ_TO_NEW>(
-        graph, std::move(ctx10),
+    auto ctx10 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx9),
         std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
                        gs::PropertySelector<int64_t>("id")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
@@ -164,7 +140,7 @@ class Query0 : public AppBase {
                        gs::PropertySelector<std::string_view>("name")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
                        gs::PropertySelector<grape::EmptyType>(""))});
-    return Engine::Sink(graph, ctx11, std::array<int32_t, 5>{5, 6, 7, 8, 4});
+    return Engine::Sink(graph, ctx10, std::array<int32_t, 5>{5, 6, 7, 8, 4});
   }
   // Wrapper query function for query class
   bool Query(Decoder& decoder, Encoder& encoder) override {
@@ -176,12 +152,7 @@ class Query0 : public AppBase {
     int32_t var2 = decoder.get_int();
 
     auto res = Query(var0, var1, var2);
-    // dump results to string
-    std::string res_str = res.SerializeAsString();
-    // encode results to encoder
-    if (!res_str.empty()) {
-      encoder.put_string_view(res_str);
-    }
+    encode_ic11_result(res, encoder);
     return true;
   }
   // private members

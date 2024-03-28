@@ -5,31 +5,18 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "interactive_utils.h"
 
 namespace gs {
 // Auto generated expression class definition
-struct Query0expr0 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0expr0(int64_t personId) : personId(personId) {}
-
-  inline auto operator()(LabelKey label, int64_t id) const {
-    return ((label<WithIn> std::array<int64_t, 1>{1}) && (id == personId));
-  }
-
- private:
-  int64_t personId;
-};
-
 struct Query0expr1 {
  public:
   using result_t = int32_t;
   static constexpr bool filter_null = true;
-  Query0expr1(int64_t endDate, int64_t startDate)
+  Query0expr1(Date endDate, Date startDate)
       : endDate(endDate), startDate(startDate) {}
 
-  inline auto operator()(int64_t creationDate, int64_t creationDate_0) const {
+  inline auto operator()(Date creationDate, Date creationDate_0) const {
     if (creationDate < endDate && creationDate_0 >= startDate) {
       return 1;
     }
@@ -38,17 +25,17 @@ struct Query0expr1 {
   }
 
  private:
-  int64_t endDate;
-  int64_t startDate;
+  Date endDate;
+  Date startDate;
 };
 
 struct Query0expr5 {
  public:
   using result_t = int32_t;
   static constexpr bool filter_null = true;
-  Query0expr5(int64_t startDate) : startDate(startDate) {}
+  Query0expr5(Date startDate) : startDate(startDate) {}
 
-  inline auto operator()(int64_t creationDate) const {
+  inline auto operator()(Date creationDate) const {
     if (startDate > creationDate) {
       return 1;
     }
@@ -57,7 +44,7 @@ struct Query0expr5 {
   }
 
  private:
-  int64_t startDate;
+  Date startDate;
 };
 
 struct Query0expr9 {
@@ -83,13 +70,11 @@ class Query0 : public AppBase {
   // constructor
   Query0(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(int64_t personId, int64_t endDate,
-                                   int64_t startDate) const {
-    auto expr0 = gs::make_filter(Query0expr0(personId),
-                                 gs::PropertySelector<LabelKey>("label"),
-                                 gs::PropertySelector<int64_t>("id"));
-    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, 1, std::move(expr0));
+  results::CollectiveResults Query(int64_t personId, Date endDate,
+                                   Date startDate) const {
+    auto ctx0 =
+        Engine::template ScanVertexWithOid<gs::AppendOpt::Persist, int64_t>(
+            graph, 1, std::vector<int64_t>{personId});
 
     auto edge_expand_opt0 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
@@ -97,8 +82,10 @@ class Query0 : public AppBase {
         Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
             graph, std::move(ctx0), std::move(edge_expand_opt0));
 
-    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
-        gs::Direction::In, (label_id_t) 0, (label_id_t) 3);
+    auto edge_expand_opt1 = gs::make_edge_expand_multiv_opt(
+        gs::Direction::In, std::vector<std::array<label_id_t, 3>>{
+                               std::array<label_id_t, 3>{2, 1, 0},
+                               std::array<label_id_t, 3>{3, 1, 0}});
     auto ctx2 =
         Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
             graph, std::move(ctx1), std::move(edge_expand_opt1));
@@ -124,11 +111,11 @@ class Query0 : public AppBase {
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_expr<1, 1>(
                        Query0expr1(endDate, startDate),
-                       gs::PropertySelector<int64_t>("creationDate"),
-                       gs::PropertySelector<int64_t>("creationDate")),
+                       gs::PropertySelector<Date>("creationDate"),
+                       gs::PropertySelector<Date>("creationDate")),
                    gs::make_mapper_with_expr<1>(
                        Query0expr5(startDate),
-                       gs::PropertySelector<int64_t>("creationDate"))});
+                       gs::PropertySelector<Date>("creationDate"))});
     GroupKey<0, grape::EmptyType> group_key3(
         gs::PropertySelector<grape::EmptyType>("None"));
 
@@ -142,11 +129,11 @@ class Query0 : public AppBase {
 
     auto ctx7 = Engine::GroupBy(graph, std::move(ctx6), std::tuple{group_key3},
                                 std::tuple{agg_func4, agg_func5});
-    auto expr4 =
+    auto expr3 =
         gs::make_filter(Query0expr9(), gs::PropertySelector<int32_t>("None"),
                         gs::PropertySelector<int32_t>("None"));
     auto ctx8 = Engine::template Select<INPUT_COL_ID(1), INPUT_COL_ID(2)>(
-        graph, std::move(ctx7), std::move(expr4));
+        graph, std::move(ctx7), std::move(expr3));
 
     auto ctx9 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(ctx8),
@@ -168,15 +155,15 @@ class Query0 : public AppBase {
 
     int64_t var1 = decoder.get_long();
 
-    int64_t var3 = decoder.get_long();
+    int32_t days = decoder.get_int();
+    const int64_t milli_sec_per_day = 24 * 60 * 60 * 1000l;
+    int64_t end_date = var1 + days * milli_sec_per_day;
 
-    auto res = Query(var0, var1, var3);
-    // dump results to string
-    std::string res_str = res.SerializeAsString();
-    // encode results to encoder
-    if (!res_str.empty()) {
-      encoder.put_string_view(res_str);
-    }
+    LOG(INFO) << "Query0: personId=" << var0 << ", start=" << var1
+              << ", end=" << end_date;
+
+    auto res = Query(var0, end_date, var1);
+    encode_ic4_result(res, encoder);
     return true;
   }
   // private members

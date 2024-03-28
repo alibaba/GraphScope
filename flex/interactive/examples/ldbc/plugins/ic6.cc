@@ -5,59 +5,33 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "interactive_utils.h"
 
 namespace gs {
 // Auto generated expression class definition
-struct Query0expr0 {
+struct Query0expr1 {
  public:
   using result_t = bool;
   static constexpr bool filter_null = true;
-  Query0expr0(std::string_view tagName) : tagName(tagName) {}
+  Query0expr1(std::string_view tagName) : tagName(tagName) {}
 
   inline auto operator()(std::string_view name) const {
-    return (name == tagName);
+    return name == tagName;
   }
 
  private:
   std::string_view tagName;
 };
 
-struct Query0expr1 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0expr1() {}
-
-  inline auto operator()(LabelKey label) const {
-    return label<WithIn> std::array<int64_t, 1>{3};
-  }
-
- private:
-};
-
 struct Query0expr2 {
  public:
   using result_t = bool;
   static constexpr bool filter_null = true;
-  Query0expr2(int64_t personId) : personId(personId) {}
+  Query0expr2() {}
 
-  inline auto operator()(LabelKey label, int64_t id) const {
-    return (label<WithIn> std::array<int64_t, 1>{1}) && (id == personId);
-  }
-
- private:
-  int64_t personId;
-};
-
-struct Query0expr3 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0expr3() {}
-
-  inline auto operator()(GlobalId var8, GlobalId var9, GlobalId var10,
-                         GlobalId var11) const {
-    return var8 != var9 && var10 != var11;
+  inline auto operator()(GlobalId var7, GlobalId var8, GlobalId var9,
+                         GlobalId var10) const {
+    return var7 != var8 && var9 != var10;
   }
 
  private:
@@ -75,77 +49,69 @@ class Query0 : public AppBase {
   // Query function for query class
   results::CollectiveResults Query(int64_t personId,
                                    std::string_view tagName) const {
-    auto expr0 = gs::make_filter(
-        Query0expr0(tagName), gs::PropertySelector<std::string_view>("name"));
-    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, 7, std::move(expr0));
+    auto ctx0 =
+        Engine::template ScanVertexWithOid<gs::AppendOpt::Persist, int64_t>(
+            graph, 1, std::vector<int64_t>{personId});
 
-    auto edge_expand_opt0 = gs::make_edge_expandv_opt(
-        gs::Direction::In, (label_id_t) 1, (label_id_t) 3);
-    auto ctx1 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(0)>(
-            graph, std::move(ctx0), std::move(edge_expand_opt0));
-
-    auto expr2 =
-        gs::make_filter(Query0expr1(), gs::PropertySelector<LabelKey>("label"));
-    auto get_v_opt1 = make_getv_opt(gs::VOpt::Itself,
-                                    std::array<label_id_t, 1>{(label_id_t) 3},
-                                    std::move(expr2));
-    auto ctx2 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
-        graph, std::move(ctx1), std::move(get_v_opt1));
-    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
-        gs::Direction::Out, (label_id_t) 0, (label_id_t) 1);
-    auto ctx3 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
-            graph, std::move(ctx2), std::move(edge_expand_opt2));
-
-    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
-    auto get_v_opt3 = make_getv_opt(gs::VOpt::Itself,
+    auto get_v_opt0 = make_getv_opt(gs::VOpt::Other,
                                     std::array<label_id_t, 1>{(label_id_t) 1});
 
-    auto path_opt5 = gs::make_path_expandv_opt(
-        std::move(edge_expand_opt4), std::move(get_v_opt3), gs::Range(1, 3));
-    auto ctx4 = Engine::PathExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(2)>(
-        graph, std::move(ctx3), std::move(path_opt5));
-    auto expr5 = gs::make_filter(Query0expr2(personId),
-                                 gs::PropertySelector<LabelKey>("label"),
-                                 gs::PropertySelector<int64_t>("id"));
-    auto get_v_opt6 = make_getv_opt(
-        gs::VOpt::Itself, std::array<label_id_t, 0>{}, std::move(expr5));
-    auto ctx5 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
-        graph, std::move(ctx4), std::move(get_v_opt6));
-    auto edge_expand_opt7 = gs::make_edge_expandv_opt(
-        gs::Direction::Out, (label_id_t) 1, (label_id_t) 7);
-    auto ctx6 =
+    auto path_opt2 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt1), std::move(get_v_opt0), gs::Range(1, 3));
+    auto ctx1 = Engine::PathExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        graph, std::move(ctx0), std::move(path_opt2));
+    auto edge_expand_opt3 = gs::make_edge_expandv_opt(
+        gs::Direction::In, (label_id_t) 0, (label_id_t) 3);
+    auto ctx2 =
         Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
-            graph, std::move(ctx5), std::move(edge_expand_opt7));
+            graph, std::move(ctx1), std::move(edge_expand_opt3));
 
-    auto expr7 =
-        gs::make_filter(Query0expr3(), gs::PropertySelector<GlobalId>("None"),
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
+        gs::Direction::Out, (label_id_t) 1, (label_id_t) 7);
+    auto ctx3 =
+        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(2)>(
+            graph, std::move(ctx2), std::move(edge_expand_opt4));
+
+    auto expr3 = gs::make_filter(
+        Query0expr1(tagName), gs::PropertySelector<std::string_view>("name"));
+    auto get_v_opt5 = make_getv_opt(gs::VOpt::Itself,
+                                    std::array<label_id_t, 1>{(label_id_t) 7},
+                                    std::move(expr3));
+    auto ctx4 = Engine::template GetV<gs::AppendOpt::Temp, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx3), std::move(get_v_opt5));
+    auto edge_expand_opt6 = gs::make_edge_expandv_opt(
+        gs::Direction::Out, (label_id_t) 1, (label_id_t) 7);
+    auto ctx5 =
+        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(2)>(
+            graph, std::move(ctx4), std::move(edge_expand_opt6));
+
+    auto expr5 =
+        gs::make_filter(Query0expr2(), gs::PropertySelector<GlobalId>("None"),
                         gs::PropertySelector<GlobalId>("None"),
                         gs::PropertySelector<GlobalId>("None"),
                         gs::PropertySelector<GlobalId>("None"));
-    auto ctx7 = Engine::template Select<INPUT_COL_ID(3), INPUT_COL_ID(2),
-                                        INPUT_COL_ID(4), INPUT_COL_ID(0)>(
-        graph, std::move(ctx6), std::move(expr7));
+    auto ctx6 = Engine::template Select<INPUT_COL_ID(0), INPUT_COL_ID(1),
+                                        INPUT_COL_ID(4), INPUT_COL_ID(3)>(
+        graph, std::move(ctx5), std::move(expr5));
 
-    GroupKey<4, std::string_view> group_key12(
+    GroupKey<4, std::string_view> group_key11(
         gs::PropertySelector<std::string_view>("name"));
 
-    auto agg_func13 = gs::make_aggregate_prop<gs::AggFunc::COUNT_DISTINCT>(
+    auto agg_func12 = gs::make_aggregate_prop<gs::AggFunc::COUNT_DISTINCT>(
         std::tuple{gs::PropertySelector<grape::EmptyType>("None")},
-        std::integer_sequence<int32_t, 1>{});
+        std::integer_sequence<int32_t, 2>{});
 
-    auto ctx8 = Engine::GroupBy(graph, std::move(ctx7), std::tuple{group_key12},
-                                std::tuple{agg_func13});
-    auto ctx9 = Engine::Sort(
-        graph, std::move(ctx8), gs::Range(0, 10),
+    auto ctx7 = Engine::GroupBy(graph, std::move(ctx6), std::tuple{group_key11},
+                                std::tuple{agg_func12});
+    auto ctx8 = Engine::Sort(
+        graph, std::move(ctx7), gs::Range(0, 10),
         std::tuple{
             gs::OrderingPropPair<gs::SortOrder::DESC, 1, int64_t>(""),
             gs::OrderingPropPair<gs::SortOrder::ASC, 0, std::string_view>("")});
-    return Engine::Sink(graph, ctx9, std::array<int32_t, 2>{5, 6});
+    return Engine::Sink(graph, ctx8, std::array<int32_t, 2>{5, 6});
   }
   // Wrapper query function for query class
   bool Query(Decoder& decoder, Encoder& encoder) override {
@@ -155,12 +121,7 @@ class Query0 : public AppBase {
     std::string_view var1 = decoder.get_string();
 
     auto res = Query(var0, var1);
-    // dump results to string
-    std::string res_str = res.SerializeAsString();
-    // encode results to encoder
-    if (!res_str.empty()) {
-      encoder.put_string_view(res_str);
-    }
+    encode_ic6_result(res, encoder);
     return true;
   }
   // private members

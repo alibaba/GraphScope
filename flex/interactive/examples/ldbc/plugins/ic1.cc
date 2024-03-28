@@ -9,33 +9,19 @@
 
 namespace gs {
 // Auto generated expression class definition
-struct Query0left_left_left_expr0 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0left_left_left_expr0(std::string_view firstName_0)
-      : firstName_0(firstName_0) {}
-
-  inline auto operator()(std::string_view firstName) const {
-    return (firstName == firstName_0);
-  }
-
- private:
-  std::string_view firstName_0;
-};
-
 struct Query0left_left_left_expr1 {
  public:
   using result_t = bool;
   static constexpr bool filter_null = true;
-  Query0left_left_left_expr1(int64_t personId) : personId(personId) {}
+  Query0left_left_left_expr1(std::string_view firstName_0)
+      : firstName_0(firstName_0) {}
 
-  inline auto operator()(LabelKey label, int64_t id) const {
-    return (label<WithIn> std::array<int64_t, 1>{1}) && (id == personId);
+  inline auto operator()(std::string_view firstName) const {
+    return firstName == firstName_0;
   }
 
  private:
-  int64_t personId;
+  std::string_view firstName_0;
 };
 
 struct Query0left_left_left_expr2 {
@@ -46,19 +32,6 @@ struct Query0left_left_left_expr2 {
 
   inline auto operator()(GlobalId var5, GlobalId var6) const {
     return var5 != var6;
-  }
-
- private:
-};
-
-struct Query0left_left_right_expr0 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0left_left_right_expr0() {}
-
-  inline auto operator()(LabelKey label) const {
-    return (label<WithIn> std::array<int64_t, 1>{1});
   }
 
  private:
@@ -77,21 +50,8 @@ struct Query0left_left_left_expr3 {
       return NullRecordCreator<result_t>::GetNull();
     }
 
-    return std::tuple{name, workFrom, name_0};
+    return std::tuple{name, workFrom, name};
     ;
-  }
-
- private:
-};
-
-struct Query0left_right_expr0 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0left_right_expr0() {}
-
-  inline auto operator()(LabelKey label) const {
-    return (label<WithIn> std::array<int64_t, 1>{1});
   }
 
  private:
@@ -110,21 +70,8 @@ struct Query0left_left_left_expr6 {
       return NullRecordCreator<result_t>::GetNull();
     }
 
-    return std::tuple{name, classYear, name_0};
+    return std::tuple{name, classYear, name};
     ;
-  }
-
- private:
-};
-
-struct Query0right_expr0 {
- public:
-  using result_t = bool;
-  static constexpr bool filter_null = true;
-  Query0right_expr0() {}
-
-  inline auto operator()(LabelKey label) const {
-    return (label<WithIn> std::array<int64_t, 1>{1});
   }
 
  private:
@@ -142,19 +89,15 @@ class Query0 : public AppBase {
   // Query function for query class
   results::CollectiveResults Query(int64_t personId,
                                    std::string_view firstName) const {
-    LOG(INFO) << "Query0: " << personId << " " << firstName;
-    auto left_left_left_expr0 =
-        gs::make_filter(Query0left_left_left_expr0(firstName),
-                        gs::PropertySelector<std::string_view>("firstName"));
     auto left_left_left_ctx0 =
-        Engine::template ScanVertex<gs::AppendOpt::Persist>(
-            graph, 1, std::move(left_left_left_expr0));
+        Engine::template ScanVertexWithOid<gs::AppendOpt::Persist, int64_t>(
+            graph, 1, std::vector<int64_t>{personId});
 
     auto left_left_left_edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
     auto left_left_left_get_v_opt0 = make_getv_opt(
-        gs::VOpt::Itself, std::array<label_id_t, 1>{(label_id_t) 1});
+        gs::VOpt::Start, std::array<label_id_t, 1>{(label_id_t) 1});
 
     auto left_left_left_path_opt2 = gs::make_path_expandv_opt(
         std::move(left_left_left_edge_expand_opt1),
@@ -164,33 +107,38 @@ class Query0 : public AppBase {
             graph, std::move(left_left_left_ctx0),
             std::move(left_left_left_path_opt2));
     auto left_left_left_get_v_opt3 =
-        make_getv_opt(gs::VOpt::End, std::array<label_id_t, 0>{});
+        make_getv_opt(gs::VOpt::End, std::array<label_id_t, 1>{(label_id_t) 1});
     auto left_left_left_ctx2 =
-        Engine::template GetV<gs::AppendOpt::Temp, INPUT_COL_ID(-1)>(
+        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
             graph, std::move(left_left_left_ctx1),
             std::move(left_left_left_get_v_opt3));
-    auto left_left_left_expr2 =
-        gs::make_filter(Query0left_left_left_expr1(personId),
-                        gs::PropertySelector<LabelKey>("label"),
-                        gs::PropertySelector<int64_t>("id"));
+
+    // auto left_left_left_ctx2 =
+    //     Engine::PathExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+    //         graph, std::move(left_left_left_ctx0),
+    //         std::move(left_left_left_path_opt2));
+
+    auto left_left_left_expr1 =
+        gs::make_filter(Query0left_left_left_expr1(firstName),
+                        gs::PropertySelector<std::string_view>("firstName"));
     auto left_left_left_get_v_opt4 =
         make_getv_opt(gs::VOpt::Itself, std::array<label_id_t, 0>{},
-                      std::move(left_left_left_expr2));
+                      std::move(left_left_left_expr1));
     auto left_left_left_ctx3 =
-        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        Engine::template GetV<gs::AppendOpt::Temp, INPUT_COL_ID(-1)>(
             graph, std::move(left_left_left_ctx2),
             std::move(left_left_left_get_v_opt4));
-    auto left_left_left_expr3 = gs::make_filter(
+    auto left_left_left_expr2 = gs::make_filter(
         Query0left_left_left_expr2(), gs::PropertySelector<GlobalId>("None"),
         gs::PropertySelector<GlobalId>("None"));
     auto left_left_left_ctx4 =
-        Engine::template Select<INPUT_COL_ID(2), INPUT_COL_ID(0)>(
+        Engine::template Select<INPUT_COL_ID(0), INPUT_COL_ID(2)>(
             graph, std::move(left_left_left_ctx3),
-            std::move(left_left_left_expr3));
+            std::move(left_left_left_expr2));
 
     auto left_left_left_ctx5 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(left_left_left_ctx4),
-        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
                        gs::PropertySelector<LengthKey>("length"))});
@@ -213,35 +161,34 @@ class Query0 : public AppBase {
                 "lastName"),
             gs::OrderingPropPair<gs::SortOrder::ASC, 0, int64_t>("id")});
 
-    auto left_left_right_expr0 = gs::make_filter(
-        Query0left_left_right_expr0(), gs::PropertySelector<LabelKey>("label"));
     auto left_left_right_ctx0 =
         Engine::template ScanVertex<gs::AppendOpt::Persist>(
-            graph, 1, std::move(left_left_right_expr0));
+            graph, 0, Filter<TruePredicate>());
 
-    auto left_left_right_edge_expand_opt0 = gs::make_edge_expande_opt<int32_t>(
-        gs::PropNameArray<int32_t>{"workFrom"}, gs::Direction::Out,
-        (label_id_t) 10, (label_id_t) 5);
+    auto left_left_right_edge_expand_opt0 = gs::make_edge_expandv_opt(
+        gs::Direction::In, (label_id_t) 7, (label_id_t) 0);
     auto left_left_right_ctx1 =
-        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
             graph, std::move(left_left_right_ctx0),
             std::move(left_left_right_edge_expand_opt0));
 
-    auto left_left_right_get_v_opt1 =
-        make_getv_opt(gs::VOpt::End, std::array<label_id_t, 1>{(label_id_t) 5});
+    auto left_left_right_edge_expand_opt1 = gs::make_edge_expande_opt<int32_t>(
+        gs::PropNameArray<int32_t>{"workFrom"}, gs::Direction::In,
+        (label_id_t) 10, (label_id_t) 1);
     auto left_left_right_ctx2 =
-        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
             graph, std::move(left_left_right_ctx1),
-            std::move(left_left_right_get_v_opt1));
-    auto left_left_right_edge_expand_opt2 = gs::make_edge_expandv_opt(
-        gs::Direction::Out, (label_id_t) 7, (label_id_t) 0);
+            std::move(left_left_right_edge_expand_opt1));
+
+    auto left_left_right_get_v_opt2 = make_getv_opt(
+        gs::VOpt::Start, std::array<label_id_t, 1>{(label_id_t) 1});
     auto left_left_right_ctx3 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(2)>(
+        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
             graph, std::move(left_left_right_ctx2),
-            std::move(left_left_right_edge_expand_opt2));
+            std::move(left_left_right_get_v_opt2));
 
     auto left_left_left_ctx8 =
-        Engine::template Join<0, 0, gs::JoinKind::LeftOuterJoin>(
+        Engine::template Join<0, 3, gs::JoinKind::LeftOuterJoin>(
             std::move(left_left_left_ctx7), std::move(left_left_right_ctx3));
     auto left_left_left_ctx9 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(left_left_left_ctx8),
@@ -249,7 +196,7 @@ class Query0 : public AppBase {
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
                        gs::PropertySelector<grape::EmptyType>("")),
-                   gs::make_mapper_with_expr<3, 3, 2, 4>(
+                   gs::make_mapper_with_expr<3, 3, 4, 2>(
                        Query0left_left_left_expr3(),
                        gs::PropertySelector<GlobalId>("None"),
                        gs::PropertySelector<std::string_view>("name"),
@@ -271,34 +218,33 @@ class Query0 : public AppBase {
         std::tuple{left_left_left_group_key10, left_left_left_group_key11},
         std::tuple{left_left_left_agg_func12});
 
-    auto left_right_expr0 = gs::make_filter(
-        Query0left_right_expr0(), gs::PropertySelector<LabelKey>("label"));
     auto left_right_ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, 1, std::move(left_right_expr0));
+        graph, 0, Filter<TruePredicate>());
 
-    auto left_right_edge_expand_opt0 = gs::make_edge_expande_opt<int32_t>(
-        gs::PropNameArray<int32_t>{"classYear"}, gs::Direction::Out,
-        (label_id_t) 14, (label_id_t) 5);
+    auto left_right_edge_expand_opt0 = gs::make_edge_expandv_opt(
+        gs::Direction::In, (label_id_t) 7, (label_id_t) 0);
     auto left_right_ctx1 =
-        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
             graph, std::move(left_right_ctx0),
             std::move(left_right_edge_expand_opt0));
 
-    auto left_right_get_v_opt1 =
-        make_getv_opt(gs::VOpt::End, std::array<label_id_t, 1>{(label_id_t) 5});
+    auto left_right_edge_expand_opt1 = gs::make_edge_expande_opt<int32_t>(
+        gs::PropNameArray<int32_t>{"classYear"}, gs::Direction::In,
+        (label_id_t) 14, (label_id_t) 1);
     auto left_right_ctx2 =
-        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
             graph, std::move(left_right_ctx1),
-            std::move(left_right_get_v_opt1));
-    auto left_right_edge_expand_opt2 = gs::make_edge_expandv_opt(
-        gs::Direction::Out, (label_id_t) 7, (label_id_t) 0);
+            std::move(left_right_edge_expand_opt1));
+
+    auto left_right_get_v_opt2 = make_getv_opt(
+        gs::VOpt::Start, std::array<label_id_t, 1>{(label_id_t) 1});
     auto left_right_ctx3 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(2)>(
+        Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
             graph, std::move(left_right_ctx2),
-            std::move(left_right_edge_expand_opt2));
+            std::move(left_right_get_v_opt2));
 
     auto left_left_left_ctx11 =
-        Engine::template Join<0, 0, gs::JoinKind::LeftOuterJoin>(
+        Engine::template Join<0, 3, gs::JoinKind::LeftOuterJoin>(
             std::move(left_left_left_ctx10), std::move(left_right_ctx3));
     auto left_left_left_ctx12 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(left_left_left_ctx11),
@@ -308,7 +254,7 @@ class Query0 : public AppBase {
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
                        gs::PropertySelector<grape::EmptyType>("")),
-                   gs::make_mapper_with_expr<4, 4, 3, 5>(
+                   gs::make_mapper_with_expr<4, 4, 5, 3>(
                        Query0left_left_left_expr6(),
                        gs::PropertySelector<GlobalId>("None"),
                        gs::PropertySelector<std::string_view>("name"),
@@ -334,19 +280,17 @@ class Query0 : public AppBase {
                    left_left_left_group_key16},
         std::tuple{left_left_left_agg_func17});
 
-    auto right_expr0 = gs::make_filter(Query0right_expr0(),
-                                       gs::PropertySelector<LabelKey>("label"));
     auto right_ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, 1, std::move(right_expr0));
+        graph, 0, Filter<TruePredicate>());
 
     auto right_edge_expand_opt0 = gs::make_edge_expandv_opt(
-        gs::Direction::Out, (label_id_t) 7, (label_id_t) 0);
+        gs::Direction::In, (label_id_t) 7, (label_id_t) 0);
     auto right_ctx1 =
         Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
             graph, std::move(right_ctx0), std::move(right_edge_expand_opt0));
 
     auto left_left_left_ctx14 =
-        Engine::template Join<0, 0, gs::JoinKind::InnerJoin>(
+        Engine::template Join<0, 1, gs::JoinKind::InnerJoin>(
             std::move(left_left_left_ctx13), std::move(right_ctx1));
     auto left_left_left_ctx15 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(left_left_left_ctx14),
@@ -376,7 +320,6 @@ class Query0 : public AppBase {
                        gs::PropertySelector<grape::EmptyType>("")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
                        gs::PropertySelector<grape::EmptyType>(""))});
-
     return Engine::Sink(graph, left_left_left_ctx15,
                         std::array<int32_t, 13>{16, 17, 18, 19, 20, 21, 22, 23,
                                                 24, 25, 26, 27, 28});

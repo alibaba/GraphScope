@@ -44,18 +44,15 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: url
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
         - property_id: 3
           property_name: type
           property_type:
-            varchar:
-              max_length: 64
+            primitive_type: DT_STRING
       primary_keys:
         - id
     - type_id: 1
@@ -68,46 +65,39 @@ schema:
         - property_id: 1
           property_name: firstName
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: lastName
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 3
           property_name: gender
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 4
           property_name: birthday
           property_type:
-            day: "day"
+            primitive_type: DT_DATE32
         - property_id: 5
           property_name: creationDate
           property_type:
-            date: "date"
+            primitive_type: DT_DATE32
         - property_id: 6
           property_name: locationIP
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 7
           property_name: browserUsed
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 8
           property_name: language
           property_type:
-            varchar:
-              max_length: 2048
+            primitive_type: DT_STRING
         - property_id: 9
           property_name: email
           property_type:
-            varchar:
-              max_length: 2048
+            primitive_type: DT_STRING
       primary_keys:
         - id
     - type_id: 2
@@ -120,22 +110,19 @@ schema:
         - property_id: 1
           property_name: creationDate
           property_type:
-            date: "date"
+            primitive_type: DT_DATE32
         - property_id: 2
           property_name: locationIP
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 3
           property_name: browserUsed
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 4
           property_name: content
           property_type:
-            varchar:
-              max_length: 2000
+            primitive_type: DT_STRING
         - property_id: 5
           property_name: length
           property_type:
@@ -152,32 +139,27 @@ schema:
         - property_id: 1
           property_name: imageFile
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: creationDate
           property_type:
-            date: "date"
+            primitive_type: DT_DATE32
         - property_id: 3
           property_name: locationIP
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 4
           property_name: browserUsed
           property_type:
-           varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 5
           property_name: language
           property_type:
-            varchar:
-              max_length: 40
+            primitive_type: DT_STRING
         - property_id: 6
           property_name: content
           property_type:
-            varchar:
-              max_length: 2000
+            primitive_type: DT_STRING
         - property_id: 7
           property_name: length
           property_type:
@@ -194,12 +176,11 @@ schema:
         - property_id: 1
           property_name: title
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: creationDate
           property_type:
-            date: "date"
+            primitive_type: DT_DATE32
       primary_keys:
         - id
     - type_id: 5
@@ -212,18 +193,15 @@ schema:
         - property_id: 1
           property_name: type
           property_type:
-            varchar:
-              max_length: 64
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: name
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
         - property_id: 3
           property_name: url
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
       primary_keys:
         - id
     - type_id: 6
@@ -236,13 +214,11 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: url
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
       primary_keys:
         - id
     - type_id: 7
@@ -255,13 +231,11 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: url
           property_type:
-            varchar:
-              max_length: 256
+            primitive_type: DT_STRING
       primary_keys:
         - id
   edge_types:
@@ -284,7 +258,7 @@ schema:
         - property_id: 0
           property_name: creationDate 
           property_type:
-            date: "date"
+            primitive_type: DT_DATE32
     - type_id: 1
       type_name: HASTAG
       vertex_type_pair_relations:
@@ -326,7 +300,7 @@ schema:
         - property_id: 0
           property_name: joinDate
           property_type:
-            date: "date"
+            primitive_type: DT_DATE32
     - type_id: 5
       type_name: HASMODERATOR
       vertex_type_pair_relations:
@@ -377,7 +351,7 @@ schema:
         - property_id: 0
           property_name: creationDate
           property_type:
-            date: "date"
+            primitive_type: DT_DATE32
     - type_id: 9
       type_name: LIKES
       vertex_type_pair_relations:
@@ -395,7 +369,7 @@ schema:
         - property_id: 0
           property_name: creationDate
           property_type:
-            date: "date"
+            primitive_type: DT_DATE32
     - type_id: 10
       type_name: WORKAT
       vertex_type_pair_relations:

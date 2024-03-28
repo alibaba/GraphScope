@@ -358,7 +358,7 @@ class ExprBuilder {
       // and also set a expr node for it. which is unique.
       make_var_name_unique(param_const);
       func_call_vars_.push_back(param_const);
-      expr_nodes_.emplace_back(param_const.var_name);
+      expr_nodes_.emplace_back(param_const.expr_var_name);
 
       // expr_nodes_.emplace_back(param_const.var_name);
       // convert a variable to a tag property,
@@ -578,7 +578,7 @@ class ExprBuilder {
     std::stringstream ss;
     for (size_t i = 0; i < func_call_vars_.size(); ++i) {
       ss << data_type_2_string(func_call_vars_[i].type) << " "
-         << func_call_vars_[i].var_name;
+         << func_call_vars_[i].expr_var_name;
       if (i != func_call_vars_.size() - 1) {
         ss << ",";
       }

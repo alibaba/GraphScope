@@ -297,6 +297,10 @@ std::string Date::to_string() const { return std::to_string(milli_second); }
 
 Day::Day(int64_t ts) { from_timestamp(ts); }
 
+Day::Day(uint32_t year, uint32_t month, uint32_t day, uint32_t hour)
+    : value{.internal = {
+                .year = year, .month = month, .day = day, .hour = hour}} {}
+
 std::string Day::to_string() const {
   return std::to_string(static_cast<int>(year())) + "-" +
          std::to_string(static_cast<int>(month())) + "-" +

@@ -50,6 +50,11 @@ struct NullRecordCreator<Direction> {
 };
 
 template <>
+struct NullRecordCreator<Day> {
+  static inline Day GetNull() { return Day(1970, 0, 0, 0); }
+};
+
+template <>
 struct NullRecordCreator<Date> {
   static inline Date GetNull() {
     return Date(std::numeric_limits<int64_t>::max());

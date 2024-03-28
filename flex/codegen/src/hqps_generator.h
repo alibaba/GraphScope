@@ -258,6 +258,10 @@ class QueryGenerator {
     if (param_vars.size() > 0) {
       sort(param_vars.begin(), param_vars.end(),
            [](const auto& a, const auto& b) { return a.id < b.id; });
+      LOG(INFO) << "param vars size: " << param_vars.size();
+      for (auto& param_var : param_vars) {
+        LOG(INFO) << "param var: " << param_var.id << " " << param_var.var_name;
+      }
       CHECK(param_vars[0].id == 0);
       for (size_t i = 0; i < param_vars.size(); ++i) {
         if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
@@ -442,7 +446,7 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kVertex: {
         physical::PhysicalOpr::MetaData meta_data;
-        LOG(INFO) << "Found a get v operator";
+        LOG(INFO) << "Found a get v operator: " << opr.vertex().DebugString();
         auto& get_v_op = opr.vertex();
         auto get_v_code = BuildGetVOp<LabelT>(ctx_, get_v_op, meta_data);
         // first output code can be empty, just ignore
@@ -473,7 +477,6 @@ class QueryGenerator {
       case physical::PhysicalOpr::Operator::kPath: {
         physical::PhysicalOpr::MetaData meta_data;
         auto& path_op = opr.path();
-        LOG(INFO) << "Found a path operator: " << path_op.DebugString();
         if (FUSE_PATH_EXPAND_V && !path_op.has_alias() && (i + 1 < size)) {
           auto& next_op = plan_.plan(i + 1).opr();
           if (next_op.op_kind_case() ==
@@ -493,6 +496,7 @@ class QueryGenerator {
           }
         }
         LOG(INFO) << " PathExpand to Path";
+        LOG(INFO) << "PathExpand: " << path_op.DebugString();
         // otherwise, just expand path
         auto res = BuildPathExpandPathOp<LabelT>(ctx_, path_op, meta_datas);
         ss << res;

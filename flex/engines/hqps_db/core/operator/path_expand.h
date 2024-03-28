@@ -198,7 +198,7 @@ class PathExpand {
         prepend_tuple(std::move(std::get<1>(tuple)), std::move(tuple_vec));
     auto row_vertex_set = make_row_vertex_set(
         std::move(std::get<0>(tuple)), edge_expand_opt.other_label_,
-        std::move(new_tuple_vec), {"dist"});
+        std::move(new_tuple_vec), {"length"});
     return std::make_pair(std::move(row_vertex_set),
                           std::move(std::get<2>(tuple)));
   }

@@ -985,8 +985,15 @@ class SyncEngine : public BaseEngine {
     auto prop_descs = create_prop_descs_from_selectors<in_col_id...>(selectors);
     auto prop_getters_tuple =
         create_prop_getters_from_prop_desc(graph, ctx, prop_descs);
+    auto length = ctx.GetHead().Size();
+    LOG(INFO) << "Context size: " << length;
+    size_t cur_cnt = 0;
     for (auto iter : ctx) {
       auto eles = iter.GetAllIndexElement();
+      if (cur_cnt % 1000 == 0) {
+        LOG(INFO) << "Processing " << cur_cnt
+                  << "th record: " << gs::to_string(eles);
+      }
       // if (expr(eles)) {
       // if (std::apply(expr, props)) {
       if (run_expr_filter(expr, prop_getters_tuple, eles)) {
@@ -995,6 +1002,7 @@ class SyncEngine : public BaseEngine {
       }
       cur_ind += 1;
       new_offsets.emplace_back(cur_offset);
+      cur_cnt += 1;
     }
     VLOG(10) << "Select " << select_indices.size() << ", out of " << cur_ind
              << " records"

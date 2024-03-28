@@ -837,6 +837,8 @@ class MutableCSRInterface {
         column = std::dynamic_pointer_cast<TypedRefColumn<T>>(
             create_ref_column(ptr));
       } else {
+        LOG(WARNING) << "Property " << prop_name << " not found in label "
+                     << std::to_string(label_id);
         return nullptr;
       }
     }
@@ -890,6 +892,9 @@ class MutableCSRInterface {
     } else if (type == PropertyType::kFloat) {
       return std::make_shared<TypedRefColumn<float>>(
           *std::dynamic_pointer_cast<TypedColumn<float>>(column));
+    } else if (type == PropertyType::kDay) {
+      return std::make_shared<TypedRefColumn<Day>>(
+          *std::dynamic_pointer_cast<TypedColumn<Day>>(column));
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type.type_enum);

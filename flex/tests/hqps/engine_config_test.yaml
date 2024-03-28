@@ -28,7 +28,7 @@ compiler:
       - ExpandGetVFusionRule
     cbo:
       glogue:
-        schema: /data/zhanglei/GraphScope/flex/interactive/examples/ldbc/sf10_staticstics.txt
+        schema: /workspaces/GraphScope/flex/interactive/examples/ldbc/sf10_staticstics.txt
   endpoint:
     default_listen_address: localhost
     bolt_connector:
