@@ -58,7 +58,21 @@
     },
     "metaData": [{
       "type": {
-        "dataType": "INT64"
+        "graphType": {
+          "elementOpt": "EDGE",
+          "graphDataType": [{
+            "label": {
+              "srcLabel": 0,
+              "dstLabel": 0
+            },
+            "props": [{
+              "propId": {
+                "name": "weight"
+              },
+              "type": "DOUBLE"
+            }]
+          }]
+        }
       },
       "alias": -1
     }]
