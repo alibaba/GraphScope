@@ -1,4 +1,4 @@
-# The Local GLTorch Server-Client Example
+# The Local GLTorch Example
 
 This example demonstrates how to run a local server-client GLTorch job
 
@@ -11,14 +11,13 @@ pip3 install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv 
 ```
 
 ### Train and evaluate
-First, launch the GraphScope server on local for sampling service. 
-`GLTorchGraph` which contains information of endpoints for sampler servers is dumped as the `.pkl` file to the disk.
+1. For local single machine mode.
 ```shell
-python3 load.py
+python3 local.py
 ```
-Then, launch the client job by reading the GLTorchGraph from the disk.
-The `node_rank` is the rank of the client node, which is used to distinguish different client processes.
+2. For local multi-server/multi-client mode with DDP.
+Here num_server_nodes indicates the number of server nodes, and num_client_nodes indicates the number of client nodes.
+The server nodes are responsible for the sampling, and the client nodes are responsible for the computation of the model.
 ```shell
-python3 client.py --node_rank=0
+python3 local_sc_ddp.py --num_server_nodes 2 --num_client_nodes 2
 ```
-

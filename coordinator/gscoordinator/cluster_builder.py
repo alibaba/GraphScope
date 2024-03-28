@@ -426,7 +426,7 @@ class EngineCluster:
         )
         return service
 
-    def get_learning_service(self, object_id, start_port):
+    def get_graphlearn_service(self, object_id, start_port):
         service_type = self._service_type
         num_workers = self._num_workers
         name = self.get_graphlearn_service_name(object_id)
@@ -463,8 +463,8 @@ class EngineCluster:
         return [i for i in range(start_port, start_port + num_workers)]
 
     def get_graphlearn_torch_ports(self, start_port):
-        num_workers = 4
-        return [i for i in range(start_port, start_port + num_workers)]
+        num_loaders = 4
+        return [i for i in range(start_port, start_port + num_loaders)]
 
     @property
     def engine_stateful_set_name(self):

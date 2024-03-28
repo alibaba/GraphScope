@@ -88,7 +88,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._api_client = resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._apps_api = kube_client.AppsV1Api(self._api_client)
-        self._pytorchjobs_api = kube_client.CustomObjectsApi()
+        self._pytorchjobs_api = kube_client.CustomObjectsApi(self._api_client)
         self._resource_object = ResourceManager(self._api_client)
 
         self._config: Config = config
@@ -1390,10 +1390,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         ports = self._engine_cluster.get_graphlearn_torch_ports(
             self._graphlearn_torch_start_port
         )
-        if handle["master_id"] != -1:
-            handle["master_addr"] = pod_ip_list[handle["master_id"]]
-        else:
-            handle["master_addr"] = "localhost"
+        handle["master_addr"] = pod_ip_list[0]
         handle["server_client_master_port"] = ports[0]
         server_list = [f"{pod_ip_list[0]}:{ports[i]}" for i in range(4)]
 

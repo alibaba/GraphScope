@@ -41,6 +41,25 @@ def decode_arg(arg):
         )
     )
 
+def extract_node_type_names(edges):
+    node_type_names = set()
+    for edge in edges:
+        node_type_names.update([edge[0], edge[-1]])
+    return node_type_names
+
+def init_node_pb(handle, server_rank, node_type_names):
+    node_pb = glt.data.VineyardPartitionBook(
+        str(handle["vineyard_socket"]),
+        str(handle["fragments"][server_rank]),
+        list(node_type_names)[0],
+    ) if len(node_type_names) == 1 else {
+        node_type_name: glt.data.VineyardPartitionBook(
+            str(handle["vineyard_socket"]),
+            str(handle["fragments"][server_rank]),
+            node_type_name,
+        ) for node_type_name in node_type_names
+    }
+    return node_pb
 
 def run_server_proc(proc_rank, handle, config, server_rank, dataset):
     glt.distributed.init_server(
@@ -59,20 +78,19 @@ def launch_graphlearn_torch_server(handle, config, server_rank):
     logger.info(f"-- [Server {server_rank}] Initializing server ...")
     edge_dir = config.pop("edge_dir")
     random_node_split = config.pop("random_node_split")
+    edges = config.pop("edges")
+    node_type_names = extract_node_type_names(edges)
 
     dataset = glt.distributed.DistDataset(
         edge_dir=edge_dir,
         num_partitions=handle["num_servers"],
         partition_idx=server_rank,
-        node_pb=glt.data.VineyardPartitionBook(
-            str(handle["vineyard_socket"]),
-            str(handle["fragments"][server_rank]),
-            "paper",
-        ),
+        node_pb=init_node_pb(handle, server_rank, node_type_names),
     )
     dataset.load_vineyard(
         vineyard_id=str(handle["fragments"][server_rank]),
         vineyard_socket=handle["vineyard_socket"],
+        edges=edges,
         **config,
     )
     if random_node_split is not None:

@@ -53,9 +53,8 @@ glt_graph = gs.graphlearn_torch(
         "num_val": 0.1,
         "num_test": 0.1,
     },
-    master_id=0,
     num_clients=params["NUM_CLIENT_NODES"],
-    manifest_path="client.yaml",
+    manifest_path="./client.yaml",
     client_folder_path="./",
 )
 

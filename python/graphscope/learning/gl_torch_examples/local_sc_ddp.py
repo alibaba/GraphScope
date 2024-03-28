@@ -206,12 +206,6 @@ if __name__ == "__main__":
         help="Number of client nodes for training.",
     )
     parser.add_argument(
-        "--node_rank",
-        type=int,
-        default=0,
-        help="The node rank of the current role.",
-    )
-    parser.add_argument(
         "--epochs",
         type=int,
         default=10,
@@ -243,13 +237,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    print(
-        f"--- Distributed training example of supervised SAGE with server-client mode. Client {args.node_rank} ---"
-    )
     print(f"* dataset: {args.dataset}")
     print(f"* total server nodes: {args.num_server_nodes}")
     print(f"* total client nodes: {args.num_client_nodes}")
-    print(f"* node rank: {args.node_rank}")
 
     num_servers = args.num_server_nodes
     num_clients = args.num_client_nodes
@@ -260,20 +250,57 @@ if __name__ == "__main__":
     print(f"* training loader master port: {args.train_loader_master_port}")
     print(f"* testing loader master port: {args.test_loader_master_port}")
 
-    client_rank = args.node_rank
-    print("--- Loading graph info ...")
-    glt_graph = pickle.load(open("glt_graph.pkl", "rb"))
-    print("--- Launching client processes ...")
-    run_client_proc(
-        glt_graph,
-        num_servers,
-        num_clients,
-        client_rank,
-        [server_rank for server_rank in range(num_servers)],
-        args.dataset,
-        args.epochs,
-        args.batch_size,
-        args.training_pg_master_port,
-        args.train_loader_master_port,
-        args.test_loader_master_port,
+    print("--- Launching sampling server processes ...")
+    import graphscope as gs
+    from graphscope.dataset import load_ogbn_arxiv
+
+    gs.set_option(log_level="DEBUG")
+    gs.set_option(show_log=True)
+
+    # load the ogbn_arxiv graph as an example.
+    sess = gs.session(cluster_type="hosts", num_workers=num_servers)
+    g = load_ogbn_arxiv(sess=sess)
+
+    glt_graph = gs.graphlearn_torch(
+        g,
+        edges=[
+            ("paper", "citation", "paper"),
+        ],
+        node_features={
+            "paper": [f"feat_{i}" for i in range(128)],
+        },
+        node_labels={
+            "paper": "label",
+        },
+        edge_dir="out",
+        random_node_split={
+            "num_val": 0.1,
+            "num_test": 0.1,
+        },
     )
+
+    print("--- Launching client processes ...")
+    mp_context = torch.multiprocessing.get_context('spawn')
+    cprocs = []
+    for client_rank in range(num_clients):
+        cproc = mp_context.Process(
+            target=run_client_proc,
+            args=(
+                glt_graph,
+                num_servers,
+                num_clients,
+                client_rank,
+                [server_rank for server_rank in range(num_servers)],
+                args.dataset,
+                args.epochs,
+                args.batch_size,
+                args.training_pg_master_port,
+                args.train_loader_master_port,
+                args.test_loader_master_port,
+            ),
+        )
+        cprocs.append(cproc)
+    for cproc in cprocs:
+        cproc.start()
+    for cproc in cprocs:
+        cproc.join()

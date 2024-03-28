@@ -1335,7 +1335,6 @@ class Session(object):
         node_labels=None,
         edge_dir="out",
         random_node_split=None,
-        master_id=-1,
         num_clients=1,
         manifest_path=None,
         client_folder_path="./",
@@ -1348,7 +1347,6 @@ class Session(object):
             "vineyard_socket": self._engine_config["vineyard_socket"],
             "vineyard_id": graph.vineyard_id,
             "fragments": graph.fragments,
-            "master_id": master_id,  # -1 means local mode
             "num_servers": len(graph.fragments),
             "num_clients": num_clients,
         }
@@ -1357,8 +1355,10 @@ class Session(object):
             "NUM_SERVER_NODES": handle["num_servers"],
             "NUM_WORKER_REPLICAS": handle["num_clients"] - 1,
         }
-        handle["manifest"] = fill_params_in_yaml(manifest_path, manifest_params)
-        handle["client_content"] = read_folder_files_content(client_folder_path)
+        if manifest_path is not None:
+            handle["manifest"] = fill_params_in_yaml(manifest_path, manifest_params)
+        if client_folder_path is not None:
+            handle["client_content"] = read_folder_files_content(client_folder_path)
 
         handle = base64.b64encode(
             json.dumps(handle).encode("utf-8", errors="ignore")
@@ -1686,7 +1686,6 @@ def graphlearn_torch(
     node_labels=None,
     edge_dir="out",
     random_node_split=None,
-    master_id=-1,
     num_clients=1,
     manifest_path=None,
     client_folder_path="./",
@@ -1704,7 +1703,6 @@ def graphlearn_torch(
         node_labels,
         edge_dir,
         random_node_split,
-        master_id,
         num_clients,
         manifest_path,
         client_folder_path,
