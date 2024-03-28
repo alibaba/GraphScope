@@ -18,7 +18,6 @@ package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
-import com.alibaba.graphscope.common.ir.planner.rules.OptionalMatchToJoinRule;
 
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
@@ -159,30 +158,24 @@ public class WhereTest {
     public void where_7_test() {
         RelNode multiMatch =
                 Utils.eval("Match (a) Optional Match (a)-[]->(b) Where b is null Return a").build();
-        //        Assert.assertEquals(
-        //                "GraphLogicalProject(a=[a], isAppend=[false])\n"
-        //                    + "  LogicalFilter(condition=[IS NULL(b)])\n"
-        //                    + "    LogicalJoin(condition=[=(a, a)], joinType=[left])\n"
-        //                    + "      GraphLogicalSource(tableConfig=[{isAll=true,
-        // tables=[software,"
-        //                    + " person]}], alias=[a], opt=[VERTEX])\n"
-        //                    + "      GraphLogicalSingleMatch(input=[null],"
-        //                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true,
-        // tables=[software,"
-        //                    + " person]}], alias=[b], opt=[END])\n"
-        //                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,
-        // knows]}],"
-        //                    + " alias=[_], opt=[OUT])\n"
-        //                    + "    GraphLogicalSource(tableConfig=[{isAll=false,
-        // tables=[person]}],"
-        //                    + " alias=[a], opt=[VERTEX])\n"
-        //                    + "], matchOpt=[INNER])",
-        //                multiMatch.explain().trim());
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[IS NULL(b)])\n"
+                    + "    LogicalJoin(condition=[=(a, a)], joinType=[left])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "      GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[_], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                multiMatch.explain().trim());
         RelOptPlanner optPlanner =
                 com.alibaba.graphscope.common.ir.Utils.mockPlanner(
-                        OptionalMatchToJoinRule.Config.DEFAULT,
-                        CoreRules.FILTER_INTO_JOIN.config,
-                        FilterMatchRule.Config.DEFAULT);
+                        CoreRules.FILTER_INTO_JOIN.config, FilterMatchRule.Config.DEFAULT);
         optPlanner.setRoot(multiMatch);
         RelNode after = optPlanner.findBestExp();
         Assert.assertEquals(
