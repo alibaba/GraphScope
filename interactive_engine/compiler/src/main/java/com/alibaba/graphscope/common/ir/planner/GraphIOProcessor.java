@@ -400,8 +400,8 @@ public class GraphIOProcessor {
                     .forEach(
                             k -> {
                                 if (pattern.getEdgesOf(k).stream()
-                                        .allMatch(e -> e.getDetails().isOptional())) {
-                                    k.getDetails().setOptional(true);
+                                        .allMatch(e -> e.getElementDetails().isOptional())) {
+                                    k.getElementDetails().setOptional(true);
                                 }
                             });
             pattern.reordering();
@@ -682,7 +682,7 @@ public class GraphIOProcessor {
                             createGetVOpt(edge.getDirection()),
                             createLabels(target.getVertexTypeIds(), true),
                             targetValue.getAlias());
-            if (edge.getRange() != null) {
+            if (edge.getElementDetails().getRange() != null) {
                 PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
                 pxdBuilder.expand(expandConfig);
                 if (edgeValue.getFilter() != null) {
@@ -694,12 +694,14 @@ public class GraphIOProcessor {
                         .pathOpt(GraphOpt.PathExpandPath.ARBITRARY)
                         .alias(edgeValue.getAlias())
                         .startAlias(srcValue.getAlias())
-                        .range(edge.getRange().getOffset(), edge.getRange().getFetch());
+                        .range(
+                                edge.getElementDetails().getRange().getOffset(),
+                                edge.getElementDetails().getRange().getFetch());
                 builder.push(
                                 createPathExpandWithOptional(
                                         (GraphLogicalPathExpand)
                                                 builder.pathExpand(pxdBuilder.build()).build(),
-                                        true))
+                                        edge.getElementDetails().isOptional()))
                         .getV(
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
@@ -712,7 +714,8 @@ public class GraphIOProcessor {
             } else {
                 builder.push(
                         createExpandWithOptional(
-                                (GraphLogicalExpand) builder.expand(expandConfig).build(), true));
+                                (GraphLogicalExpand) builder.expand(expandConfig).build(),
+                                edge.getElementDetails().isOptional()));
                 if (edgeValue.getFilter() != null) {
                     builder.filter(edgeValue.getFilter());
                 }

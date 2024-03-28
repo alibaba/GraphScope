@@ -118,7 +118,7 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                                             k.getEdgeTypeIds(),
                                             Utils.getExtendDirection(k, target),
                                             estimator.estimate(k, target),
-                                            k.getElementDetails().getRange());
+                                            k.getElementDetails());
                                 })
                         .collect(Collectors.toList());
         ExtendStep extendStep =
@@ -198,7 +198,7 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
             // constraint transformations if the pattern has optional vertices or edges
             List<PatternVertex> optionalVertices =
                     pattern.getVertexSet().stream()
-                            .filter(k -> k.getDetails().isOptional())
+                            .filter(k -> k.getElementDetails().isOptional())
                             .collect(Collectors.toList());
             if (!optionalVertices.isEmpty()) {
                 // If there are optional vertices in the pattern, we should prioritize selecting
@@ -216,7 +216,7 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                             Pattern clone = new Pattern(pattern);
                             clone.removeVertex(v);
                             return clone.getEdgeSet().stream()
-                                    .anyMatch(k -> k.getDetails().isOptional());
+                                    .anyMatch(k -> k.getElementDetails().isOptional());
                         });
             }
         }

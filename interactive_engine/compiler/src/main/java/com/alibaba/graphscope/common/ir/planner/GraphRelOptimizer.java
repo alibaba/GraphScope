@@ -141,6 +141,9 @@ public class GraphRelOptimizer {
                                     ruleConfigs.add(FilterMatchRule.Config.DEFAULT);
                                 } else if (k.equals(NotMatchToAntiJoinRule.class.getSimpleName())) {
                                     ruleConfigs.add(NotMatchToAntiJoinRule.Config.DEFAULT);
+                                } else if (k.equals(
+                                        OptionalMatchToJoinRule.class.getSimpleName())) {
+                                    ruleConfigs.add(OptionalMatchToJoinRule.Config.DEFAULT);
                                 }
                             });
             ruleConfigs.forEach(

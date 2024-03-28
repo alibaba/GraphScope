@@ -298,7 +298,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                         new RelDataTypeFieldImpl(
                                 getAliasName(),
                                 getAliasId(),
-                                new GraphPathType(getElementType()))));
+                                new GraphPathType(getElementType(), optional))));
     }
 
     private GraphPathType.ElementType getElementType() {

@@ -439,14 +439,14 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
             List<GraphJoinDecomposition.JoinVertexPair> jointVertices) {
         JoinRelType joinType = null;
         if (allNonOptional(probePattern.getEdgeSet()) && allOptional(buildPattern.getEdgeSet())) {
-            buildPattern.getVertexSet().forEach(v -> v.getDetails().setOptional(false));
-            buildPattern.getEdgeSet().forEach(e -> e.getDetails().setOptional(false));
+            buildPattern.getVertexSet().forEach(v -> v.getElementDetails().setOptional(false));
+            buildPattern.getEdgeSet().forEach(e -> e.getElementDetails().setOptional(false));
             buildPattern.reordering();
             joinType = JoinRelType.LEFT;
         } else if (allOptional(probePattern.getEdgeSet())
                 && allNonOptional(buildPattern.getEdgeSet())) {
-            probePattern.getVertexSet().forEach(v -> v.getDetails().setOptional(false));
-            probePattern.getEdgeSet().forEach(e -> e.getDetails().setOptional(false));
+            probePattern.getVertexSet().forEach(v -> v.getElementDetails().setOptional(false));
+            probePattern.getEdgeSet().forEach(e -> e.getElementDetails().setOptional(false));
             probePattern.reordering();
             joinType = JoinRelType.RIGHT;
         } else {
@@ -469,11 +469,11 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
     }
 
     private boolean allOptional(Set<PatternEdge> edges) {
-        return edges.stream().allMatch(e -> e.getDetails().isOptional());
+        return edges.stream().allMatch(e -> e.getElementDetails().isOptional());
     }
 
     private boolean allNonOptional(Set<PatternEdge> edges) {
-        return edges.stream().allMatch(e -> !e.getDetails().isOptional());
+        return edges.stream().allMatch(e -> !e.getElementDetails().isOptional());
     }
 
     public static class Config implements RelRule.Config {

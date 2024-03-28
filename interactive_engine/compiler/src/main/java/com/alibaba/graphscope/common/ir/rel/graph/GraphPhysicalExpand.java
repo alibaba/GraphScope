@@ -46,6 +46,8 @@ public class GraphPhysicalExpand extends SingleRel {
     private final String aliasName;
     private final int aliasId;
 
+    private final boolean optional;
+
     protected GraphPhysicalExpand(
             RelOptCluster cluster,
             List<RelHint> hints,
@@ -53,7 +55,8 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt,
-            String aliasName) {
+            String aliasName,
+            boolean optional) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.physicalOpt = physicalOpt;
         this.fusedExpand = fusedExpand;
@@ -62,6 +65,7 @@ public class GraphPhysicalExpand extends SingleRel {
                 AliasInference.inferDefault(
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = ((GraphOptCluster) cluster).getIdGenerator().generate(this.aliasName);
+        this.optional = optional;
     }
 
     public static GraphPhysicalExpand create(
@@ -73,7 +77,14 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphOpt.PhysicalExpandOpt physicalOpt,
             String alias) {
         return new GraphPhysicalExpand(
-                cluster, hints, input, fusedExpand, fusedGetV, physicalOpt, alias);
+                cluster,
+                hints,
+                input,
+                fusedExpand,
+                fusedGetV,
+                physicalOpt,
+                alias,
+                fusedExpand.isOptional());
     }
 
     public GraphOpt.PhysicalExpandOpt getPhysicalOpt() {
@@ -98,6 +109,10 @@ public class GraphPhysicalExpand extends SingleRel {
 
     public @Nullable ImmutableList<RexNode> getFilters() {
         return fusedExpand.getFilters();
+    }
+
+    public boolean isOptional() {
+        return optional;
     }
 
     @Override
@@ -140,7 +155,8 @@ public class GraphPhysicalExpand extends SingleRel {
                         fusedExpand.getFilters(),
                         !ObjectUtils.isEmpty(fusedExpand.getFilters()))
                 .item("opt", fusedExpand.getOpt())
-                .item("physicalOpt", getPhysicalOpt());
+                .item("physicalOpt", getPhysicalOpt())
+                .itemIf("optional", optional, optional);
     }
 
     @Override

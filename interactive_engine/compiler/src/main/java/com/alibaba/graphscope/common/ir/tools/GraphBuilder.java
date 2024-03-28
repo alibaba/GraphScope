@@ -325,14 +325,7 @@ public class GraphBuilder extends RelBuilder {
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
         RelNode match =
-                (single.getInputs().isEmpty() && single instanceof GraphLogicalSource)
-                        ? single
-                        : GraphLogicalSingleMatch.create(
-                                (GraphOptCluster) cluster,
-                                null,
-                                input,
-                                single,
-                                (input == null) ? opt : GraphOpt.Match.INNER);
+                GraphLogicalSingleMatch.create((GraphOptCluster) cluster, null, input, single, opt);
         if (input == null) {
             push(match);
         } else {
@@ -425,17 +418,6 @@ public class GraphBuilder extends RelBuilder {
                 && second instanceof GraphSchemaType
                 && ((GraphSchemaType) first).getScanOpt()
                         == ((GraphSchemaType) second).getScanOpt();
-    }
-
-    private JoinRelType getJoinRelType(GraphOpt.Match opt) {
-        switch (opt) {
-            case OPTIONAL:
-                return JoinRelType.LEFT;
-            case ANTI:
-                return JoinRelType.ANTI;
-            default:
-                return JoinRelType.INNER;
-        }
     }
 
     /**
