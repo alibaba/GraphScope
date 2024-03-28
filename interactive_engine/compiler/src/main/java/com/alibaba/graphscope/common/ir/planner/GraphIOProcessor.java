@@ -36,7 +36,12 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
+import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
+import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 
@@ -677,6 +682,7 @@ public class GraphIOProcessor {
                                     false),
                             edgeValue.getAlias(),
                             srcValue.getAlias());
+            GraphLabelType tripletEdgeType = createTripletEdgeType(edge.getEdgeTypeIds());
             GetVConfig getVConfig =
                     new GetVConfig(
                             createGetVOpt(edge.getDirection()),
@@ -697,11 +703,15 @@ public class GraphIOProcessor {
                         .range(
                                 edge.getElementDetails().getRange().getOffset(),
                                 edge.getElementDetails().getRange().getFetch());
+                GraphLogicalPathExpand pxd =
+                        (GraphLogicalPathExpand) builder.pathExpand(pxdBuilder.build()).build();
+                GraphLogicalExpand expand = (GraphLogicalExpand) pxd.getExpand();
+                GraphSchemaType edgeType =
+                        (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
+                expand.setRowType(createSchemaType(tripletEdgeType, edgeType));
                 builder.push(
                                 createPathExpandWithOptional(
-                                        (GraphLogicalPathExpand)
-                                                builder.pathExpand(pxdBuilder.build()).build(),
-                                        edge.getElementDetails().isOptional()))
+                                        pxd, edge.getElementDetails().isOptional()))
                         .getV(
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
@@ -712,10 +722,14 @@ public class GraphIOProcessor {
                     builder.filter(targetValue.getFilter());
                 }
             } else {
-                builder.push(
+                GraphLogicalExpand expand =
                         createExpandWithOptional(
                                 (GraphLogicalExpand) builder.expand(expandConfig).build(),
-                                edge.getElementDetails().isOptional()));
+                                edge.getElementDetails().isOptional());
+                GraphSchemaType edgeType =
+                        (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
+                expand.setRowType(createSchemaType(tripletEdgeType, edgeType));
+                builder.push(expand);
                 if (edgeValue.getFilter() != null) {
                     builder.filter(edgeValue.getFilter());
                 }
@@ -785,6 +799,63 @@ public class GraphIOProcessor {
             return (edgeValue != null)
                     ? edgeValue
                     : new DataValue(AliasInference.DEFAULT_NAME, null);
+        }
+
+        private GraphLabelType createTripletEdgeType(List<EdgeTypeId> edgeTypeIds) {
+            List<GraphLabelType.Entry> entries = Lists.newArrayList();
+            IrGraphSchema schema = irMeta.getSchema();
+            for (EdgeTypeId typeId : edgeTypeIds) {
+                GraphEdge edgeWithTypeId = null;
+                for (GraphEdge edge : schema.getEdgeList()) {
+                    if (edge.getLabelId() == typeId.getEdgeLabelId()) {
+                        edgeWithTypeId = edge;
+                        break;
+                    }
+                }
+                if (edgeWithTypeId != null) {
+                    for (EdgeRelation relation : edgeWithTypeId.getRelationList()) {
+                        GraphVertex src = relation.getSource();
+                        GraphVertex dst = relation.getTarget();
+                        if (src.getLabelId() == typeId.getSrcLabelId()
+                                && dst.getLabelId() == typeId.getDstLabelId()) {
+                            entries.add(
+                                    new GraphLabelType.Entry()
+                                            .label(edgeWithTypeId.getLabel())
+                                            .labelId(edgeWithTypeId.getLabelId())
+                                            .srcLabel(src.getLabel())
+                                            .srcLabelId(src.getLabelId())
+                                            .dstLabel(dst.getLabel())
+                                            .dstLabelId(dst.getLabelId()));
+                            break;
+                        }
+                    }
+                }
+            }
+            return new GraphLabelType(entries);
+        }
+
+        private GraphSchemaType createSchemaType(
+                GraphLabelType labelType, GraphSchemaType originalType) {
+            if (labelType.getLabelsEntry().size() == 1) {
+                return new GraphSchemaType(
+                        originalType.getScanOpt(),
+                        labelType,
+                        originalType.getFieldList(),
+                        originalType.isNullable());
+            } else {
+                List<GraphSchemaType> fuzzyTypes =
+                        labelType.getLabelsEntry().stream()
+                                .map(
+                                        k ->
+                                                new GraphSchemaType(
+                                                        originalType.getScanOpt(),
+                                                        new GraphLabelType(k),
+                                                        originalType.getFieldList(),
+                                                        originalType.isNullable()))
+                                .collect(Collectors.toList());
+                return GraphSchemaType.create(
+                        fuzzyTypes, builder.getTypeFactory(), originalType.isNullable());
+            }
         }
 
         private LabelConfig createLabels(List<Integer> typeIds, boolean isVertex) {

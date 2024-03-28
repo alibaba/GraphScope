@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -102,6 +103,7 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
         if (ObjectUtils.isNotEmpty(this.getFilters())) {
             copy.setFilters(this.getFilters());
         }
+        copy.setRowType((GraphSchemaType) this.getRowType().getFieldList().get(0).getType());
         return copy;
     }
 
