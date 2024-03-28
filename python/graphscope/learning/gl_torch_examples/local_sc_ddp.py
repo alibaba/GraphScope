@@ -280,7 +280,7 @@ if __name__ == "__main__":
     )
 
     print("--- Launching client processes ...")
-    mp_context = torch.multiprocessing.get_context('spawn')
+    mp_context = torch.multiprocessing.get_context("spawn")
     cprocs = []
     for client_rank in range(num_clients):
         cproc = mp_context.Process(
