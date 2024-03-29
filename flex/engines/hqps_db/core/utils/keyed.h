@@ -168,15 +168,24 @@ struct KeyedT<KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>,
 };
 
 // group by vertex set' id, for generate vertex set.
-// template <typename VID_T, typename LabelT, size_t N>
-// struct KeyedT<GeneralVertexSet<VID_T, LabelT, N>,
-//               PropertySelector<grape::EmptyType>> {
-//   using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T,
-//   grape::EmptyType>;
-//   // // The builder type.
-//   using builder_t =
-//       KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, grape::EmptyType>;
-// };
+template <typename VID_T, typename LabelT, typename... T>
+struct KeyedT<GeneralVertexSet<VID_T, LabelT, T...>,
+              PropertySelector<grape::EmptyType>> {
+  using keyed_builder_t = GeneralVertexSetKeyedBuilder<VID_T, LabelT, T...>;
+  using keyed_set_t = GeneralVertexSet<VID_T, LabelT, T...>;
+  using unkeyed_builder_t =
+      typename GeneralVertexSet<LabelT, VID_T, LabelT, T...>::builder_t;
+  static keyed_builder_t create_keyed_builder(
+      const GeneralVertexSet<VID_T, LabelT, T...>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return keyed_builder_t(set);
+  }
+  static unkeyed_builder_t create_unkeyedkeyed_builder(
+      const GeneralVertexSet<VID_T, LabelT, T...>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return set.CreateBuilder();
+  }
+};
 
 template <typename VID_T, typename LabelT, typename... T>
 struct KeyedT<GeneralVertexSet<VID_T, LabelT, T...>,
