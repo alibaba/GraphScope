@@ -31,6 +31,7 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
@@ -107,6 +108,11 @@ public class GraphPhysicalGetV extends SingleRel {
     @Override
     public List<RelNode> getInputs() {
         return this.input == null ? ImmutableList.of() : ImmutableList.of(this.input);
+    }
+
+    @Override
+    public RelDataType deriveRowType() {
+        return fusedGetV.getRowType();
     }
 
     @Override

@@ -867,7 +867,7 @@ public class GraphRelToProtoTest {
         }
     }
 
-    // g.V().hasLabel("person").outE("knows").inV()
+    // g.V().hasLabel("person").outE("knows").inV().as("a")
     @Test
     public void expand_vertex_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -883,11 +883,12 @@ public class GraphRelToProtoTest {
                         .getV(
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
-                                        new LabelConfig(false).addLabel("person")))
+                                        new LabelConfig(false).addLabel("person"),
+                                        "a"))
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[_], opt=[END])\n"
+                        + " alias=[a], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
@@ -898,7 +899,7 @@ public class GraphRelToProtoTest {
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[a],"
                         + " opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[_], opt=[VERTEX])",
@@ -925,7 +926,7 @@ public class GraphRelToProtoTest {
         }
     }
 
-    // g.V().hasLabel("person").outE("knows").inV().has("age",10), can be fused into
+    // g.V().hasLabel("person").outE("knows").inV().as("a").has("age",10), can be fused into
     // GraphPhysicalExpand + GraphPhysicalGetV
     @Test
     public void expand_vertex_filter_test() throws Exception {
@@ -1019,10 +1020,10 @@ public class GraphRelToProtoTest {
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
                         + " fusedFilter=[[=(_.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[a], fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT],"
+                        + " alias=[_], fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT],"
                         + " physicalOpt=[VERTEX])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[_], opt=[VERTEX])",

@@ -75,16 +75,31 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt,
-            String alias) {
+            String aliasName) {
+        GraphLogicalGetV newGetV = null;
+        if (fusedGetV != null) {
+            // if fused to output vertices, build a new getV if a new aliasName is given, to make
+            // sure the derived row type is correct (which is derived by getV)
+            if (fusedGetV.getAliasName().equals(aliasName)) {
+                newGetV = fusedGetV;
+            } else {
+                newGetV =
+                        GraphLogicalGetV.create(
+                                (GraphOptCluster) fusedGetV.getCluster(),
+                                fusedGetV.getHints(),
+                                input,
+                                fusedGetV.getOpt(),
+                                fusedGetV.getTableConfig(),
+                                aliasName,
+                                fusedGetV.getStartAlias());
+                if (ObjectUtils.isNotEmpty(fusedGetV.getFilters())) {
+                    // should not have filters, as it would built as a new PhysicalGetV
+                    newGetV.setFilters(fusedGetV.getFilters());
+                }
+            }
+        }
         return new GraphPhysicalExpand(
-                cluster,
-                hints,
-                input,
-                fusedExpand,
-                fusedGetV,
-                physicalOpt,
-                alias,
-                fusedExpand.isOptional());
+                cluster, hints, input, fusedExpand, newGetV, physicalOpt, aliasName, fusedExpand.isOptional());
     }
 
     public GraphOpt.PhysicalExpandOpt getPhysicalOpt() {
@@ -119,7 +134,7 @@ public class GraphPhysicalExpand extends SingleRel {
     public RelDataType deriveRowType() {
         switch (physicalOpt) {
             case EDGE:
-                return fusedExpand.deriveRowType();
+                return fusedExpand.getRowType();
             case DEGREE:
                 {
                     RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
@@ -132,7 +147,7 @@ public class GraphPhysicalExpand extends SingleRel {
                 }
             case VERTEX:
             default:
-                return fusedGetV.deriveRowType();
+                return fusedGetV.getRowType();
         }
     }
 

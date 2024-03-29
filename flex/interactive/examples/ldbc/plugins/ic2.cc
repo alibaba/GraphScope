@@ -47,10 +47,11 @@ class Query0 : public AppBase {
             graph, std::move(ctx0), std::move(edge_expand_opt0));
 
     auto edge_expand_opt1 = gs::make_edge_expand_multiv_opt(
-        gs::Direction::In,
-        std::vector<std::array<label_id_t, 3>>{{2, 0, 0}, {3, 0, 0}});
+        gs::Direction::In, std::vector<std::array<label_id_t, 3>>{
+                               std::array<label_id_t, 3>{2, 1, 0},
+                               std::array<label_id_t, 3>{3, 1, 0}});
     auto ctx2 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
+        Engine::template EdgeExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(1)>(
             graph, std::move(ctx1), std::move(edge_expand_opt1));
 
     auto expr2 = gs::make_filter(Query0expr1(maxDate),
@@ -59,7 +60,7 @@ class Query0 : public AppBase {
         make_getv_opt(gs::VOpt::Itself,
                       std::array<label_id_t, 2>{(label_id_t) 2, (label_id_t) 3},
                       std::move(expr2));
-    auto ctx3 = Engine::template GetV<gs::AppendOpt::Replace, INPUT_COL_ID(-1)>(
+    auto ctx3 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
         graph, std::move(ctx2), std::move(get_v_opt2));
     auto ctx4 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(ctx3),
