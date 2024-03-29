@@ -25,6 +25,7 @@ import "schema.proto";
 import "type.proto";
 import "algebra.proto";
 import "google/protobuf/wrappers.proto";
+import "cypher_write.proto";
 
 // To project a relation on certain attributes or further their properties
 message Project {
@@ -271,50 +272,6 @@ message Repartition {
 // A dummy node to delegate a source opr for multiple scan cases.
 message Root {}
 
-message Set {
-  enum Kind {
-    // replace all existing properties on a node or relationship with those values provided in a literal or a map.
-    // i.e. SET p.name = 'marko'
-    // i.e. SET p = {name: 'Peter Smith', position: 'Entrepreneur'}, after replacing, the node p will extactly have two properties with the provided values.
-    REPLACE_PROPERTY = 0;
-    // mutate properties from a map in a fine-grained fashion, it functions as follows:
-    // Any properties in the map that are not on the node or relationship will be added.
-    // Any properties not in the map that are on the node or relationship will be left as is.
-    // Any properties that are in both the map and the node or relationship will be replaced in the node or relationship.
-    MUTATE_PROPERTY = 1;
-    // set a label on a node, i.e. SET n:PERSON
-    SET_LABEL = 2;
-  }
-  Kind kind = 1;
-  common.Variable key = 2;
-  common.Expression value = 3;
-}
-
-// denote mappings between columns in the input data and the properties of the node or relationship
-message ColumnMappings {
-    oneof item {
-      // should follow data import specification in gs-interactive (https://graphscope.io/docs/flex/interactive/data_import)
-      string yaml = 1;
-      // todo: other formats like protobuf, json, etc.
-    }
-}
-
-message Create {
-  ColumnMappings mappings = 1;
-}
-
-message Merge {
-  ColumnMappings mappings = 1;
-  // set properties on found or newly-created nodes
-  Set properties = 2;
-}
-
-message Delete {
-  // when deleting a node, delete all relationships connected to it if `detached` is true, otherwise only delete the node itself.
-  bool detached = 1;
-  repeated common.Expression keys = 2;
-}
-
 message PhysicalOpr {
   message Operator {
     oneof op_kind {
@@ -340,10 +297,10 @@ message PhysicalOpr {
       PathExpand path = 32;
 
       // write operators
-      Set set = 33;
-      Create create = 34;
-      Merge merge = 35;
-      Delete delete = 36;
+      cypher.Set set = 33;
+      cypher.Create create = 34;
+      cypher.Merge merge = 35;
+      cypher.Delete delete = 36;
     }
   }
   message MetaData {

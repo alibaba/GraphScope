@@ -1,0 +1,79 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package cypher;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "GraphAlgebraCypherWrite";
+
+import "expr.proto";
+
+// Examples:
+// SET p.name = 'marko'; set property 'name' of node p to 'marko', if not exist, create it.
+// SET p = {name: 'Peter Smith', position: 'Entrepreneur'}; after replacing, the node p will extactly have two properties with the provided values.
+// SET p += {name: 'Peter Smith', position: 'Entrepreneur'}; after mutating, the original properties still exist, and two new properties are added.
+// SET n:PERSON; after mutating, the original labels still exist, and a new label is added.
+message Set {
+    enum Kind {
+      // replace all existing properties on a node or relationship with those values provided in a literal or a map.
+      REPLACE_PROPERTY = 0;
+      // mutate properties from a map in a fine-grained fashion, it functions as follows:
+      // Any properties in the map that are not on the node or relationship will be added.
+      // Any properties not in the map that are on the node or relationship will be left as is.
+      // Any properties that are in both the map and the node or relationship will be replaced in the node or relationship.
+      MUTATE_PROPERTY = 1;
+      // mutate a label on a node
+      MUTATE_LABEL = 2;
+    }
+    Kind kind = 1;
+    common.Variable key = 2;
+    common.Expression value = 3;
+}
+  
+// denote mappings between columns in the input data and the properties of the node or relationship
+message ColumnMappings {
+    oneof item {
+    // should follow data import specification in gs-interactive (https://graphscope.io/docs/flex/interactive/data_import)
+    string yaml = 1;
+    // todo: other formats like protobuf, json, etc.
+    }
+}
+  
+// Examples:
+// CREATE (charlie:Person {name: 'Charlie Sheen'});
+// CREATE (charlie:Person {name: 'Charlie Sheen'})-[:ACTED_IN {role: 'Bud Fox'}]->(wallStreet:Movie {title: 'Wall Street'});
+message Create {
+    ColumnMappings mappings = 1;
+}
+  
+// Examples:
+// MERGE (charlie {name: 'Charlie Sheen', age: 10}) Return charlie;
+// MERGE (charlie {name: 'Charlie Sheen', age: 10}) ON MATCH SET charlie.found = true;
+// MERGE (charlie {name: 'Charlie Sheen', age: 10}) ON CREATE SET charlie.created = true;
+message Merge {
+    ColumnMappings mappings = 1;
+    // set properties on found or newly-created nodes
+    Set properties = 2;
+}
+  
+// Examples:
+// MATCH (n:Person {name: 'Tom Hanks'}) DETACH DELETE n;
+// MATCH (n:Person {name: 'Laurence Fishburne'})-[r:ACTED_IN]->() DELETE r;
+message Delete {
+    // when deleting a node, delete all relationships connected to it if `detached` is true, otherwise only delete the node itself.
+    bool detached = 1;
+    repeated common.Expression keys = 2;
+}
