@@ -804,6 +804,34 @@ paths:
       tags:
       - procedure
       x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    get:
+      description: Get a procedure by name
+      operationId: get_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Procedure'
+          description: successful operation
+      tags:
+      - procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
     put:
       description: Update stored procedure on a certain graph
       operationId: update_procedure
@@ -1752,7 +1780,7 @@ components:
         graph_name: mocking_graph
         sdk_endpoints:
           gremlin: ws://111.111.111.111:12312/gremlin
-          cypher: neo4j://111.111.111.111:7687
+          cypher: neo4j://mock.api.cypher:7676
           hqps: neo4j://111.111.111.111:10000
           grpc: 111.111.111.111:55556
         status: running
@@ -2333,82 +2361,58 @@ components:
       x-body-name: data_source
     GrootGraph:
       example:
-        creation_time: creation_time
+        name: demo
+        type: GrootGraph
+        directed: true
+        creation_time: 2024-02-29 12:00:00
+        gremlin_interface:
+          gremlin_endpoint: ws://127.0.0.1:12312/gremmin
+          grpc_endpoint: 127.0.0.1:55556
         schema:
           vertices:
-          - label: label
+          - label: person
             properties:
-            - is_primary_key: true
-              name: name
-              id: 0
+            - name: id
               type: STRING
-            - is_primary_key: true
-              name: name
-              id: 0
+              is_primary_key: true
+            - name: name
               type: STRING
-          - label: label
+              is_primary_key: false
+          - label: software
             properties:
-            - is_primary_key: true
-              name: name
-              id: 0
+            - name: id
               type: STRING
-            - is_primary_key: true
-              name: name
-              id: 0
+              is_primary_key: true
+            - name: name
               type: STRING
+              is_primary_key: false
           edges:
-          - label: label
+          - label: knows
             relations:
-            - src_label: src_label
-              dst_label: dst_label
-            - src_label: src_label
-              dst_label: dst_label
+            - src_label: person
+              dst_label: person
             properties:
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: STRING
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: STRING
-          - label: label
+            - name: weight
+              type: DOUBLE
+              is_primary_key: false
+          - label: created
             relations:
-            - src_label: src_label
-              dst_label: dst_label
-            - src_label: src_label
-              dst_label: dst_label
+            - src_label: person
+              dst_label: software
             properties:
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: STRING
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: STRING
-        directed: true
-        gremlin_interface:
-          grpc_endpoint: grpc_endpoint
-          password: password
-          gremlin_endpoint: gremlin_endpoint
-          username: username
-        name: name
-        type: GrootGraph
+            - name: weight
+              type: DOUBLE
+              is_primary_key: false
       properties:
         name:
-          title: name
           type: string
         type:
           enum:
           - GrootGraph
-          title: type
           type: string
         directed:
-          title: directed
           type: boolean
         creation_time:
-          title: creation_time
           type: string
         schema:
           $ref: '#/components/schemas/GrootSchema'
@@ -2738,12 +2742,12 @@ components:
     ServiceStatus_sdk_endpoints:
       example:
         gremlin: ws://111.111.111.111:12312/gremlin
-        cypher: neo4j://111.111.111.111:7687
+        cypher: neo4j://mock.api.cypher:7676
         hqps: neo4j://111.111.111.111:10000
         grpc: 111.111.111.111:55556
       properties:
         cypher:
-          example: neo4j://111.111.111.111:7687
+          example: neo4j://mock.api.cypher:7676
           title: cypher
           type: string
         gremlin:
@@ -2865,11 +2869,6 @@ components:
       title: EdgeMapping_destination_vertex_mappings_inner
       type: object
     GrootGraph_gremlin_interface:
-      example:
-        grpc_endpoint: grpc_endpoint
-        password: password
-        gremlin_endpoint: gremlin_endpoint
-        username: username
       properties:
         gremlin_endpoint:
           title: gremlin_endpoint

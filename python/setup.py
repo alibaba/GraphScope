@@ -126,10 +126,12 @@ class GenerateFlexSDK(Command):
             "--package-name",
             "graphscope.flex.rest",
         ]
+        env = os.environ.copy()
+        env["OPENAPI_GENERATOR_VERSION"] = "7.3.0"
         print(" ".join(cmd))
         subprocess.check_call(
             cmd,
-            env=os.environ.copy(),
+            env=env,
         )
         # cp
         subprocess.run(
