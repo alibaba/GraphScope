@@ -174,7 +174,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		python3 -m pip install ${PIP_ARGS} -U pip; \
-		python3 -m pip install ${PIP_ARGS} "torch" --index-url https://download.pytorch.org/whl/cpu --user; \
+		python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" --index-url https://download.pytorch.org/whl/cpu --user; \
 		if [[ "$$py" == "cp311-cp311" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -218,7 +218,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../python && \
-		python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 		python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		(git submodule update --init third_party/pybind11 || true) && \
