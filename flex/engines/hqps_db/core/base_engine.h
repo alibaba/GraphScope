@@ -712,7 +712,7 @@ class BaseEngine {
         auto x_ele = iter.GetAllElement();
         auto pair = std::make_pair(std::get<real_x_ind0>(x_ele),
                                    std::get<real_x_ind1>(x_ele));
-        LOG(INFO) << "pair: " << pair.first << ", " << pair.second;
+        // LOG(INFO) << "pair: " << pair.first << ", " << pair.second;
         if (cur_ind != 0) {
           if (prev_tuple == pair && prev_res) {
             LOG(INFO) << gs::to_string(prev_tuple)

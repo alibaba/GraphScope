@@ -99,7 +99,9 @@ std::vector<std::vector<int32_t>> parse_edge_label_triplet_from_ir_data_type(
     auto ele = graph_ele_type.element_opt();
     if (ele == common::GraphDataType::GraphElementOpt::
                    GraphDataType_GraphElementOpt_VERTEX) {
-      LOG(ERROR) << "Vertex element does not have edge label triplet.";
+      // We construct edge triplet from source label, destination label and edge
+      // label
+
       return edge_label_triplets;
     } else {
       VLOG(10) << "Get edge label triplet: ";

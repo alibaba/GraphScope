@@ -165,7 +165,7 @@ public class MatchTest {
     public void match_6_test() {
         RelNode project = Utils.eval("Match (a:person {id: 2l}) Return a").build();
         GraphLogicalSource source = (GraphLogicalSource) project.getInput(0);
-        RexCall condition = (RexCall) source.getFilters().get(0);
+        RexCall condition = (RexCall) source.getUniqueKeyFilters();
         Assert.assertEquals(
                 SqlTypeName.BIGINT, condition.getOperands().get(1).getType().getSqlTypeName());
     }

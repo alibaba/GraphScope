@@ -525,6 +525,15 @@ class GeneralVertexSetBuilder<VID_T, LabelT, grape::EmptyType> {
     }
   }
 
+  GeneralVertexSetBuilder(const GeneralVertexSetBuilder& other)
+      : labels_(other.labels_) {
+    vec_.reserve(other.vec_.size());
+    bitsets_.resize(other.bitsets_.size());
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
+      bitsets_[i].copy(other.bitsets_[i]);
+    }
+  }
+
   void Insert(const index_ele_tuple_t& tuple, const data_tuple_t& data) {
     vec_.emplace_back(std::get<2>(tuple));
     CHECK(std::get<1>(tuple) < bitsets_.size());
@@ -1374,14 +1383,21 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
   //   }
   // }
 
+  // cur_offset is the array marks the repeat times of corresponding range in
+  // repeat vec
   void Repeat(std::vector<offset_t>& cur_offset,
               std::vector<offset_t>& repeat_vec) {
     CHECK(cur_offset.size() == repeat_vec.size());
-    CHECK(cur_offset.back() == vec_.back())
-        << "neq : " << cur_offset.back() << ", " << vec_.back();
+    CHECK(cur_offset.back() == vec_.size())
+        << "neq : " << cur_offset.back() << ", " << vec_.size();
     std::vector<lid_t> res_vec;
     std::vector<grape::Bitset> res_bitsets(bitsets_.size());
-    size_t total_cnt = repeat_vec.back();
+    // size_t total_cnt = repeat_vec.back();
+    size_t total_cnt = 0;
+    for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
+      auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
+      total_cnt += (cur_offset[i + 1] - cur_offset[i]) * times_to_repeat;
+    }
     VLOG(10) << "Repeat current vertices num: " << vec_.size() << ", to "
              << total_cnt;
     for (size_t i = 0; i < res_bitsets.size(); ++i) {
@@ -1390,7 +1406,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
     {
       auto label_indices = GenerateLabelIndices();
       size_t cur_ind = 0;
-      res_vec.reserve(repeat_vec.back());
+      res_vec.reserve(total_cnt);
       for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
         auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
         for (size_t j = 0; j < times_to_repeat; ++j) {
@@ -1401,7 +1417,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
           }
         }
       }
-      CHECK(cur_ind == repeat_vec.back());
+      CHECK(cur_ind == total_cnt);
     }
     vec_.swap(res_vec);
     bitsets_.swap(res_bitsets);
