@@ -262,6 +262,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         if (pxd.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
             pathExpandBuilder.setStartTag(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
         }
+        pathExpandBuilder.setIsOptional(pxd.isOptional());
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setPath(pathExpandBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(rowType, isColumnId));
@@ -890,6 +891,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             expandBuilder.setVTag(Utils.asAliasId(expand.getStartAlias().getAliasId()));
         }
         expandBuilder.setExpandOpt(Utils.protoExpandOpt(opt));
+        expandBuilder.setIsOptional(expand.isOptional());
         return expandBuilder;
     }
 
