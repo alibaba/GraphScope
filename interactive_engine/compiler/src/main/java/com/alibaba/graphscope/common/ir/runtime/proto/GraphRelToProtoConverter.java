@@ -47,7 +47,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalUnion;
-import org.apache.calcite.rel.rules.MultiJoin;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
@@ -213,6 +213,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.PathExpand.ExpandBase.Builder expandBaseBuilder =
                 GraphAlgebraPhysical.PathExpand.ExpandBase.newBuilder();
         RelNode fused = pxd.getFused();
+        RelDataType rowType;
         if (fused != null) {
             // the case that expand base is fused
             if (fused instanceof GraphPhysicalGetV) {
@@ -224,6 +225,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fusedGetV.getInput();
                     GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
                     expandBaseBuilder.setEdgeExpand(expand);
+                    rowType = fusedExpand.getRowType();
                 } else {
                     throw new UnsupportedOperationException(
                             "unsupported fused plan in path expand base: "
@@ -234,6 +236,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fused;
                 GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
                 expandBaseBuilder.setEdgeExpand(expand);
+                rowType = fusedExpand.getFusedExpand().getRowType();
             } else {
                 throw new UnsupportedOperationException(
                         "unsupported fused plan in path expand base");
@@ -245,6 +248,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             GraphAlgebraPhysical.GetV.Builder getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
             expandBaseBuilder.setEdgeExpand(expand);
             expandBaseBuilder.setGetV(getV);
+            rowType = pxd.getExpand().getRowType();
         }
         pathExpandBuilder.setBase(expandBaseBuilder);
         pathExpandBuilder.setPathOpt(Utils.protoPathOpt(pxd.getPathOpt()));
@@ -259,6 +263,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         }
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setPath(pathExpandBuilder));
+        oprBuilder.addAllMetaData(Utils.physicalProtoRowType(rowType, isColumnId));
         if (isPartitioned) {
             addRepartitionToAnother(pxd.getStartAlias().getAliasId());
         }
@@ -274,8 +279,11 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpand(physicalExpand);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
+        // Currently we use the row type of ExpandE as the output row type of the fused
+        // ExpandV, as desired by the engine implementation.
         oprBuilder.addAllMetaData(
-                Utils.physicalProtoRowType(physicalExpand.getRowType(), isColumnId));
+                Utils.physicalProtoRowType(
+                        physicalExpand.getFusedExpand().getRowType(), isColumnId));
         if (isPartitioned) {
             addRepartitionToAnother(physicalExpand.getStartAlias().getAliasId());
         }
@@ -953,8 +961,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     private GraphAlgebra.QueryParams.Builder defaultQueryParams() {
         GraphAlgebra.QueryParams.Builder paramsBuilder = GraphAlgebra.QueryParams.newBuilder();
-        // TODO(shirly121): currently no sample rate fused into tableScan, so directly set 1.0 as
-        // default.
+        // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as default.
         paramsBuilder.setSampleRatio(1.0);
         return paramsBuilder;
     }
