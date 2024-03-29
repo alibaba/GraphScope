@@ -37,10 +37,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 // This rule try to fuse GraphLogicalExpand and GraphLogicalGetV if GraphLogicalExpand has no alias
 // (that it won't be visited individually later):
 // 1. if GraphLogicalGetV has no filters, then:
-//      GraphLogicalExpand + GraphLogicalGetV -> GraphPhysicalExpand(ExpandV)
+//      GraphLogicalExpand + GraphLogicalGetV -> GraphPhysicalExpand(ExpandV),
+// where GraphPhysicalExpand carries the alias of GraphLogicalGetV
 // 2. if GraphLogicalGetV has filters, then:
 //      GraphLogicalExpand + GraphLogicalGetV -> GraphPhysicalExpand(ExpandV)  +
-// GraphPhysicalGetV(VertexFilter)
+// GraphPhysicalGetV(VertexFilter),
+// where GraphPhysicalExpand carries the Default alias, and GraphPhysicalGetV carries the alias of
+// GraphLogicalGetV
 public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends RelRule<C>
         implements TransformationRule {
 
@@ -54,18 +57,27 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
                         && getV.getOpt().equals(GraphOpt.GetV.START)
                 || expand.getOpt().equals(GraphOpt.Expand.BOTH)
                         && getV.getOpt().equals(GraphOpt.GetV.OTHER)) {
-            GraphPhysicalExpand physicalExpand =
-                    GraphPhysicalExpand.create(
-                            expand.getCluster(),
-                            expand.getHints(),
-                            input,
-                            expand,
-                            getV,
-                            GraphOpt.PhysicalExpandOpt.VERTEX,
-                            getV.getAliasName());
             if (ObjectUtils.isEmpty(getV.getFilters())) {
+                GraphPhysicalExpand physicalExpand =
+                        GraphPhysicalExpand.create(
+                                expand.getCluster(),
+                                expand.getHints(),
+                                input,
+                                expand,
+                                getV,
+                                GraphOpt.PhysicalExpandOpt.VERTEX,
+                                getV.getAliasName());
                 return physicalExpand;
             } else {
+                GraphPhysicalExpand physicalExpand =
+                        GraphPhysicalExpand.create(
+                                expand.getCluster(),
+                                expand.getHints(),
+                                input,
+                                expand,
+                                getV,
+                                GraphOpt.PhysicalExpandOpt.VERTEX,
+                                AliasInference.DEFAULT_NAME);
                 // If with filters, then create a GraphPhysicalGetV to do the filtering.
                 // We set alias of getV to null to avoid alias conflict (with expand's alias)
                 GraphPhysicalGetV physicalGetV =
@@ -74,7 +86,7 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
                                 getV.getHints(),
                                 physicalExpand,
                                 getV,
-                                null,
+                                getV.getAliasName(),
                                 GraphOpt.PhysicalGetVOpt.ITSELF);
                 return physicalGetV;
             }
