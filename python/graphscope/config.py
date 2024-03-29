@@ -121,7 +121,7 @@ class DatasetConfig:
 class EngineConfig:
     """Engine configuration"""
 
-    enabled_engines: str = "gae,gie,gle,glt"  # A set of engines to enable.
+    enabled_engines: str = "gae,gie"  # A set of engines to enable.
     # Node selector for engine pods, default is None.
     node_selector: Union[str, None] = None
 
