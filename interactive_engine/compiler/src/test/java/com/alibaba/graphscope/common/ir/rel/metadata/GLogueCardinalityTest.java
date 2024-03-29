@@ -28,7 +28,7 @@ import org.junit.Test;
 
 public class GLogueCardinalityTest {
     static GlogueSchema g = GLogueSchemaTest.mockGlogueSchema();
-    static Glogue gl = new Glogue().create(g, 3);
+    static Glogue gl = new Glogue(g, 3);
     static Integer person = 0;
     static Integer software = 1;
     // person -> software
@@ -40,7 +40,7 @@ public class GLogueCardinalityTest {
     @Test
     public void basic_pattern_cardinality_estimation_test() {
         GlogueBasicCardinalityEstimationImpl basicCardinalityEstimation =
-                new GlogueBasicCardinalityEstimationImpl().create(gl, g);
+                new GlogueBasicCardinalityEstimationImpl(gl, g);
         PatternVertex v0 = new SinglePatternVertex(person, 0);
         PatternVertex v1 = new SinglePatternVertex(software, 1);
         PatternVertex v2 = new SinglePatternVertex(person, 2);
