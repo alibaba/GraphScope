@@ -36,10 +36,16 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
+import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
+import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 
+import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -81,10 +87,10 @@ public class GraphIOProcessor {
      * @return
      */
     public RelNode processInput(RelNode input) {
-        if (!graphDetails.isEmpty()) {
-            graphDetails.clear();
-        }
-        return input.accept(new InputConvertor());
+        InputConvertor convertor = new InputConvertor();
+        RelNode processed = input.accept(convertor);
+        convertor.buildGraphDetails();
+        return processed;
     }
 
     /**
@@ -105,28 +111,97 @@ public class GraphIOProcessor {
     }
 
     private class InputConvertor extends GraphShuttle {
+        private final Map<String, PatternVertex> aliasNameToVertex;
+        private final AtomicInteger idGenerator;
+        private final Map<Object, DataValue> vertexOrEdgeDetails;
+        @Nullable private Pattern finalPattern;
+
+        public InputConvertor() {
+            this.aliasNameToVertex = Maps.newHashMap();
+            this.idGenerator = new AtomicInteger(0);
+            this.vertexOrEdgeDetails = Maps.newHashMap();
+            this.finalPattern = null;
+        }
+
+        public void buildGraphDetails() {
+            if (!graphDetails.isEmpty()) {
+                graphDetails.clear();
+            }
+            if (this.finalPattern != null && !vertexOrEdgeDetails.isEmpty()) {
+                vertexOrEdgeDetails.forEach(
+                        (k, v) -> {
+                            DataKey key = null;
+                            if (k instanceof PatternVertex) {
+                                key =
+                                        new VertexDataKey(
+                                                finalPattern.getVertexOrder((PatternVertex) k));
+                            } else if (k instanceof PatternEdge) {
+                                int srcOrderId =
+                                        finalPattern.getVertexOrder(
+                                                ((PatternEdge) k).getSrcVertex());
+                                int dstOrderId =
+                                        finalPattern.getVertexOrder(
+                                                ((PatternEdge) k).getDstVertex());
+                                PatternDirection direction =
+                                        ((PatternEdge) k).isBoth()
+                                                ? PatternDirection.BOTH
+                                                : PatternDirection.OUT;
+                                key = new EdgeDataKey(srcOrderId, dstOrderId, direction);
+                            }
+                            graphDetails.put(key, v);
+                        });
+            }
+        }
+
         @Override
         public RelNode visit(GraphLogicalMultiMatch match) {
-            return new GraphPattern(
-                    match.getCluster(), match.getTraitSet(), visit(match.getSentences()));
+            Pattern childPattern;
+            if (match.getInputs().isEmpty()) {
+                childPattern = new Pattern();
+                childPattern.setPatternId(UUID.randomUUID().hashCode());
+            } else {
+                RelNode child = visitChildren(match).getInput(0);
+                if (child instanceof GraphPattern) {
+                    childPattern = ((GraphPattern) child).getPattern();
+                } else {
+                    // todo: support partial computation
+                    throw new UnsupportedOperationException(
+                            "there are relational operations between match operations, which is"
+                                    + " unsupported yet");
+                }
+            }
+            this.finalPattern = visit(match.getSentences(), false, childPattern);
+            return new GraphPattern(match.getCluster(), match.getTraitSet(), this.finalPattern);
         }
 
         @Override
         public RelNode visit(GraphLogicalSingleMatch match) {
-            return new GraphPattern(
-                    match.getCluster(),
-                    match.getTraitSet(),
-                    visit(ImmutableList.of(match.getSentence())));
+            Pattern childPattern;
+            if (match.getInputs().isEmpty()) {
+                childPattern = new Pattern();
+                childPattern.setPatternId(UUID.randomUUID().hashCode());
+            } else {
+                RelNode child = visitChildren(match).getInput(0);
+                if (child instanceof GraphPattern) {
+                    childPattern = ((GraphPattern) child).getPattern();
+                } else {
+                    // todo: support partial computation
+                    throw new UnsupportedOperationException(
+                            "there are relational operations between match operations, which is"
+                                    + " unsupported yet");
+                }
+            }
+            this.finalPattern =
+                    visit(
+                            ImmutableList.of(match.getSentence()),
+                            match.getMatchOpt() == GraphOpt.Match.OPTIONAL,
+                            childPattern);
+            return new GraphPattern(match.getCluster(), match.getTraitSet(), this.finalPattern);
         }
 
-        private Pattern visit(List<RelNode> sentences) {
-            Pattern pattern = new Pattern();
-            pattern.setPatternId(UUID.randomUUID().hashCode());
-            Map<Object, DataValue> vertexOrEdgeDetails = Maps.newHashMap();
+        private Pattern visit(List<RelNode> sentences, boolean optional, final Pattern pattern) {
             RelVisitor visitor =
                     new RelVisitor() {
-                        Map<String, PatternVertex> aliasNameToVertex = Maps.newHashMap();
-                        AtomicInteger idGenerator = new AtomicInteger(0);
                         PatternVertex lastVisited = null;
 
                         @Override
@@ -255,36 +330,38 @@ public class GraphIOProcessor {
                                     dst = left;
                             }
                             PatternEdge expandEdge = visitEdge(expand, src, dst);
-                            if (pxd.getOffset() != null && pxd.getFetch() != null) {
-                                int offset =
-                                        ((RexLiteral) pxd.getOffset())
-                                                .getValueAs(Number.class)
-                                                .intValue();
-                                int fetch =
-                                        ((RexLiteral) pxd.getFetch())
-                                                .getValueAs(Number.class)
-                                                .intValue();
-                                ElementDetails newDetails =
-                                        new ElementDetails(
-                                                expandEdge.getDetails().getSelectivity(),
-                                                new PathExpandRange(offset, fetch));
-                                expandEdge =
-                                        expandEdge.isDistinct()
-                                                ? new SinglePatternEdge(
-                                                        expandEdge.getSrcVertex(),
-                                                        expandEdge.getDstVertex(),
-                                                        expandEdge.getEdgeTypeIds().get(0),
-                                                        expandEdge.getId(),
-                                                        expandEdge.isBoth(),
-                                                        newDetails)
-                                                : new FuzzyPatternEdge(
-                                                        expandEdge.getSrcVertex(),
-                                                        expandEdge.getDstVertex(),
-                                                        expandEdge.getEdgeTypeIds(),
-                                                        expandEdge.getId(),
-                                                        expandEdge.isBoth(),
-                                                        newDetails);
-                            }
+                            int offset =
+                                    (pxd.getOffset() == null)
+                                            ? 0
+                                            : ((RexLiteral) pxd.getOffset())
+                                                    .getValueAs(Number.class)
+                                                    .intValue();
+                            int fetch =
+                                    (pxd.getFetch() == null)
+                                            ? (Integer.MAX_VALUE - offset)
+                                            : ((RexLiteral) pxd.getFetch())
+                                                    .getValueAs(Number.class)
+                                                    .intValue();
+                            ElementDetails newDetails =
+                                    new ElementDetails(
+                                            expandEdge.getElementDetails().getSelectivity(),
+                                            new PathExpandRange(offset, fetch));
+                            expandEdge =
+                                    (expandEdge instanceof SinglePatternEdge)
+                                            ? new SinglePatternEdge(
+                                                    expandEdge.getSrcVertex(),
+                                                    expandEdge.getDstVertex(),
+                                                    expandEdge.getEdgeTypeIds().get(0),
+                                                    expandEdge.getId(),
+                                                    expandEdge.isBoth(),
+                                                    newDetails)
+                                            : new FuzzyPatternEdge(
+                                                    expandEdge.getSrcVertex(),
+                                                    expandEdge.getDstVertex(),
+                                                    expandEdge.getEdgeTypeIds(),
+                                                    expandEdge.getId(),
+                                                    expandEdge.isBoth(),
+                                                    newDetails);
                             pattern.addEdge(src, dst, expandEdge);
                             vertexOrEdgeDetails.put(
                                     expandEdge,
@@ -308,39 +385,31 @@ public class GraphIOProcessor {
                                                     edgeTypeIds.get(0),
                                                     edgeId,
                                                     isBoth,
-                                                    new ElementDetails(selectivity))
+                                                    new ElementDetails(selectivity, optional))
                                             : new FuzzyPatternEdge(
                                                     src,
                                                     dst,
                                                     edgeTypeIds,
                                                     edgeId,
                                                     isBoth,
-                                                    new ElementDetails(selectivity));
+                                                    new ElementDetails(selectivity, optional));
                             return edge;
                         }
                     };
             for (RelNode sentence : sentences) {
                 visitor.go(sentence);
             }
+            // set vertex optional: if all edges of a vertex are optional, then the vertex is
+            // optional
+            pattern.getVertexSet()
+                    .forEach(
+                            k -> {
+                                if (pattern.getEdgesOf(k).stream()
+                                        .allMatch(e -> e.getElementDetails().isOptional())) {
+                                    k.getElementDetails().setOptional(true);
+                                }
+                            });
             pattern.reordering();
-            vertexOrEdgeDetails.forEach(
-                    (k, v) -> {
-                        DataKey key = null;
-                        if (k instanceof PatternVertex) {
-                            key = new VertexDataKey(pattern.getVertexOrder((PatternVertex) k));
-                        } else if (k instanceof PatternEdge) {
-                            int srcOrderId =
-                                    pattern.getVertexOrder(((PatternEdge) k).getSrcVertex());
-                            int dstOrderId =
-                                    pattern.getVertexOrder(((PatternEdge) k).getDstVertex());
-                            PatternDirection direction =
-                                    ((PatternEdge) k).isBoth()
-                                            ? PatternDirection.BOTH
-                                            : PatternDirection.OUT;
-                            key = new EdgeDataKey(srcOrderId, dstOrderId, direction);
-                        }
-                        graphDetails.put(key, v);
-                    });
             checkPattern(pattern);
             return pattern;
         }
@@ -613,12 +682,13 @@ public class GraphIOProcessor {
                                     false),
                             edgeValue.getAlias(),
                             srcValue.getAlias());
+            GraphLabelType tripletEdgeType = createTripletEdgeType(edge.getEdgeTypeIds());
             GetVConfig getVConfig =
                     new GetVConfig(
                             createGetVOpt(edge.getDirection()),
                             createLabels(target.getVertexTypeIds(), true),
                             targetValue.getAlias());
-            if (edge.getRange() != null) {
+            if (edge.getElementDetails().getRange() != null) {
                 PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
                 pxdBuilder.expand(expandConfig);
                 if (edgeValue.getFilter() != null) {
@@ -630,8 +700,18 @@ public class GraphIOProcessor {
                         .pathOpt(GraphOpt.PathExpandPath.ARBITRARY)
                         .alias(edgeValue.getAlias())
                         .startAlias(srcValue.getAlias())
-                        .range(edge.getRange().getOffset(), edge.getRange().getFetch());
-                builder.pathExpand(pxdBuilder.build())
+                        .range(
+                                edge.getElementDetails().getRange().getOffset(),
+                                edge.getElementDetails().getRange().getFetch());
+                GraphLogicalPathExpand pxd =
+                        (GraphLogicalPathExpand) builder.pathExpand(pxdBuilder.build()).build();
+                GraphLogicalExpand expand = (GraphLogicalExpand) pxd.getExpand();
+                GraphSchemaType edgeType =
+                        (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
+                expand.setRowType(createSchemaType(tripletEdgeType, edgeType));
+                builder.push(
+                                createPathExpandWithOptional(
+                                        pxd, edge.getElementDetails().isOptional()))
                         .getV(
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
@@ -642,7 +722,14 @@ public class GraphIOProcessor {
                     builder.filter(targetValue.getFilter());
                 }
             } else {
-                builder.expand(expandConfig);
+                GraphLogicalExpand expand =
+                        createExpandWithOptional(
+                                (GraphLogicalExpand) builder.expand(expandConfig).build(),
+                                edge.getElementDetails().isOptional());
+                GraphSchemaType edgeType =
+                        (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
+                expand.setRowType(createSchemaType(tripletEdgeType, edgeType));
+                builder.push(expand);
                 if (edgeValue.getFilter() != null) {
                     builder.filter(edgeValue.getFilter());
                 }
@@ -652,6 +739,51 @@ public class GraphIOProcessor {
                 }
             }
             return builder.build();
+        }
+
+        private GraphLogicalPathExpand createPathExpandWithOptional(
+                GraphLogicalPathExpand pxd, boolean optional) {
+            if (pxd.getFused() != null) {
+                return GraphLogicalPathExpand.create(
+                        (GraphOptCluster) pxd.getCluster(),
+                        ImmutableList.of(),
+                        pxd.getInput(),
+                        pxd.getFused(),
+                        pxd.getOffset(),
+                        pxd.getFetch(),
+                        pxd.getResultOpt(),
+                        pxd.getPathOpt(),
+                        pxd.getAliasName(),
+                        pxd.getStartAlias(),
+                        optional);
+            } else {
+                return GraphLogicalPathExpand.create(
+                        (GraphOptCluster) pxd.getCluster(),
+                        ImmutableList.of(),
+                        pxd.getInput(),
+                        pxd.getExpand(),
+                        pxd.getGetV(),
+                        pxd.getOffset(),
+                        pxd.getFetch(),
+                        pxd.getResultOpt(),
+                        pxd.getPathOpt(),
+                        pxd.getAliasName(),
+                        pxd.getStartAlias(),
+                        optional);
+            }
+        }
+
+        private GraphLogicalExpand createExpandWithOptional(
+                GraphLogicalExpand expand, boolean optional) {
+            return GraphLogicalExpand.create(
+                    (GraphOptCluster) expand.getCluster(),
+                    expand.getHints(),
+                    expand.getInput(0),
+                    expand.getOpt(),
+                    expand.getTableConfig(),
+                    expand.getAliasName(),
+                    expand.getStartAlias(),
+                    optional);
         }
 
         private DataValue getVertexValue(
@@ -667,6 +799,63 @@ public class GraphIOProcessor {
             return (edgeValue != null)
                     ? edgeValue
                     : new DataValue(AliasInference.DEFAULT_NAME, null);
+        }
+
+        private GraphLabelType createTripletEdgeType(List<EdgeTypeId> edgeTypeIds) {
+            List<GraphLabelType.Entry> entries = Lists.newArrayList();
+            IrGraphSchema schema = irMeta.getSchema();
+            for (EdgeTypeId typeId : edgeTypeIds) {
+                GraphEdge edgeWithTypeId = null;
+                for (GraphEdge edge : schema.getEdgeList()) {
+                    if (edge.getLabelId() == typeId.getEdgeLabelId()) {
+                        edgeWithTypeId = edge;
+                        break;
+                    }
+                }
+                if (edgeWithTypeId != null) {
+                    for (EdgeRelation relation : edgeWithTypeId.getRelationList()) {
+                        GraphVertex src = relation.getSource();
+                        GraphVertex dst = relation.getTarget();
+                        if (src.getLabelId() == typeId.getSrcLabelId()
+                                && dst.getLabelId() == typeId.getDstLabelId()) {
+                            entries.add(
+                                    new GraphLabelType.Entry()
+                                            .label(edgeWithTypeId.getLabel())
+                                            .labelId(edgeWithTypeId.getLabelId())
+                                            .srcLabel(src.getLabel())
+                                            .srcLabelId(src.getLabelId())
+                                            .dstLabel(dst.getLabel())
+                                            .dstLabelId(dst.getLabelId()));
+                            break;
+                        }
+                    }
+                }
+            }
+            return new GraphLabelType(entries);
+        }
+
+        private GraphSchemaType createSchemaType(
+                GraphLabelType labelType, GraphSchemaType originalType) {
+            if (labelType.getLabelsEntry().size() == 1) {
+                return new GraphSchemaType(
+                        originalType.getScanOpt(),
+                        labelType,
+                        originalType.getFieldList(),
+                        originalType.isNullable());
+            } else {
+                List<GraphSchemaType> fuzzyTypes =
+                        labelType.getLabelsEntry().stream()
+                                .map(
+                                        k ->
+                                                new GraphSchemaType(
+                                                        originalType.getScanOpt(),
+                                                        new GraphLabelType(k),
+                                                        originalType.getFieldList(),
+                                                        originalType.isNullable()))
+                                .collect(Collectors.toList());
+                return GraphSchemaType.create(
+                        fuzzyTypes, builder.getTypeFactory(), originalType.isNullable());
+            }
         }
 
         private LabelConfig createLabels(List<Integer> typeIds, boolean isVertex) {

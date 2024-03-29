@@ -7,14 +7,17 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelRule;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -39,8 +42,8 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
     private int getMaxVertexNum(Pattern pattern) {
         int maxVertexNum = pattern.getVertexNumber();
         for (PatternEdge edge : pattern.getEdgeSet()) {
-            if (edge.getDetails().getRange() != null) {
-                PathExpandRange range = edge.getDetails().getRange();
+            if (edge.getElementDetails().getRange() != null) {
+                PathExpandRange range = edge.getElementDetails().getRange();
                 int maxHop = range.getOffset() + range.getFetch() - 1;
                 maxVertexNum += (maxHop - 1);
             }
@@ -227,6 +230,10 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                 || newJointVertexNum >= buildClone.getVertexNumber()) {
             return null;
         }
+        JoinRelType joinType = pruneOptional(probeClone, buildClone, newJointVertices);
+        if (joinType == null) {
+            return null;
+        }
         // update the order mappings for the new probe pattern and build pattern
         Map<Integer, Integer> probeOrderMap = parent.getOrderMappings().getLeftToTargetOrderMap();
         Map<Integer, Integer> buildOrderMap = parent.getOrderMappings().getRightToTargetOrderMap();
@@ -264,7 +271,8 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                 probeClone,
                 buildClone,
                 newJointVertices,
-                new GraphJoinDecomposition.OrderMappings(newProbeOrderMap, newBuildOrderMap));
+                new GraphJoinDecomposition.OrderMappings(newProbeOrderMap, newBuildOrderMap),
+                joinType);
     }
 
     private void getEdgeDecompositions(
@@ -279,7 +287,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
             return;
         }
         PatternEdge probeEdge = probeEdges.get(edgeId);
-        PathExpandRange pxdRange = probeEdge.getDetails().getRange();
+        PathExpandRange pxdRange = probeEdge.getElementDetails().getRange();
         // try to split the path expand
         if (pxdRange != null) {
             int minHop = pxdRange.getOffset();
@@ -352,7 +360,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
 
     private PatternVertex createNewVertex(PatternVertex oldVertex) {
         int randomId = UUID.randomUUID().hashCode();
-        return oldVertex.isDistinct()
+        return (oldVertex instanceof SinglePatternVertex)
                 ? new SinglePatternVertex(
                         oldVertex.getVertexTypeIds().get(0), randomId, new ElementDetails())
                 : new FuzzyPatternVertex(
@@ -366,8 +374,8 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
             PathExpandRange newRange) {
         int randomId = UUID.randomUUID().hashCode();
         ElementDetails newDetails =
-                new ElementDetails(oldEdge.getDetails().getSelectivity(), newRange);
-        return oldEdge.isDistinct()
+                new ElementDetails(oldEdge.getElementDetails().getSelectivity(), newRange);
+        return (oldEdge instanceof SinglePatternEdge)
                 ? new SinglePatternEdge(
                         newSrc,
                         newDst,
@@ -413,6 +421,59 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                                     || dProbe.isIsomorphicTo(targetBuild)
                                             && dBuild.isIsomorphicTo(targetProbe);
                         });
+    }
+
+    /**
+     * Prune unreasonable join combinations. Join combinations that meet any of the following conditions will be retained; otherwise, prune:
+     * 1. All edges in the probe pattern are non-optional, and all edges in the build pattern are optional. In this case, the original pattern is probe left join build;
+     * 2. All edges in the probe pattern are optional, and all edges in the build pattern are non-optional. In this case, the original pattern is probe right join build;
+     * 3. The edges adjacent to the joint point are all non-optional. In this case, the original pattern is probe inner join build.
+     * @param probePattern
+     * @param buildPattern
+     * @param jointVertices
+     * @return return null if the join combination is pruned; otherwise, return the join type
+     */
+    private @Nullable JoinRelType pruneOptional(
+            Pattern probePattern,
+            Pattern buildPattern,
+            List<GraphJoinDecomposition.JoinVertexPair> jointVertices) {
+        JoinRelType joinType = null;
+        if (allNonOptional(probePattern.getEdgeSet()) && allOptional(buildPattern.getEdgeSet())) {
+            buildPattern.getVertexSet().forEach(v -> v.getElementDetails().setOptional(false));
+            buildPattern.getEdgeSet().forEach(e -> e.getElementDetails().setOptional(false));
+            buildPattern.reordering();
+            joinType = JoinRelType.LEFT;
+        } else if (allOptional(probePattern.getEdgeSet())
+                && allNonOptional(buildPattern.getEdgeSet())) {
+            probePattern.getVertexSet().forEach(v -> v.getElementDetails().setOptional(false));
+            probePattern.getEdgeSet().forEach(e -> e.getElementDetails().setOptional(false));
+            probePattern.reordering();
+            joinType = JoinRelType.RIGHT;
+        } else {
+            Set<PatternEdge> probeJointAdjEdges = Sets.newHashSet();
+            Set<PatternEdge> buildJointAdjEdges = Sets.newHashSet();
+            jointVertices.forEach(
+                    v -> {
+                        probeJointAdjEdges.addAll(
+                                probePattern.getEdgesOf(
+                                        probePattern.getVertexByOrder(v.getLeftOrderId())));
+                        buildJointAdjEdges.addAll(
+                                buildPattern.getEdgesOf(
+                                        buildPattern.getVertexByOrder(v.getRightOrderId())));
+                    });
+            if (allNonOptional(probeJointAdjEdges) && allNonOptional(buildJointAdjEdges)) {
+                joinType = JoinRelType.INNER;
+            }
+        }
+        return joinType;
+    }
+
+    private boolean allOptional(Set<PatternEdge> edges) {
+        return edges.stream().allMatch(e -> e.getElementDetails().isOptional());
+    }
+
+    private boolean allNonOptional(Set<PatternEdge> edges) {
+        return edges.stream().allMatch(e -> !e.getElementDetails().isOptional());
     }
 
     public static class Config implements RelRule.Config {

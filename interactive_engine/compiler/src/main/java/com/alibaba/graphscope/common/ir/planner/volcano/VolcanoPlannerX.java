@@ -31,22 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VolcanoPlannerX extends VolcanoPlanner {
     @Override
     protected RelOptCost upperBoundForInputs(RelNode mExpr, RelOptCost upperBound) {
-        //        RelSubset group = getSubset(mExpr);
-        //        RelOptCost bestCost =
-        //                (group != null) ? Utils.getFieldValue(RelSubset.class, group, "bestCost")
-        // : null;
-        //        RelOptCost currentUpperBound =
-        //                (bestCost == null || upperBound != null && upperBound.isLt(bestCost))
-        //                        ? upperBound
-        //                        : bestCost;
-        //        if (currentUpperBound != null && !currentUpperBound.isInfinite()) {
-        //            RelOptCost rootCost =
-        // mExpr.getCluster().getMetadataQuery().getNonCumulativeCost(mExpr);
-        //            if (rootCost != null && !rootCost.isInfinite()) {
-        //                return currentUpperBound.minus(rootCost);
-        //            }
-        //        }
-        //        return upperBound;
+        // todo: support pruning optimizations
         return upperBound;
     }
 

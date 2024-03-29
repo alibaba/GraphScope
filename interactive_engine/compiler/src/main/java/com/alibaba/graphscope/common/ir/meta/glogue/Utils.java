@@ -106,7 +106,7 @@ public class Utils {
             if (vertex.getVertexTypeIds().size() != 1) {
                 return false;
             }
-            ElementDetails details = vertex.getDetails();
+            ElementDetails details = vertex.getElementDetails();
             if (details != null && Double.compare(details.getSelectivity(), 1.0d) != 0) {
                 return false;
             }
@@ -116,7 +116,7 @@ public class Utils {
                 return false;
             }
             if (edge.isBoth()) return false;
-            ElementDetails details = edge.getDetails();
+            ElementDetails details = edge.getElementDetails();
             if (details != null
                     && (Double.compare(details.getSelectivity(), 1.0d) != 0
                             || details.getRange() != null)) {
