@@ -40,6 +40,8 @@ struct Path {
     return null_path;
   }
 
+  static Path<VID_T, LabelT> GetNull() { return Null(); }
+
   Path() = default;
 
   Path(const Path<VID_T, LabelT>& other)

@@ -28,13 +28,14 @@ static constexpr const None NONE;
 template <typename T>
 struct NullRecordCreator {
   static inline T GetNull() {
-    static_assert(
-        std::numeric_limits<
-            std::remove_const_t<std::remove_reference_t<T>>>::is_specialized,
-        "NullRecordCreator only support numeric type");
-    using type = std::remove_const_t<std::remove_reference_t<T>>;
-    static type null_value = std::numeric_limits<type>::max();
-    return null_value;
+    if constexpr (std::numeric_limits<std::remove_const_t<
+                      std::remove_reference_t<T>>>::is_specialized) {
+      using type = std::remove_const_t<std::remove_reference_t<T>>;
+      static type null_value = std::numeric_limits<type>::max();
+      return null_value;
+    } else {
+      return T::GetNull();
+    }
   }
 };
 
