@@ -1465,11 +1465,12 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 plural=plural,
                 body=pytorch_job_manifest,
             )
-            print(api_response)
+            logger.info(api_response)
         except K8SApiException as e:
-            print(
+            logger.info(
                 f"Exception when calling CustomObjectsApi->create_namespaced_custom_object: {e}"
             )
+            raise
 
         # set Watcher to monitor the state of the PyTorchJob
         w = kube_watch.Watch()
@@ -1492,14 +1493,14 @@ class KubernetesClusterLauncher(AbstractLauncher):
                             condition.get("type") == "Succeeded"
                             and condition.get("status") == "True"
                         ):
-                            print(f"PyTorchJob {name} has succeeded!")
+                            logger.info(f"PyTorchJob {name} has succeeded!")
                             w.stop()
                             break
                         elif (
                             condition.get("type") == "Failed"
                             and condition.get("status") == "True"
                         ):
-                            print(f"PyTorchJob {name} has failed!")
+                            logger.info(f"PyTorchJob {name} has failed!")
                             w.stop()
                             break
 
@@ -1595,7 +1596,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def close_graphlearn_torch_client(self, group, name, version, plural, namespace):
         # clear PyTorchJob
-        print(f"Deleting PyTorchJob {name}...")
+        logger.info(f"Deleting PyTorchJob {name}...")
         try:
             response = self._pytorchjobs_api.delete_namespaced_custom_object(
                 group=group,
@@ -1607,9 +1608,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
                     propagation_policy="Foreground",
                 ),
             )
-            print(f"PyTorchJob {name} deleted. Response: {response}")
+            logger.info(f"PyTorchJob {name} deleted. Response: {response}")
         except K8SApiException as e:
-            print(
+            logger.info(
                 f"Exception when calling CustomObjectsApi->delete_namespaced_custom_object: {e}"
             )
 
@@ -1618,11 +1619,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 name="graphlearn-torch-client-config",
                 namespace=self._namespace,
             )
-            print(
+            logger.info(
                 f"ConfigMap graphlearn-torch-client-config deleted. Response: {response}"
             )
         except K8SApiException as e:
-            print(
+            logger.info(
                 f"Exception when calling CoreV1Api->delete_namespaced_config_map: {e}"
             )
 
