@@ -24,7 +24,6 @@ public class ElementDetails implements Comparable<ElementDetails> {
     private final double selectivity;
     // the range is not null if and only if the element denotes a path expand operator
     private final @Nullable PathExpandRange range;
-
     private boolean optional;
 
     public ElementDetails() {

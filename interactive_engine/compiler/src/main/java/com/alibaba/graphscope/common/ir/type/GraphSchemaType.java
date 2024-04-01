@@ -151,9 +151,6 @@ public class GraphSchemaType extends RelRecordType {
     protected void generateTypeString(StringBuilder sb, boolean withDetail) {
         sb.append("Graph_Schema_Type");
         sb.append("(");
-        if (isNullable()) {
-            sb.append("nullable=" + isNullable() + ", ");
-        }
         sb.append("labels=" + labelType);
         sb.append(", properties=[");
         Iterator var3 =

@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadat
 import com.alibaba.graphscope.common.ir.planner.rules.*;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
@@ -33,6 +34,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -43,6 +45,7 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
@@ -135,58 +138,79 @@ public class GraphRelOptimizer {
 
         @Override
         public RelNode visit(LogicalJoin join) {
-            List<RelNode> matchList = convertJoinToMatchList(join);
-            if (matchList.isEmpty()) {
+            List<RelNode> matchList = Lists.newArrayList();
+            List<RelNode> filterList = Lists.newArrayList();
+            if (!decomposeJoin(join, matchList, filterList)) {
                 return super.visit(join);
             } else {
                 matchPlanner.setRoot(ioProcessor.processInput(matchList));
-                return ioProcessor.processOutput(matchPlanner.findBestExp());
+                RelNode match = ioProcessor.processOutput(matchPlanner.findBestExp());
+                for (RelNode filter : filterList) {
+                    match = filter.copy(filter.getTraitSet(), ImmutableList.of(match));
+                }
+                return match;
             }
         }
 
-        private List<RelNode> convertJoinToMatchList(LogicalJoin join) {
-            AtomicBoolean convertable = new AtomicBoolean(true);
-            List<RelNode> matchList = Lists.newArrayList();
-            RelVisitor visitor = new RelVisitor() {
-                @Override
-                public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                    if (node instanceof LogicalJoin) {
-                        JoinRelType joinType = ((LogicalJoin) node).getJoinType();
-                        if (joinType != JoinRelType.LEFT && joinType != JoinRelType.INNER) {
-                            convertable.set(false);
-                            return;
-                        }
-                        visit(((LogicalJoin) node).getLeft(), ordinal, node);
-                        if (!convertable.get()) {
-                            return;
-                        }
-                        int leftMatchSize = matchList.size();
-                        visit(((LogicalJoin) node).getRight(), ordinal, node);
-                        if (!convertable.get()) {
-                            return;
-                        }
-                        if (joinType == JoinRelType.LEFT) {
-                            for(int i = leftMatchSize; i < matchList.size(); i++) {
-                                if (matchList.get(i) instanceof GraphLogicalSingleMatch) {
-                                    GraphLogicalSingleMatch singleMatch = (GraphLogicalSingleMatch) matchList.get(i);
-                                    matchList.set(i, GraphLogicalSingleMatch.create(
-                                            (GraphOptCluster) singleMatch.getCluster(),
-                                            ImmutableList.of(),
-                                            singleMatch.getInput(),
-                                            singleMatch.getSentence(),
-                                            GraphOpt.Match.OPTIONAL));
+        private boolean decomposeJoin(
+                LogicalJoin join, List<RelNode> matchList, List<RelNode> filterList) {
+            AtomicBoolean decomposable = new AtomicBoolean(true);
+            RelVisitor visitor =
+                    new RelVisitor() {
+                        @Override
+                        public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                            if (node instanceof LogicalJoin) {
+                                JoinRelType joinType = ((LogicalJoin) node).getJoinType();
+                                if (joinType != JoinRelType.LEFT && joinType != JoinRelType.INNER) {
+                                    decomposable.set(false);
+                                    return;
                                 }
+                                visit(((LogicalJoin) node).getLeft(), 0, node);
+                                if (!decomposable.get()) {
+                                    return;
+                                }
+                                int leftMatchSize = matchList.size();
+                                visit(((LogicalJoin) node).getRight(), 1, node);
+                                if (!decomposable.get()) {
+                                    return;
+                                }
+                                if (joinType == JoinRelType.LEFT) {
+                                    for (int i = leftMatchSize; i < matchList.size(); i++) {
+                                        if (matchList.get(i) instanceof GraphLogicalSingleMatch) {
+                                            GraphLogicalSingleMatch singleMatch =
+                                                    (GraphLogicalSingleMatch) matchList.get(i);
+                                            matchList.set(
+                                                    i,
+                                                    GraphLogicalSingleMatch.create(
+                                                            (GraphOptCluster)
+                                                                    singleMatch.getCluster(),
+                                                            ImmutableList.of(),
+                                                            singleMatch.getInput(),
+                                                            singleMatch.getSentence(),
+                                                            GraphOpt.Match.OPTIONAL));
+                                        }
+                                    }
+                                }
+                            } else if (node instanceof AbstractLogicalMatch) {
+                                matchList.add(node);
+                            } else if (node instanceof GraphLogicalSource) {
+                                matchList.add(
+                                        GraphLogicalSingleMatch.create(
+                                                (GraphOptCluster) node.getCluster(),
+                                                ImmutableList.of(),
+                                                null,
+                                                node,
+                                                GraphOpt.Match.INNER));
+                            } else if (node instanceof Filter) {
+                                filterList.add(node);
+                                visit(node.getInput(0), 0, node);
+                            } else {
+                                decomposable.set(false);
                             }
                         }
-                    } else if (node instanceof AbstractLogicalMatch) {
-                        matchList.add(node);
-                    } else {
-                        convertable.set(false);
-                    }
-                }
-            };
+                    };
             visitor.go(join);
-            return (convertable.get()) ? matchList : ImmutableList.of();
+            return decomposable.get();
         }
     }
 
@@ -205,10 +229,12 @@ public class GraphRelOptimizer {
                                 } else if (k.equals(NotMatchToAntiJoinRule.class.getSimpleName())) {
                                     ruleConfigs.add(NotMatchToAntiJoinRule.Config.DEFAULT);
                                 }
-//                                else if (k.equals(
-//                                        OptionalMatchToJoinRule.class.getSimpleName())) {
-//                                    ruleConfigs.add(OptionalMatchToJoinRule.Config.DEFAULT);
-//                                }
+                                //                                else if (k.equals(
+                                //
+                                // OptionalMatchToJoinRule.class.getSimpleName())) {
+                                //
+                                // ruleConfigs.add(OptionalMatchToJoinRule.Config.DEFAULT);
+                                //                                }
                             });
             ruleConfigs.forEach(
                     k -> {

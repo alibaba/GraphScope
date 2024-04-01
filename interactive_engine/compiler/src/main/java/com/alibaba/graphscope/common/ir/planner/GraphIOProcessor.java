@@ -132,7 +132,9 @@ public class GraphIOProcessor {
             return new GraphPattern(
                     match.getCluster(),
                     match.getTraitSet(),
-                    visit(ImmutableList.of(match.getSentence()), match.getMatchOpt() == GraphOpt.Match.OPTIONAL));
+                    visit(
+                            ImmutableList.of(match.getSentence()),
+                            match.getMatchOpt() == GraphOpt.Match.OPTIONAL));
         }
 
         @Override
@@ -144,7 +146,8 @@ public class GraphIOProcessor {
         public void build() {
             // set vertex optional: if all edges of a vertex are optional, then the vertex is
             // optional
-            inputPattern.getVertexSet()
+            inputPattern
+                    .getVertexSet()
                     .forEach(
                             k -> {
                                 if (inputPattern.getEdgesOf(k).stream()
@@ -165,13 +168,14 @@ public class GraphIOProcessor {
                             DataKey key = null;
                             if (k instanceof PatternVertex) {
                                 key =
-                                        new VertexDataKey(inputPattern.getVertexOrder((PatternVertex) k));
+                                        new VertexDataKey(
+                                                inputPattern.getVertexOrder((PatternVertex) k));
                             } else if (k instanceof PatternEdge) {
-                                int srcOrderId = inputPattern
-                                        .getVertexOrder(
+                                int srcOrderId =
+                                        inputPattern.getVertexOrder(
                                                 ((PatternEdge) k).getSrcVertex());
-                                int dstOrderId = inputPattern
-                                        .getVertexOrder(
+                                int dstOrderId =
+                                        inputPattern.getVertexOrder(
                                                 ((PatternEdge) k).getDstVertex());
                                 PatternDirection direction =
                                         ((PatternEdge) k).isBoth()
