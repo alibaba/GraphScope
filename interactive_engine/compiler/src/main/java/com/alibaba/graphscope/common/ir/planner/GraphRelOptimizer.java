@@ -23,15 +23,18 @@ import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadat
 import com.alibaba.graphscope.common.ir.planner.rules.*;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
+import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.plan.hep.HepPlanner;
@@ -39,6 +42,9 @@ import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelVisitor;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.rel.rules.FilterJoinRule;
@@ -46,6 +52,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Optimize graph relational tree which consists of match and other relational operators
@@ -125,6 +132,62 @@ public class GraphRelOptimizer {
             matchPlanner.setRoot(ioProcessor.processInput(match));
             return ioProcessor.processOutput(matchPlanner.findBestExp());
         }
+
+        @Override
+        public RelNode visit(LogicalJoin join) {
+            List<RelNode> matchList = convertJoinToMatchList(join);
+            if (matchList.isEmpty()) {
+                return super.visit(join);
+            } else {
+                matchPlanner.setRoot(ioProcessor.processInput(matchList));
+                return ioProcessor.processOutput(matchPlanner.findBestExp());
+            }
+        }
+
+        private List<RelNode> convertJoinToMatchList(LogicalJoin join) {
+            AtomicBoolean convertable = new AtomicBoolean(true);
+            List<RelNode> matchList = Lists.newArrayList();
+            RelVisitor visitor = new RelVisitor() {
+                @Override
+                public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                    if (node instanceof LogicalJoin) {
+                        JoinRelType joinType = ((LogicalJoin) node).getJoinType();
+                        if (joinType != JoinRelType.LEFT && joinType != JoinRelType.INNER) {
+                            convertable.set(false);
+                            return;
+                        }
+                        visit(((LogicalJoin) node).getLeft(), ordinal, node);
+                        if (!convertable.get()) {
+                            return;
+                        }
+                        int leftMatchSize = matchList.size();
+                        visit(((LogicalJoin) node).getRight(), ordinal, node);
+                        if (!convertable.get()) {
+                            return;
+                        }
+                        if (joinType == JoinRelType.LEFT) {
+                            for(int i = leftMatchSize; i < matchList.size(); i++) {
+                                if (matchList.get(i) instanceof GraphLogicalSingleMatch) {
+                                    GraphLogicalSingleMatch singleMatch = (GraphLogicalSingleMatch) matchList.get(i);
+                                    matchList.set(i, GraphLogicalSingleMatch.create(
+                                            (GraphOptCluster) singleMatch.getCluster(),
+                                            ImmutableList.of(),
+                                            singleMatch.getInput(),
+                                            singleMatch.getSentence(),
+                                            GraphOpt.Match.OPTIONAL));
+                                }
+                            }
+                        }
+                    } else if (node instanceof AbstractLogicalMatch) {
+                        matchList.add(node);
+                    } else {
+                        convertable.set(false);
+                    }
+                }
+            };
+            visitor.go(join);
+            return (convertable.get()) ? matchList : ImmutableList.of();
+        }
     }
 
     private RelOptPlanner createRelPlanner() {
@@ -141,10 +204,11 @@ public class GraphRelOptimizer {
                                     ruleConfigs.add(FilterMatchRule.Config.DEFAULT);
                                 } else if (k.equals(NotMatchToAntiJoinRule.class.getSimpleName())) {
                                     ruleConfigs.add(NotMatchToAntiJoinRule.Config.DEFAULT);
-                                } else if (k.equals(
-                                        OptionalMatchToJoinRule.class.getSimpleName())) {
-                                    ruleConfigs.add(OptionalMatchToJoinRule.Config.DEFAULT);
                                 }
+//                                else if (k.equals(
+//                                        OptionalMatchToJoinRule.class.getSimpleName())) {
+//                                    ruleConfigs.add(OptionalMatchToJoinRule.Config.DEFAULT);
+//                                }
                             });
             ruleConfigs.forEach(
                     k -> {

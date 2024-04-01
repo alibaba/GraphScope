@@ -87,9 +87,16 @@ public class GraphIOProcessor {
      * @return
      */
     public RelNode processInput(RelNode input) {
+        return processInput(ImmutableList.of(input));
+    }
+
+    public RelNode processInput(List<RelNode> inputs) {
         InputConvertor convertor = new InputConvertor();
-        RelNode processed = input.accept(convertor);
-        convertor.buildGraphDetails();
+        RelNode processed = null;
+        for (RelNode input : inputs) {
+            processed = input.accept(convertor);
+        }
+        convertor.build();
         return processed;
     }
 
@@ -102,10 +109,6 @@ public class GraphIOProcessor {
         return output.accept(new OutputConvertor());
     }
 
-    public Map<DataKey, DataValue> getGraphDetails() {
-        return Collections.unmodifiableMap(this.graphDetails);
-    }
-
     public GraphBuilder getBuilder() {
         return builder;
     }
@@ -114,33 +117,61 @@ public class GraphIOProcessor {
         private final Map<String, PatternVertex> aliasNameToVertex;
         private final AtomicInteger idGenerator;
         private final Map<Object, DataValue> vertexOrEdgeDetails;
-        @Nullable private Pattern finalPattern;
+        private final Pattern inputPattern;
 
         public InputConvertor() {
             this.aliasNameToVertex = Maps.newHashMap();
             this.idGenerator = new AtomicInteger(0);
             this.vertexOrEdgeDetails = Maps.newHashMap();
-            this.finalPattern = null;
+            this.inputPattern = new Pattern();
+            this.inputPattern.setPatternId(UUID.randomUUID().hashCode());
         }
 
-        public void buildGraphDetails() {
+        @Override
+        public RelNode visit(GraphLogicalSingleMatch match) {
+            return new GraphPattern(
+                    match.getCluster(),
+                    match.getTraitSet(),
+                    visit(ImmutableList.of(match.getSentence()), match.getMatchOpt() == GraphOpt.Match.OPTIONAL));
+        }
+
+        @Override
+        public RelNode visit(GraphLogicalMultiMatch match) {
+            return new GraphPattern(
+                    match.getCluster(), match.getTraitSet(), visit(match.getSentences(), false));
+        }
+
+        public void build() {
+            // set vertex optional: if all edges of a vertex are optional, then the vertex is
+            // optional
+            inputPattern.getVertexSet()
+                    .forEach(
+                            k -> {
+                                if (inputPattern.getEdgesOf(k).stream()
+                                        .allMatch(e -> e.getElementDetails().isOptional())) {
+                                    k.getElementDetails().setOptional(true);
+                                }
+                            });
+            inputPattern.reordering();
+            checkPattern(inputPattern);
+
+            // set graph details
             if (!graphDetails.isEmpty()) {
                 graphDetails.clear();
             }
-            if (this.finalPattern != null && !vertexOrEdgeDetails.isEmpty()) {
+            if (inputPattern != null && !vertexOrEdgeDetails.isEmpty()) {
                 vertexOrEdgeDetails.forEach(
                         (k, v) -> {
                             DataKey key = null;
                             if (k instanceof PatternVertex) {
                                 key =
-                                        new VertexDataKey(
-                                                finalPattern.getVertexOrder((PatternVertex) k));
+                                        new VertexDataKey(inputPattern.getVertexOrder((PatternVertex) k));
                             } else if (k instanceof PatternEdge) {
-                                int srcOrderId =
-                                        finalPattern.getVertexOrder(
+                                int srcOrderId = inputPattern
+                                        .getVertexOrder(
                                                 ((PatternEdge) k).getSrcVertex());
-                                int dstOrderId =
-                                        finalPattern.getVertexOrder(
+                                int dstOrderId = inputPattern
+                                        .getVertexOrder(
                                                 ((PatternEdge) k).getDstVertex());
                                 PatternDirection direction =
                                         ((PatternEdge) k).isBoth()
@@ -153,53 +184,7 @@ public class GraphIOProcessor {
             }
         }
 
-        @Override
-        public RelNode visit(GraphLogicalMultiMatch match) {
-            Pattern childPattern;
-            if (match.getInputs().isEmpty()) {
-                childPattern = new Pattern();
-                childPattern.setPatternId(UUID.randomUUID().hashCode());
-            } else {
-                RelNode child = visitChildren(match).getInput(0);
-                if (child instanceof GraphPattern) {
-                    childPattern = ((GraphPattern) child).getPattern();
-                } else {
-                    // todo: support partial computation
-                    throw new UnsupportedOperationException(
-                            "there are relational operations between match operations, which is"
-                                    + " unsupported yet");
-                }
-            }
-            this.finalPattern = visit(match.getSentences(), false, childPattern);
-            return new GraphPattern(match.getCluster(), match.getTraitSet(), this.finalPattern);
-        }
-
-        @Override
-        public RelNode visit(GraphLogicalSingleMatch match) {
-            Pattern childPattern;
-            if (match.getInputs().isEmpty()) {
-                childPattern = new Pattern();
-                childPattern.setPatternId(UUID.randomUUID().hashCode());
-            } else {
-                RelNode child = visitChildren(match).getInput(0);
-                if (child instanceof GraphPattern) {
-                    childPattern = ((GraphPattern) child).getPattern();
-                } else {
-                    // todo: support partial computation
-                    throw new UnsupportedOperationException(
-                            "there are relational operations between match operations, which is"
-                                    + " unsupported yet");
-                }
-            }
-            this.finalPattern =
-                    visit(
-                            ImmutableList.of(match.getSentence()),
-                            match.getMatchOpt() == GraphOpt.Match.OPTIONAL,
-                            childPattern);
-            return new GraphPattern(match.getCluster(), match.getTraitSet(), this.finalPattern);
-        }
-
-        private Pattern visit(List<RelNode> sentences, boolean optional, final Pattern pattern) {
+        private Pattern visit(List<RelNode> sentences, boolean optional) {
             RelVisitor visitor =
                     new RelVisitor() {
                         PatternVertex lastVisited = null;
@@ -269,7 +254,7 @@ public class GraphIOProcessor {
                                                         typeIds,
                                                         vertexId,
                                                         new ElementDetails(selectivity));
-                                pattern.addVertex(existVertex);
+                                inputPattern.addVertex(existVertex);
                                 if (alias != AliasInference.DEFAULT_NAME) {
                                     aliasNameToVertex.put(alias, existVertex);
                                 }
@@ -306,7 +291,7 @@ public class GraphIOProcessor {
                                     dst = left;
                             }
                             PatternEdge edge = visitEdge(expand, src, dst);
-                            pattern.addEdge(src, dst, edge);
+                            inputPattern.addEdge(src, dst, edge);
                             vertexOrEdgeDetails.put(
                                     edge, new DataValue(expand.getAliasName(), getFilters(expand)));
                             return edge;
@@ -362,7 +347,7 @@ public class GraphIOProcessor {
                                                     expandEdge.getId(),
                                                     expandEdge.isBoth(),
                                                     newDetails);
-                            pattern.addEdge(src, dst, expandEdge);
+                            inputPattern.addEdge(src, dst, expandEdge);
                             vertexOrEdgeDetails.put(
                                     expandEdge,
                                     new DataValue(pxd.getAliasName(), getFilters(expand)));
@@ -399,19 +384,7 @@ public class GraphIOProcessor {
             for (RelNode sentence : sentences) {
                 visitor.go(sentence);
             }
-            // set vertex optional: if all edges of a vertex are optional, then the vertex is
-            // optional
-            pattern.getVertexSet()
-                    .forEach(
-                            k -> {
-                                if (pattern.getEdgesOf(k).stream()
-                                        .allMatch(e -> e.getElementDetails().isOptional())) {
-                                    k.getElementDetails().setOptional(true);
-                                }
-                            });
-            pattern.reordering();
-            checkPattern(pattern);
-            return pattern;
+            return inputPattern;
         }
 
         private @Nullable RexNode getFilters(AbstractBindableTableScan tableScan) {

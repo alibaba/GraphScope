@@ -427,4 +427,10 @@ public class MatchTest {
                         + "]}])",
                 node.explain().trim());
     }
+
+    @Test
+    public void join_type_test() {
+        RelNode node = Utils.eval("Match (a:person) Optional Match (a)-[]->(b:person) Return a, b").build();
+        System.out.println(node.getInput(0).getRowType());
+    }
 }
