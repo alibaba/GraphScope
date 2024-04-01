@@ -1,6 +1,6 @@
 MATCH(p:PERSON {id: $personId}) <-[:HASCREATOR] -(msg : POST | COMMENT) <- [:REPLYOF] - (cmt: COMMENT) - [:HASCREATOR] -> (author : PERSON)
 WITH
-    p, msg, cmt, author 
+    cmt, author 
 ORDER BY 
     cmt.creationDate DESC, 
     cmt.id ASC 

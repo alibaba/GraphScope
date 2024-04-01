@@ -255,21 +255,25 @@ void encode_ic12_result(const results::CollectiveResults& ic12_result,
   LOG(INFO) << "encode_ic12_result: " << ic12_result.DebugString();
   for (int32_t i = 0; i < ic12_result.results_size(); ++i) {
     auto& result = ic12_result.results(i);
-    // const auto& personId =
-    //     result.record().columns(0).entry().element().object().i64();
-    // const auto& personFirstName =
-    //     result.record().columns(1).entry().element().object().str();
-    // const auto& personLastName =
-    //     result.record().columns(2).entry().element().object().str();
-    // const auto& tagNames =
-    //     result.record().columns(3).entry().element().object().str();
-    // const auto& replyCount =
-    //     result.record().columns(4).entry().element().object().i32();
-    // encoder.put_long(personId);
-    // encoder.put_string_view(personFirstName);
-    // encoder.put_string_view(personLastName);
-    // encoder.put_string_view(tagNames);
-    // encoder.put_int(replyCount);
+    const auto& personId =
+        result.record().columns(0).entry().element().object().i64();
+    const auto& personFirstName =
+        result.record().columns(1).entry().element().object().str();
+    const auto& personLastName =
+        result.record().columns(2).entry().element().object().str();
+    encoder.put_long(personId);
+    encoder.put_string_view(personFirstName);
+    encoder.put_string_view(personLastName);
+
+    const auto& tagNames = result.record().columns(3).entry().collection();
+    encoder.put_int(tagNames.collection_size());
+    for (int32_t i = 0; i < tagNames.collection_size(); ++i) {
+      const auto& tagName = tagNames.collection(i).object().str();
+      encoder.put_string_view(tagName);
+    }
+    const auto& replyCount =
+        result.record().columns(4).entry().element().object().i64();
+    encoder.put_int(replyCount);
   }
 }
 

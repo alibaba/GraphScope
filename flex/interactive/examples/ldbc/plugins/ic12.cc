@@ -45,18 +45,14 @@ class Query0 : public AppBase {
         Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
             graph, std::move(ctx0), std::move(edge_expand_opt0));
 
-    auto edge_expand_opt1 = gs::make_edge_expand_multiv_opt(
-        gs::Direction::In, std::vector<std::array<label_id_t, 3>>{
-                               std::array<label_id_t, 3>{2, 1, 0},
-                               std::array<label_id_t, 3>{3, 1, 0}});
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
+        gs::Direction::In, (label_id_t) 0, (label_id_t) 2);
     auto ctx2 =
         Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(1)>(
             graph, std::move(ctx1), std::move(edge_expand_opt1));
 
-    auto edge_expand_opt2 = gs::make_edge_expand_multiv_opt(
-        gs::Direction::Out, std::vector<std::array<label_id_t, 3>>{
-                                std::array<label_id_t, 3>{2, 2, 2},
-                                std::array<label_id_t, 3>{2, 3, 2}});
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
+        gs::Direction::Out, (label_id_t) 2, (label_id_t) 3);
     auto ctx3 =
         Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(2)>(
             graph, std::move(ctx2), std::move(edge_expand_opt2));
@@ -73,33 +69,36 @@ class Query0 : public AppBase {
         Engine::template EdgeExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(4)>(
             graph, std::move(ctx4), std::move(edge_expand_opt4));
 
-    auto edge_expand_opt5 = gs::make_edge_expandv_opt(
+    auto edge_expand_opt6 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 13, (label_id_t) 6);
-    auto ctx6 =
-        Engine::template EdgeExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(5)>(
-            graph, std::move(ctx5), std::move(edge_expand_opt5));
 
+    auto get_v_opt5 = make_getv_opt(gs::VOpt::Other,
+                                    std::array<label_id_t, 1>{(label_id_t) 6});
+
+    auto path_opt7 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt6), std::move(get_v_opt5), gs::Range(0, 10));
+    auto ctx6 = Engine::PathExpandV<gs::AppendOpt::Temp, INPUT_COL_ID(5)>(
+        graph, std::move(ctx5), std::move(path_opt7));
     auto expr6 =
         gs::make_filter(Query0expr1(tagClassName),
                         gs::PropertySelector<std::string_view>("name"));
-    auto get_v_opt6 = make_getv_opt(gs::VOpt::Itself,
-                                    std::array<label_id_t, 1>{(label_id_t) 6},
-                                    std::move(expr6));
+    auto get_v_opt8 = make_getv_opt(
+        gs::VOpt::Itself, std::array<label_id_t, 0>{}, std::move(expr6));
     auto ctx7 = Engine::template GetV<gs::AppendOpt::Temp, INPUT_COL_ID(-1)>(
-        graph, std::move(ctx6), std::move(get_v_opt6));
-    GroupKey<1, grape::EmptyType> group_key7(
+        graph, std::move(ctx6), std::move(get_v_opt8));
+    GroupKey<1, grape::EmptyType> group_key9(
         gs::PropertySelector<grape::EmptyType>("None"));
 
-    auto agg_func8 = gs::make_aggregate_prop<gs::AggFunc::TO_SET>(
+    auto agg_func10 = gs::make_aggregate_prop<gs::AggFunc::TO_SET>(
         std::tuple{gs::PropertySelector<std::string_view>("name")},
         std::integer_sequence<int32_t, 4>{});
 
-    auto agg_func9 = gs::make_aggregate_prop<gs::AggFunc::COUNT_DISTINCT>(
+    auto agg_func11 = gs::make_aggregate_prop<gs::AggFunc::COUNT_DISTINCT>(
         std::tuple{gs::PropertySelector<grape::EmptyType>("None")},
         std::integer_sequence<int32_t, 2>{});
 
-    auto ctx8 = Engine::GroupBy(graph, std::move(ctx7), std::tuple{group_key7},
-                                std::tuple{agg_func8, agg_func9});
+    auto ctx8 = Engine::GroupBy(graph, std::move(ctx7), std::tuple{group_key9},
+                                std::tuple{agg_func10, agg_func11});
     auto ctx9 = Engine::Sort(
         graph, std::move(ctx8), gs::Range(0, 20),
         std::tuple{gs::OrderingPropPair<gs::SortOrder::DESC, 2, int64_t>(""),

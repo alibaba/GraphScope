@@ -20,6 +20,7 @@
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
 #include "flex/engines/hqps_db/structures/collection.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/adj_edge_set.h"
+#include "flex/engines/hqps_db/structures/multi_edge_set/flat_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/keyed_row_vertex_set.h"
@@ -193,6 +194,26 @@ struct KeyedT<GeneralVertexSet<VID_T, LabelT, T...>,
 
 template <typename T>
 struct KeyedT<Collection<T>, PropertySelector<grape::EmptyType>> {
+  using keyed_set_t = Collection<T>;
+  // // The builder type.
+  using keyed_builder_t = KeyedCollectionBuilder<T>;
+  using unkeyed_builder_t = CollectionBuilder<T>;
+
+  static keyed_builder_t create_keyed_builder(
+      const Collection<T>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return keyed_builder_t(set);
+  }
+  static unkeyed_builder_t create_unkeyed_builder(
+      const Collection<T>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return unkeyed_builder_t();
+  }
+};
+
+template <typename VID_T, typename LabelT, typename EDATA_T>
+struct KeyedT<SingleLabelEdgeSet<VID_T, LabelT, EDATA_T,
+                                 PropertySelector<grape::EmptyType>>> {
   using keyed_set_t = Collection<T>;
   // // The builder type.
   using keyed_builder_t = KeyedCollectionBuilder<T>;

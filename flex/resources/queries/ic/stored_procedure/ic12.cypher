@@ -1,5 +1,5 @@
 MATCH 
-    (unused:PERSON {id: $personId })-[:KNOWS]-(friend:PERSON)<-[:HASCREATOR]-(comments:COMMENT)-[:REPLYOF]->(:POST)-[:HASTAG]->(tags:TAG)-[:HASTYPE]->(:TAGCLASS)-[:ISSUBCLASSOF*0..10]->(:TAGCLASS {name: $tagClassName})
+    (unused:PERSON {id: $personId })-[:KNOWS]-(friend:PERSON)<-[:HASCREATOR]-(comments:COMMENT)-[:REPLYOF]->(:POST)-[:HASTAG]->(tags:TAG)-[:HASTYPE]->(:TAGCLASS)-[:ISSUBCLASSOF*0..1000]->(:TAGCLASS {name: $tagClassName})
 WITH 
     friend AS friend, 
     collect(DISTINCT tags.name) AS tagNames, 

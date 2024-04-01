@@ -701,6 +701,7 @@ template <typename VID_T, typename LabelT, typename EDATA_T>
 class SingleLabelEdgeSet {
  public:
   using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T, Direction>;
+  using element_type = ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using iterator = SingleLabelEdgeSetIter<VID_T, LabelT, EDATA_T>;
   using self_type_t = SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>;
@@ -742,7 +743,7 @@ class SingleLabelEdgeSet {
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
-    std::vector<std::tuple<VID_T, VID_T, std::tuple<EDATA_T>>> res;
+    std::vector<std::tuple<VID_T, VID_T, EDATA_T, Direction>> res;
     res.reserve(index_ele_tuple.size());
     for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
