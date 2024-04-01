@@ -40,10 +40,10 @@ public class ExpandTest {
                                         new LabelConfig(false).addLabel("knows")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[DEFAULT],"
+                "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 expand.explain().trim());
     }
 
@@ -66,7 +66,7 @@ public class ExpandTest {
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[x],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 expand.explain().trim());
     }
 
@@ -105,13 +105,13 @@ public class ExpandTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + " alias=[_], fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                        + " alias=[DEFAULT])\n"
+                        + " alias=[_])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 pathExpand.explain().trim());
     }
 
@@ -140,7 +140,7 @@ public class ExpandTest {
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
                         + " startAlias=[a], opt=[OUT])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 expand.explain().trim());
@@ -178,13 +178,13 @@ public class ExpandTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[ARBITRARY], result_opt=[END_V],"
-                        + " alias=[DEFAULT], start_alias=[a])\n"
+                        + " alias=[_], start_alias=[a])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 expand.explain().trim());

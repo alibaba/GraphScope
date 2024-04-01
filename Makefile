@@ -78,7 +78,7 @@ clean:
 
 client: learning
 	cd $(CLIENT_DIR) && \
-	python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+	python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 	python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	export PATH=$(PATH):$(HOME)/.local/bin && \
 	python3 setup.py build_ext --inplace --user && \
@@ -90,7 +90,7 @@ client: learning
 
 coordinator: client
 	cd $(COORDINATOR_DIR) && \
-	python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+	python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 	python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin && \
 	python3 -m pip install --user --editable $(COORDINATOR_DIR) && \
@@ -174,7 +174,7 @@ $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX):
 
 prepare-client:
 	cd $(CLIENT_DIR) && \
-	pip3 install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+	pip3 install ${PIP_ARGS} "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 	pip3 install ${PIP_ARGS} -r requirements.txt --user && \
 	pip3 install ${PIP_ARGS} -r requirements-dev.txt --user && \
 	python3 setup.py build_proto

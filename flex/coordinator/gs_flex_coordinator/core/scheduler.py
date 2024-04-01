@@ -24,9 +24,10 @@ from abc import ABCMeta, abstractmethod
 from string import ascii_uppercase
 
 import schedule
+from schedule import CancelJob
+
 from gs_flex_coordinator.core.stoppable_thread import StoppableThread
 from gs_flex_coordinator.core.utils import decode_datetimestr
-from schedule import CancelJob
 
 
 class Schedule(object):
@@ -77,7 +78,7 @@ class Scheduler(metaclass=ABCMeta):
         # time at which this job to schedule
         self._at_time = self._decode_datetimestr(at_time)
         # repeat every day or week, or run job once(no repeat)
-        # optional value "day", "week", "null"
+        # optional value "day", "week", "once"
         self._repeat = repeat
         # job running thread, note that:
         # the last job should be end of execution at the beginning of the next job
@@ -184,7 +185,7 @@ class Scheduler(metaclass=ABCMeta):
         self._running_thread.start()
 
     def submit(self):
-        if not self._run_now and self._repeat not in ["week", "day", "null", None]:
+        if not self._run_now and self._repeat not in ["week", "day", "once", None]:
             raise RuntimeError(
                 "Submit schedule job failed: at_time is '{0}', repeat is '{1}'".format(
                     self._at_time, self._repeat
@@ -213,7 +214,7 @@ class Scheduler(metaclass=ABCMeta):
         if not self._run_now and self._repeat == "day":
             self._job = schedule.every().day.at(self.timestr).do(self.do_run)
 
-        if not self._run_now and self._repeat in ["null", None]:
+        if not self._run_now and self._repeat in ["once", None]:
             self._job = (
                 schedule.every().day.at(self.timestr).do(self.waiting_until_to_run)
             )
@@ -225,14 +226,26 @@ class Scheduler(metaclass=ABCMeta):
         """Submit and schedule the job."""
         self.submit()
 
-    def cancel(self):
+    def cancel(self, wait=False):
         """
         Set the running job thread stoppable and wait for the
         thread to exit properly by using join() method.
+
+        Args:
+            wait: Whether to wait for the wait to exit properly.
         """
         if self._running_thread is not None and self._running_thread.is_alive():
             self._running_thread.stop()
-            self._running_thread.join()
+            if wait:
+                self._running_thread.join()
+
+    def stopped(self):
+        """
+        Check the stoppable flag of the current thread.
+        """
+        if self._running_thread is None:
+            return True
+        return self._running_thread.stopped()
 
     @abstractmethod
     def run(self):

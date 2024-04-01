@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.CRC32;
@@ -56,64 +58,60 @@ public class FileMetaStore implements MetaStore {
 
     @Override
     public boolean exists(String path) {
-        String realPath = pathWith(path, 0);
-        return Files.exists(new File(this.workingDir, realPath).toPath());
+        File file0 = new File(workingDir, pathWith(path, 0));
+        File file1 = new File(workingDir, pathWith(path, 1));
+        return file0.exists() || file1.exists();
+    }
+
+    private SimpleImmutableEntry<Long, byte[]> readEntry(String path) throws IOException {
+        File file = new File(this.workingDir, path);
+        long timestamp = 0;
+        byte[] res = null;
+        if (file.exists()) {
+            try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+                DataInputStream dataInputStream = new DataInputStream(is);
+                long crc = dataInputStream.readLong();
+                timestamp = dataInputStream.readLong();
+                int length = dataInputStream.readInt();
+                res = new byte[length];
+                int ignored = is.read(res);
+                long realCrc = getCRC32Checksum(res);
+                if (realCrc != crc) {
+                    throw new IOException("Checksum mismatch for " + file.getAbsolutePath());
+                }
+            }
+        }
+        return new SimpleImmutableEntry<>(timestamp, res);
     }
 
     @Override
     public byte[] read(String path) throws IOException {
-        File file0 = new File(this.workingDir, pathWith(path, 0));
-        File file1 = new File(this.workingDir, pathWith(path, 1));
-        byte[] res;
-        long timestamp0;
-        try (InputStream is = new BufferedInputStream(new FileInputStream(file0))) {
-            DataInputStream dataInputStream = new DataInputStream(is);
-            long crc = dataInputStream.readLong();
-            timestamp0 = dataInputStream.readLong();
-            int length0 = dataInputStream.readInt();
-            res = new byte[length0];
-            is.read(res);
-            long realCrc = getCRC32Checksum(res);
-            if (realCrc != crc) {
-                logger.error(
-                        "checksum [{}] is [{}] versus [{}]", file0.getAbsolutePath(), realCrc, crc);
-                res = null;
-            }
+        long timestamp0 = 0, timestamp1 = 0;
+        byte[] res0 = null, res1 = null;
+        String file0 = pathWith(path, 0), file1 = pathWith(path, 1);
+        try {
+            SimpleImmutableEntry<Long, byte[]> stat = readEntry(file0);
+            timestamp0 = stat.getKey();
+            res0 = stat.getValue();
+        } catch (Exception e) {
+            logger.error("Failed to read {}", file0, e);
         }
-        if (!file1.exists()) {
-            if (res != null) {
-                return res;
-            } else {
-                throw new IOException("file0 checksum failed and file1 not exists");
-            }
+        try {
+            SimpleImmutableEntry<Long, byte[]> stat = readEntry(file1);
+            timestamp1 = stat.getKey();
+            res1 = stat.getValue();
+        } catch (Exception e) {
+            logger.error("Failed to read {}", file1, e);
+        }
+
+        if (res0 != null && res1 != null) {
+            return timestamp0 > timestamp1 ? res0 : res1;
+        } else if (res0 != null) {
+            return res0;
+        } else if (res1 != null) {
+            return res1;
         } else {
-            try (InputStream is = new BufferedInputStream(new FileInputStream(file1))) {
-                DataInputStream dataInputStream = new DataInputStream(is);
-                long crc = dataInputStream.readLong();
-                long timestamp1 = dataInputStream.readLong();
-                if (timestamp1 <= timestamp0) {
-                    if (res != null) {
-                        return res;
-                    } else {
-                        throw new IOException("file0 checksum failed, file1 has old data");
-                    }
-                }
-                int length1 = dataInputStream.readInt();
-                res = new byte[length1];
-                is.read(res);
-                long realCrc = getCRC32Checksum(res);
-                if (realCrc != crc) {
-                    throw new IOException(
-                            "checksum of file ["
-                                    + file1.getAbsolutePath()
-                                    + "] is ["
-                                    + realCrc
-                                    + "], expected ["
-                                    + crc
-                                    + "]");
-                }
-                return res;
-            }
+            throw new IOException("File maybe corrupted: " + path);
         }
     }
 
@@ -124,14 +122,18 @@ public class FileMetaStore implements MetaStore {
             suffix = 0;
         }
         pathToSuffix.put(path, 1 - suffix);
-        File file = new File(this.workingDir, pathWith(path, suffix));
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+        String pathWithSuffix = pathWith(path, suffix);
+        String tmpPath = pathWithSuffix + ".tmp";
+        File file = new File(workingDir, pathWithSuffix);
+        File tmpFile = new File(workingDir, tmpPath);
+        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(tmpFile))) {
             DataOutputStream dos = new DataOutputStream(os);
             dos.writeLong(getCRC32Checksum(content));
             dos.writeLong(System.currentTimeMillis());
             dos.writeInt(content.length);
             os.write(content);
         }
+        Files.move(tmpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override

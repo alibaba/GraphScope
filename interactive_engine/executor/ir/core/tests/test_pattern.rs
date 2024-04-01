@@ -320,13 +320,13 @@ mod tests {
                     .len(),
                 1
             );
-            // 1 Comment vertex
+            // 3 Comment vertex
             assert_eq!(
                 pattern
                     .vertices_iter_by_label(2)
                     .collect::<Vec<&PatternVertex>>()
                     .len(),
-                1
+                3
             );
             // 1 has creator edge
             assert_eq!(

@@ -149,7 +149,9 @@ int main(int argc, char** argv) {
                                    bpo::value<unsigned>()->default_value(2),
                                    "worker thread number")(
       "enable-trace", bpo::value<bool>()->default_value(false),
-      "whether to enable opentelemetry tracing");
+      "whether to enable opentelemetry tracing")(
+      "start-compiler", bpo::value<bool>()->default_value(false),
+      "whether or not to start compiler");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -179,6 +181,7 @@ int main(int argc, char** argv) {
   server::ServiceConfig service_config = node.as<server::ServiceConfig>();
   service_config.engine_config_path = engine_config_file;
   service_config.start_admin_service = vm["enable-admin-service"].as<bool>();
+  service_config.start_compiler = vm["start-compiler"].as<bool>();
 
   auto& db = gs::GraphDB::get();
 

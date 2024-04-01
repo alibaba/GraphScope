@@ -59,11 +59,7 @@ public class GaiaEngine implements ExecutorEngine {
     @Override
     public void init() {
         Configs engineConfigs =
-                Configs.newBuilder(this.configs)
-                        .put(
-                                "worker.num",
-                                String.valueOf(CommonConfig.STORE_NODE_COUNT.get(this.configs)))
-                        .build();
+                Configs.newBuilder(configs).put("worker.num", String.valueOf(nodeCount)).build();
         byte[] configBytes = engineConfigs.toProto().toByteArray();
         this.pointer = GaiaLibrary.INSTANCE.initialize(configBytes, configBytes.length);
     }
@@ -108,10 +104,17 @@ public class GaiaEngine implements ExecutorEngine {
     @Override
     public void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes) {
         if (role == RoleType.GAIA_ENGINE) {
-            this.engineNodes.putAll(nodes);
+            for (Map.Entry<Integer, GrootNode> entry : nodes.entrySet()) {
+                GrootNode node = entry.getValue();
+                if (node.getRoleName().equals(RoleType.GAIA_ENGINE.getName())) {
+                    this.engineNodes.put(entry.getKey(), node);
+                } else {
+                    logger.warn("Unexpected node joined: {}", node);
+                }
+            }
             if (this.engineNodes.size() == this.nodeCount) {
                 String peerViewString =
-                        nodes.values().stream()
+                        engineNodes.values().stream()
                                 .map(
                                         n ->
                                                 String.format(

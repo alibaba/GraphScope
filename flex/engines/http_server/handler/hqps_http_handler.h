@@ -34,6 +34,8 @@ class hqps_ic_handler : public seastar::httpd::handler_base {
 
   seastar::future<> cancel_current_scope();
 
+  bool is_current_scope_cancelled() const;
+
   seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
@@ -45,6 +47,7 @@ class hqps_ic_handler : public seastar::httpd::handler_base {
   const uint32_t shard_concurrency_;
   uint32_t executor_idx_;
   std::vector<executor_ref> executor_refs_;
+  bool is_cancelled_;
 };
 
 class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
@@ -57,6 +60,8 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
   ~hqps_adhoc_query_handler() override;
 
   seastar::future<> cancel_current_scope();
+
+  bool is_current_scope_cancelled() const;
 
   bool create_actors();
 
@@ -72,6 +77,7 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
   uint32_t executor_idx_;
   std::vector<executor_ref> executor_refs_;
   std::vector<codegen_actor_ref> codegen_actor_refs_;
+  bool is_cancelled_;
 };
 
 class hqps_exit_handler : public seastar::httpd::handler_base {
@@ -93,6 +99,8 @@ class hqps_http_handler {
   uint16_t get_port() const;
 
   bool is_running() const;
+
+  bool is_actors_running() const;
 
   seastar::future<> stop_query_actors();
 

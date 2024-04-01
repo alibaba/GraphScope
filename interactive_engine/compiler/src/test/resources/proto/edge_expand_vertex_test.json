@@ -45,30 +45,24 @@
             "id": 0
           }],
           "sampleRatio": 1.0
-        }
+        },
+        "alias": 0
       }
     },
     "metaData": [{
       "type": {
         "graphType": {
+          "elementOpt": "EDGE",
           "graphDataType": [{
             "label": {
+              "srcLabel": 0,
+              "dstLabel": 0
             },
             "props": [{
               "propId": {
-                "name": "id"
+                "name": "weight"
               },
-              "type": "INT64"
-            }, {
-              "propId": {
-                "name": "name"
-              },
-              "type": "STRING"
-            }, {
-              "propId": {
-                "name": "age"
-              },
-              "type": "INT32"
+              "type": "DOUBLE"
             }]
           }]
         }

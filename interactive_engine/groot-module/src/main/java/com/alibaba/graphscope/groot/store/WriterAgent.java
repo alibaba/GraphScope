@@ -22,6 +22,7 @@ import com.alibaba.graphscope.groot.metrics.AvgMetric;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,7 @@ public class WriterAgent implements MetricsAgent {
     private final int queueCount;
     private final StoreService storeService;
     private final MetaService metaService;
-    private final SnapshotCommitter snapshotCommitter;
+    private final RoleClients<SnapshotCommitClient> snapshotCommitter;
 
     private volatile boolean shouldStop = true;
     private SnapshotSortQueue bufferQueue;
@@ -78,7 +79,7 @@ public class WriterAgent implements MetricsAgent {
             Configs configs,
             StoreService storeService,
             MetaService metaService,
-            SnapshotCommitter snapshotCommitter,
+            RoleClients<SnapshotCommitClient> snapshotCommitter,
             MetricsCollector metricsCollector) {
         this.configs = configs;
         this.storeId = CommonConfig.NODE_IDX.get(configs);
@@ -91,15 +92,11 @@ public class WriterAgent implements MetricsAgent {
         metricsCollector.register(this, this::updateMetrics);
     }
 
-    /** should be called once, before start */
-    public void init(long availSnapshotId) {
-        this.availSnapshotInfoRef.set(new SnapshotInfo(availSnapshotId, availSnapshotId));
-    }
-
     public void start() {
         this.lastCommitSI = -1L;
         this.consumeSI = 0L;
         this.consumeDdlSnapshotId = 0L;
+        this.availSnapshotInfoRef.set(new SnapshotInfo(0, 0));
 
         this.shouldStop = false;
         this.bufferQueue = new SnapshotSortQueue(this.configs, this.metaService);
@@ -222,8 +219,9 @@ public class WriterAgent implements MetricsAgent {
             List<Long> queueOffsets = new ArrayList<>(this.consumedQueueOffsets);
             try {
                 // logger.info("commit SI {}, last DDL SI {}", availSnapshotId, ddlSnapshotId);
-                this.snapshotCommitter.commitSnapshotId(
-                        storeId, curSI, ddlSnapshotId, queueOffsets);
+                this.snapshotCommitter
+                        .getClient(0)
+                        .commitSnapshotId(storeId, curSI, ddlSnapshotId, queueOffsets);
                 this.lastCommitSI = curSI;
             } catch (Exception e) {
                 logger.warn("commit failed. SI {}, offset {}. ignored", curSI, queueOffsets, e);

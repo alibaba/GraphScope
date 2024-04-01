@@ -1042,3 +1042,17 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/node/status"
 #### Status Codes
 - `200 OK`: Request successful.
 - `500 Internal Error`: Server internal Error.
+
+## Enable AdminService in development
+
+To start admin service in development, use the command line argument `--enable-admin-service true`. `${ENGINE_CONFIG}` specifies the configuration for interactive query engine, see [engine-configuration](https://graphscope.io/docs/flex/interactive/configuration). `${WORKSPACE}` points to the directory where interactive related data is maintaned.
+
+```bash
+./bin/interactive_server -c ${ENGINE_CONFIG} -w ${WORKSPACE} --enable-admin-service true
+```
+
+### Start Compiler Service
+The Compiler service could be started as a subprocess of the AdminService. This ensures that when switching graphs in the AdminService, the Compiler service also switches to the corresponding graph's schema. This is the default behavior in the current Interactive.
+
+```bash
+./bin/interactive_server -c ${ENGINE_CONFIG} -w ${WORKSPACE} --enable-admin-service true --start-compiler true

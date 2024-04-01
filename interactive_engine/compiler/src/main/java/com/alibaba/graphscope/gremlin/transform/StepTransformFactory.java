@@ -54,6 +54,7 @@ import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.javatuples.Pair;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -664,10 +665,14 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             return ArgUtils.asConst((Integer) id);
                                         } else if (id instanceof Long) {
                                             return ArgUtils.asConst((Long) id);
+                                        } else if (id instanceof BigInteger) {
+                                            return ArgUtils.asConst(((BigInteger) id).longValue());
                                         } else {
                                             throw new OpArgIllegalException(
                                                     OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                                    "unimplemented yet");
+                                                    "can not convert const ["
+                                                            + id
+                                                            + "] to any type of FfiConst");
                                         }
                                     })
                             .collect(Collectors.toList());
