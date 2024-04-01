@@ -67,12 +67,22 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         + " should be consistent with output type "
                         + outputType.getFieldCount());
         List<AnyValue> columns = new ArrayList<>(record.getColumnsCount());
-        for (int i = 0; i < record.getColumnsCount(); i++) {
-            IrResult.Column column = record.getColumns(i);
-            RelDataTypeField field = outputType.getFieldList().get(i);
+        for (RelDataTypeField field : outputType.getFieldList()) {
+            IrResult.Column column = getColumn(record, field);
             columns.add(parseEntry(column.getEntry(), field.getType()));
         }
         return columns;
+    }
+
+    private IrResult.Column getColumn(IrResult.Record record, RelDataTypeField field) {
+        int aliasId = field.getIndex();
+        for (IrResult.Column column : record.getColumnsList()) {
+            if (column.getNameOrId().getId() == aliasId) {
+                return column;
+            }
+        }
+        throw new IllegalArgumentException(
+                "column with alias id " + aliasId + " not found in record " + record);
     }
 
     @Override
