@@ -31,10 +31,13 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 import java.util.Objects;
+
+import javax.annotation.Nullable;
 
 public class GraphPhysicalGetV extends SingleRel {
     private final GraphOpt.PhysicalGetVOpt physicalOpt;
@@ -98,6 +101,10 @@ public class GraphPhysicalGetV extends SingleRel {
         return fusedGetV;
     }
 
+    public @Nullable ImmutableList<RexNode> getFilters() {
+        return fusedGetV.getFilters();
+    }
+
     @Override
     public List<RelNode> getInputs() {
         return this.input == null ? ImmutableList.of() : ImmutableList.of(this.input);
@@ -115,7 +122,7 @@ public class GraphPhysicalGetV extends SingleRel {
                 .item("alias", AliasInference.SIMPLE_NAME(fusedGetV.getAliasName()))
                 .itemIf(
                         "startAlias",
-                        fusedGetV.getStartAlias(),
+                        fusedGetV.getStartAlias().getAliasName(),
                         fusedGetV.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
                 .itemIf(
                         "fusedFilter",

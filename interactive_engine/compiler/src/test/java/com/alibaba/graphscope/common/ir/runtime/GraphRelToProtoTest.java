@@ -18,6 +18,8 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
@@ -30,6 +32,7 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.ir.tools.config.PathExpandConfig;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,6 +47,7 @@ import org.junit.Test;
 import java.util.Collections;
 
 public class GraphRelToProtoTest {
+
     @Test
     public void scan_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -1083,6 +1087,73 @@ public class GraphRelToProtoTest {
                     FileUtils.readJsonFromResource("proto/path_fused_expand_test.json"),
                     plan.explain().trim());
         }
+    }
+
+    @Test
+    public void intersect_test() throws Exception {
+        GraphRelOptimizer optimizer = getMockCBO();
+        IrMeta irMeta = getMockCBOMeta();
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (message:COMMENT|POST)-[:HASCREATOR]->(person:PERSON), \n"
+                                        + "      (message:COMMENT|POST)-[:HASTAG]->(tag:TAG), \n"
+                                        + "      (person:PERSON)-[:HASINTEREST]->(tag:TAG)\n"
+                                        + "Return count(person);",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  MultiJoin(joinFilter=[=(tag, tag)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
+                    + " projFields=[[ALL, ALL]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASTAG]}],"
+                    + " alias=[tag], startAlias=[message], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-697155798]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + " alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-697155798]])\n"
+                    + "common#-697155798:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
+                    + " alias=[message], startAlias=[person], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/intersect_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    private Configs getMockCBOConfig() {
+        return new Configs(
+                ImmutableMap.of(
+                        "graph.planner.is.on",
+                        "true",
+                        "graph.planner.opt",
+                        "CBO",
+                        "graph.planner.rules",
+                        "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                + " ExpandGetVFusionRule",
+                        "graph.planner.cbo.glogue.schema",
+                        "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt"));
+    }
+
+    private GraphRelOptimizer getMockCBO() {
+        return new GraphRelOptimizer(getMockCBOConfig());
+    }
+
+    private IrMeta getMockCBOMeta() {
+        return Utils.mockSchemaMeta("schema/ldbc_schema_exp_hierarchy.json");
     }
 
     private Configs getMockGraphConfig() {

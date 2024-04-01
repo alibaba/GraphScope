@@ -522,6 +522,30 @@ class ProjectOp {
         std::move(lengths_vec));
   }
 
+  // apply project on path set，the type must be lengthKey
+  template <typename PROP_T, typename VID_T, typename LabelT,
+            typename std::enable_if<std::is_same_v<PROP_T, LengthKey>>::type* =
+                nullptr>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph, PathSet<VID_T, LabelT>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    VLOG(10) << "Finish fetching properties";
+
+    std::vector<typename LengthKey::length_data_type> lengths_vec;
+    for (size_t i = 0; i < node.Size(); ++i) {
+      const auto& path = node.get(i);
+      if (repeat_array[i] > 0) {
+        auto length = path.length();
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
+          lengths_vec.push_back(length);
+        }
+      }
+    }
+
+    return Collection<typename LengthKey::length_data_type>(
+        std::move(lengths_vec));
+  }
+
   ///////////////////Apply KeyValueMapper to all data structures.
   template <typename CTX_T, typename... MAPPER>
   static auto apply_single_project(
