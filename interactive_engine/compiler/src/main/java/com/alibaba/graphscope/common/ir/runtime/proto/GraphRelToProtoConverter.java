@@ -47,14 +47,13 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -63,7 +62,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GraphRelToProtoConverter extends GraphShuttle {
-    private static final Logger logger = LoggerFactory.getLogger(GraphRelToProtoConverter.class);
     private final boolean isColumnId;
     private final RexBuilder rexBuilder;
     private final Configs graphConfig;
@@ -744,6 +742,119 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return union;
     }
 
+    @Override
+    public RelNode visit(MultiJoin multiJoin) {
+        // we convert multi-join to intersect + unfold
+        List<CommonTableScan> commons = relToCommons.get(multiJoin);
+        if (ObjectUtils.isNotEmpty(commons)) {
+            // add commons before intersect
+            GraphAlgebraPhysical.PhysicalPlan.Builder commonPlanBuilder =
+                    GraphAlgebraPhysical.PhysicalPlan.newBuilder();
+            for (int i = commons.size() - 1; i >= 0; --i) {
+                RelNode commonRel = ((CommonOptTable) commons.get(i).getTable()).getCommon();
+                commonRel.accept(
+                        new GraphRelToProtoConverter(
+                                isColumnId,
+                                graphConfig,
+                                commonPlanBuilder,
+                                this.relToCommons,
+                                depth + 1));
+            }
+            physicalBuilder.addAllPlan(commonPlanBuilder.getPlanList());
+        }
+        GraphAlgebraPhysical.PhysicalOpr.Builder intersectOprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.Intersect.Builder intersectBuilder =
+                GraphAlgebraPhysical.Intersect.newBuilder();
+        GraphAlgebraPhysical.PhysicalOpr.Builder unfoldOprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.Unfold.Builder unfoldBuilder =
+                GraphAlgebraPhysical.Unfold.newBuilder();
+
+        List<RexNode> conditions = RelOptUtil.conjunctions(multiJoin.getJoinFilter());
+        int intersectKey = -1;
+        for (RexNode condition : conditions) {
+            List<RexGraphVariable> leftRightVars = getLeftRightVariables(condition);
+            Preconditions.checkArgument(
+                    leftRightVars.size() == 2,
+                    "the condition of multi-join" + " should be equal condition");
+            if (intersectKey == -1) {
+                intersectKey = leftRightVars.get(0).getAliasId();
+            } else {
+                Preconditions.checkArgument(
+                        intersectKey == leftRightVars.get(0).getAliasId(),
+                        "the intersect key should be the same in multi-join: "
+                                + intersectKey
+                                + " "
+                                + leftRightVars.get(0).getAliasId());
+            }
+        }
+        Preconditions.checkArgument(intersectKey != -1, "intersect key should be set");
+        intersectBuilder.setKey(intersectKey);
+
+        // then, process operators in the intersect branches;
+        // currently, there are some cases:
+        // case 1: PhysicalExpand;
+        // case 2: PhysicalExpand + PhysicalGetV(filter);
+        // case 3: EdgeExpand + GetV; (not supported yet)
+        // case 4: PathExpand + GetV;
+        // TODO(bingqing): This should be refactored. Directly add these cases as subplans in the
+        // intersect.
+        // Currently, we process these cases in a consistent way with the previous ir-core
+        // implementation.
+        GraphPhysicalGetV auxiliaFilter = null;
+        for (RelNode input : multiJoin.getInputs()) {
+            GraphAlgebraPhysical.PhysicalPlan.Builder subPlanBuilder =
+                    GraphAlgebraPhysical.PhysicalPlan.newBuilder();
+            // specifically, if it is PhysicalGetV(filter), we build an auxilia node after
+            // the intersect.
+            if (input instanceof GraphPhysicalGetV
+                    && !ObjectUtils.isEmpty(((GraphPhysicalGetV) input).getFilters())) {
+                auxiliaFilter = (GraphPhysicalGetV) input;
+                auxiliaFilter
+                        .getInput()
+                        .accept(
+                                new GraphRelToProtoConverter(
+                                        isColumnId,
+                                        graphConfig,
+                                        subPlanBuilder,
+                                        this.relToCommons,
+                                        depth + 1));
+            } else if (input instanceof GraphLogicalGetV) {
+                throw new UnsupportedOperationException(
+                        "Unsupported of LogicalEdgeEdge + LogicalGetV in Intersect yet");
+            } else {
+                input.accept(
+                        new GraphRelToProtoConverter(
+                                isColumnId,
+                                graphConfig,
+                                subPlanBuilder,
+                                this.relToCommons,
+                                depth + 1));
+            }
+            intersectBuilder.addSubPlans(subPlanBuilder);
+        }
+        intersectOprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                        .setIntersect(intersectBuilder));
+        physicalBuilder.addPlan(intersectOprBuilder.build());
+
+        // after intersect, we need to unfold the result.
+        unfoldBuilder.setTag(Utils.asAliasId(intersectKey));
+        unfoldBuilder.setAlias(Utils.asAliasId(intersectKey));
+        unfoldOprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setUnfold(unfoldBuilder));
+
+        physicalBuilder.addPlan(unfoldOprBuilder.build());
+
+        // if have filters, we need to add a auxilia node after intersect.
+        if (auxiliaFilter != null) {
+            addAuxilia(physicalBuilder, auxiliaFilter);
+        }
+
+        return multiJoin;
+    }
+
     private List<RexGraphVariable> getLeftRightVariables(RexNode condition) {
         List<RexGraphVariable> vars = Lists.newArrayList();
         if (condition instanceof RexCall) {
@@ -926,6 +1037,22 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         physicalBuilder.addPlan(auxiliaOprBuilder.build());
     }
 
+    private void addAuxilia(
+            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
+            GraphPhysicalGetV physicalGetV) {
+        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(physicalGetV);
+        oprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(auxilia));
+        oprBuilder.addAllMetaData(
+                Utils.physicalProtoRowType(physicalGetV.getRowType(), isColumnId));
+        if (isPartitioned) {
+            addRepartitionToAnother(physicalGetV.getStartAlias().getAliasId());
+        }
+        physicalBuilder.addPlan(oprBuilder.build());
+    }
+
     private void lazyPropertyFetching(Map<Integer, Set<GraphNameOrId>> columns) {
         // by default, we cache the result of the tagColumns, i.e., the optimizedNoCaching is false
         lazyPropertyFetching(columns, false);
@@ -954,11 +1081,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     @Override
     public RelNode visit(GraphLogicalSingleMatch match) {
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        throw new UnsupportedOperationException(
+                "converting logical match to physical plan is unsupported yet");
     }
 
     @Override
     public RelNode visit(GraphLogicalMultiMatch match) {
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        throw new UnsupportedOperationException(
+                "converting logical match to physical plan is unsupported yet");
     }
 }
