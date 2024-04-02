@@ -19,12 +19,15 @@
 import base64
 import json
 import logging
-import os.path as osp
 import sys
 
+import graphscope
 import graphscope.learning.graphlearn_torch as glt
 import torch
 from graphscope.learning.gl_torch_graph import GLTorchGraph
+
+graphscope.set_option(show_log=True)
+graphscope.set_option(log_level="DEBUG")
 
 logger = logging.getLogger("graphscope")
 
@@ -39,6 +42,33 @@ def decode_arg(arg):
     )
 
 
+def extract_node_type_names(edges):
+    node_type_names = set()
+    for edge in edges:
+        node_type_names.update([edge[0], edge[-1]])
+    return node_type_names
+
+
+def init_node_pb(handle, server_rank, node_type_names):
+    node_pb = (
+        glt.data.VineyardPartitionBook(
+            str(handle["vineyard_socket"]),
+            str(handle["fragments"][server_rank]),
+            list(node_type_names)[0],
+        )
+        if len(node_type_names) == 1
+        else {
+            node_type_name: glt.data.VineyardPartitionBook(
+                str(handle["vineyard_socket"]),
+                str(handle["fragments"][server_rank]),
+                node_type_name,
+            )
+            for node_type_name in node_type_names
+        }
+    )
+    return node_pb
+
+
 def run_server_proc(proc_rank, handle, config, server_rank, dataset):
     glt.distributed.init_server(
         num_servers=handle["num_servers"],
@@ -49,36 +79,42 @@ def run_server_proc(proc_rank, handle, config, server_rank, dataset):
         num_rpc_threads=16,
         is_dynamic=True,
     )
-    logger.info(f"-- [Server {server_rank}] Waiting for exit ...")
     glt.distributed.wait_and_shutdown_server()
-    logger.info(f"-- [Server {server_rank}] Exited ...")
 
 
 def launch_graphlearn_torch_server(handle, config, server_rank):
     logger.info(f"-- [Server {server_rank}] Initializing server ...")
-
     edge_dir = config.pop("edge_dir")
     random_node_split = config.pop("random_node_split")
-    dataset = glt.distributed.DistDataset(edge_dir=edge_dir)
+    edges = config.pop("edges")
+    node_type_names = extract_node_type_names(edges)
+
+    dataset = glt.distributed.DistDataset(
+        edge_dir=edge_dir,
+        num_partitions=handle["num_servers"],
+        partition_idx=server_rank,
+        node_pb=init_node_pb(handle, server_rank, node_type_names),
+    )
     dataset.load_vineyard(
-        vineyard_id=str(handle["vineyard_id"]),
+        vineyard_id=str(handle["fragments"][server_rank]),
         vineyard_socket=handle["vineyard_socket"],
+        edges=edges,
         **config,
     )
     if random_node_split is not None:
         dataset.random_node_split(**random_node_split)
-    logger.info(f"-- [Server {server_rank}] Initializing server ...")
+    logger.info(f"-- [Server {server_rank}] Running server ...")
 
     torch.multiprocessing.spawn(
         fn=run_server_proc, args=(handle, config, server_rank, dataset), nprocs=1
     )
+    logger.info(f"-- [Server {server_rank}] Server exited.")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         logger.info(
             "Usage: ./launch_graphlearn_torch.py <handle> <config> <server_index>",
-            file=sys.stderr,
         )
         sys.exit(-1)
 
@@ -87,7 +123,4 @@ if __name__ == "__main__":
     server_index = int(sys.argv[3])
     config = GLTorchGraph.reverse_transform_config(config)
 
-    logger.info(
-        f"launch_graphlearn_torch_server handle: {handle} config: {config} server_index: {server_index}"
-    )
     launch_graphlearn_torch_server(handle, config, server_index)
