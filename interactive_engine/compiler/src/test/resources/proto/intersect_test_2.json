@@ -2,7 +2,7 @@
   "plan": [{
     "opr": {
       "scan": {
-        "alias": 1,
+        "alias": 2,
         "params": {
           "tables": [{
             "id": 1
@@ -62,12 +62,12 @@
           }]
         }
       },
-      "alias": 1
+      "alias": 2
     }]
   }, {
     "opr": {
       "edge": {
-        "vTag": 1,
+        "vTag": 2,
         "direction": "IN",
         "params": {
           "tables": [{
@@ -75,7 +75,8 @@
           }],
           "sampleRatio": 1.0
         },
-        "alias": 0
+        "alias": 1,
+        "expandOpt": "EDGE"
       }
     },
     "metaData": [{
@@ -95,7 +96,108 @@
           }]
         }
       },
-      "alias": -1
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "vertex": {
+        "params": {
+          "tables": [{
+            "id": 2
+          }, {
+            "id": 3
+          }],
+          "sampleRatio": 1.0
+        },
+        "alias": 0
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+              "label": 3
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "imageFile"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "creationDate"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "locationIP"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "browserUsed"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "language"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "content"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "length"
+              },
+              "type": "INT32"
+            }]
+          }, {
+            "label": {
+              "label": 2
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "creationDate"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "browserUsed"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "content"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "locationIP"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "length"
+              },
+              "type": "INT32"
+            }]
+          }]
+        }
+      }
     }]
   }, {
     "opr": {
@@ -111,7 +213,8 @@
                   }],
                   "sampleRatio": 1.0
                 },
-                "alias": 2
+                "alias": 3,
+                "expandOpt": "EDGE"
               }
             },
             "metaData": [{
@@ -139,21 +242,63 @@
                   }]
                 }
               },
-              "alias": -1
+              "alias": 3
+            }]
+          }, {
+            "opr": {
+              "vertex": {
+                "opt": "END",
+                "params": {
+                  "tables": [{
+                    "id": 7
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 4
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "graphDataType": [{
+                    "label": {
+                      "label": 7
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "id"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "name"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "url"
+                      },
+                      "type": "STRING"
+                    }]
+                  }]
+                }
+              },
+              "alias": 4
             }]
           }]
         }, {
           "plan": [{
             "opr": {
               "edge": {
-                "vTag": 1,
+                "vTag": 2,
                 "params": {
                   "tables": [{
                     "id": 10
                   }],
                   "sampleRatio": 1.0
                 },
-                "alias": 2
+                "alias": 5,
+                "expandOpt": "EDGE"
               }
             },
             "metaData": [{
@@ -169,11 +314,52 @@
                   }]
                 }
               },
-              "alias": -1
+              "alias": 5
+            }]
+          }, {
+            "opr": {
+              "vertex": {
+                "opt": "END",
+                "params": {
+                  "tables": [{
+                    "id": 7
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 4
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "graphDataType": [{
+                    "label": {
+                      "label": 7
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "id"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "name"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "url"
+                      },
+                      "type": "STRING"
+                    }]
+                  }]
+                }
+              },
+              "alias": 4
             }]
           }]
         }],
-        "key": 2
+        "key": 4
       }
     }
   }, {
@@ -182,7 +368,7 @@
         "functions": [{
           "vars": [{
             "tag": {
-              "id": 1
+              "id": 2
             },
             "nodeType": {
               "graphType": {
@@ -236,7 +422,7 @@
             }
           }],
           "aggregate": "COUNT",
-          "alias": 3
+          "alias": 6
         }]
       }
     },
@@ -244,7 +430,7 @@
       "type": {
         "dataType": "INT64"
       },
-      "alias": 3
+      "alias": 6
     }]
   }, {
     "opr": {
