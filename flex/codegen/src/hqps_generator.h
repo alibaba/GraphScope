@@ -34,6 +34,7 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_sink_builder.h"
 #include "flex/codegen/src/hqps/hqps_sort_builder.h"
 #include "flex/proto_generated_gie/physical.pb.h"
+#include "flex/storages/rt_mutable_graph/schema.h"
 
 namespace gs {
 
@@ -57,6 +58,7 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "  using Engine = SyncEngine<%4%>;\n"
     "  using label_id_t = typename %4%::label_id_t;\n"
     "  using vertex_id_t = typename %4%::vertex_id_t;\n"
+    "  using gid_t = typename %4%::gid_t;\n"
     " // constructor\n"
     "  %3%(const GraphDBSession& session) : %6%(session) {}\n"
     "// Query function for query class\n"
@@ -116,14 +118,44 @@ static std::array<std::string, 4> BuildIntersectOp(
 // get_v can contains labels and filters.
 // what ever it takes, we will always fuse label info into edge_expand,
 // but if get_v contains expression, we will not fuse it into edge_expand
-bool simple_get_v(const physical::GetV& get_v_op) {
+bool simple_get_v(const physical::GetV& get_v_op,
+                  const physical::EdgeExpand& edge_expand_op) {
   if (get_v_op.params().has_predicate()) {
     return false;
+  }
+  // There are 5 possible combinations of get_v and edge_expand
+  // Direction::Out & GetVOpt::End
+  // Direction::Out & GetVOpt::Start
+  // Direction::In & GetVOpt::End
+  // Direction::In & GetVOpt::Start
+  // Whatever Direction & GetVOpt::Other
+  //
+  if (get_v_op.opt() == physical::GetV::OTHER) {
+    return true;
+  }
+  if (get_v_op.opt() == physical::GetV::BOTH) {
+    return false;
+  }
+  if (get_v_op.opt() == physical::GetV::END) {
+    if (edge_expand_op.direction() == physical::EdgeExpand::OUT) {
+      return true;
+    }
+    if (edge_expand_op.direction() == physical::EdgeExpand::IN) {
+      return false;
+    }
+  }
+  if (get_v_op.opt() == physical::GetV::START) {
+    if (edge_expand_op.direction() == physical::EdgeExpand::OUT) {
+      return false;
+    }
+    if (edge_expand_op.direction() == physical::EdgeExpand::IN) {
+      return true;
+    }
   }
   return true;
 }
 
-bool intermeidate_edge_op(const physical::EdgeExpand& expand_op) {
+bool intermediate_edge_op(const physical::EdgeExpand& expand_op) {
   if (!expand_op.has_alias() || expand_op.alias().value() == -1) {
     return true;
   }
@@ -178,7 +210,11 @@ class QueryGenerator {
   static constexpr bool FUSE_EDGE_GET_V = true;
   static constexpr bool FUSE_PATH_EXPAND_V = true;
   QueryGenerator(BuildingContext& ctx, const physical::PhysicalPlan& plan)
-      : ctx_(ctx), plan_(plan) {}
+      : ctx_(ctx), plan_(plan), schema_() {}
+
+  QueryGenerator(BuildingContext& ctx, const physical::PhysicalPlan& plan,
+                 const Schema& schema)
+      : ctx_(ctx), plan_(plan), schema_(schema) {}
 
   std::string GenerateQuery() {
     // During generate query body, we will track the parameters
@@ -314,7 +350,7 @@ class QueryGenerator {
         LOG(INFO) << "Found a scan operator";
         auto& scan_op = opr.scan();
 
-        ss << BuildScanOp(ctx_, scan_op, meta_data) << std::endl;
+        ss << BuildScanOp(ctx_, scan_op, meta_data, schema_) << std::endl;
         break;
       }
 
@@ -330,10 +366,10 @@ class QueryGenerator {
             extract_vertex_labels(get_v_op, dst_vertex_labels);
 
             if (FUSE_EDGE_GET_V) {
-              if (simple_get_v(get_v_op) &&
-                  intermeidate_edge_op(real_edge_expand)) {
+              if (simple_get_v(get_v_op, real_edge_expand) &&
+                  intermediate_edge_op(real_edge_expand)) {
                 CHECK(dst_vertex_labels.size() > 0);
-                VLOG(10) << "When fuseing edge+get_v, get_v has labels: "
+                VLOG(10) << "When fusing edge+get_v, get_v has labels: "
                          << gs::to_string(dst_vertex_labels);
                 build_fused_edge_get_v<LabelT>(ctx_, ss, real_edge_expand,
                                                meta_datas[0], get_v_op,
@@ -341,7 +377,7 @@ class QueryGenerator {
                 LOG(INFO) << "Fuse edge expand and get_v since get_v is simple";
                 i += 1;
                 break;
-              } else if (intermeidate_edge_op(real_edge_expand)) {
+              } else if (intermediate_edge_op(real_edge_expand)) {
                 LOG(INFO) << "try to fuse edge expand with complex get_v, take "
                              "take the get_v' vertex label";
               } else {
@@ -378,9 +414,12 @@ class QueryGenerator {
       case physical::PhysicalOpr::Operator::kProject: {  // project
         // project op can result into multiple meta data
         // auto& meta_data = meta_datas[0];
-        physical::PhysicalOpr::MetaData meta_data;
         LOG(INFO) << "Found a project operator";
         auto& project_op = opr.project();
+        physical::PhysicalOpr_MetaData meta_data;
+        if (meta_datas.size() > 0) {
+          meta_data = meta_datas[0];
+        }
         std::string call_project_code;
         call_project_code = BuildProjectOp(ctx_, project_op, meta_data);
         ss << call_project_code;
@@ -535,6 +574,7 @@ class QueryGenerator {
 
   BuildingContext& ctx_;
   const physical::PhysicalPlan& plan_;
+  std::optional<Schema> schema_;
 };
 
 // When building a join op, we need to consider the following cases:

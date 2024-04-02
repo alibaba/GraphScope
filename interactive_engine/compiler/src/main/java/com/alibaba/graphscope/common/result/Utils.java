@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Utils {
     private static final Logger logger = LoggerFactory.getLogger(Utils.class);
@@ -118,9 +119,12 @@ public class Utils {
     }
 
     public static RelDataType getEdgeType(RelDataType graphPathType) {
-        return (graphPathType instanceof GraphPathType)
-                ? ((GraphPathType) graphPathType).getComponentType().getExpandType()
-                : graphPathType;
+        if (graphPathType instanceof GraphPathType) {
+            return Objects.requireNonNull(
+                    ((GraphPathType) graphPathType).getComponentType().getExpandType(),
+                    "cannot get expand type from graph path " + graphPathType);
+        }
+        return graphPathType;
     }
 
     public static String parseLabelValue(Common.Value value, GraphLabelType type) {

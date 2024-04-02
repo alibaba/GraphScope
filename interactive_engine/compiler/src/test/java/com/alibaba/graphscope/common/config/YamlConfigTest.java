@@ -41,8 +41,10 @@ public class YamlConfigTest {
         StoredProcedureMeta meta = procedures.getStoredProcedure("ldbc_ic2");
         Assert.assertEquals(
                 "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(CHAR(1) name),"
-                        + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
-                        + " Parameter{name='maxDate', dataType=BIGINT}]}",
+                    + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
+                    + " Parameter{name='maxDate', dataType=BIGINT}], option={type=cypher,"
+                    + " queryStr=MATCH(n: PERSON ${personId2}) WHERE n.creationDate < ${maxDate}"
+                    + " RETURN n.firstName AS name LIMIT 10;}}",
                 meta.toString());
     }
 
@@ -51,8 +53,8 @@ public class YamlConfigTest {
         YamlConfigs configs =
                 new YamlConfigs("config/gs_interactive_pegasus.yaml", FileLoadType.RESOURCES);
         Assert.assertEquals(
-                "PlannerConfig{isOn=true, opt=RBO, rules=[FilterMatchRule]}",
-                PlannerConfig.create(configs).toString());
+                "PlannerConfig{isOn=true, opt=RBO, rules=[FilterMatchRule], glogueSize=3}",
+                (new PlannerConfig(configs)).toString());
         Assert.assertEquals(
                 "localhost:8001, localhost:8005", PegasusConfig.PEGASUS_HOSTS.get(configs));
         Assert.assertEquals(3, (int) PegasusConfig.PEGASUS_WORKER_NUM.get(configs));

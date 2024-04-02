@@ -3,7 +3,7 @@
 {
     "name": "GraphScope",
     // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-    "image": "registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9",
+    "image": "registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10",
     // Features to add to the dev container. More info: https://containers.dev/features.
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
@@ -27,6 +27,6 @@
         }
     },
     // Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-    "remoteUser": "root",
+    "remoteUser": "graphscope",
     "postCreateCommand": "sudo chown -R graphscope /workspaces && bash pre-commit/install-hook.sh && bash pre-commit/prepare-commit-msg"
 }

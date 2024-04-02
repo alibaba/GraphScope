@@ -95,7 +95,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::CreateGraph(
            << GetGraphSchemaPath(graph_name);
 
   return gs::Result<seastar::sstring>(
-      seastar::sstring("successfuly created graph "));
+      seastar::sstring("successfully created graph "));
 }
 
 gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
@@ -113,11 +113,11 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
         "Graph schema file is expected, but not exists: " + schema_file));
   }
   // read schema file and output to string
-  auto schema_str_res = gs::get_string_from_yaml(schema_file);
+  auto schema_str_res = gs::get_json_string_from_yaml(schema_file);
   if (!schema_str_res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
-                   "Failt to read schema file: " + schema_file +
+                   "Failed to read schema file: " + schema_file +
                        ", error: " + schema_str_res.status().error_message()));
   } else {
     return gs::Result<seastar::sstring>(schema_str_res.value());
@@ -141,7 +141,11 @@ gs::Result<gs::Schema> WorkDirManipulator::GetGraphSchema(
   // Load schema from schema_file
   try {
     LOG(INFO) << "Load graph schema from file: " << schema_file;
-    schema = gs::Schema::LoadFromYaml(schema_file);
+    auto schema_res = gs::Schema::LoadFromYaml(schema_file);
+    if (!schema_res.ok()) {
+      return gs::Result<gs::Schema>(schema_res.status(), schema);
+    }
+    schema = schema_res.value();
   } catch (const std::exception& e) {
     LOG(ERROR) << "Fail to load graph schema: " << schema_file
                << ", error: " << e.what();
@@ -193,7 +197,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::ListGraphs() {
       }
     }
   }
-  auto json_str = gs::get_string_from_yaml(yaml_list);
+  auto json_str = gs::get_json_string_from_yaml(yaml_list);
   if (!json_str.ok()) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::InternalError,
@@ -275,7 +279,11 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
   auto schema_file = GetGraphSchemaPath(graph_name);
   gs::Schema schema;
   try {
-    schema = gs::Schema::LoadFromYaml(schema_file);
+    auto schema_res = gs::Schema::LoadFromYaml(schema_file);
+    if (!schema_res.ok()) {
+      return gs::Result<seastar::sstring>(schema_res.status());
+    }
+    schema = schema_res.value();
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::InternalError,
@@ -430,7 +438,8 @@ WorkDirManipulator::GetProcedureByGraphAndProcedureName(
 }
 
 seastar::future<seastar::sstring> WorkDirManipulator::CreateProcedure(
-    const std::string& graph_name, const std::string& parameter) {
+    const std::string& graph_name, const std::string& parameter,
+    const std::string& engine_config_path) {
   if (!is_graph_exist(graph_name)) {
     return seastar::make_ready_future<seastar::sstring>("Graph not exists: " +
                                                         graph_name);
@@ -469,49 +478,50 @@ seastar::future<seastar::sstring> WorkDirManipulator::CreateProcedure(
     return seastar::make_exception_future<seastar::sstring>(
         "Procedure already exists: " + procedure_name);
   }
-  return generate_procedure(json).then_wrapped([json](auto&& fut) {
-    try {
-      auto res = fut.get();
-      bool enable = true;  // default enable.
-      if (json.contains("enable")) {
-        if (json["enable"].is_boolean()) {
-          enable = json["enable"].get<bool>();
-        } else if (json["enable"].is_string()) {
-          auto enable_str = json["enable"].get<std::string>();
-          if (enable_str == "true" || enable_str == "True" ||
-              enable_str == "TRUE") {
-            enable = true;
-          } else {
-            enable = false;
+  return generate_procedure(json, engine_config_path)
+      .then_wrapped([json](auto&& fut) {
+        try {
+          auto res = fut.get();
+          bool enable = true;  // default enable.
+          if (json.contains("enable")) {
+            if (json["enable"].is_boolean()) {
+              enable = json["enable"].get<bool>();
+            } else if (json["enable"].is_string()) {
+              auto enable_str = json["enable"].get<std::string>();
+              if (enable_str == "true" || enable_str == "True" ||
+                  enable_str == "TRUE") {
+                enable = true;
+              } else {
+                enable = false;
+              }
+            } else {
+              return seastar::make_ready_future<seastar::sstring>(
+                  "Fail to parse enable field: " + json["enable"].dump());
+            }
           }
-        } else {
+          LOG(INFO) << "Enable: " << std::to_string(enable);
+
+          // If create procedure success, update graph schema (dump to file)
+          // and add to plugin list. this is critical, and should be
+          // transactional.
+          if (enable) {
+            LOG(INFO)
+                << "Procedure is enabled, add to graph schema and plugin list.";
+            return add_procedure_to_graph(json, res);
+          } else {
+            // Not enabled, do nothing.
+            LOG(INFO) << "Procedure is not enabled, do nothing.";
+          }
+
           return seastar::make_ready_future<seastar::sstring>(
-              "Fail to parse enable field: " + json["enable"].dump());
+              seastar::sstring("Successfully create procedure"));
+        } catch (const std::exception& e) {
+          return seastar::make_ready_future<seastar::sstring>(
+              "Fail to generate procedure: " + std::string(e.what()));
         }
-      }
-      LOG(INFO) << "Enable: " << std::to_string(enable);
-
-      // If create procedure success, update graph schema (dump to file)
-      // and add to plugin list. this is critical, and should be
-      // transactional.
-      if (enable) {
-        LOG(INFO)
-            << "Procedure is enabled, add to graph schema and plugin list.";
-        return add_procedure_to_graph(json, res);
-      } else {
-        // Not enabled, do nothing.
-        LOG(INFO) << "Procedure is not enabled, do nothing.";
-      }
-
-      return seastar::make_ready_future<seastar::sstring>(
-          seastar::sstring("Successfully create procedure"));
-    } catch (const std::exception& e) {
-      return seastar::make_ready_future<seastar::sstring>(
-          "Fail to generate procedure: " + std::string(e.what()));
-    }
-    return seastar::make_ready_future<seastar::sstring>(
-        "Fail to generate procedure");
-  });
+        return seastar::make_ready_future<seastar::sstring>(
+            "Fail to generate procedure");
+      });
 }
 
 gs::Result<seastar::sstring> WorkDirManipulator::DeleteProcedure(
@@ -639,7 +649,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         gs::Status(gs::StatusCode::InternalError,
                    "Fail to parse parameter as json: " + parameters));
   }
-  VLOG(1) << "Successfully parse json paramters: " << json.dump();
+  VLOG(1) << "Successfully parse json parameters: " << json.dump();
   // load plugin_file as yaml
   YAML::Node plugin_node;
   try {
@@ -732,6 +742,30 @@ std::string WorkDirManipulator::GetGraphIndicesDir(
   return get_graph_dir(graph_name) + "/" + GRAPH_INDICES_DIR_NAME;
 }
 
+std::string WorkDirManipulator::GetLogDir() {
+  auto log_dir = workspace + "/logs/";
+  if (!std::filesystem::exists(log_dir)) {
+    std::filesystem::create_directory(log_dir);
+  }
+  return log_dir;
+}
+
+std::string WorkDirManipulator::GetCompilerLogFile() {
+  // with timestamp
+  auto time_stamp = std::to_string(
+      std::chrono::system_clock::now().time_since_epoch().count());
+  auto log_path = GetLogDir() + "/compiler.log";
+  // Check if the log file exists
+  if (std::filesystem::exists(log_path)) {
+    // Backup the previous log file
+    std::string backupPath = GetLogDir() + "/compiler.log." + time_stamp;
+    std::filesystem::rename(log_path, backupPath);
+    std::cout << "Backed up the previous log file to: " << backupPath
+              << std::endl;
+  }
+  return log_path;
+}
+
 std::string WorkDirManipulator::get_graph_indices_file(
     const std::string& graph_name) {
   return get_graph_dir(graph_name) + GRAPH_INDICES_DIR_NAME + "/" +
@@ -788,10 +822,6 @@ void WorkDirManipulator::unlock_graph(const std::string& graph_name) {
   if (std::filesystem::exists(lock_file)) {
     std::filesystem::remove(lock_file);
   }
-}
-
-std::string WorkDirManipulator::get_engine_config_path() {
-  return workspace + "/conf/" + CONF_ENGINE_CONFIG_FILE_NAME;
 }
 
 bool WorkDirManipulator::ensure_graph_dir_exists(
@@ -873,8 +903,8 @@ gs::Result<seastar::sstring> WorkDirManipulator::create_procedure_sanity_check(
 }
 
 seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
-    const nlohmann::json& json) {
-  LOG(INFO) << "Generate procedure: " << json.dump();
+    const nlohmann::json& json, const std::string& engine_config_path) {
+  VLOG(10) << "Generate procedure: " << json.dump();
   auto codegen_bin = gs::find_codegen_bin();
   auto temp_codegen_directory =
       std::string(server::CodegenProxy::DEFAULT_CODEGEN_DIR);
@@ -887,6 +917,12 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
   auto name = json["name"].get<std::string>();
   auto type = json["type"].get<std::string>();
   auto bounded_graph = json["bound_graph"].get<std::string>();
+  std::string procedure_desc;
+  if (json.contains("description")) {
+    procedure_desc = json["description"].get<std::string>();
+  } else {
+    procedure_desc = "";
+  }
   std::string query_file;
   if (type == "cypher" || type == "CYPHER") {
     query_file = temp_codegen_directory + "/" + name + ".cypher";
@@ -901,30 +937,29 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
     std::ofstream fout(query_file);
     if (!fout.is_open()) {
       return seastar::make_exception_future<seastar::sstring>(
-          "Fail to open query file: " + query_file);
+          std::runtime_error("Fail to open query file: " + query_file));
     }
     fout << query;
     fout.close();
   } catch (const std::exception& e) {
     return seastar::make_exception_future<seastar::sstring>(
-        "Fail to dump query to file: " + query_file +
-        ", error: " + std::string(e.what()));
+        std::runtime_error("Fail to dump query to file: " + query_file +
+                           ", error: " + std::string(e.what())));
   }
 
   if (!is_graph_exist(bounded_graph)) {
     return seastar::make_exception_future<seastar::sstring>(
-        "Graph not exists: " + bounded_graph);
+        std::runtime_error("Graph not exists: " + bounded_graph));
   }
   auto output_dir = get_graph_plugin_dir(bounded_graph);
   if (!std::filesystem::exists(output_dir)) {
     std::filesystem::create_directory(output_dir);
   }
   auto schema_path = GetGraphSchemaPath(bounded_graph);
-  auto engine_config = get_engine_config_path();
 
-  return CodegenProxy::CallCodegenCmd(query_file, name, temp_codegen_directory,
-                                      output_dir, schema_path, engine_config,
-                                      codegen_bin)
+  return CodegenProxy::CallCodegenCmd(
+             codegen_bin, query_file, name, temp_codegen_directory, output_dir,
+             schema_path, engine_config_path, procedure_desc)
       .then_wrapped([name, output_dir](auto&& f) {
         try {
           auto res = f.get();
@@ -934,11 +969,13 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
             ss << output_dir << "/lib" << name << ".so";
             so_file = ss.str();
           }
-          LOG(INFO) << "Check so file: " << so_file;
+          VLOG(10) << "Check so file: " << so_file;
 
           if (!std::filesystem::exists(so_file)) {
             return seastar::make_exception_future<seastar::sstring>(
-                "Fail to generate procedure, so file not exists: " + so_file);
+                std::runtime_error(
+                    "Fail to generate procedure, so file not exists: " +
+                    so_file));
           }
           std::string yaml_file;
           {
@@ -949,19 +986,21 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
           LOG(INFO) << "Check yaml file: " << yaml_file;
           if (!std::filesystem::exists(yaml_file)) {
             return seastar::make_exception_future<seastar::sstring>(
-                "Fail to generate procedure, yaml file not exists: " +
-                yaml_file);
+                std::runtime_error(
+                    "Fail to generate procedure, yaml file not exists: " +
+                    yaml_file));
           }
           return seastar::make_ready_future<seastar::sstring>(
               seastar::sstring{yaml_file});
         } catch (const std::exception& e) {
           LOG(ERROR) << "Fail to generate procedure, error: " << e.what();
           return seastar::make_exception_future<seastar::sstring>(
-              "Fail to generate procedure, error: " + std::string(e.what()));
+              std::runtime_error("Fail to generate procedure, error: " +
+                                 std::string(e.what())));
         } catch (...) {
           LOG(ERROR) << "Fail to generate procedure, unknown error";
           return seastar::make_exception_future<seastar::sstring>(
-              "Fail to generate procedure, unknown error");
+              std::runtime_error("Fail to generate procedure, unknown error"));
         }
       });
 }
@@ -1075,7 +1114,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
     }
   }
   // dump to json
-  auto res = gs::get_string_from_yaml(yaml_list);
+  auto res = gs::get_json_string_from_yaml(yaml_list);
   if (!res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::InternalError,
@@ -1111,7 +1150,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
     }
   }
   // dump to json
-  auto res = gs::get_string_from_yaml(yaml_list);
+  auto res = gs::get_json_string_from_yaml(yaml_list);
   if (!res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::InternalError,

@@ -16,11 +16,12 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
+import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
+import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.base.Preconditions;
@@ -28,21 +29,26 @@ import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.RelBuilder;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     private final GraphBuilder builder;
-    private final Set<String> uniqueNameList;
     private final ExpressionVisitor expressionVisitor;
+    private final ExprUniqueAliasInfer aliasInfer;
 
     public GraphBuilderVisitor(GraphBuilder builder) {
+        this(builder, new ExprUniqueAliasInfer());
+    }
+
+    public GraphBuilderVisitor(GraphBuilder builder, ExprUniqueAliasInfer aliasInfer) {
         this.builder = Objects.requireNonNull(builder);
+        this.aliasInfer = Objects.requireNonNull(aliasInfer);
         this.expressionVisitor = new ExpressionVisitor(this);
-        this.uniqueNameList = new HashSet<>();
     }
 
     @Override
@@ -153,7 +159,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
             } else {
                 if (!extraExprs.isEmpty()) {
                     for (int i = 0; i < keyExprs.size(); ++i) {
-                        newAliases.add(inferAlias());
+                        newAliases.add(aliasInfer.infer());
                     }
                     groupKey = builder.groupKey(keyExprs, newAliases);
                 } else {
@@ -254,13 +260,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         return expressionVisitor;
     }
 
-    public String inferAlias() {
-        String name;
-        int j = 0;
-        do {
-            name = SqlValidatorUtil.EXPR_SUGGESTER.apply(null, j++, 0);
-        } while (uniqueNameList.contains(name));
-        uniqueNameList.add(name);
-        return name;
+    public ExprUniqueAliasInfer getAliasInfer() {
+        return aliasInfer;
     }
 }

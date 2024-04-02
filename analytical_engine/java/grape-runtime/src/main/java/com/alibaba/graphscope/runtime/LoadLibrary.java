@@ -41,7 +41,7 @@ public class LoadLibrary {
     public static void invoke(String userLibrary) {
         logger.info("loading " + userLibrary);
         System.loadLibrary(userLibrary);
-        logger.info("Load libary cl: " + LoadLibrary.class.getClassLoader());
+        logger.info("Load library cl: " + LoadLibrary.class.getClassLoader());
         try {
             LIBRARIES = ClassLoader.class.getDeclaredField("loadedLibraryNames");
             LIBRARIES.setAccessible(true);

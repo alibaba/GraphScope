@@ -123,26 +123,27 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     @Override
-    public RelNode visit(GraphLogicalExpandDegree expandCount) {
-        GraphLogicalExpand fusedExpand = expandCount.getFusedExpand();
-        Pointer ptrExpandCount =
+    public RelNode visit(GraphPhysicalExpand physicalExpand) {
+        GraphLogicalExpand fusedExpand = physicalExpand.getFusedExpand();
+        Pointer ptrPhysicalExpand =
                 LIB.initEdgexpdOperator(
-                        FfiExpandOpt.Degree, Utils.ffiDirection(fusedExpand.getOpt()));
-        checkFfiResult(LIB.setEdgexpdParams(ptrExpandCount, ffiQueryParams(fusedExpand)));
-        if (expandCount.getAliasId() != AliasInference.DEFAULT_ID) {
+                        Utils.ffiPhysicalExpandOpt(physicalExpand.getPhysicalOpt()),
+                        Utils.ffiDirection(fusedExpand.getOpt()));
+        checkFfiResult(LIB.setEdgexpdParams(ptrPhysicalExpand, ffiQueryParams(fusedExpand)));
+        if (physicalExpand.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(
                     LIB.setEdgexpdAlias(
-                            ptrExpandCount, ArgUtils.asAlias(expandCount.getAliasId())));
+                            ptrPhysicalExpand, ArgUtils.asAlias(physicalExpand.getAliasId())));
         }
         checkFfiResult(
                 LIB.setEdgexpdMeta(
-                        ptrExpandCount,
+                        ptrPhysicalExpand,
                         new FfiPbPointer.ByValue(
                                 com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
-                                                expandCount.getRowType(), isColumnId)
+                                                physicalExpand.getRowType(), isColumnId)
                                         .get(0)
                                         .toByteArray())));
-        return new PhysicalNode(expandCount, ptrExpandCount);
+        return new PhysicalNode(physicalExpand, ptrPhysicalExpand);
     }
 
     @Override
@@ -625,6 +626,20 @@ public class RelToFfiConverter implements GraphRelShuttle {
             predicateBuilder.append("]");
             checkFfiResult(LIB.setSelectPredicate(ptrFilter, predicateBuilder.toString()));
             checkFfiResult(LIB.addSentenceBinder(ptrSentence, ptrFilter, FfiBinderOpt.Select));
+        }
+        // add index predicates as select operator
+        if (tableScan instanceof GraphLogicalSource) {
+            GraphLogicalSource source = (GraphLogicalSource) tableScan;
+            if (source.getUniqueKeyFilters() != null) {
+                OuterExpression.Expression exprProto =
+                        source.getUniqueKeyFilters()
+                                .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
+                Pointer ptrFilter = LIB.initSelectOperator();
+                checkFfiResult(
+                        LIB.setSelectPredicatePb(
+                                ptrFilter, new FfiPbPointer.ByValue(exprProto.toByteArray())));
+                checkFfiResult(LIB.addSentenceBinder(ptrSentence, ptrFilter, FfiBinderOpt.Select));
+            }
         }
         // add predicates as select operator
         List<RexNode> filters = tableScan.getFilters();

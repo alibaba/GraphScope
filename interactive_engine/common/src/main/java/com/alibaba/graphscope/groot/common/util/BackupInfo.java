@@ -25,11 +25,11 @@ import java.util.Map;
 
 public class BackupInfo {
 
-    private int globalBackupId;
-    private long snapshotId;
-    private byte[] graphDefBytes;
-    private List<Long> walOffsets;
-    private Map<Integer, Integer> partitionToBackupId;
+    private final int globalBackupId;
+    private final long snapshotId;
+    private final byte[] graphDefBytes;
+    private final List<Long> walOffsets;
+    private final Map<Integer, Integer> partitionToBackupId;
 
     @JsonCreator
     public BackupInfo(

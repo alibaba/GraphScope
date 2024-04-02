@@ -17,37 +17,30 @@
 package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.PlannerConfig;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
-import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
-import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
-import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
-import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
+import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.calcite.plan.*;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgram;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
+import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.rules.CoreRules;
-import org.apache.calcite.rel.rules.FilterJoinRule;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -57,7 +50,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -68,8 +60,7 @@ import java.util.function.Function;
 public class GraphPlanner {
     private static final Logger logger = LoggerFactory.getLogger(GraphPlanner.class);
     private final Configs graphConfig;
-    private final PlannerConfig plannerConfig;
-    private final RelOptPlanner optPlanner;
+    private final GraphRelOptimizer optimizer;
     private final RexBuilder rexBuilder;
     private final LogicalPlanFactory logicalPlanFactory;
 
@@ -78,16 +69,18 @@ public class GraphPlanner {
 
     public GraphPlanner(Configs graphConfig, LogicalPlanFactory logicalPlanFactory) {
         this.graphConfig = graphConfig;
-        this.plannerConfig = PlannerConfig.create(this.graphConfig);
-        logger.debug("planner config: " + this.plannerConfig);
-        this.optPlanner =
-                createRelOptPlanner(this.plannerConfig, new GraphBuilderFactory(this.graphConfig));
+        this.optimizer = new GraphRelOptimizer(this.graphConfig);
         this.rexBuilder = rexBuilderFactory.apply(graphConfig);
         this.logicalPlanFactory = logicalPlanFactory;
     }
 
     public PlannerInstance instance(String query, IrMeta irMeta) {
-        GraphOptCluster optCluster = GraphOptCluster.create(this.optPlanner, this.rexBuilder);
+        GraphOptCluster optCluster =
+                GraphOptCluster.create(this.optimizer.getMatchPlanner(), this.rexBuilder);
+        RelMetadataQuery mq = optimizer.createMetaDataQuery();
+        if (mq != null) {
+            optCluster.setMetadataQuerySupplier(() -> mq);
+        }
         return new PlannerInstance(query, optCluster, irMeta);
     }
 
@@ -119,17 +112,13 @@ public class GraphPlanner {
             LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
 
             // apply optimizations
-            if (plannerConfig.isOn()
-                    && logicalPlan.getRegularQuery() != null
-                    && !logicalPlan.isReturnEmpty()) {
-                RelNode regularQuery = logicalPlan.getRegularQuery();
-                if (plannerConfig.getRules().contains(FieldTrimRule.class.getSimpleName())) {
-                    regularQuery = FieldTrimRule.trim(graphBuilder, regularQuery);
+            if (logicalPlan.getRegularQuery() != null && !logicalPlan.isReturnEmpty()) {
+                RelNode before = logicalPlan.getRegularQuery();
+                RelNode after =
+                        optimizer.optimize(before, new GraphIOProcessor(graphBuilder, irMeta));
+                if (after != before) {
+                    logicalPlan = new LogicalPlan(after, logicalPlan.getDynamicParams());
                 }
-                RelOptPlanner planner = this.optCluster.getPlanner();
-                planner.setRoot(regularQuery);
-                logicalPlan =
-                        new LogicalPlan(planner.findBestExp(), logicalPlan.getDynamicParams());
             }
             return logicalPlan;
         }
@@ -139,11 +128,23 @@ public class GraphPlanner {
             if (logicalPlan.isReturnEmpty()) {
                 return PhysicalPlan.createEmpty();
             } else if (logicalPlan.getRegularQuery() != null) {
-                try (PhysicalBuilder physicalBuilder =
-                        new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
-                    return physicalBuilder.build();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                String physicalOpt = FrontendConfig.PHYSICAL_OPT_CONFIG.get(graphConfig);
+                if ("proto".equals(physicalOpt.toLowerCase())) {
+                    logger.debug("physical type is proto");
+                    try (GraphRelProtoPhysicalBuilder physicalBuilder =
+                            new GraphRelProtoPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                        return physicalBuilder.build();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    logger.debug("physical type is ffi");
+                    try (PhysicalBuilder physicalBuilder =
+                            new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                        return physicalBuilder.build();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             } else {
                 return new ProcedurePhysicalBuilder(logicalPlan).build();
@@ -166,55 +167,6 @@ public class GraphPlanner {
 
         public PhysicalPlan getPhysicalPlan() {
             return physicalPlan;
-        }
-    }
-
-    private RelOptPlanner createRelOptPlanner(
-            PlannerConfig plannerConfig, RelBuilderFactory graphBuilderFactory) {
-        if (plannerConfig.isOn()) {
-            PlannerConfig.Opt opt = plannerConfig.getOpt();
-            switch (opt) {
-                case RBO:
-                    List<RelRule.Config> ruleConfigs = Lists.newArrayList();
-                    plannerConfig
-                            .getRules()
-                            .forEach(
-                                    k -> {
-                                        if (k.equals(
-                                                FilterJoinRule.FilterIntoJoinRule.class
-                                                        .getSimpleName())) {
-                                            ruleConfigs.add(CoreRules.FILTER_INTO_JOIN.config);
-                                        } else if (k.equals(
-                                                FilterMatchRule.class.getSimpleName())) {
-                                            ruleConfigs.add(FilterMatchRule.Config.DEFAULT);
-                                        } else if (k.equals(
-                                                NotMatchToAntiJoinRule.class.getSimpleName())) {
-                                            ruleConfigs.add(NotMatchToAntiJoinRule.Config.DEFAULT);
-                                        } else if (k.equals(
-                                                DegreeFusionRule.class.getSimpleName())) {
-                                            ruleConfigs.add(
-                                                    DegreeFusionRule.ExpandDegreeFusionRule.Config
-                                                            .DEFAULT);
-                                            ruleConfigs.add(
-                                                    DegreeFusionRule.ExpandGetVDegreeFusionRule
-                                                            .Config.DEFAULT);
-                                        }
-                                    });
-                    HepProgramBuilder hepBuilder = HepProgram.builder();
-                    ruleConfigs.forEach(
-                            k -> {
-                                hepBuilder.addRuleInstance(
-                                        k.withRelBuilderFactory(graphBuilderFactory).toRule());
-                            });
-                    return new HepPlanner(hepBuilder.build());
-                case CBO:
-                default:
-                    throw new UnsupportedOperationException(
-                            "planner type " + opt.name() + " is unsupported yet");
-            }
-        } else {
-            // return HepPlanner with empty rules if optimization is turned off
-            return new HepPlanner(HepProgram.builder().build());
         }
     }
 
@@ -263,7 +215,10 @@ public class GraphPlanner {
         Configs extraConfigs = createExtraConfigs(args.length > 4 ? args[4] : null);
         StoredProcedureMeta procedureMeta =
                 new StoredProcedureMeta(
-                        extraConfigs, logicalPlan.getOutputType(), logicalPlan.getDynamicParams());
+                        extraConfigs,
+                        query,
+                        logicalPlan.getOutputType(),
+                        logicalPlan.getDynamicParams());
         StoredProcedureMeta.Serializer.perform(procedureMeta, new FileOutputStream(args[3]));
     }
 }

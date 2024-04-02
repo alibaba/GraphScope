@@ -41,6 +41,11 @@ public class StreamIterator<T> implements CloseableIterator<T> {
         this.head = null;
     }
 
+    public StreamIterator(int capacity) {
+        this.buffer = new LinkedBlockingQueue<>(capacity);
+        this.head = null;
+    }
+
     @Override
     public boolean hasNext() {
         Throwable t = this.exception.get();

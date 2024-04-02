@@ -39,9 +39,9 @@ public class OrderLimitTest {
                         .sort(builder.variable(null, "name"))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[ASC])\n"
+                "GraphLogicalSort(sort0=[_.name], dir0=[ASC])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -57,9 +57,9 @@ public class OrderLimitTest {
                         .sort(builder.desc(builder.variable(null, "name")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[DESC])\n"
+                "GraphLogicalSort(sort0=[_.name], dir0=[DESC])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -76,9 +76,9 @@ public class OrderLimitTest {
                         .limit(1, 2)
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[DESC], offset=[1], fetch=[2])\n"
+                "GraphLogicalSort(sort0=[_.name], dir0=[DESC], offset=[1], fetch=[2])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -96,7 +96,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(offset=[1], fetch=[2])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 limit.explain().trim());
     }
 
@@ -117,12 +117,15 @@ public class OrderLimitTest {
                                                 builder.variable(null, "age"),
                                                 builder.literal(1))))
                         .build();
+        // fix a bug: we added a `project` before the `order`, which altered the current HEAD. To
+        // correct this, we need to add a subsequent project with a meaningful alias ($f1 instead of
+        // DEFAULT).
         Assert.assertEquals(
-                "GraphLogicalProject(~DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject(_=[$f1], isAppend=[true])\n"
                         + "  GraphLogicalSort(sort0=[$f0], dir0=[DESC])\n"
-                        + "    GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
+                        + "    GraphLogicalProject($f0=[+(_.age, 1)], isAppend=[true])\n"
                         + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[$f1], opt=[VERTEX])",
                 sort.explain().trim());
     }
 }

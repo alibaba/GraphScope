@@ -34,6 +34,8 @@ frontend_query_per_second_limit="frontend.query.per.second.limit: $FRONTEND_QUER
 
 gremlin_script_language_name="gremlin.script.language.name: $GREMLIN_SCRIPT_LANGUAGE_NAME"
 
+physical_opt_config="physical.opt.config: $PHYSICAL_OPT_CONFIG"
+
 count=1;
 while (($count<$SERVERSSIZE))
 do
@@ -45,6 +47,6 @@ done
 
 graph_schema="graph.schema: $GRAPH_SCHEMA"
 
-properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port\n$frontend_query_per_second_limit\n$gremlin_script_language_name"
+properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port\n$frontend_query_per_second_limit\n$gremlin_script_language_name\n$physical_opt_config"
 
 echo -e $properties > ./conf/ir.compiler.properties

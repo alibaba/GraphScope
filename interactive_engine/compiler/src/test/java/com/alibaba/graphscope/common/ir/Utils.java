@@ -21,6 +21,8 @@ import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.planner.GraphHepPlanner;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
@@ -30,9 +32,9 @@ import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelRule;
-import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -63,6 +65,15 @@ public class Utils {
                 new GraphOptSchema(cluster, mockSchemaMeta(schemaJson).getSchema()));
     }
 
+    public static final GraphBuilder mockGraphBuilder(GraphRelOptimizer optimizer, IrMeta irMeta) {
+        RelOptCluster optCluster =
+                GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
+        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
+        return (GraphBuilder)
+                relBuilderFactory.create(
+                        optCluster, new GraphOptSchema(optCluster, irMeta.getSchema()));
+    }
+
     public static final GraphBuilder mockGraphBuilder(Configs configs) {
         GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
         return GraphBuilder.create(
@@ -77,10 +88,10 @@ public class Utils {
                         ruleConfig.withRelBuilderFactory(relBuilderFactory).toRule());
             }
         }
-        return new HepPlanner(hepBuilder.build());
+        return new GraphHepPlanner(hepBuilder.build());
     }
 
-    private static IrMeta mockSchemaMeta(String schemaJson) {
+    public static IrMeta mockSchemaMeta(String schemaJson) {
         try {
             URL schemaResource =
                     Thread.currentThread().getContextClassLoader().getResource(schemaJson);

@@ -18,7 +18,6 @@
 #include <limits>
 #include <tuple>
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
-#include "flex/engines/hqps_db/structures/path.h"
 
 namespace gs {
 
@@ -29,14 +28,53 @@ static constexpr const None NONE;
 template <typename T>
 struct NullRecordCreator {
   static inline T GetNull() {
-    static T null_value = std::numeric_limits<T>::max();
-    return null_value;
+    if constexpr (std::numeric_limits<std::remove_const_t<
+                      std::remove_reference_t<T>>>::is_specialized) {
+      using type = std::remove_const_t<std::remove_reference_t<T>>;
+      static type null_value = std::numeric_limits<type>::max();
+      return null_value;
+    } else {
+      return T::GetNull();
+    }
   }
 };
 
 template <>
 struct NullRecordCreator<std::string_view> {
   static inline std::string_view GetNull() { return ""; }
+};
+
+template <>
+struct NullRecordCreator<Date> {
+  static inline Date GetNull() {
+    return Date(std::numeric_limits<int64_t>::max());
+  }
+};
+
+template <>
+struct NullRecordCreator<Any> {
+  static inline Any GetNull() { return Any(); }
+};
+
+template <>
+struct NullRecordCreator<LabelKey> {
+  static inline LabelKey GetNull() {
+    return LabelKey(std::numeric_limits<LabelKey::label_data_type>::max());
+  }
+};
+
+template <>
+struct NullRecordCreator<grape::EmptyType> {
+  static inline grape::EmptyType GetNull() { return grape::EmptyType(); }
+};
+
+// bool doesn't have a null value
+
+template <>
+struct NullRecordCreator<GlobalId> {
+  static inline GlobalId GetNull() {
+    return GlobalId(std::numeric_limits<GlobalId::gid_t>::max());
+  }
 };
 
 template <typename... T>
@@ -46,12 +84,12 @@ struct NullRecordCreator<std::tuple<T...>> {
   }
 };
 
-template <typename VID_T, typename LabelT>
-struct NullRecordCreator<Path<VID_T, LabelT>> {
-  static inline Path<VID_T, LabelT> GetNull() {
-    return Path<VID_T, LabelT>::Null();
-  }
-};
+static inline bool IsNull(const bool& b) { return false; }
+
+template <typename A, typename B>
+static inline bool IsNull(const std::pair<A, B>& pair) {
+  return IsNull(pair.first) && IsNull(pair.second);
+}
 
 template <size_t Ind = 0, typename... T>
 static inline bool IsNull(const std::tuple<T...>& tuple) {
@@ -110,6 +148,31 @@ template <typename T>
 bool operator!=(const None& lhs, const T& rhs) {
   return !IsNull(rhs);
 }
+
+template <size_t Is, typename T>
+bool has_null(const T& t) {
+  if constexpr (Is < std::tuple_size<T>::value) {
+    if (IsNull(std::get<Is>(t))) {
+      return true;
+    } else {
+      return has_null<Is + 1>(t);
+    }
+  } else {
+    return false;
+  }
+}
+
+template <typename... T>
+bool HasNull(const std::tuple<T...>& t) {
+  // at least one element in the tuple is null
+  return has_null<0>(t);
+}
+
+template <typename T>
+bool HasNull(const T& t) {
+  return IsNull(t);
+}
+
 }  // namespace gs
 
 #endif  // ENGINES_HQPS_ENGINE_NULL_RECORD_H_

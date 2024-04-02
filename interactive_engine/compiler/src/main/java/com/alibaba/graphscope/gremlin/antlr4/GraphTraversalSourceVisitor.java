@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
+import com.alibaba.graphscope.gremlin.antlr4x.visitor.LiteralVisitor;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -44,13 +45,12 @@ public class GraphTraversalSourceVisitor extends GremlinGSBaseVisitor<GraphTrave
     @Override
     public GraphTraversalSource visitTraversalMethod_with(
             GremlinGSParser.TraversalMethod_withContext ctx) {
-        if (ctx.stringLiteral() != null
-                && ctx.genericLiteral() != null
+        if (ctx.StringLiteral() != null
+                && ctx.oC_Literal() != null
                 && g instanceof IrCustomizedTraversalSource) {
             IrCustomizedTraversalSource customSource = (IrCustomizedTraversalSource) g;
-            String key = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
-            Object value =
-                    GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());
+            String key = (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral());
+            Object value = LiteralVisitor.INSTANCE.visit(ctx.oC_Literal());
             customSource.addConfig(key, value);
         }
         return g;

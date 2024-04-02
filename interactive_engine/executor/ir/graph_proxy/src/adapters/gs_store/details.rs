@@ -16,7 +16,7 @@
 use std::fmt;
 
 use ahash::HashMap;
-use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use dyn_type::DateTimeFormats;
 use dyn_type::Object;
 use dyn_type::Primitives;

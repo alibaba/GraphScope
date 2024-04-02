@@ -20,7 +20,7 @@ In `rt_mutable_graph`, schema is defined [here](./schema.h). To initialize an `M
 - Invoking the member functions of `Schema`, such as `add_vertex_label`, `add_edge_label`, etc.
 - Parsing an `Schema` object from a YAML configuration file, using `Schema::LoadFromYaml`.
 
-The configuration file ([modern graph example](./modern_graph/modern_graph.yaml)) defines the graph schema and the raw files of each type of vertices and edges. Also, a set of stored procedures can be registered here. With this configuration file, a `MutablePropertyGraph` object can be initialized.
+The configuration file ([modern graph example](./modern_graph/graph.yaml)) defines the graph schema and the raw files of each type of vertices and edges. Also, a set of stored procedures can be registered here. With this configuration file, a `MutablePropertyGraph` object can be initialized.
 
 Here is an example of a configuration file:
 

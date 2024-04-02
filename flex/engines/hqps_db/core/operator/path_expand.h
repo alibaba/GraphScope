@@ -65,13 +65,9 @@ class PathExpand {
 
     auto cur_label = vertex_set.GetLabel();
 
-    std::vector<offset_t> offsets;
-    CompressedPathSet<vertex_id_t, label_id_t> path_set;
-    std::tie(path_set, offsets) = path_expand_from_single_label(
-        graph, cur_label, vertex_set.GetVertices(), range, edge_expand_opt,
-        get_v_opt);
-
-    return std::make_pair(std::move(path_set), std::move(offsets));
+    return path_expand_from_single_label(graph, cur_label,
+                                         vertex_set.GetVertices(), range,
+                                         edge_expand_opt, get_v_opt);
   }
 
   // PathExpand Path with multiple edge triplet.
@@ -138,7 +134,7 @@ class PathExpand {
       CHECK(cur_path.size() == vertices_vec.size());
       next_path.resize(vertices_vec.size());
 
-      for (auto i = 0; i < vertices_vec.size(); ++i) {
+      for (size_t i = 0; i < vertices_vec.size(); ++i) {
         auto& tmp_path = cur_path[i];
         auto start = cur_offset_vec[i];
         auto end = cur_offset_vec[i + 1];
@@ -159,7 +155,7 @@ class PathExpand {
     }
 
     std::vector<Path<vid_t, LabelT>> res_path;
-    for (auto i = 0; i < vertices_vec.size(); ++i) {
+    for (size_t i = 0; i < vertices_vec.size(); ++i) {
       auto& tmp_path = prev_path[i];
       res_path.insert(res_path.end(), tmp_path.begin(), tmp_path.end());
       res_offsets.emplace_back(res_path.size());
@@ -205,7 +201,7 @@ class PathExpand {
 
   // PathExpandV for two_label_vertex set as input.
   template <typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
-            typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<int32_t>,
+            typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<Dist>,
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
   static RES_T PathExpandV(
       const GRAPH_INTERFACE& graph,
@@ -223,7 +219,7 @@ class PathExpand {
     std::tie(input_v_1, active_ind1) = vertex_set.GetVertices(1);
 
     std::vector<vertex_id_t> vids_vec0, vids_vec1;
-    std::vector<int32_t> dist_vec0, dist_vec1;
+    std::vector<Dist> dist_vec0, dist_vec1;
     std::vector<offset_t> offsets0, offsets1;
     std::tie(vids_vec0, dist_vec0, offsets0) = PathExpandRawVMultiV(
         graph, vertex_set.GetLabel(0), input_v_0, range, edge_expand_opt);
@@ -233,7 +229,7 @@ class PathExpand {
 
     // Default vertex set to vertex set.
     std::vector<vertex_id_t> res_vids;
-    std::vector<int32_t> res_dist;
+    std::vector<Dist> res_dist;
     std::vector<offset_t> res_offsets;
     res_vids.reserve(vids_vec0.size() + vids_vec1.size());
     res_dist.reserve(dist_vec0.size() + dist_vec1.size());
@@ -287,12 +283,10 @@ class PathExpand {
     auto cur_label = vertex_set.GetLabel();
     auto& range = path_expand_opt.range_;
     auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
-    auto& get_v_opt = path_expand_opt.get_v_opt_;
     auto tuple = PathExpandRawVMultiV(
         graph, cur_label, vertex_set.GetVertices(), range, edge_expand_opt);
 
     // Default vertex set to vertex set.
-    auto& vids_vec = std::get<0>(tuple);
     auto tuple_vec = single_col_vec_to_tuple_vec(std::move(std::get<1>(tuple)));
     auto row_vertex_set = make_row_vertex_set(std::move(std::get<0>(tuple)),
                                               edge_expand_opt.other_label_,
@@ -465,7 +459,6 @@ class PathExpand {
       EdgeExpandOpt<LabelT, EDGE_FILTER_T, SELECTOR...>& edge_expand_opt) {
     // auto src_label = vertex_set.GetLabel();
     // auto src_vertices_vec = vertex_set.GetVertices();
-    auto src_vertices_size = src_vertices_vec.size();
     vertex_id_t src_id = src_vertices_vec[0];
 
     std::vector<vertex_id_t> gids;
@@ -484,12 +477,16 @@ class PathExpand {
       dists.emplace_back(0);
     }
 
+    label_id_t real_src_label, dst_label;
+    std::tie(real_src_label, dst_label) = get_graph_label_pair(
+        edge_expand_opt.dir_, src_label, edge_expand_opt.other_label_);
+
     double visit_array_time = 0.0;
-    for (auto cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
+    for (size_t cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
       std::vector<size_t> unused;
       std::tie(tmp_vec, unused) = graph.GetOtherVerticesV2(
-          src_label, edge_expand_opt.other_label_, edge_expand_opt.edge_label_,
-          tmp_vec, gs::to_string(edge_expand_opt.dir_), INT_MAX);
+          real_src_label, dst_label, edge_expand_opt.edge_label_, tmp_vec,
+          gs::to_string(edge_expand_opt.dir_), INT_MAX);
       // remove duplicate
       size_t limit = 0;
       for (size_t i = 0; i < tmp_vec.size(); ++i) {
@@ -565,11 +562,15 @@ class PathExpand {
     }
     offsets[0].emplace_back(src_vertices_size);
 
+    label_id_t real_src_label, dst_label;
+    std::tie(real_src_label, dst_label) = get_graph_label_pair(
+        edge_expand_opt.dir_, src_label, edge_expand_opt.other_label_);
+
     double visit_array_time = 0.0;
-    for (auto cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
+    for (size_t cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
       double t0 = -grape::GetCurrentTime();
       auto pair = graph.GetOtherVerticesV2(
-          src_label, edge_expand_opt.other_label_, edge_expand_opt.edge_label_,
+          real_src_label, dst_label, edge_expand_opt.edge_label_,
           gids[cur_hop - 1], gs::to_string(edge_expand_opt.dir_), INT_MAX);
 
       gids[cur_hop].swap(pair.first);
@@ -609,10 +610,8 @@ class PathExpand {
           auto start = offsets[j][i];
           auto end = offsets[j][i + 1];
           for (auto k = start; k < end; ++k) {
-            auto gid = gids[j][k];
             flat_gids.emplace_back(gids[j][k]);
             dists.emplace_back(j);
-            // }
           }
         }
         flat_offsets.emplace_back(flat_gids.size());
@@ -796,10 +795,18 @@ class PathExpand {
 
     // create a copy of other_offsets.
     auto copied_other_offsets(other_offsets);
-    std::vector<label_id_t> labels_vec(range.limit_, src_label);
-    auto path_set = CompressedPathSet<vertex_id_t, label_id_t>(
-        std::move(other_vertices), std::move(other_offsets),
-        std::move(labels_vec), range.start_);
+    std::vector<Path<vertex_id_t, label_id_t>> paths;
+    {
+      std::vector<label_id_t> labels_vec(range.limit_, src_label);
+      // use compressed_path_set to generate all paths. We don't insert the
+      // CompressPathSet into context, since it is hard to be resized.
+      auto compressed_path_set = CompressedPathSet<vertex_id_t, label_id_t>(
+          std::move(other_vertices), std::move(other_offsets),
+          std::move(labels_vec), range.start_);
+      paths = compressed_path_set.get_all_valid_paths();
+    }
+
+    PathSet<vertex_id_t, label_id_t> path_set(std::move(paths));
 
     std::vector<std::vector<offset_t>> offset_amplify(
         range.limit_, std::vector<offset_t>(copied_other_offsets[0].size(), 0));

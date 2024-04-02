@@ -22,17 +22,14 @@ import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.common.store.SnapshotId;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
-import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
 import java.io.IOException;
 import java.util.*;
 
 public class GrootMetaFetcher implements IrMetaFetcher {
-    private IrSchemaParser parser;
-    private SchemaFetcher schemaFetcher;
+    private final SchemaFetcher schemaFetcher;
 
     public GrootMetaFetcher(SchemaFetcher schemaFetcher) {
-        this.parser = IrSchemaParser.getInstance();
         this.schemaFetcher = schemaFetcher;
     }
 

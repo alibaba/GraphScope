@@ -84,6 +84,6 @@ public class GraphOptSchema implements RelOptSchema {
 
     @Override
     public void registerRules(RelOptPlanner relOptPlanner) {
-        throw new UnsupportedOperationException("registerRules is unsupported yet");
+        // do nothing
     }
 }

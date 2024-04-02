@@ -1,0 +1,89 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
+            }]
+          }]
+        }
+      },
+      "alias": -1
+    }]
+  }, {
+    "opr": {
+      "repartition": {
+        "toAnother": {
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "edge": {
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "sampleRatio": 1.0
+        },
+        "alias": 0
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "elementOpt": "EDGE",
+          "graphDataType": [{
+            "label": {
+              "srcLabel": 0,
+              "dstLabel": 0
+            },
+            "props": [{
+              "propId": {
+                "name": "weight"
+              },
+              "type": "DOUBLE"
+            }]
+          }]
+        }
+      },
+      "alias": -1
+    }]
+  }, {
+    "opr": {
+      "sink": {
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

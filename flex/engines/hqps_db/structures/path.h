@@ -40,6 +40,8 @@ struct Path {
     return null_path;
   }
 
+  static Path<VID_T, LabelT> GetNull() { return Null(); }
+
   Path() = default;
 
   Path(const Path<VID_T, LabelT>& other)
@@ -256,7 +258,7 @@ class PathSet {
       std::fill(label_set.begin(), label_set.end(), true);  // empty means all
     }
     size_t valid_labels = 0;
-    for (int i = 0; i < label_set.size(); ++i) {
+    for (size_t i = 0; i < label_set.size(); ++i) {
       if (label_set[i]) {
         labels.emplace_back(i);
         label_to_index[i] = valid_labels++;
@@ -265,7 +267,7 @@ class PathSet {
 
     std::vector<grape::Bitset> label_bitsets;
     label_bitsets.resize(labels.size());
-    for (auto i = 0; i < labels.size(); ++i) {
+    for (size_t i = 0; i < labels.size(); ++i) {
       label_bitsets[i].init(paths_.size());
     }
     for (auto iter : *this) {
@@ -289,12 +291,26 @@ class PathSet {
       offsets.emplace_back(vids.size());
     }
 
-    for (auto i = 0; i < labels.size(); ++i) {
+    for (size_t i = 0; i < labels.size(); ++i) {
       label_bitsets[i].resize(vids.size());
     }
     auto general_set = make_general_set(std::move(vids), std::move(labels),
                                         std::move(label_bitsets));
     return std::make_pair(general_set, std::move(offsets));
+  }
+
+  void Repeat(std::vector<offset_t>& cur_offset,
+              std::vector<offset_t>& repeat_vec) {
+    std::vector<Path<VID_T, LabelT>> res;
+    CHECK(cur_offset.size() == repeat_vec.size() + 1);
+    for (size_t i = 0; i < repeat_vec.size(); ++i) {
+      for (size_t j = cur_offset[i]; j < cur_offset[i + 1]; ++j) {
+        for (size_t k = 0; k < repeat_vec[i]; ++k) {
+          res.push_back(paths_[j]);
+        }
+      }
+    }
+    res.swap(paths_);
   }
 
   // project my self.

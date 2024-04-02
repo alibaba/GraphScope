@@ -1,0 +1,137 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "alias": 0,
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
+            }]
+          }]
+        }
+      }
+    }]
+  }, {
+    "opr": {
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 0
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "vertex": {
+        "tag": 0,
+        "opt": "ITSELF",
+        "params": {
+          "columns": [{
+            "name": "name"
+          }],
+          "sampleRatio": 1.0
+        },
+        "alias": 0
+      }
+    }
+  }, {
+    "opr": {
+      "groupBy": {
+        "mappings": [{
+          "key": {
+            "tag": {
+              "id": 0
+            },
+            "property": {
+              "key": {
+                "name": "name"
+              }
+            },
+            "nodeType": {
+              "dataType": "STRING"
+            }
+          },
+          "alias": 1
+        }],
+        "functions": [{
+          "vars": [{
+            "tag": {
+              "id": 0
+            },
+            "nodeType": {
+              "graphType": {
+                "graphDataType": [{
+                  "label": {
+                  },
+                  "props": [{
+                    "propId": {
+                      "name": "id"
+                    },
+                    "type": "INT64"
+                  }, {
+                    "propId": {
+                      "name": "name"
+                    },
+                    "type": "STRING"
+                  }, {
+                    "propId": {
+                      "name": "age"
+                    },
+                    "type": "INT32"
+                  }]
+                }]
+              }
+            }
+          }],
+          "aggregate": "COUNT",
+          "alias": 2
+        }]
+      }
+    },
+    "metaData": [{
+      "type": {
+        "dataType": "STRING"
+      },
+      "alias": 1
+    }, {
+      "type": {
+        "dataType": "INT64"
+      },
+      "alias": 2
+    }]
+  }, {
+    "opr": {
+      "sink": {
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

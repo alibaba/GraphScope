@@ -91,7 +91,7 @@ public class DefaultMessageStore<OID_T extends WritableComparable, MSG_T extends
             GS_VID_T gid = gids.next();
             MSG_T msg = writables.next();
             if (!fragment.innerVertexGid2Vertex(gid, vertex)) {
-                throw new IllegalStateException("gid to vertex convertion failed: " + gid);
+                throw new IllegalStateException("gid to vertex conversion failed: " + gid);
             }
             GS_VID_T lid = vertex.getValue();
             addLidMessage(lid, msg);
@@ -109,7 +109,7 @@ public class DefaultMessageStore<OID_T extends WritableComparable, MSG_T extends
     @Override
     public void addGidMessage(GS_VID_T gid, MSG_T writable) {
         if (!fragment.innerVertexGid2Vertex(gid, vertex)) {
-            throw new IllegalStateException("gid to vertex convertion failed: " + gid);
+            throw new IllegalStateException("gid to vertex conversion failed: " + gid);
         }
         GS_VID_T lid = vertex.getValue();
         if (!messages.containsKey(lid)) {

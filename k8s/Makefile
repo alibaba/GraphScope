@@ -10,13 +10,15 @@ endif
 ARCH := $(shell uname -m)
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.20.3
+VINEYARD_VERSION ?= v0.21.3
 # This is the version of builder base image in most cases, except for graphscope-dev
 BUILDER_VERSION ?= $(VINEYARD_VERSION)
 # This is the version of runtime base image
 RUNTIME_VERSION ?= $(VINEYARD_VERSION)
 PROFILE ?= release
 CI ?= false
+# Flex Coordinator
+ENABLE_COORDINATOR ?= false
 
 BUILD_PROGRESS  	?= auto
 
@@ -178,5 +180,6 @@ graphscope-store:
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg profile=${PROFILE} \
+		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
 		-t graphscope/graphscope-store:${VERSION} \
 		-f $(DOCKERFILES_DIR)/graphscope-store.Dockerfile .

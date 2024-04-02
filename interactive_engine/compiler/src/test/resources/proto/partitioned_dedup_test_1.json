@@ -1,0 +1,113 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "alias": 0,
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
+            }]
+          }]
+        }
+      }
+    }]
+  }, {
+    "opr": {
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 0
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "vertex": {
+        "tag": 0,
+        "opt": "ITSELF",
+        "params": {
+          "columns": [{
+            "name": "name"
+          }],
+          "sampleRatio": 1.0
+        },
+        "alias": 0
+      }
+    }
+  }, {
+    "opr": {
+      "project": {
+        "mappings": [{
+          "expr": {
+            "operators": [{
+              "var": {
+                "tag": {
+                  "id": 0
+                },
+                "property": {
+                  "key": {
+                    "name": "name"
+                  }
+                },
+                "nodeType": {
+                  "dataType": "STRING"
+                }
+              },
+              "nodeType": {
+                "dataType": "STRING"
+              }
+            }]
+          },
+          "alias": 1
+        }]
+      }
+    }
+  }, {
+    "opr": {
+      "dedup": {
+        "keys": [{
+          "tag": {
+            "id": 1
+          },
+          "nodeType": {
+            "dataType": "STRING"
+          }
+        }]
+      }
+    }
+  }, {
+    "opr": {
+      "sink": {
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

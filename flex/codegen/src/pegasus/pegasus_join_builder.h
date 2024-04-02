@@ -209,7 +209,7 @@ class JoinOpBuilder {
         break;
       }
       default:
-        LOG(FATAL) << "Not supproted in union.";
+        LOG(FATAL) << "Not supported in union.";
       }
     }
     sub_plan_code_ss << "stream_" << plan_size;

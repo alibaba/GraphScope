@@ -12,10 +12,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "flex/engines/http_server/handler/hqps_http_handler.h"
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+#include "opentelemetry/context/context.h"
+#include "opentelemetry/trace/span_metadata.h"
+#include "opentelemetry/trace/span_startoptions.h"
+
+#endif  // HAVE_OPENTELEMETRY_CPP
+
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/types.h"
+#include "flex/otel/otel.h"
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+namespace otel {
+template <typename T>
+class HttpTextMapCarrier
+    : public opentelemetry::context::propagation::TextMapCarrier {
+ public:
+  HttpTextMapCarrier(T& headers) : headers_(headers) {}
+  HttpTextMapCarrier() = default;
+  virtual opentelemetry::nostd::string_view Get(
+      opentelemetry::nostd::string_view key) const noexcept override {
+    auto it = headers_.find(key.data());
+    if (it != headers_.end()) {
+      return opentelemetry::nostd::string_view(it->second);
+    }
+    return "";
+  }
+
+  virtual void Set(opentelemetry::nostd::string_view key,
+                   opentelemetry::nostd::string_view value) noexcept override {
+    headers_.insert(std::pair{std::string(key), std::string(value)});
+  }
+
+  T headers_;
+};
+}  // namespace otel
+#endif  // HAVE_OPENTELEMETRY_CPP
 
 namespace server {
 
@@ -26,7 +63,8 @@ hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
       max_group_id_(max_group_id),
       group_inc_step_(group_inc_step),
       shard_concurrency_(shard_concurrency),
-      executor_idx_(0) {
+      executor_idx_(0),
+      is_cancelled_(false) {
   executor_refs_.reserve(shard_concurrency_);
   hiactor::scope_builder builder;
   builder.set_shard(hiactor::local_shard_id())
@@ -50,8 +88,13 @@ seastar::future<> hqps_ic_handler::cancel_current_scope() {
         LOG(INFO) << "Cancel IC scope successfully!";
         // clear the actor refs
         executor_refs_.clear();
+        is_cancelled_ = true;
         return seastar::make_ready_future<>();
       });
+}
+
+bool hqps_ic_handler::is_current_scope_cancelled() const {
+  return is_cancelled_;
 }
 
 bool hqps_ic_handler::create_actors() {
@@ -77,6 +120,7 @@ bool hqps_ic_handler::create_actors() {
   for (unsigned i = 0; i < shard_concurrency_; ++i) {
     executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
   }
+  is_cancelled_ = false;  // locked outside
   return true;
 }
 
@@ -129,7 +173,8 @@ hqps_adhoc_query_handler::hqps_adhoc_query_handler(
       max_group_id_(max_group_id),
       group_inc_step_(group_inc_step),
       shard_concurrency_(shard_concurrency),
-      executor_idx_(0) {
+      executor_idx_(0),
+      is_cancelled_(false) {
   executor_refs_.reserve(shard_concurrency_);
   {
     hiactor::scope_builder builder;
@@ -176,8 +221,13 @@ seastar::future<> hqps_adhoc_query_handler::cancel_current_scope() {
         executor_refs_.clear();
         codegen_actor_refs_.clear();
         LOG(INFO) << "Clear actor refs successfully!";
+        is_cancelled_ = true;
         return seastar::make_ready_future<>();
       });
+}
+
+bool hqps_adhoc_query_handler::is_current_scope_cancelled() const {
+  return is_cancelled_;
 }
 
 bool hqps_adhoc_query_handler::create_actors() {
@@ -218,8 +268,26 @@ bool hqps_adhoc_query_handler::create_actors() {
             hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
     codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
   }
+  is_cancelled_ = false;
   return true;
 }
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+opentelemetry::trace::StartSpanOptions get_parent_ctx(
+    opentelemetry::context::Context& context,
+    std::map<std::string, std::string>& headers) {
+  auto propagator = opentelemetry::context::propagation::
+      GlobalTextMapPropagator::GetGlobalPropagator();
+  otel::HttpTextMapCarrier<decltype(headers)> carrier(headers);
+  auto new_context = propagator->Extract(carrier, context);
+
+  opentelemetry::trace::StartSpanOptions options;
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+  auto parent_ctx = opentelemetry::trace::GetSpan(new_context)->GetContext();
+  options.parent = opentelemetry::trace::GetSpan(new_context)->GetContext();
+  return options;
+}
+#endif  // HAVE_OPENTELEMETRY_CPP
 
 seastar::future<std::unique_ptr<seastar::httpd::reply>>
 hqps_adhoc_query_handler::handle(const seastar::sstring& path,
@@ -227,6 +295,20 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
                                  std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+  auto tracer_ = otel::get_tracer("hqps_adhoc_query_handler");
+  // Extract context from headers. This copy is necessary to avoid access after
+  // header content been freed
+  std::map<std::string, std::string> headers(req->_headers.begin(),
+                                             req->_headers.end());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+  auto options = get_parent_ctx(current_ctx, headers);
+  auto span = tracer_->StartSpan(path.data(), options);
+  auto scope = tracer_->WithActiveSpan(span);
+#else
+  int span = 0;
+#endif  // HAVE_OPENTELEMETRY_CPP
 
   return codegen_actor_refs_[0]
       .do_codegen(query_param{std::move(req->content)})
@@ -243,26 +325,38 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         return seastar::make_ready_future<query_param>(
             std::move(output.content.substr(4)));
       })
-      .then_wrapped(
-          [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              rep->set_status(
-                  seastar::httpd::reply::status_type::internal_server_error);
-              try {
-                std::rethrow_exception(fut.get_exception());
-              } catch (std::exception& e) {
-                rep->write_body("bin", seastar::sstring(e.what()));
-              }
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            }
-            auto result = fut.get0();
-            rep->write_body("bin", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-          });
+      .then_wrapped([rep = std::move(rep)
+#ifdef HAVE_OPENTELEMETRY_CPP
+                         ,
+                     span
+#endif  // HAVE_OPENTELEMETRY_CPP
+  ](seastar::future<query_result>&& fut) mutable {
+        if (__builtin_expect(fut.failed(), false)) {
+          rep->set_status(
+              seastar::httpd::reply::status_type::internal_server_error);
+          try {
+            std::rethrow_exception(fut.get_exception());
+          } catch (std::exception& e) {
+            rep->write_body("bin", seastar::sstring(e.what()));
+          }
+#ifdef HAVE_OPENTELEMETRY_CPP
+          span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                          "Internal Server Error");
+          span->End();
+#endif  // HAVE_OPENTELEMETRY_CPP
+          rep->done();
+          return seastar::make_ready_future<
+              std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+        }
+        auto result = fut.get0();
+        rep->write_body("bin", std::move(result.content));
+#ifdef HAVE_OPENTELEMETRY_CPP
+        span->End();
+#endif  // HAVE_OPENTELEMETRY_CPP
+        rep->done();
+        return seastar::make_ready_future<
+            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+      });
 }
 
 seastar::future<std::unique_ptr<seastar::httpd::reply>>
@@ -298,6 +392,11 @@ uint16_t hqps_http_handler::get_port() const { return http_port_; }
 
 bool hqps_http_handler::is_running() const { return running_.load(); }
 
+bool hqps_http_handler::is_actors_running() const {
+  return !ic_handler_->is_current_scope_cancelled() &&
+         !adhoc_query_handler_->is_current_scope_cancelled();
+}
+
 void hqps_http_handler::start() {
   auto fut = seastar::alien::submit_to(
       *seastar::alien::internal::default_instance, 0, [this] {
@@ -329,15 +428,30 @@ void hqps_http_handler::stop() {
 
 seastar::future<> hqps_http_handler::stop_query_actors() {
   // First cancel the scope.
-  return ic_handler_->cancel_current_scope()
-      .then([this] {
-        LOG(INFO) << "Cancel ic scope";
-        return adhoc_query_handler_->cancel_current_scope();
-      })
-      .then([] {
-        LOG(INFO) << "Cancel adhoc scope";
-        return seastar::make_ready_future<>();
-      });
+  if (ic_handler_->is_current_scope_cancelled()) {
+    LOG(INFO) << "IC scope has been cancelled!";
+    if (adhoc_query_handler_->is_current_scope_cancelled()) {
+      LOG(INFO) << "Adhoc scope has been cancelled!";
+      return seastar::make_ready_future<>();
+    } else {
+      return adhoc_query_handler_->cancel_current_scope();
+    }
+  } else {
+    return ic_handler_->cancel_current_scope()
+        .then([this] {
+          LOG(INFO) << "Cancel ic scope";
+          if (adhoc_query_handler_->is_current_scope_cancelled()) {
+            LOG(INFO) << "Adhoc scope has been cancelled!";
+            return seastar::make_ready_future<>();
+          } else {
+            return adhoc_query_handler_->cancel_current_scope();
+          }
+        })
+        .then([] {
+          LOG(INFO) << "Cancel adhoc scope";
+          return seastar::make_ready_future<>();
+        });
+  }
 }
 
 void hqps_http_handler::start_query_actors() {

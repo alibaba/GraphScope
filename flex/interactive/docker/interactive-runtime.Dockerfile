@@ -22,6 +22,14 @@ RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   . ${HOME}/.cargo/env && \
   cargo --version
 
+# install opentelemetry
+RUN cd /tmp && git clone https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
+cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
+-DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
+-DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
+-DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
+-DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && make -j  && make install && rm -rf /tmp/opentelemetry-cpp
+
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
     git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF && make -j && make install && \
@@ -38,21 +46,18 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
     fi
 
-from ubuntu:20.04 as final_image
+
+########################### RUNTIME IMAGE ###########################
+
+from ubuntu:22.04 as final_image
 ARG ARCH
 ARG ENABLE_COORDINATOR="false"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y sudo
-
-# Add graphscope user with user id 1001
-RUN useradd -m graphscope -u 1001 && \
-    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-
 # g++ + jre 500MB
-RUN apt-get update && apt-get -y install locales g++-9 cmake openjdk-11-jre-headless && \
-    ln -sf /usr/bin/g++-9 /usr/bin/g++ && locale-gen en_US.UTF-8 && apt-get clean -y && sudo rm -rf /var/lib/apt/lists/* 
+RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless && \
+    locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/* 
 
 # python3
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
@@ -74,6 +79,11 @@ COPY --from=builder /opt/flex /opt/flex
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
+COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/engine_config_test.yaml /opt/flex/share/engine_config.yaml
+COPY --from=builder /home/graphscope/GraphScope/flex/interactive/docker/entrypoint.sh /opt/flex/bin/entrypoint.sh
+RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml
+# change the default graph name.
+RUN sed -i 's/default_graph: ldbc/default_graph: gs_interactive_default_graph/g' /opt/flex/share/engine_config.yaml
 
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
@@ -85,6 +95,7 @@ COPY --from=builder /usr/lib/$ARCH-linux-gnu/libglog*.so* /usr/lib/$ARCH-linux-g
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libyaml-cpp*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libmpi*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_program_options*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_filesystem*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_thread*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libcrypto*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-rte*.so* /usr/lib/$ARCH-linux-gnu/
@@ -127,7 +138,15 @@ ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/:/usr/local/lib/
 # flex solution
 ENV SOLUTION=INTERACTIVE
 
+# Add graphscope user with user id 1001
+RUN useradd -m graphscope -u 1001 && \
+    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+RUN chown -R graphscope:graphscope /opt/flex
+
 # set home to graphscope user
 ENV HOME=/home/graphscope
 USER graphscope
 WORKDIR /home/graphscope
+
+ENTRYPOINT ["/opt/flex/bin/entrypoint.sh"]

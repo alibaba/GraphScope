@@ -3,6 +3,7 @@ package com.alibaba.graphscope.groot.store;
 import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
@@ -47,9 +48,9 @@ public class KafkaProcessor {
     private Thread pollThread;
 
     private final boolean isSecondary;
-
+    private final long offsetsPersistIntervalMs;
     private final WriterAgent writerAgent;
-    public static final String QUEUE_OFFSETS_PATH = "queue_offsets";
+    public static final String QUEUE_OFFSETS_PATH = "queue_offsets_store";
     public static final int QUEUE_COUNT = 1;
 
     public static int storeId = 0;
@@ -71,6 +72,7 @@ public class KafkaProcessor {
         this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
 
         storeId = CommonConfig.NODE_IDX.get(configs);
+        offsetsPersistIntervalMs = CoordinatorConfig.OFFSETS_PERSIST_INTERVAL_MS.get(configs);
     }
 
     public void start() {
@@ -92,8 +94,8 @@ public class KafkaProcessor {
                         logger.error("error in updateQueueOffsets, ignore", e);
                     }
                 },
-                3000,
-                3000,
+                offsetsPersistIntervalMs,
+                offsetsPersistIntervalMs,
                 TimeUnit.MILLISECONDS);
         this.shouldStop = false;
         this.pollThread = new Thread(this::pollBatches);
@@ -131,8 +133,6 @@ public class KafkaProcessor {
             for (int i = 0; i < QUEUE_COUNT; i++) {
                 offsets.add(-1L);
             }
-            byte[] b = this.objectMapper.writeValueAsBytes(offsets);
-            this.metaStore.write(QUEUE_OFFSETS_PATH, b);
         } else {
             byte[] offsetBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
             offsets = objectMapper.readValue(offsetBytes, new TypeReference<>() {});
@@ -144,6 +144,15 @@ public class KafkaProcessor {
                     String.format(
                             "recovered queueCount %d, expect %d", offsets.size(), QUEUE_COUNT);
             throw new IllegalStateException(msg);
+        }
+
+        long recoveredOffset = offsets.get(0);
+        if (recoveredOffset != -1) { // if -1, then assume it's a fresh store
+            try (LogReader ignored = logService.createReader(storeId, recoveredOffset + 1)) {
+            } catch (Exception e) {
+                throw new IOException(
+                        "recovered queue [0] offset [" + recoveredOffset + "] is not available", e);
+            }
         }
     }
 
@@ -181,7 +190,7 @@ public class KafkaProcessor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
+        // -1 stands for poll from latest
         try (LogReader reader = logService.createReader(storeId, -1)) {
             while (!shouldStop) {
                 ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
@@ -236,9 +245,13 @@ public class KafkaProcessor {
     }
 
     public void replayWAL() throws IOException {
-        long queueOffset = queueOffsetsRef.get().get(0);
-        long replayFrom = queueOffset + 1;
+        // Only has one queue per store
+        long replayFrom = queueOffsetsRef.get().get(0) + 1;
         logger.info("replay WAL of queue#[{}] from offset [{}]", storeId, replayFrom);
+        if (replayFrom == 0) {
+            logger.error("It's not normal to replay from the 0 offset, skipped");
+            return;
+        }
         int replayCount = 0;
         try (LogReader logReader = this.logService.createReader(storeId, replayFrom)) {
             ConsumerRecord<LogEntry, LogEntry> record;

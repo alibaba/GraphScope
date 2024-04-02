@@ -61,13 +61,15 @@ class TestStringEdgeProperty {
     CHECK(db_.graph().get_lid(dst_label_, dst, dst_lid));
 
     {
-      auto graph_view = txn.GetOutgoingSingleGraphView<std::string_view>(
+      auto graph_view = txn.GetOutgoingGraphView<std::string_view>(
           src_label_, dst_label_, edge_label_);
-      auto oe = graph_view.get_edge(src_lid);
-      LOG(INFO) << oe.get_data() << "\n";
-      CHECK(oe.get_data() == "0.4")
-          << "Inconsistent value, Excepted : 0.4, Got " << oe.get_data()
-          << "\n";
+      auto oes = graph_view.get_edges(src_lid);
+      for (auto& oe : oes) {
+        LOG(INFO) << oe.get_data() << "\n";
+        CHECK(oe.get_data() == "0.4")
+            << "Inconsistent value, Excepted : 0.4, Got " << oe.get_data()
+            << "\n";
+      }
     }
     {
       auto graph_view = txn.GetIncomingGraphView<std::string_view>(
@@ -103,12 +105,14 @@ class TestStringEdgeProperty {
     }
     {
       auto txn = db_.GetReadTransaction();
-      auto graph_view = txn.GetOutgoingSingleGraphView<std::string_view>(
+      auto graph_view = txn.GetOutgoingGraphView<std::string_view>(
           src_label_, dst_label_, edge_label_);
-      auto oe = graph_view.get_edge(src_lid);
-      CHECK(oe.get_data() == "test")
-          << "Inconsistent value, Excepted: test, Got " << oe.get_data()
-          << "\n";
+      auto oes = graph_view.get_edges(src_lid);
+      for (auto& oe : oes) {
+        CHECK(oe.get_data() == "test")
+            << "Inconsistent value, Excepted: test, Got " << oe.get_data()
+            << "\n";
+      }
     }
     LOG(INFO) << "Finish test add edge\n";
   }
@@ -135,8 +139,13 @@ int main(int argc, char** argv) {
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
 
-  auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  db.Open(schema, data_path, shard_num, warmup, true);
+  auto schema_res = gs::Schema::LoadFromYaml(graph_schema_path);
+  if (!schema_res.ok()) {
+    LOG(ERROR) << "Fail to load graph schema file: "
+               << schema_res.status().error_message();
+    return -1;
+  }
+  db.Open(schema_res.value(), data_path, shard_num, warmup, true);
 
   t0 += grape::GetCurrentTime();
 
@@ -146,7 +155,7 @@ int main(int argc, char** argv) {
   std::filesystem::remove_all(data_path + "/wal/");
   {
     double t0 = -grape::GetCurrentTime();
-    db.Open(schema, data_path, shard_num, warmup, false);
+    db.Open(schema_res.value(), data_path, shard_num, warmup, false);
 
     t0 += grape::GetCurrentTime();
 

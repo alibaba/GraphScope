@@ -80,12 +80,21 @@ void SumEleSize(std::tuple<T...>& t, size_t& size) {
 template <typename T, typename std::enable_if<
                           (std::is_same_v<T, int32_t>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
-  value->set_i32(v);
+  if (v == NullRecordCreator<int32_t>::GetNull()) {
+    value->mutable_none();
+  } else {
+    value->set_i32(v);
+  }
 }
+
 template <typename T, typename std::enable_if<
                           (std::is_same_v<T, uint32_t>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
-  value->set_i32(v);
+  if (v == NullRecordCreator<int32_t>::GetNull()) {
+    value->mutable_none();
+  } else {
+    value->set_i32(v);
+  }
 }
 
 template <typename T,
@@ -164,19 +173,71 @@ template <typename T>
 void template_set_tuple_value(results::Collection* collection,
                               const std::vector<T>& t) {
   for (size_t i = 0; i < t.size(); ++i) {
-    auto cur_ele = collection->add_collection()->mutable_object();
+    auto cur_collection = collection->add_collection();
     // if is tuple
     if constexpr (gs::is_tuple<T>::value) {
       LOG(WARNING) << "PLEASE FIXME: tuple in vector is not supported "
                       "yet.";
-      template_set_value(cur_ele, gs::to_string(t[i]));
+      template_set_value(cur_collection->mutable_object(), gs::to_string(t[i]));
+    } else if constexpr (std::is_same_v<T, GlobalId>) {
+      cur_collection->mutable_vertex()->mutable_label()->set_id(
+          t[i].label_id());
+      cur_collection->mutable_vertex()->set_id(t[i].global_id);
     } else {
-      template_set_value(cur_ele, t[i]);
+      template_set_value(cur_collection->mutable_object(), t[i]);
     }
   }
 }
 
 /////Sink Any
+
+void set_any_to_element(const Any& any, results::Element* element) {
+  if (any.type == PropertyType::Bool()) {
+    element->mutable_object()->set_boolean(any.value.b);
+  } else if (any.type == PropertyType::Int32()) {
+    element->mutable_object()->set_i32(any.value.i);
+  } else if (any.type == PropertyType::UInt32()) {
+    // FIXME(zhanglei): temporarily use i32, fix this after common.proto is
+    // changed
+    element->mutable_object()->set_i32(any.value.ui);
+  } else if (any.type == PropertyType::Int64()) {
+    element->mutable_object()->set_i64(any.value.l);
+  } else if (any.type == PropertyType::UInt64()) {
+    // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
+    // changed
+    element->mutable_object()->set_i64(any.value.ul);
+  } else if (any.type == PropertyType::Double()) {
+    element->mutable_object()->set_f64(any.value.db);
+  } else if (any.type == PropertyType::Float()) {
+    element->mutable_object()->set_f64(any.value.f);
+  } else if (any.type == PropertyType::Date()) {
+    element->mutable_object()->set_i64(any.value.d.milli_second);
+  } else if (any.type == PropertyType::String()) {
+    element->mutable_object()->mutable_str()->assign(any.value.s.data(),
+                                                     any.value.s.size());
+  } else if (any.type == PropertyType::VertexGlobalId()) {
+    auto vertex = element->mutable_vertex();
+    vertex->mutable_label()->set_id(any.value.vertex_gid.label_id());
+    vertex->set_id(any.value.vertex_gid.global_id);
+  } else if (any.type == PropertyType::Label()) {
+    element->mutable_object()->set_i32(any.value.label_key.label_id);
+  } else if (any.type == PropertyType::Empty()) {
+    element->mutable_object()->mutable_none();
+  } else {
+    LOG(WARNING) << "Unexpected property type: "
+                 << static_cast<int>(any.type.type_enum);
+  }
+}
+
+void template_set_key_value(results::KeyValues* map,
+                            const VariableKeyValue& key_value) {
+  for (auto& kv : key_value) {
+    auto cur_kv = map->add_key_values();
+    cur_kv->mutable_key()->set_str(kv.first);
+    auto value = cur_kv->mutable_value();
+    set_any_to_element(kv.second, value);
+  }
+}
 
 void set_any_to_common_value(const Any& any, common::Value* value) {
   if (any.type == PropertyType::Bool()) {
@@ -705,7 +766,7 @@ class SinkOp {
                             const std::vector<size_t>& repeat_offsets,
                             int32_t tag_id) {
     if (repeat_offsets.empty()) {
-      CHECK(collection.Size() == results_vec.results_size())
+      CHECK(collection.Size() == (size_t) results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
       for (size_t i = 0; i < collection.Size(); ++i) {
@@ -717,9 +778,15 @@ class SinkOp {
         auto record = row->mutable_record();
         auto new_col = record->add_columns();
         new_col->mutable_name_or_id()->set_id(tag_id);
-        auto mutable_collection =
-            new_col->mutable_entry()->mutable_collection();
-        template_set_tuple_value(mutable_collection, collection.Get(i));
+        if constexpr (gs::is_vector<T>::value &&
+                      gs::is_pair<typename T::value_type>::value) {
+          auto mutable_map = new_col->mutable_entry()->mutable_map();
+          template_set_key_value(mutable_map, collection.Get(i));
+        } else {
+          auto mutable_collection =
+              new_col->mutable_entry()->mutable_collection();
+          template_set_tuple_value(mutable_collection, collection.Get(i));
+        }
       }
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
@@ -730,9 +797,53 @@ class SinkOp {
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
           new_col->mutable_name_or_id()->set_id(tag_id);
-          auto mutable_collection =
-              new_col->mutable_entry()->mutable_collection();
-          template_set_tuple_value(mutable_collection, collection.Get(i));
+          if constexpr (gs::is_vector<T>::value &&
+                        gs::is_pair<typename T::value_type>::value) {
+            auto mutable_map = new_col->mutable_entry()->mutable_map();
+            template_set_key_value(mutable_map, collection.Get(i));
+          } else {
+            auto mutable_collection =
+                new_col->mutable_entry()->mutable_collection();
+            template_set_tuple_value(mutable_collection, collection.Get(i));
+          }
+        }
+      }
+    }
+  }
+
+  // sink for collection of unordered_map.
+  template <size_t Ind, size_t act_tag_id, typename KeyT, typename ValueT>
+  static void sink_col_impl(
+      const GRAPH_INTERFACE& graph, results::CollectiveResults& results_vec,
+      const Collection<std::unordered_map<KeyT, ValueT>>& collection,
+      const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
+    if (repeat_offsets.empty()) {
+      CHECK(collection.Size() == (size_t) results_vec.results_size())
+          << "size neq " << collection.Size() << " "
+          << results_vec.results_size();
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        // auto& row = results_vec[i];
+        auto row = results_vec.mutable_results(i);
+        CHECK(row->record().columns_size() == Ind)
+            << "record column size: " << row->record().columns_size()
+            << ", ind: " << Ind;
+        auto record = row->mutable_record();
+        auto new_col = record->add_columns();
+        new_col->mutable_name_or_id()->set_id(tag_id);
+        auto mutable_map = new_col->mutable_entry()->mutable_map();
+        template_set_key_value(mutable_map, collection.Get(i));
+      }
+    } else {
+      CHECK(repeat_offsets.size() == collection.Size());
+      size_t cur_ind = 0;
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
+          auto row = results_vec.mutable_results(cur_ind++);
+          auto record = row->mutable_record();
+          auto new_col = record->add_columns();
+          new_col->mutable_name_or_id()->set_id(tag_id);
+          auto mutable_map = new_col->mutable_entry()->mutable_map();
+          template_set_key_value(mutable_map, collection.Get(i));
         }
       }
     }
@@ -745,6 +856,7 @@ class SinkOp {
       const GRAPH_INTERFACE& graph, results::CollectiveResults& results_vec,
       const GeneralVertexSet<VID_T, LabelT, SET_T...>& vertex_set,
       const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
+    LOG(INFO) << "Sink for general vertex set: " << demangle(vertex_set);
     auto& schema = graph.schema();
     auto vertices_vec = vertex_set.GetVertices();
     auto labels_vec = vertex_set.GetLabels();
@@ -766,10 +878,10 @@ class SinkOp {
       }
     }
 
-    label_t label;
+    label_t label = std::numeric_limits<label_t>::max();
     size_t label_vec_ind;
     if (repeat_offsets.empty()) {
-      CHECK(vertex_set.Size() == results_vec.results_size())
+      CHECK(vertex_set.Size() == (size_t) results_vec.results_size())
           << "size neq " << vertex_set.Size() << " "
           << results_vec.results_size();
 
@@ -791,6 +903,10 @@ class SinkOp {
             label_vec_ind = j;
             break;
           }
+        }
+        if (label == std::numeric_limits<label_t>::max()) {
+          LOG(ERROR) << "No label found for vertex: " << vertices_vec[i];
+          continue;
         }
         mutable_vertex->mutable_label()->set_id(label);
         mutable_vertex->set_id(encode_unique_vertex_id(label, vertices_vec[i]));
@@ -825,6 +941,10 @@ class SinkOp {
               break;
             }
           }
+          if (label == std::numeric_limits<label_t>::max()) {
+            LOG(ERROR) << "No label found for vertex: " << vertices_vec[i];
+            continue;
+          }
           mutable_vertex->mutable_label()->set_id(label);
           mutable_vertex->set_id(
               encode_unique_vertex_id(label, vertices_vec[i]));
@@ -843,6 +963,7 @@ class SinkOp {
         }
       }
     }
+    // LOG(INFO) << "result_vec" << results_vec.DebugString();
   }
 
   template <size_t Ind, size_t act_tag_id, typename EDGE_SET_T,
@@ -853,12 +974,12 @@ class SinkOp {
                             const std::vector<size_t>& repeat_offsets,
                             int32_t tag_id) {
     if (repeat_offsets.empty()) {
-      CHECK(edge_set.Size() == results_vec.results_size())
+      CHECK(edge_set.Size() == (size_t) results_vec.results_size())
           << "size neq " << edge_set.Size() << " "
           << results_vec.results_size();
       auto iter = edge_set.begin();
       auto end_iter = edge_set.end();
-      for (size_t i = 0; i < results_vec.results_size(); ++i) {
+      for (int32_t i = 0; i < results_vec.results_size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
             << "record column size: " << row->record().columns_size()
@@ -871,8 +992,10 @@ class SinkOp {
         CHECK(iter != end_iter);
         auto unique_edge_label = generate_edge_label_id(
             iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
-        mutable_edge->mutable_label()->set_id(unique_edge_label);
-        mutable_edge->set_id(encode_unique_edge_id(unique_edge_label, i));
+        mutable_edge->mutable_label()->set_id(iter.GetEdgeLabel());
+        mutable_edge->set_id(encode_unique_edge_id(
+            unique_edge_label, iter.GetSrc(),
+            iter.GetDst()));  // Currently we don't have a unique id for edge.
         mutable_edge->set_src_id(
             encode_unique_vertex_id(iter.GetSrcLabel(), iter.GetSrc()));
         mutable_edge->mutable_src_label()->set_id(iter.GetSrcLabel());
@@ -888,7 +1011,7 @@ class SinkOp {
         // todo: set properties.
       }
     } else {
-      CHECK(repeat_offsets.size() == edge_set.Size());
+      CHECK(repeat_offsets.size() == (size_t) edge_set.Size());
       size_t cur_ind = 0;
       auto iter = edge_set.begin();
       auto end_iter = edge_set.end();
@@ -906,9 +1029,10 @@ class SinkOp {
               new_col->mutable_entry()->mutable_element()->mutable_edge();
           auto unique_edge_label = generate_edge_label_id(
               iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
-          mutable_edge->mutable_label()->set_id(unique_edge_label);
-          mutable_edge->set_id(
-              encode_unique_edge_id(unique_edge_label, cur_ind - 1));
+          mutable_edge->mutable_label()->set_id(iter.GetEdgeLabel());
+          mutable_edge->set_id(encode_unique_edge_id(
+              unique_edge_label, iter.GetSrc(),
+              iter.GetDst()));  // Currently we don't have a unique id for edge.
           mutable_edge->set_src_id(
               encode_unique_vertex_id(iter.GetSrcLabel(), iter.GetSrc()));
           mutable_edge->mutable_src_label()->set_id(iter.GetSrcLabel());
@@ -1002,29 +1126,35 @@ class SinkOp {
     vertex->mutable_label()->set_id(label);
   }
 
-  static vid_t encode_unique_vertex_id(label_id_t label_id, vid_t vid) {
+  static uint64_t encode_unique_vertex_id(label_id_t label_id, vid_t vid) {
     // encode label_id and vid to a unique vid
-    vid_t unique_vid = label_id;
-    static constexpr int num_bits = sizeof(vid_t) * 8 - sizeof(label_id_t) * 8;
-    unique_vid = unique_vid << num_bits;
-    unique_vid = unique_vid | vid;
-    return unique_vid;
+    GlobalId global_id(label_id, vid);
+    return global_id.global_id;
   }
 
-  static int64_t encode_unique_edge_id(label_id_t label_id, size_t index) {
-    // encode label_id and vid to a unique vid
+  static int64_t encode_unique_edge_id(uint32_t label_id, vid_t src,
+                                       vid_t dst) {
+    // We assume label_id is only used by 24 bits.
     int64_t unique_edge_id = label_id;
-    static constexpr int num_bits =
-        sizeof(int64_t) * 8 - sizeof(label_id_t) * 8;
+    static constexpr int num_bits = sizeof(int64_t) * 8 - sizeof(uint32_t) * 8;
     unique_edge_id = unique_edge_id << num_bits;
-    unique_edge_id = unique_edge_id | index;
+    // bitmask for top 44 bits set to 1
+    int64_t bitmask = 0xFFFFFFFFFF000000;
+    // 24 bit | 20 bit | 20 bit
+    if (bitmask & (int64_t) src || bitmask & (int64_t) dst) {
+      LOG(ERROR) << "src or dst is too large to be encoded in 20 bits: " << src
+                 << " " << dst;
+    }
+    unique_edge_id = unique_edge_id | (src << 20);
+    unique_edge_id = unique_edge_id | dst;
     return unique_edge_id;
   }
 
-  static label_id_t generate_edge_label_id(label_id_t src_label_id,
-                                           label_id_t dst_label_id,
-                                           label_id_t edge_label_id) {
-    label_id_t unique_edge_label_id = src_label_id;
+  // actually produce uint24_t.
+  static uint32_t generate_edge_label_id(label_id_t src_label_id,
+                                         label_id_t dst_label_id,
+                                         label_id_t edge_label_id) {
+    uint32_t unique_edge_label_id = src_label_id;
     static constexpr int num_bits = sizeof(label_id_t) * 8;
     unique_edge_label_id = unique_edge_label_id << num_bits;
     unique_edge_label_id = unique_edge_label_id | dst_label_id;

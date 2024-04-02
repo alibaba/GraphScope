@@ -33,9 +33,10 @@ from graphscope.deploy.kubernetes.utils import get_service_endpoints
 
 from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
 from gscoordinator.constants import DATASET_CONTAINER_NAME
+from gscoordinator.constants import GRAPHLEARN_CONTAINER_NAME
+from gscoordinator.constants import GRAPHLEARN_TORCH_CONTAINER_NAME
 from gscoordinator.constants import INTERACTIVE_EXECUTOR_CONTAINER_NAME
 from gscoordinator.constants import INTERACTIVE_FRONTEND_CONTAINER_NAME
-from gscoordinator.constants import LEARNING_CONTAINER_NAME
 from gscoordinator.utils import parse_as_glog_level
 from gscoordinator.version import __version__
 
@@ -63,7 +64,8 @@ class EngineCluster:
         self,
         config: Config,
         engine_pod_prefix,
-        learning_start_port,
+        graphlearn_start_port,
+        graphlearn_torch_start_port,
     ):
         self._instance_id = config.session.instance_id
         self._glog_level = parse_as_glog_level(config.log_level)
@@ -81,7 +83,8 @@ class EngineCluster:
         self._with_analytical = launcher_config.engine.enable_gae
         self._with_analytical_java = launcher_config.engine.enable_gae_java
         self._with_interactive = launcher_config.engine.enable_gie
-        self._with_learning = launcher_config.engine.enable_gle
+        self._with_graphlearn = launcher_config.engine.enable_gle
+        self._with_graphlearn_torch = launcher_config.engine.enable_glt
         self._with_mars = launcher_config.mars.enable
 
         def load_base64_json(string):
@@ -108,7 +111,8 @@ class EngineCluster:
         self._analytical_java_image = f"{image_prefix}/analytical-java:{tag}"
         self._interactive_frontend_image = f"{image_prefix}/interactive-frontend:{tag}"
         self._interactive_executor_image = f"{image_prefix}/interactive-executor:{tag}"
-        self._learning_image = f"{image_prefix}/learning:{tag}"
+        self._graphlearn_image = f"{image_prefix}/graphlearn:{tag}"
+        self._graphlearn_torch_image = f"{image_prefix}/graphlearn-torch:{tag}"
         self._dataset_image = f"{image_prefix}/dataset:{tag}"
 
         self._vineyard_deployment = config.vineyard.deployment_name
@@ -121,12 +125,14 @@ class EngineCluster:
         self._engine_pod_prefix = engine_pod_prefix
         self._analytical_prefix = "gs-analytical-"
         self._interactive_frontend_prefix = "gs-interactive-frontend-"
-        self._learning_prefix = "gs-learning-"
+        self._graphlearn_prefix = "gs-graphlearn-"
+        self._graphlearn_torch_prefix = "gs-graphlearn-torch-"
         self._vineyard_prefix = "vineyard-"
         self._mars_scheduler_name_prefix = "mars-scheduler-"
         self._mars_service_name_prefix = "mars-"
 
-        self._learning_start_port = learning_start_port
+        self._graphlearn_start_port = graphlearn_start_port
+        self._graphlearn_torch_start_port = graphlearn_torch_start_port
 
         self._engine_labels = {
             "app.kubernetes.io/name": "graphscope",
@@ -255,9 +261,9 @@ class EngineCluster:
         )
         return container
 
-    def get_learning_container(self, volume_mounts):
-        name = LEARNING_CONTAINER_NAME
-        image = self._learning_image
+    def get_graphlearn_container(self, volume_mounts):
+        name = GRAPHLEARN_CONTAINER_NAME
+        image = self._graphlearn_image
         args = ["tail", "-f", "/dev/null"]
         resource = self._engine_resources.gle_resource
         container = self.get_engine_container_helper(
@@ -265,7 +271,26 @@ class EngineCluster:
         )
         container.ports = [
             kube_client.V1ContainerPort(container_port=p)
-            for p in range(self._learning_start_port, self._learning_start_port + 1000)
+            for p in range(
+                self._graphlearn_start_port, self._graphlearn_start_port + 1000
+            )
+        ]
+        return container
+
+    def get_graphlearn_torch_container(self, volume_mounts):
+        name = GRAPHLEARN_TORCH_CONTAINER_NAME
+        image = self._graphlearn_torch_image
+        args = ["tail", "-f", "/dev/null"]
+        resource = self._engine_resources.glt_resource
+        container = self.get_engine_container_helper(
+            name, image, args, volume_mounts, resource
+        )
+        container.ports = [
+            kube_client.V1ContainerPort(container_port=p)
+            for p in range(
+                self._graphlearn_torch_start_port,
+                self._graphlearn_torch_start_port + 1000,
+            )
         ]
         return container
 
@@ -338,9 +363,13 @@ class EngineCluster:
                     volume_mounts=engine_volume_mounts
                 )
             )
-        if self._with_learning:
+        if self._with_graphlearn:
             containers.append(
-                self.get_learning_container(volume_mounts=engine_volume_mounts)
+                self.get_graphlearn_container(volume_mounts=engine_volume_mounts)
+            )
+        if self._with_graphlearn_torch:
+            containers.append(
+                self.get_graphlearn_torch_container(volume_mounts=engine_volume_mounts)
             )
 
         if self._with_dataset:
@@ -397,10 +426,10 @@ class EngineCluster:
         )
         return service
 
-    def get_learning_service(self, object_id, start_port):
+    def get_graphlearn_service(self, object_id, start_port):
         service_type = self._service_type
         num_workers = self._num_workers
-        name = self.get_learning_service_name(object_id)
+        name = self.get_graphlearn_service_name(object_id)
         ports = []
         for i in range(start_port, start_port + num_workers):
             port = kube_client.V1ServicePort(name=f"{name}-{i}", port=i, protocol="TCP")
@@ -413,9 +442,29 @@ class EngineCluster:
         )
         return service
 
-    def get_learning_ports(self, start_port):
+    def get_graphlearn_torch_service(self, object_id, start_port):
+        service_type = self._service_type
+        num_workers = self._num_workers
+        name = self.get_graphlearn_torch_service_name(object_id)
+        ports = []
+        for i in range(start_port, start_port + num_workers):
+            port = kube_client.V1ServicePort(name=f"{name}-{i}", port=i, protocol="TCP")
+            ports.append(port)
+        service_spec = ResourceBuilder.get_service_spec(
+            service_type, ports, self._engine_labels, "Local"
+        )
+        service = ResourceBuilder.get_service(
+            self._namespace, name, service_spec, self._engine_labels
+        )
+        return service
+
+    def get_graphlearn_ports(self, start_port):
         num_workers = self._num_workers
         return [i for i in range(start_port, start_port + num_workers)]
+
+    def get_graphlearn_torch_ports(self, start_port):
+        num_loaders = 4
+        return [i for i in range(start_port, start_port + num_loaders)]
 
     @property
     def engine_stateful_set_name(self):
@@ -444,11 +493,14 @@ class EngineCluster:
         assert len(endpoints) > 0
         return endpoints[0]
 
-    def get_learning_service_name(self, object_id):
-        return f"{self._learning_prefix}{object_id}"
+    def get_graphlearn_service_name(self, object_id):
+        return f"{self._graphlearn_prefix}{object_id}"
+
+    def get_graphlearn_torch_service_name(self, object_id):
+        return f"{self._graphlearn_torch_prefix}{object_id}"
 
     def get_graphlearn_service_endpoint(self, api_client, object_id, pod_host_ip_list):
-        service_name = self.get_learning_service_name(object_id)
+        service_name = self.get_graphlearn_service_name(object_id)
         service_type = self._service_type
         core_api = kube_client.CoreV1Api(api_client)
         if service_type == "NodePort":

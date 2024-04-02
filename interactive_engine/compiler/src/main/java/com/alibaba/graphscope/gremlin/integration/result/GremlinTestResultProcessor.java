@@ -45,13 +45,13 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     private static String EDGE_PROPERTIES = "edge_properties";
 
     public GremlinTestResultProcessor(
+            Configs configs,
             Context writeResult,
             Traversal traversal,
             QueryStatusCallback statusCallback,
             GraphProperties testGraph,
-            Configs configs,
             QueryTimeoutConfig timeoutConfig) {
-        super(writeResult, traversal, statusCallback, timeoutConfig);
+        super(configs, writeResult, traversal, statusCallback, timeoutConfig);
         this.cachedProperties = testGraph.getProperties(configs);
     }
 

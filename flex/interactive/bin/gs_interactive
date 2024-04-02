@@ -256,7 +256,10 @@ DATABASE_COMPILER_PLANNER_IS_ON="true"
 DATABASE_COMPILER_PLANNER_OPT="RBO"
 DATABASE_COMPILER_PLANNER_RULES="FilterIntoJoinRule,FilterMatchRule,NotMatchToAntiJoinRule"
 DATABASE_COMPILER_ENDPOINT_ADDRESS="localhost"
+DATABASE_COMPILER_BOLT_DISABLED="false"
 DATABASE_COMPILER_BOLT_PORT="7687"
+DATABASE_COMPILER_GREMLIN_DISABLED="true"
+DATABASE_COMPILER_GREMLIN_PORT="8182"
 DATABASE_COMPILER_QUERY_TIMEOUT="20000"
 
 ## hiactor related default configuration
@@ -401,7 +404,12 @@ function update_init_config_from_yaml(){
     x=$((x + 1))
   done
   # append compiler port and engine port to DATABASE_PORTS
-  DATABASE_PORTS="${DATABASE_COMPILER_BOLT_PORT}:${DATABASE_COMPILER_BOLT_PORT}"
+  if [ "${DATABASE_COMPILER_BOLT_DISABLED}" == "false" ]; then
+    DATABASE_PORTS="${DATABASE_COMPILER_BOLT_PORT}:${DATABASE_COMPILER_BOLT_PORT}"
+  fi
+  if [ "${DATABASE_COMPILER_GREMLIN_DISABLED}" == "false" ]; then
+    DATABASE_PORTS="${DATABASE_PORTS},${DATABASE_COMPILER_GREMLIN_PORT}:${DATABASE_COMPILER_GREMLIN_PORT}"
+  fi
   DATABASE_PORTS="${DATABASE_PORTS},${DATABASE_COMPUTE_ENGINE_PORT}:${DATABASE_COMPUTE_ENGINE_PORT}"
   DATABASE_PORTS="${DATABASE_PORTS},${DATABASE_ADMIN_PORT}:${DATABASE_ADMIN_PORT}"
 }
@@ -458,6 +466,15 @@ function update_engine_config_from_yaml(){
   fi
   if [[ -n "${compiler_endpoint_bolt_connector_port}" ]]; then
     DATABASE_COMPILER_BOLT_PORT="${compiler_endpoint_bolt_connector_port}"
+  fi
+  if [[ -n "${compiler_endpoint_bolt_connector_disabled}" ]]; then
+    DATABASE_COMPILER_BOLT_DISABLED="${compiler_endpoint_bolt_connector_disabled}"
+  fi
+  if [[ -n "${compiler_endpoint_gremlin_connector_port}" ]]; then
+    DATABASE_COMPILER_GREMLIN_PORT="${compiler_endpoint_gremlin_connector_port}"
+  fi
+  if [[ -n "${compiler_endpoint_gremlin_connector_disabled}" ]]; then
+    DATABASE_COMPILER_GREMLIN_DISABLED="${compiler_endpoint_gremlin_connector_disabled}"
   fi
   if [[ -n "${compiler_query_timeout}" ]]; then
     DATABASE_COMPILER_QUERY_TIMEOUT="${compiler_query_timeout}"
@@ -642,19 +659,19 @@ EOF
 
 function enable_proc_usage(){
   cat << EOF
-    gs_interactive procedure enable -g[--graph] <graph_name> -n[--name] <library names,seprated by ','> 
+    gs_interactive procedure enable -g[--graph] <graph_name> -n[--name] <library names,separated by ','>
                                  -c[--config] <stored_procedures.yaml>
                 Enable the stored procedure in the given graph, with the provided library.
-                stored_procedures.yaml contains the the stored procedure names at each line.
+                stored_procedures.yaml contains the stored procedure names at each line.
 EOF
 }
 
 function disable_proc_usage(){
   cat << EOF
-    gs_interactive procedure disable -g[--graph] <graph_name> -n[--name] <library names,seprated by ','>
+    gs_interactive procedure disable -g[--graph] <graph_name> -n[--name] <library names,separated by ','>
                                   -c[--config] <stored_procedures.yaml>
                 Disable the stored procedure in the given graph, with the provided library.
-                stored_procedures.yaml contains the the stored procedure names at each line.
+                stored_procedures.yaml contains the stored procedure names at each line.
 EOF
 }
 
@@ -745,11 +762,11 @@ function do_gen_conf(){
   echo "  endpoint:"  >> ${output_config_file}
   echo "    default_listen_address: ${DATABASE_COMPILER_ENDPOINT_ADDRESS}" >> ${output_config_file}
   echo "    bolt_connector:" >> ${output_config_file}
-  echo "      disabled: false" >> ${output_config_file}
+  echo "      disabled: ${DATABASE_COMPILER_BOLT_DISABLED}" >> ${output_config_file}
   echo "      port: ${DATABASE_COMPILER_BOLT_PORT}" >> ${output_config_file}
   echo "    gremlin_connector:" >> ${output_config_file}
-  echo "      disabled: true" >> ${output_config_file}
-  echo "      port: 8182" >> ${output_config_file}
+  echo "      disabled: ${DATABASE_COMPILER_GREMLIN_DISABLED}" >> ${output_config_file}
+  echo "      port: ${DATABASE_COMPILER_GREMLIN_PORT}" >> ${output_config_file}
   echo "  query_timeout: ${DATABASE_COMPILER_QUERY_TIMEOUT}" >> ${output_config_file}
 
   #echo http_service
@@ -835,7 +852,7 @@ function update_graph_yaml_with_procedure_enabling(){
   
   # copy graph0.yaml to container
   docker cp "${HOST_DB_TMP_DIR}/graph0.yaml" "${GIE_DB_CONTAINER_NAME}:${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
-  info "Finish update graph yaml with procedure enabling, add stored proc.edures of size ${#ENABLED_ARRAY[@]}."
+  info "Finish update graph yaml with procedure enabling, add stored procedures of size ${#ENABLED_ARRAY[@]}."
 }
 
 
@@ -902,7 +919,7 @@ function do_init(){
   # put docker_workspace into env
   echo "export DATABASE_WORKSPACE=${DATABASE_WORKSPACE}" >> ${HOST_DB_ENV_FILE}
   echo "export DATABASE_DATA_DIR_NAME=${DATABASE_DATA_DIR_NAME}" >> ${HOST_DB_ENV_FILE}
-  info "Found databse version: ${DATABASE_VERSION}"
+  info "Found database version: ${DATABASE_VERSION}"
 
   #2. Found mounting volumes from yaml file
   mount_cmd=""
@@ -964,10 +981,10 @@ function do_init(){
   local username=$(id -un)
 
   GIE_DB_IMAGE_NAME_TAG="${GIE_DB_IMAGE_NAME}:${DATABASE_VERSION}"
-  cmd="docker run -it -d --privileged --name ${GIE_DB_CONTAINER_NAME}"
+  cmd="docker run --entrypoint bash -it -d --privileged --name ${GIE_DB_CONTAINER_NAME}"
 
   # create user in container
-  cmd="${cmd} ${port_cmd} ${mount_cmd} ${GIE_DB_IMAGE_NAME_TAG} bash"
+  cmd="${cmd} ${port_cmd} ${mount_cmd} ${GIE_DB_IMAGE_NAME_TAG}"
   
   info "Running cmd: ${cmd}"
   # eval $cmd, exit if failed
@@ -986,13 +1003,13 @@ function do_init(){
   docker exec -u graphscope "${GIE_DB_CONTAINER_NAME}" bash -c "mkdir -p ${DATABASE_WORKSPACE}/data" || exit 1
 
   # create default_graph
-  do_create -g ${DATABASE_DEFAULT_GRAPH_NAME} -c ${HOST_DB_HOME}/examples/modern_graph/modern_graph.yaml
+  do_create -g ${DATABASE_DEFAULT_GRAPH_NAME} -c ${HOST_DB_HOME}/examples/modern_graph/graph.yaml
   # check whether do_import success
   if ! do_import -g ${DATABASE_DEFAULT_GRAPH_NAME} -c ${HOST_DB_HOME}/examples/modern_graph/bulk_load.yaml; then
     err "Fail to import default graph"
     exit 1
   fi
-  info "Successfuly create and import default graph: [${DATABASE_DEFAULT_GRAPH_NAME}]"
+  info "Successfully create and import default graph: [${DATABASE_DEFAULT_GRAPH_NAME}]"
 }
 
 
@@ -1041,7 +1058,7 @@ function do_create(){
   # add some default settings and non-user-aware settings to schema file.
   amplify_graph_schema ${schema_file} ${amplify_schema_file}
   # check graph is running inside docker
-  check_graph_not_running ${graph_name} || (err "Can not create graph ${graph_name}, since a graph with same nameing running." && exit 1)
+  check_graph_not_running ${graph_name} || (err "Can not create graph ${graph_name}, since a graph with same naming running." && exit 1)
   # create the graph directory in the docker's workspace
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
@@ -1058,7 +1075,7 @@ function do_create(){
   # copy the schema file to the docker's workspace
   docker cp "${amplify_schema_file}" "${GIE_DB_CONTAINER_NAME}:${docker_graph_schema_file}" || exit 1
   docker cp "${amplify_schema_file}" "${GIE_DB_CONTAINER_NAME}:${docker_graph_schema_file_back}" || exit 1
-  info "Successfuly create graph [${graph_name}]"
+  info "Successfully create graph [${graph_name}]"
   #TODO: support creating an empty graph
 }
 
@@ -1093,7 +1110,7 @@ function do_remove(){
   fi
   # check graph is running inside docker
   if ! check_graph_not_running ${graph_name}; then
-    err "Can not remove graph ${graph_name}, since a graph with same nameing running!"
+    err "Can not remove graph ${graph_name}, since a graph with same naming running!"
     exit 1;
   fi
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
@@ -1110,7 +1127,7 @@ function do_remove(){
 
   # rm -rf the graph directory in the docker's workspace
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "rm -rf ${docker_graph_dir}" || ( echo "Fail to delete graph ${graph_name}" && exit 1)
-  info "Successfuly remove graph [${graph_name}]"
+  info "Successfully remove graph [${graph_name}]"
   # if graph_name is current graph, set current graph to .running 
   if [ "${DATABASE_CURRENT_GRAPH_NAME}" = "${graph_name}" ]; then
     info "Remove current graph [${graph_name}], set current graph to default_graph: ${DATABASE_DEFAULT_GRAPH_NAME}"
@@ -1190,7 +1207,7 @@ function do_import(){
     err "Fail to import graph [${graph_name}]"
     exit 1
   fi
-  info "Successfuly import data to graph [${graph_name}]"
+  info "Successfully import data to graph [${graph_name}]"
 }
 
 ####################  List Graph ####################
@@ -1225,10 +1242,10 @@ function do_destroy() {
     exit 0
   fi
   # check if the GraphServer and SyncServer are running, if running, echo "Service is running, please stop it first" and exit
-  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "GraphServer" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "GraphServer" "Service is running, please stop it first: ./bin/gs_interactive service stop"; then
     exit 1
   fi
-  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "interactive_server" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "interactive_server" "Service is running, please stop it first: ./bin/gs_interactive service stop"; then
     exit 1
   fi
 
@@ -1407,7 +1424,7 @@ function do_start(){
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
   fi
-  info "In start datebase, received graph_name = ${graph_name}, engine_config_file = ${engine_config_file}"
+  info "In start database, received graph_name = ${graph_name}, engine_config_file = ${engine_config_file}"
   docker_server_log_path="${DATABASE_WORKSPACE}/logs/server.log"
   graph_schema_file="${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
   csr_data_dir="${DATABASE_WORKSPACE}/data/${graph_name}/indices"
@@ -1421,7 +1438,7 @@ function do_start(){
   sleep 4
   # check whether the process is running
   check_process_running_in_container ${GIE_DB_CONTAINER_NAME} ${DOCKER_DB_SERVER_BIN} ", use gs_interactive service get_log -o [dir] to see get logs"
-  info "Successfuly start server"
+  info "Successfully start server"
 
   # start compiler
   docker_compiler_log_path="${DATABASE_WORKSPACE}/logs/compiler.log"
@@ -1437,10 +1454,20 @@ function do_start(){
   eval ${cmd}
   sleep 6
   check_process_running_in_container ${GIE_DB_CONTAINER_NAME} ${DOCKER_DB_COMPILER_BIN} ", use gs_interactive service get_log -o [dir] to see more details"
-  info "Successfuly start compiler"
+  info "Successfully start compiler"
   # get cypher port from engine config file
-  # bolt_connector_port=$(parse_yaml "${engine_config_file}" | grep "compiler_endpoint_bolt_connector_port" | awk -F "=" '{print $2}')
-  emph "DataBase service is running, port is open on :${DATABASE_COMPILER_BOLT_PORT}"
+  eval $(parse_yaml "${real_engine_config_file}")
+
+  if [ "${compiler_endpoint_bolt_connector_disabled}" = "false" ]; then
+    emph "Cypher port is open on :${compiler_endpoint_bolt_connector_port}"
+  else
+    emph "Bolt connector is disabled, no bolt endpoint is available"
+  fi
+  if [ "${compiler_endpoint_gremlin_connector_disabled}" = "false" ]; then
+    emph "Gremlin port is running, port is open on :${compiler_endpoint_gremlin_connector_port}"
+  else
+    emph "Gremlin connector is disabled, no gremlin endpoint is available"
+  fi
 
   # if do_start success, we should write current args to ${HOST_DB_RUNNING_FILE}
   echo "GRAPH_NAME=${graph_name}" > ${HOST_DB_RUNNING_FILE}
@@ -1464,7 +1491,7 @@ function do_stop(){
     local graph_name=$(sed -n '1p' ${HOST_DB_RUNNING_FILE} | cut -d '=' -f 2)
     docker_graph_lock_file="${DATABASE_WORKSPACE}/data/${graph_name}/.lock"
     docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "rm -f ${docker_graph_lock_file}" || exit 1
-    info "Successfuly remove ${docker_graph_lock_file} file"
+    info "Successfully remove ${docker_graph_lock_file} file"
   else
     info "No graph is running"
   fi
@@ -1473,7 +1500,7 @@ function do_stop(){
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "pkill -f ${DOCKER_DB_SERVER_BIN}" 
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "pkill -f ${DOCKER_DB_COMPILER_BIN}"
   sleep 6
-  info "Successfuly stop database"
+  info "Successfully stop database"
 }
 
 
@@ -1497,7 +1524,16 @@ function do_status() {
   # copy the engine config file to host's tmp directory
   docker cp "${GIE_DB_CONTAINER_NAME}:${docker_engine_config_file}" "${HOST_DB_TMP_DIR}/engine_config.yaml" || exit 1
   eval $(parse_yaml "${HOST_DB_TMP_DIR}/engine_config.yaml")
-  emph "Database service is running, port is open on :${compiler_endpoint_bolt_connector_port}"
+  if [ "${compiler_endpoint_bolt_connector_disabled}" = "false" ]; then
+    emph "Cypher port is open on :${compiler_endpoint_bolt_connector_port}"
+  else
+    emph "Bolt connector is disabled, no bolt endpoint is available"
+  fi
+  if [ "${compiler_endpoint_gremlin_connector_disabled}" = "false" ]; then
+    emph "Gremlin port is open on :${compiler_endpoint_gremlin_connector_port}"
+  else
+    emph "Gremlin connector is disabled, no gremlin endpoint is available"
+  fi
   # print current running graph name
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
     local graph_name=$(sed -n '1p' ${HOST_DB_RUNNING_FILE} | cut -d '=' -f 2)
@@ -1544,7 +1580,7 @@ function do_restart() {
     esac
   done
   do_stop
-  info "Successfuly stop database"
+  info "Successfully stop database"
   do_start -g ${GRAPH_NAME} -c ${ENGINE_CONFIG_FILE}
   info "Finish restarting database..."
 }
@@ -1583,7 +1619,7 @@ function do_log(){
   # docker cp
   docker cp "${GIE_DB_CONTAINER_NAME}:${docker_compiler_log}" "${directory}/compiler.log" || exit 1
   docker cp "${GIE_DB_CONTAINER_NAME}:${docker_server_log}" "${directory}/server.log" || exit 1
-  info "Successfuly get log to ${directory}, please check compiler.log and server.log"
+  info "Successfully get log to ${directory}, please check compiler.log and server.log"
 }
 
 # the compiled dynamic libs will be placed at data/${graph_name}/plugins/
@@ -1711,15 +1747,15 @@ function do_compile() {
   fi
 
   container_output_dir="${DATABASE_WORKSPACE}/data/${graph_name}/plugins"
-  cotainer_input_path="${HOST_DB_TMP_DIR}/${file_name}"
+  container_input_path="${HOST_DB_TMP_DIR}/${file_name}"
   # docker cp file to container
-  cmd="docker cp ${real_file_path} ${GIE_DB_CONTAINER_NAME}:${cotainer_input_path}"
+  cmd="docker cp ${real_file_path} ${GIE_DB_CONTAINER_NAME}:${container_input_path}"
   eval ${cmd} || exit 1
 
   cmd="docker exec ${GIE_DB_CONTAINER_NAME} bash -c '"
   cmd=${cmd}" ${DOCKER_DB_GEN_BIN}"
   cmd=${cmd}" --engine_type=hqps"
-  cmd=${cmd}" --input=${cotainer_input_path}"
+  cmd=${cmd}" --input=${container_input_path}"
   cmd=${cmd}" --work_dir=/tmp/codegen/"
   cmd=${cmd}" --ir_conf=${docker_engine_config}"
   cmd=${cmd}" --graph_schema_path=${docker_graph_schema}"
@@ -1842,7 +1878,7 @@ function do_enable(){
   # copy the .enable file back to container
   docker cp "${HOST_DB_TMP_DIR}/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
   new_line_num=$(wc -l < ${HOST_DB_TMP_DIR}/.enable)
-  info "Successfuly enable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
+  info "Successfully enable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
 }
 
 function do_disable(){
@@ -1915,7 +1951,7 @@ function do_disable(){
     # clear the .enable file
     info "disable all stored_procedures for graph [${graph_name}]"
     docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "(rm \"\" > ${docker_graph_enable_file}) || exit 0" || exit 1
-    info "Successfuly disable all stored_procedures for graph [${graph_name}]"
+    info "Successfully disable all stored_procedures for graph [${graph_name}]"
     exit 0
   fi
 
@@ -1939,7 +1975,7 @@ function do_disable(){
   # copy the .enable file back to container
   docker cp "${HOST_DB_TMP_DIR}/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
   new_line_num=$(wc -l < ${HOST_DB_TMP_DIR}/.enable)
-  info "Successfuly disable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
+  info "Successfully disable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
 }
 
 function do_show(){

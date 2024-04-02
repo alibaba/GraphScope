@@ -67,6 +67,15 @@ public class YamlConfigs extends Configs {
                             }
                         })
                 .put(
+                        "graph.store",
+                        (Configs configs) -> {
+                            if (configs.get("compute_engine.store.type") != null) {
+                                return configs.get("compute_engine.store.type");
+                            } else {
+                                return "cpp-mcsr";
+                            }
+                        })
+                .put(
                         "graph.stored.procedures",
                         (Configs configs) -> {
                             String workspace = configs.get("directories.workspace");
@@ -200,7 +209,10 @@ public class YamlConfigs extends Configs {
                 .put("engine.type", (Configs configs) -> configs.get("compute_engine.type"))
                 .put(
                         "calcite.default.charset",
-                        (Configs configs) -> configs.get("compiler.calcite_default_charset"));
+                        (Configs configs) -> configs.get("compiler.calcite_default_charset"))
+                .put(
+                        "gremlin.script.language.name",
+                        (Configs configs) -> configs.get("compiler.gremlin_script_language_name"));
         valueGetterMap = mapBuilder.build();
     }
 

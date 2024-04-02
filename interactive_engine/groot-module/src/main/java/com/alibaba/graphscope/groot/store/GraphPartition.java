@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.store.backup.GraphPartitionBackup;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 

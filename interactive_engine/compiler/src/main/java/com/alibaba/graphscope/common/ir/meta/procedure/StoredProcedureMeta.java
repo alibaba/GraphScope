@@ -41,6 +41,7 @@ public class StoredProcedureMeta {
     private final Mode mode;
     private final String description;
     private final String extension;
+    private final Map<String, Object> options;
 
     protected StoredProcedureMeta(
             String name,
@@ -48,24 +49,32 @@ public class StoredProcedureMeta {
             String description,
             String extension,
             RelDataType returnType,
-            List<Parameter> parameters) {
+            List<Parameter> parameters,
+            Map<String, Object> options) {
         this.name = name;
         this.mode = mode;
         this.description = description;
         this.extension = extension;
         this.returnType = returnType;
         this.parameters = Objects.requireNonNull(parameters);
+        this.options = options;
     }
 
     public StoredProcedureMeta(
-            Configs configs, RelDataType returnType, List<Parameter> parameters) {
+            Configs configs, String queryStr, RelDataType returnType, List<Parameter> parameters) {
+        // For optional keys, construct a map and pass it to the constructor.
         this(
                 Config.NAME.get(configs),
                 Mode.valueOf(Config.MODE.get(configs)),
                 Config.DESCRIPTION.get(configs),
                 Config.EXTENSION.get(configs),
                 returnType,
-                parameters);
+                parameters,
+                ImmutableMap.of(
+                        Config.TYPE.getKey(),
+                        Config.TYPE.get(configs),
+                        Config.QUERY_STR.getKey(),
+                        queryStr));
     }
 
     public String getName() {
@@ -80,6 +89,10 @@ public class StoredProcedureMeta {
         return Collections.unmodifiableList(parameters);
     }
 
+    public Object getOption(String key) {
+        return options.getOrDefault(key, null);
+    }
+
     @Override
     public String toString() {
         return "StoredProcedureMeta{"
@@ -90,6 +103,8 @@ public class StoredProcedureMeta {
                 + returnType
                 + ", parameters="
                 + parameters
+                + ", option="
+                + options
                 + '}';
     }
 
@@ -167,7 +182,9 @@ public class StoredProcedureMeta {
                                             ImmutableMap.of(
                                                     "name", k.getName(),
                                                     "type", Utils.typeToStr(k.getType())))
-                            .collect(Collectors.toList()));
+                            .collect(Collectors.toList()),
+                    "option",
+                    meta.options);
         }
     }
 
@@ -181,7 +198,8 @@ public class StoredProcedureMeta {
                     (String) config.get("description"),
                     (String) config.get("extension"),
                     createReturnType((List) config.get("returns")),
-                    createParameters((List) config.get("params")));
+                    createParameters((List) config.get("params")),
+                    (Map<String, Object>) config.get("option"));
         }
 
         private static RelDataType createReturnType(List config) {
@@ -230,5 +248,11 @@ public class StoredProcedureMeta {
                 com.alibaba.graphscope.common.config.Config.stringConfig("extension", ".so");
         public static final com.alibaba.graphscope.common.config.Config<String> MODE =
                 com.alibaba.graphscope.common.config.Config.stringConfig("mode", "READ");
+        // option configurations.
+        public static final com.alibaba.graphscope.common.config.Config<String> TYPE =
+                com.alibaba.graphscope.common.config.Config.stringConfig(
+                        "type", "UNKNOWN"); // cypher or cpp
+        public static final com.alibaba.graphscope.common.config.Config<String> QUERY_STR =
+                com.alibaba.graphscope.common.config.Config.stringConfig("queryStr", "UNKNOWN");
     }
 }

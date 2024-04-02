@@ -834,6 +834,13 @@ impl From<physical_pb::Scan> for physical_pb::PhysicalOpr {
     }
 }
 
+impl From<physical_pb::PathExpand> for physical_pb::PhysicalOpr {
+    fn from(path: physical_pb::PathExpand) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Path(path);
+        op_kind.into()
+    }
+}
+
 impl From<pb::Project> for physical_pb::Project {
     fn from(project: pb::Project) -> Self {
         let mappings = project

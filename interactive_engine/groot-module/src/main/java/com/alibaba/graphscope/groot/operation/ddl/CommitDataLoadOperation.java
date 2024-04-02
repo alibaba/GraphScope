@@ -21,9 +21,9 @@ import com.google.protobuf.ByteString;
 
 public class CommitDataLoadOperation extends Operation {
 
-    private int partitionId;
-    private long schemaVersion;
-    private CommitDataLoadPb proto;
+    private final int partitionId;
+    private final long schemaVersion;
+    private final CommitDataLoadPb proto;
 
     public CommitDataLoadOperation(int partitionId, long schemaVersion, CommitDataLoadPb proto) {
         super(OperationType.COMMIT_DATA_LOAD);

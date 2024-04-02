@@ -61,13 +61,6 @@ public class CommonConfig {
     public static final Config<Long> METRIC_UPDATE_INTERVAL_MS =
             Config.longConfig("metric.update.interval.ms", 5000L);
 
-    /**
-     * Get the engine type
-     *
-     * @return The engine type
-     */
-    public static final Config<String> ENGINE_TYPE = Config.stringConfig("engine.type", "gaia");
-
     public static final Config<String> LOG4RS_CONFIG = Config.stringConfig("log4rs.config", "");
 
     public static final Config<String> DISCOVERY_MODE =
@@ -81,4 +74,12 @@ public class CommonConfig {
 
     public static final Config<Boolean> SECONDARY_INSTANCE_ENABLED =
             Config.boolConfig("secondary.instance.enabled", false);
+
+    // Create an extra store pod for each original store pod for backup.
+    // Only available in multi pod mode.
+    public static final Config<Boolean> WRITE_HIGH_AVAILABILITY_ENABLED =
+            Config.boolConfig("write.high.availability.enabled", false);
+
+    public static final Config<Boolean> TRACING_ENABLED =
+            Config.boolConfig("tracing.enabled", false);
 }

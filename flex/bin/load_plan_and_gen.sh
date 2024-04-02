@@ -136,12 +136,13 @@ cypher_to_plan() {
   # add extra_key_value_config
   extra_config="name:${procedure_name}"
   extra_config="${extra_config},description:${procedure_description}"
+  extra_config="${extra_config},type:cypher"
 
   cmd="java -cp ${COMPILER_LIB_DIR}/*:${COMPILER_JAR}"
   cmd="${cmd} -Dgraph.schema=${graph_schema_path}"
   cmd="${cmd} -Djna.library.path=${IR_CORE_LIB_DIR}"
   cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} '${extra_config}'"
-  info "running physical plan genration with ${cmd}"
+  info "running physical plan generation with ${cmd}"
   eval ${cmd}
 
   info "---------------------------"
@@ -233,7 +234,7 @@ compile_hqps_so() {
 
   #only do codegen when receives a .pb file.
   if [[ $last_file_name == *.pb ]]; then
-    cmd="${CODEGEN_RUNNER} -e hqps -i ${input_path} -o ${output_cc_path}"
+    cmd="${CODEGEN_RUNNER} -e hqps -i ${input_path} -o ${output_cc_path} -g ${graph_schema_path}"
     info "Codegen command = ${cmd}"
     eval ${cmd}
     info "----------------------------"
@@ -249,7 +250,7 @@ compile_hqps_so() {
     info "----------------------------"
     info "Codegen from cypher query done."
     info "----------------------------"
-    cmd="${CODEGEN_RUNNER} -e hqps -i ${output_pb_path} -o ${output_cc_path}"
+    cmd="${CODEGEN_RUNNER} -e hqps -i ${output_pb_path} -o ${output_cc_path} -g ${graph_schema_path}"
     info "Codegen command = ${cmd}"
     eval ${cmd}
     # then. do .pb to .cc

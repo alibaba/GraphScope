@@ -22,10 +22,10 @@ import com.google.protobuf.ByteString;
 
 public class CreateVertexTypeOperation extends Operation {
 
-    private int partitionId;
-    private long schemaVersion;
-    private TypeDef typeDef;
-    private long tableIdx;
+    private final int partitionId;
+    private final long schemaVersion;
+    private final TypeDef typeDef;
+    private final long tableIdx;
 
     public CreateVertexTypeOperation(
             int partitionId, long schemaVersion, TypeDef typeDef, long tableIdx) {
@@ -38,10 +38,6 @@ public class CreateVertexTypeOperation extends Operation {
 
     public int getPartitionId() {
         return partitionId;
-    }
-
-    public long getSchemaVersion() {
-        return schemaVersion;
     }
 
     public TypeDef getTypeDef() {

@@ -17,9 +17,10 @@ import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.store.*;
-import com.alibaba.graphscope.groot.store.StoreBackupService;
 import com.alibaba.graphscope.groot.store.StoreSchemaService;
-import com.alibaba.graphscope.groot.store.StoreWriteService;
+import com.alibaba.graphscope.groot.store.backup.BackupAgent;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupId;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupService;
 import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.stub.StreamObserver;
@@ -59,17 +60,6 @@ public class StoreRpcTest {
                         FetchSchemaResponse.newBuilder()
                                 .setGraphDef(GraphDefPb.newBuilder().build())
                                 .build());
-        verify(observer).onCompleted();
-    }
-
-    @Test
-    void testStoreWriteService() throws InterruptedException {
-        WriterAgent writerAgent = mock(WriterAgent.class);
-        when(writerAgent.writeStore2(any())).thenReturn(true);
-        StoreWriteService storeWriteService = new StoreWriteService(writerAgent);
-        StreamObserver observer = mock(StreamObserver.class);
-        storeWriteService.writeStore(WriteStoreRequest.newBuilder().build(), observer);
-        verify(observer).onNext(WriteStoreResponse.newBuilder().setSuccess(true).build());
         verify(observer).onCompleted();
     }
 

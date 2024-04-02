@@ -129,7 +129,8 @@ class EngineConfig:
     # Enable or disable analytical engine with java support.
     enable_gae_java: bool = False
     enable_gie: bool = False  # Enable or disable interactive engine.
-    enable_gle: bool = False  # Enable or disable learning engine.
+    enable_gle: bool = False  # Enable or disable graphlearn engine.
+    enable_glt: bool = False  # Enable or disable graphlearn_torch engine.
 
     preemptive: bool = True
 
@@ -153,9 +154,14 @@ class EngineConfig:
         default_factory=lambda: ResourceConfig.make_burstable(0.2, "1Gi")
     )
 
+    # Resource for learning pod
+    glt_resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(0.2, "1Gi")
+    )
+
     def post_setup(self):
         valid_engines = set(
-            "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle".split(
+            "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle,glt".split(
                 ","
             )
         )
@@ -166,14 +172,17 @@ class EngineConfig:
                 self.enable_gae = True
             if item == "interactive" or item == "gie":
                 self.enable_gie = True
-            if item == "learning" or item == "gle":
+            if item == "graphlearn" or item == "gle":
                 self.enable_gle = True
+            if item == "graphlearn-torch" or item == "glt":
+                self.enable_glt = True
             if item == "analytical-java" or item == "gae-java":
                 self.enable_gae_java = True
 
         if self.preemptive:
             self.gae_resource.requests = None
             self.gle_resource.requests = None
+            self.glt_resource.requests = None
             self.gie_executor_resource.requests = None
             self.gie_frontend_resource.requests = None
 

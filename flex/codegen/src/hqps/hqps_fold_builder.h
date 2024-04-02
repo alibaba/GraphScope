@@ -51,8 +51,23 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
   auto& vars = agg_func.vars();
   for (int32_t i = 0; i < vars.size(); ++i) {
     auto& var = vars[i];
-    auto raw_tag_id = var.tag().id();
-    in_tags.push_back(ctx.GetTagInd(raw_tag_id));
+    VLOG(10) << "var " << i << " " << var.DebugString();
+    int32_t raw_tag_id;
+    if (var.has_tag()) {
+      raw_tag_id = var.tag().id();
+    } else {
+      raw_tag_id = -1;
+    }
+
+    if (raw_tag_id == -1) {
+      in_tags.push_back(-1);
+    } else if (ctx.GetTagIdAndIndMapping().HasTagId(raw_tag_id)) {
+      in_tags.push_back(ctx.GetTagInd(raw_tag_id));
+    } else if (raw_tag_id == ctx.GetTagIdAndIndMapping().GetMaxTagId() + 1) {
+      in_tags.push_back(-1);
+    } else {
+      LOG(WARNING) << "tag id " << raw_tag_id << " not found in tag id mapping";
+    }
     VLOG(10) << "var " << i << " tag id " << raw_tag_id << " real tag id "
              << in_tags[i];
     if (var.has_property()) {

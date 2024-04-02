@@ -1,8 +1,8 @@
 #![allow(dead_code)]
+use super::version::MAX_SIZE;
 use super::version::*;
 use crate::db::api::*;
 use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
-
 pub type TableId = i64;
 
 /// Every type has a table manager to maintain the multi versions of bulk loading data
@@ -106,8 +106,6 @@ mod tests {
 
     use super::*;
     use crate::db::util::time;
-    const MAX_SIZE: usize = 128;
-
     #[test]
     fn test_simple_table_manager() {
         let manager = TableManager::new();

@@ -1,0 +1,170 @@
+{
+  "plan": [{
+    "opr": {
+      "join": {
+        "leftKeys": [{
+          "tag": {
+            "id": 0
+          },
+          "property": {
+            "key": {
+              "name": "name"
+            }
+          },
+          "nodeType": {
+            "dataType": "STRING"
+          }
+        }],
+        "rightKeys": [{
+          "tag": {
+            "id": 1
+          },
+          "property": {
+            "key": {
+              "name": "name"
+            }
+          },
+          "nodeType": {
+            "dataType": "STRING"
+          }
+        }],
+        "leftPlan": {
+          "plan": [{
+            "opr": {
+              "scan": {
+                "alias": 0,
+                "params": {
+                  "tables": [{
+                    "id": 0
+                  }],
+                  "sampleRatio": 1.0
+                }
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "graphDataType": [{
+                    "label": {
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "id"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "name"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "age"
+                      },
+                      "type": "INT32"
+                    }]
+                  }]
+                }
+              }
+            }]
+          }, {
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 0
+                }
+              }
+            }
+          }, {
+            "opr": {
+              "vertex": {
+                "tag": 0,
+                "opt": "ITSELF",
+                "params": {
+                  "columns": [{
+                    "name": "name"
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 0
+              }
+            }
+          }]
+        },
+        "rightPlan": {
+          "plan": [{
+            "opr": {
+              "scan": {
+                "alias": 1,
+                "params": {
+                  "tables": [{
+                    "id": 0
+                  }],
+                  "sampleRatio": 1.0
+                }
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "graphDataType": [{
+                    "label": {
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "id"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "name"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "age"
+                      },
+                      "type": "INT32"
+                    }]
+                  }]
+                }
+              },
+              "alias": 1
+            }]
+          }, {
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 1
+                }
+              }
+            }
+          }, {
+            "opr": {
+              "vertex": {
+                "tag": 1,
+                "opt": "ITSELF",
+                "params": {
+                  "columns": [{
+                    "name": "name"
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 1
+              }
+            }
+          }]
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "sink": {
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

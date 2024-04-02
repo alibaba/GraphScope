@@ -18,7 +18,7 @@ then
     echo "No GRAPHSCOPE_HOME found, infer from python package"
     site_path=`python3 -m site --user-site`
     export GRAPHSCOPE_HOME=${site_path}/graphscope.runtime/
-    echo "Infered GRAPHSCOPE_HOME "${gs_runtime}
+    echo "Inferred GRAPHSCOPE_HOME "${gs_runtime}
 fi
 
 GRAPHX_GRAPE_SDK=`ls ${GRAPHSCOPE_HOME}/lib/grape-graphx-*.jar`
