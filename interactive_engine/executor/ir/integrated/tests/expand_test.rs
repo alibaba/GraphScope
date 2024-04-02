@@ -1134,6 +1134,7 @@ mod test {
             expand_opt: 0,
             alias: Some(TAG_B.into()),
             meta_data: None,
+            is_optional: false,
         };
 
         // marko (A) -> (C): path expand C;
@@ -1143,6 +1144,7 @@ mod test {
             params: Some(query_params(vec![], vec![], None)),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
             meta_data: None,
         };
         let path_opr = algebra_pb::PathExpand {
@@ -1156,6 +1158,7 @@ mod test {
             path_opt: 1,   // simple
             result_opt: 0, // endv
             condition: None,
+            is_optional: false,
         };
 
         let end_v = algebra_pb::GetV {
@@ -1174,6 +1177,7 @@ mod test {
             expand_opt: 0,
             alias: Some(TAG_C.into()),
             meta_data: None,
+            is_optional: false,
         };
         let unfold_opr =
             algebra_pb::Unfold { tag: Some(TAG_C.into()), alias: Some(TAG_C.into()), meta_data: None };
