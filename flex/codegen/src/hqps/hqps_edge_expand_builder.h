@@ -408,12 +408,6 @@ static std::pair<std::string, std::string> BuildMultiLabelEdgeExpandOpt(
 
   std::vector<std::vector<int32_t>> edge_label_triplet =
       parse_edge_label_triplet_from_ir_data_type(meta_data.type());
-  CHECK(edge_label_triplet.size() == prop_names.size());
-  LOG(INFO) << "Find multiple edge triplet: " << edge_label_triplet.size();
-
-  auto func_template_str = make_edge_expand_e_func_template_str(prop_types);
-  auto edge_named_prop_array =
-      make_prop_tuple_array_tuple(prop_names, prop_types);
 
   if (params.has_predicate()) {
     VLOG(10) << "Found expr in edge expand with multiple label triplet";
@@ -424,6 +418,13 @@ static std::pair<std::string, std::string> BuildMultiLabelEdgeExpandOpt(
   boost::format formater;
   if (expand_opt ==
       physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_EDGE) {
+    // only parse the prop_names if the expand opt is edge.
+    CHECK(edge_label_triplet.size() == prop_names.size());
+    LOG(INFO) << "Find multiple edge triplet: " << edge_label_triplet.size();
+
+    auto func_template_str = make_edge_expand_e_func_template_str(prop_types);
+    auto edge_named_prop_array =
+        make_prop_tuple_array_tuple(prop_names, prop_types);
     auto edge_triplet_2d_array =
         edge_label_triplet_to_array_str(edge_label_triplet);
     if (params.has_predicate()) {

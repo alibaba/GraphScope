@@ -82,6 +82,7 @@ class UnTypedEdgeSetIter {
       return cur_iter_.GetDstId();
     } else {
       LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
+      return 0;
     }
   }
 
@@ -93,6 +94,7 @@ class UnTypedEdgeSetIter {
       return src_vertices_[vid_ind_];
     } else {
       LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
+      return 0;
     }
   }
 
@@ -115,6 +117,7 @@ class UnTypedEdgeSetIter {
       return cur_iter_.GetDstLabel();
     } else {
       LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
+      return 0;
     }
   }
 
@@ -214,7 +217,6 @@ class UnTypedEdgeSet {
   using self_type_t = UnTypedEdgeSet<vid_t, label_t, sub_graph_t>;
   using flat_t = FlatEdgeSet<vid_t, label_t, Any>;
   using data_tuple_t = std::tuple<vid_t, vid_t, Any>;
-  using builder_t = FlatEdgeSetBuilder<vid_t, label_t, Any>;
 
   static constexpr bool is_edge_set = true;
 
@@ -246,25 +248,9 @@ class UnTypedEdgeSet {
                     src_vertices_.size());
   }
 
-  builder_t CreateBuilder() const {
-    auto triplet = get_edge_triplets();
-    std::vector<std::array<LabelT, 3>> edge_triplets;
-    for (size_t i = 0; i < triplet.size(); ++i) {
-      auto& cur_triplets_vec = triplet[i];
-      for (size_t j = 0; j < cur_triplets_vec.size(); ++j) {
-        edge_triplets.emplace_back(std::array{
-            std::get<0>(cur_triplets_vec[j]), std::get<1>(cur_triplets_vec[j]),
-            std::get<2>(cur_triplets_vec[j])});
-      }
-    }
-    return builder_t(edge_triplets, get_prop_names(),
-                     get_label_triplet_indices(), get_directions());
-  }
-
   std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     res.reserve(Size());
-    auto edge_iters = generate_iters();
     VLOG(1) << "GetLabelVec for UntypedEdgeSet, size: " << Size();
     for (size_t i = 0; i < src_vertices_.size(); ++i) {
       auto label_ind = label_indices_[i];
@@ -350,54 +336,22 @@ class UnTypedEdgeSet {
     }
     std::vector<std::vector<std::string>> prop_names = get_prop_names();
     CHECK(prop_names.size() == res_label_triplets.size());
-    auto directions = get_directions();
-    return FlatEdgeSet<vid_t, label_t, Any>(
-        std::move(dst_eles), std::move(res_label_triplets), prop_names,
-        std::move(label_triplet_indices), std::move(directions));
-  }
-
-  std::vector<Direction> get_directions() const {
-    std::vector<Direction> res;
-    auto edge_triplet = get_edge_triplets();
-    for (auto src_label_ind = 0; src_label_ind < src_labels_.size();
-         ++src_label_ind) {
-      auto src_label = src_labels_[src_label_ind];
-      std::vector<std::tuple<LabelT, LabelT, LabelT, Direction>> tmp;
-      if (adj_lists_.find(src_label) != adj_lists_.end()) {
-        auto& sub_graphs = adj_lists_.at(src_label);
-        for (auto& sub_graph : sub_graphs) {
-          res.emplace_back(sub_graph.GetDirection());
+    if (direction_ != Direction::Both) {
+      return FlatEdgeSet<vid_t, label_t, Any>(
+          std::move(dst_eles), std::move(res_label_triplets), prop_names,
+          std::move(label_triplet_indices), direction_);
+    } else {
+      std::vector<Direction> directions;
+      for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
+        auto& cur_triplets_vec = edge_label_triplets[i];
+        for (size_t j = 0; j < cur_triplets_vec.size(); ++j) {
+          directions.emplace_back(std::get<3>(cur_triplets_vec[j]));
         }
       }
+      return FlatEdgeSet<vid_t, label_t, Any>(
+          std::move(dst_eles), std::move(res_label_triplets), prop_names,
+          std::move(label_triplet_indices), std::move(directions));
     }
-    return res;
-  }
-
-  std::vector<uint8_t> get_label_triplet_indices() const {
-    std::vector<uint8_t> res;
-    auto edge_label_triplets = get_edge_triplets();
-    res.reserve(Size());
-    std::vector<size_t> sizes;
-    sizes.emplace_back(0);
-    auto edge_iters = generate_iters();
-    for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
-      sizes.emplace_back(sizes.back() + edge_label_triplets[i].size());
-    }
-    for (size_t i = 0; i < src_vertices_.size(); ++i) {
-      auto src_vid = src_vertices_[i];
-      auto& cur_edge_iters = edge_iters[i];
-      auto src_label_ind = label_indices_[i];
-      auto src_label = src_labels_[src_label_ind];
-
-      for (size_t j = 0; j < cur_edge_iters.size(); ++j) {
-        auto& cur_iter = cur_edge_iters[j];
-        while (cur_iter.IsValid()) {
-          res.emplace_back(sizes[src_label_ind] + j);
-          cur_iter.Next();
-        }
-      }
-    }
-    return res;
   }
 
   size_t Size() const {
@@ -656,10 +610,22 @@ class UnTypedEdgeSet {
     std::vector<std::vector<std::string>> prop_names = get_prop_names();
     CHECK(prop_names.size() == res_label_triplets.size());
 
-    auto directions = get_directions();
-    return FlatEdgeSet<vid_t, label_t, Any>(
-        std::move(dst_eles), std::move(res_label_triplets), prop_names,
-        std::move(label_triplet_indices), std::move(directions));
+    if (direction_ != Direction::Both) {
+      return FlatEdgeSet<vid_t, label_t, Any>(
+          std::move(dst_eles), std::move(res_label_triplets), prop_names,
+          std::move(label_triplet_indices), direction_);
+    } else {
+      std::vector<Direction> directions;
+      for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
+        auto& cur_triplets_vec = edge_label_triplets[i];
+        for (size_t j = 0; j < cur_triplets_vec.size(); ++j) {
+          directions.emplace_back(std::get<3>(cur_triplets_vec[j]));
+        }
+      }
+      return FlatEdgeSet<vid_t, label_t, Any>(
+          std::move(dst_eles), std::move(res_label_triplets), prop_names,
+          std::move(label_triplet_indices), std::move(directions));
+    }
   }
 
  private:
@@ -713,19 +679,19 @@ class UnTypedEdgeSet {
     return edge_iter_vecs;
   }
 
-  std::vector<std::vector<std::tuple<LabelT, LabelT, LabelT>>>
+  std::vector<std::vector<std::tuple<LabelT, LabelT, LabelT, Direction>>>
   get_edge_triplets() const {
-    std::vector<std::vector<std::tuple<LabelT, LabelT, LabelT>>> ret;
+    std::vector<std::vector<std::tuple<LabelT, LabelT, LabelT, Direction>>> ret;
     for (auto src_label_ind = 0; src_label_ind < src_labels_.size();
          ++src_label_ind) {
       auto src_label = src_labels_[src_label_ind];
-      std::vector<std::tuple<LabelT, LabelT, LabelT>> tmp;
+      std::vector<std::tuple<LabelT, LabelT, LabelT, Direction>> tmp;
       if (adj_lists_.find(src_label) != adj_lists_.end()) {
         auto& sub_graphs = adj_lists_.at(src_label);
         for (auto& sub_graph : sub_graphs) {
-          tmp.emplace_back(std::make_tuple(sub_graph.GetSrcLabel(),
-                                           sub_graph.GetDstLabel(),
-                                           sub_graph.GetEdgeLabel()));
+          tmp.emplace_back(std::make_tuple(
+              sub_graph.GetSrcLabel(), sub_graph.GetDstLabel(),
+              sub_graph.GetEdgeLabel(), sub_graph.GetDirection()));
         }
       }
       ret.emplace_back(std::move(tmp));

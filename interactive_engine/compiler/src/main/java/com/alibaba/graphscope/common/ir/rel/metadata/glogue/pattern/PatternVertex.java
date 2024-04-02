@@ -39,6 +39,10 @@ public abstract class PatternVertex {
         return details;
     }
 
+    public ElementDetails getDetails() {
+        return details;
+    }
+
     @Override
     public String toString() {
         return getId().toString() + "[" + getVertexTypeIds().toString() + "]";

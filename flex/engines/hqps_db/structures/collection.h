@@ -53,9 +53,6 @@ class TwoLabelVertexSetImpl;
 template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetImplBuilder;
 
-template <typename VID_T, typename LabelT, typename... T>
-class GeneralVertexSetBuilder;
-
 // untypedEdgeSet
 template <typename VID_T, typename LabelT, typename SUB_GRAPH_T>
 class UnTypedEdgeSet;
@@ -421,6 +418,7 @@ class CountBuilder {
         VLOG(10) << "ele is null";
       }
     } else {
+      VLOG(10) << "inc:" << ind << ", " << gs::to_string(tuple);
       ++vec_[ind];
     }
     return true;

@@ -25,6 +25,8 @@ public class ElementDetails implements Comparable<ElementDetails> {
     // the range is not null if and only if the element denotes a path expand operator
     private final @Nullable PathExpandRange range;
 
+    private boolean optional;
+
     public ElementDetails() {
         this(1.0d);
     }
@@ -34,8 +36,17 @@ public class ElementDetails implements Comparable<ElementDetails> {
     }
 
     public ElementDetails(double selectivity, @Nullable PathExpandRange range) {
+        this(selectivity, range, false);
+    }
+
+    public ElementDetails(double selectivity, boolean optional) {
+        this(selectivity, null, optional);
+    }
+
+    public ElementDetails(double selectivity, @Nullable PathExpandRange range, boolean optional) {
         this.selectivity = selectivity;
         this.range = range;
+        this.optional = optional;
     }
 
     @Override
@@ -44,12 +55,13 @@ public class ElementDetails implements Comparable<ElementDetails> {
         if (o == null || getClass() != o.getClass()) return false;
         ElementDetails details = (ElementDetails) o;
         return Double.compare(details.selectivity, selectivity) == 0
-                && Objects.equals(range, details.range);
+                && Objects.equals(range, details.range)
+                && optional == details.optional;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(selectivity, range);
+        return Objects.hash(selectivity, range, optional);
     }
 
     public double getSelectivity() {
@@ -60,9 +72,21 @@ public class ElementDetails implements Comparable<ElementDetails> {
         return range;
     }
 
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public void setOptional(boolean optional) {
+        this.optional = optional;
+    }
+
     @Override
     public int compareTo(ElementDetails o) {
         int compare = Double.compare(this.selectivity, o.selectivity);
+        if (compare != 0) {
+            return compare;
+        }
+        compare = Boolean.compare(this.optional, o.optional);
         if (compare != 0) {
             return compare;
         }

@@ -100,15 +100,33 @@ public abstract class AbstractBindableTableScan extends TableScan {
             tableTypes.addAll(type.getSchemaTypeAsList());
         }
         ObjectUtils.requireNonEmpty(tableTypes);
+        boolean nullable = schemaTypeNullable();
         GraphSchemaType graphType =
                 (tableTypes.size() == 1)
-                        ? tableTypes.get(0)
-                        : GraphSchemaType.create(tableTypes, typeFactory);
+                        ? new GraphSchemaType(
+                                tableTypes.get(0).getScanOpt(),
+                                tableTypes.get(0).getLabelType(),
+                                tableTypes.get(0).getFieldList(),
+                                nullable)
+                        : GraphSchemaType.create(tableTypes, typeFactory, nullable);
         RelRecordType rowType =
                 new RelRecordType(
                         ImmutableList.of(
                                 new RelDataTypeFieldImpl(getAliasName(), getAliasId(), graphType)));
         return rowType;
+    }
+
+    private boolean schemaTypeNullable() {
+        if (this instanceof GraphLogicalExpand) {
+            return ((GraphLogicalExpand) this).isOptional();
+        } else if (input instanceof GraphLogicalExpand) {
+            return ((GraphLogicalExpand) input).isOptional();
+        } else if (input instanceof GraphPhysicalExpand) {
+            return ((GraphPhysicalExpand) input).isOptional();
+        } else if (input instanceof GraphLogicalPathExpand) {
+            return ((GraphLogicalPathExpand) input).isOptional();
+        }
+        return false;
     }
 
     public void setRowType(GraphSchemaType graphType) {

@@ -21,6 +21,9 @@ python/proto
 # swp file
 *.swp
 
+# .so
+*.so
+
 # Protobuf GRPC
 *.pb.*
 *_pb2.py

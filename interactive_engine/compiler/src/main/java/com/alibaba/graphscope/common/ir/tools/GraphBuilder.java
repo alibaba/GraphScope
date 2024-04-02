@@ -326,18 +326,11 @@ public class GraphBuilder extends RelBuilder {
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
         RelNode match =
-                (single.getInputs().isEmpty() && single instanceof GraphLogicalSource)
-                        ? single
-                        : GraphLogicalSingleMatch.create(
-                                (GraphOptCluster) cluster,
-                                null,
-                                null,
-                                single,
-                                (input == null) ? opt : GraphOpt.Match.INNER);
+                GraphLogicalSingleMatch.create((GraphOptCluster) cluster, null, input, single, opt);
         if (input == null) {
             push(match);
         } else {
-            push(match).join(getJoinRelType(opt), getJoinCondition(input, match));
+            replaceTop(match);
         }
         return this;
     }
@@ -374,13 +367,13 @@ public class GraphBuilder extends RelBuilder {
                 GraphLogicalMultiMatch.create(
                         (GraphOptCluster) cluster,
                         null,
-                        null,
+                        input,
                         sentences.get(0),
                         sentences.subList(1, sentences.size()));
         if (input == null) {
             push(match);
         } else {
-            push(match).join(getJoinRelType(GraphOpt.Match.INNER), getJoinCondition(input, match));
+            replaceTop(match);
         }
         return this;
     }
@@ -426,17 +419,6 @@ public class GraphBuilder extends RelBuilder {
                 && second instanceof GraphSchemaType
                 && ((GraphSchemaType) first).getScanOpt()
                         == ((GraphSchemaType) second).getScanOpt();
-    }
-
-    private JoinRelType getJoinRelType(GraphOpt.Match opt) {
-        switch (opt) {
-            case OPTIONAL:
-                return JoinRelType.LEFT;
-            case ANTI:
-                return JoinRelType.ANTI;
-            default:
-                return JoinRelType.INNER;
-        }
     }
 
     /**

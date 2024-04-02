@@ -68,7 +68,6 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
                     patternVertex,
                     initialMapCheckerToColor.get(patternVertex.getIsomorphismChecker()));
         }
-
         ColoringImpl<PatternVertex> initialColoringImpl =
                 new ColoringImpl<PatternVertex>(initialColors, colorId);
         ColorRefinementAlgorithm<PatternVertex, PatternEdge> colorRefinementAlgorithm =

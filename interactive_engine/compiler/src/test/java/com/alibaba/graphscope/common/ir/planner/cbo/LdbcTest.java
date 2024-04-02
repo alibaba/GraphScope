@@ -23,17 +23,19 @@ public class LdbcTest {
         configs =
                 new Configs(
                         ImmutableMap.of(
+                                "graph.type.inference.enabled",
+                                "false",
                                 "graph.planner.is.on",
                                 "true",
                                 "graph.planner.opt",
                                 "CBO",
                                 "graph.planner.rules",
                                 "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
-                                        + " ExpandGetVFusionRule",
+                                        + " ExpandGetVFusionRule, NotMatchToAntiJoinRule",
                                 "graph.planner.cbo.glogue.schema",
-                                "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt"));
+                                "target/test-classes/statistics/ldbc30_statistics.txt"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockSchemaMeta("schema/ldbc_schema_exp_hierarchy.json");
+        irMeta = Utils.mockSchemaMeta("schema/ldbc.json");
     }
 
     @Test
@@ -41,53 +43,108 @@ public class LdbcTest {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "MATCH (p: PERSON{id: 1939})-[k:KNOWS*1..4]-(f:"
-                                        + " PERSON)-[:ISLOCATEDIN]->(city),\n"
-                                        + "     "
-                                        + " (f)-[:WORKAT]->(:COMPANY)-[:ISLOCATEDIN]->(:COUNTRY),\n"
-                                        + "     "
-                                        + " (f)-[:STUDYAT]->(:UNIVERSITY)-[:ISLOCATEDIN]->(:CITY)\n"
-                                        + "WHERE f.firstName = \"Mikhail\" AND f.id <> 1939\n"
-                                        + "WITH f, length(k) as len\n"
-                                        + "RETURN f, min(len) as distance\n"
-                                        + "ORDER BY distance ASC, f.lastName ASC, f.id ASC\n"
-                                        + "LIMIT 20;",
+                                "MATCH (p: PERSON{id: $personId}) -[k:KNOWS*1..4]-(f: PERSON"
+                                    + " {firstName: $firstName})\n"
+                                    + "OPTIONAL MATCH (f:"
+                                    + " PERSON)-[workAt:WORKAT]->(company:ORGANISATION)-[:ISLOCATEDIN]->(country:PLACE)\n"
+                                    + "OPTIONAL MATCH (f:"
+                                    + " PERSON)-[studyAt:STUDYAT]->(university)-[:ISLOCATEDIN]->(universityCity:PLACE)\n"
+                                    + "MATCH (f:PERSON)-[:ISLOCATEDIN]->(locationCity:PLACE)\n"
+                                    + "WHERE p <> f\n"
+                                    + "with f AS f, company, university, workAt, country, studyAt,"
+                                    + " universityCity, locationCity, length(k) as len\n"
+                                    + "with f AS f, company, university, workAt, country, studyAt,"
+                                    + " universityCity, locationCity, min(len) as distance\n"
+                                    + "ORDER  BY distance ASC, f.lastName ASC, f.id ASC\n"
+                                    + "LIMIT 20\n"
+                                    + "\n"
+                                    + "WITH \n"
+                                    + "    f, distance, locationCity,\n"
+                                    + "    CASE\n"
+                                    + "        WHEN company is null Then null\n"
+                                    + "        ELSE [company.name, workAt.workFrom, country.name]\n"
+                                    + "    END as companies,\n"
+                                    + "    CASE \n"
+                                    + "\t\t    WHEN university is null Then null\n"
+                                    + "\t\t    ELSE [university.name, studyAt.classYear,"
+                                    + " universityCity.name]\n"
+                                    + "\t  END as universities\n"
+                                    + "WITH f, distance, locationCity, collect(companies) as"
+                                    + " company_info, collect(universities) as university_info\n"
+                                    + "\n"
+                                    + "return f.id AS friendId,\n"
+                                    + "        f.lastName AS friendLastName,\n"
+                                    + "        distance AS distanceFromPerson,\n"
+                                    + "        f.birthday AS friendBirthday,\n"
+                                    + "        f.creationDate AS friendCreationDate,\n"
+                                    + "        f.gender AS friendGender,\n"
+                                    + "        f.browserUsed AS friendBrowserUsed,\n"
+                                    + "        f.locationIP AS friendLocationIp,\n"
+                                    + "        locationCity.name AS friendCityName,\n"
+                                    + "        university_info AS friendUniversities,\n"
+                                    + "        company_info AS friendCompanies;",
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
         Assert.assertEquals(
-                "GraphLogicalSort(sort0=[distance], sort1=[f.lastName], sort2=[f.id], dir0=[ASC],"
-                    + " dir1=[ASC], dir2=[ASC], fetch=[20])\n"
-                    + "  GraphLogicalAggregate(keys=[{variables=[f], aliases=[f]}],"
-                    + " values=[[{operands=[len], aggFunction=MIN, alias='distance',"
+                "GraphLogicalProject(friendId=[f.id], friendLastName=[f.lastName],"
+                    + " distanceFromPerson=[distance], friendBirthday=[f.birthday],"
+                    + " friendCreationDate=[f.creationDate], friendGender=[f.gender],"
+                    + " friendBrowserUsed=[f.browserUsed], friendLocationIp=[f.locationIP],"
+                    + " friendCityName=[locationCity.name], friendUniversities=[university_info],"
+                    + " friendCompanies=[company_info], isAppend=[false])\n"
+                    + "  GraphLogicalAggregate(keys=[{variables=[f, distance, locationCity],"
+                    + " aliases=[f, distance, locationCity]}], values=[[{operands=[companies],"
+                    + " aggFunction=COLLECT, alias='company_info', distinct=false},"
+                    + " {operands=[universities], aggFunction=COLLECT, alias='university_info',"
                     + " distinct=false}]])\n"
-                    + "    GraphLogicalProject(f=[f], len=[k.~len], isAppend=[false])\n"
-                    + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[ISLOCATEDIN]}],"
-                    + " alias=[_], startAlias=[PATTERN_VERTEX$5], opt=[OUT],"
-                    + " physicalOpt=[VERTEX])\n"
-                    + "        GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[WORKAT]}],"
-                    + " alias=[PATTERN_VERTEX$5], startAlias=[f], opt=[OUT],"
-                    + " physicalOpt=[VERTEX])\n"
-                    + "          GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[ISLOCATEDIN]}], alias=[city], startAlias=[f], opt=[OUT],"
-                    + " physicalOpt=[VERTEX])\n"
-                    + "            GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[ISLOCATEDIN]}], alias=[_], startAlias=[PATTERN_VERTEX$9],"
-                    + " opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "    GraphLogicalProject(f=[f], distance=[distance],"
+                    + " locationCity=[locationCity], companies=[CASE(IS NULL(company), null:NULL,"
+                    + " ARRAY(company.name, workAt.workFrom, country.name))], universities=[CASE(IS"
+                    + " NULL(university), null:NULL, ARRAY(university.name, studyAt.classYear,"
+                    + " universityCity.name))], isAppend=[false])\n"
+                    + "      GraphLogicalSort(sort0=[distance], sort1=[f.lastName], sort2=[f.id],"
+                    + " dir0=[ASC], dir1=[ASC], dir2=[ASC], fetch=[20])\n"
+                    + "        GraphLogicalAggregate(keys=[{variables=[f, company, university,"
+                    + " workAt, country, studyAt, universityCity, locationCity], aliases=[f,"
+                    + " company, university, workAt, country, studyAt, universityCity,"
+                    + " locationCity]}], values=[[{operands=[len], aggFunction=MIN,"
+                    + " alias='distance', distinct=false}]])\n"
+                    + "          GraphLogicalProject(f=[f], company=[company],"
+                    + " university=[university], workAt=[workAt], country=[country],"
+                    + " studyAt=[studyAt], universityCity=[universityCity],"
+                    + " locationCity=[locationCity], len=[k.~len], isAppend=[false])\n"
+                    + "            LogicalFilter(condition=[<>(p, f)])\n"
                     + "              GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[STUDYAT]}], alias=[PATTERN_VERTEX$9], startAlias=[f], opt=[OUT],"
-                    + " physicalOpt=[VERTEX])\n"
+                    + " tables=[ISLOCATEDIN]}], alias=[country], startAlias=[company], opt=[OUT],"
+                    + " physicalOpt=[VERTEX], optional=[true])\n"
                     + "                GraphLogicalGetV(tableConfig=[{isAll=false,"
-                    + " tables=[PERSON]}], alias=[f], fusedFilter=[[AND(=(_.firstName,"
-                    + " _UTF-8'Mikhail'), <>(_.id, 1939))]], opt=[END])\n"
-                    + "                 "
+                    + " tables=[ORGANISATION]}], alias=[company], opt=[END])\n"
+                    + "                  GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[WORKAT]}], alias=[workAt], startAlias=[f], opt=[OUT],"
+                    + " optional=[true])\n"
+                    + "                    GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[ISLOCATEDIN]}], alias=[universityCity], startAlias=[university],"
+                    + " opt=[OUT], physicalOpt=[VERTEX], optional=[true])\n"
+                    + "                      GraphLogicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[ORGANISATION]}], alias=[university], opt=[END])\n"
+                    + "                        GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[STUDYAT]}], alias=[studyAt], startAlias=[f], opt=[OUT],"
+                    + " optional=[true])\n"
+                    + "                          GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[ISLOCATEDIN]}], alias=[locationCity], startAlias=[f], opt=[OUT],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "                            GraphLogicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[PERSON]}], alias=[f], fusedFilter=[[=(_.firstName, ?1)]],"
+                    + " opt=[END])\n"
+                    + "                             "
                     + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[1], fetch=[3], path_opt=[ARBITRARY], result_opt=[END_V],"
                     + " alias=[k], start_alias=[p])\n"
-                    + "                    GraphLogicalSource(tableConfig=[{isAll=false,"
-                    + " tables=[PERSON]}], alias=[p], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
-                    + " 1939)])",
+                    + "                               "
+                    + " GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[p],"
+                    + " opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
                 after.explain().trim());
     }
 
@@ -229,11 +286,27 @@ public class LdbcTest {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "MATCH (person:PERSON {id: 168944})-[:KNOWS]-(friend:PERSON),\n"
-                                    + "      (friend)<-[:HASCREATOR]-(post:POST)-[:HASTAG]->(tag)\n"
-                                    + "Where post.creationDate >= 20100111014617581 AND"
-                                    + " post.creationDate <= 20130604130807720\n"
-                                    + "Return count(person);",
+                                "MATCH (person:PERSON {id:"
+                                    + " $personId})-[:KNOWS]-(friend:PERSON)<-[:HASCREATOR]-(post:POST)-[:HASTAG]->(tag:"
+                                    + " TAG)\n"
+                                    + "WITH DISTINCT tag, post\n"
+                                    + "WITH tag,\n"
+                                    + "     CASE\n"
+                                    + "       WHEN post.creationDate < $endDate  AND"
+                                    + " post.creationDate >= $startDate THEN 1\n"
+                                    + "       ELSE 0\n"
+                                    + "     END AS valid,\n"
+                                    + "     CASE\n"
+                                    + "       WHEN $startDate > post.creationDate THEN 1\n"
+                                    + "       ELSE 0\n"
+                                    + "     END AS inValid\n"
+                                    + "WITH tag, sum(valid) AS postCount, sum(inValid) AS"
+                                    + " inValidPostCount\n"
+                                    + "WHERE postCount>0 AND inValidPostCount=0\n"
+                                    + "\n"
+                                    + "RETURN tag.name AS tagName, postCount\n"
+                                    + "ORDER BY postCount DESC, tagName ASC\n"
+                                    + "LIMIT 10;",
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
@@ -261,48 +334,62 @@ public class LdbcTest {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "MATCH (person:PERSON"
-                                    + " {id:2199023378950})-[k:KNOWS*1..3]-(other)<-[hasMember:HASMEMBER]-(forum:FORUM),\n"
-                                    + "     "
-                                    + " (other)<-[:HASCREATOR]-(post:POST)<-[:CONTAINEROF]-(forum)\n"
-                                    + "RETURN forum.title as title, forum.id as id, count(distinct"
-                                    + " post) AS postCount\n"
+                                "MATCH (person:PERSON { id: $personId })-[:KNOWS*1..2]-(friend)\n"
+                                    + "MATCH (friend)<-[membership:HASMEMBER]-(forum)\n"
+                                    + "WHERE membership.joinDate > $minDate\n"
+                                    + "OPTIONAL MATCH"
+                                    + " (friend)<-[:HASCREATOR]-(post)<-[:CONTAINEROF]-(forum)\n"
+                                    + "WHERE\n"
+                                    + "  NOT person=friend\n"
+                                    + "WITH\n"
+                                    + "  forum,\n"
+                                    + "  count(distinct post) AS postCount\n"
                                     + "ORDER BY\n"
-                                    + "    postCount DESC,\n"
-                                    + "    id ASC\n"
-                                    + "LIMIT 20;",
+                                    + "  postCount DESC,\n"
+                                    + "  forum.id ASC\n"
+                                    + "LIMIT 20\n"
+                                    + "RETURN\n"
+                                    + "  forum.title AS forumName,\n"
+                                    + "  postCount;",
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalSort(sort0=[postCount], sort1=[id], dir0=[DESC], dir1=[ASC],"
-                    + " fetch=[20])\n"
-                    + "  GraphLogicalAggregate(keys=[{variables=[forum.title, forum.id],"
-                    + " aliases=[title, id]}], values=[[{operands=[post], aggFunction=COUNT,"
-                    + " alias='postCount', distinct=true}]])\n"
-                    + "    MultiJoin(joinFilter=[=(forum, forum)], isFullOuterJoin=[false],"
+                    + "GraphLogicalProject(forumName=[forum.title], postCount=[postCount],"
+                    + " isAppend=[false])\n"
+                    + "  GraphLogicalSort(sort0=[postCount], sort1=[forum.id], dir0=[DESC],"
+                    + " dir1=[ASC], fetch=[20])\n"
+                    + "    GraphLogicalAggregate(keys=[{variables=[forum], aliases=[forum]}],"
+                    + " values=[[{operands=[post], aggFunction=COUNT, alias='postCount',"
+                    + " distinct=true}]])\n"
+                    + "      LogicalFilter(condition=[<>(person, friend)])\n"
+                    + "        MultiJoin(joinFilter=[=(post, post)], isFullOuterJoin=[false],"
                     + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
                     + " projFields=[[ALL, ALL]])\n"
-                    + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[CONTAINEROF]}],"
-                    + " alias=[forum], startAlias=[post], opt=[IN], physicalOpt=[VERTEX])\n"
-                    + "        CommonTableScan(table=[[common#-1186040689]])\n"
-                    + "      GraphLogicalGetV(tableConfig=[{isAll=false, tables=[FORUM]}],"
-                    + " alias=[forum], opt=[START])\n"
-                    + "        GraphLogicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
-                    + " alias=[hasMember], startAlias=[other], opt=[IN])\n"
-                    + "          CommonTableScan(table=[[common#-1186040689]])\n"
-                    + "common#-1186040689:\n"
-                    + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
-                    + " alias=[post], startAlias=[other], opt=[IN], physicalOpt=[VERTEX])\n"
-                    + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[other], opt=[END])\n"
-                    + "    GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + "          GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[CONTAINEROF]}], alias=[post], startAlias=[forum], opt=[OUT],"
+                    + " physicalOpt=[VERTEX], optional=[true])\n"
+                    + "            CommonTableScan(table=[[common#391831169]])\n"
+                    + "          GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[HASCREATOR]}], alias=[post], startAlias=[friend], opt=[IN],"
+                    + " physicalOpt=[VERTEX], optional=[true])\n"
+                    + "            CommonTableScan(table=[[common#391831169]])\n"
+                    + "common#391831169:\n"
+                    + "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[FORUM]}], alias=[forum],"
+                    + " opt=[START])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[HASMEMBER]}],"
+                    + " alias=[membership], startAlias=[friend], fusedFilter=[[>(_.joinDate, ?1)]],"
+                    + " opt=[IN])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[friend], opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
-                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
-                    + " alias=[k], start_alias=[person])\n"
-                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 2199023378950)])",
+                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " alias=[_], start_alias=[person])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
                 com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
 
@@ -359,23 +446,34 @@ public class LdbcTest {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "MATCH (person:PERSON {id:"
-                                    + " 2199023382370})<-[:HASCREATOR]-(message)<-[like:LIKES]-(liker:PERSON),\n"
-                                    + "      (liker)-[:KNOWS]-(person)\n"
-                                    + "WITH liker, message, like.creationDate AS likeTime, person\n"
-                                    + "ORDER BY likeTime DESC, message.id ASC\n"
-                                    + "WITH liker, person, head(collect(message)) as message,"
-                                    + " head(collect(likeTime)) AS likeTime\n"
-                                    + "RETURN\n"
-                                    + "    liker.id AS personId,\n"
-                                    + "    liker.firstName AS personFirstName,\n"
-                                    + "    liker.lastName AS personLastName,\n"
-                                    + "    likeTime AS likeCreationDate,\n"
-                                    + "    message.id AS commentOrPostId\n"
-                                    + "ORDER BY\n"
-                                    + "    likeCreationDate DESC,\n"
-                                    + "    personId ASC\n"
-                                    + "LIMIT 20;",
+                                "MATCH (person:PERSON {id: $personId})<-[:HASCREATOR]-(message:"
+                                        + " POST | COMMENT)<-[like:LIKES]-(liker:PERSON)\n"
+                                        + "OPTIONAL MATCH (liker: PERSON)-[k:KNOWS]-(person: PERSON"
+                                        + " {id: $personId})\n"
+                                        + "WITH liker, message, like.creationDate AS likeTime,"
+                                        + " person,\n"
+                                        + "  CASE\n"
+                                        + "      WHEN k is null THEN true\n"
+                                        + "      ELSE false\n"
+                                        + "     END AS isNew\n"
+                                        + "ORDER BY likeTime DESC, message.id ASC\n"
+                                        + "WITH liker, person, head(collect(message)) as message,"
+                                        + " head(collect(likeTime)) AS likeTime, isNew\n"
+                                        + "RETURN\n"
+                                        + "    liker.id AS personId,\n"
+                                        + "    liker.firstName AS personFirstName,\n"
+                                        + "    liker.lastName AS personLastName,\n"
+                                        + "    likeTime AS likeCreationDate,\n"
+                                        + "    message.id AS commentOrPostId,\n"
+                                        + "    message.content AS messageContent,\n"
+                                        + "    message.imageFile AS messageImageFile,\n"
+                                        + "    (likeTime - message.creationDate)/1000/60 AS"
+                                        + " minutesLatency,\n"
+                                        + "  \tisNew\n"
+                                        + "ORDER BY\n"
+                                        + "    likeCreationDate DESC,\n"
+                                        + "    personId ASC\n"
+                                        + "LIMIT 20;",
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
@@ -386,15 +484,19 @@ public class LdbcTest {
                     + "  GraphLogicalProject(personId=[liker.id],"
                     + " personFirstName=[liker.firstName], personLastName=[liker.lastName],"
                     + " likeCreationDate=[likeTime], commentOrPostId=[message.id],"
-                    + " isAppend=[false])\n"
-                    + "    GraphLogicalAggregate(keys=[{variables=[liker, person], aliases=[liker,"
-                    + " person]}], values=[[{operands=[message], aggFunction=FIRST_VALUE,"
-                    + " alias='message', distinct=false}, {operands=[likeTime],"
-                    + " aggFunction=FIRST_VALUE, alias='likeTime', distinct=false}]])\n"
+                    + " messageContent=[message.content], messageImageFile=[message.imageFile],"
+                    + " minutesLatency=[/(/(-(likeTime, message.creationDate), 1000), 60)],"
+                    + " isNew=[isNew], isAppend=[false])\n"
+                    + "    GraphLogicalAggregate(keys=[{variables=[liker, person, isNew],"
+                    + " aliases=[liker, person, isNew]}], values=[[{operands=[message],"
+                    + " aggFunction=FIRST_VALUE, alias='message', distinct=false},"
+                    + " {operands=[likeTime], aggFunction=FIRST_VALUE, alias='likeTime',"
+                    + " distinct=false}]])\n"
                     + "      GraphLogicalSort(sort0=[likeTime], sort1=[message.id], dir0=[DESC],"
                     + " dir1=[ASC])\n"
                     + "        GraphLogicalProject(liker=[liker], message=[message],"
-                    + " likeTime=[like.creationDate], person=[person], isAppend=[false])\n"
+                    + " likeTime=[like.creationDate], person=[person], isNew=[IS NULL(k)],"
+                    + " isAppend=[false])\n"
                     + "          MultiJoin(joinFilter=[=(liker, liker)], isFullOuterJoin=[false],"
                     + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
                     + " projFields=[[ALL, ALL]])\n"
@@ -402,15 +504,18 @@ public class LdbcTest {
                     + " alias=[liker], opt=[START])\n"
                     + "              GraphLogicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[LIKES]}], alias=[like], startAlias=[message], opt=[IN])\n"
-                    + "                CommonTableScan(table=[[common#-1625147595]])\n"
-                    + "            GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
-                    + " alias=[liker], startAlias=[person], opt=[BOTH], physicalOpt=[VERTEX])\n"
-                    + "              CommonTableScan(table=[[common#-1625147595]])\n"
-                    + "common#-1625147595:\n"
+                    + "                CommonTableScan(table=[[common#378747223]])\n"
+                    + "            GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[liker], opt=[OTHER])\n"
+                    + "              GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[KNOWS]}], alias=[k], startAlias=[person], opt=[BOTH],"
+                    + " optional=[true])\n"
+                    + "                CommonTableScan(table=[[common#378747223]])\n"
+                    + "common#378747223:\n"
                     + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
                     + " alias=[message], startAlias=[person], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 2199023382370)])",
+                    + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
                 com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
 
@@ -580,6 +685,7 @@ public class LdbcTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        System.out.println(after.explain());
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[replyCount], sort1=[personId], dir0=[DESC], dir1=[ASC],"
                     + " fetch=[20])\n"

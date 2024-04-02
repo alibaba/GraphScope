@@ -83,6 +83,14 @@ void deserialize_plan_and_gen_hqps(const std::string& input_file_path,
   CHECK(plan_pb.ParseFromArray(content_str.data(), content_str.size()));
   LOG(INFO) << "deserialized plan size : " << plan_pb.ByteSizeLong();
   VLOG(1) << "deserialized plan : " << plan_pb.DebugString();
+  std::string output_path = output_file_path + ".json";
+  std::string json_plan;
+  google::protobuf::util::JsonOptions option;
+  option.always_print_primitive_fields = true;
+  google::protobuf::util::MessageToJsonString(plan_pb, &json_plan, option);
+  std::ofstream out(output_path);
+  out << json_plan;
+  out.close();
   BuildingContext context;
   std::shared_ptr<QueryGenerator<uint8_t>> query_generator;
   // load schema

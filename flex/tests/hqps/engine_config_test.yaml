@@ -14,13 +14,21 @@ compute_engine:
   store:
     type: cpp-mcsr
 compiler:
+  physical:
+    opt:
+      config: proto # default is ffi
   planner:
     is_on: true
-    opt: RBO
+    opt: CBO
     rules:
       - FilterIntoJoinRule
       - FilterMatchRule
       - NotMatchToAntiJoinRule
+      - ExtendIntersectRule
+      - ExpandGetVFusionRule
+    cbo:
+      glogue:
+        schema: /workspaces/GraphScope/flex/interactive/examples/ldbc/sf10_staticstics.txt
   endpoint:
     default_listen_address: localhost
     bolt_connector:
