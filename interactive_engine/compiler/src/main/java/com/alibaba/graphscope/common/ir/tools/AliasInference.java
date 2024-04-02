@@ -204,4 +204,14 @@ public abstract class AliasInference {
     public static final boolean isDefaultAlias(@Nullable String alias) {
         return alias == null || alias.equals(DEFAULT_NAME);
     }
+
+    public static final String inferAliasWithPrefix(String prefix, Set<String> uniqueNameList) {
+        int j = 0;
+        String name;
+        do {
+            name = prefix + j;
+            ++j;
+        } while (uniqueNameList.contains(name));
+        return name;
+    }
 }

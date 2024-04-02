@@ -183,8 +183,8 @@ class KubernetesClusterLauncher(Launcher):
             role = ResourceBuilder.get_role(
                 name=self._role_name,
                 namespace=self._namespace,
-                api_groups=",apps,extensions",  # The leading comma is necessary, represents for core api group.
-                resources="configmaps,deployments,deployments/status,statefulsets,statefulsets/status,endpoints,events,pods,pods/log,pods/exec,pods/status,services,replicasets",  # noqa: E501
+                api_groups=",apps,extensions,kubeflow.org",  # The leading comma is necessary, represents for core api group.
+                resources="configmaps,deployments,deployments/status,statefulsets,statefulsets/status,endpoints,events,pods,pods/log,pods/exec,pods/status,services,replicasets,pytorchjobs",  # noqa: E501
                 verbs="create,delete,get,update,watch,list",
                 labels=self._labels,
             )

@@ -22,10 +22,12 @@ import static org.junit.Assume.assumeTrue;
 
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
+import com.google.common.collect.Lists;
 
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Column;
@@ -204,6 +206,170 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                 get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
         printTraversalForm(traversal);
         Assert.assertEquals("marko", traversal.next());
+    }
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_out_out_count();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_not_out_out_count();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_a_neq_b_by_out_count_count();
+
+    public abstract Traversal<Vertex, Map<String, Object>> get_g_V_select_a_b_by_out_count();
+
+    public abstract Traversal<Vertex, Map<String, Object>>
+            get_g_V_select_a_b_by_out_count_by_name();
+
+    public abstract Traversal<Vertex, Long> get_g_V_dedup_a_b_by_out_count_count();
+
+    public abstract Traversal<Vertex, Object> get_g_V_order_by_out_count_by_name();
+
+    public abstract Traversal<Vertex, Map<Object, Long>> get_g_V_groupCount_by_out_count_by_age();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_values_age_count();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_not_values_age_count();
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_out_out_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_out_out_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(1, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_not_out_out_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_not_out_out_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(5, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_a_neq_b_by_out_count_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_a_neq_b_by_out_count_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(6, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_a_b_by_out_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        Traversal<Vertex, Map<String, Object>> traversal = this.get_g_V_select_a_b_by_out_count();
+        this.printTraversalForm(traversal);
+        int a_2_b_0_count = 0;
+        int a_1_b_0_count = 0;
+        int a_3_b_0_count = 0;
+        int a_3_b_2_count = 0;
+        while (traversal.hasNext()) {
+            Map<String, Object> result = traversal.next();
+            if (((Long) result.get("a")) == 2 && ((Long) result.get("b")) == 0) {
+                a_2_b_0_count++;
+            } else if (((Long) result.get("a")) == 1 && ((Long) result.get("b")) == 0) {
+                a_1_b_0_count++;
+            } else if (((Long) result.get("a")) == 3 && ((Long) result.get("b")) == 0) {
+                a_3_b_0_count++;
+            } else if (((Long) result.get("a")) == 3 && ((Long) result.get("b")) == 2) {
+                a_3_b_2_count++;
+            }
+        }
+        Assert.assertEquals(2, a_2_b_0_count);
+        Assert.assertEquals(1, a_1_b_0_count);
+        Assert.assertEquals(2, a_3_b_0_count);
+        Assert.assertEquals(1, a_3_b_2_count);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_a_b_by_out_count_by_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        Traversal<Vertex, Map<String, Object>> traversal =
+                this.get_g_V_select_a_b_by_out_count_by_name();
+        this.printTraversalForm(traversal);
+        int a_3_b_lop_count = 0;
+        int a_2_b_lop_count = 0;
+        int a_1_b_lop_count = 0;
+        int a_2_b_ripple_count = 0;
+        int a_3_b_vadas_count = 0;
+        int a_3_b_josh_count = 0;
+        while (traversal.hasNext()) {
+            Map<String, Object> result = traversal.next();
+            if (((Long) result.get("a")) == 3 && result.get("b").equals("lop")) {
+                a_3_b_lop_count++;
+            } else if (((Long) result.get("a")) == 2 && result.get("b").equals("lop")) {
+                a_2_b_lop_count++;
+            } else if (((Long) result.get("a")) == 1 && result.get("b").equals("lop")) {
+                a_1_b_lop_count++;
+            } else if (((Long) result.get("a")) == 2 && result.get("b").equals("ripple")) {
+                a_2_b_ripple_count++;
+            } else if (((Long) result.get("a")) == 3 && result.get("b").equals("vadas")) {
+                a_3_b_vadas_count++;
+            } else if (((Long) result.get("a")) == 3 && result.get("b").equals("josh")) {
+                a_3_b_josh_count++;
+            }
+        }
+        Assert.assertEquals(1, a_3_b_lop_count);
+        Assert.assertEquals(1, a_2_b_lop_count);
+        Assert.assertEquals(1, a_1_b_lop_count);
+        Assert.assertEquals(1, a_2_b_ripple_count);
+        Assert.assertEquals(1, a_3_b_vadas_count);
+        Assert.assertEquals(1, a_3_b_josh_count);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_dedup_a_b_by_out_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        Traversal<Vertex, Long> traversal = this.get_g_V_dedup_a_b_by_out_count_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(4, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_order_by_out_count_by_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        Traversal<Vertex, Object> traversal = this.get_g_V_order_by_out_count_by_name();
+        this.printTraversalForm(traversal);
+        List names = Lists.newArrayList();
+        while (traversal.hasNext()) {
+            names.add(traversal.next());
+        }
+        Assert.assertEquals(
+                Lists.newArrayList("vadas", "ripple", "lop", "peter", "josh", "marko"), names);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_groupCount_by_out_count_by_age() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        Traversal<Vertex, Map<Object, Long>> traversal =
+                this.get_g_V_groupCount_by_out_count_by_age();
+        this.printTraversalForm(traversal);
+        Map<Object, Long> result = traversal.next();
+        Assert.assertEquals(1, result.get(2L).intValue());
+        Assert.assertEquals(5, result.get(0L).intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_values_age_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_values_age_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(4, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_not_values_age_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_not_values_age_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(2, traversal.next().intValue());
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
@@ -989,6 +1155,60 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                                     "a.name = 'marko' and (a.age > 20 OR a.age < 10)",
                                     ExprStep.Type.FILTER))
                     .values("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_out_out_count() {
+            return g.V().where(__.out().out()).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_not_out_out_count() {
+            return g.V().where(__.not(__.out().out())).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_a_neq_b_by_out_count_count() {
+            return g.V().as("a").out().as("b").where("a", P.neq("b")).by(out().count()).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>> get_g_V_select_a_b_by_out_count() {
+            return g.V().as("a").out().as("b").select("a", "b").by(__.out().count());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>> get_g_V_select_a_b_by_out_count_by_name() {
+            return g.V().as("a").out().as("b").select("a", "b").by(__.out().count()).by("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_dedup_a_b_by_out_count_count() {
+            return g.V().as("a").out().as("b").dedup("a", "b").by(out().count()).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_order_by_out_count_by_name() {
+            return g.V().as("a")
+                    .values("name")
+                    .order()
+                    .by(select("a").out().count(), Order.asc)
+                    .by(select("a").values("name"), Order.desc);
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Long>> get_g_V_groupCount_by_out_count_by_age() {
+            return g.V().out().groupCount().by(__.out().count().as("key1"));
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_values_age_count() {
+            return g.V().where(__.values("age")).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_not_values_age_count() {
+            return g.V().where(__.not(values("age"))).count();
         }
 
         @Override

@@ -617,8 +617,23 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                         "aggregate functions should not exist in filter expression");
             }
             return builder.filter(exprRes.getExpr());
+        } else if (ctx.nestedTraversal() != null) {
+            RexNode subQuery =
+                    (new NestedTraversalRexVisitor(builder, null, ctx))
+                            .visitNestedTraversal(ctx.nestedTraversal());
+            return builder.filter(Utils.convertExprToPair(subQuery).getValue0());
+        } else if (ctx.traversalMethod_not() != null) {
+            return visitTraversalMethod_not(ctx.traversalMethod_not());
         }
         throw new UnsupportedEvalException(ctx.getClass(), ctx.getText() + " is unsupported");
+    }
+
+    @Override
+    public GraphBuilder visitTraversalMethod_not(GremlinGSParser.TraversalMethod_notContext ctx) {
+        RexNode subQuery =
+                (new NestedTraversalRexVisitor(builder, null, ctx))
+                        .visitNestedTraversal(ctx.nestedTraversal());
+        return builder.filter(Utils.convertExprToPair(subQuery).getValue0());
     }
 
     @Override
@@ -771,17 +786,10 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                             T.class, byCtx.traversalToken());
             return builder.variable(tag, token.getAccessor());
         } else if (byCtx.nestedTraversal() != null) {
-            RexNode rex =
-                    Utils.convertExprToPair(
-                                    new NestedTraversalRexVisitor(this.builder, tag, byCtx)
-                                            .visitNestedTraversal(byCtx.nestedTraversal()))
-                            .getValue0();
-            if (rex instanceof RexCall) {
-                throw new UnsupportedEvalException(
-                        byCtx.nestedTraversal().getClass(),
-                        "rex " + rex + " is unsupported yet in dedup by");
-            }
-            return rex;
+            return Utils.convertExprToPair(
+                            new NestedTraversalRexVisitor(this.builder, tag, byCtx)
+                                    .visitNestedTraversal(byCtx.nestedTraversal()))
+                    .getValue0();
         } else {
             throw new UnsupportedEvalException(
                     byCtx.getClass(), byCtx.getText() + " is unsupported yet");
@@ -810,12 +818,6 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                                     new NestedTraversalRexVisitor(this.builder, null, byCtx)
                                             .visitNestedTraversal(byCtx.nestedTraversal()))
                             .getValue0();
-            // todo: RexCall need to be computed in advance which will change the current head
-            if (rex instanceof RexCall) {
-                throw new UnsupportedEvalException(
-                        byCtx.nestedTraversal().getClass(),
-                        "rex " + rex + " is unsupported yet in order by");
-            }
             exprs.add(rex);
         } else {
             exprs.add(builder.variable((String) null));
