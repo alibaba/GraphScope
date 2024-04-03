@@ -44,12 +44,65 @@ message Set {
 }
   
 // denote mappings between columns in the input data and the properties of the node or relationship
+// follow data import specification in gs-interactive (https://graphscope.io/docs/flex/interactive/data_import)
 message ColumnMappings {
-    oneof item {
-    // should follow data import specification in gs-interactive (https://graphscope.io/docs/flex/interactive/data_import)
-    string yaml = 1;
-    // todo: other formats like protobuf, json, etc.
+    message LoadingConfig {
+        message DataSource {
+            string scheme = 1;
+            string location = 2;
+        }
+
+        message Format {
+            message Metadata {
+                string delimiter = 1;
+                bool header_row = 2;
+                bool quoting = 3;
+                string quote_char = 4;
+                bool double_quote = 5;
+                string escape_char = 6;
+                string block_size = 7;
+            }
+            Metadata metadata = 1;
+        }
+
+        DataSource data_source = 1;
+        Format format = 2;
     }
+
+    LoadingConfig load_config = 1;
+
+    message ColumnMapping {
+        message Column {
+            int32 index = 1;
+            string name = 2;
+        }
+
+        Column column = 1;
+        string property = 2;
+    }
+
+    message VertexMapping {
+        string type_name = 1;
+        repeated string inputs = 2;
+        repeated ColumnMapping column_mappings = 3;
+    }
+
+    repeated VertexMapping vertex_mappings = 2;
+
+    message EdgeMapping {
+        message TypeTriplet {
+            string edge = 1;
+            string source_vertex = 2;
+            string destination_vertex = 3;
+        }
+        TypeTriplet type_triplet = 1;
+        repeated string inputs = 2;
+        repeated ColumnMapping.Column source_vertex_mappings = 3;
+        repeated ColumnMapping.Column destination_vertex_mappings = 4;
+        repeated ColumnMapping column_mappings = 5;
+    }
+
+    repeated EdgeMapping edge_mappings = 3;
 }
   
 // Examples:
