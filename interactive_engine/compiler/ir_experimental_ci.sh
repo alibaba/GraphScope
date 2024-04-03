@@ -17,7 +17,7 @@ fi
 
 # restart compiler service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
-cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto &
+cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto graph.planner.rules=FilterIntoJoinRule,FilterMatchRule &
 sleep 5s
 # run gremlin standard tests to test calcite-based IR layer
 cd ${base_dir} && make gremlin_calcite_test
@@ -38,7 +38,7 @@ RUST_LOG=info DATA_PATH=/tmp/gstest/modern_graph_exp_bin PARTITION_ID=0 ./start_
 cd ${base_dir}/../executor/ir/target/release &&
 RUST_LOG=info DATA_PATH=/tmp/gstest/modern_graph_exp_bin PARTITION_ID=1 ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config/distributed/server_1 &
 # start compiler service
-cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto pegasus.hosts:=127.0.0.1:1234,127.0.0.1:1235 &
+cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto graph.planner.rules=FilterIntoJoinRule,FilterMatchRule pegasus.hosts:=127.0.0.1:1234,127.0.0.1:1235 &
 sleep 5s
 # run gremlin standard tests to test calcite-based IR layer
 cd ${base_dir} && make gremlin_calcite_test

@@ -158,6 +158,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     expr = "@" + applyAliasName;
                 }
                 dedupVars.add(getExpressionAsVar(expr));
+                ++subId;
             }
             DedupOp dedupOp = new DedupOp();
             dedupOp.setDedupKeys(new OpArg(dedupVars));
