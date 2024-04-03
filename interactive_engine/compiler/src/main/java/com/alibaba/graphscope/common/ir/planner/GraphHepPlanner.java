@@ -12,6 +12,7 @@ import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
@@ -131,6 +132,11 @@ public class GraphHepPlanner extends HepPlanner {
         @Override
         public RelNode visit(LogicalFilter filter) {
             return findBestIfRoot(filter, visitChildren(filter));
+        }
+
+        @Override
+        public RelNode visit(MultiJoin join) {
+            return findBestIfRoot(join, visitChildren(join));
         }
 
         @Override

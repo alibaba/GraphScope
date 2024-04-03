@@ -427,4 +427,37 @@ public class MatchTest {
                         + "]}])",
                 node.explain().trim());
     }
+
+    @Test
+    public void match_21_test() {
+        // The IN operator in Cypher will be transformed into the following three logical plans:
+        // 1) IN ['marko', 'vadas'], where the elements in the list consist only of constants, will
+        // be converted into a SEARCH operator.
+        RelNode node = Utils.eval("Match (a) Where a.name IN ['marko', 'vadas'] Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], fusedFilter=[[SEARCH(_.name, Sarg[_UTF-8'marko',"
+                    + " _UTF-8'vadas']:CHAR(5) CHARACTER SET \"UTF-8\")]], opt=[VERTEX])",
+                node.explain().trim());
+
+        // 2) IN [a.age, 1], where the elements include variables, will be decomposed into a set of
+        // OR predicates.
+        node = Utils.eval("Match (a) Where a.id IN [a.age, 1] Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], fusedFilter=[[OR(=(_.id, _.age), =(_.id, 1))]], opt=[VERTEX])",
+                node.explain().trim());
+
+        // 3) Dynamic parameters will be transformed into the IN operator.
+        // The differences between 1) and 3) exist only in the logical plan, as both will be
+        // converted into WITHIN in the physical plan.
+        node = Utils.eval("Match (a) Where a.name IN $names Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], fusedFilter=[[IN(_.name, ?0)]], opt=[VERTEX])",
+                node.explain().trim());
+    }
 }

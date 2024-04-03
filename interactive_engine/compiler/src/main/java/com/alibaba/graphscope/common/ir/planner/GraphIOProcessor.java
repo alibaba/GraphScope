@@ -685,7 +685,7 @@ public class GraphIOProcessor {
                 GraphLogicalExpand expand = (GraphLogicalExpand) pxd.getExpand();
                 GraphSchemaType edgeType =
                         (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
-                expand.setRowType(createSchemaType(tripletEdgeType, edgeType));
+                expand.setSchemaType(createSchemaType(tripletEdgeType, edgeType));
                 builder.push(
                                 createPathExpandWithOptional(
                                         pxd, edge.getElementDetails().isOptional()))
@@ -705,7 +705,7 @@ public class GraphIOProcessor {
                                 edge.getElementDetails().isOptional());
                 GraphSchemaType edgeType =
                         (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
-                expand.setRowType(createSchemaType(tripletEdgeType, edgeType));
+                expand.setSchemaType(createSchemaType(tripletEdgeType, edgeType));
                 builder.push(expand);
                 if (edgeValue.getFilter() != null) {
                     builder.filter(edgeValue.getFilter());

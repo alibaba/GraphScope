@@ -166,7 +166,7 @@ public class GraphPhysicalExpand extends SingleRel {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return pw.itemIf("input", input, !Objects.isNull(input))
-                .item("tableConfig", fusedExpand.tableConfig)
+                .item("tableConfig", fusedExpand.explainTableConfig())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
                         "startAlias",

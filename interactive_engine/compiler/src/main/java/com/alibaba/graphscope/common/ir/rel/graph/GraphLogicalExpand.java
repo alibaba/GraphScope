@@ -103,7 +103,7 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
         if (ObjectUtils.isNotEmpty(this.getFilters())) {
             copy.setFilters(this.getFilters());
         }
-        copy.setRowType((GraphSchemaType) this.getRowType().getFieldList().get(0).getType());
+        copy.setSchemaType((GraphSchemaType) this.getRowType().getFieldList().get(0).getType());
         return copy;
     }
 

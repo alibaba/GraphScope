@@ -47,7 +47,7 @@
               "propId": {
                 "name": "creationDate"
               },
-              "type": "INT64"
+              "type": "DATE32"
             }, {
               "propId": {
                 "name": "locationIP"
@@ -220,7 +220,7 @@
                     "propId": {
                       "name": "creationDate"
                     },
-                    "type": "INT64"
+                    "type": "DATE32"
                   }, {
                     "propId": {
                       "name": "locationIP"

@@ -326,7 +326,7 @@ public class GraphBuilder extends RelBuilder {
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
         RelNode match =
-                (single.getInputs().isEmpty() && single instanceof GraphLogicalSource)
+                (input == null && single instanceof GraphLogicalSource)
                         ? single
                         : GraphLogicalSingleMatch.create(
                                 (GraphOptCluster) cluster,
@@ -678,8 +678,12 @@ public class GraphBuilder extends RelBuilder {
         // derive unknown types of operands
         operandList =
                 inferOperandTypes(operator, returnType, convertOperands(operator, operandList));
-        final RexBuilder builder = cluster.getRexBuilder();
-        return builder.makeCall(returnType, operator, operandList);
+        final RexBuilder rexBuilder = cluster.getRexBuilder();
+        if (operator.getKind() == SqlKind.OTHER && operator.getName().equals("IN")) {
+            return rexBuilder.makeIn(
+                    operandList.get(0), operandList.subList(1, operandList.size()));
+        }
+        return rexBuilder.makeCall(returnType, operator, operandList);
     }
 
     // convert operands of the operator in some special cases
@@ -756,7 +760,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.AS
                 || sqlKind == SqlKind.BIT_AND
                 || sqlKind == SqlKind.BIT_OR
-                || sqlKind == SqlKind.BIT_XOR;
+                || sqlKind == SqlKind.BIT_XOR
+                || (sqlKind == SqlKind.OTHER && operator.getName().equals("IN"));
     }
 
     @Override

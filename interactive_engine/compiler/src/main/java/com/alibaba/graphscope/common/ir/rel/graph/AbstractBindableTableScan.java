@@ -129,7 +129,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return false;
     }
 
-    public void setRowType(GraphSchemaType graphType) {
+    public void setSchemaType(GraphSchemaType graphType) {
         rowType =
                 new RelRecordType(
                         ImmutableList.of(
@@ -153,7 +153,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return pw.itemIf("input", input, !Objects.isNull(input))
-                .item("tableConfig", tableConfig)
+                .item("tableConfig", explainTableConfig())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
                         "startAlias",
@@ -161,6 +161,22 @@ public abstract class AbstractBindableTableScan extends TableScan {
                         startAlias.getAliasName() != AliasInference.DEFAULT_NAME)
                 .itemIf("fusedProject", project, !ObjectUtils.isEmpty(project))
                 .itemIf("fusedFilter", filters, !ObjectUtils.isEmpty(filters));
+    }
+
+    protected Object explainTableConfig() {
+        if (this instanceof GraphLogicalExpand) {
+            GraphSchemaType deriveSchema =
+                    (GraphSchemaType) deriveRowType().getFieldList().get(0).getType();
+            GraphSchemaType curSchema =
+                    (GraphSchemaType) getRowType().getFieldList().get(0).getType();
+            if (!curSchema
+                    .getLabelType()
+                    .getLabelsEntry()
+                    .equals(deriveSchema.getLabelType().getLabelsEntry())) {
+                return curSchema.getLabelType();
+            }
+        }
+        return tableConfig;
     }
 
     @Override
