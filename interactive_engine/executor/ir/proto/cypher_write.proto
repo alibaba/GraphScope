@@ -27,20 +27,23 @@ import "expr.proto";
 // SET p += {name: 'Peter Smith', position: 'Entrepreneur'}; after mutating, the original properties still exist, and two new properties are added.
 // SET n:PERSON; after mutating, the original labels still exist, and a new label is added.
 message Set {
-    enum Kind {
-      // replace all existing properties on a node or relationship with those values provided in a literal or a map.
-      REPLACE_PROPERTY = 0;
-      // mutate properties from a map in a fine-grained fashion, it functions as follows:
-      // Any properties in the map that are not on the node or relationship will be added.
-      // Any properties not in the map that are on the node or relationship will be left as is.
-      // Any properties that are in both the map and the node or relationship will be replaced in the node or relationship.
-      MUTATE_PROPERTY = 1;
-      // mutate a label on a node
-      MUTATE_LABEL = 2;
+    message Item {
+        enum Kind {
+            // replace all existing properties on a node or relationship with those values provided in a literal or a map.
+            REPLACE_PROPERTY = 0;
+            // mutate properties from a map in a fine-grained fashion, it functions as follows:
+            // Any properties in the map that are not on the node or relationship will be added.
+            // Any properties not in the map that are on the node or relationship will be left as is.
+            // Any properties that are in both the map and the node or relationship will be replaced in the node or relationship.
+            MUTATE_PROPERTY = 1;
+            // mutate a label on a node
+            MUTATE_LABEL = 2;
+        }
+        Kind kind = 1;
+        common.Variable key = 2;
+        common.Expression value = 3;
     }
-    Kind kind = 1;
-    common.Variable key = 2;
-    common.Expression value = 3;
+    repeated Item items = 1;
 }
   
 // denote mappings between columns in the input data and the properties of the node or relationship
