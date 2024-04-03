@@ -298,9 +298,8 @@ message PhysicalOpr {
 
       // write operators
       cypher.Set set = 33;
-      cypher.Create create = 34;
-      cypher.Merge merge = 35;
-      cypher.Delete delete = 36;
+      cypher.Load load = 34;
+      cypher.Delete delete = 35;
     }
   }
   message MetaData {
