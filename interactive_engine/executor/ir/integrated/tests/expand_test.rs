@@ -1139,8 +1139,6 @@ mod test {
             alias: Some(TAG_C.into()),
             meta_data: None,
         };
-        let unfold_opr =
-            algebra_pb::Unfold { tag: Some(TAG_C.into()), alias: Some(TAG_C.into()), meta_data: None };
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_scan_source(source_opr.clone());
@@ -1154,7 +1152,6 @@ mod test {
         plan_builder_2.shuffle(None);
         plan_builder_2.edge_expand(expand_opr3.clone());
         job_builder.intersect(vec![plan_builder_1, plan_builder_2], TAG_C.into());
-        job_builder.unfold(unfold_opr.clone());
         job_builder.sink(default_sink_pb());
         job_builder.build().unwrap()
     }
