@@ -33,7 +33,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
-use crate::process::operator::map::IntersectionEntry;
+use crate::process::operator::map::{GeneralIntersectionEntry, IntersectionEntry};
 
 #[derive(Debug, PartialEq)]
 pub enum EntryType {
@@ -421,6 +421,12 @@ impl Entry for IntersectionEntry {
     }
 }
 
+impl Entry for GeneralIntersectionEntry {
+    fn get_type(&self) -> EntryType {
+        EntryType::Intersection
+    }
+}
+
 impl Entry for GraphPath {
     fn get_type(&self) -> EntryType {
         EntryType::Path
@@ -633,6 +639,18 @@ impl From<Vec<DynEntry>> for DynEntry {
     fn from(vec: Vec<DynEntry>) -> Self {
         let c = CollectionEntry { inner: vec };
         DynEntry::new(c)
+    }
+}
+
+impl From<IntersectionEntry> for DynEntry {
+    fn from(i: IntersectionEntry) -> Self {
+        DynEntry::new(i)
+    }
+}
+
+impl From<GeneralIntersectionEntry> for DynEntry {
+    fn from(i: GeneralIntersectionEntry) -> Self {
+        DynEntry::new(i)
     }
 }
 
