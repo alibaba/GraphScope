@@ -341,7 +341,10 @@ public abstract class Utils {
             case MULTISET:
             case ARRAY:
             case MAP:
-                SqlTypeName typeName = dataType.getComponentType().getSqlTypeName();
+                SqlTypeName typeName =
+                        (dataType != null && dataType.getComponentType() != null)
+                                ? dataType.getComponentType().getSqlTypeName()
+                                : null;
                 List<SqlTypeName> basicTypes =
                         ImmutableList.of(
                                 SqlTypeName.BOOLEAN,
@@ -351,7 +354,7 @@ public abstract class Utils {
                                 SqlTypeName.DECIMAL,
                                 SqlTypeName.FLOAT,
                                 SqlTypeName.DOUBLE);
-                if (!basicTypes.contains(typeName)) {
+                if (typeName == null || !basicTypes.contains(typeName)) {
                     logger.warn(
                             "collection type with component type = ["
                                     + typeName
