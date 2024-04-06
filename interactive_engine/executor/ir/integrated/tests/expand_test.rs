@@ -1513,4 +1513,171 @@ mod test {
         assert_eq!(result_collection, expected_result_ids);
         assert_eq!(result_edge_collection, expected_preserved_edge);
     }
+
+    // marko (A) -> lop (B) with optional edge_tag; marko (A) -2..3-> (B);
+    fn init_intersect_path_edges_job_request(edge_tag: Option<KeyId>) -> JobRequest {
+        // marko (A)
+        let source_opr = algebra_pb::Scan {
+            scan_opt: 0,
+            alias: Some(TAG_A.into()),
+            params: None,
+            idx_predicate: Some(vec![1].into()),
+            is_count_only: false,
+            meta_data: None,
+        };
+
+        // marko (A) -> lop (B);
+        let expand_opr1;
+        let mut get_v_opr1 = None;
+
+        if let Some(edge_tag) = edge_tag {
+            // a seperate expande + getv
+            // marko (A) -> (B); with edge tag edge_tag
+            expand_opr1 = algebra_pb::EdgeExpand {
+                v_tag: Some(TAG_A.into()),
+                direction: 0, // out
+                params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
+                expand_opt: 1,
+                alias: Some(edge_tag.into()),
+                meta_data: None,
+            };
+
+            get_v_opr1 = Some(algebra_pb::GetV {
+                tag: None,
+                opt: 1, // EndV
+                params: Some(query_params(vec![], vec![], None)),
+                alias: Some(TAG_B.into()),
+                meta_data: None,
+            });
+        } else {
+            // a fused expandv
+            expand_opr1 = algebra_pb::EdgeExpand {
+                v_tag: Some(TAG_A.into()),
+                direction: 0, // out
+                params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
+                expand_opt: 0, // expand vertex
+                alias: Some(TAG_B.into()),
+                meta_data: None,
+            };
+        }
+
+        // marko (A) -2..3-> (B): path expand B;
+        let expand_opr2 = algebra_pb::EdgeExpand {
+            v_tag: None,
+            direction: 2, // both
+            params: Some(query_params(vec![], vec![], None)),
+            expand_opt: 0,
+            alias: None,
+            meta_data: None,
+        };
+        let path_opr = algebra_pb::PathExpand {
+            alias: None,
+            base: Some(algebra_pb::path_expand::ExpandBase {
+                edge_expand: Some(expand_opr2.clone()),
+                get_v: None,
+            }),
+            start_tag: Some(TAG_A.into()),
+            hop_range: Some(algebra_pb::Range { lower: 2, upper: 3 }),
+            path_opt: 1,   // simple
+            result_opt: 0, // endv
+            condition: None,
+        };
+
+        let endv = algebra_pb::GetV {
+            tag: None,
+            opt: 1, // EndV
+            params: Some(query_params(vec![], vec![], None)),
+            alias: Some(TAG_B.into()),
+            meta_data: None,
+        };
+
+        let mut sink_tags: Vec<_> = vec![TAG_A, TAG_B]
+            .into_iter()
+            .map(|i| common_pb::NameOrIdKey { key: Some(i.into()) })
+            .collect();
+        if let Some(edge_tag) = edge_tag {
+            sink_tags.push(common_pb::NameOrIdKey { key: Some(edge_tag.into()) });
+        }
+        let sink_pb = algebra_pb::Sink { tags: sink_tags, sink_target: default_sink_target() };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr.clone());
+        let mut plan_builder_1 = PlanBuilder::new(1);
+        plan_builder_1.shuffle(None);
+        plan_builder_1.edge_expand(expand_opr1);
+        if let Some(get_v_opr1) = get_v_opr1 {
+            plan_builder_1.get_v(get_v_opr1);
+        }
+        let mut plan_builder_2 = PlanBuilder::new(2);
+        plan_builder_2.shuffle(None);
+        plan_builder_2.path_expand(path_opr.clone());
+        plan_builder_2.get_v(endv);
+        job_builder.intersect(vec![plan_builder_1, plan_builder_2], TAG_B.into());
+
+        job_builder.sink(sink_pb);
+        job_builder.build().unwrap()
+    }
+
+    #[test]
+    fn general_expand_multi_hop_path_and_intersect_test_01() {
+        initialize();
+        // no edge tags, i.e., the optimized intersection
+        let request = init_intersect_path_edges_job_request(None);
+
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let mut expected_result_ids = vec![v3];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(Some(TAG_B)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+
+        result_collection.sort();
+        expected_result_ids.sort();
+        assert_eq!(result_collection, expected_result_ids);
+    }
+
+    #[test]
+    fn general_expand_multi_hop_path_and_intersect_test_02() {
+        initialize();
+        // with edge tags, i.e., the general intersection
+        let request = init_intersect_path_edges_job_request(Some(TAG_C));
+
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let mut expected_result_ids = vec![v3];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(Some(TAG_B)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                    if let Some(edge) = record.get(Some(TAG_C)).unwrap().as_edge() {
+                        assert_eq!(edge.src_id as DefaultId, v1);
+                        assert_eq!(edge.dst_id as DefaultId, v3);
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+
+        result_collection.sort();
+        expected_result_ids.sort();
+        assert_eq!(result_collection, expected_result_ids);
+    }
 }

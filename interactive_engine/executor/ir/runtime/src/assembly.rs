@@ -490,7 +490,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                             ))
                         })?;
 
-                        // if the lase opr is Auxilia, move it after intersect
+                        // if the last opr is Auxilia, move it after intersect
                         if let OpKind::Vertex(mut vertex) = to_op_kind(&last_op)? {
                             if vertex.opt == pb::get_v::VOpt::Itself as i32 {
                                 vertex.tag = Some(intersect.key);
@@ -533,7 +533,6 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                             }
                             // case 2/3: PathExpand/EdgeExpand + GetV
                             OpKind::Vertex(mut get_v) => {
-                                // the remaining cases includes (after move auxilia)
                                 let prev_opr_kind = to_op_kind(&subplan.plan.pop().ok_or_else(|| {
                                     FnGenError::unsupported_error(&format!(
                                         "subplan with only getV in pb::Intersect::plan {:?}",
@@ -549,7 +548,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                                 subplan_clone,
                                             )))?
                                         }
-                                        // note that this get_v won't take filters, as it would be translated to auxilia.
+                                        // note that this get_v won't take filters, as it should be translated to auxilia.
                                         if let Some(params) = &get_v.params {
                                             if params.has_predicates()
                                                 || params.has_columns()
@@ -586,7 +585,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                                 subplan_clone,
                                             )))?
                                         }
-                                        let prev_repartition = if let Some(opr) = subplan.plan.last() {
+                                        let path_repartition = if let Some(opr) = subplan.plan.last() {
                                             if opr.is_repartition() {
                                                 subplan.plan.pop()
                                             } else {
@@ -645,10 +644,12 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                             )))?
                                         }
                                         let mut edge_expand = base_edge_expand.clone();
+                                        let mut edge_repartition = None;
                                         if hop_range.lower == 1 && hop_range.upper == 2 {
                                             // optimized Path(1..2) to as EdgeExpand
                                             edge_expand.v_tag = path_expand.start_tag;
                                             edge_expand.alias = get_v.alias;
+                                            edge_repartition = path_repartition.clone();
                                         } else {
                                             // translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand,
                                             edge_expand.v_tag = None;
@@ -658,15 +659,29 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                             hop_range.lower -= 1;
                                             hop_range.upper -= 1;
                                             // pre expand path_expand(l-1, h-1)
-                                            if let Some(repartition) = prev_repartition.clone() {
+                                            if let Some(repartition) = path_repartition.clone() {
                                                 pre_expands.push(repartition);
                                             }
                                             pre_expands.push(path_expand.into());
                                             pre_expands.push(get_v.into());
+                                            if path_repartition.is_some() {
+                                                edge_repartition = Some(
+                                                    pb::Repartition {
+                                                        strategy: Some(
+                                                            pb::repartition::Strategy::ToAnother(
+                                                                pb::repartition::Shuffle {
+                                                                    shuffle_key: None,
+                                                                },
+                                                            ),
+                                                        ),
+                                                    }
+                                                    .into(),
+                                                );
+                                            }
                                         }
                                         // and then expand and intersect on the last edge_expand
                                         intersected_expands.push((
-                                            prev_repartition.clone(),
+                                            edge_repartition.clone(),
                                             edge_expand,
                                             None,
                                         ));
@@ -708,14 +723,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     // intersect of edge_expands
                     for (repartition, expand_intersect_func) in intersect_expand_funcs {
                         if let Some(repartition) = repartition {
-                            if let OpKind::Repartition(_) = to_op_kind(&repartition)? {
-                                stream = self.install(stream, &vec![repartition])?;
-                            } else {
-                                Err(FnGenError::unsupported_error(&format!(
-                                    "Wired Op in Intersection {:?}",
-                                    repartition
-                                )))?
-                            }
+                            stream = self.install(stream, &vec![repartition])?;
                         }
                         stream = stream.filter_map_with_name("ExpandIntersect", move |input| {
                             expand_intersect_func.exec(input)
