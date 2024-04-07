@@ -1028,6 +1028,7 @@ mod test {
             alias,
             expand_opt,
             meta_data: None,
+            is_optional: false,
         }
     }
 
@@ -1530,6 +1531,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let limit_opr = pb::Limit { range: Some(pb::Range { lower: 10, upper: 11 }) };
 
@@ -1626,6 +1628,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_opr = pb::PathExpand {
@@ -1636,6 +1639,7 @@ mod test {
             path_opt: 0,
             result_opt: 0,
             condition: None,
+            is_optional: false,
         };
 
         let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
@@ -1690,6 +1694,7 @@ mod test {
             expand_opt: 1, // expand edge
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let getv = pb::GetV {
@@ -1708,6 +1713,7 @@ mod test {
             path_opt: 0,
             result_opt: 0,
             condition: None,
+            is_optional: false,
         };
 
         let fused_edge_expand = pb::EdgeExpand {
@@ -1717,6 +1723,7 @@ mod test {
             expand_opt: 0, // expand vertex
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let fused_path_opr = pb::PathExpand {
             base: Some(fused_edge_expand.into()),
@@ -1726,6 +1733,7 @@ mod test {
             path_opt: 0,
             result_opt: 0,
             condition: None,
+            is_optional: false,
         };
 
         let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
@@ -1780,6 +1788,7 @@ mod test {
             expand_opt: 1, // expand edge
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let getv = pb::GetV {
@@ -1806,6 +1815,7 @@ mod test {
             path_opt: 0,
             result_opt: 0,
             condition: None,
+            is_optional: false,
         };
 
         let fused_edge_expand = pb::EdgeExpand {
@@ -1815,6 +1825,7 @@ mod test {
             expand_opt: 0, // expand vertex
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let fused_getv_with_filter = pb::GetV {
             tag: None,
@@ -1839,6 +1850,7 @@ mod test {
             path_opt: 0,
             result_opt: 0,
             condition: None,
+            is_optional: false,
         };
 
         let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
@@ -1931,6 +1943,7 @@ mod test {
             expand_opt: 0,
             alias: Some(1.into()),
             meta_data: None,
+            is_optional: false,
         };
 
         let root_id = plan
@@ -2152,6 +2165,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let join_opr = pb::Join { left_keys: vec![], right_keys: vec![], kind: 0 };
         let limit_opr = pb::Limit { range: Some(pb::Range { lower: 10, upper: 11 }) };
@@ -2214,6 +2228,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let get_b = pb::GetV {
@@ -2232,6 +2247,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let mut expand_ac_opr_vertex = expand_ac_opr_edge.clone();
@@ -2245,6 +2261,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let mut expand_bc_opr_vertex = expand_bc_opr_edge.clone();
@@ -2298,6 +2315,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Vertex as i32,
             alias: Some(1.into()),
             meta_data: None,
+            is_optional: false,
         };
         let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
@@ -2330,6 +2348,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let get_b = pb::GetV {
@@ -2348,6 +2367,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let expand_bc_opr_edge = pb::EdgeExpand {
@@ -2357,6 +2377,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let get_c = pb::GetV {
@@ -2406,6 +2427,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Vertex as i32,
             alias: Some(1.into()),
             meta_data: None,
+            is_optional: false,
         };
         let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
@@ -2949,6 +2971,7 @@ mod test {
             expand_opt: 0, // vertex
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_opr = pb::PathExpand {
@@ -2959,6 +2982,7 @@ mod test {
             path_opt: 0,   // ARBITRARY
             result_opt: 1, // ALL_V
             condition: None,
+            is_optional: false,
         };
 
         let project_opr = pb::Project {

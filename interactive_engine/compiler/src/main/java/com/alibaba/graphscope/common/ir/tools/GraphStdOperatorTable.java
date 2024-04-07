@@ -276,4 +276,14 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
     public static final SqlOperator POSIX_REGEX_CASE_SENSITIVE =
             new ExtSqlPosixRegexOperator(
                     "POSIX REGEX CASE SENSITIVE", SqlKind.POSIX_REGEX_CASE_SENSITIVE, true, false);
+
+    public static final SqlOperator IN =
+            new SqlBinaryOperator(
+                    "IN",
+                    SqlKind.OTHER,
+                    32,
+                    true,
+                    ReturnTypes.BOOLEAN_NULLABLE,
+                    GraphInferTypes.IN_OPERANDS_TYPE,
+                    OperandTypes.ANY);
 }

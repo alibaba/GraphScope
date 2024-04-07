@@ -38,6 +38,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends RelRule<C> {
@@ -87,14 +88,12 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                                                     k.getSrcPattern()),
                                             (GlogueExtendIntersectEdge) k)));
         } else {
+            PruningStrategy pruningStrategy = new PruningStrategy(pattern);
             for (PatternVertex vertex : pattern.getVertexSet()) {
-                Pattern clone = new Pattern(pattern);
-                clone.setPatternId(UUID.randomUUID().hashCode());
-                List connectedSets = clone.removeVertex(vertex);
-                if (connectedSets.size() != 1) {
+                if (pruningStrategy.toPrune(vertex)) {
                     continue;
                 }
-                edges.add(createExtendIntersect(graphPattern, clone, pattern, vertex, estimator));
+                edges.add(createExtendIntersect(graphPattern, vertex, estimator));
             }
         }
         Collections.sort(edges, comparator.getEdgeComparator());
@@ -102,11 +101,11 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
     }
 
     private GraphExtendIntersect createExtendIntersect(
-            GraphPattern graphPattern,
-            Pattern src,
-            Pattern dst,
-            PatternVertex target,
-            ExtendWeightEstimator estimator) {
+            GraphPattern graphPattern, PatternVertex target, ExtendWeightEstimator estimator) {
+        Pattern dst = graphPattern.getPattern();
+        Pattern src = new Pattern(dst);
+        src.setPatternId(UUID.randomUUID().hashCode());
+        src.removeVertex(target);
         List<PatternEdge> adjacentEdges = Lists.newArrayList(dst.getEdgesOf(target));
         double totalWeight = estimator.estimate(adjacentEdges, target);
         List<ExtendEdge> extendEdges =
@@ -119,7 +118,7 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                                             k.getEdgeTypeIds(),
                                             Utils.getExtendDirection(k, target),
                                             estimator.estimate(k, target),
-                                            k.getElementDetails().getRange());
+                                            k.getElementDetails());
                                 })
                         .collect(Collectors.toList());
         ExtendStep extendStep =
@@ -181,6 +180,54 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                                 .getVertexByOrder(step2.getTargetVertexOrder());
                 return targetVertex2.getId() - targetVertex1.getId();
             };
+        }
+    }
+
+    private static class PruningStrategy {
+        private final List<Predicate<PatternVertex>> predicates;
+
+        public PruningStrategy(Pattern pattern) {
+            predicates = Lists.newArrayList();
+            // if pattern is disconnected after removing vertex v, prune it
+            predicates.add(
+                    (PatternVertex v) -> {
+                        Pattern clone = new Pattern(pattern);
+                        List connectedSets = clone.removeVertex(v);
+                        return connectedSets.size() != 1;
+                    });
+            // constraint transformations if the pattern has optional vertices or edges
+            List<PatternVertex> optionalVertices =
+                    pattern.getVertexSet().stream()
+                            .filter(k -> k.getElementDetails().isOptional())
+                            .collect(Collectors.toList());
+            if (!optionalVertices.isEmpty()) {
+                // If there are optional vertices in the pattern, we should prioritize selecting
+                // these vertices to perform rule transformations.
+                // Vertices that do not belong to the optional set will be pruned.
+                predicates.add((PatternVertex v) -> !optionalVertices.contains(v));
+            } else {
+                // If there are no optional vertices in the pattern, in which case the pattern only
+                // consists of optional edges, we should first execute the part of the pattern that
+                // does not contain optional edges.
+                // After removing vertex v, if the subpattern contains optional edges, this case
+                // will be pruned.
+                predicates.add(
+                        (PatternVertex v) -> {
+                            Pattern clone = new Pattern(pattern);
+                            clone.removeVertex(v);
+                            return clone.getEdgeSet().stream()
+                                    .anyMatch(k -> k.getElementDetails().isOptional());
+                        });
+            }
+        }
+
+        public boolean toPrune(PatternVertex target) {
+            for (Predicate<PatternVertex> predicate : predicates) {
+                if (predicate.test(target)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

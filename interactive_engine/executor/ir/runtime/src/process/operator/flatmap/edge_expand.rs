@@ -99,6 +99,9 @@ impl FlatMapFuncGen for pb::EdgeExpand {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
+        if self.is_optional {
+            return Err(FnGenError::unsupported_error("optional edge expand in EdgeExpandOperator"));
+        }
         let graph = get_graph().ok_or_else(|| FnGenError::NullGraphError)?;
         let start_v_tag = self.v_tag;
         let edge_or_end_v_tag = self.alias;

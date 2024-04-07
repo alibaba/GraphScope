@@ -467,6 +467,7 @@ pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -517,6 +518,7 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr2 = pb::EdgeExpand {
         v_tag: None,
@@ -525,6 +527,7 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr3 = pb::EdgeExpand {
         v_tag: None,
@@ -533,6 +536,7 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -579,6 +583,7 @@ pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -655,6 +660,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr2 = pb::EdgeExpand {
         v_tag: None,
@@ -663,6 +669,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr3 = pb::EdgeExpand {
         v_tag: None,
@@ -671,6 +678,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr4 = pb::EdgeExpand {
         v_tag: None,
@@ -679,6 +687,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -739,6 +748,7 @@ pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr1 = pb::EdgeExpand {
         v_tag: None,
@@ -747,6 +757,7 @@ pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -806,6 +817,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr1 = pb::EdgeExpand {
         v_tag: None,
@@ -814,6 +826,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr2 = pb::EdgeExpand {
         v_tag: None,
@@ -822,6 +835,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr3 = pb::EdgeExpand {
         v_tag: None,
@@ -830,6 +844,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let expand_opr4 = pb::EdgeExpand {
         v_tag: None,
@@ -838,6 +853,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         expand_opt: 0,
         alias: None,
         meta_data: None,
+        is_optional: false,
     };
     let pattern = pb::Pattern {
         sentences: vec![

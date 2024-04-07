@@ -62,4 +62,18 @@ public abstract class GraphInferTypes {
                     }
                 }
             };
+
+    public static final SqlOperandTypeInference IN_OPERANDS_TYPE =
+            (callBinding, returnType, operandTypes) -> {
+                RelDataType leftType = operandTypes[0];
+                RelDataType rightType = operandTypes[1];
+                RelDataType unknownType = callBinding.getTypeFactory().createUnknownType();
+                if (leftType.equals(unknownType)
+                        && rightType.getSqlTypeName() == SqlTypeName.ARRAY) {
+                    operandTypes[0] = rightType.getComponentType();
+                }
+                if (rightType.equals(unknownType) && !leftType.equals(unknownType)) {
+                    operandTypes[1] = callBinding.getTypeFactory().createArrayType(leftType, -1);
+                }
+            };
 }
