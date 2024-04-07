@@ -1306,6 +1306,7 @@ mod test {
             expand_opt: 0,
             alias: Some(TAG_B.into()),
             meta_data: None,
+            is_optional: false,
         };
 
         let expand_opr2;
@@ -1321,6 +1322,7 @@ mod test {
                 expand_opt: 1, // expand edge
                 alias: Some(edge_tag_1.into()),
                 meta_data: None,
+                is_optional: false,
             };
 
             get_v_opr1 = Some(algebra_pb::GetV {
@@ -1339,6 +1341,7 @@ mod test {
                 expand_opt: 0, // expand vertex
                 alias: Some(TAG_C.into()),
                 meta_data: None,
+                is_optional: false,
             };
         }
 
@@ -1355,6 +1358,7 @@ mod test {
                 expand_opt: 1, // expand edge
                 alias: Some(edge_tag_2.into()),
                 meta_data: None,
+                is_optional: false,
             };
 
             get_v_opr2 = Some(algebra_pb::GetV {
@@ -1373,6 +1377,7 @@ mod test {
                 expand_opt: 0, // expand vertex
                 alias: Some(TAG_C.into()),
                 meta_data: None,
+                is_optional: false,
             };
         }
 
@@ -1580,6 +1585,7 @@ mod test {
                 expand_opt: 1,
                 alias: Some(edge_tag.into()),
                 meta_data: None,
+                is_optional: false,
             };
 
             get_v_opr1 = Some(algebra_pb::GetV {
@@ -1598,6 +1604,7 @@ mod test {
                 expand_opt: 0, // expand vertex
                 alias: Some(TAG_B.into()),
                 meta_data: None,
+                is_optional: false,
             };
         }
 
@@ -1609,6 +1616,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let path_opr = algebra_pb::PathExpand {
             alias: None,
@@ -1621,6 +1629,7 @@ mod test {
             path_opt: 1,   // simple
             result_opt: 0, // endv
             condition: None,
+            is_optional: false,
         };
 
         let endv = algebra_pb::GetV {
