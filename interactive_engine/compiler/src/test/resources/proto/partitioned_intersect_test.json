@@ -47,7 +47,7 @@
               "propId": {
                 "name": "creationDate"
               },
-              "type": "INT64"
+              "type": "DATE32"
             }, {
               "propId": {
                 "name": "locationIP"
@@ -137,19 +137,13 @@
                   "graphDataType": [{
                     "label": {
                       "label": 1,
-                      "srcLabel": 4,
+                      "srcLabel": 2,
                       "dstLabel": 7
                     }
                   }, {
                     "label": {
                       "label": 1,
                       "srcLabel": 3,
-                      "dstLabel": 7
-                    }
-                  }, {
-                    "label": {
-                      "label": 1,
-                      "srcLabel": 2,
                       "dstLabel": 7
                     }
                   }]
@@ -243,7 +237,7 @@
                     "propId": {
                       "name": "creationDate"
                     },
-                    "type": "INT64"
+                    "type": "DATE32"
                   }, {
                     "propId": {
                       "name": "locationIP"
