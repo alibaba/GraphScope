@@ -152,12 +152,21 @@ impl Encode for DynEntry {
                 self.as_object().unwrap().write_to(writer)?;
             }
             EntryType::Intersection => {
-                writer.write_u8(5)?;
-                self.inner
+                if let Some(intersect) = self
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
-                    .unwrap()
-                    .write_to(writer)?;
+                {
+                    writer.write_u8(5)?;
+                    intersect.write_to(writer)?;
+                } else if let Some(intersect) = self
+                    .as_any_ref()
+                    .downcast_ref::<GeneralIntersectionEntry>()
+                {
+                    writer.write_u8(8)?;
+                    intersect.write_to(writer)?;
+                } else {
+                    unreachable!()
+                }
             }
             EntryType::Collection => {
                 writer.write_u8(6)?;
@@ -211,6 +220,10 @@ impl Decode for DynEntry {
             7 => {
                 let pair = PairEntry::read_from(reader)?;
                 Ok(DynEntry::new(pair))
+            }
+            8 => {
+                let general_intersect = GeneralIntersectionEntry::read_from(reader)?;
+                Ok(DynEntry::new(general_intersect))
             }
             _ => unreachable!(),
         }
