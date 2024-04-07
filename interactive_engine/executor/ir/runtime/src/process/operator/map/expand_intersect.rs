@@ -206,6 +206,9 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect
 
 impl FilterMapFuncGen for pb::EdgeExpand {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
+        if self.is_optional {
+            return Err(FnGenError::unsupported_error("optional edge expand in ExpandIntersection"));
+        }
         let graph = graph_proxy::apis::get_graph().ok_or_else(|| FnGenError::NullGraphError)?;
         let start_v_tag = self.v_tag;
         let edge_or_end_v_tag = self

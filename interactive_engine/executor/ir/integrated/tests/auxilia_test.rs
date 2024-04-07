@@ -58,6 +58,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
 
         let auxilia_opr = pb::GetV {
@@ -102,6 +103,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
 
         let auxilia_opr = pb::GetV {
@@ -153,6 +155,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
 
         let auxilia_opr = pb::GetV {
@@ -204,6 +207,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
 
         let auxilia_opr = pb::GetV {
@@ -259,6 +263,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
 
         let auxilia_opr = pb::GetV {
@@ -422,6 +427,7 @@ mod test {
             params: Some(query_param),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
 
         let auxilia_opr = pb::GetV {
@@ -476,6 +482,7 @@ mod test {
             params: None,
             expand_opt: 0,
             alias: Some(TAG_B.into()),
+            is_optional: false,
         };
 
         let project_opr = pb::Project {
@@ -519,6 +526,7 @@ mod test {
             params: Some(query_params(vec![], vec!["weight".into()], None)),
             expand_opt: 1, // edge
             alias: None,
+            is_optional: false,
         };
 
         let auxilia_opr = pb::GetV {

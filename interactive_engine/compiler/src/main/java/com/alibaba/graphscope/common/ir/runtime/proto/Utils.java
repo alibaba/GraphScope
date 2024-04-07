@@ -27,6 +27,7 @@ import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.*;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra.GroupBy.AggFunc.Aggregate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.Int32Value;
 
 import org.apache.calcite.avatica.util.TimeUnit;
@@ -254,6 +255,12 @@ public abstract class Utils {
                 return OuterExpression.ExprOpr.newBuilder()
                         .setArith(OuterExpression.Arithmetic.BITXOR)
                         .build();
+            case OTHER:
+                if (operator.getName().equals("IN")) {
+                    return OuterExpression.ExprOpr.newBuilder()
+                            .setLogical(OuterExpression.Logical.WITHIN)
+                            .build();
+                }
             default:
                 throw new UnsupportedOperationException(
                         "operator type="
@@ -334,8 +341,26 @@ public abstract class Utils {
             case MULTISET:
             case ARRAY:
             case MAP:
-                logger.warn("multiset or array type can not be converted to any ir core data type");
-                return DataType.IrDataType.newBuilder().build();
+                SqlTypeName typeName =
+                        (dataType != null && dataType.getComponentType() != null)
+                                ? dataType.getComponentType().getSqlTypeName()
+                                : null;
+                List<SqlTypeName> basicTypes =
+                        ImmutableList.of(
+                                SqlTypeName.BOOLEAN,
+                                SqlTypeName.INTEGER,
+                                SqlTypeName.BIGINT,
+                                SqlTypeName.CHAR,
+                                SqlTypeName.DECIMAL,
+                                SqlTypeName.FLOAT,
+                                SqlTypeName.DOUBLE);
+                if (typeName == null || !basicTypes.contains(typeName)) {
+                    logger.warn(
+                            "collection type with component type = ["
+                                    + typeName
+                                    + "] can not be converted to any ir core data type");
+                    return DataType.IrDataType.newBuilder().build();
+                }
             default:
                 return DataType.IrDataType.newBuilder()
                         .setDataType(protoBasicDataType(dataType))

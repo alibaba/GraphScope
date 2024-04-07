@@ -556,13 +556,13 @@ public class GraphTypeInference {
                                 newTableConfig,
                                 expand.getAliasName(),
                                 expand.getStartAlias());
-                newExpand.setRowType((GraphSchemaType) newType);
+                newExpand.setSchemaType((GraphSchemaType) newType);
                 if (ObjectUtils.isNotEmpty(expand.getFilters())) {
                     return builder.push(newExpand).filter(expand.getFilters()).build();
                 }
                 return newExpand;
             } else {
-                expand.setRowType((GraphSchemaType) newType);
+                expand.setSchemaType((GraphSchemaType) newType);
             }
         }
         if (rel instanceof GraphLogicalGetV) {

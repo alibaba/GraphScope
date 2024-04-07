@@ -132,7 +132,8 @@
                     }
                   },
                   "alias": -1
-                }
+                },
+                "is_optional": false
               },
               "get_v": {
                 "tag": null,
@@ -208,7 +209,8 @@
             },
             "path_opt": 1,
             "result_opt": 1,
-            "condition": null
+            "condition": null,
+            "is_optional": false
           }
         }
       },

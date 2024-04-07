@@ -18,22 +18,22 @@ package com.alibaba.graphscope.common.ir.rel.graph.match;
 
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.rel.type.StructKind;
+import org.apache.calcite.rel.type.*;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
     private final RelNode sentence;
@@ -70,6 +70,20 @@ public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
     public RelDataType deriveRowType() {
         List<RelDataTypeField> fields = Lists.newArrayList();
         addFields(fields, sentence);
+        // convert type to nullable
+        if (matchOpt == GraphOpt.Match.OPTIONAL) {
+            RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
+            fields =
+                    fields.stream()
+                            .map(
+                                    k ->
+                                            new RelDataTypeFieldImpl(
+                                                    k.getName(),
+                                                    k.getIndex(),
+                                                    typeFactory.createTypeWithNullability(
+                                                            k.getType(), true)))
+                            .collect(Collectors.toList());
+        }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
     }
 
@@ -79,6 +93,16 @@ public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
             return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
+    }
+
+    @Override
+    public GraphLogicalSingleMatch copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        return new GraphLogicalSingleMatch(
+                (GraphOptCluster) getCluster(),
+                ImmutableList.of(),
+                inputs.get(0),
+                sentence,
+                matchOpt);
     }
 
     public RelNode getSentence() {
