@@ -76,7 +76,7 @@ fi
 
 # Test5: run cypher movie tests on experimental store via calcite-based ir
 # restart compiler service
-cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/movie_schema.json graph.planner.opt=CBO graph.planner.cbo.glogue.schema:=./src/main/resources/statistics/movie_statistics.txt physical.opt.config=proto graph.planner.rules=FilterIntoJoinRule,FilterMatchRule,ExpandGetVFusionRule,ExtendIntersectRule &
+cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/movie_schema.json graph.planner.opt=CBO graph.planner.cbo.glogue.schema:=./src/main/resources/statistics/movie_statistics.txt physical.opt.config=proto graph.planner.rules=FilterIntoJoinRule,FilterMatchRule,NotMatchToAntiJoinRule,ExpandGetVFusionRule,ExtendIntersectRule &
 sleep 10s
 export ENGINE_TYPE=pegasus
 cd ${base_dir} && make cypher_test
