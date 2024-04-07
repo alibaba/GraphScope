@@ -21,7 +21,8 @@ import os
 import pickle
 from typing import List
 
-from gs_flex_coordinator.core.config import CLUSTER_TYPE, WORKSPACE
+from gs_flex_coordinator.core.config import (CLUSTER_TYPE, INSTANCE_NAME,
+                                             WORKSPACE)
 from gs_flex_coordinator.core.insight.graph import get_groot_graph
 from gs_flex_coordinator.core.insight.job import DataloadingJobScheduler
 from gs_flex_coordinator.core.scheduler import schedule
@@ -293,6 +294,76 @@ class GrootClient(object):
             # some processes will not exist if the coordinator is restart
             self._job_scheduler[job_id].cancel()
         return f"Submit cancellation job successfully"
+
+    def get_dataloading_config(self, graph_name: str) -> dict:
+        config = {
+            "graph": INSTANCE_NAME,
+            "loading_config": {},
+            "vertex_mappings": [],
+            "edge_mappings": [],
+        }
+        # transfer
+        for vtype, ds in self._data_source["vertices_datasource"].items():
+            column_mappings = []
+            for index, property_name in ds["property_mapping"].items():
+                column_mappings.append(
+                    {
+                        "column": {
+                            "index": int(index),
+                        },
+                        "property": property_name,
+                    }
+                )
+            config["vertex_mappings"].append(
+                {
+                    "type_name": vtype,
+                    "inputs": [ds["location"]],
+                    "column_mappings": column_mappings,
+                }
+            )
+        for etype, ds in self._data_source["edges_datasource"].items():
+            source_vertex_mappings = []
+            for index, _ in ds["source_pk_column_map"].items():
+                source_vertex_mappings.append(
+                    {
+                        "column": {
+                            "index": int(index),
+                        }
+                    }
+                )
+            destination_vertex_mappings = []
+            for index, _ in ds["destination_pk_column_map"].items():
+                destination_vertex_mappings.append(
+                    {
+                        "column": {
+                            "index": int(index),
+                        }
+                    }
+                )
+            column_mappings = []
+            for index, property_name in ds["property_mapping"].items():
+                column_mappings.append(
+                    {
+                        "column": {
+                            "index": int(index),
+                        },
+                        "property": property_name,
+                    }
+                )
+            config["edge_mappings"].append(
+                {
+                    "type_triplet": {
+                        "edge": ds["type_name"],
+                        "source_vertex": ds["source_vertex"],
+                        "destination_vertex": ds["destination_vertex"],
+                    },
+                    "inputs": [ds["location"]],
+                    "source_vertex_mappings": source_vertex_mappings,
+                    "destination_vertex_mappings": destination_vertex_mappings,
+                    "column_mappings": column_mappings,
+                }
+            )
+        return config
 
 
 def init_groot_client():

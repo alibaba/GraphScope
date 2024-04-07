@@ -227,6 +227,11 @@ class ClientWrapper(object):
     def delete_procedure_by_name(self, graph_name: str, procedure_name: str) -> str:
         return self._client.delete_procedure_by_name(graph_name, procedure_name)
 
+    def get_procedure_by_name(self, graph_name: str, procedure_name: str) -> Procedure:
+        return Procedure.from_dict(
+            self._client.get_procedure_by_name(graph_name, procedure_name).to_dict()
+        )
+
     def get_node_status(self) -> List[NodeStatus]:
         rlt = []
         if CLUSTER_TYPE == "HOSTS":

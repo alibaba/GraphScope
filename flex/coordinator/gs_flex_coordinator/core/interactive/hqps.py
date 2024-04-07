@@ -171,6 +171,13 @@ class HQPSClient(object):
             api_instance = hqps_client.ProcedureApi(api_client)
             return api_instance.delete_procedure(graph_name, procedure_name)
 
+    def get_procedure_by_name(self, graph_name: str, procedure_name: str) -> Procedure:
+        with hqps_client.ApiClient(
+            hqps_client.Configuration(self._hqps_endpoint)
+        ) as api_client:
+            api_instance = hqps_client.ProcedureApi(api_client)
+            return api_instance.get_procedure(graph_name, procedure_name)
+
     def get_service_status(self) -> dict:
         with hqps_client.ApiClient(
             hqps_client.Configuration(self._hqps_endpoint)

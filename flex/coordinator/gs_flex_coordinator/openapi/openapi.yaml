@@ -73,6 +73,34 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - message_id: ALERT-MESSAGE-QWERTYUIOP-1
+                alert_name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: unsolved
+                message: "Disk usage node1 85.12%, exceeds threshold"
+              - message_id: ALERT-MESSAGE-QWERTYUIOP-2
+                alert_name: HighDiskUtilization
+                severity: emergency
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: solved
+                message: "Disk usage node1 85.12%, exceeds threshold"
+              - message_id: ALERT-MESSAGE-QWERTYUIOP-3
+                alert_name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: dealing
+                message: "Disk usage node1 85.12%, exceeds threshold"
               schema:
                 items:
                   $ref: '#/components/schemas/AlertMessage'
@@ -108,6 +136,24 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - type: webhook
+                receiver_id: RECEIVER-QWERTYUIOP-1
+                webhook_url: http://webhook.com
+                is_at_all: false
+                at_user_ids:
+                - 111111
+                - 222222
+                enable: false
+              - type: webhook
+                receiver_id: RECEIVER-QWERTYUIOP-2
+                webhook_url: http://webhook.com
+                is_at_all: false
+                at_user_ids:
+                - 111111
+                - 222222
+                enable: true
+                message: error message
               schema:
                 items:
                   $ref: '#/components/schemas/AlertReceiver'
@@ -191,6 +237,17 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                conditions_description: disk usage >= 85
+                enable: true
+              - name: GremlinServiceAvailable
+                severity: emergency
+                metric_type: node
+                conditions_description: g.V().limit(1) failed
+                enable: false
               schema:
                 items:
                   $ref: '#/components/schemas/AlertRule'
@@ -286,6 +343,18 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                cluster_type: HOSTS
+                creation_time: 2024-02-07 14:21:28
+                graphs_info:
+                  demo:
+                    creation_time: 2024-02-07 14:21:28
+                    last_dataloading_time: 2024-02-08 14:21:28
+                    name: demo
+                    update_time: 2024-02-07 14:21:28
+                name: demo
+                solution: INTERACTIVE
+                version: 0.27.0
               schema:
                 $ref: '#/components/schemas/DeploymentInfo'
           description: successful operation
@@ -379,6 +448,66 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - name: demo
+                store_type: mutable_csr
+                stored_procedures:
+                  directory: plugins
+                schema:
+                  vertex_types:
+                  - type_id: 0
+                    type_name: person
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        primitive_type: DT_STRING
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        primitive_type: DT_STRING
+                    primary_keys:
+                    - id
+                  - type_id: 1
+                    type_name: software
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        primitive_type: DT_STRING
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        primitive_type: DT_STRING
+                    primary_keys:
+                    - id
+                  edge_types:
+                  - type_id: 0
+                    type_name: knows
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: person
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_STRING
+                  - type_id: 1
+                    type_name: created
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: software
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_STRING
               schema:
                 items:
                   $ref: '#/components/schemas/Graph'
@@ -471,6 +600,77 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                graph: demo
+                loading_config: overwrite
+                format:
+                  type: csv
+                  metadata:
+                    delimiter: '|'
+                vertex_mappings:
+                - type_name: person
+                  inputs:
+                  - /home/graphscope/path/to/person.csv
+                  column_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  - column:
+                      index: 1
+                      name: name
+                    property: name
+                - type_name: software
+                  inputs:
+                  - /home/graphscope/path/to/software.csv
+                  column_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  - column:
+                      index: 1
+                      name: name
+                    property: name
+                edge_mappings:
+                - type_triplet:
+                    edge: knows
+                    source_vertex: person
+                    destination_vertex: person
+                    inputs:
+                    - /home/graphscope/path/to/person_knows_person.csv
+                    source_vertex_mappings:
+                    - column:
+                        index: 0
+                        name: id
+                    destination_vertex_mappings:
+                    - column:
+                        index: 1
+                        name: id
+                    column_mappings:
+                    - column:
+                        index: 2
+                        name: weight
+                      property: weight
+                - type_triplet:
+                    edge: created
+                    source_vertex: person
+                    destination_vertex: software
+                    inputs:
+                    - /home/graphscope/path/to/person_created_software.csv
+                    source_vertex_mappings:
+                    - column:
+                        index: 0
+                        name: id
+                    destination_vertex_mappings:
+                    - column:
+                        index: 1
+                        name: id
+                    column_mappings:
+                    - column:
+                        index: 2
+                        name: weight
+                      property: weight
               schema:
                 $ref: '#/components/schemas/SchemaMapping'
           description: Successful operation
@@ -493,6 +693,43 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                vertices_datasource:
+                - data_source: FILE
+                  type_name: person
+                  location: /home/graphscope/path/to/person.csv
+                  property_mapping:
+                    "0": id
+                    "1": name
+                - data_source: FILE
+                  type_name: software
+                  location: /home/graphscope/path/to/software.csv
+                  property_mapping:
+                    "0": id
+                    "1": name
+                edges_datasource:
+                - data_source: FILE
+                  type_name: knows
+                  source_vertex: person
+                  destination_vertex: person
+                  location: /home/graphscope/path/to/person_knows_person.csv
+                  source_pk_column_map:
+                    "0": id
+                  destination_pk_column_map:
+                    "1": id
+                  property_mapping:
+                    "2": weight
+                - data_source: FILE
+                  type_name: created
+                  source_vertex: person
+                  destination_vertex: software
+                  location: /home/graphscope/path/to/person_created_software.csv
+                  source_pk_column_map:
+                    "0": id
+                  destination_pk_column_map:
+                    "1": id
+                  property_mapping:
+                    "2": weight
               schema:
                 $ref: '#/components/schemas/DataSource'
           description: Successful operation
@@ -633,6 +870,18 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                data_source: FILE
+                type_name: created
+                source_vertex: person
+                destination_vertex: software
+                location: /home/graphscope/path/to/person_created_software.csv
+                source_pk_column_map:
+                  "0": id
+                destination_pk_column_map:
+                  "1": id
+                property_mapping:
+                  "2": weight
               schema:
                 $ref: '#/components/schemas/EdgeDataSource'
           description: Successful operation
@@ -718,6 +967,13 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                data_source: FILE
+                type_name: person
+                location: /home/graphscope/path/to/person.csv
+                property_mapping:
+                  "0": id
+                  "1": name
               schema:
                 $ref: '#/components/schemas/VertexDataSource'
           description: Successful operation
@@ -740,6 +996,20 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - bound_graph: demo
+                description: stored procedure 1
+                enable: true
+                runnable: true
+                name: procedure-1
+                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                type: cypher
+                params:
+                - name: id
+                  type: DT_STRING
+                returns:
+                - name: name
+                  type: DT_STRING
               schema:
                 items:
                   $ref: '#/components/schemas/Procedure'
@@ -804,6 +1074,48 @@ paths:
       tags:
       - procedure
       x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    get:
+      description: Get a procedure by name
+      operationId: get_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                bound_graph: demo
+                description: stored procedure 1
+                enable: true
+                runnable: true
+                name: procedure-1
+                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                type: cypher
+                params:
+                - name: id
+                  type: DT_STRING
+                returns:
+                - name: name
+                  type: DT_STRING
+              schema:
+                $ref: '#/components/schemas/Procedure'
+          description: successful operation
+      tags:
+      - procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
     put:
       description: Update stored procedure on a certain graph
       operationId: update_procedure
@@ -853,6 +1165,61 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                vertex_types:
+                - type_id: 0
+                  type_name: person
+                  properties:
+                  - property_id: 0
+                    property_name: id
+                    property_type:
+                      primitive_type: DT_STRING
+                  - property_id: 1
+                    property_name: name
+                    property_type:
+                      primitive_type: DT_STRING
+                  primary_keys:
+                  - id
+                - type_id: 1
+                  type_name: software
+                  properties:
+                  - property_id: 0
+                    property_name: id
+                    property_type:
+                      primitive_type: DT_STRING
+                  - property_id: 1
+                    property_name: name
+                    property_type:
+                      primitive_type: DT_STRING
+                  primary_keys:
+                  - id
+                edge_types:
+                - type_id: 0
+                  type_name: knows
+                  vertex_type_pair_relations:
+                  - source_vertex: person
+                    destination_vertex: person
+                    relation: MANY_TO_MANY
+                    x_csr_params:
+                      edge_storage_strategy: ONLY_IN
+                  properties:
+                  - property_id: 0
+                    property_name: weight
+                    property_type:
+                      primitive_type: DT_STRING
+                - type_id: 1
+                  type_name: created
+                  vertex_type_pair_relations:
+                  - source_vertex: person
+                    destination_vertex: software
+                    relation: MANY_TO_MANY
+                    x_csr_params:
+                      edge_storage_strategy: ONLY_IN
+                  properties:
+                  - property_id: 0
+                    property_name: weight
+                    property_type:
+                      primitive_type: DT_STRING
               schema:
                 $ref: '#/components/schemas/Schema'
           description: Successful operation
@@ -995,6 +1362,52 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - name: demo
+                type: GrootGraph
+                directed: true
+                creation_time: 2024-04-01 12:00:00
+                schema:
+                  vertices:
+                  - label: person
+                    properties:
+                    - id: 0
+                      name: id
+                      type: STRING
+                      is_primary_key: true
+                    - id: 1
+                      name: name
+                      type: STRING
+                      is_primary_key: false
+                  - label: software
+                    properties:
+                    - id: 0
+                      name: id
+                      type: STRING
+                      is_primary_key: true
+                    - id: 1
+                      name: name
+                      type: STRING
+                      is_primary_key: false
+                  edges:
+                  - label: knows
+                    relations:
+                    - src_label: person
+                      dst_label: person
+                    properties:
+                    - id: 0
+                      name: weight
+                      type: DOUBLE
+                      is_primary_key: false
+                  - label: created
+                    relations:
+                    - src_label: person
+                      dst_label: software
+                    properties:
+                    - id: 0
+                      name: weight
+                      type: DOUBLE
+                      is_primary_key: false
               schema:
                 items:
                   $ref: '#/components/schemas/GrootGraph'
@@ -1046,6 +1459,47 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                vertices:
+                - label: person
+                  properties:
+                  - id: 0
+                    name: id
+                    type: STRING
+                    is_primary_key: true
+                  - id: 1
+                    name: name
+                    type: STRING
+                    is_primary_key: false
+                - label: software
+                  properties:
+                  - id: 0
+                    name: id
+                    type: STRING
+                    is_primary_key: true
+                  - id: 1
+                    name: name
+                    type: STRING
+                    is_primary_key: false
+                edges:
+                - label: knows
+                  relations:
+                  - src_label: person
+                    dst_label: person
+                  properties:
+                  - id: 0
+                    name: weight
+                    type: DOUBLE
+                    is_primary_key: false
+                - label: created
+                  relations:
+                  - src_label: person
+                    dst_label: software
+                  properties:
+                  - id: 0
+                    name: weight
+                    type: DOUBLE
+                    is_primary_key: false
               schema:
                 $ref: '#/components/schemas/GrootSchema'
           description: Successful operation
@@ -1086,6 +1540,46 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - job_id: JOB-QWERTYUIOPASDFGH-1
+                type: DATA IMPORT
+                status: RUNNING
+                start_time: 2024-02-24 00:00:00
+                end_time: null
+                log: logging...
+                detail:
+                  graph_name: demo
+              - job_id: JOB-QWERTYUIOPASDFGH-2
+                type: DATA IMPORT
+                status: CANCELLED
+                start_time: 2024-02-24 00:00:00
+                end_time: null
+                log: logging...
+                detail:
+                  graph_name: demo
+              - job_id: JOB-QWERTYUIOPASDFGH-3
+                type: DATA IMPORT
+                status: SUCCESS
+                start_time: 2024-02-24 00:00:00
+                end_time: 2024-02-24 12:00:00
+                log: logging...
+                detail:
+                  graph_name: demo
+              - job_id: JOB-QWERTYUIOPASDFGH-4
+                type: DATA IMPORT
+                status: FAILED
+                start_time: 2024-02-24 00:00:00
+                end_time: 2024-02-24 12:00:00
+                log: logging...
+                detail:
+                  graph_name: demo
+              - job_id: JOB-QWERTYUIOPASDFGH-5
+                type: DATA IMPORT
+                status: WAITING
+                start_time: null
+                end_time: null
+                detail:
+                  graph_name: demo
               schema:
                 items:
                   $ref: '#/components/schemas/JobStatus'
@@ -1129,6 +1623,13 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                job_id: JOB-QWERTYUIOPASDFGH-1
+                type: DATA IMPORT
+                status: RUNNING
+                start_time: 2024-02-24 00:00:00
+                end_time: null
+                log: logging...
               schema:
                 $ref: '#/components/schemas/JobStatus'
           description: successful operation
@@ -1143,6 +1644,11 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - node: hostname-1
+                cpu_usage: 80
+                memory_usage: 40
+                disk_usage: 85
               schema:
                 items:
                   $ref: '#/components/schemas/NodeStatus'
@@ -1159,6 +1665,20 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - bound_graph: demo
+                description: stored procedure 1
+                enable: true
+                runnable: true
+                name: procedure-1
+                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                type: cypher
+                params:
+                - name: id
+                  type: DT_STRING
+                returns:
+                - name: name
+                  type: DT_STRING
               schema:
                 items:
                   $ref: '#/components/schemas/Procedure'
@@ -1208,6 +1728,14 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                status: running
+                graph_name: demo
+                sdk_endpoints:
+                  cypher: neo4j://mock.api.cypher:7676
+                  gremlin: ws://mock.api.gremlin/gremlin
+                  hqps: http://mock.api.hqps:10000
+                  grpc: http://mock.api.grpc:10000
               schema:
                 $ref: '#/components/schemas/ServiceStatus'
           description: successful operation
@@ -1266,70 +1794,85 @@ components:
       example:
         schema:
           vertex_types:
-          - type_name: person
+          - type_name: type_name
             primary_keys:
-            - id
+            - primary_keys
+            - primary_keys
             type_id: 0
             properties:
-            - property_id: 0
-              property_name: id
-              property_type:
-                primitive_type: DT_STRING
-            - property_id: 1
-              property_name: name
-              property_type:
-                primitive_type: DT_STRING
-            - property_id: 2
-              property_name: age
-              property_type:
-                primitive_type: DT_SIGNED_INT32
-          - type_name: person
+            - property_type:
+                primitive_type: DT_DOUBLE
+              property_id: 6
+              property_name: property_name
+            - property_type:
+                primitive_type: DT_DOUBLE
+              property_id: 6
+              property_name: property_name
+          - type_name: type_name
             primary_keys:
-            - id
+            - primary_keys
+            - primary_keys
             type_id: 0
             properties:
-            - property_id: 0
-              property_name: id
-              property_type:
-                primitive_type: DT_STRING
-            - property_id: 1
-              property_name: name
-              property_type:
-                primitive_type: DT_STRING
-            - property_id: 2
-              property_name: age
-              property_type:
-                primitive_type: DT_SIGNED_INT32
+            - property_type:
+                primitive_type: DT_DOUBLE
+              property_id: 6
+              property_name: property_name
+            - property_type:
+                primitive_type: DT_DOUBLE
+              property_id: 6
+              property_name: property_name
           edge_types:
-          - type_name: knows
-            type_id: 0
+          - type_name: type_name
+            type_id: 1
             vertex_type_pair_relations:
-            - source_vertex: person
-              destination_vertex: person
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
               relation: MANY_TO_MANY
             properties:
-            - property_id: 0
-              property_name: weight
-              property_type:
+            - property_type:
                 primitive_type: DT_DOUBLE
-          - type_name: knows
-            type_id: 0
+              property_id: 6
+              property_name: property_name
+            - property_type:
+                primitive_type: DT_DOUBLE
+              property_id: 6
+              property_name: property_name
+          - type_name: type_name
+            type_id: 1
             vertex_type_pair_relations:
-            - source_vertex: person
-              destination_vertex: person
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
               relation: MANY_TO_MANY
             properties:
-            - property_id: 0
-              property_name: weight
-              property_type:
+            - property_type:
                 primitive_type: DT_DOUBLE
+              property_id: 6
+              property_name: property_name
+            - property_type:
+                primitive_type: DT_DOUBLE
+              property_id: 6
+              property_name: property_name
         stored_procedures:
           directory: plugins
-        name: mocking_graph
+        name: name
         store_type: mutable_csr
       properties:
         name:
-          example: mocking_graph
           title: name
           type: string
         store_type:
@@ -1347,63 +1890,79 @@ components:
     Schema:
       example:
         vertex_types:
-        - type_name: person
+        - type_name: type_name
           primary_keys:
-          - id
+          - primary_keys
+          - primary_keys
           type_id: 0
           properties:
-          - property_id: 0
-            property_name: id
-            property_type:
-              primitive_type: DT_STRING
-          - property_id: 1
-            property_name: name
-            property_type:
-              primitive_type: DT_STRING
-          - property_id: 2
-            property_name: age
-            property_type:
-              primitive_type: DT_SIGNED_INT32
-        - type_name: person
+          - property_type:
+              primitive_type: DT_DOUBLE
+            property_id: 6
+            property_name: property_name
+          - property_type:
+              primitive_type: DT_DOUBLE
+            property_id: 6
+            property_name: property_name
+        - type_name: type_name
           primary_keys:
-          - id
+          - primary_keys
+          - primary_keys
           type_id: 0
           properties:
-          - property_id: 0
-            property_name: id
-            property_type:
-              primitive_type: DT_STRING
-          - property_id: 1
-            property_name: name
-            property_type:
-              primitive_type: DT_STRING
-          - property_id: 2
-            property_name: age
-            property_type:
-              primitive_type: DT_SIGNED_INT32
+          - property_type:
+              primitive_type: DT_DOUBLE
+            property_id: 6
+            property_name: property_name
+          - property_type:
+              primitive_type: DT_DOUBLE
+            property_id: 6
+            property_name: property_name
         edge_types:
-        - type_name: knows
-          type_id: 0
+        - type_name: type_name
+          type_id: 1
           vertex_type_pair_relations:
-          - source_vertex: person
-            destination_vertex: person
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
             relation: MANY_TO_MANY
           properties:
-          - property_id: 0
-            property_name: weight
-            property_type:
+          - property_type:
               primitive_type: DT_DOUBLE
-        - type_name: knows
-          type_id: 0
+            property_id: 6
+            property_name: property_name
+          - property_type:
+              primitive_type: DT_DOUBLE
+            property_id: 6
+            property_name: property_name
+        - type_name: type_name
+          type_id: 1
           vertex_type_pair_relations:
-          - source_vertex: person
-            destination_vertex: person
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
             relation: MANY_TO_MANY
           properties:
-          - property_id: 0
-            property_name: weight
-            property_type:
+          - property_type:
               primitive_type: DT_DOUBLE
+            property_id: 6
+            property_name: property_name
+          - property_type:
+              primitive_type: DT_DOUBLE
+            property_id: 6
+            property_name: property_name
       properties:
         vertex_types:
           items:
@@ -1420,54 +1979,34 @@ components:
       x-body-name: schema
     VertexType:
       example:
-        type_name: person
+        type_name: type_name
         primary_keys:
-        - id
+        - primary_keys
+        - primary_keys
         type_id: 0
         properties:
-        - property_id: 0
-          property_name: id
-          property_type:
-            primitive_type: DT_STRING
-        - property_id: 1
-          property_name: name
-          property_type:
-            primitive_type: DT_STRING
-        - property_id: 2
-          property_name: age
-          property_type:
-            primitive_type: DT_SIGNED_INT32
+        - property_type:
+            primitive_type: DT_DOUBLE
+          property_id: 6
+          property_name: property_name
+        - property_type:
+            primitive_type: DT_DOUBLE
+          property_id: 6
+          property_name: property_name
       properties:
         type_id:
-          example: 0
           format: int32
           title: type_id
           type: integer
         type_name:
-          example: person
           title: type_name
           type: string
         properties:
-          example:
-          - property_id: 0
-            property_name: id
-            property_type:
-              primitive_type: DT_STRING
-          - property_id: 1
-            property_name: name
-            property_type:
-              primitive_type: DT_STRING
-          - property_id: 2
-            property_name: age
-            property_type:
-              primitive_type: DT_SIGNED_INT32
           items:
             $ref: '#/components/schemas/Property'
           title: properties
           type: array
         primary_keys:
-          example:
-          - id
           items:
             type: string
           title: primary_keys
@@ -1477,42 +2016,42 @@ components:
       x-body-name: vertex_type
     EdgeType:
       example:
-        type_name: knows
-        type_id: 0
+        type_name: type_name
+        type_id: 1
         vertex_type_pair_relations:
-        - source_vertex: person
-          destination_vertex: person
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
           relation: MANY_TO_MANY
         properties:
-        - property_id: 0
-          property_name: weight
-          property_type:
+        - property_type:
             primitive_type: DT_DOUBLE
+          property_id: 6
+          property_name: property_name
+        - property_type:
+            primitive_type: DT_DOUBLE
+          property_id: 6
+          property_name: property_name
       properties:
         type_id:
-          example: 0
           format: int32
           title: type_id
           type: integer
         type_name:
-          example: knows
           title: type_name
           type: string
         vertex_type_pair_relations:
-          example:
-          - source_vertex: person
-            destination_vertex: person
-            relation: MANY_TO_MANY
           items:
             $ref: '#/components/schemas/EdgeType_vertex_type_pair_relations_inner'
           title: vertex_type_pair_relations
           type: array
         properties:
-          example:
-          - property_id: 0
-            property_name: weight
-            property_type:
-              primitive_type: DT_DOUBLE
           items:
             $ref: '#/components/schemas/Property'
           title: properties
@@ -1521,6 +2060,11 @@ components:
       type: object
       x-body-name: edge_type
     Property:
+      example:
+        property_type:
+          primitive_type: DT_DOUBLE
+        property_id: 6
+        property_name: property_name
       properties:
         property_id:
           format: int32
@@ -1537,42 +2081,39 @@ components:
     Procedure:
       example:
         runnable: true
-        bound_graph: mocking_graph
+        bound_graph: bound_graph
         enable: true
-        query: MATCH (n:Person) return n;
-        name: mocking_procedure
-        description: This a test stored procedure
+        query: query
+        name: name
+        description: description
         returns:
-        - name: rlt
-          type: DT_DOUBLE
-        type: cypher
+        - name: name
+          type: type
+        - name: name
+          type: type
+        type: cpp
         params:
-        - name: param1
-          type: DT_DOUBLE
-        - name: param2
-          type: DT_STRING
+        - name: name
+          type: type
+        - name: name
+          type: type
       properties:
         name:
-          example: mocking_procedure
           title: name
           type: string
         bound_graph:
-          example: mocking_graph
           title: bound_graph
           type: string
         description:
-          example: This a test stored procedure
           title: description
           type: string
         type:
           enum:
           - cpp
           - cypher
-          example: cypher
           title: type
           type: string
         query:
-          example: MATCH (n:Person) return n;
           title: query
           type: string
         enable:
@@ -1582,19 +2123,11 @@ components:
           title: runnable
           type: boolean
         params:
-          example:
-          - name: param1
-            type: DT_DOUBLE
-          - name: param2
-            type: DT_STRING
           items:
             $ref: '#/components/schemas/Procedure_params_inner'
           title: params
           type: array
         returns:
-          example:
-          - name: rlt
-            type: DT_DOUBLE
           items:
             $ref: '#/components/schemas/Procedure_params_inner'
           title: returns
@@ -1604,42 +2137,37 @@ components:
       x-body-name: procedure
     DeploymentInfo:
       example:
-        creation_time: 2024-02-29 12:00:00
+        creation_time: creation_time
         graphs_info:
           key:
-            creation_time: 2024-02-29 12:00:00
-            update_time: 2024-02-29 14:00:00
-            last_dataloading_time: 2024-02-29 16:00:00
-            name: mocking_graph
+            creation_time: creation_time
+            update_time: update_time
+            last_dataloading_time: last_dataloading_time
+            name: name
         solution: INTERACTIVE
-        name: demo
+        name: name
         cluster_type: HOSTS
-        version: 0.26.0
+        version: version
       properties:
         name:
-          example: demo
           title: name
           type: string
         cluster_type:
           enum:
           - HOSTS
           - KUBERNETES
-          example: HOSTS
           title: cluster_type
           type: string
         version:
-          example: 0.26.0
           title: version
           type: string
         solution:
           enum:
           - INTERACTIVE
           - GRAPHSCOPE_INSIGHT
-          example: INTERACTIVE
           title: solution
           type: string
         creation_time:
-          example: 2024-02-29 12:00:00
           title: creation_time
           type: string
         graphs_info:
@@ -1720,27 +2248,23 @@ components:
       x-body-name: deployment_status
     NodeStatus:
       example:
-        node: node1
-        memory_usage: 70
-        disk_usage: 99
-        cpu_usage: 80
+        node: node
+        memory_usage: 6.027456183070403
+        disk_usage: 1.4658129805029452
+        cpu_usage: 0.8008281904610115
       properties:
         node:
-          example: node1
           title: node
           type: string
         cpu_usage:
-          example: 80
           format: double
           title: cpu_usage
           type: number
         memory_usage:
-          example: 70
           format: double
           title: memory_usage
           type: number
         disk_usage:
-          example: 99
           format: double
           title: disk_usage
           type: number
@@ -1749,21 +2273,19 @@ components:
       x-body-name: node_status
     ServiceStatus:
       example:
-        graph_name: mocking_graph
+        graph_name: graph_name
         sdk_endpoints:
-          gremlin: ws://111.111.111.111:12312/gremlin
-          cypher: neo4j://111.111.111.111:7687
-          hqps: neo4j://111.111.111.111:10000
-          grpc: 111.111.111.111:55556
-        status: running
+          gremlin: gremlin
+          cypher: cypher
+          hqps: hqps
+          grpc: grpc
+        status: status
       properties:
         status:
-          example: running
           title: status
           type: string
         graph_name:
           description: which graph is serving now
-          example: mocking_graph
           title: graph_name
           type: string
         sdk_endpoints:
@@ -1774,37 +2296,32 @@ components:
     AlertRule:
       example:
         severity: warning
-        conditions_description: disk_utilization>80
+        conditions_description: conditions_description
         enable: true
-        name: HighDiskUtilization
+        name: name
         metric_type: node
-        frequency: 1
+        frequency: 0
       properties:
         name:
-          example: HighDiskUtilization
           title: name
           type: string
         severity:
           enum:
           - warning
           - emergency
-          example: warning
           title: severity
           type: string
         metric_type:
           enum:
           - node
           - service
-          example: node
           title: metric_type
           type: string
         conditions_description:
-          example: disk_utilization>80
           title: conditions_description
           type: string
         frequency:
           description: (mins)
-          example: 1
           title: frequency
           type: integer
         enable:
@@ -1816,47 +2333,41 @@ components:
     AlertMessage:
       example:
         severity: warning
-        trigger_time: 2024-03-1 12:00:00
+        trigger_time: trigger_time
         metric_type: node
-        message_id: MESSAGE_ABCDEF123GHIJKL456
-        message: "Disk usage node1 43.63%, exceeds threshold"
-        alert_name: HighDiskUtilization
+        message_id: message_id
+        message: message
+        alert_name: alert_name
         target:
-        - node1
+        - target
+        - target
         status: unsolved
       properties:
         message_id:
           description: Generated in server side
-          example: MESSAGE_ABCDEF123GHIJKL456
           title: message_id
           type: string
         alert_name:
-          example: HighDiskUtilization
           title: alert_name
           type: string
         severity:
           enum:
           - warning
           - emergency
-          example: warning
           title: severity
           type: string
         metric_type:
           enum:
           - node
           - service
-          example: node
           title: metric_type
           type: string
         target:
-          example:
-          - node1
           items:
             type: string
           title: target
           type: array
         trigger_time:
-          example: 2024-03-1 12:00:00
           title: trigger_time
           type: string
         status:
@@ -1867,7 +2378,6 @@ components:
           title: status
           type: string
         message:
-          example: "Disk usage node1 43.63%, exceeds threshold"
           title: message
           type: string
       title: AlertMessage
@@ -1875,13 +2385,13 @@ components:
       x-body-name: alert_message
     AlertReceiver:
       example:
-        webhook_url: http://test/webhook/url.com
+        webhook_url: webhook_url
         is_at_all: true
-        receiver_id: RECEIVER_ABCDEF123GHIJKL456
+        receiver_id: receiver_id
         enable: true
         at_user_ids:
-        - 111111
-        - 222222
+        - at_user_ids
+        - at_user_ids
         type: webhook
         message: message
       properties:
@@ -1892,17 +2402,12 @@ components:
           type: string
         receiver_id:
           description: Generated in server side
-          example: RECEIVER_ABCDEF123GHIJKL456
           title: receiver_id
           type: string
         webhook_url:
-          example: http://test/webhook/url.com
           title: webhook_url
           type: string
         at_user_ids:
-          example:
-          - 111111
-          - 222222
           items:
             type: string
           title: at_user_ids
@@ -1926,98 +2431,101 @@ components:
           format:
             metadata:
               key: ""
-            type: csv
-          import_option: overwrite
+            type: type
+          import_option: init
           data_source:
             scheme: file
         edge_mappings:
         - inputs:
-          - /home/graphscope/person_knows_person.csv
+          - inputs
+          - inputs
           source_vertex_mappings:
           - column:
+              name: name
               index: 0
-              name: id
           - column:
+              name: name
               index: 0
-              name: id
           destination_vertex_mappings:
           - column:
-              index: 1
-              name: id
+              name: name
+              index: 0
           - column:
-              index: 1
-              name: id
+              name: name
+              index: 0
           column_mappings:
           - column:
-              index: 2
-              name: weight
-            property: weight
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
           type_triplet:
-            edge: knows
-            source_vertex: person
-            destination_vertex: person
+            edge: edge
+            source_vertex: source_vertex
+            destination_vertex: destination_vertex
         - inputs:
-          - /home/graphscope/person_knows_person.csv
+          - inputs
+          - inputs
           source_vertex_mappings:
           - column:
+              name: name
               index: 0
-              name: id
           - column:
+              name: name
               index: 0
-              name: id
           destination_vertex_mappings:
           - column:
-              index: 1
-              name: id
+              name: name
+              index: 0
           - column:
-              index: 1
-              name: id
+              name: name
+              index: 0
           column_mappings:
           - column:
-              index: 2
-              name: weight
-            property: weight
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
           type_triplet:
-            edge: knows
-            source_vertex: person
-            destination_vertex: person
-        graph: mocking_graph
+            edge: edge
+            source_vertex: source_vertex
+            destination_vertex: destination_vertex
+        graph: graph
         vertex_mappings:
-        - type_name: person
+        - type_name: type_name
           inputs:
-          - /home/graphscope/person.csv
+          - inputs
+          - inputs
           column_mappings:
           - column:
-              index: 0
-              name: id
-            property: id
-          - column:
-              index: 0
               name: name
-            property: name
-          - column:
               index: 0
-              name: age
-            property: age
-        - type_name: person
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+        - type_name: type_name
           inputs:
-          - /home/graphscope/person.csv
+          - inputs
+          - inputs
           column_mappings:
           - column:
-              index: 0
-              name: id
-            property: id
-          - column:
-              index: 0
               name: name
-            property: name
-          - column:
               index: 0
-              name: age
-            property: age
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
       properties:
         graph:
-          example: mocking_graph
           title: graph
           type: string
         loading_config:
@@ -2037,48 +2545,29 @@ components:
       x-body-name: schema_mapping
     VertexMapping:
       example:
-        type_name: person
+        type_name: type_name
         inputs:
-        - /home/graphscope/person.csv
+        - inputs
+        - inputs
         column_mappings:
         - column:
-            index: 0
-            name: id
-          property: id
-        - column:
-            index: 0
             name: name
-          property: name
-        - column:
             index: 0
-            name: age
-          property: age
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
       properties:
         type_name:
-          example: person
           title: type_name
           type: string
         inputs:
-          example:
-          - /home/graphscope/person.csv
           items:
             type: string
           title: inputs
           type: array
         column_mappings:
-          example:
-          - column:
-              index: 0
-              name: id
-            property: id
-          - column:
-              index: 0
-              name: name
-            property: name
-          - column:
-              index: 0
-              name: age
-            property: age
           items:
             $ref: '#/components/schemas/ColumnMapping'
           title: column_mappings
@@ -2089,36 +2578,39 @@ components:
     EdgeMapping:
       example:
         inputs:
-        - /home/graphscope/person_knows_person.csv
+        - inputs
+        - inputs
         source_vertex_mappings:
         - column:
+            name: name
             index: 0
-            name: id
         - column:
+            name: name
             index: 0
-            name: id
         destination_vertex_mappings:
         - column:
-            index: 1
-            name: id
+            name: name
+            index: 0
         - column:
-            index: 1
-            name: id
+            name: name
+            index: 0
         column_mappings:
         - column:
-            index: 2
-            name: weight
-          property: weight
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
         type_triplet:
-          edge: knows
-          source_vertex: person
-          destination_vertex: person
+          edge: edge
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
       properties:
         type_triplet:
           $ref: '#/components/schemas/EdgeMapping_type_triplet'
         inputs:
-          example:
-          - /home/graphscope/person_knows_person.csv
           items:
             type: string
           title: inputs
@@ -2134,11 +2626,6 @@ components:
           title: destination_vertex_mappings
           type: array
         column_mappings:
-          example:
-          - column:
-              index: 2
-              name: weight
-            property: weight
           items:
             $ref: '#/components/schemas/ColumnMapping'
           title: column_mappings
@@ -2147,6 +2634,11 @@ components:
       type: object
       x-body-name: edge_mapping
     ColumnMapping:
+      example:
+        column:
+          name: name
+          index: 0
+        property: property
       properties:
         column:
           $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
@@ -2159,21 +2651,19 @@ components:
       x-body-name: column_mapping
     JobStatus:
       example:
-        start_time: 2024-02-29 14:00:00
-        log: logging ...
-        job_id: JOB_XKDJEJ27827HDJHDJ
+        start_time: start_time
+        log: log
+        job_id: job_id
         end_time: end_time
         detail:
-        - graph_name: mocking_graph
-        type: Data Import
+          key: ""
+        type: type
         status: RUNNING
       properties:
         job_id:
-          example: JOB_XKDJEJ27827HDJHDJ
           title: job_id
           type: string
         type:
-          example: Data Import
           title: type
           type: string
         status:
@@ -2186,22 +2676,17 @@ components:
           title: status
           type: string
         start_time:
-          example: 2024-02-29 14:00:00
           title: start_time
           type: string
         end_time:
           title: end_time
           type: string
-          example: null
         log:
           description: URL or log string
-          example: logging ...
           title: log
           type: string
         detail:
           additionalProperties: true
-          example:
-          - graph_name: mocking_graph
           title: detail
           type: object
       title: JobStatus
@@ -2657,6 +3142,8 @@ components:
       type: object
     EdgeType_vertex_type_pair_relations_inner_x_csr_params:
       description: Used for storage optimization
+      example:
+        edge_storage_strategy: ONLY_IN
       properties:
         edge_storage_strategy:
           enum:
@@ -2668,6 +3155,12 @@ components:
       title: EdgeType_vertex_type_pair_relations_inner_x_csr_params
       type: object
     EdgeType_vertex_type_pair_relations_inner:
+      example:
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+        x_csr_params:
+          edge_storage_strategy: ONLY_IN
+        relation: MANY_TO_MANY
       properties:
         source_vertex:
           title: source_vertex
@@ -2688,6 +3181,8 @@ components:
       title: EdgeType_vertex_type_pair_relations_inner
       type: object
     Property_property_type:
+      example:
+        primitive_type: DT_DOUBLE
       properties:
         primitive_type:
           enum:
@@ -2701,6 +3196,9 @@ components:
       title: Property_property_type
       type: object
     Procedure_params_inner:
+      example:
+        name: name
+        type: type
       properties:
         name:
           title: name
@@ -2712,50 +3210,42 @@ components:
       type: object
     DeploymentInfo_graphs_info_value:
       example:
-        creation_time: 2024-02-29 12:00:00
-        update_time: 2024-02-29 14:00:00
-        last_dataloading_time: 2024-02-29 16:00:00
-        name: mocking_graph
+        creation_time: creation_time
+        update_time: update_time
+        last_dataloading_time: last_dataloading_time
+        name: name
       properties:
         name:
-          example: mocking_graph
           title: name
           type: string
         creation_time:
-          example: 2024-02-29 12:00:00
           title: creation_time
           type: string
         update_time:
-          example: 2024-02-29 14:00:00
           title: update_time
           type: string
         last_dataloading_time:
-          example: 2024-02-29 16:00:00
           title: last_dataloading_time
           type: string
       title: DeploymentInfo_graphs_info_value
       type: object
     ServiceStatus_sdk_endpoints:
       example:
-        gremlin: ws://111.111.111.111:12312/gremlin
-        cypher: neo4j://111.111.111.111:7687
-        hqps: neo4j://111.111.111.111:10000
-        grpc: 111.111.111.111:55556
+        gremlin: gremlin
+        cypher: cypher
+        hqps: hqps
+        grpc: grpc
       properties:
         cypher:
-          example: neo4j://111.111.111.111:7687
           title: cypher
           type: string
         gremlin:
-          example: ws://111.111.111.111:12312/gremlin
           title: gremlin
           type: string
         hqps:
-          example: neo4j://111.111.111.111:10000
           title: hqps
           type: string
         grpc:
-          example: 111.111.111.111:55556
           title: grpc
           type: string
       title: ServiceStatus_sdk_endpoints
@@ -2775,10 +3265,9 @@ components:
       example:
         metadata:
           key: ""
-        type: csv
+        type: type
       properties:
         type:
-          example: csv
           title: type
           type: string
         metadata:
@@ -2792,8 +3281,8 @@ components:
         format:
           metadata:
             key: ""
-          type: csv
-        import_option: overwrite
+          type: type
+        import_option: init
         data_source:
           scheme: file
       properties:
@@ -2803,7 +3292,6 @@ components:
           enum:
           - init
           - overwrite
-          example: overwrite
           title: import_option
           type: string
         format:
@@ -2813,25 +3301,25 @@ components:
     EdgeMapping_type_triplet:
       description: "source label -> [edge label] -> destination label"
       example:
-        edge: knows
-        source_vertex: person
-        destination_vertex: person
+        edge: edge
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
       properties:
         edge:
-          example: knows
           title: edge
           type: string
         source_vertex:
-          example: person
           title: source_vertex
           type: string
         destination_vertex:
-          example: person
           title: destination_vertex
           type: string
       title: EdgeMapping_type_triplet
       type: object
     EdgeMapping_source_vertex_mappings_inner_column:
+      example:
+        name: name
+        index: 0
       properties:
         index:
           format: int32
@@ -2846,8 +3334,8 @@ components:
       description: Mapping column index to the primary key of source vertex
       example:
         column:
+          name: name
           index: 0
-          name: id
       properties:
         column:
           $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
@@ -2857,8 +3345,8 @@ components:
       description: Mapping column index to the primary key of destination vertex
       example:
         column:
-          index: 1
-          name: id
+          name: name
+          index: 0
       properties:
         column:
           $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
