@@ -416,8 +416,15 @@ public class GraphIOProcessor {
                 edge.getEdgeTypeIds()
                         .forEach(
                                 k -> {
-                                    expectedSrcIds.add(k.getSrcLabelId());
-                                    expectedDstIds.add(k.getDstLabelId());
+                                    if (!edge.isBoth()) {
+                                        expectedSrcIds.add(k.getSrcLabelId());
+                                        expectedDstIds.add(k.getDstLabelId());
+                                    } else {
+                                        expectedSrcIds.add(k.getSrcLabelId());
+                                        expectedDstIds.add(k.getDstLabelId());
+                                        expectedSrcIds.add(k.getDstLabelId());
+                                        expectedDstIds.add(k.getSrcLabelId());
+                                    }
                                 });
                 Preconditions.checkArgument(
                         Sets.newHashSet(src.getVertexTypeIds()).equals(expectedSrcIds),

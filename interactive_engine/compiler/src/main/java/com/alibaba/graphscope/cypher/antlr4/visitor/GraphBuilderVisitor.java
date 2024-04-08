@@ -29,10 +29,14 @@ import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexSubQuery;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilder;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -137,7 +141,40 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
             throw new IllegalArgumentException(
                     "aggregate functions should not exist in filter expression");
         }
-        return builder.filter(res.getExpr());
+        // try to convert not exists sub query to anti join
+        List<RexNode> conditions = RelOptUtil.conjunctions(res.getExpr());
+        List<RexNode> conditionsToRemove = Lists.newArrayList();
+        for (RexNode condition : conditions) {
+            RelNode antiSentence = getSubQueryRel(condition);
+            if (antiSentence != null) {
+                builder.match(antiSentence, GraphOpt.Match.ANTI);
+                conditionsToRemove.add(condition);
+            }
+        }
+        conditions.removeAll(conditionsToRemove);
+        if (!conditions.isEmpty()) {
+            builder.filter(conditions);
+        }
+        return builder;
+    }
+
+    /**
+     * Return {@code RelNode} nested in the {@code RelSubQuery} if the condition denotes a {@code NOT} {@code RelSubQuery(kind=EXISTS)}
+     * @param condition
+     * @return
+     */
+    private @Nullable RelNode getSubQueryRel(RexNode condition) {
+        if (condition instanceof RexCall) {
+            RexCall call = (RexCall) condition;
+            if (call.getOperator().getKind() == SqlKind.NOT) {
+                RexNode operand = ((RexCall) condition).operands.get(0);
+                if (operand instanceof RexSubQuery
+                        && ((RexSubQuery) operand).getOperator().getKind() == SqlKind.EXISTS) {
+                    return ((RexSubQuery) operand).rel;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

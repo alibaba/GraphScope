@@ -17,7 +17,7 @@ fi
 
 # restart compiler service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
-cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto graph.planner.rules=FilterIntoJoinRule,FilterMatchRule &
+cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto graph.planner.opt=CBO graph.planner.cbo.glogue.schema=src/test/resources/statistics/modern_statistics.txt &
 sleep 5s
 # run gremlin standard tests to test calcite-based IR layer
 cd ${base_dir} && make gremlin_calcite_test

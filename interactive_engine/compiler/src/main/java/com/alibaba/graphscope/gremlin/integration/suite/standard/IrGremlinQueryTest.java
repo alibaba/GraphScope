@@ -169,6 +169,18 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Object>
             get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
 
+    public abstract Traversal<Vertex, Long>
+            get_g_V_match_as_a_out_as_b_not_as_b_out_as_c_select_b_count();
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_match_as_a_out_as_b_not_as_b_out_as_c_select_b_count() {
+        Traversal<Vertex, Long> traversal =
+                this.get_g_V_match_as_a_out_as_b_not_as_b_out_as_c_select_b_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(5, traversal.next().intValue());
+    }
+
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_select_expr_power_age_by_2() {
@@ -1155,6 +1167,14 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                                     "a.name = 'marko' and (a.age > 20 OR a.age < 10)",
                                     ExprStep.Type.FILTER))
                     .values("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Long>
+                get_g_V_match_as_a_out_as_b_not_as_b_out_as_c_select_b_count() {
+            return g.V().match(as("a").out().as("b"), not(as("b").out().as("c")))
+                    .select("b")
+                    .count();
         }
 
         @Override
