@@ -31,6 +31,7 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -155,10 +156,20 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return pw.itemIf("input", input, !Objects.isNull(input))
                 .item("tableConfig", explainTableConfig())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                // print 'aliasId' if the explain level is digest, in that 'aliasId' can contribute
+                // to a rel's digest
+                .itemIf(
+                        "aliasId",
+                        getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf(
                         "startAlias",
                         startAlias.getAliasName(),
                         startAlias.getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf(
+                        "startAliasId",
+                        startAlias.getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf("fusedProject", project, !ObjectUtils.isEmpty(project))
                 .itemIf("fusedFilter", filters, !ObjectUtils.isEmpty(filters));
     }
