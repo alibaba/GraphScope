@@ -40,7 +40,7 @@ admin_actor::admin_actor(hiactor::actor_base* exec_ctx,
 }
 
 // Create a new Graph with the passed graph config.
-seastar::future<query_result> admin_actor::run_create_graph(
+seastar::future<admin_query_result> admin_actor::run_create_graph(
     query_param&& query_param) {
   LOG(INFO) << "Creating Graph: " << query_param.content;
 
@@ -53,82 +53,54 @@ seastar::future<query_result> admin_actor::run_create_graph(
     yaml = YAML::Load(json_ss);
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to parse json: " << e.what();
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to parse json: " + std::string(e.what())));
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::StatusCode::InvalidSchema,
+            "Fail to parse json: " + std::string(e.what())));
   } catch (...) {
     LOG(ERROR) << "Fail to parse json: " << query_param.content;
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to parse json: " + query_param.content));
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::StatusCode::InvalidSchema,
+                                     "Fail to parse json: "));
   }
 
   auto result = server::WorkDirManipulator::CreateGraph(yaml);
-
-  if (result.ok()) {
-    VLOG(10) << "Successfully created graph";
-    return seastar::make_ready_future<query_result>(std::move(result.value()));
-  } else {
-    LOG(ERROR) << "Fail to create graph: " << result.status().error_message();
-    return seastar::make_exception_future<query_result>(std::runtime_error(
-        "Fail to create graph: " + result.status().error_message()));
-  }
+  return seastar::make_ready_future<admin_query_result>(std::move(result));
 }
 
 // get graph schema
 // query_param is the graph name
-seastar::future<query_result> admin_actor::run_get_graph_schema(
+seastar::future<admin_query_result> admin_actor::run_get_graph_schema(
     query_param&& query_param) {
   LOG(INFO) << "Get Graph schema for graph: " << query_param.content;
 
   auto schema_result =
       server::WorkDirManipulator::GetGraphSchemaString(query_param.content);
-  if (schema_result.ok()) {
-    return seastar::make_ready_future<query_result>(
-        std::move(schema_result.value()));
-  } else {
-    LOG(ERROR) << "Fail to get graph schema: "
-               << schema_result.status().error_message();
-    return seastar::make_exception_future<query_result>(std::runtime_error(
-        "Fail to get graph schema: " + schema_result.status().error_message()));
-  }
+  return seastar::make_ready_future<admin_query_result>(
+      std::move(schema_result));
 }
 
 // list all graphs
-seastar::future<query_result> admin_actor::run_list_graphs(
+seastar::future<admin_query_result> admin_actor::run_list_graphs(
     query_param&& query_param) {
   LOG(INFO) << "List all graphs.";
   auto list_result = server::WorkDirManipulator::ListGraphs();
-  if (!list_result.ok()) {
-    LOG(ERROR) << "Fail to list graphs: "
-               << list_result.status().error_message();
-    return seastar::make_exception_future<query_result>(std::runtime_error(
-        "Fail to list graphs: " + list_result.status().error_message()));
-  } else {
-    VLOG(10) << "Successfully list graphs";
-    return seastar::make_ready_future<query_result>(
-        std::move(list_result.value()));
-  }
+  return seastar::make_ready_future<admin_query_result>(std::move(list_result));
 }
 
 // delete one graph
-seastar::future<query_result> admin_actor::run_delete_graph(
+seastar::future<admin_query_result> admin_actor::run_delete_graph(
     query_param&& query_param) {
   LOG(INFO) << "Delete graph: " << query_param.content;
 
   auto delete_res =
       server::WorkDirManipulator::DeleteGraph(query_param.content);
-  if (delete_res.ok()) {
-    return seastar::make_ready_future<query_result>(
-        std::move(delete_res.value()));
-  } else {
-    LOG(ERROR) << "Fail to delete graph: "
-               << delete_res.status().error_message();
-    return seastar::make_exception_future<query_result>(std::runtime_error(
-        "Fail to delete graph: " + delete_res.status().error_message()));
-  }
+
+  return seastar::make_ready_future<admin_query_result>(std::move(delete_res));
 }
 
 // load the graph.
-seastar::future<query_result> admin_actor::run_graph_loading(
+seastar::future<admin_query_result> admin_actor::run_graph_loading(
     graph_management_param&& query_param) {
   // query_param contains two parameter, first for graph name, second for graph
   // config
@@ -146,13 +118,17 @@ seastar::future<query_result> admin_actor::run_graph_loading(
     yaml = YAML::Load(json_ss);
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to parse json: " << e.what();
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to parse json: " + std::string(e.what())));
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::StatusCode::InvalidImportFile,
+            "Fail to parse json: " + std::string(e.what())));
   } catch (...) {
-    LOG(ERROR) << "Fail to parse json: " << graph_config;
-    return seastar::make_exception_future<query_result>(std::runtime_error(
-        "Fail to parse json when running dataloading for : " + graph_name));
+    LOG(ERROR) << "Fail to parse json: ";
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::StatusCode::InvalidImportFile,
+                                     "Fail to parse json: "));
   }
+
   int32_t loading_thread_num = 1;
   if (yaml["loading_thread_num"]) {
     loading_thread_num = yaml["loading_thread_num"].as<int32_t>();
@@ -160,21 +136,13 @@ seastar::future<query_result> admin_actor::run_graph_loading(
 
   auto graph_loading_res = server::WorkDirManipulator::LoadGraph(
       graph_name, yaml, loading_thread_num);
-
-  if (graph_loading_res.ok()) {
-    VLOG(10) << "Successfully loaded graph";
-    return seastar::make_ready_future<query_result>(
-        std::move(graph_loading_res.value()));
-  } else {
-    LOG(ERROR) << "Fail to load graph: "
-               << graph_loading_res.status().error_message();
-    return seastar::make_exception_future<query_result>(std::runtime_error(
-        "Fail to load graph: " + graph_loading_res.status().error_message()));
-  }
+  return seastar::make_ready_future<admin_query_result>(
+      std::move(graph_loading_res));
 }
 
 // Get all procedure with graph_name and procedure_name
-seastar::future<query_result> admin_actor::get_procedure_by_procedure_name(
+seastar::future<admin_query_result>
+admin_actor::get_procedure_by_procedure_name(
     procedure_query_param&& query_param) {
   auto& graph_name = query_param.content.first;
   auto& procedure_name = query_param.content.second;
@@ -183,41 +151,23 @@ seastar::future<query_result> admin_actor::get_procedure_by_procedure_name(
   auto get_procedure_res =
       server::WorkDirManipulator::GetProcedureByGraphAndProcedureName(
           graph_name, procedure_name);
-  if (get_procedure_res.ok()) {
-    VLOG(10) << "Successfully get procedure procedures";
-    return seastar::make_ready_future<query_result>(
-        std::move(get_procedure_res.value()));
-  } else {
-    LOG(ERROR) << "Fail to get procedure for graph: " << graph_name
-               << " and procedure: " << procedure_name << ", error message: "
-               << get_procedure_res.status().error_message();
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to get procedure: " +
-                           get_procedure_res.status().error_message()));
-  }
+
+  return seastar::make_ready_future<admin_query_result>(
+      std::move(get_procedure_res));
 }
 
 // Get all procedures of one graph.
-seastar::future<query_result> admin_actor::get_procedures_by_graph_name(
+seastar::future<admin_query_result> admin_actor::get_procedures_by_graph_name(
     query_param&& query_param) {
   auto& graph_name = query_param.content;
   auto get_all_procedure_res =
       server::WorkDirManipulator::GetProceduresByGraphName(graph_name);
-  if (get_all_procedure_res.ok()) {
-    VLOG(10) << "Successfully get all procedures: "
-             << get_all_procedure_res.value();
-    return seastar::make_ready_future<query_result>(
-        std::move(get_all_procedure_res.value()));
-  } else {
-    LOG(ERROR) << "Fail to get all procedures: "
-               << get_all_procedure_res.status().error_message();
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to get all procedures: " +
-                           get_all_procedure_res.status().error_message()));
-  }
+
+  return seastar::make_ready_future<admin_query_result>(
+      std::move(get_all_procedure_res));
 }
 
-seastar::future<query_result> admin_actor::create_procedure(
+seastar::future<admin_query_result> admin_actor::create_procedure(
     create_procedure_query_param&& query_param) {
   auto& graph_name = query_param.content.first;
   auto& parameter = query_param.content.second;
@@ -228,11 +178,11 @@ seastar::future<query_result> admin_actor::create_procedure(
       .then_wrapped([](auto&& f) {
         try {
           auto res = f.get();
-          return seastar::make_ready_future<query_result>(
-              query_result{std::move(res)});
+          return seastar::make_ready_future<admin_query_result>(
+              admin_query_result{std::move(res)});
         } catch (std::exception& e) {
           LOG(ERROR) << "Fail to create procedure: " << e.what();
-          return seastar::make_exception_future<query_result>(
+          return seastar::make_exception_future<admin_query_result>(
               std::runtime_error("Fail to create procedure: " +
                                  std::string(e.what())));
         }
@@ -240,49 +190,32 @@ seastar::future<query_result> admin_actor::create_procedure(
 }
 
 // Delete a procedure by graph name and procedure name
-seastar::future<query_result> admin_actor::delete_procedure(
+seastar::future<admin_query_result> admin_actor::delete_procedure(
     create_procedure_query_param&& query_param) {
   auto& graph_name = query_param.content.first;
   auto& procedure_name = query_param.content.second;
   auto delete_procedure_res =
       server::WorkDirManipulator::DeleteProcedure(graph_name, procedure_name);
-  if (delete_procedure_res.ok()) {
-    VLOG(10) << "Successfully get all procedures";
-    return seastar::make_ready_future<query_result>(
-        std::move(delete_procedure_res.value()));
-  } else {
-    LOG(ERROR) << "Fail to create procedure: "
-               << delete_procedure_res.status().error_message();
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to create procedures: " +
-                           delete_procedure_res.status().error_message()));
-  }
+  return seastar::make_ready_future<admin_query_result>(
+      std::move(delete_procedure_res));
 }
 
 // update a procedure by graph name and procedure name
-seastar::future<query_result> admin_actor::update_procedure(
+seastar::future<admin_query_result> admin_actor::update_procedure(
     update_procedure_query_param&& query_param) {
   auto& graph_name = std::get<0>(query_param.content);
   auto& procedure_name = std::get<1>(query_param.content);
   auto& parameter = std::get<2>(query_param.content);
   auto update_procedure_res = server::WorkDirManipulator::UpdateProcedure(
       graph_name, procedure_name, parameter);
-  if (update_procedure_res.ok()) {
-    VLOG(10) << "Successfully update procedure: " << procedure_name;
-    return seastar::make_ready_future<query_result>(
-        std::move(update_procedure_res.value()));
-  } else {
-    LOG(ERROR) << "Fail to create procedure: "
-               << update_procedure_res.status().error_message();
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to create procedures: " +
-                           update_procedure_res.status().error_message()));
-  }
+
+  return seastar::make_ready_future<admin_query_result>(
+      std::move(update_procedure_res));
 }
 
 // Start service on a graph first means stop all current running actors, then
 // switch graph and create new actors with a unused scope_id.
-seastar::future<query_result> admin_actor::start_service(
+seastar::future<admin_query_result> admin_actor::start_service(
     query_param&& query_param) {
   // parse query_param.content as json and get graph_name
   auto& content = query_param.content;
@@ -302,25 +235,26 @@ seastar::future<query_result> admin_actor::start_service(
     LOG(WARNING) << "Starting service with graph: " << graph_name;
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to Start service: ";
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error(e.what()));
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::StatusCode::InvalidSchema,
+            "Fail to parse json: " + std::string(e.what())));
   }
 
   auto schema_result = server::WorkDirManipulator::GetGraphSchema(graph_name);
   if (!schema_result.ok()) {
     LOG(ERROR) << "Fail to get graph schema: "
                << schema_result.status().error_message() << ", " << graph_name;
-    return seastar::make_exception_future<query_result>(std::runtime_error(
-        "Fail to get graph schema: " + schema_result.status().error_message() +
-        ", " + graph_name));
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(schema_result.status()));
   }
   auto& schema_value = schema_result.value();
   auto data_dir = server::WorkDirManipulator::GetDataDirectory(graph_name);
   if (!data_dir.ok()) {
     LOG(ERROR) << "Fail to get data directory: "
                << data_dir.status().error_message();
-    return seastar::make_exception_future<query_result>(std::runtime_error(
-        "Fail to get data directory: " + data_dir.status().error_message()));
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(data_dir.status()));
   }
   auto data_dir_value = data_dir.value();
 
@@ -342,8 +276,10 @@ seastar::future<query_result> admin_actor::start_service(
       if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
         LOG(ERROR) << "Fail to load graph from data directory: "
                    << data_dir_value;
-        return seastar::make_exception_future<query_result>(std::runtime_error(
-            "Fail to load graph from data directory: " + data_dir_value));
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>(
+                gs::StatusCode::InternalError,
+                "Fail to open graph from data directory: " + data_dir_value));
       }
       server::WorkDirManipulator::SetRunningGraph(graph_name);
     }
@@ -354,37 +290,38 @@ seastar::future<query_result> admin_actor::start_service(
         server::WorkDirManipulator::GetGraphSchemaPath(graph_name);
     if (!hqps_service.start_compiler_subprocess(schema_path)) {
       LOG(ERROR) << "Fail to start compiler";
-      return seastar::make_exception_future<query_result>(
+      return seastar::make_exception_future<admin_query_result>(
           seastar::sstring("Fail to start compiler"));
     }
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
-    return seastar::make_ready_future<query_result>(
-        "Successfully start service");
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>("Successfully start service"));
   });
 }
 
 // Stop service.
 // Actually stop the query_handler's actors.
 // The port is still connectable.
-seastar::future<query_result> admin_actor::stop_service(
+seastar::future<admin_query_result> admin_actor::stop_service(
     query_param&& query_param) {
   auto& hqps_service = HQPSService::get();
   return hqps_service.stop_query_actors().then([&hqps_service] {
     LOG(INFO) << "Successfully stopped query handler";
     if (hqps_service.stop_compiler_subprocess()) {
       LOG(INFO) << "Successfully stop compiler";
-      return seastar::make_ready_future<query_result>(
-          seastar::sstring("Successfully stop service"));
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>("Successfully stop service"));
     } else {
       LOG(ERROR) << "Fail to stop compiler";
-      return seastar::make_ready_future<query_result>(
-          seastar::sstring("Fail to stop compiler"));
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(gs::StatusCode::InternalError,
+                                       "Fail to stop compiler"));
     }
   });
 }
 
 // get service status
-seastar::future<query_result> admin_actor::service_status(
+seastar::future<admin_query_result> admin_actor::service_status(
     query_param&& query_param) {
   auto& hqps_service = HQPSService::get();
   auto query_port = hqps_service.get_query_port();
@@ -397,11 +334,12 @@ seastar::future<query_result> admin_actor::service_status(
     LOG(INFO) << "Query service has not been inited!";
     res["status"] = "Query service has not been inited!";
   }
-  return seastar::make_ready_future<query_result>(res.dump());
+  return seastar::make_ready_future<admin_query_result>(
+      gs::Result<seastar::sstring>(res.dump()));
 }
 
 // get node status.
-seastar::future<query_result> admin_actor::node_status(
+seastar::future<admin_query_result> admin_actor::node_status(
     query_param&& query_param) {
   // get current host' cpu usage and memory usage
   auto cpu_usage = gs::get_current_cpu_usage();
@@ -423,7 +361,8 @@ seastar::future<query_result> admin_actor::node_status(
        << gs::memory_to_mb_str(mem_usage.second);
     json["memory_usage"] = ss.str();
   }
-  return seastar::make_ready_future<query_result>(json.dump());
+  return seastar::make_ready_future<admin_query_result>(
+      gs::Result<seastar::sstring>(json.dump()));
 }
 
 }  // namespace server

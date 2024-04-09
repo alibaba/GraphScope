@@ -31,33 +31,33 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
   admin_actor(hiactor::actor_base* exec_ctx, const hiactor::byte_t* addr);
   ~admin_actor() override;
 
-  seastar::future<query_result> ANNOTATION(actor:method) run_create_graph(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) run_create_graph(query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) run_get_graph_schema(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) run_get_graph_schema(query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) run_list_graphs(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) run_list_graphs(query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) run_delete_graph(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) run_delete_graph(query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) run_graph_loading(graph_management_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) run_graph_loading(graph_management_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) start_service(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) start_service(query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) stop_service(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) stop_service(query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) service_status(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) service_status(query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) get_procedure_by_procedure_name(procedure_query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) get_procedure_by_procedure_name(procedure_query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) get_procedures_by_graph_name(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) get_procedures_by_graph_name(query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) create_procedure(create_procedure_query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) create_procedure(create_procedure_query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) delete_procedure(procedure_query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_procedure(procedure_query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) update_procedure(update_procedure_query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) update_procedure(update_procedure_query_param&& param);
 
-  seastar::future<query_result> ANNOTATION(actor:method) node_status(query_param&& param);
+  seastar::future<admin_query_result> ANNOTATION(actor:method) node_status(query_param&& param);
 
   // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.

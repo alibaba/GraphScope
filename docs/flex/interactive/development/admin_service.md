@@ -1086,3 +1086,29 @@ The Compiler service could be started as a subprocess of the AdminService. This 
 
 ```bash
 ./bin/interactive_server -c ${ENGINE_CONFIG} -w ${WORKSPACE} --enable-admin-service true --start-compiler true
+```
+
+
+## Http error code
+
+Internally we use [`StatusCode`](https://github.com/alibaba/GraphScope/blob/main/flex/utils/result.h) to record the runtime errors.
+The mapping between statusCode and http code is shown in the following table.
+
+| Code                                | HTTP Code   |
+| ----------------------------------- | ----------- |
+| gs::StatusCode::OK                  | 200         |
+| gs::StatusCode::InValidArgument     | 400         |
+| gs::StatusCode::UnsupportedOperator | 400         |
+| gs::StatusCode::AlreadyExists       | 409         |
+| gs::StatusCode::NotExists           | 404         |
+| gs::StatusCode::CodegenError        | 500         |
+| gs::StatusCode::UninitializedStatus | 500         |
+| gs::StatusCode::InvalidSchema       | 400         |
+| gs::StatusCode::PermissionError     | 403         |
+| gs::StatusCode::IllegalOperation    | 400         |
+| gs::StatusCode::InternalError       | 500         |
+| gs::StatusCode::InvalidImportFile   | 400         |
+| gs::StatusCode::IOError             | 500         |
+| gs::StatusCode::NotFound            | 404         |
+| gs::StatusCode::QueryFailed         | 500         |
+| default                             | 500         |
