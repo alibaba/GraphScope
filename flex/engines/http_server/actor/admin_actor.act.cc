@@ -349,9 +349,37 @@ seastar::future<query_result> admin_actor::start_service(
     }
     hqps_service.start_query_actors();  // start on a new scope.
     LOG(INFO) << "Successfully restart query actors";
+    // now start the compiler
+    auto schema_path =
+        server::WorkDirManipulator::GetGraphSchemaPath(graph_name);
+    if (!hqps_service.start_compiler_subprocess(schema_path)) {
+      LOG(ERROR) << "Fail to start compiler";
+      return seastar::make_exception_future<query_result>(
+          seastar::sstring("Fail to start compiler"));
+    }
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
     return seastar::make_ready_future<query_result>(
         "Successfully start service");
+  });
+}
+
+// Stop service.
+// Actually stop the query_handler's actors.
+// The port is still connectable.
+seastar::future<query_result> admin_actor::stop_service(
+    query_param&& query_param) {
+  auto& hqps_service = HQPSService::get();
+  return hqps_service.stop_query_actors().then([&hqps_service] {
+    LOG(INFO) << "Successfully stopped query handler";
+    if (hqps_service.stop_compiler_subprocess()) {
+      LOG(INFO) << "Successfully stop compiler";
+      return seastar::make_ready_future<query_result>(
+          seastar::sstring("Successfully stop service"));
+    } else {
+      LOG(ERROR) << "Fail to stop compiler";
+      return seastar::make_ready_future<query_result>(
+          seastar::sstring("Fail to stop compiler"));
+    }
   });
 }
 
