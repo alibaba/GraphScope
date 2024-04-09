@@ -289,7 +289,7 @@ template <int tag_id, typename PROP_GETTER_T, typename IND_ELE_T>
 class GeneralVertexSetPropGetter {
  public:
   using prop_element_t = typename PROP_GETTER_T::value_type;
-  using ELE_TUPLE_T = std::tuple<label_t, vid_t>;
+  using ELE_TUPLE_T = GlobalId;
   GeneralVertexSetPropGetter(std::vector<PROP_GETTER_T>&& getters,
                              const std::vector<grape::Bitset>& bitset)
       : getters_(std::move(getters)), bitset_(bitset) {}
@@ -302,11 +302,9 @@ class GeneralVertexSetPropGetter {
     return getters_[label_ind].get_view(vid);
   }
 
-  inline auto get_view(const ELE_TUPLE_T& ind_ele) const {
-    auto label_ind = std::get<0>(ind_ele);
-    auto vid = std::get<1>(ind_ele);
-    CHECK(label_ind < bitset_.size());
-    return getters_[label_ind].get_view(vid);
+  inline auto get_view(const ELE_TUPLE_T& ele) const {
+    CHECK(ele.label_id() < bitset_.size());
+    return getters_[ele.label_id()].get_view(ele.vid());
   }
 
   inline auto get_view() const { return get_view(ind_ele_); }
@@ -335,7 +333,7 @@ class EdgeSetInnerIdGetter {
     auto& tuple = gs::get_from_tuple<tag_id>(all_ele);
     using cur_tuple_t =
         std::remove_const_t<std::remove_reference_t<decltype(tuple)>>;
-    if constexpr (std::tuple_size_v<cur_tuple_t> > 2) {
+    if constexpr (std::tuple_size_v < cur_tuple_t >> 2) {
       auto src_vid = std::get<0>(tuple);
       auto dst_vid = std::get<1>(tuple);
       return Edge<VID_T, grape::EmptyType>(src_vid, dst_vid);

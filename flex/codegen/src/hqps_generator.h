@@ -773,7 +773,6 @@ static std::array<std::string, 4> BuildIntersectOp(
   std::string intersect_code;
 
   auto right_context = ctx.CreateSubTaskContext("right_");
-  CHECK(!ctx.EmptyContext());
 
   {
     std::stringstream cur_ss;
