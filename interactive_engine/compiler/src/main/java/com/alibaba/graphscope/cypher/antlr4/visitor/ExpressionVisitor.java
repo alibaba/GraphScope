@@ -19,6 +19,7 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rex.RexGraphDynamicParam;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
@@ -37,20 +38,20 @@ import com.google.common.collect.Maps;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rex.RexDynamicParam;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexSubQuery;
+import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.NlsString;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -242,7 +243,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                                 ? builder.variable(aliasName, propertyName)
                                 : builder.call(
                                         GraphStdOperatorTable.EXTRACT,
-                                        createIntervalLiteral(propertyName),
+                                        createIntervalExpr(null, createExtractUnit(propertyName)),
                                         variable);
                 return new ExprVisitorResult(expr);
             }
@@ -469,6 +470,27 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                 return new ExprVisitorResult(
                         allAggCalls,
                         builder.call(GraphStdOperatorTable.POWER, left.getExpr(), right.getExpr()));
+            case "DURATION":
+                ExprVisitorResult operand = visitOC_Expression(exprCtx.get(0));
+                Preconditions.checkArgument(
+                        operand.getExpr().getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR,
+                        "parameter of scalar function 'duration' should be a map literal");
+                RexCall mapValues = (RexCall) operand.getExpr();
+                RexNode intervals = null;
+                for (int i = 0; i < mapValues.getOperands().size(); i += 2) {
+                    RexNode key = mapValues.getOperands().get(i);
+                    RexNode value = mapValues.getOperands().get(i + 1);
+                    String timeField = ((RexLiteral) key).getValueAs(NlsString.class).getValue();
+                    RexNode interval = createIntervalExpr(value, createDurationUnit(timeField));
+                    intervals =
+                            (intervals == null)
+                                    ? interval
+                                    : builder.call(GraphStdOperatorTable.PLUS, intervals, interval);
+                }
+                Preconditions.checkArgument(
+                        intervals != null,
+                        "parameter of scalar function 'duration' should not be empty");
+                return new ExprVisitorResult(operand.getAggCalls(), intervals);
             default:
                 throw new IllegalArgumentException(
                         "scalar function " + functionName + " is unsupported yet");
@@ -524,7 +546,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         List<RelBuilder.AggCall> aggCalls = new ArrayList<>();
         aggCalls.addAll(operands.get(0).getAggCalls());
         for (int i = 1; i < operands.size(); ++i) {
-            expr = builder.call(operators.get(i - 1), expr, operands.get(i).getExpr());
+            expr = binaryCall(expr, operands.get(i).getExpr(), operators.get(i - 1));
             aggCalls.addAll(operands.get(i).getAggCalls());
         }
         return new ExprVisitorResult(aggCalls, expr);
@@ -536,10 +558,23 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         List<RelBuilder.AggCall> aggCalls = new ArrayList<>();
         aggCalls.addAll(operands.get(0).getAggCalls());
         for (int i = 1; i < operands.size(); ++i) {
-            expr = builder.call(operator, expr, operands.get(i).getExpr());
+            expr = binaryCall(expr, operands.get(i).getExpr(), operator);
             aggCalls.addAll(operands.get(i).getAggCalls());
         }
         return new ExprVisitorResult(aggCalls, expr);
+    }
+
+    private RexNode binaryCall(RexNode left, RexNode right, SqlOperator operator) {
+        if (operator.getKind() == SqlKind.MINUS
+                && SqlTypeUtil.isOfSameTypeName(SqlTypeName.DATETIME_TYPES, left.getType())
+                && SqlTypeUtil.isOfSameTypeName(SqlTypeName.DATETIME_TYPES, right.getType())) {
+            return builder.call(
+                    GraphStdOperatorTable.DATETIME_MINUS,
+                    left,
+                    right,
+                    createIntervalExpr(null, TimeUnit.MILLISECOND));
+        }
+        return builder.call(operator, left, right);
     }
 
     /**
@@ -584,10 +619,59 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         return Collections.unmodifiableMap(paramManager.paramIdToNameMap);
     }
 
-    private RexLiteral createIntervalLiteral(String fieldName) {
-        TimeUnit timeUnit = TimeUnit.valueOf(fieldName.toUpperCase());
+    private TimeUnit createExtractUnit(String fieldName) {
+        return TimeUnit.valueOf(fieldName.toUpperCase());
+    }
+
+    private TimeUnit createDurationUnit(String fieldName) {
+        switch (fieldName.toUpperCase()) {
+            case "YEARS":
+                return TimeUnit.YEAR;
+            case "QUARTERS":
+                return TimeUnit.QUARTER;
+            case "MONTHS":
+                return TimeUnit.MONTH;
+            case "WEEKS":
+                return TimeUnit.WEEK;
+            case "DAYS":
+                return TimeUnit.DAY;
+            case "HOURS":
+                return TimeUnit.HOUR;
+            case "MINUTES":
+                return TimeUnit.MINUTE;
+            case "SECONDS":
+                return TimeUnit.SECOND;
+            case "MILLISECONDS":
+                return TimeUnit.MILLISECOND;
+            case "MICROSECONDS":
+                return TimeUnit.MICROSECOND;
+            case "NANOSECONDS":
+                return TimeUnit.NANOSECOND;
+            default:
+                throw new UnsupportedOperationException(
+                        "duration field name " + fieldName + " is unsupported yet");
+        }
+    }
+
+    private RexNode createIntervalExpr(@Nullable RexNode value, TimeUnit unit) {
         SqlIntervalQualifier intervalQualifier =
-                new SqlIntervalQualifier(timeUnit, null, SqlParserPos.ZERO);
-        return builder.getRexBuilder().makeIntervalLiteral(null, intervalQualifier);
+                new SqlIntervalQualifier(unit, null, SqlParserPos.ZERO);
+        if (value == null) {
+            return builder.getRexBuilder().makeIntervalLiteral(null, intervalQualifier);
+        } else if (value instanceof RexLiteral) {
+            return builder.getRexBuilder()
+                    .makeIntervalLiteral(
+                            new BigDecimal(
+                                    ((RexLiteral) value).getValueAs(Number.class).toString()),
+                            intervalQualifier);
+        } else if (value instanceof RexGraphDynamicParam) {
+            RexGraphDynamicParam param = (RexGraphDynamicParam) value;
+            return ((GraphRexBuilder) builder.getRexBuilder())
+                    .makeGraphDynamicParam(
+                            builder.getTypeFactory().createSqlIntervalType(intervalQualifier),
+                            param.getName(),
+                            param.getIndex());
+        }
+        throw new IllegalArgumentException("cannot create interval expression from value " + value);
     }
 }

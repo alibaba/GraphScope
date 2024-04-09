@@ -128,7 +128,7 @@ FOLD : ( 'F' | 'f' ) ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'D' | 'd' );
 MEAN : ( 'M' | 'm' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'N' | 'n' );
 
 oC_ScalarFunctionInvocation
-    :  ( LENGTH | POWER | LABELS | TYPE | HEAD ) SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
+    :  ( LENGTH | POWER | LABELS | TYPE | HEAD | DURATION ) SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
 
 LENGTH : ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'G' | 'g' ) ( 'T' | 't' ) ( 'H' | 'h' );
 
@@ -139,6 +139,8 @@ LABELS : ( 'L' | 'l' ) ( 'A' | 'a' ) ( 'B' | 'b' ) ( 'E' | 'e' ) ( 'L' | 'l' ) (
 TYPE : ( 'T' | 't' ) ( 'Y' | 'y' ) ( 'P' | 'p' ) ( 'E' | 'e' );
 
 HEAD : ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'D' | 'd' );
+
+DURATION: ( 'D' | 'd' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'O' | 'o' ) ( 'N' | 'n' );
 
 oC_FunctionName
     :  oC_Namespace oC_SymbolicName ;

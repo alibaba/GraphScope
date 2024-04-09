@@ -1,0 +1,52 @@
+{
+  "operators": [{
+    "var": {
+      "property": {
+        "key": {
+          "name": "creationDate"
+        }
+      },
+      "nodeType": {
+        "dataType": "DATE32"
+      }
+    },
+    "nodeType": {
+      "dataType": "DATE32"
+    }
+  }, {
+    "arith": "ADD",
+    "nodeType": {
+      "dataType": "DATE32"
+    }
+  }, {
+    "brace": "LEFT_BRACE"
+  }, {
+    "param": {
+      "name": "year",
+      "dataType": {
+        "dataType": "INT64"
+      }
+    },
+    "nodeType": {
+      "dataType": "INT64"
+    }
+  }, {
+    "arith": "ADD",
+    "nodeType": {
+      "dataType": "INT64"
+    }
+  }, {
+    "param": {
+      "name": "month",
+      "index": 1,
+      "dataType": {
+        "dataType": "INT64"
+      }
+    },
+    "nodeType": {
+      "dataType": "INT64"
+    }
+  }, {
+    "brace": "RIGHT_BRACE"
+  }]
+}
