@@ -329,19 +329,12 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
       } else if (action == "stop") {
         return admin_actor_refs_[dst_executor]
             .stop_service(query_param{std::move(req->content)})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<query_result>&& fut) mutable {
-              if (__builtin_expect(fut.failed(), false)) {
-                return seastar::make_exception_future<
-                    std::unique_ptr<seastar::httpd::reply>>(
-                    fut.get_exception());
-              }
-              auto result = fut.get0();
-              rep->write_body("application/json", std::move(result.content));
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else {
         return seastar::make_exception_future<
             std::unique_ptr<seastar::httpd::reply>>(
