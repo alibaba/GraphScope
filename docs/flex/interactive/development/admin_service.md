@@ -21,7 +21,8 @@ The table below provides an overview of the available APIs:
 | GetProcedure    | GET /v1/graph/{graph}/procedure/{proc_name} | Get the metadata of the procedure.                                 |
 | DeleteProcedure | DELETE /v1/graph/{graph}/procedure/{proc_name} | Delete the specified procedure.                                   |
 | UpdateProcedure | PUT /v1/graph/{graph}/procedure/{proc_name} | Update some metadata for the specified procedure, i.e. update description, enable/disable. |
-| StartService   | POST /v1/service/start                     | Start the service on the graph specified in request body.          |
+| StartService   | POST /v1/service/start                     | Start the query service on the graph specified in request body.          |
+| StopService    | GET /v1/service/stop                     | Stop the query service                                            |
 | ServiceStatus  | GET /v1/service/status                    | Get current service status.                                        |
 | SystemMetrics     | GET /v1/node/status                       | Get the system metrics of current host/pod, i.e. CPU usage, memory usages.                    |
 
@@ -971,6 +972,35 @@ The response of the http request will be like
 #### Curl Command Example
 ```bash
 curl -X POST -H "Content-Type: application/json" "http://[host]/v1/service/start"
+```
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+```json
+{
+  "message": "message"
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+
+### StopService (ServiceManagement Category)
+
+#### Description 
+
+Stop the current running query service. 
+
+#### HTTP Request
+- **Method**: POST
+- **Endpoint**: `/v1/service/stop`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X POST -H "Content-Type: application/json" "http://[host]/v1/service/stop"
 ```
 
 #### Expected Response
