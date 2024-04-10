@@ -21,7 +21,8 @@ The table below provides an overview of the available APIs:
 | GetProcedure    | GET /v1/graph/{graph}/procedure/{proc_name} | Get the metadata of the procedure.                                 |
 | DeleteProcedure | DELETE /v1/graph/{graph}/procedure/{proc_name} | Delete the specified procedure.                                   |
 | UpdateProcedure | PUT /v1/graph/{graph}/procedure/{proc_name} | Update some metadata for the specified procedure, i.e. update description, enable/disable. |
-| StartService   | POST /v1/service/start                     | Start the service on the graph specified in request body.          |
+| StartService   | POST /v1/service/start                     | Start the query service on the graph specified in request body.          |
+| StopService    | GET /v1/service/stop                     | Stop the query service                                            |
 | ServiceStatus  | GET /v1/service/status                    | Get current service status.                                        |
 | SystemMetrics     | GET /v1/node/status                       | Get the system metrics of current host/pod, i.e. CPU usage, memory usages.                    |
 
@@ -986,6 +987,35 @@ curl -X POST -H "Content-Type: application/json" "http://[host]/v1/service/start
 - `200 OK`: Request successful.
 - `500 Internal Error`: Server internal Error.
 
+### StopService (ServiceManagement Category)
+
+#### Description 
+
+Stop the current running query service. 
+
+#### HTTP Request
+- **Method**: POST
+- **Endpoint**: `/v1/service/stop`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X POST -H "Content-Type: application/json" "http://[host]/v1/service/stop"
+```
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+```json
+{
+  "message": "message"
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+
 ### ServiceStatus
 
 #### Description
@@ -1056,3 +1086,29 @@ The Compiler service could be started as a subprocess of the AdminService. This 
 
 ```bash
 ./bin/interactive_server -c ${ENGINE_CONFIG} -w ${WORKSPACE} --enable-admin-service true --start-compiler true
+```
+
+
+## Http error code
+
+Internally we use [`StatusCode`](https://github.com/alibaba/GraphScope/blob/main/flex/utils/result.h) to record the runtime errors.
+The mapping between statusCode and http code is shown in the following table.
+
+| Code                                | HTTP Code   |
+| ----------------------------------- | ----------- |
+| gs::StatusCode::OK                  | 200         |
+| gs::StatusCode::InValidArgument     | 400         |
+| gs::StatusCode::UnsupportedOperator | 400         |
+| gs::StatusCode::AlreadyExists       | 409         |
+| gs::StatusCode::NotExists           | 404         |
+| gs::StatusCode::CodegenError        | 500         |
+| gs::StatusCode::UninitializedStatus | 500         |
+| gs::StatusCode::InvalidSchema       | 400         |
+| gs::StatusCode::PermissionError     | 403         |
+| gs::StatusCode::IllegalOperation    | 400         |
+| gs::StatusCode::InternalError       | 500         |
+| gs::StatusCode::InvalidImportFile   | 400         |
+| gs::StatusCode::IOError             | 500         |
+| gs::StatusCode::NotFound            | 404         |
+| gs::StatusCode::QueryFailed         | 500         |
+| default                             | 500         |

@@ -32,6 +32,7 @@ import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -169,9 +170,17 @@ public class GraphPhysicalExpand extends SingleRel {
                 .item("tableConfig", fusedExpand.explainTableConfig())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
+                        "aliasId",
+                        getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
+                .itemIf(
                         "startAlias",
                         fusedExpand.getStartAlias().getAliasName(),
                         fusedExpand.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf(
+                        "startAliasId",
+                        fusedExpand.getStartAlias().getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf(
                         "fusedFilter",
                         fusedExpand.getFilters(),
