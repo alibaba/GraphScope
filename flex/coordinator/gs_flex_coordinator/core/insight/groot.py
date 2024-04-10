@@ -209,6 +209,7 @@ class GrootClient(object):
             vertex_data_source["type_name"]
         ] = vertex_data_source
         self._pickle_datasource_impl()
+        return "Bind vertex data source successfully"
 
     def bind_edge_datasource(self, graph_name: str, edge_data_source: dict) -> str:
         edge_label = self.get_edge_full_label(
@@ -218,6 +219,7 @@ class GrootClient(object):
         )
         self._data_source["edges_datasource"][edge_label] = edge_data_source
         self._pickle_datasource_impl()
+        return "Bind edge data source successfully"
 
     def get_vertex_datasource(self, graph_name: str, vertex_type: str) -> dict:
         if vertex_type not in self._data_source["vertices_datasource"]:
@@ -320,15 +322,16 @@ class GrootClient(object):
         # transfer
         for vtype, ds in self._data_source["vertices_datasource"].items():
             column_mappings = []
-            for index, property_name in ds["property_mapping"].items():
-                column_mappings.append(
-                    {
-                        "column": {
-                            "index": int(index),
-                        },
-                        "property": property_name,
-                    }
-                )
+            if ds["property_mapping"] is not None:
+                for index, property_name in ds["property_mapping"].items():
+                    column_mappings.append(
+                        {
+                            "column": {
+                                "index": int(index),
+                            },
+                            "property": property_name,
+                        }
+                    )
             config["vertex_mappings"].append(
                 {
                     "type_name": vtype,
@@ -356,15 +359,16 @@ class GrootClient(object):
                     }
                 )
             column_mappings = []
-            for index, property_name in ds["property_mapping"].items():
-                column_mappings.append(
-                    {
-                        "column": {
-                            "index": int(index),
-                        },
-                        "property": property_name,
-                    }
-                )
+            if ds["property_mapping"] is not None:
+                for index, property_name in ds["property_mapping"].items():
+                    column_mappings.append(
+                        {
+                            "column": {
+                                "index": int(index),
+                            },
+                            "property": property_name,
+                        }
+                    )
             config["edge_mappings"].append(
                 {
                     "type_triplet": {
