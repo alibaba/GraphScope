@@ -74,6 +74,11 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Mathematical  | Division  | /  | / | <input type="checkbox" disabled checked /> |  |
 | Mathematical  | Modulo division | %  | % |  <input type="checkbox" disabled checked /> |  |
 | Mathematical  | Exponentiation | ^ | power(a, b) |  <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Add a duration to a temporal type | \<temporal\> + \<duration\> | \<temporal\> + \<duration\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Subtract a duration from a temporal type | \<temporal\> - \<duration\> | \<temporal\> - \<duration\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Subtract two temporal types, returning a duration in milliseconds | \<temporal\> - \<temporal\> | \<temporal\> - \<temporal\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Add two durations | \<duration\> + \<duration\> | \<duration\> + \<duration\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Subtract two durations | \<duration\> - \<duration\> | \<duration\> - \<duration\> | <input type="checkbox" disabled checked /> |  |
 | Comparison | Equality | = | = |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Inequality| <> | <> |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Less than | < | < |  <input type="checkbox" disabled checked /> |  |
