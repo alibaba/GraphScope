@@ -79,6 +79,8 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Temporal Mathematical | Subtract two temporal types, returning a duration in milliseconds | \<temporal\> - \<temporal\> | \<temporal\> - \<temporal\> | <input type="checkbox" disabled checked /> |  |
 | Temporal Mathematical | Add two durations | \<duration\> + \<duration\> | \<duration\> + \<duration\> | <input type="checkbox" disabled checked /> |  |
 |Temporal Mathematical | Subtract two durations | \<duration\> - \<duration\> | \<duration\> - \<duration\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Multiply a duration by a numeric value | \<duration\> * \<numeric\> | \<duration\> * \<numeric\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Divide a duration by a numeric value | \<duration\> / \<numeric\> | \<duration\> / \<numeric\> | <input type="checkbox" disabled checked /> |  |
 | Comparison | Equality | = | = |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Inequality| <> | <> |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Less than | < | < |  <input type="checkbox" disabled checked /> |  |
