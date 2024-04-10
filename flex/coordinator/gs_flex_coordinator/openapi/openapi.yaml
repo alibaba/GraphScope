@@ -27,7 +27,7 @@ paths:
       parameters:
       - explode: true
         in: query
-        name: type
+        name: alert_type
         required: false
         schema:
           type: string
@@ -2826,21 +2826,21 @@ components:
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
           - label: label
             properties:
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
           edges:
           - label: label
             relations:
@@ -2852,11 +2852,11 @@ components:
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
           - label: label
             relations:
             - src_label: src_label
@@ -2867,11 +2867,11 @@ components:
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
         directed: true
         gremlin_interface:
           grpc_endpoint: grpc_endpoint
@@ -2910,21 +2910,21 @@ components:
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
         - label: label
           properties:
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
         edges:
         - label: label
           relations:
@@ -2936,11 +2936,11 @@ components:
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
         - label: label
           relations:
           - src_label: src_label
@@ -2951,11 +2951,11 @@ components:
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
       properties:
         vertices:
           items:
@@ -2977,11 +2977,11 @@ components:
         - is_primary_key: true
           name: name
           id: 0
-          type: STRING
+          type: DT_STRING
         - is_primary_key: true
           name: name
           id: 0
-          type: STRING
+          type: DT_STRING
       properties:
         label:
           title: label
@@ -3006,11 +3006,11 @@ components:
         - is_primary_key: true
           name: name
           id: 0
-          type: STRING
+          type: DT_STRING
         - is_primary_key: true
           name: name
           id: 0
-          type: STRING
+          type: DT_STRING
       properties:
         label:
           title: label
@@ -3033,7 +3033,7 @@ components:
         is_primary_key: true
         name: name
         id: 0
-        type: STRING
+        type: DT_STRING
       properties:
         id:
           format: int32
@@ -3044,9 +3044,9 @@ components:
           type: string
         type:
           enum:
-          - STRING
-          - LONG
-          - DOUBLE
+          - DT_STRING
+          - DT_SIGNED_INT64
+          - DT_DOUBLE
           title: type
           type: string
         is_primary_key:

@@ -1332,7 +1332,7 @@ paths:
         - alert
       operationId: list_alert_messages
       parameters:
-        - name: type
+        - name: alert_type
           in: query
           required: false
           schema:
@@ -2250,9 +2250,9 @@ components:
         type:
           type: string
           enum:
-            - STRING
-            - LONG
-            - DOUBLE
+            - DT_STRING
+            - DT_SIGNED_INT64
+            - DT_DOUBLE
         is_primary_key:
           type: boolean
     GrootDataloadingJobConfig:

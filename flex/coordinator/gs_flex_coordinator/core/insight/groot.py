@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import itertools
 import logging
 import os
 import pickle
@@ -149,6 +150,20 @@ class GrootClient(object):
         return self._graph.schema
 
     def import_groot_schema(self, graph_name: str, schema: dict) -> str:
+        def _data_type_to_groot(dt):
+            if dt == "DT_DOUBLE":
+                return "DOUBLE"
+            elif dt == "DT_SIGNED_INT64":
+                return "LONG"
+            elif dt == "DT_STRING":
+                return "STRING"
+            else:
+                return dt
+
+        # transfer to groot data type
+        for item in itertools.chain(schema["vertices"], schema["edges"]):
+            for p in item["properties"]:
+                p["type"] = _data_type_to_groot(p["type"])
         return self._graph.import_schema(schema)
 
     def list_jobs(self) -> List[dict]:
