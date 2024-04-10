@@ -59,46 +59,31 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
       if (path.find("dataloading") != seastar::sstring::npos) {
         LOG(INFO) << "Route to loading graph";
         if (!req->param.exists("graph_name")) {
-          return seastar::make_exception_future<
-              std::unique_ptr<seastar::httpd::reply>>(
-              std::runtime_error("graph_name not exists"));
+          return new_bad_request_reply(std::move(rep),
+                                       "expect field 'graph_name' in request");
         } else {
           auto graph_name = req->param.at("graph_name");
           LOG(INFO) << "Graph name: " << graph_name;
           auto pair = std::make_pair(graph_name, std::move(req->content));
           return admin_actor_refs_[dst_executor]
               .run_graph_loading(graph_management_param{std::move(pair)})
-              .then_wrapped([rep = std::move(rep)](
-                                seastar::future<query_result>&& fut) mutable {
-                if (__builtin_expect(fut.failed(), false)) {
-                  return seastar::make_exception_future<
-                      std::unique_ptr<seastar::httpd::reply>>(
-                      fut.get_exception());
-                }
-                auto result = fut.get0();
-                rep->write_body("application/json", std::move(result.content));
-                rep->done();
-                return seastar::make_ready_future<
-                    std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-              });
+              .then_wrapped(
+                  [rep = std::move(rep)](
+                      seastar::future<admin_query_result>&& fut) mutable {
+                    return return_reply_with_result(std::move(rep),
+                                                    std::move(fut));
+                  });
         }
       } else {
         LOG(INFO) << "Route to creating graph";
         return admin_actor_refs_[dst_executor]
             .run_create_graph(query_param{std::move(req->content)})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<query_result>&& fut) mutable {
-              if (__builtin_expect(fut.failed(), false)) {
-                return seastar::make_exception_future<
-                    std::unique_ptr<seastar::httpd::reply>>(
-                    fut.get_exception());
-              }
-              auto result = fut.get0();
-              rep->write_body("application/json", std::move(result.content));
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (method == "GET") {
       if (req->param.exists("graph_name") &&
@@ -106,35 +91,21 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
         auto graph_name = req->param.at("graph_name");
         return admin_actor_refs_[dst_executor]
             .run_get_graph_schema(query_param{std::move(graph_name)})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<query_result>&& fut) mutable {
-              if (__builtin_expect(fut.failed(), false)) {
-                return seastar::make_exception_future<
-                    std::unique_ptr<seastar::httpd::reply>>(
-                    fut.get_exception());
-              }
-              auto result = fut.get0();
-              rep->write_body("application/json", std::move(result.content));
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else {
         return admin_actor_refs_[dst_executor]
             .run_list_graphs(query_param{std::move(req->content)})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<query_result>&& fut) mutable {
-              if (__builtin_expect(fut.failed(), false)) {
-                return seastar::make_exception_future<
-                    std::unique_ptr<seastar::httpd::reply>>(
-                    fut.get_exception());
-              }
-              auto result = fut.get0();
-              rep->write_body("application/json", std::move(result.content));
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (method == "DELETE") {
       if (!req->param.exists("graph_name")) {
@@ -146,16 +117,8 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
       return admin_actor_refs_[dst_executor]
           .run_delete_graph(query_param{std::move(graph_name)})
           .then_wrapped([rep = std::move(rep)](
-                            seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              return seastar::make_exception_future<
-                  std::unique_ptr<seastar::httpd::reply>>(fut.get_exception());
-            }
-            auto result = fut.get0();
-            rep->write_body("application/json", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+                            seastar::future<admin_query_result>&& fut) mutable {
+            return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else {
       return seastar::make_exception_future<
@@ -220,37 +183,23 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
         return admin_actor_refs_[dst_executor]
             .get_procedure_by_procedure_name(
                 procedure_query_param{std::move(pair)})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<query_result>&& fut) mutable {
-              if (__builtin_expect(fut.failed(), false)) {
-                return seastar::make_exception_future<
-                    std::unique_ptr<seastar::httpd::reply>>(
-                    fut.get_exception());
-              }
-              auto result = fut.get0();
-              rep->write_body("application/json", std::move(result.content));
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else {
         // get all procedures.
         LOG(INFO) << "Get all procedures for: " << graph_name;
         return admin_actor_refs_[dst_executor]
             .get_procedures_by_graph_name(query_param{std::move(graph_name)})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<query_result>&& fut) mutable {
-              if (__builtin_expect(fut.failed(), false)) {
-                return seastar::make_exception_future<
-                    std::unique_ptr<seastar::httpd::reply>>(
-                    fut.get_exception());
-              }
-              auto result = fut.get0();
-              rep->write_body("application/json", std::move(result.content));
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (req->_method == "POST") {
       if (!req->param.exists("graph_name")) {
@@ -267,16 +216,8 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
           .create_procedure(create_procedure_query_param{
               std::make_pair(graph_name, std::move(req->content))})
           .then_wrapped([rep = std::move(rep)](
-                            seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              return seastar::make_exception_future<
-                  std::unique_ptr<seastar::httpd::reply>>(fut.get_exception());
-            }
-            auto result = fut.get0();
-            rep->write_body("application/json", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+                            seastar::future<admin_query_result>&& fut) mutable {
+            return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else if (req->_method == "DELETE") {
       // delete must give graph_name and procedure_name
@@ -299,16 +240,8 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
           .delete_procedure(
               procedure_query_param{std::make_pair(graph_name, procedure_name)})
           .then_wrapped([rep = std::move(rep)](
-                            seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              return seastar::make_exception_future<
-                  std::unique_ptr<seastar::httpd::reply>>(fut.get_exception());
-            }
-            auto result = fut.get0();
-            rep->write_body("application/json", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+                            seastar::future<admin_query_result>&& fut) mutable {
+            return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else if (req->_method == "PUT") {
       if (!req->param.exists("graph_name") ||
@@ -330,16 +263,8 @@ class admin_http_procedure_handler_impl : public seastar::httpd::handler_base {
           .update_procedure(update_procedure_query_param{
               std::make_tuple(graph_name, procedure_name, req->content)})
           .then_wrapped([rep = std::move(rep)](
-                            seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              return seastar::make_exception_future<
-                  std::unique_ptr<seastar::httpd::reply>>(fut.get_exception());
-            }
-            auto result = fut.get0();
-            rep->write_body("application/json", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+                            seastar::future<admin_query_result>&& fut) mutable {
+            return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else {
       return seastar::make_exception_future<
@@ -395,23 +320,21 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
       if (action == "start" || action == "restart") {
         return admin_actor_refs_[dst_executor]
             .start_service(query_param{std::move(req->content)})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<query_result>&& fut) mutable {
-              if (__builtin_expect(fut.failed(), false)) {
-                return seastar::make_exception_future<
-                    std::unique_ptr<seastar::httpd::reply>>(
-                    fut.get_exception());
-              }
-              auto result = fut.get0();
-              rep->write_body("application/json", std::move(result.content));
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else if (action == "stop") {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("Stopping service not supported."));
+        return admin_actor_refs_[dst_executor]
+            .stop_service(query_param{std::move(req->content)})
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else {
         return seastar::make_exception_future<
             std::unique_ptr<seastar::httpd::reply>>(
@@ -423,17 +346,8 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
       return admin_actor_refs_[dst_executor]
           .service_status(query_param{std::move(req->content)})
           .then_wrapped([rep = std::move(rep)](
-                            seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              return seastar::make_exception_future<
-                  std::unique_ptr<seastar::httpd::reply>>(fut.get_exception());
-            }
-            auto result = fut.get0();
-            LOG(INFO) << "Service status: " << result.content;
-            rep->write_body("application/json", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+                            seastar::future<admin_query_result>&& fut) mutable {
+            return return_reply_with_result(std::move(rep), std::move(fut));
           });
     }
   }
@@ -473,17 +387,8 @@ class admin_http_node_handler_impl : public seastar::httpd::handler_base {
       return admin_actor_refs_[dst_executor]
           .node_status(query_param{std::move(req->content)})
           .then_wrapped([rep = std::move(rep)](
-                            seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              return seastar::make_exception_future<
-                  std::unique_ptr<seastar::httpd::reply>>(fut.get_exception());
-            }
-            auto result = fut.get0();
-            LOG(INFO) << "Node status: " << result.content;
-            rep->write_body("application/json", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+                            seastar::future<admin_query_result>&& fut) mutable {
+            return return_reply_with_result(std::move(rep), std::move(fut));
           });
     } else {
       return seastar::make_exception_future<

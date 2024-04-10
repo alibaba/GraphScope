@@ -36,6 +36,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -241,9 +242,17 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .item("result_opt", getResultOpt())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
+                        "aliasId",
+                        getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
+                .itemIf(
                         "start_alias",
                         startAlias.getAliasName(),
                         startAlias.getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf(
+                        "startAliasId",
+                        startAlias.getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf("optional", optional, optional);
     }
 
