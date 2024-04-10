@@ -171,6 +171,10 @@ EOM
 
   cmd="java -cp ${COMPILER_LIB_DIR}/*:${COMPILER_JAR}"
   cmd="${cmd} -Dgraph.schema=${graph_schema_path}"
+  # if env var CBO_GLOGUE_SCHEMA exits, set to properti graph.planner.cbo.glogue.schema
+  if [ ! -z ${CBO_GLOGUE_SCHEMA} ]; then
+    cmd="${cmd} -Dgraph.planner.cbo.glogue.schema=${CBO_GLOGUE_SCHEMA}"
+  fi
   cmd="${cmd} -Djna.library.path=${IR_CORE_LIB_DIR}"
   cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} ${extra_arg_config_file}"
   info "running physical plan generation with ${cmd}"
