@@ -692,3 +692,7 @@ And use a different `zk.base.path` for each secondary instance to avoid conflict
 ### Traces
 
 use `--set otel.enabled=true` to enable trace export.
+
+### Write High-availability
+
+use `--set write.ha.enabled=True` in multi-pod deployment mode to open a backup store pod.
