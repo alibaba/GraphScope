@@ -123,6 +123,8 @@ spec:
               value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
+            - name: ZK_CONNECT
+              value: {{ printf "%s-headless" (include "graphscope-store.zookeeper.fullname" .) | quote }}
           ports:
             - name: service-port
               containerPort: 55556
@@ -139,6 +141,11 @@ spec:
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: gremlin
+            failureThreshold: 5
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
           {{- end }}
           {{- if .Values.startupProbe.enabled }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}

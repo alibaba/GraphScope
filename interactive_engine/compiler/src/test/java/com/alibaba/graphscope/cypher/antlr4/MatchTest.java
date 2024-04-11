@@ -440,4 +440,45 @@ public class MatchTest {
                     + " alias=[a], fusedFilter=[[IN(_.name, ?0)]], opt=[VERTEX])",
                 node.explain().trim());
     }
+
+    @Test
+    public void match_22_test() {
+        RelNode node =
+                Utils.eval(
+                                "Match (a)-[b]-(c) Return (a.creationDate - c.creationDate) / 1000"
+                                        + " as diff")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(diff=[/(DATETIME_MINUS(a.creationDate, c.creationDate,"
+                    + " null:INTERVAL MILLISECOND), 1000)], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void match_23_test() {
+        RelNode node =
+                Utils.eval(
+                                "Match (a)-[b]-(c) Return a.creationDate + duration({years: $year,"
+                                        + " months: $month})")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[+(a.creationDate, +(?0, ?1))], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                node.explain().trim());
+    }
 }

@@ -1,3 +1,4 @@
+{{- if .Values.backup.enabled }}
 {{- $frontendFullname := include "graphscope-store.frontend.fullname" . }}
 {{- $coordinatorFullname := include "graphscope-store.coordinator.fullname" . }}
 {{- $storeFullname := include "graphscope-store.store.fullname" . }}
@@ -8,7 +9,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "graphscope-store.store.fullname" . }}
+  name: {{ include "graphscope-store.store.fullname" . }}-backup
   namespace: {{ .Release.Namespace }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: store
@@ -187,3 +188,4 @@ spec:
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
   {{- end }}
+{{- end }}

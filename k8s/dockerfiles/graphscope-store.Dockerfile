@@ -40,7 +40,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo '$TZ' > /etc/timezone
 
 RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk dnsutils tzdata \
+    apt-get install -y sudo default-jdk dnsutils tzdata lsof \
         libjemalloc-dev libunwind-dev binutils less python3 python3-pip && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
