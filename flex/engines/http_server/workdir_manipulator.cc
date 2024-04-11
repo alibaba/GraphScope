@@ -250,7 +250,6 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteGraph(
 gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
     const std::string& graph_name, const YAML::Node& yaml_node,
     int32_t loading_thread_num, const std::string& dst_indices_dir,
-    std::unique_ptr<gs::FlexLockGuard> lock_guard,
     std::shared_ptr<gs::IMetaDataStore> metadata_store) {
   // First check whether graph exists
   if (!is_graph_exist(graph_name)) {
@@ -297,7 +296,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
 
   return load_graph_impl(temp_file_path, graph_name, loading_thread_num,
                          dst_indices_dir, loading_config_json_str_res.value(),
-                         std::move(lock_guard), metadata_store);
+                         metadata_store);
 }
 
 gs::Result<seastar::sstring> WorkDirManipulator::GetProceduresByGraphName(
@@ -712,7 +711,6 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
     const std::string& config_file_path, const std::string& graph_id,
     int32_t loading_thread_num, const std::string& dst_indices_dir,
     const std::string& loading_config_json_str,
-    std::unique_ptr<gs::FlexLockGuard> lock_guard,
     std::shared_ptr<gs::IMetaDataStore> metadata_store) {
   auto schema_file = GetGraphSchemaPath(graph_id);
   auto final_indices_dir = GetGraphIndicesDir(graph_id);
@@ -761,12 +759,8 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
             auto res = child_handle.exit_code();
             VLOG(10) << "Graph loader finished, job_id: " << internal_job_id
                      << ", res: " << res;
-            // if res is sigkill return
-            if (res == 9) {
-              return gs::Result<seastar::sstring>(gs::Status(
-                  gs::StatusCode::OK, "Graph loader killed by signal 9"));
-            }
 
+            LOG(INFO) << "Updating graph meta";
             auto exit_request = gs::UpdateJobMetaRequest::NewFinished(res);
             auto update_exit_res =
                 metadata_store->UpdateJobMeta(internal_job_id, exit_request);
@@ -775,13 +769,6 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
                          << internal_job_id;
               return gs::Result<seastar::sstring>(update_exit_res.status());
             }
-            if (res != 0) {
-              return gs::Result<seastar::sstring>(
-                  gs::Status(gs::StatusCode::InternalError,
-                             "Graph loader failed with exit code: " +
-                                 std::to_string(res)));
-            }
-            LOG(INFO) << "Updating graph meta";
 
             gs::UpdateGraphMetaRequest update_graph_meta_req(
                 gs::GetCurrentTimeStamp(), loading_config_json_str_copied);
@@ -804,10 +791,11 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
                 "Finish Loading and commit temp "
                 "indices");
           })
-          .then_wrapped([lock_guard_moved = std::move(lock_guard),
-                         copied_graph_id = graph_id](auto&& f) {
+          .then_wrapped([copied_graph_id = graph_id,
+                         metadata_store = metadata_store](auto&& f) {
             // the destructor of lock_file will unlock the graph.
             // the destructor of decrementer will decrement the job count.
+            metadata_store->UnlockGraphIndices(copied_graph_id);
             return gs::Result<seastar::sstring>("Finish unlock graph");
           });
 

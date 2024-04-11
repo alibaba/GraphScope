@@ -45,44 +45,6 @@ inline int64_t GetCurrentTimeStamp() {
       .count();
 }
 
-/*
- * @brief A simple RAII lock guard for graph.
- * The object can not be copied, will be unlocked when the guard is destroyed.
- */
-class FlexLockGuard {
- public:
-  using LOCK_FUNC = std::function<Result<bool>()>;
-  using UNLOCK_FUNC = std::function<void()>;
-  FlexLockGuard(LOCK_FUNC&& lock_func, UNLOCK_FUNC&& unlock_func)
-      : locked_(false),
-        lock_func_(std::forward<LOCK_FUNC>(lock_func)),
-        unlock_func_(std::forward<UNLOCK_FUNC>(unlock_func)) {}
-
-  FlexLockGuard(const FlexLockGuard&) = delete;
-
-  // Make sure the graph is unlocked when the guard is destroyed.
-  ~FlexLockGuard() {
-    if (locked_) {
-      VLOG(10) << "Calling Unlocking function, obj address: " << this;
-      unlock_func_();
-    }
-  }
-
-  Result<bool> TryLock() {
-    VLOG(10) << "Calling Locking function, obj address: " << this;
-    auto res = lock_func_();
-    if (res.ok() && res.value()) {
-      locked_ = true;
-    }
-    return res;
-  }
-
- private:
-  bool locked_;
-  LOCK_FUNC lock_func_;
-  UNLOCK_FUNC unlock_func_;
-};
-
 class FlexException : public std::exception {
  public:
   explicit FlexException(std::string&& error_msg);

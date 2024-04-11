@@ -612,12 +612,13 @@ Result<GraphId> LocalFileMetadataStore::GetRunningGraph() {
   std::unique_lock<std::mutex> lock(running_graph_mutex_);
   auto running_graph_file = get_running_graph_file();
   if (!std::filesystem::exists(running_graph_file)) {
-    return Result<GraphId>(gs::StatusCode::NotFound, "No running graph");
+    return Result<GraphId>(
+        gs::Status(gs::StatusCode::NotFound, "No running graph"));
   }
   std::ifstream running_graph_stream(running_graph_file);
   if (!running_graph_stream.is_open()) {
-    return Result<GraphId>(gs::StatusCode::IOError,
-                           "Failed to get running graph");
+    return Result<GraphId>(
+        gs::Status(gs::StatusCode::IOError, "Failed to get running graph"));
   }
   std::string graph_id;
   running_graph_stream >> graph_id;

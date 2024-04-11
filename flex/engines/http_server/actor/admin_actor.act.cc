@@ -40,217 +40,143 @@ void add_runnable_info(gs::PluginMeta& plugin_meta) {
   }
 }
 
-/*
-  Loading data to a graph means we need change both the GraphData and
-  GraphMetaData. We use a transaction to ensure the atomicity of the operation.
-*/
-class GraphLoadingTransaction {
- public:
-  using result_t = gs::Result<bool>;
-  GraphLoadingTransaction(std::shared_ptr<gs::IMetaDataStore> metadata_store,
-                          const std::string& graph_id,
-                          const YAML::Node& loading_config,
-                          int32_t loading_thread_num,
-                          std::unique_ptr<gs::FlexLockGuard> lock_guard)
-      : metadata_store_(metadata_store),
-        graph_id_(graph_id),
-        loading_config_(loading_config),
-        loading_thread_num_(loading_thread_num),
-        lock_guard_(std::move(lock_guard)) {}
-
-  ~GraphLoadingTransaction() {}
-
-  // At this step, we will
-  // - Try to load graph to a tmp directory.
-  // - If success, we will update the graph meta data.
-  // - If fail, we will rollback the transaction.
-  gs::Result<gs::JobId> CommitOrRollBack() {
-    // First try to load to a tmp directory.
-    // If the loading process itself is atomic(The tmp data dir will be cleaned
-    // if process terminated unexpectedly, and the original data dir is
-    // recovered)
-    auto tmp_indices_dir = WorkDirManipulator::GetTempIndicesDir(graph_id_);
-    WorkDirManipulator::CleanTempIndicesDir(graph_id_);
-    auto loading_res = server::WorkDirManipulator::LoadGraph(
-        graph_id_, loading_config_, loading_thread_num_, tmp_indices_dir,
-        std::move(lock_guard_), metadata_store_);
-    if (!loading_res.ok()) {
-      WorkDirManipulator::CleanTempIndicesDir(graph_id_);
-      return loading_res.status();
-    }
-    auto job_id = loading_res.value();
-    return gs::Result<gs::JobId>(job_id);
+gs::Result<gs::JobId> invoke_loading_graph(
+    std::shared_ptr<gs::IMetaDataStore> metadata_store,
+    const std::string& graph_id, const YAML::Node& loading_config,
+    int32_t loading_thread_num) {
+  // First try to load to a tmp directory.
+  // If the loading process itself is atomic(The tmp data dir will be cleaned
+  // if process terminated unexpectedly, and the original data dir is
+  // recovered)
+  auto tmp_indices_dir = WorkDirManipulator::GetTempIndicesDir(graph_id);
+  WorkDirManipulator::CleanTempIndicesDir(graph_id);
+  auto loading_res = server::WorkDirManipulator::LoadGraph(
+      graph_id, loading_config, loading_thread_num, tmp_indices_dir,
+      metadata_store);
+  if (!loading_res.ok()) {
+    WorkDirManipulator::CleanTempIndicesDir(graph_id);
+    return loading_res.status();
   }
+  auto job_id = loading_res.value();
+  return gs::Result<gs::JobId>(job_id);
+}
 
- private:
-  std::shared_ptr<gs::IMetaDataStore> metadata_store_;
-  std::string graph_id_;
-  YAML::Node loading_config_;
-  int32_t loading_thread_num_;
-  std::unique_ptr<gs::FlexLockGuard> lock_guard_;
-};
+seastar::future<seastar::sstring> invoke_creating_procedure(
+    std::shared_ptr<gs::IMetaDataStore> metadata_store,
+    const std::string& graph_id, const std::string& plugin_creation_parameter) {
+  auto& hqps_service = HQPSService::get();
+  // First create a plugin meta to get the plugin id, then do the real
+  // creation.
+  nlohmann::json json;
+  try {
+    LOG(INFO) << "parsing: " << plugin_creation_parameter;
+    json = nlohmann::json::parse(plugin_creation_parameter);
+  } catch (const std::exception& e) {
+    return seastar::make_exception_future<seastar::sstring>(
+        "Fail to parse parameter as json: " + plugin_creation_parameter);
+  }
+  json["graph_id"] = graph_id;
+  auto procedure_meta_request = gs::CreatePluginMetaRequest::FromJson(json);
 
-/**
- * Create Plugin Transaction will Do these things in a transactional manner
- * - Create the plugin libxx.so and xxx.yaml on disk
- * - Insert the plugin meta.
- * - Update the Graph's meta about the plugin.(enable_lists)
- */
-class CreatePluginTransaction {
- public:
-  using result_t = gs::Result<bool>;
-  CreatePluginTransaction(std::shared_ptr<gs::IMetaDataStore> metadata_store,
-                          const std::string& graph_id,
-                          const std::string& plugin_creation_parameter)
-      : metadata_store_(metadata_store),
-        graph_id_(graph_id),
-        plugin_creation_parameter_(plugin_creation_parameter) {}
+  LOG(INFO) << "parse create plugin meta:" << procedure_meta_request.ToString();
+  auto insert_res = metadata_store->CreatePluginMeta(procedure_meta_request);
+  if (!insert_res.ok()) {
+    return seastar::make_exception_future<seastar::sstring>(
+        std::runtime_error(insert_res.status().error_message()));
+  }
+  auto plugin_id = insert_res.value();
 
-  ~CreatePluginTransaction() {}
-
-  // This interface returns future since the codegen process utilize the hiactor
-  // thread_pool to run the codegen process, which provides async interface.
-  seastar::future<seastar::sstring> Run() {
-    auto& hqps_service = HQPSService::get();
-    // First create a plugin meta to get the plugin id, then do the real
-    // creation.
-    nlohmann::json json;
-    try {
-      LOG(INFO) << "parsing: " << plugin_creation_parameter_;
-      json = nlohmann::json::parse(plugin_creation_parameter_);
-    } catch (const std::exception& e) {
-      return seastar::make_exception_future<seastar::sstring>(
-          "Fail to parse parameter as json: " + plugin_creation_parameter_);
-    }
-    json["graph_id"] = graph_id_;
-    auto procedure_meta_request = gs::CreatePluginMetaRequest::FromJson(json);
-
-    LOG(INFO) << "parse create plugin meta:"
-              << procedure_meta_request.ToString();
-    auto insert_res = metadata_store_->CreatePluginMeta(procedure_meta_request);
-    if (!insert_res.ok()) {
-      return seastar::make_exception_future<seastar::sstring>(
-          std::runtime_error(insert_res.status().error_message()));
-    }
-    auto plugin_id = insert_res.value();
-
-    return server::WorkDirManipulator::CreateProcedure(
-               graph_id_, plugin_id, json,
-               hqps_service.get_service_config().engine_config_path)
-        .then_wrapped([graph_id = graph_id_, old_plugin_id = plugin_id,
-                       json = json,
-                       metadata_store = metadata_store_](auto&& f) {
-          std::string proc_id;
-          try {
-            proc_id = f.get0();
-            // proc_yaml path should already checked to exists.
-            if (proc_id.empty()) {
-              metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
-              return seastar::make_exception_future<seastar::sstring>(
-                  std::runtime_error("Fail to create plugin: " + proc_id));
-            }
-            if (proc_id != old_plugin_id) {
-              metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
-              return seastar::make_exception_future<
-                  seastar::sstring>(std::runtime_error(
-                  std::string(
-                      "the generated plugin id is not same as the old one:") +
-                  proc_id + " " + old_plugin_id));
-            }
-            VLOG(10) << "Successfully create plugin and meta: " << proc_id
-                     << ", now update "
-                        "the plugin meta and update the graph meta: "
-                     << graph_id;
-
-            //  Then insert the plugin meta.
-            auto procedure_meta_from_file =
-                WorkDirManipulator::GetProcedureByGraphAndProcedureName(
-                    graph_id, proc_id);
-            if (!procedure_meta_from_file.ok()) {
-              VLOG(10) << "Fail to insert plugin meta: "
-                       << procedure_meta_from_file.status().error_message();
-              metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
-              WorkDirManipulator::DeleteProcedure(graph_id, proc_id);
-              return seastar::make_exception_future<seastar::sstring>(
-                  std::runtime_error(
-                      procedure_meta_from_file.status().error_message() + ", " +
-                      proc_id.c_str()));
-            }
-            seastar::sstring procedure_meta_str =
-                procedure_meta_from_file.value();
-            VLOG(10) << "got procedure meta: " << procedure_meta_str;
-            auto internal_plugin_update =
-                gs::UpdatePluginMetaRequest::FromJson(procedure_meta_str);
-            // the field enable should be parsed from json
-            if (json.contains("enable")) {
-              internal_plugin_update.enable = json["enable"].get<bool>();
-            }
-            auto str = internal_plugin_update.toString();
-            VLOG(10) << "internal plugin update: " << str;
-            auto update_res = metadata_store->UpdatePluginMeta(
-                graph_id, proc_id, internal_plugin_update);
-            VLOG(10) << "update_res: " << update_res.status().ok();
-            if (!update_res.ok()) {
-              metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
-              WorkDirManipulator::DeleteProcedure(graph_id, proc_id);
-              return seastar::make_exception_future<seastar::sstring>(
-                  std::runtime_error(update_res.status().error_message()));
-            }
-            VLOG(10) << "Successfully created procedure: " << proc_id;
-            std::string response = "{\"procedure_id\":\"" + proc_id + "\"}";
-            return seastar::make_ready_future<seastar::sstring>(response);
-          } catch (std::exception& e) {
-            LOG(ERROR) << "Fail to create plugin: " << e.what();
+  return server::WorkDirManipulator::CreateProcedure(
+             graph_id, plugin_id, json,
+             hqps_service.get_service_config().engine_config_path)
+      .then_wrapped([graph_id = graph_id, old_plugin_id = plugin_id,
+                     json = json, metadata_store = metadata_store](auto&& f) {
+        std::string proc_id;
+        try {
+          proc_id = f.get0();
+          // proc_yaml path should already checked to exists.
+          if (proc_id.empty()) {
             metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
-            WorkDirManipulator::DeleteProcedure(graph_id, old_plugin_id);
             return seastar::make_exception_future<seastar::sstring>(
-                std::runtime_error("Fail to create plugin: "));
+                std::runtime_error("Fail to create plugin: " + proc_id));
           }
-        });
+          if (proc_id != old_plugin_id) {
+            metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
+            return seastar::make_exception_future<seastar::sstring>(
+                std::runtime_error(
+                    std::string(
+                        "the generated plugin id is not same as the old one:") +
+                    proc_id + " " + old_plugin_id));
+          }
+          VLOG(10) << "Successfully create plugin and meta: " << proc_id
+                   << ", now update "
+                      "the plugin meta and update the graph meta: "
+                   << graph_id;
+
+          //  Then insert the plugin meta.
+          auto procedure_meta_from_file =
+              WorkDirManipulator::GetProcedureByGraphAndProcedureName(graph_id,
+                                                                      proc_id);
+          if (!procedure_meta_from_file.ok()) {
+            VLOG(10) << "Fail to insert plugin meta: "
+                     << procedure_meta_from_file.status().error_message();
+            metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
+            WorkDirManipulator::DeleteProcedure(graph_id, proc_id);
+            return seastar::make_exception_future<seastar::sstring>(
+                std::runtime_error(
+                    procedure_meta_from_file.status().error_message() + ", " +
+                    proc_id.c_str()));
+          }
+          seastar::sstring procedure_meta_str =
+              procedure_meta_from_file.value();
+          VLOG(10) << "got procedure meta: " << procedure_meta_str;
+          auto internal_plugin_update =
+              gs::UpdatePluginMetaRequest::FromJson(procedure_meta_str);
+          // the field enable should be parsed from json
+          if (json.contains("enable")) {
+            internal_plugin_update.enable = json["enable"].get<bool>();
+          }
+          auto str = internal_plugin_update.toString();
+          VLOG(10) << "internal plugin update: " << str;
+          auto update_res = metadata_store->UpdatePluginMeta(
+              graph_id, proc_id, internal_plugin_update);
+          VLOG(10) << "update_res: " << update_res.status().ok();
+          if (!update_res.ok()) {
+            metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
+            WorkDirManipulator::DeleteProcedure(graph_id, proc_id);
+            return seastar::make_exception_future<seastar::sstring>(
+                std::runtime_error(update_res.status().error_message()));
+          }
+          VLOG(10) << "Successfully created procedure: " << proc_id;
+          std::string response = "{\"procedure_id\":\"" + proc_id + "\"}";
+          return seastar::make_ready_future<seastar::sstring>(response);
+        } catch (std::exception& e) {
+          LOG(ERROR) << "Fail to create plugin: " << e.what();
+          metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
+          WorkDirManipulator::DeleteProcedure(graph_id, old_plugin_id);
+          return seastar::make_exception_future<seastar::sstring>(
+              std::runtime_error("Fail to create plugin: "));
+        }
+      });
+}
+
+gs::Status invoke_delete_plugin_meta(
+    std::shared_ptr<gs::IMetaDataStore> metadata_store,
+    const std::string& graph_id, const std::string& procedure_id) {
+  // First delete the plugin meta.
+  auto delete_meta_res =
+      metadata_store->DeletePluginMeta(graph_id, procedure_id);
+  if (!delete_meta_res.ok()) {
+    return delete_meta_res.status();
   }
-
-  // If commit failed, we need to delete the plugin libxx.so and xxx.yaml.
-  gs::Status Commit() { return gs::Status::OK(); }
-
- private:
-  std::shared_ptr<gs::IMetaDataStore> metadata_store_;
-  std::string graph_id_;
-  std::string plugin_creation_parameter_;
-};
-
-class DeletePluginTransaction {
- public:
-  DeletePluginTransaction(std::shared_ptr<gs::IMetaDataStore> metadata_store,
-                          const std::string& graph_id,
-                          const std::string& procedure_id)
-      : metadata_store_(metadata_store),
-        graph_id_(graph_id),
-        procedure_id_(procedure_id) {}
-
-  gs::Status Run() {
-    // First delete the plugin meta.
-    auto delete_meta_res =
-        metadata_store_->DeletePluginMeta(graph_id_, procedure_id_);
-    if (!delete_meta_res.ok()) {
-      return delete_meta_res.status();
-    }
-    // Then delete the plugin libxx.so and xxx.yaml on disk
-    auto delete_res =
-        server::WorkDirManipulator::DeleteProcedure(graph_id_, procedure_id_);
-    if (!delete_res.ok()) {
-      return delete_res.status();
-    }
-    return gs::Status::OK();
+  // Then delete the plugin libxx.so and xxx.yaml on disk
+  auto delete_res =
+      server::WorkDirManipulator::DeleteProcedure(graph_id, procedure_id);
+  if (!delete_res.ok()) {
+    return delete_res.status();
   }
-
-  // If commit failed, we need to delete the plugin libxx.so and xxx.yaml.
-  gs::Status Commit() { return gs::Status::OK(); }
-
- private:
-  std::shared_ptr<gs::IMetaDataStore> metadata_store_;
-  std::string graph_id_;
-  std::string procedure_id_;
-};
+  return gs::Status::OK();
+}
 
 // util functions
 
@@ -469,33 +395,24 @@ seastar::future<admin_query_result> admin_actor::run_graph_loading(
         gs::Result<seastar::sstring>(graph_meta_res.status()));
   }
 
-  // Use a lock guard, to represent the graph's data directory is locked.
-  // Other operations should return failure if the lock is already required.
-  // Will be release after loading is done.
-
-  std::unique_ptr<gs::FlexLockGuard> lock_guard(new gs::FlexLockGuard(
-      [metadata_store = metadata_store_, graph_id]() {  // lock func
-        return metadata_store->LockGraphIndices(graph_id);
-      },
-      [metadata_store = metadata_store_, graph_id]() {  // unlock func
-        return metadata_store->UnlockGraphIndices(graph_id);
-      }));
-  auto lock_res = lock_guard->TryLock();
+  // try to lock the graph indices dir
+  auto lock_res = metadata_store_->LockGraphIndices(graph_id);
   if (!lock_res.ok() || !lock_res.value()) {
-    LOG(ERROR) << "Fail to lock graph: " << graph_id << " :"
-               << lock_res.status().error_message();
+    LOG(ERROR) << "Fail to lock graph indices dir: " << graph_id;
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(lock_res.status()));
+        gs::Result<seastar::sstring>(
+            gs::StatusCode::AlreadyLocked,
+            "Fail to acquire lock for graph indices dir: " + graph_id +
+                ", try again later"));
   }
 
   std::string graph_id_str = graph_id.c_str();
-  GraphLoadingTransaction transaction(metadata_store_, graph_id_str, yaml,
-                                      loading_thread_num,
-                                      std::move(lock_guard));
-  auto job_id_res = transaction.CommitOrRollBack();
+  auto job_id_res = invoke_loading_graph(metadata_store_, graph_id_str, yaml,
+                                         loading_thread_num);
   if (!job_id_res.ok()) {
-    LOG(ERROR) << "Fail to run graph loading transaction: "
+    LOG(ERROR) << "Fail to run graph loading : "
                << job_id_res.status().error_message();
+    metadata_store_->UnlockGraphIndices(graph_id);
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(job_id_res.status()));
   }
@@ -579,14 +496,7 @@ seastar::future<admin_query_result> admin_actor::create_procedure(
         gs::Result<seastar::sstring>(graph_meta_res.status()));
   }
 
-  gs::FlexLockGuard lock_guard(
-      [metadata_store = metadata_store_, graph_id]() {  // lock func
-        return metadata_store->LockGraphPlugins(graph_id);
-      },
-      [metadata_store = metadata_store_, graph_id]() {  // unlock func
-        return metadata_store->UnlockGraphPlugins(graph_id);
-      });
-  auto lock_res = lock_guard.TryLock();
+  auto lock_res = metadata_store_->LockGraphPlugins(graph_id);
   if (!lock_res.ok() || !lock_res.value()) {
     LOG(ERROR) << "Fail to lock graph plugin dir: " << graph_id;
     return seastar::make_ready_future<admin_query_result>(
@@ -596,22 +506,24 @@ seastar::future<admin_query_result> admin_actor::create_procedure(
                 ", try again later"));
   }
 
-  // Use a transaction to ensure the transactional
-  CreatePluginTransaction transaction(metadata_store_, graph_id, parameter);
-
-  return transaction.Run().then_wrapped([](auto&& f) {
-    try {
-      auto res = f.get();
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(std::move(res)));
-    } catch (std::exception& e) {
-      LOG(ERROR) << "Fail to create procedure: " << e.what();
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::StatusCode::InternalError,
-              "Fail to create procedure: " + std::string(e.what())));
-    }
-  });
+  return invoke_creating_procedure(metadata_store_, graph_id, parameter)
+      .then_wrapped([this, graph_id = graph_id](auto&& f) {
+        auto unlock_res = metadata_store_->UnlockGraphPlugins(graph_id);
+        if (!unlock_res.ok()) {
+          LOG(ERROR) << "Fail to unlock graph plugin dir: " << graph_id;
+        }
+        try {
+          auto res = f.get();
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(std::move(res)));
+        } catch (std::exception& e) {
+          LOG(ERROR) << "Fail to create procedure: " << e.what();
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(
+                  gs::StatusCode::InternalError,
+                  "Fail to create procedure: " + std::string(e.what())));
+        }
+      });
 }
 
 // Delete a procedure by graph name and procedure name
@@ -637,15 +549,7 @@ seastar::future<admin_query_result> admin_actor::delete_procedure(
         gs::Result<seastar::sstring>(get_procedure_res.status()));
   }
 
-  // To delete a procedure, we need to lock the plugin directory first.
-  gs::FlexLockGuard lock_guard(
-      [metadata_store = metadata_store_, graph_id]() {  // lock func
-        return metadata_store->LockGraphPlugins(graph_id);
-      },
-      [metadata_store = metadata_store_, graph_id]() {  // unlock func
-        return metadata_store->UnlockGraphPlugins(graph_id);
-      });
-  auto lock_res = lock_guard.TryLock();
+  auto lock_res = metadata_store_->LockGraphPlugins(graph_id);
   if (!lock_res.ok() || !lock_res.value()) {
     LOG(ERROR) << "Fail to lock graph plugin dir: " << graph_id;
     return seastar::make_ready_future<admin_query_result>(
@@ -655,23 +559,20 @@ seastar::future<admin_query_result> admin_actor::delete_procedure(
                 ", try again later"));
   }
 
-  DeletePluginTransaction transaction(metadata_store_, graph_id, procedure_id);
-  auto run_res = transaction.Run();
-  if (!run_res.ok()) {
-    LOG(ERROR) << "Fail to run delete procedure transaction: "
-               << run_res.error_message();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(run_res));
+  auto delete_res =
+      invoke_delete_plugin_meta(metadata_store_, graph_id, procedure_id);
+  auto unlock_res = metadata_store_->UnlockGraphPlugins(graph_id);
+  if (!unlock_res.ok()) {
+    LOG(ERROR) << "Fail to unlock graph plugin dir: " << graph_id;
   }
-  auto commit_res = transaction.Commit();
-  if (!commit_res.ok()) {
-    LOG(ERROR) << "Fail to commit delete procedure transaction: "
-               << commit_res.error_message();
+  if (!delete_res.ok()) {
+    LOG(ERROR) << "Fail to run delete procedure: "
+               << delete_res.error_message();
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(commit_res));
+        gs::Result<seastar::sstring>(delete_res));
   }
 
-  VLOG(10) << "Successfully get all procedures";
+  VLOG(10) << "Successfully delete procedure: " << procedure_id;
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("Successfully delete procedure: " +
                                    procedure_id));

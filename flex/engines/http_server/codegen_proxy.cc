@@ -68,17 +68,25 @@ seastar::future<std::pair<int32_t, std::string>> CodegenProxy::DoGen(
              [this, next_job_id] { return !check_job_running(next_job_id); });
   }
 
-  auto& hqps_service = server::HQPSService::get();
-  auto running_graph_res = hqps_service.get_metadata_store()->GetRunningGraph();
-  if (!running_graph_res.ok()) {
-    return seastar::make_exception_future<std::pair<int32_t, std::string>>(
-        std::runtime_error("Get running graph failed"));
+  auto cur_graph_schema_path = default_graph_schema_path_;
+  if (cur_graph_schema_path.empty()) {
+    auto& hqps_service = server::HQPSService::get();
+    if (hqps_service.get_metadata_store()) {
+      auto running_graph_res =
+          hqps_service.get_metadata_store()->GetRunningGraph();
+      if (!running_graph_res.ok()) {
+        return seastar::make_exception_future<std::pair<int32_t, std::string>>(
+            std::runtime_error("Get running graph failed"));
+      }
+      cur_graph_schema_path =
+          WorkDirManipulator::GetGraphSchemaPath(running_graph_res.value());
+    } else {
+      LOG(ERROR) << "Graph schema path is empty";
+      return seastar::make_exception_future<std::pair<int32_t, std::string>>(
+          std::runtime_error("Graph schema path is empty"));
+    }
   }
 
-  auto cur_graph_schema_path =
-      default_graph_schema_path_.empty()
-          ? WorkDirManipulator::GetGraphSchemaPath(running_graph_res.value())
-          : default_graph_schema_path_;
   if (cur_graph_schema_path.empty()) {
     LOG(ERROR) << "Graph schema path is empty";
     return seastar::make_exception_future<std::pair<int32_t, std::string>>(
