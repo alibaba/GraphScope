@@ -143,6 +143,11 @@ class RowVertexSetImplBuilder {
     datas_.push_back(data);
   }
 
+  void Insert(const GlobalId& global_id, const data_tuple_t& data) {
+    vids_.push_back(global_id.vid());
+    datas_.push_back(data);
+  }
+
   void Insert(const std::tuple<size_t, VID_T>& ind_ele,
               const data_tuple_t& data) {
     vids_.push_back(std::get<1>(ind_ele));
@@ -228,9 +233,7 @@ class RowVertexSetIter {
                    size_t ind)
       : vids_(vids), datas_(datas), label_(label), cur_ind_(ind) {}
 
-  ele_tuple_t GetElement() const {
-    return std::make_tuple(GlobalId(vids_[cur_ind_]), GetData());
-  }
+  ele_tuple_t GetElement() const { return GlobalId(vids_[cur_ind_]); }
 
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(cur_ind_, vids_[cur_ind_]);
@@ -872,9 +875,9 @@ subSetWithRemovedIndicesImpl(std::vector<offset_t>& removed_indices,
 template <typename LabelT, typename VID_T, typename... T>
 class RowVertexSetImpl {
  public:
-  using element_type = VID_T;
-  using element_t = VID_T;
   using ele_tuple_t = GlobalId;
+  using element_type = ele_tuple_t;
+  using element_t = VID_T;
   using lid_t = VID_T;
   using data_tuple_t = std::tuple<T...>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T>;
@@ -1207,7 +1210,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
  public:
   using ele_tuple_t = GlobalId;
   using element_t = VID_T;
-  using element_type = VID_T;
+  using element_type = ele_tuple_t;
   using lid_t = VID_T;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   // from this tuple, we can reconstruct the partial set.

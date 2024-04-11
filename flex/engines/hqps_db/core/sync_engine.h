@@ -1079,11 +1079,11 @@ class SyncEngine : public BaseEngine {
     auto index_seq = std::make_index_sequence<sizeof...(PropGetterT)>();
     size_t cnt = 0;
     for (auto iter : ctx) {
-      auto index_eles = iter.GetAllIndexElement();
+      auto eles = iter.GetAllElement();
       // for each element of prop_getter_tuple, apply get_from_all_element
       // to index_eles, and make result as a tuple
-      auto key_tuple = get_prop_from_index_ele_with_prop_getter(
-          prop_getters_tuple, index_eles, index_seq);
+      auto key_tuple = get_prop_from_ele_with_prop_getter(prop_getters_tuple,
+                                                          eles, index_seq);
 
       if (dedup_set.find(key_tuple) == dedup_set.end()) {
         dedup_set.insert(key_tuple);
@@ -1110,7 +1110,8 @@ class SyncEngine : public BaseEngine {
   static inline bool run_expr_filter_impl(
       const EXPR& expr, std::tuple<PROP_GETTER...>& prop_getter_tuple,
       std::tuple<ELE...>& eles, std::index_sequence<Is...>) {
-    return expr(std::get<Is>(prop_getter_tuple).get_from_all_element(eles)...);
+    return expr(
+        std::get<Is>(prop_getter_tuple).get_from_all_index_element(eles)...);
   }
 
   //////////////////////////////////////Group/////////////////////////

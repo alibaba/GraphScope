@@ -599,12 +599,6 @@ using SharedPtrTypeOf = std::shared_ptr<gs::TypedColumn<T>>;
 template <typename T>
 using GetterTypeOf = typename T::GetterType;
 
-template <typename GETTER_T>
-using ElementTypeOf = typename GETTER_T::element_type;
-
-template <typename T>
-using DataOfColumnPtr = typename T::element_type::value_type;
-
 template <typename T>
 using IterOf = typename T::iterator;
 
