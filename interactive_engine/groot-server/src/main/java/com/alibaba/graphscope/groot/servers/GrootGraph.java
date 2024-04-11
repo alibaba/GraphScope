@@ -69,14 +69,11 @@ public class GrootGraph {
                     while (true) {
                         latch = new LeaderLatch(curator, latchPath);
                         latch.start();
-                        logger.info(
-                                "latch id: {}, is leader: {}, participants: {}, state: {}, is"
-                                    + " leader: {}",
+                        logger.info("latch id: {}, is leader: {}, participants: {}, state: {}",
                                 latch.getId(),
                                 latch.getLeader(),
                                 latch.getParticipants(),
-                                latch.getState(),
-                                latch.hasLeadership());
+                                latch.getState());
                         latch.await();
                         // Sleep 5s before check the lock to prevent the leader has not
                         // released the resource yet.
