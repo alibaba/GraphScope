@@ -671,6 +671,29 @@ paths:
                 items:
                   $ref: '#/components/schemas/Procedure'
   /api/v1/graph/{graph_name}/procedure/{procedure_name}:
+    get:
+      tags:
+        - procedure
+      description: Get a procedure by name
+      operationId: get_procedure
+      parameters:
+      - name: graph_name
+        in : path
+        required: true
+        schema:
+          type: string
+      - name: procedure_name
+        in : path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Procedure'
     put:
       tags:
         - procedure
@@ -1422,7 +1445,7 @@ components:
           properties:
             cypher:
               type: string
-              example: neo4j://111.111.111.111:7687
+              example: neo4j://mock.api.cypher:7676
             gremlin:
               type: string
               example: ws://111.111.111.111:12312/gremlin
@@ -1797,6 +1820,49 @@ components:
               type: string
             password:
               type: string
+      example:
+        name: demo
+        type: GrootGraph
+        directed: true
+        creation_time: 2024-02-29 12:00:00
+        gremlin_interface:
+          gremlin_endpoint: ws://127.0.0.1:12312/gremmin
+          grpc_endpoint: 127.0.0.1:55556
+        schema:
+          vertices:
+            - label: person
+              properties:
+                - name: id
+                  type: STRING
+                  is_primary_key: true
+                - name: name
+                  type: STRING
+                  is_primary_key: false
+            - label: software
+              properties:
+                - name: id
+                  type: STRING
+                  is_primary_key: true
+                - name: name
+                  type: STRING
+                  is_primary_key: false
+          edges:
+            - label: knows
+              relations:
+                - src_label: person
+                  dst_label: person
+              properties:
+                - name: weight
+                  type: DOUBLE
+                  is_primary_key: false
+            - label: created
+              relations:
+                - src_label: person
+                  dst_label: software
+              properties:
+                - name: weight
+                  type: DOUBLE
+                  is_primary_key: false
     GrootSchema:
       x-body-name: groot_schema
       type: object

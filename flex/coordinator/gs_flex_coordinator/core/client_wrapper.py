@@ -212,6 +212,11 @@ class ClientWrapper(object):
         procedure_dict = procedure.to_dict()
         return self._client.create_procedure(graph_name, procedure_dict)
 
+    def get_procedure_by_name(self, graph_name: str, procedure_name: str) -> Procedure:
+        return Procedure.from_dict(
+            self._client.get_procedure_by_name(graph_name, procedure_name).to_dict()
+        )
+
     def list_procedures(self, graph_name: Union[None, str]) -> List[Procedure]:
         procedures = self._client.list_procedures(graph_name)
         # transfer

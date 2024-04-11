@@ -64,10 +64,12 @@ class GenerateFlexServer(Command):
             "--package-name",
             "gs_flex_coordinator",
         ]
+        env = os.environ.copy()
+        env["OPENAPI_GENERATOR_VERSION"] = "7.3.0"
         print(" ".join(cmd))
         subprocess.check_call(
             cmd,
-            env=os.environ.copy(),
+            env=env,
         )
 
 
@@ -107,10 +109,12 @@ class GenerateInteractiveSDK(Command):
             "--package-name",
             "hqps_client",
         ]
+        env = os.environ.copy()
+        env["OPENAPI_GENERATOR_VERSION"] = "7.3.0"
         print(" ".join(cmd))
         subprocess.check_call(
             cmd,
-            env=os.environ.copy(),
+            env=env,
         )
         # cp
         subprocess.run(["cp", "-r", os.path.join(tempdir, "hqps_client"), targetdir])
