@@ -117,7 +117,7 @@ class WorkDirManipulator {
   static gs::Result<seastar::sstring> LoadGraph(
       const std::string& graph_name, const YAML::Node& yaml_node,
       int32_t loading_thread_num, const std::string& dst_indices_dir,
-      std::unique_ptr<gs::GraphLockGuard> lock_guard,
+      std::unique_ptr<gs::FlexLockGuard> lock_guard,
       std::shared_ptr<gs::IMetaDataStore> metadata_store);
 
   /**
@@ -180,7 +180,7 @@ class WorkDirManipulator {
       const std::string& yaml_config_file, const std::string& graph_name,
       int32_t thread_num, const std::string& dst_indices_dir,
       const std::string& loading_config_json_str,
-      std::unique_ptr<gs::GraphLockGuard> lock_guard,
+      std::unique_ptr<gs::FlexLockGuard> lock_guard,
       std::shared_ptr<gs::IMetaDataStore> metadata_store);
 
   static gs::Result<seastar::sstring> create_procedure_sanity_check(

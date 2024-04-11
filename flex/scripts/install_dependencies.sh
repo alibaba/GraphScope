@@ -17,7 +17,7 @@ sudo apt-get update && sudo apt install -y \
       libboost-all-dev libxml2-dev protobuf-compiler libprotobuf-dev libncurses5-dev libcurl4-openssl-dev
 sudo apt install -y xfslibs-dev libgnutls28-dev liblz4-dev maven openssl pkg-config \
       libsctp-dev gcc make python3 systemtap-sdt-dev libtool libyaml-cpp-dev \
-      libc-ares-dev stow libfmt-dev diffutils valgrind doxygen python3-pip net-tools graphviz \
+      libc-ares-dev stow libfmt-dev diffutils valgrind doxygen python3-pip net-tools graphviz
 
 pushd /tmp
 git clone https://github.com/alibaba/libgrape-lite.git

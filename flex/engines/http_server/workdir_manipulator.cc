@@ -250,7 +250,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteGraph(
 gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
     const std::string& graph_name, const YAML::Node& yaml_node,
     int32_t loading_thread_num, const std::string& dst_indices_dir,
-    std::unique_ptr<gs::GraphLockGuard> lock_guard,
+    std::unique_ptr<gs::FlexLockGuard> lock_guard,
     std::shared_ptr<gs::IMetaDataStore> metadata_store) {
   // First check whether graph exists
   if (!is_graph_exist(graph_name)) {
@@ -712,7 +712,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
     const std::string& config_file_path, const std::string& graph_id,
     int32_t loading_thread_num, const std::string& dst_indices_dir,
     const std::string& loading_config_json_str,
-    std::unique_ptr<gs::GraphLockGuard> lock_guard,
+    std::unique_ptr<gs::FlexLockGuard> lock_guard,
     std::shared_ptr<gs::IMetaDataStore> metadata_store) {
   auto schema_file = GetGraphSchemaPath(graph_id);
   auto final_indices_dir = GetGraphIndicesDir(graph_id);

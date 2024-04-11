@@ -51,7 +51,7 @@ class GraphLoadingTransaction {
                           const std::string& graph_id,
                           const YAML::Node& loading_config,
                           int32_t loading_thread_num,
-                          std::unique_ptr<gs::GraphLockGuard> lock_guard)
+                          std::unique_ptr<gs::FlexLockGuard> lock_guard)
       : metadata_store_(metadata_store),
         graph_id_(graph_id),
         loading_config_(loading_config),
@@ -87,7 +87,7 @@ class GraphLoadingTransaction {
   std::string graph_id_;
   YAML::Node loading_config_;
   int32_t loading_thread_num_;
-  std::unique_ptr<gs::GraphLockGuard> lock_guard_;
+  std::unique_ptr<gs::FlexLockGuard> lock_guard_;
 };
 
 /**
@@ -473,7 +473,7 @@ seastar::future<admin_query_result> admin_actor::run_graph_loading(
   // Other operations should return failure if the lock is already required.
   // Will be release after loading is done.
 
-  std::unique_ptr<gs::GraphLockGuard> lock_guard(new gs::GraphLockGuard(
+  std::unique_ptr<gs::FlexLockGuard> lock_guard(new gs::FlexLockGuard(
       [metadata_store = metadata_store_, graph_id]() {  // lock func
         return metadata_store->LockGraphIndices(graph_id);
       },
@@ -579,7 +579,7 @@ seastar::future<admin_query_result> admin_actor::create_procedure(
         gs::Result<seastar::sstring>(graph_meta_res.status()));
   }
 
-  gs::GraphLockGuard lock_guard(
+  gs::FlexLockGuard lock_guard(
       [metadata_store = metadata_store_, graph_id]() {  // lock func
         return metadata_store->LockGraphPlugins(graph_id);
       },
@@ -638,7 +638,7 @@ seastar::future<admin_query_result> admin_actor::delete_procedure(
   }
 
   // To delete a procedure, we need to lock the plugin directory first.
-  gs::GraphLockGuard lock_guard(
+  gs::FlexLockGuard lock_guard(
       [metadata_store = metadata_store_, graph_id]() {  // lock func
         return metadata_store->LockGraphPlugins(graph_id);
       },

@@ -213,7 +213,6 @@ compile_hqps_so() {
   if [ -z "${procedure_name}" ]; then
     procedure_name=${query_name}
   fi
-
   # if procedure_description is not set, use query_name
   if [ -z "${procedure_description}" ]; then
     procedure_description="Stored procedure for ${procedure_name}"
