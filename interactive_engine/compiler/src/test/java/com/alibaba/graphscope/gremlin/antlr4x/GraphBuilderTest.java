@@ -1453,4 +1453,62 @@ public class GraphBuilderTest {
                     + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
     }
+
+    @Test
+    public void g_V_select_expr_date_minus_date_test() {
+        RelNode node =
+                eval(
+                        "g.V().as('a').both().as('b').select(expr((a.creationDate - b.creationDate)"
+                                + " / 1000))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                    + "  GraphLogicalProject($f0=[/(DATETIME_MINUS(a.creationDate, b.creationDate,"
+                    + " null:INTERVAL MILLISECOND), 1000)], isAppend=[true])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void g_V_select_expr_date_minus_interval_test() {
+        RelNode node =
+                eval(
+                        "g.V().as('a').both().as('b').select(expr(a.creationDate - duration({years:"
+                                + " 1})))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                    + "  GraphLogicalProject($f0=[-(a.creationDate, 1:INTERVAL YEAR)],"
+                    + " isAppend=[true])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[BOTH], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void g_V_select_expr_interval_minus_interval_test() {
+        RelNode node = eval("g.V().select(expr(duration({years: 1}) - duration({months: 1})))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                        + "  GraphLogicalProject($f0=[-(1:INTERVAL YEAR, 1:INTERVAL MONTH)],"
+                        + " isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[_], opt=[VERTEX])",
+                after.explain().trim());
+    }
 }

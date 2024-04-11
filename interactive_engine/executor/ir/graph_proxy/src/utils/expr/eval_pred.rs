@@ -540,6 +540,7 @@ fn process_predicates(
                 Item::Extract(extract) => {
                     return Err(ExprError::unsupported(format!("Extract {:?}", extract)))
                 }
+                _ => return Err(ExprError::unsupported(format!("Item {:?}", item))),
             }
         }
     }
