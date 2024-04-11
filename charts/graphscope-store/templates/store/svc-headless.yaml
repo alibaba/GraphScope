@@ -1,3 +1,4 @@
+{{- if .Values.distributedDeployment -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -20,11 +21,6 @@ spec:
     - name: port
       port: {{ .Values.store.service.port }}
       targetPort: port
-    - name: gaia-rpc
-      port: {{ .Values.store.service.gaiaRpc }}
-      targetPort: gaia-rpc
-    - name: gaia-engine
-      port: {{ .Values.store.service.gaiaEngine }}
-      targetPort: gaia-engine
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: store
+{{- end -}}

@@ -1,3 +1,4 @@
+{{- if .Values.distributedDeployment -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -49,3 +50,4 @@ spec:
       {{- end }}
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
+{{- end -}}

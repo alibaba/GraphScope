@@ -1,10 +1,10 @@
-{{- if .Values.distributedDeployment -}}
+{{- if not .Values.distributedDeployment }}
 {{- include "util.statefulsets" (list . "store.statefulset") -}}
 {{- end -}}
 
 {{- define "store.statefulset" -}}
 metadata:
-  name: {{ include "graphscope-store.store.fullname" . }}-backup
+  name: {{ include "graphscope-store.store.fullname" . }}
   labels:
     app.kubernetes.io/component: store
 spec:
@@ -38,26 +38,17 @@ spec:
           {{- if .Values.args }}
           args: {{- include "common.tplvalues.render" (dict "value" .Values.args "context" $) | nindent 12 }}
           {{- end }}
-          env:
-            - name: ROLE
-              value: "store"
-            - name: KAFKA_SERVERS
-              value: {{ include "graphscope-store.kafka.brokerlist" . }}
-            - name: ZK_CONNECT
-              value: {{ printf "%s-headless" (include "graphscope-store.zookeeper.fullname" .) | quote }}
           name: default
           ports:
+            - name: grpc
+              containerPort: {{ .Values.frontend.service.servicePort }}
+            - name: gremlin
+              containerPort: {{ .Values.frontend.service.gremlinPort }}
             - name: inner-rpc
-              containerPort: 55555
-            - name: gaia-rpc
-              containerPort: 60000
-            - name: gaia-engine
-              containerPort: 60001
+              containerPort: {{ .Values.frontend.service.port }}
           env:
             - name: ROLE
-              value: store
-            - name: RELEASE_FULL_NAME
-              value: {{ include "graphscope-store.fullname" . }}
+              value: ""
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
             - name: ZK_CONNECT
@@ -65,38 +56,30 @@ spec:
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
-              port: inner-rpc
+              port: gremlin
           {{- end }}
           {{- if .Values.readinessProbe.enabled }}
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
-              port: inner-rpc
+              port: gremlin
           {{- end }}
           {{- if .Values.startupProbe.enabled }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
-              port: inner-rpc
+              port: gremlin
           {{- end }}
           {{- if .Values.store.resources }}
           resources: {{- toYaml .Values.store.resources | nindent 12 }}
           {{- end }}
-          readinessProbe:
-            failureThreshold: 5
-            tcpSocket:
-              port: gaia-rpc
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            successThreshold: 1
-            timeoutSeconds: 1
           volumeMounts:
-            - name: meta
-              mountPath: {{ .Values.storeDataPath }}
             - name: config
               mountPath: /etc/groot/groot.config.tpl
               subPath: groot.config
             - name: config
               mountPath: /etc/groot/setup.sh
               subPath: setup.sh
+            - name: data
+              mountPath: {{ .Values.storeDataPath }}
       volumes:
         - name: config
           configMap:
@@ -122,5 +105,5 @@ spec:
           requests:
             storage: {{ .Values.store.persistence.size | quote }}
         {{ include "graphscope-store.storageClass" . | nindent 8 }}
-  {{- end }}
+{{- end -}}
 {{- end -}}
