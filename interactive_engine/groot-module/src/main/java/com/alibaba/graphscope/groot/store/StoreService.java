@@ -86,7 +86,7 @@ public class StoreService implements MetricsAgent {
         this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(storeConfigs);
         this.metaService = metaService;
         this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(storeConfigs);
-        metricsCollector.register(this, () -> updateMetrics());
+        metricsCollector.register(this, this::updateMetrics);
     }
 
     public void start() throws IOException {
