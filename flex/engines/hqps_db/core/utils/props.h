@@ -182,6 +182,10 @@ class CollectionInnerIdGetter {
 
   T get_view(const std::tuple<T>& ele) const { return std::get<0>(ele); }
 
+  T get_view(const std::tuple<size_t, T>& ele) const {
+    return std::get<1>(ele);
+  }
+
   template <typename ALL_ELE_T>
   inline auto get_from_all_element(const ALL_ELE_T& all_ele) const {
     return get_view(gs::get_from_tuple<tag_id>(all_ele));
@@ -210,6 +214,13 @@ class VertexGlobalIdGetter {
   GlobalId get_view(const std::tuple<size_t, VID_T>& ele) const {
     return GlobalId(label_vec_[std::get<0>(ele)].label_id,
                     vids_[std::get<0>(ele)]);
+  }
+
+  // general vertex set
+  template <typename... T>
+  GlobalId get_view(
+      const std::tuple<size_t, size_t, VID_T, std::tuple<T...>>& ele) const {
+    return GlobalId(std::get<1>(ele), std::get<2>(ele));
   }
 
   template <typename ALL_ELE_T>
