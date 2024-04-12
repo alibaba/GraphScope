@@ -1219,11 +1219,11 @@ static auto create_prop_descs_from_group_keys(
 }
 
 template <typename... PropTGetter, typename... IndexEle, size_t... Is>
-auto get_prop_from_ele_with_prop_getter(
+auto get_prop_from_index_ele_with_prop_getter(
     const std::tuple<PropTGetter...>& prop_getters,
     const std::tuple<IndexEle...>& index_ele, std::index_sequence<Is...>) {
   return std::make_tuple(
-      std::get<Is>(prop_getters).get_from_all_element(index_ele)...);
+      std::get<Is>(prop_getters).get_from_all_index_element(index_ele)...);
 }
 
 }  // namespace gs

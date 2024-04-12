@@ -233,7 +233,7 @@ class RowVertexSetIter {
                    size_t ind)
       : vids_(vids), datas_(datas), label_(label), cur_ind_(ind) {}
 
-  ele_tuple_t GetElement() const { return GlobalId(vids_[cur_ind_]); }
+  ele_tuple_t GetElement() const { return GlobalId(label_, vids_[cur_ind_]); }
 
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(cur_ind_, vids_[cur_ind_]);
