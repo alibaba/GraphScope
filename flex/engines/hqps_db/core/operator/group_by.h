@@ -49,7 +49,7 @@ struct CommonBuilderT<CTX_T, GroupKey<col_id, T>> {
       decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
   using builder_t = CollectionBuilder<T>;
   using result_t = typename builder_t::result_t;
-  using result_ele_t = typename result_t::ele_tuple;
+  using result_ele_t = typename result_t::element_type;
 };
 
 template <typename CTX_T, typename GROUP_KEY>

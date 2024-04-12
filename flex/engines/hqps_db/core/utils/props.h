@@ -641,6 +641,10 @@ class RowVertexSetPropGetter {
     return getter_.get_view(vid);
   }
 
+  inline auto get_view(const GlobalId& global_id) const {
+    return getter_.get_view(global_id.vid());
+  }
+
   inline auto get_view() const {
     return getter_.get_view(std::get<1>(ind_ele_));
   }
@@ -682,6 +686,10 @@ class KeyedRowVertexSetPropGetter {
   template <typename VID_T>
   inline auto get_view(const std::tuple<size_t, VID_T>& ind_ele) const {
     return getter_.get_view(std::get<1>(ind_ele));
+  }
+
+  inline auto get_view(const GlobalId& global_id) const {
+    return getter_.get_view(global_id.vid());
   }
 
   inline auto get_view() const {
