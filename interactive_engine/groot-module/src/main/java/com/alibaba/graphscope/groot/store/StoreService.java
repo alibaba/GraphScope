@@ -63,6 +63,7 @@ public class StoreService implements MetricsAgent {
     private final Configs storeConfigs;
     private final int storeId;
     private final int writeThreadCount;
+    private final int compactThreadCount;
     private final MetaService metaService;
     private Map<Integer, GraphPartition> idToPartition;
     private ExecutorService writeExecutor;
@@ -84,6 +85,7 @@ public class StoreService implements MetricsAgent {
         this.storeId = CommonConfig.NODE_IDX.get(storeConfigs);
         this.enableGc = StoreConfig.STORE_GC_ENABLE.get(storeConfigs);
         this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(storeConfigs);
+        this.compactThreadCount = StoreConfig.STORE_COMPACT_THREAD_NUM.get(storeConfigs);
         this.metaService = metaService;
         this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(storeConfigs);
         metricsCollector.register(this, this::updateMetrics);
@@ -121,13 +123,18 @@ public class StoreService implements MetricsAgent {
                         new LinkedBlockingQueue<>(1),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
+        int partitionCount = partitionIds.size();
+        int compactQueueLength =
+                partitionCount - this.compactThreadCount <= 0
+                        ? 1
+                        : partitionCount - this.compactThreadCount;
         this.compactExecutor =
                 new ThreadPoolExecutor(
                         1,
-                        1,
-                        0L,
-                        TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<>(1),
+                        this.compactThreadCount,
+                        60L,
+                        TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<>(compactQueueLength),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-compact", logger));
         this.garbageCollectExecutor =
@@ -407,21 +414,36 @@ public class StoreService implements MetricsAgent {
             callback.onCompleted(null);
             return;
         }
-        this.compactExecutor.execute(
-                () -> {
-                    logger.info("compact DB");
-                    try {
-                        for (GraphPartition partition : this.idToPartition.values()) {
+        int partitionCount = this.idToPartition.values().size();
+        CountDownLatch compactCountDownLatch = new CountDownLatch(partitionCount);
+        AtomicInteger successCompactJobCount = new AtomicInteger(partitionCount);
+        logger.info("compact DB");
+        for (GraphPartition partition : this.idToPartition.values()) {
+            this.compactExecutor.execute(
+                    () -> {
+                        try {
                             partition.compact();
                             logger.info("Compaction {} partition finished", partition.getId());
+                            successCompactJobCount.decrementAndGet();
+                        } catch (Exception e) {
+                            logger.error("compact DB failed", e);
+                        } finally {
+                            compactCountDownLatch.countDown();
                         }
-                        logger.info("compact DB finished");
-                        callback.onCompleted(null);
-                    } catch (Exception e) {
-                        logger.error("compact DB failed", e);
-                        callback.onError(e);
-                    }
-                });
+                    });
+        }
+
+        try {
+            compactCountDownLatch.await();
+        } catch (InterruptedException e) {
+            logger.error("compact DB has been InterruptedException", e);
+        }
+
+        if (successCompactJobCount.get() > 0) {
+            callback.onError(new Exception("not all partition compact success. please check log."));
+        } else {
+            callback.onCompleted(null);
+        }
     }
 
     public void tryCatchUpWithPrimary() throws IOException {
