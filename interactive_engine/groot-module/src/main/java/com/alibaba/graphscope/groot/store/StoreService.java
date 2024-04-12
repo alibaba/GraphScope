@@ -124,7 +124,10 @@ public class StoreService implements MetricsAgent {
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
         int partitionCount = partitionIds.size();
-        int compactQueueLength = partitionCount - this.compactThreadCount < 0 ? 1 : partitionCount - this.compactThreadCount;
+        int compactQueueLength =
+                partitionCount - this.compactThreadCount < 0
+                        ? 1
+                        : partitionCount - this.compactThreadCount;
         this.compactExecutor =
                 new ThreadPoolExecutor(
                         1,
@@ -416,17 +419,18 @@ public class StoreService implements MetricsAgent {
         AtomicInteger successCompactJobCount = new AtomicInteger(partitionCount);
         logger.info("compact DB");
         for (GraphPartition partition : this.idToPartition.values()) {
-            this.compactExecutor.execute(() -> {
-                try {
-                    partition.compact();
-                    logger.info("Compaction {} partition finished", partition.getId());
-                    successCompactJobCount.decrementAndGet();
-                } catch (Exception e) {
-                    logger.error("compact DB failed", e);
-                } finally {
-                    compactCountDownLatch.countDown();
-                }
-            });
+            this.compactExecutor.execute(
+                    () -> {
+                        try {
+                            partition.compact();
+                            logger.info("Compaction {} partition finished", partition.getId());
+                            successCompactJobCount.decrementAndGet();
+                        } catch (Exception e) {
+                            logger.error("compact DB failed", e);
+                        } finally {
+                            compactCountDownLatch.countDown();
+                        }
+                    });
         }
 
         try {
