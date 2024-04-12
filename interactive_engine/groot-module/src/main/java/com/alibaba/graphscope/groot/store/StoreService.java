@@ -125,7 +125,7 @@ public class StoreService implements MetricsAgent {
                                 "store-ingest", logger));
         int partitionCount = partitionIds.size();
         int compactQueueLength =
-                partitionCount - this.compactThreadCount < 0
+                partitionCount - this.compactThreadCount <= 0
                         ? 1
                         : partitionCount - this.compactThreadCount;
         this.compactExecutor =
