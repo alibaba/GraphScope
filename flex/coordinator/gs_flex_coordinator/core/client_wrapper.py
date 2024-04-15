@@ -204,8 +204,9 @@ class ClientWrapper(object):
 
     def delete_graph_by_name(self, graph_name: str) -> str:
         rlt = self._client.delete_graph_by_name(graph_name)
-        del self._graphs_info[graph_name]
-        self._pickle_graphs_info_impl()
+        if graph_name in self._graphs_info:
+            del self._graphs_info[graph_name]
+            self._pickle_graphs_info_impl()
         return rlt
 
     def create_procedure(self, graph_name: str, procedure: Procedure) -> str:

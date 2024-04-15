@@ -121,8 +121,9 @@ class HQPSClient(object):
             api_instance = hqps_client.GraphApi(api_client)
             rlt = api_instance.delete_graph(graph_name)
             # unbind datasource
-            del self._dataloading_config[graph_name]
-            self._pickle_dataloading_config_impl()
+            if graph_name in self._dataloading_config:
+                del self._dataloading_config[graph_name]
+                self._pickle_dataloading_config_impl()
             return rlt
 
     def create_procedure(self, graph_name: str, procedure: dict) -> str:
