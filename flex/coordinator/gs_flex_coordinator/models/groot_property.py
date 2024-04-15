@@ -114,7 +114,7 @@ class GrootProperty(Model):
         :param type: The type of this GrootProperty.
         :type type: str
         """
-        allowed_values = ["STRING", "LONG", "DOUBLE"]  # noqa: E501
+        allowed_values = ["DT_STRING", "DT_SIGNED_INT64", "DT_DOUBLE"]  # noqa: E501
         if type not in allowed_values:
             raise ValueError(
                 "Invalid value for `type` ({0}), must be one of {1}"

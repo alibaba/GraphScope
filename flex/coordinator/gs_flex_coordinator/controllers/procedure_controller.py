@@ -43,6 +43,21 @@ def delete_procedure(graph_name, procedure_name):  # noqa: E501
     return client_wrapper.delete_procedure_by_name(graph_name, procedure_name)
 
 
+def get_procedure(graph_name, procedure_name):  # noqa: E501
+    """get_procedure
+
+    Get a procedure by name # noqa: E501
+
+    :param graph_name:
+    :type graph_name: str
+    :param procedure_name:
+    :type procedure_name: str
+
+    :rtype: Union[Procedure, Tuple[Procedure, int], Tuple[Procedure, int, Dict[str, str]]
+    """
+    return client_wrapper.get_procedure_by_name(graph_name, procedure_name)
+
+
 @handle_api_exception()
 def list_procedures():  # noqa: E501
     """list_procedures

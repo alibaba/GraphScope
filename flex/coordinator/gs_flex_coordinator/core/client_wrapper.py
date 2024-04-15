@@ -204,8 +204,9 @@ class ClientWrapper(object):
 
     def delete_graph_by_name(self, graph_name: str) -> str:
         rlt = self._client.delete_graph_by_name(graph_name)
-        del self._graphs_info[graph_name]
-        self._pickle_graphs_info_impl()
+        if graph_name in self._graphs_info:
+            del self._graphs_info[graph_name]
+            self._pickle_graphs_info_impl()
         return rlt
 
     def create_procedure(self, graph_name: str, procedure: Procedure) -> str:
@@ -226,6 +227,11 @@ class ClientWrapper(object):
 
     def delete_procedure_by_name(self, graph_name: str, procedure_name: str) -> str:
         return self._client.delete_procedure_by_name(graph_name, procedure_name)
+
+    def get_procedure_by_name(self, graph_name: str, procedure_name: str) -> Procedure:
+        return Procedure.from_dict(
+            self._client.get_procedure_by_name(graph_name, procedure_name).to_dict()
+        )
 
     def get_node_status(self) -> List[NodeStatus]:
         rlt = []
