@@ -204,7 +204,6 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
       BOOST_LEAF_CHECK(loader->Init(graph_info_path, selected_vertices,
                                     selected_edges, true, false,
                                     store_in_local));
-      MPI_Barrier(comm_spec.comm());
       BOOST_LEAF_ASSIGN(frag_group_id, loader->LoadFragmentAsFragmentGroup());
 #else
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
