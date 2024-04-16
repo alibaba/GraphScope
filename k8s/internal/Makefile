@@ -49,8 +49,7 @@ CI ?= false
 graphscope:
 	cd $(WORKING_DIR)/../.. && \
 	git submodule update --init && \
-	docker build --progress=$(BUILD_PROGRESS) \
-				 --build-arg CI=${CI} \
+	docker build --build-arg CI=${CI} \
 				 -t graphscope/graphscope:${SHORT_SHA} \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile .
 
