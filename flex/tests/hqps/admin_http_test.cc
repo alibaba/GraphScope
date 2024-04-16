@@ -16,7 +16,7 @@
 #include <boost/format.hpp>
 #include <string>
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
-#include "flex/storages/metadata/metadata_store.h"
+#include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/third_party/httplib.h"
 #include "flex/utils/yaml_utils.h"
 #include "nlohmann/json.hpp"

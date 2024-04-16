@@ -250,7 +250,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteGraph(
 gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
     const std::string& graph_name, const YAML::Node& yaml_node,
     int32_t loading_thread_num, const std::string& dst_indices_dir,
-    std::shared_ptr<gs::IMetaDataStore> metadata_store) {
+    std::shared_ptr<gs::IGraphMetaStore> metadata_store) {
   // First check whether graph exists
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
@@ -711,7 +711,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
     const std::string& config_file_path, const std::string& graph_id,
     int32_t loading_thread_num, const std::string& dst_indices_dir,
     const std::string& loading_config_json_str,
-    std::shared_ptr<gs::IMetaDataStore> metadata_store) {
+    std::shared_ptr<gs::IGraphMetaStore> metadata_store) {
   auto schema_file = GetGraphSchemaPath(graph_id);
   auto final_indices_dir = GetGraphIndicesDir(graph_id);
   auto bulk_loading_job_log = get_tmp_bulk_loading_job_log_path(graph_id);
@@ -738,9 +738,6 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
                 boost::process::std_err > bulk_loading_job_log_copied);
             int32_t pid = child_handle.id();
 
-            auto create_time =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::system_clock::now().time_since_epoch());
             auto create_job_req = gs::CreateJobMetaRequest::NewRunning(
                 copied_graph_id, pid, bulk_loading_job_log_copied,
                 "BULK_LOADING");

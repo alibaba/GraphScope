@@ -18,7 +18,7 @@
 #include <iostream>
 #include <string>
 
-#include "flex/storages/metadata/metadata_store.h"
+#include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/rt_mutable_graph/schema.h"
 #include "flex/utils/yaml_utils.h"
 
@@ -72,9 +72,20 @@ std::string GraphMeta::ToJson() const {
   return json.dump();
 }
 
+GraphMeta GraphMeta::FromJson(const std::string& json_str) {
+  auto j = nlohmann::json::parse(json_str);
+  return GraphMeta::FromJson(j);
+}
+
 GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
   GraphMeta meta;
-  meta.id = json["id"].get<GraphId>();
+  if (json.contains("id")) {
+    if (json["id"].is_number()) {
+      meta.id = json["id"].get<int64_t>();
+    } else {
+      meta.id = json["id"].get<GraphId>();
+    }
+  }
   meta.name = json["name"].get<std::string>();
   meta.is_builtin = json["is_builtin"].get<bool>();
   meta.description = json["description"].get<std::string>();
@@ -90,10 +101,19 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
   return meta;
 }
 
+PluginMeta PluginMeta::FromJson(const std::string& json_str) {
+  auto j = nlohmann::json::parse(json_str);
+  return PluginMeta::FromJson(j);
+}
+
 PluginMeta PluginMeta::FromJson(const nlohmann::json& json) {
   PluginMeta meta;
   if (json.contains("id")) {
-    meta.id = json["id"].get<PluginId>();
+    if (json["id"].is_number()) {
+      meta.id = json["id"].get<int64_t>();
+    } else {
+      meta.id = json["id"].get<PluginId>();
+    }
   }
   if (json.contains("name")) {
     meta.name = json["name"].get<std::string>();
@@ -223,10 +243,18 @@ JobMeta JobMeta::FromJson(const std::string& json_str) {
 JobMeta JobMeta::FromJson(const nlohmann::json& json) {
   JobMeta meta;
   if (json.contains("id")) {
-    meta.id = json["id"].get<JobId>();
+    if (json["id"].is_number()) {
+      meta.id = json["id"].get<int64_t>();
+    } else {
+      meta.id = json["id"].get<JobId>();
+    }
   }
   if (json.contains("graph_id")) {
-    meta.graph_id = json["graph_id"].get<GraphId>();
+    if (json["graph_id"].is_number()) {
+      meta.graph_id = json["graph_id"].get<int64_t>();
+    } else {
+      meta.graph_id = json["graph_id"].get<GraphId>();
+    }
   }
   if (json.contains("process_id")) {
     meta.process_id = json["process_id"].get<int32_t>();
@@ -282,6 +310,9 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
   if (json.contains("data_update_time")) {
     request.data_update_time = json["data_update_time"].get<int64_t>();
   }
+  if (json.contains("creation_time")) {
+    request.creation_time = json["creation_time"].get<int64_t>();
+  }
   return request;
 }
 
@@ -298,6 +329,7 @@ std::string CreateGraphMetaRequest::ToString() const {
   if (data_update_time.has_value()) {
     json["data_update_time"] = data_update_time.value();
   }
+  json["creation_time"] = creation_time;
   return json.dump();
 }
 
@@ -335,8 +367,12 @@ std::string CreatePluginMetaRequest::optionString() const {
 
 std::string CreatePluginMetaRequest::ToString() const {
   nlohmann::json json;
+  if (id.has_value()) {
+    json["id"] = id.value();
+  }
   json["graph_id"] = graph_id;
   json["name"] = name;
+  json["creation_time"] = creation_time;
   json["description"] = description;
   json["params"] = nlohmann::json::array();
   for (auto& param : params) {
@@ -372,9 +408,29 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
     const nlohmann::json& j) {
   // TODO: make sure this is correct
   CreatePluginMetaRequest request;
-  request.graph_id = j["graph_id"].get<GraphId>();
-  request.name = j["name"].get<std::string>();
-  request.description = j["description"].get<std::string>();
+  if (j.contains("id")) {
+    if (j["id"].is_number()) {
+      request.id = std::to_string(j["id"].get<int64_t>());
+    } else {
+      request.id = j["id"].get<PluginId>();
+    }
+  }
+  if (j.contains("name")) {
+    request.name = j["name"].get<std::string>();
+  }
+  if (j.contains("graph_id")) {
+    if (j["id"].is_number()) {
+      request.graph_id = j["graph_id"].get<int64_t>();
+    } else {
+      request.graph_id = j["graph_id"].get<PluginId>();
+    }
+  }
+  if (j.contains("creation_time")) {
+    request.creation_time = j["creation_time"].get<int64_t>();
+  }
+  if (j.contains("description")) {
+    request.description = j["description"].get<std::string>();
+  }
   if (j.contains("params")) {
     for (auto& param : j["params"]) {
       Parameter p;
@@ -414,12 +470,21 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
   UpdatePluginMetaRequest request;
   try {
     auto j = nlohmann::json::parse(json);
-    if (j["name"].is_number()) {
-      request.name = std::to_string(j["name"].get<int64_t>());
-    } else {
-      request.name = j["name"].get<std::string>();
+    if (j.contains("name")) {
+      if (j["name"].is_number()) {
+        request.name = std::to_string(j["name"].get<int64_t>());
+      } else {
+        request.name = j["name"].get<std::string>();
+      }
     }
-    request.description = j["description"].get<std::string>();
+    if (j.contains("description")) {
+      request.description = j["description"].get<std::string>();
+    }
+    if (j.contains("update_time")) {
+      request.update_time = j["update_time"].get<int64_t>();
+    } else {
+      request.update_time = GetCurrentTimeStamp();
+    }
     if (j.contains("params")) {
       request.params.emplace();
       for (auto& param : j["params"]) {
@@ -495,13 +560,19 @@ std::string UpdatePluginMetaRequest::optionString() const {
   return json.dump();
 }
 
-std::string UpdatePluginMetaRequest::toString() const {
+std::string UpdatePluginMetaRequest::ToString() const {
   nlohmann::json json;
   if (name.has_value()) {
     json["name"] = name.value();
   }
+  if (graph_id.has_value()) {
+    json["graph_id"] = graph_id.value();
+  }
   if (description.has_value()) {
     json["description"] = description.value();
+  }
+  if (update_time.has_value()) {
+    json["update_time"] = update_time.value();
   }
   // create array of json objects
   json["params"] = nlohmann::json::array();
@@ -523,7 +594,9 @@ std::string UpdatePluginMetaRequest::toString() const {
       json["returns"].push_back(ret_json);
     }
   }
-  json["library"] = library.value();
+  if (library.has_value()) {
+    json["library"] = library.value();
+  }
   json["option"] = nlohmann::json::object();
   if (option.has_value()) {
     for (auto& opt : option.value()) {
@@ -555,6 +628,7 @@ std::string CreateJobMetaRequest::ToString() const {
   nlohmann::json json;
   json["graph_id"] = graph_id;
   json["process_id"] = process_id;
+  json["start_time"] = start_time;
   json["status"] = std::to_string(status);
   json["log_path"] = log_path;
   json["type"] = type;

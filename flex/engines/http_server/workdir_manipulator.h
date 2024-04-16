@@ -21,7 +21,7 @@
 
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/http_server/types.h"
-#include "flex/storages/metadata/metadata_store.h"
+#include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/schema.h"
 #include "flex/utils/result.h"
@@ -117,7 +117,7 @@ class WorkDirManipulator {
   static gs::Result<seastar::sstring> LoadGraph(
       const std::string& graph_name, const YAML::Node& yaml_node,
       int32_t loading_thread_num, const std::string& dst_indices_dir,
-      std::shared_ptr<gs::IMetaDataStore> metadata_store);
+      std::shared_ptr<gs::IGraphMetaStore> metadata_store);
 
   /**
    * @brief Get all procedures bound to the graph.
@@ -179,7 +179,7 @@ class WorkDirManipulator {
       const std::string& yaml_config_file, const std::string& graph_name,
       int32_t thread_num, const std::string& dst_indices_dir,
       const std::string& loading_config_json_str,
-      std::shared_ptr<gs::IMetaDataStore> metadata_store);
+      std::shared_ptr<gs::IGraphMetaStore> metadata_store);
 
   static gs::Result<seastar::sstring> create_procedure_sanity_check(
       const nlohmann::json& json);

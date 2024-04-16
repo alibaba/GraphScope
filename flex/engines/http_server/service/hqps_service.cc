@@ -115,7 +115,7 @@ uint16_t HQPSService::get_query_port() const {
   return 0;
 }
 
-std::shared_ptr<gs::IMetaDataStore> HQPSService::get_metadata_store() const {
+std::shared_ptr<gs::IGraphMetaStore> HQPSService::get_metadata_store() const {
   return metadata_store_;
 }
 
@@ -329,7 +329,8 @@ gs::GraphId HQPSService::insert_default_graph_meta() {
               << dst_graph_dir;
   }
 
-  LOG(INFO) << "Insert default graph meta successfully.";
+  LOG(INFO) << "Insert default graph meta successfully, graph_id: "
+            << res.value();
   return res.value();
 }
 

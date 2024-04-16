@@ -20,7 +20,8 @@
 #ifdef BUILD_FILE_META_STORE
 #include "flex/storages/metadata/local_file_metadata_store.h"
 #endif
-#include "flex/storages/metadata/metadata_store.h"
+#include "flex/storages/metadata/default_graph_meta_store.h"
+#include "flex/storages/metadata/graph_meta_store.h"
 
 namespace gs {
 
@@ -33,8 +34,8 @@ enum class MetadataStoreType {
  */
 class MetadataStoreFactory {
  public:
-  static std::shared_ptr<IMetaDataStore> Create(MetadataStoreType type,
-                                                const std::string& path);
+  static std::shared_ptr<IGraphMetaStore> Create(MetadataStoreType type,
+                                                 const std::string& path);
 };
 }  // namespace gs
 

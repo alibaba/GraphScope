@@ -17,14 +17,15 @@
 #define ENGINES_HTTP_SERVER_ACTOR_ADMIN_ACT_H_
 
 #include "flex/engines/http_server/types.h"
-#include "flex/engines/http_server/service/hqps_service.h"
-#include "flex/storages/metadata/metadata_store.h"
 #include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/storages/metadata/metadata_store.h"
-#include <mutex>
+
+#include "flex/storages/metadata/graph_meta_store.h"
 
 #include <hiactor/core/actor-template.hh>
 #include <hiactor/util/data_type.hh>
+
+#include <memory>
+#include <mutex>
 
 namespace server {
 
@@ -73,7 +74,7 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
 
  private:
   std::mutex mtx_;
-  std::shared_ptr<gs::IMetaDataStore> metadata_store_;
+  std::shared_ptr<gs::IGraphMetaStore> metadata_store_;
 };
 
 }  // namespace server

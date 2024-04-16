@@ -16,11 +16,12 @@
 #ifndef FLEX_STORAGES_METADATA_LOCAL_FILE_METADATA_STORE_H_
 #define FLEX_STORAGES_METADATA_LOCAL_FILE_METADATA_STORE_H_
 
+#include <fstream>
 #include <mutex>
 #include <string>
 #include <vector>
 
-#include "flex/storages/metadata/metadata_store.h"
+#include "flex/storages/metadata/i_meta_store.h"
 #include "flex/utils/service_utils.h"
 
 #include <boost/format.hpp>
@@ -32,32 +33,21 @@ namespace gs {
  * which stores metadata via local files.
  *
  * We store the graph meta and procedure meta in to files under workspace.
- * ├── graph
-   │   ├── ldbc
-   │   └── modern
-   ├── job
-   │   ├── job_1
-   │   └── job_2
-   └── plugin
-        ├── plugin_1
-        └── plugin_2
+ * ├── META_CLASS1
+ * │   ├── KEY1
+ * │   └── KEY2
+ * └── META_CLASS2
+ *     ├── KEY1
+ *     └── KEY2
  */
-class LocalFileMetadataStore : public IMetaDataStore {
+class LocalFileMetadataStore : public IMetaStore {
  public:
-  static constexpr const char* METADATA_DIR = "METADATA";
-  static constexpr const char* GRAPH_META_DIR = "graph";
-  static constexpr const char* PLUGIN_META_DIR = "plugin";
-  static constexpr const char* JOB_META_DIR = "job";
-  static constexpr const char* GRAPH_META_FILE_PREFIX = "GRAPH_";
-  static constexpr const char* PLUGIN_META_FILE_PREFIX = "PLUGIN_";
-  static constexpr const char* JOB_META_FILE_PREFIX = "JOB_";
-  static constexpr const char* GRAPH_META_FILE = "GRAPH_META";
-  static constexpr const char* PLUGIN_META_FILE = "PLUGIN_META";
-  static constexpr const char* JOB_META_FILE = "JOB_META";
-  static constexpr const char* GRAPH_INDICES_LOCK_FILE = "GRAPH_INDICES_LOCK";
-  static constexpr const char* GRAPH_PLUGINS_LOCK_FILE = "GRAPH_PLUGINS_LOCK";
+  using meta_key_t = IMetaStore::meta_key_t;
+  using meta_value_t = IMetaStore::meta_value_t;
+  using meta_kind_t = IMetaStore::meta_kind_t;
 
-  static constexpr const char* RUNNING_GRAPH_FILE = "RUNNING_GRAPH";
+  static constexpr const char* METADATA_DIR = "METADATA";
+  static constexpr const char* META_FILE_PREFIX = "META_";
 
   LocalFileMetadataStore(const std::string& path);
 
@@ -66,97 +56,76 @@ class LocalFileMetadataStore : public IMetaDataStore {
   Result<bool> Open() override;
 
   Result<bool> Close() override;
-  /* Graph Meta related.
-   */
-  Result<GraphId> CreateGraphMeta(
-      const CreateGraphMetaRequest& request) override;
-  Result<GraphMeta> GetGraphMeta(const GraphId& graph_id) override;
-  Result<std::vector<GraphMeta>> GetAllGraphMeta() override;
-  Result<bool> DeleteGraphMeta(const GraphId& graph_id) override;
-  Result<bool> UpdateGraphMeta(
-      const GraphId& graph_id,
-      const UpdateGraphMetaRequest& update_request) override;
-  /* Plugin Meta related.
-   */
-  Result<PluginId> CreatePluginMeta(
-      const CreatePluginMetaRequest& request) override;
-  Result<PluginMeta> GetPluginMeta(const GraphId& graph_id,
-                                   const PluginId& plugin_id) override;
-  Result<std::vector<PluginMeta>> GetAllPluginMeta(
-      const GraphId& graph_id) override;
-  Result<bool> DeletePluginMeta(const GraphId& graph_id,
-                                const PluginId& plugin_id) override;
-  Result<bool> DeletePluginMetaByGraphId(const GraphId& graph_id) override;
-  Result<bool> UpdatePluginMeta(
-      const GraphId& graph_id, const PluginId& plugin_id,
-      const UpdatePluginMetaRequest& update_request) override;
 
   /*
-  Job related MetaData.
-  */
-  Result<JobId> CreateJobMeta(const CreateJobMetaRequest& request) override;
-  Result<JobMeta> GetJobMeta(const JobId& job_id) override;
-  Result<std::vector<JobMeta>> GetAllJobMeta() override;
-  Result<bool> DeleteJobMeta(const JobId& job_id) override;
-  Result<bool> UpdateJobMeta(
-      const JobId& job_id, const UpdateJobMetaRequest& update_request) override;
-
-  /*Lock graph and unlock graph
+   * @brief Create a meta with a new key.
+   * @param meta_kind The kind of meta.
+   * @param value The value of the meta.
+   * @return The key of the meta.
    */
-  Result<bool> LockGraphIndices(const GraphId& graph_id) override;
-  Result<bool> UnlockGraphIndices(const GraphId& graph_id) override;
-  Result<bool> GetGraphIndicesLocked(const GraphId& graph_id) override;
+  Result<meta_key_t> CreateMeta(const meta_kind_t& meta_kind,
+                                const meta_value_t& value) override;
 
-  Result<bool> LockGraphPlugins(const GraphId& graph_id) override;
-  Result<bool> UnlockGraphPlugins(const GraphId& graph_id) override;
-  Result<bool> GetGraphPluginsLocked(const GraphId& graph_id) override;
+  /*
+   * @brief Create a meta with a specific key.
+   * @param meta_kind The kind of meta.
+   * @param key The key of the meta.
+   * @param value The value of the meta.
+   * @return If the meta is created successfully.
+   */
+  Result<meta_key_t> CreateMeta(const meta_kind_t& meta_kind,
+                                const meta_key_t& key,
+                                const meta_value_t& value) override;
 
-  Result<bool> SetRunningGraph(const GraphId& graph_id) override;
-  Result<GraphId> GetRunningGraph() override;
-  Result<bool> ClearRunningGraph() override;
+  Result<meta_value_t> GetMeta(const meta_kind_t& meta_kind,
+                               const meta_key_t& key) override;
+
+  Result<std::vector<std::pair<meta_key_t, meta_value_t>>> GetAllMeta(
+      const meta_kind_t& meta_kind) override;
+
+  Result<bool> DeleteMeta(const meta_kind_t& meta_kind,
+                          const meta_key_t& key) override;
+
+  Result<bool> DeleteAllMeta(const meta_kind_t& meta_kind) override;
+
+  /*
+   * @brief Update the meta with a specific key, regardless of the original
+   * value.
+   * @param meta_kind The kind of meta.
+   * @param key The key of the meta.
+   * @param value The new value of the meta.
+   * @return If the meta is updated successfully.
+   */
+  Result<bool> UpdateMeta(const meta_kind_t& meta_kind, const meta_key_t& key,
+                          const meta_value_t& value) override;
+
+  /**
+   * @brief Update the meta with a specific key, based on the original value.
+   * @param meta_kind The kind of meta.
+   * @param key The key of the meta.
+   * @param update_func The function to update the meta.
+   * @return If the meta is updated successfully.
+   */
+  Result<bool> UpdateMeta(const meta_kind_t& meta_kind, const meta_key_t& key,
+                          update_func_t update_func) override;
 
  private:
-  // Get the next available graph id
-  Result<GraphId> GetNextGraphId() const;
-  Result<PluginId> GetNextPluginId(const std::string& plugin_name) const;
-  Result<JobId> GetNextJobId() const;
-  Result<int32_t> GetMaxId(const std::string& dir,
-                           const std::string& prefix) const;
+  Result<meta_key_t> get_next_meta_key(const meta_kind_t& meta_kind) const;
+  std::string get_root_meta_dir() const;
+  std::string get_meta_kind_dir(const meta_kind_t& meta_kind) const;
+  std::string get_meta_file(const meta_kind_t& meta_kind,
+                            const meta_key_t& meta_key) const;
+  int32_t get_max_id(const meta_kind_t& meta_kind) const;
+  bool is_key_exist(const meta_kind_t& meta_kind,
+                    const meta_key_t& meta_key) const;
 
-  std::string get_meta_data_dir() const;
-
-  std::string get_graph_meta_dir() const;
-  std::string get_graph_meta_dir(const GraphId& graph_id) const;
-  std::string get_graph_meta_file(const GraphId& graph_id) const;
-
-  std::string get_plugin_meta_dir() const;
-  std::string get_plugin_meta_dir(const PluginId& plugin_id) const;
-  std::string get_plugin_meta_file(const PluginId& plugin_id) const;
-
-  std::string get_job_meta_dir() const;
-  std::string get_job_meta_dir(const JobId& job_id) const;
-  std::string get_job_meta_file(const JobId& job_id) const;
-
-  std::string get_graph_indices_lock_file(const GraphId& graph_id) const;
-  std::string get_graph_plugins_lock_file(const GraphId& graph_id) const;
-
-  std::string get_running_graph_file() const;
-
-  std::vector<GraphId> get_graph_ids() const;
   Result<bool> dump_file(const std::string& file_path,
                          const std::string& content) const;
+  Result<meta_value_t> read_file(const std::string& file_path) const;
 
   Result<bool> create_directory(const std::string& dir) const;
-  Result<bool> clear_locks();
 
-  std::recursive_mutex graph_meta_mutex_;
-  std::recursive_mutex plugin_meta_mutex_;
-  std::recursive_mutex job_meta_mutex_;
-
-  std::recursive_mutex graph_indices_mutex_;
-  std::recursive_mutex graph_plugins_mutex_;
-
-  std::mutex running_graph_mutex_;
+  std::mutex meta_mutex_;
 
   std::string root_dir_;
 };

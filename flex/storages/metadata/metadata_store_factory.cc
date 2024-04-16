@@ -16,12 +16,13 @@
 #include "flex/storages/metadata/metadata_store_factory.h"
 
 namespace gs {
-std::shared_ptr<IMetaDataStore> MetadataStoreFactory::Create(
+std::shared_ptr<IGraphMetaStore> MetadataStoreFactory::Create(
     MetadataStoreType type, const std::string& path) {
   switch (type) {
   case MetadataStoreType::kLocalFile:
 #ifdef BUILD_FILE_META_STORE
-    return std::make_shared<LocalFileMetadataStore>(path);
+    return std::make_shared<DefaultGraphMetaStore>(
+        std::make_unique<LocalFileMetadataStore>(path));
 #else
     LOG(FATAL)
         << "Local file metadata store is not supported in current build.";

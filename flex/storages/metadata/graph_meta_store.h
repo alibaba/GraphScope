@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FLEX_STORAGES_METADATA_METADATA_STORE_H_
-#define FLEX_STORAGES_METADATA_METADATA_STORE_H_
+#ifndef FLEX_STORAGES_METADATA_GRAPH_META_STORE_H_
+#define FLEX_STORAGES_METADATA_GRAPH_META_STORE_H_
 
 #include <memory>
 #include <string>
@@ -65,6 +65,7 @@ struct GraphMeta {
   std::string schema;
 
   std::string ToJson() const;
+  static GraphMeta FromJson(const std::string& json_str);
   static GraphMeta FromJson(const nlohmann::json& json);
 };
 
@@ -92,6 +93,7 @@ struct PluginMeta {
 
   std::string ToJson() const;
 
+  static PluginMeta FromJson(const std::string& json_str);
   static PluginMeta FromJson(const nlohmann::json& json);
 };
 
@@ -122,6 +124,7 @@ struct CreateGraphMetaRequest {
   std::string description;
   std::string schema;  // all in one string.
   std::optional<uint64_t> data_update_time;
+  int64_t creation_time;
 
   bool GetIsBuiltin() const;
 
@@ -131,8 +134,10 @@ struct CreateGraphMetaRequest {
 };
 
 struct CreatePluginMetaRequest {
+  std::optional<PluginId> id;
   std::string name;
   GraphId graph_id;
+  int64_t creation_time;
   std::string description;
   std::vector<Parameter> params;
   std::vector<Parameter> returns;
@@ -171,6 +176,7 @@ struct UpdatePluginMetaRequest {
   std::optional<std::string> name;
   std::optional<GraphId> graph_id;
   std::optional<std::string> description;
+  std::optional<int64_t> update_time;
   std::optional<std::vector<Parameter>> params;
   std::optional<std::vector<Parameter>> returns;
   std::optional<std::string> library;
@@ -185,7 +191,7 @@ struct UpdatePluginMetaRequest {
 
   std::string optionString() const;
 
-  std::string toString() const;
+  std::string ToString() const;
 
   static UpdatePluginMetaRequest FromJson(const std::string& json_str);
 };
@@ -219,9 +225,9 @@ struct UpdateJobMetaRequest {
  *
  * MetadataStore should be thread safe inside.
  */
-class IMetaDataStore {
+class IGraphMetaStore {
  public:
-  virtual ~IMetaDataStore() = default;
+  virtual ~IGraphMetaStore() = default;
 
   virtual Result<bool> Open() = 0;
   virtual Result<bool> Close() = 0;
@@ -287,4 +293,4 @@ std::string to_string(const gs::JobStatus& status);
 std::ostream& operator<<(std::ostream& os, const gs::JobStatus& status);
 }  // namespace std
 
-#endif  // FLEX_STORAGES_METADATA_METADATA_STORE_H_
+#endif  // FLEX_STORAGES_METADATA_GRAPH_META_STORE_H_

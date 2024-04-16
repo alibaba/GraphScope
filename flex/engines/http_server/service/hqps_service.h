@@ -23,7 +23,7 @@
 #include "flex/engines/http_server/handler/admin_http_handler.h"
 #include "flex/engines/http_server/handler/hqps_http_handler.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
-#include "flex/storages/metadata/metadata_store.h"
+#include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/metadata/metadata_store_factory.h"
 #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
@@ -79,7 +79,7 @@ class HQPSService {
 
   uint16_t get_query_port() const;
 
-  std::shared_ptr<gs::IMetaDataStore> get_metadata_store() const;
+  std::shared_ptr<gs::IGraphMetaStore> get_metadata_store() const;
 
   gs::Result<seastar::sstring> service_status();
 
@@ -121,7 +121,7 @@ class HQPSService {
   ServiceConfig service_config_;
   boost::process::child compiler_process_;
   // handler for metadata store
-  std::shared_ptr<gs::IMetaDataStore> metadata_store_;
+  std::shared_ptr<gs::IGraphMetaStore> metadata_store_;
 };
 
 }  // namespace server
