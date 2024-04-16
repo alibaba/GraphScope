@@ -1,4 +1,4 @@
-{{- if .Values.distributedDeployment -}}
+{{- if not .Values.distributedDeployment }}
 apiVersion: v1
 kind: Service
 metadata:

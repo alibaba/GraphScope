@@ -1,4 +1,3 @@
-{{- if (include "graphscope-store.createConfigmap" .) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -19,13 +18,14 @@ data:
 {{- if .Values.distributedDeployment }}
     rpc.port=55555
     discovery.mode={{ .Values.discoveryMode }}
+    role.name=ROLE
+    node.idx=INDEX
 {{- else }}
     rpc.port=0
     discovery.mode=zookeeper
+    role.name=all-in-one
+    node.idx=0
 {{- end }}
-
-    role.name=ROLE
-    node.idx=INDEX
 
     store.node.count={{ .Values.store.replicaCount }}
     frontend.node.count={{ .Values.frontend.replicaCount }}
@@ -44,10 +44,10 @@ data:
 
     ## Zk Config
     zk.base.path={{ .Values.zkBasePath }}
-    zk.connect.string=ZK_CONNECT
+    zk.connect.string={{ printf "%s-headless" (include "graphscope-store.zookeeper.fullname" .) | quote }}
 
     ## Kafka Config
-    kafka.servers=KAFKA_SERVERS
+    kafka.servers={{ include "graphscope-store.kafka.brokerlist" . }}
     kafka.topic={{ .Values.kafkaTopic }}
     kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
     kafka.test.cluster.enable=false
@@ -58,7 +58,7 @@ data:
     neo4j.bolt.server.disabled=true
 
     log4rs.config=LOG4RS_CONFIG
-    release.full.name=RELEASE_FULL_NAME
+    release.full.name={{ include "graphscope-store.fullname" . }}
     ## Auth config
     auth.username={{ .Values.auth.username }}
     auth.password={{ .Values.auth.password }}
@@ -102,9 +102,6 @@ data:
 
     sudo sed  -e "s/ROLE/${ROLE}/g" \
               -e "s/INDEX/${ordinal}/g" \
-              -e "s/RELEASE_FULL_NAME/${RELEASE_FULL_NAME}/g" \
-              -e "s/ZK_CONNECT/${ZK_CONNECT}/g" \
-              -e "s/KAFKA_SERVERS/${KAFKA_SERVERS}/g" \
               -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
     /etc/groot/groot.config.tpl | sudo tee -a /etc/groot/groot.config
 
@@ -126,4 +123,3 @@ data:
 
     export RUST_BACKTRACE=1
     ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}  # || sleep infinity
-{{- end -}}

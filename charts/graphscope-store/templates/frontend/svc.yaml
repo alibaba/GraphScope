@@ -31,7 +31,7 @@ spec:
     - name: grpc
       port: {{ .Values.frontend.service.servicePort }}
       protocol: TCP
-      targetPort: service-port
+      targetPort: grpc
       {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.service)) }}
       nodePort: {{ .Values.frontend.service.nodePorts.service }}
       {{- else if eq .Values.frontend.service.type "ClusterIP" }}

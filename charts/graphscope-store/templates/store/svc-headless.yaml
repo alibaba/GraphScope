@@ -19,7 +19,7 @@ spec:
   publishNotReadyAddresses: true
   ports:
     - name: port
-      port: {{ .Values.store.service.port }}
+      port: 55555
       targetPort: port
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: store
