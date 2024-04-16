@@ -176,10 +176,10 @@ jobs:
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
 
         # 2. deploy hadoop hdfs
-        tar -zxf /home/runner/hadoop-2.10.1.tar.gz -C /tmp/
+        tar -zxf /home/runner/hadoop-2.10.2.tar.gz -C /tmp/
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
-        ./prepare_hadoop.sh /tmp/hadoop-2.10.1
-        export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
+        ./prepare_hadoop.sh /tmp/hadoop-2.10.2
+        export PATH=${PATH}:/tmp/hadoop-2.10.2/bin
 
         # data-load-tool is needed for offline_load.sh
         # see .github/workflows/hadoop_scripts/offline_load.sh
