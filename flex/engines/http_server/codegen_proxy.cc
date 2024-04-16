@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "flex/engines/http_server/codegen_proxy.h"
+#include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 
 namespace server {
@@ -67,10 +68,25 @@ seastar::future<std::pair<int32_t, std::string>> CodegenProxy::DoGen(
              [this, next_job_id] { return !check_job_running(next_job_id); });
   }
 
-  auto cur_graph_schema_path = default_graph_schema_path_.empty()
-                                   ? WorkDirManipulator::GetGraphSchemaPath(
-                                         WorkDirManipulator::GetRunningGraph())
-                                   : default_graph_schema_path_;
+  auto cur_graph_schema_path = default_graph_schema_path_;
+  if (cur_graph_schema_path.empty()) {
+    auto& hqps_service = server::HQPSService::get();
+    if (hqps_service.get_metadata_store()) {
+      auto running_graph_res =
+          hqps_service.get_metadata_store()->GetRunningGraph();
+      if (!running_graph_res.ok()) {
+        return seastar::make_exception_future<std::pair<int32_t, std::string>>(
+            std::runtime_error("Get running graph failed"));
+      }
+      cur_graph_schema_path =
+          WorkDirManipulator::GetGraphSchemaPath(running_graph_res.value());
+    } else {
+      LOG(ERROR) << "Graph schema path is empty";
+      return seastar::make_exception_future<std::pair<int32_t, std::string>>(
+          std::runtime_error("Graph schema path is empty"));
+    }
+  }
+
   if (cur_graph_schema_path.empty()) {
     LOG(ERROR) << "Graph schema path is empty";
     return seastar::make_exception_future<std::pair<int32_t, std::string>>(
@@ -172,8 +188,8 @@ seastar::future<int> CodegenProxy::CallCodegenCmd(
     const std::string& engine_config, const std::string& procedure_desc) {
   // TODO: different suffix for different platform
   std::string cmd = codegen_bin + " -e=hqps " + " -i=" + plan_path +
-                    " -o=" + output_dir + " --procedure_name=" + query_name +
-                    " -w=" + work_dir + " --ir_conf=" + engine_config +
+                    " -o=" + output_dir + " --procedure_name=\"" + query_name +
+                    "\" -w=" + work_dir + " --ir_conf=" + engine_config +
                     " --graph_schema_path=" + graph_schema_path;
   if (!procedure_desc.empty()) {
     cmd += " --procedure_desc=\'" + procedure_desc + "\'";

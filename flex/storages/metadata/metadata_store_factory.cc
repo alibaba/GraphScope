@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-#include "flex/engines/http_server/options.h"
+#include "flex/storages/metadata/metadata_store_factory.h"
 
-namespace server {
-
-uint32_t shard_query_concurrency = 16;
-uint32_t shard_update_concurrency = 4;
-uint32_t shard_adhoc_concurrency = 4;
-uint32_t shard_admin_graph_concurrency = 1;
-uint32_t shard_admin_procedure_concurrency = 1;
-uint32_t shard_admin_node_concurrency = 1;
-uint32_t shard_admin_job_concurrency = 1;
-uint32_t shard_admin_service_concurrency = 1;
-
-}  // namespace server
+namespace gs {
+std::shared_ptr<IGraphMetaStore> MetadataStoreFactory::Create(
+    MetadataStoreType type, const std::string& path) {
+  switch (type) {
+  case MetadataStoreType::kLocalFile:
+    return std::make_shared<DefaultGraphMetaStore>(
+        std::make_unique<LocalFileMetadataStore>(path));
+  default:
+    LOG(FATAL) << "Unsupported metadata store type: " << static_cast<int>(type);
+  }
+  return nullptr;
+}
+}  // namespace gs

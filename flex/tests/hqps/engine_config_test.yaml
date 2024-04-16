@@ -13,6 +13,8 @@ compute_engine:
   thread_num_per_worker: 1
   store:
     type: cpp-mcsr
+  metadata_store:
+    type: file # file/sqlite/etcd
 compiler:
   planner:
     is_on: true

@@ -38,6 +38,13 @@ namespace gs {
 
 static constexpr const char* CODEGEN_BIN = "load_plan_and_gen.sh";
 
+/// Util functions.
+inline int64_t GetCurrentTimeStamp() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::system_clock::now().time_since_epoch())
+      .count();
+}
+
 class FlexException : public std::exception {
  public:
   explicit FlexException(std::string&& error_msg);
