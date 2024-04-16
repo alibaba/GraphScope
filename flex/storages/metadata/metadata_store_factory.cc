@@ -20,13 +20,8 @@ std::shared_ptr<IGraphMetaStore> MetadataStoreFactory::Create(
     MetadataStoreType type, const std::string& path) {
   switch (type) {
   case MetadataStoreType::kLocalFile:
-#ifdef BUILD_FILE_META_STORE
     return std::make_shared<DefaultGraphMetaStore>(
         std::make_unique<LocalFileMetadataStore>(path));
-#else
-    LOG(FATAL)
-        << "Local file metadata store is not supported in current build.";
-#endif
   default:
     LOG(FATAL) << "Unsupported metadata store type: " << static_cast<int>(type);
   }

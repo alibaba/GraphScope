@@ -17,9 +17,7 @@
 #define FLEX_STORAGES_METADATA_METADATA_STORE_FACTORY_H_
 
 #include <string>
-#ifdef BUILD_FILE_META_STORE
 #include "flex/storages/metadata/local_file_metadata_store.h"
-#endif
 #include "flex/storages/metadata/default_graph_meta_store.h"
 #include "flex/storages/metadata/graph_meta_store.h"
 

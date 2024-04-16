@@ -14,7 +14,6 @@ option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" OFF)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
-option(BUILD_FILE_META_STORE "Whether to build file-based meta store" ON)
 option(USE_PTHASH "Whether to use pthash" OFF)
 
 #print options
@@ -41,11 +40,6 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 if (BUILD_HQPS)
     message("Build HighQPS Engine")
     add_definitions(-DBUILD_HQPS)
-endif ()
-
-if  (BUILD_FILE_META_STORE)
-    message("Build file-based meta store")
-    add_definitions(-DBUILD_FILE_META_STORE)
 endif ()
 
 if(USE_PTHASH)
