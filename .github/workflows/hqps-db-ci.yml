@@ -129,9 +129,9 @@ jobs:
         cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
-        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
-        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
+        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test_rbo.yaml
+        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test_rbo.yaml ${GS_TEST_DIR}
+        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test_rbo.yaml
 
     - name: Sample Query test
       env:
@@ -154,10 +154,12 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/bin
 
-        for i in 1 2 3 4 5 6 7 8 9 10 11 12;
+        # test ic procedure gen with cbo, ic7 is not supported now.
+        export CBO_GLOGUE_SCHEMA=${GITHUB_WORKSPACE}/interactive_engine/compiler/src/main/resources/statistics/ldbc1_statistics.txt
+        for i in 1 2 3 4 5 6 8 9 10 11 12;
         do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/stored_procedure/ic${i}.cypher -w=/tmp/codegen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test_cbo.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
           eval ${cmd} || exit 1
@@ -166,19 +168,19 @@ jobs:
         for i in 1 2 3 4 5 6 7 8 9 10 11 12;
         do
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test_rbo.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
           eval ${cmd} || exit 1
         done
 
         # test movie graph, 8,9,10 are not supported now
-        # change the default_graph config in ../tests/hqps/engine_config_test.yaml to movies
-        sed -i 's/default_graph: ldbc/default_graph: movies/g' ../tests/hqps/engine_config_test.yaml
+        # change the default_graph config in ../tests/hqps/engine_config_test_rbo.yaml to movies
+        sed -i 's/default_graph: ldbc/default_graph: movies/g' ../tests/hqps/engine_config_test_rbo.yaml
         for i in 1 2 3 4 5 6 7 11 12 13 14 15;
         do
           cmd="./load_plan_and_gen.sh -e=hqps -i=../tests/hqps/queries/movie/query${i}.cypher -w=/tmp/codegen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test_rbo.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml"
           echo $cmd
           eval ${cmd} || exit 1
@@ -188,11 +190,11 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/bin
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/get_person_name.cypher -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test_rbo.yaml \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/count_vertex_num.cypher -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test_rbo.yaml \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
     - name: Run End-to-End cypher adhoc ldbc query test
@@ -204,10 +206,10 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        # change the default_graph config in ./engine_config_test.yaml to ldbc
-        sed -i 's/default_graph: movies/default_graph: ldbc/g' ./engine_config_test.yaml
+        # change the default_graph config in ./engine_config_test_rbo.yaml to ldbc
+        sed -i 's/default_graph: movies/default_graph: ldbc/g' ./engine_config_test_rbo.yaml
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc \
-              ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+              ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test_rbo.yaml
 
     - name: Run End-to-End cypher adhoc movie query test
       env:
@@ -218,10 +220,10 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        # change the default_graph config in ./engine_config_test.yaml to movies
-        sed -i 's/default_graph: ldbc/default_graph: movies/g' ./engine_config_test.yaml
+        # change the default_graph config in ./engine_config_test_rbo.yaml to movies
+        sed -i 's/default_graph: ldbc/default_graph: movies/g' ./engine_config_test_rbo.yaml
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} movies \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test_rbo.yaml
 
     - name: Run End-to-End cypher adhoc graph_algo query test
       env:
@@ -233,9 +235,9 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
         # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to graph_algo
-        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ./engine_config_test.yaml
+        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ./engine_config_test_rbo.yaml
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} graph_algo \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test_rbo.yaml
 
     - name: Run Gremlin test on modern graph
       env:
@@ -245,8 +247,8 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ./engine_config_test.yaml
+        sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ./engine_config_test_rbo.yaml
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} modern_graph \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml gremlin
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test_rbo.yaml gremlin
 
 

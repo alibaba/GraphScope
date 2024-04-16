@@ -665,12 +665,13 @@ class MutableCSRInterface {
                                                    edge_label_id);
       auto oe_csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                    edge_label_id);
-      auto size = 0;
+      size_t size = 0;
       for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         size += ie_csr->edge_iter(v)->size();
         size += oe_csr->edge_iter(v)->size();
       }
+      LOG(INFO) << "size: " << size;
       ret_v.reserve(size);
       ret_offset.reserve(vids.size() + 1);
       ret_offset.emplace_back(0);

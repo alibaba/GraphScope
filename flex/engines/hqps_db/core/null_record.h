@@ -45,6 +45,11 @@ struct NullRecordCreator<std::string_view> {
 };
 
 template <>
+struct NullRecordCreator<Direction> {
+  static inline Direction GetNull() { return Direction::Unknown; }
+};
+
+template <>
 struct NullRecordCreator<Date> {
   static inline Date GetNull() {
     return Date(std::numeric_limits<int64_t>::max());
