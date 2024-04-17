@@ -165,7 +165,7 @@ jobs:
 
         # helm deployment and testing
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA},distributed.enabled=false ./graphscope-store
         helm test ci --timeout 5m0s
 
     - name: Test the helm deployment
@@ -206,7 +206,7 @@ jobs:
         helm uninstall ci
         sleep 30
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA},distributed.enabled=false ./graphscope-store
 
     - name: Helm Test with Helm Deployment and PersistentVolume
       run: |

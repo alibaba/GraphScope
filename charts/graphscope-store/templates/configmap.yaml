@@ -23,7 +23,7 @@ data:
 {{- else }}
     rpc.port=0
     discovery.mode=zookeeper
-    role.name=all-in-one
+    role.name=""
     node.idx=0
 {{- end }}
 

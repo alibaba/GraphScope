@@ -127,7 +127,7 @@ spec:
   {{- if and .Values.coordinator.persistence.enabled .Values.coordinator.persistence.existingClaim }}
         - name: meta
           persistentVolumeClaim:
-            claimName: {{ printf "%s" (tpl .Values.persistence.existingClaim .) }}
+            claimName: {{ printf "%s" (tpl .Values.coordinator.persistence.existingClaim .) }}
   {{- else if not .Values.coordinator.persistence.enabled }}
         - name: meta
           emptyDir: {}
