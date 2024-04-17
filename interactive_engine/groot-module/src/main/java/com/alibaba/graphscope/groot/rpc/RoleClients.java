@@ -32,12 +32,12 @@ public class RoleClients<T extends RpcClient> {
     private final RoleType targetRole;
 
     private final Map<Integer, T> clients;
-    private final Function<ManagedChannel, T> clientBuilder;
+    private final Function<RpcChannel, T> clientBuilder;
 
     public RoleClients(
             ChannelManager channelManager,
             RoleType targetRole,
-            Function<ManagedChannel, T> clientBuilder) {
+            Function<RpcChannel, T> clientBuilder) {
         this.channelManager = channelManager;
         this.targetRole = targetRole;
         this.clientBuilder = clientBuilder;
@@ -51,7 +51,8 @@ public class RoleClients<T extends RpcClient> {
             synchronized (this) {
                 client = this.clients.get(clientId);
                 if (client == null) {
-                    ManagedChannel channel = this.channelManager.getChannel(targetRole, clientId);
+                    RpcChannel channel = new RpcChannel(channelManager, targetRole, clientId);
+                    // ManagedChannel channel = this.channelManager.getChannel(targetRole, clientId);
                     client = clientBuilder.apply(channel);
                     this.clients.put(clientId, client);
                 }

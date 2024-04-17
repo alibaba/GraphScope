@@ -149,6 +149,12 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: data
+        {{- if .Values.persistence.annotations }}
+        annotations: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
+        {{- end }}
+        {{- if .Values.persistence.labels }}
+        labels: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
+        {{- end }}
       spec:
         accessModes:
           {{- range .Values.persistence.accessModes }}
@@ -158,6 +164,9 @@ spec:
           requests:
             storage: {{ .Values.store.persistence.size | quote }}
         {{ include "graphscope-store.storageClass" . | nindent 8 }}
+        {{- if .Values.store.persistence.selector }}
+        selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.persistence.selector "context" $) | nindent 10 }}
+        {{- end -}}
   {{- end }}
 {{- end -}}
 {{- end -}}

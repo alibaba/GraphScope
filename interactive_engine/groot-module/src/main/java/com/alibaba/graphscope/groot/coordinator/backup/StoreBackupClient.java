@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.groot.coordinator.backup;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.store.backup.StoreBackupId;
 import com.alibaba.graphscope.proto.groot.*;
@@ -28,22 +29,22 @@ import java.util.List;
 import java.util.Map;
 
 public class StoreBackupClient extends RpcClient {
-    private final StoreBackupGrpc.StoreBackupStub stub;
-
-    public StoreBackupClient(ManagedChannel channel) {
+    public StoreBackupClient(RpcChannel channel) {
         super(channel);
-        this.stub = StoreBackupGrpc.newStub(channel);
     }
 
     public StoreBackupClient(StoreBackupGrpc.StoreBackupStub stub) {
         super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
+    }
+
+    private StoreBackupGrpc.StoreBackupStub getStub() {
+        return StoreBackupGrpc.newStub(rpcChannel.getChannel());
     }
 
     public void createStoreBackup(int globalBackupId, CompletionCallback<StoreBackupId> callback) {
         CreateStoreBackupRequest req =
                 CreateStoreBackupRequest.newBuilder().setGlobalBackupId(globalBackupId).build();
-        stub.createStoreBackup(
+        getStub().createStoreBackup(
                 req,
                 new StreamObserver<CreateStoreBackupResponse>() {
                     @Override
@@ -78,7 +79,7 @@ public class StoreBackupClient extends RpcClient {
                 ClearUnavailableStoreBackupsRequest.newBuilder()
                         .putAllPartitionToReadyBackupIds(partitionToBackupIdListPb)
                         .build();
-        stub.clearUnavailableStoreBackups(
+        getStub().clearUnavailableStoreBackups(
                 req,
                 new StreamObserver<ClearUnavailableStoreBackupsResponse>() {
                     @Override
@@ -107,7 +108,7 @@ public class StoreBackupClient extends RpcClient {
                         .setStoreBackupId(storeBackupId.toProto())
                         .setRestoreRootPath(storeRestoreRootPath)
                         .build();
-        stub.restoreFromStoreBackup(
+        getStub().restoreFromStoreBackup(
                 req,
                 new StreamObserver<RestoreFromStoreBackupResponse>() {
                     @Override
@@ -131,7 +132,7 @@ public class StoreBackupClient extends RpcClient {
                 VerifyStoreBackupRequest.newBuilder()
                         .setStoreBackupId(storeBackupId.toProto())
                         .build();
-        stub.verifyStoreBackup(
+        getStub().verifyStoreBackup(
                 req,
                 new StreamObserver<VerifyStoreBackupResponse>() {
                     @Override

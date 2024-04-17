@@ -21,6 +21,7 @@ import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.NodeConnectException;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.tests.common.rpc.MockFactory;
 
@@ -48,7 +49,7 @@ public class RoleClientsTest {
 
     class MockRoleClient extends RpcClient {
 
-        public MockRoleClient(ManagedChannel channel) {
+        public MockRoleClient(RpcChannel channel) {
             super(channel);
         }
     }

@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.*;
 
@@ -22,11 +23,13 @@ import io.grpc.ManagedChannel;
 
 public class IngestorWriteClient extends RpcClient {
 
-    private final IngestorWriteGrpc.IngestorWriteBlockingStub stub;
 
-    public IngestorWriteClient(ManagedChannel channel) {
+    public IngestorWriteClient(RpcChannel channel) {
         super(channel);
-        this.stub = IngestorWriteGrpc.newBlockingStub(channel);
+    }
+
+    private IngestorWriteGrpc.IngestorWriteBlockingStub getStub() {
+        return IngestorWriteGrpc.newBlockingStub(rpcChannel.getChannel());
     }
 
     public BatchId writeIngestor(String requestId, int queueId, OperationBatch operationBatch) {
@@ -36,7 +39,7 @@ public class IngestorWriteClient extends RpcClient {
                         .setQueueId(queueId)
                         .setOperationBatch(operationBatch.toProto())
                         .build();
-        WriteIngestorResponse response = this.stub.writeIngestor(request);
+        WriteIngestorResponse response = getStub().writeIngestor(request);
         return new BatchId(response.getSnapshotId());
     }
 }

@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.metrics;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.CollectMetricsRequest;
 import com.alibaba.graphscope.proto.groot.CollectMetricsResponse;
@@ -25,16 +26,16 @@ import io.grpc.stub.StreamObserver;
 import java.util.Map;
 
 public class MetricsCollectClient extends RpcClient {
-
-    private final MetricsCollectGrpc.MetricsCollectStub stub;
-
-    public MetricsCollectClient(ManagedChannel channel) {
+    public MetricsCollectClient(RpcChannel channel) {
         super(channel);
-        this.stub = MetricsCollectGrpc.newStub(channel);
+    }
+
+    private MetricsCollectGrpc.MetricsCollectStub getStub() {
+        return MetricsCollectGrpc.newStub(rpcChannel.getChannel());
     }
 
     public void collectMetrics(CompletionCallback<Map<String, String>> callback) {
-        this.stub.collectMetrics(
+        getStub().collectMetrics(
                 CollectMetricsRequest.newBuilder().build(),
                 new StreamObserver<CollectMetricsResponse>() {
                     @Override
