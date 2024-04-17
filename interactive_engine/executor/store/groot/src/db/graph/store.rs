@@ -562,14 +562,14 @@ impl MultiVersionGraph for GraphStore {
 
     fn gc(&self, si: i64) -> GraphResult<()> {
         let vertex_tables = self.vertex_manager.gc(si)?;
+        info!("garbage collect vertex table {:?}", vertex_tables);
         for vt in vertex_tables {
-            info!("garbage collect vertex table {}", vt);
             let table_prefix = vertex_table_prefix(vt);
             self.delete_table_by_prefix(table_prefix, true)?;
         }
         let edge_tables = self.edge_manager.gc(si)?;
+        info!("garbage collect edge table {:?}", edge_tables);
         for et in edge_tables {
-            info!("garbage collect edge table {}", et);
             let out_table_prefix = edge_table_prefix(et, EdgeDirection::Out);
             self.delete_table_by_prefix(out_table_prefix, false)?;
         }
@@ -648,7 +648,10 @@ impl GraphStore {
         let path = config
             .get_storage_option("store.data.path")
             .expect("invalid config, missing store.data.path");
-        info!("open graph store at {} with config {:?}", path, config);
+        let parts: Vec<&str> = path.split("/").collect();
+        if parts.get(parts.len() - 1) == Some(&"0") {
+            info!("open graph store at {} with config {:?}", path, config);
+        }
         match config.get_storage_engine() {
             "rocksdb" => {
                 let res = RocksDB::open(config.get_storage_options()).and_then(|db| {
