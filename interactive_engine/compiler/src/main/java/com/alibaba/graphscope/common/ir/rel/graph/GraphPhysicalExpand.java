@@ -32,6 +32,7 @@ import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -46,6 +47,8 @@ public class GraphPhysicalExpand extends SingleRel {
     private final String aliasName;
     private final int aliasId;
 
+    private final boolean optional;
+
     protected GraphPhysicalExpand(
             RelOptCluster cluster,
             List<RelHint> hints,
@@ -53,7 +56,8 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt,
-            String aliasName) {
+            String aliasName,
+            boolean optional) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.physicalOpt = physicalOpt;
         this.fusedExpand = fusedExpand;
@@ -62,6 +66,7 @@ public class GraphPhysicalExpand extends SingleRel {
                 AliasInference.inferDefault(
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = ((GraphOptCluster) cluster).getIdGenerator().generate(this.aliasName);
+        this.optional = optional;
     }
 
     public static GraphPhysicalExpand create(
@@ -95,7 +100,14 @@ public class GraphPhysicalExpand extends SingleRel {
             }
         }
         return new GraphPhysicalExpand(
-                cluster, hints, input, fusedExpand, newGetV, physicalOpt, aliasName);
+                cluster,
+                hints,
+                input,
+                fusedExpand,
+                newGetV,
+                physicalOpt,
+                aliasName,
+                fusedExpand.isOptional());
     }
 
     public GraphOpt.PhysicalExpandOpt getPhysicalOpt() {
@@ -120,6 +132,10 @@ public class GraphPhysicalExpand extends SingleRel {
 
     public @Nullable ImmutableList<RexNode> getFilters() {
         return fusedExpand.getFilters();
+    }
+
+    public boolean isOptional() {
+        return optional;
     }
 
     @Override
@@ -151,18 +167,27 @@ public class GraphPhysicalExpand extends SingleRel {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return pw.itemIf("input", input, !Objects.isNull(input))
-                .item("tableConfig", fusedExpand.tableConfig)
+                .item("tableConfig", fusedExpand.explainTableConfig())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                .itemIf(
+                        "aliasId",
+                        getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf(
                         "startAlias",
                         fusedExpand.getStartAlias().getAliasName(),
                         fusedExpand.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
                 .itemIf(
+                        "startAliasId",
+                        fusedExpand.getStartAlias().getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
+                .itemIf(
                         "fusedFilter",
                         fusedExpand.getFilters(),
                         !ObjectUtils.isEmpty(fusedExpand.getFilters()))
                 .item("opt", fusedExpand.getOpt())
-                .item("physicalOpt", getPhysicalOpt());
+                .item("physicalOpt", getPhysicalOpt())
+                .itemIf("optional", optional, optional);
     }
 
     @Override

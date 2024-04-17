@@ -32,6 +32,7 @@ import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
@@ -121,9 +122,17 @@ public class GraphPhysicalGetV extends SingleRel {
                 .item("tableConfig", fusedGetV.tableConfig)
                 .item("alias", AliasInference.SIMPLE_NAME(fusedGetV.getAliasName()))
                 .itemIf(
+                        "aliasId",
+                        getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
+                .itemIf(
                         "startAlias",
                         fusedGetV.getStartAlias().getAliasName(),
                         fusedGetV.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf(
+                        "startAliasId",
+                        fusedGetV.getStartAlias().getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf(
                         "fusedFilter",
                         fusedGetV.getFilters(),

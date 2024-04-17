@@ -127,8 +127,14 @@ mod test {
     // g.V().out()
     #[test]
     fn expand_outv_test() {
-        let expand_opr_pb =
-            pb::EdgeExpand { v_tag: None, direction: 0, params: None, expand_opt: 0, alias: None };
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: None,
+            expand_opt: 0,
+            alias: None,
+            is_optional: false,
+        };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -156,6 +162,7 @@ mod test {
             params: Some(query_param),
             expand_opt: 1,
             alias: None,
+            is_optional: false,
         };
         let mut result = expand_test(expand_opr_pb);
         let mut result_edges = vec![];
@@ -182,6 +189,7 @@ mod test {
             params: Some(query_param),
             expand_opt: 1,
             alias: None,
+            is_optional: false,
         };
         let mut result = expand_test(expand_opr_pb);
         let mut result_edges = vec![];
@@ -212,6 +220,7 @@ mod test {
             params: Some(query_param),
             expand_opt: 1,
             alias: None,
+            is_optional: false,
         };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids_with_prop = vec![];
@@ -243,6 +252,7 @@ mod test {
             params: Some(query_param),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
         let mut result = expand_test(expand_opr_pb);
         let mut cnt = 0;
@@ -263,6 +273,7 @@ mod test {
             params: Some(query_param),
             expand_opt: 0,
             alias: Some(TAG_B.into()),
+            is_optional: false,
         };
         let mut result = expand_test_with_source_tag(TAG_A.into(), expand_opr_pb);
         let mut result_ids = vec![];
@@ -296,6 +307,7 @@ mod test {
             params: Some(query_param),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
 
         let conf = JobConf::new("expand_test");
@@ -337,6 +349,7 @@ mod test {
             params: Some(edge_query_param),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
         let vertex_query_param = query_params(vec![], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
         let auxilia_opr_pb = pb::GetV { tag: None, opt: 4, params: Some(vertex_query_param), alias: None };
@@ -378,6 +391,7 @@ mod test {
             params: Some(query_param),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
         };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids = vec![];
@@ -400,6 +414,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 1,
             alias: None,
+            is_optional: false,
         };
 
         let getv_opr = pb::GetV {
@@ -444,6 +459,7 @@ mod test {
             params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
             expand_opt: 1,
             alias: None,
+            is_optional: false,
         };
 
         let getv_opr = pb::GetV {
@@ -488,6 +504,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 1,
             alias: None,
+            is_optional: false,
         };
 
         let getv_opr = pb::GetV {
@@ -532,6 +549,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 1,
             alias: None,
+            is_optional: false,
         };
 
         let getv_opr = pb::GetV {
@@ -576,6 +594,7 @@ mod test {
             params: None,
             expand_opt: 2,
             alias: Some(1.into()),
+            is_optional: false,
         };
         let mut pegasus_result = expand_degree_opt_test(expand_opr_pb);
         let mut results = vec![];
@@ -608,6 +627,7 @@ mod test {
             params: None,
             expand_opt: 2,
             alias: Some(1.into()),
+            is_optional: false,
         };
         let mut pegasus_result = expand_degree_opt_test(expand_opr_pb);
         let mut results = vec![];
@@ -640,6 +660,7 @@ mod test {
             params: None,
             expand_opt: 2,
             alias: Some(1.into()),
+            is_optional: false,
         };
         let mut pegasus_result = expand_degree_opt_test(expand_opr_pb);
         let mut results = vec![];
@@ -674,6 +695,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_B.into()),
+            is_optional: false,
         };
 
         // marko (A) -> josh (C): expand C;
@@ -683,6 +705,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         let conf = JobConf::new("expand_and_intersection_expand_test");
@@ -744,6 +767,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_B.into()),
+            is_optional: false,
         };
 
         // marko (A) -> josh (C): expand C;
@@ -753,6 +777,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         // lop (B) <- josh (C): expand C and intersect on C;
@@ -762,6 +787,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         let conf = JobConf::new("expand_and_intersection_intersect_test");
@@ -822,6 +848,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_B.into()),
+            is_optional: false,
         };
 
         // marko (A) -> josh (C): expand C;
@@ -831,6 +858,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         // lop (B) <- josh (C): expand C and intersect on C;
@@ -840,6 +868,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         // unfold tag C
@@ -895,6 +924,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_B.into()),
+            is_optional: false,
         };
 
         // A <-> C: expand C;
@@ -904,6 +934,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         // B <-> C: expand C and intersect on C;
@@ -913,6 +944,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         // unfold tag C
@@ -965,6 +997,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_B.into()),
+            is_optional: false,
         };
 
         // A <-> C: expand C;
@@ -978,6 +1011,7 @@ mod test {
             )),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         // B <-> C: expand C and intersect on C;
@@ -987,6 +1021,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: Some(TAG_C.into()),
+            is_optional: false,
         };
 
         // unfold tag C
@@ -1043,6 +1078,7 @@ mod test {
             params: Some(query_params(vec![], vec![], None)),
             expand_opt: 1,
             alias: None,
+            is_optional: false,
         };
 
         let getv_opr = pb::GetV {
@@ -1098,6 +1134,7 @@ mod test {
             expand_opt: 0,
             alias: Some(TAG_B.into()),
             meta_data: None,
+            is_optional: false,
         };
 
         // marko (A) -> (C): path expand C;
@@ -1107,6 +1144,7 @@ mod test {
             params: Some(query_params(vec![], vec![], None)),
             expand_opt: 0,
             alias: None,
+            is_optional: false,
             meta_data: None,
         };
         let path_opr = algebra_pb::PathExpand {
@@ -1120,6 +1158,7 @@ mod test {
             path_opt: 1,   // simple
             result_opt: 0, // endv
             condition: None,
+            is_optional: false,
         };
 
         let end_v = algebra_pb::GetV {
@@ -1138,6 +1177,7 @@ mod test {
             expand_opt: 0,
             alias: Some(TAG_C.into()),
             meta_data: None,
+            is_optional: false,
         };
         let unfold_opr =
             algebra_pb::Unfold { tag: Some(TAG_C.into()), alias: Some(TAG_C.into()), meta_data: None };

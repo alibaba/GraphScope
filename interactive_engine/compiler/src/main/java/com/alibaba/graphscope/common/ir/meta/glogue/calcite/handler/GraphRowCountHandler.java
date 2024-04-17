@@ -156,12 +156,12 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     edgeTypeIds.stream().map(k -> k.getDstLabelId()).collect(Collectors.toList());
             PatternVertex srcVertex =
                     (srcVertexTypeIds.size() == 1)
-                            ? new SinglePatternVertex(srcVertexTypeIds.get(0))
-                            : new FuzzyPatternVertex(srcVertexTypeIds);
+                            ? new SinglePatternVertex(srcVertexTypeIds.get(0), 0)
+                            : new FuzzyPatternVertex(srcVertexTypeIds, 0);
             PatternVertex dstVertex =
                     (dstVertexTypeIds.size() == 1)
-                            ? new SinglePatternVertex(dstVertexTypeIds.get(0))
-                            : new FuzzyPatternVertex(dstVertexTypeIds);
+                            ? new SinglePatternVertex(dstVertexTypeIds.get(0), 1)
+                            : new FuzzyPatternVertex(dstVertexTypeIds, 1);
             boolean isBoth = ((GraphLogicalExpand) rel).getOpt() == GraphOpt.Expand.BOTH;
             PatternEdge edge =
                     (edgeTypeIds.size() == 1)

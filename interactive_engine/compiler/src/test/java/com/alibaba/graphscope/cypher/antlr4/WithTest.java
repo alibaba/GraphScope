@@ -85,8 +85,8 @@ public class WithTest {
         RelNode project =
                 Utils.eval("Match (a) Return a.name as name, count(a.name) + 1 as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(name=[EXPR$1], d=[+(EXPR$0, 1)], isAppend=[false])\n"
-                        + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[EXPR$1]}],"
+                "GraphLogicalProject(name=[name], d=[+(EXPR$0, 1)], isAppend=[false])\n"
+                        + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}],"
                         + " values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0',"
                         + " distinct=false}]])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"

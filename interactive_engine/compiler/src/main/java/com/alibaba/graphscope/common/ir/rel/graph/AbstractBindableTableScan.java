@@ -31,6 +31,7 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -100,10 +101,15 @@ public abstract class AbstractBindableTableScan extends TableScan {
             tableTypes.addAll(type.getSchemaTypeAsList());
         }
         ObjectUtils.requireNonEmpty(tableTypes);
+        boolean nullable = schemaTypeNullable();
         GraphSchemaType graphType =
                 (tableTypes.size() == 1)
-                        ? tableTypes.get(0)
-                        : GraphSchemaType.create(tableTypes, typeFactory);
+                        ? new GraphSchemaType(
+                                tableTypes.get(0).getScanOpt(),
+                                tableTypes.get(0).getLabelType(),
+                                tableTypes.get(0).getFieldList(),
+                                nullable)
+                        : GraphSchemaType.create(tableTypes, typeFactory, nullable);
         RelRecordType rowType =
                 new RelRecordType(
                         ImmutableList.of(
@@ -111,7 +117,20 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return rowType;
     }
 
-    public void setRowType(GraphSchemaType graphType) {
+    private boolean schemaTypeNullable() {
+        if (this instanceof GraphLogicalExpand) {
+            return ((GraphLogicalExpand) this).isOptional();
+        } else if (input instanceof GraphLogicalExpand) {
+            return ((GraphLogicalExpand) input).isOptional();
+        } else if (input instanceof GraphPhysicalExpand) {
+            return ((GraphPhysicalExpand) input).isOptional();
+        } else if (input instanceof GraphLogicalPathExpand) {
+            return ((GraphLogicalPathExpand) input).isOptional();
+        }
+        return false;
+    }
+
+    public void setSchemaType(GraphSchemaType graphType) {
         rowType =
                 new RelRecordType(
                         ImmutableList.of(
@@ -135,14 +154,40 @@ public abstract class AbstractBindableTableScan extends TableScan {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return pw.itemIf("input", input, !Objects.isNull(input))
-                .item("tableConfig", tableConfig)
+                .item("tableConfig", explainTableConfig())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                // print 'aliasId' if the explain level is digest, in that 'aliasId' can contribute
+                // to a rel's digest
+                .itemIf(
+                        "aliasId",
+                        getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf(
                         "startAlias",
                         startAlias.getAliasName(),
                         startAlias.getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf(
+                        "startAliasId",
+                        startAlias.getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf("fusedProject", project, !ObjectUtils.isEmpty(project))
                 .itemIf("fusedFilter", filters, !ObjectUtils.isEmpty(filters));
+    }
+
+    protected Object explainTableConfig() {
+        if (this instanceof GraphLogicalExpand) {
+            GraphSchemaType deriveSchema =
+                    (GraphSchemaType) deriveRowType().getFieldList().get(0).getType();
+            GraphSchemaType curSchema =
+                    (GraphSchemaType) getRowType().getFieldList().get(0).getType();
+            if (!curSchema
+                    .getLabelType()
+                    .getLabelsEntry()
+                    .equals(deriveSchema.getLabelType().getLabelsEntry())) {
+                return curSchema.getLabelType();
+            }
+        }
+        return tableConfig;
     }
 
     @Override

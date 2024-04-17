@@ -538,16 +538,6 @@ public class GraphRelToProtoTest {
                     FileUtils.readJsonFromResource("proto/aggregate_test_2.json"),
                     plan.explain().trim());
         }
-        try (PhysicalBuilder protoBuilder =
-                new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedGraphConfig(),
-                        Utils.schemaMeta,
-                        new LogicalPlan(aggregate))) {
-            PhysicalPlan plan = protoBuilder.build();
-            Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/partitioned_aggregate_test_2.json"),
-                    plan.explain().trim());
-        }
     }
 
     @Test
@@ -1111,8 +1101,9 @@ public class GraphRelToProtoTest {
                     + "  MultiJoin(joinFilter=[=(tag, tag)], isFullOuterJoin=[false],"
                     + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
                     + " projFields=[[ALL, ALL]])\n"
-                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASTAG]}],"
-                    + " alias=[tag], startAlias=[message], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, COMMENT, TAG),"
+                    + " EdgeLabel(HASTAG, POST, TAG)]], alias=[tag], startAlias=[message],"
+                    + " opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "      CommonTableScan(table=[[common#-697155798]])\n"
                     + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
                     + " alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX])\n"

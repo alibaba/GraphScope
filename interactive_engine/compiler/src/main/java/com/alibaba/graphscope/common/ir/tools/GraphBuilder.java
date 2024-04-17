@@ -326,7 +326,7 @@ public class GraphBuilder extends RelBuilder {
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
         RelNode match =
-                (single.getInputs().isEmpty() && single instanceof GraphLogicalSource)
+                (input == null && single instanceof GraphLogicalSource)
                         ? single
                         : GraphLogicalSingleMatch.create(
                                 (GraphOptCluster) cluster,
@@ -401,7 +401,8 @@ public class GraphBuilder extends RelBuilder {
             for (RelDataTypeField secondField : secondFields) {
                 if (isGraphElementTypeWithSameOpt(firstField.getType(), secondField.getType())
                         && firstField.getIndex() != AliasInference.DEFAULT_ID
-                        && firstField.getIndex() == secondField.getIndex()) {
+                        && firstField.getIndex() == secondField.getIndex()
+                        && firstField.getName().equals(secondField.getName())) {
                     RexGraphVariable leftKey =
                             RexGraphVariable.of(
                                     firstField.getIndex(),
@@ -677,8 +678,12 @@ public class GraphBuilder extends RelBuilder {
         // derive unknown types of operands
         operandList =
                 inferOperandTypes(operator, returnType, convertOperands(operator, operandList));
-        final RexBuilder builder = cluster.getRexBuilder();
-        return builder.makeCall(returnType, operator, operandList);
+        final RexBuilder rexBuilder = cluster.getRexBuilder();
+        if (operator.getKind() == SqlKind.OTHER && operator.getName().equals("IN")) {
+            return rexBuilder.makeIn(
+                    operandList.get(0), operandList.subList(1, operandList.size()));
+        }
+        return rexBuilder.makeCall(returnType, operator, operandList);
     }
 
     // convert operands of the operator in some special cases
@@ -755,7 +760,10 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.AS
                 || sqlKind == SqlKind.BIT_AND
                 || sqlKind == SqlKind.BIT_OR
-                || sqlKind == SqlKind.BIT_XOR;
+                || sqlKind == SqlKind.BIT_XOR
+                || (sqlKind == SqlKind.OTHER
+                        && (operator.getName().equals("IN")
+                                || operator.getName().equals("DATETIME_MINUS")));
     }
 
     @Override
@@ -1524,10 +1532,7 @@ public class GraphBuilder extends RelBuilder {
 
         RelNode input = requireNonNull(peek(), "frame stack is empty");
 
-        // specific implementation for gremlin, project will change the 'head' before the current
-        // order, which need to be recovered later
-        // the operation has no side effect to the cypher
-        RelDataTypeField recoverHead = null;
+        List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
 
         Registrar registrar = new Registrar(this, input, true);
         List<RexNode> registerNodes = registrar.registerExpressions(ImmutableList.copyOf(nodes));
@@ -1536,18 +1541,20 @@ public class GraphBuilder extends RelBuilder {
         if (!registrar.getExtraNodes().isEmpty()) {
             if (input.getRowType().getFieldList().size() == 1) {
                 RelDataTypeField field = input.getRowType().getFieldList().get(0);
-                // give a non-default alias to the head, so that it can be recovered later
+                // give a non-default alias to the head, so that the tail project can preserve the
+                // head field
                 if (field.getName() == AliasInference.DEFAULT_NAME) {
                     Set<String> uniqueAliases = AliasInference.getUniqueAliasList(input, true);
                     uniqueAliases.addAll(registrar.getExtraAliases());
                     String nonDefault = AliasInference.inferAliasWithPrefix("$f", uniqueAliases);
                     // set the non default alias to the input
                     as(nonDefault);
-                    recoverHead =
-                            new RelDataTypeFieldImpl(
-                                    nonDefault, generateAliasId(nonDefault), field.getType());
-                } else {
-                    recoverHead = field;
+                    originalFields =
+                            Lists.newArrayList(
+                                    new RelDataTypeFieldImpl(
+                                            nonDefault,
+                                            generateAliasId(nonDefault),
+                                            field.getType()));
                 }
             }
             project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
@@ -1612,8 +1619,15 @@ public class GraphBuilder extends RelBuilder {
                 GraphLogicalSort.create(
                         input, GraphRelCollations.of(fieldCollations), offsetNode, fetchNode);
         replaceTop(sort);
-        if (recoverHead != null) {
-            project(ImmutableList.of(variable(recoverHead.getName())), ImmutableList.of(), true);
+        // to remove the extra columns we have added
+        if (!registrar.getExtraAliases().isEmpty()) {
+            List<RexNode> originalExprs = new ArrayList<>();
+            List<String> originalAliases = new ArrayList<>();
+            for (RelDataTypeField field : originalFields) {
+                originalExprs.add(variable(field.getName()));
+                originalAliases.add(field.getName());
+            }
+            project(originalExprs, originalAliases, false);
         }
         return this;
     }
@@ -1621,10 +1635,7 @@ public class GraphBuilder extends RelBuilder {
     public GraphBuilder dedupBy(Iterable<? extends RexNode> nodes) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
 
-        // specific implementation for gremlin, project will change the 'head' before the current
-        // dedupBy, which need to be recovered later
-        // the operation has no side effect to the cypher
-        RelDataTypeField recoverHead = null;
+        List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
 
         Registrar registrar = new Registrar(this, input, true);
         List<RexNode> registerNodes = registrar.registerExpressions(ImmutableList.copyOf(nodes));
@@ -1633,18 +1644,20 @@ public class GraphBuilder extends RelBuilder {
         if (!registrar.getExtraNodes().isEmpty()) {
             if (input.getRowType().getFieldList().size() == 1) {
                 RelDataTypeField field = input.getRowType().getFieldList().get(0);
-                // give a non-default alias to the head, so that it can be recovered later
+                // give a non-default alias to the head, so that the tail project can preserve the
+                // head field
                 if (field.getName() == AliasInference.DEFAULT_NAME) {
                     Set<String> uniqueAliases = AliasInference.getUniqueAliasList(input, true);
                     uniqueAliases.addAll(registrar.getExtraAliases());
                     String nonDefault = AliasInference.inferAliasWithPrefix("$f", uniqueAliases);
                     // set the non default alias to the input
                     as(nonDefault);
-                    recoverHead =
-                            new RelDataTypeFieldImpl(
-                                    nonDefault, generateAliasId(nonDefault), field.getType());
-                } else {
-                    recoverHead = field;
+                    originalFields =
+                            Lists.newArrayList(
+                                    new RelDataTypeFieldImpl(
+                                            nonDefault,
+                                            generateAliasId(nonDefault),
+                                            field.getType()));
                 }
             }
             project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
@@ -1664,8 +1677,15 @@ public class GraphBuilder extends RelBuilder {
                 GraphLogicalDedupBy.create(
                         (GraphOptCluster) this.getCluster(), input, registerNodes);
         replaceTop(dedupBy);
-        if (recoverHead != null) {
-            project(ImmutableList.of(variable(recoverHead.getName())), ImmutableList.of(), true);
+        // to remove the extra columns we have added
+        if (!registrar.getExtraAliases().isEmpty()) {
+            List<RexNode> originalExprs = new ArrayList<>();
+            List<String> originalAliases = new ArrayList<>();
+            for (RelDataTypeField field : originalFields) {
+                originalExprs.add(variable(field.getName()));
+                originalAliases.add(field.getName());
+            }
+            project(originalExprs, originalAliases, false);
         }
         return this;
     }

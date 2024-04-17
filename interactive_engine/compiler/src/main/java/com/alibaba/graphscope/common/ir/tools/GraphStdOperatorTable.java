@@ -56,6 +56,16 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     GraphInferTypes.FIRST_KNOWN,
                     GraphOperandTypes.MINUS_OPERATOR);
 
+    public static final SqlOperator DATETIME_MINUS =
+            new SqlSpecialOperator(
+                    "DATETIME_MINUS",
+                    SqlKind.OTHER,
+                    40,
+                    true,
+                    ReturnTypes.ARG2_NULLABLE,
+                    InferTypes.FIRST_KNOWN,
+                    GraphOperandTypes.DATETIME_DATETIME_INTERVAL);
+
     public static final SqlBinaryOperator BIT_AND =
             new SqlMonotonicBinaryOperator(
                     "&",
@@ -276,4 +286,14 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
     public static final SqlOperator POSIX_REGEX_CASE_SENSITIVE =
             new ExtSqlPosixRegexOperator(
                     "POSIX REGEX CASE SENSITIVE", SqlKind.POSIX_REGEX_CASE_SENSITIVE, true, false);
+
+    public static final SqlOperator IN =
+            new SqlBinaryOperator(
+                    "IN",
+                    SqlKind.OTHER,
+                    32,
+                    true,
+                    ReturnTypes.BOOLEAN_NULLABLE,
+                    GraphInferTypes.IN_OPERANDS_TYPE,
+                    OperandTypes.ANY);
 }

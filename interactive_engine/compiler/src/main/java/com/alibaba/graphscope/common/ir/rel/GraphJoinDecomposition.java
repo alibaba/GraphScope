@@ -24,6 +24,7 @@ import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.SqlTypeName;
 
@@ -36,6 +37,7 @@ public class GraphJoinDecomposition extends BiRel {
     private final OrderMappings orderMappings;
     private final Pattern probePattern;
     private final Pattern buildPattern;
+    private final JoinRelType joinType;
 
     public GraphJoinDecomposition(
             RelOptCluster cluster,
@@ -47,12 +49,31 @@ public class GraphJoinDecomposition extends BiRel {
         this(
                 cluster,
                 traitSet,
+                probePattern,
+                buildPattern,
+                joinVertexPairs,
+                orderMappings,
+                JoinRelType.INNER);
+    }
+
+    public GraphJoinDecomposition(
+            RelOptCluster cluster,
+            RelTraitSet traitSet,
+            Pattern probePattern,
+            Pattern buildPattern,
+            List<JoinVertexPair> joinVertexPairs,
+            OrderMappings orderMappings,
+            JoinRelType joinType) {
+        this(
+                cluster,
+                traitSet,
                 new GraphPattern(cluster, traitSet, probePattern),
                 probePattern,
                 new GraphPattern(cluster, traitSet, buildPattern),
                 buildPattern,
                 joinVertexPairs,
-                orderMappings);
+                orderMappings,
+                joinType);
     }
 
     protected GraphJoinDecomposition(
@@ -63,12 +84,14 @@ public class GraphJoinDecomposition extends BiRel {
             RelNode right,
             Pattern rightPattern,
             List<JoinVertexPair> joinVertexPairs,
-            OrderMappings orderMappings) {
+            OrderMappings orderMappings,
+            JoinRelType joinType) {
         super(cluster, traitSet, left, right);
         this.joinVertexPairs = joinVertexPairs;
         this.orderMappings = orderMappings;
         this.probePattern = leftPattern;
         this.buildPattern = rightPattern;
+        this.joinType = joinType;
     }
 
     public List<JoinVertexPair> getJoinVertexPairs() {
@@ -85,6 +108,10 @@ public class GraphJoinDecomposition extends BiRel {
 
     public Pattern getBuildPattern() {
         return buildPattern;
+    }
+
+    public JoinRelType getJoinType() {
+        return joinType;
     }
 
     public static class JoinVertexPair {
@@ -160,7 +187,8 @@ public class GraphJoinDecomposition extends BiRel {
                 inputs.get(1),
                 this.buildPattern,
                 this.joinVertexPairs,
-                this.orderMappings);
+                this.orderMappings,
+                this.joinType);
     }
 
     @Override

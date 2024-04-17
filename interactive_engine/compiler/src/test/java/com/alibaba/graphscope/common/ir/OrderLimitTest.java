@@ -117,11 +117,8 @@ public class OrderLimitTest {
                                                 builder.variable(null, "age"),
                                                 builder.literal(1))))
                         .build();
-        // fix a bug: we added a `project` before the `order`, which altered the current HEAD. To
-        // correct this, we need to add a subsequent project with a meaningful alias ($f1 instead of
-        // DEFAULT).
         Assert.assertEquals(
-                "GraphLogicalProject(_=[$f1], isAppend=[true])\n"
+                "GraphLogicalProject($f1=[$f1], isAppend=[false])\n"
                         + "  GraphLogicalSort(sort0=[$f0], dir0=[DESC])\n"
                         + "    GraphLogicalProject($f0=[+(_.age, 1)], isAppend=[true])\n"
                         + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"

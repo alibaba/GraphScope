@@ -11,7 +11,7 @@ if [ $# -eq 1 ]; then
 fi
 echo "parallelism: $parallelism"
 
-sudo apt install -y \
+sudo apt-get update && sudo apt install -y \
       ninja-build ragel libhwloc-dev libnuma-dev libpciaccess-dev vim wget curl \
       git g++ libunwind-dev libgoogle-glog-dev cmake libopenmpi-dev default-jdk libcrypto++-dev \
       libboost-all-dev libxml2-dev protobuf-compiler libprotobuf-dev libncurses5-dev libcurl4-openssl-dev

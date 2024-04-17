@@ -48,6 +48,10 @@ data:
     kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
     kafka.test.cluster.enable=false
 
+    ## Zk Config
+    zk.base.path={{ .Values.zkBasePath }}
+    zk.connect.string=ZK_CONNECT
+
     ## Frontend Config
     gremlin.server.port=12312
     ## disable neo4j when launching groot server by default
@@ -72,12 +76,14 @@ data:
     pegasus.timeout={{ .Values.pegasus.timeout }}
     pegasus.batch.size=1024
     pegasus.output.capacity=16
-    pegasus.hosts=PEGASUS_HOSTS
 
     ## Secondary config
     secondary.instance.enabled={{ .Values.secondary.enabled }}
     store.data.secondary.path={{ .Values.secondary.storeDataPath }}
     store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
+
+
+    write.ha.enabled={{ .Values.backup.enabled }}
 
     ## Extra Config
     {{- if .Values.extraConfig }}
@@ -95,24 +101,14 @@ data:
     [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
     ordinal=${BASH_REMATCH[1]}
 
-    pegasus_hosts=""
-    i=0
-    while [ $i -ne $STORE_COUNT ]; do
-      pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
-      # 60001 is fixed gaia engine port
-      pegasus_hosts="${pegasus_hosts},${pod}:60001"
-      i=$(($i+1))
-    done
-    pegasus_hosts=${pegasus_hosts:1}
-
     sudo sed -e "s/GRAPH_NAME/${GRAPH_NAME}/g" \
               -e "s/ROLE/${ROLE}/g" \
               -e "s/INDEX/${ordinal}/g" \
+              -e "s/ZK_CONNECT/${ZK_CONNECT}/g" \
               -e "s/KAFKA_SERVERS/${KAFKA_SERVERS}/g" \
               -e "s/FRONTEND/${DNS_NAME_PREFIX_FRONTEND}/g" \
               -e "s/COORDINATOR/${DNS_NAME_PREFIX_COORDINATOR}/g" \
               -e "s/STORE/${DNS_NAME_PREFIX_STORE}/g" \
-              -e "s/PEGASUS_HOSTS/${pegasus_hosts}/g" \
               -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
     /etc/groot/groot.config.tpl | sudo tee -a /etc/groot/groot.config
 
