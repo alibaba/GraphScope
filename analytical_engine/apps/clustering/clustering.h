@@ -271,6 +271,7 @@ class Clustering
         } else {
           int degree =
               global_degree[v] * (global_degree[v] - 1) - 2 * rec_degree[v];
+          // Refer to https://en.wikipedia.org/wiki/Clustering_coefficient
           if (frag.directed()) {
             ctx_data[v] = degree == 0 ? 0.0 : 1.0 * tricnt[v] / degree;
           } else {
