@@ -204,6 +204,7 @@ class TestClustering:
             3 / 6,
         ]
 
+
 @pytest.mark.usefixtures("graphscope_session")
 class TestDirectedWeightedClustering:
     def test_clustering(self):
