@@ -244,6 +244,8 @@ class TestBuiltInApp:
     def test_clustering(self):
         ans = nx.builtin.clustering(self.p2p)
         self.assert_result_almost_equal(ans, self.p2p_clus_ans)
+
+    def test_clustering_undirected(self):
         # test undirected graph
         G = nx.Graph()
         G.add_nodes_from([1, 2, 3])
