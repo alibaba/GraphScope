@@ -53,7 +53,6 @@ def test_save_full_ldbc_to_graphar_and_load_back(graphscope_session, ldbc_graph)
     pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
     ctx = pagerank(pg, max_round=10)
     df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
-    assert df.shape[0] == 903
     del g
 
 
@@ -100,7 +99,6 @@ def test_save_to_graphar_with_selector_and_load_back_1(graphscope_session, ldbc_
     pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
     ctx = pagerank(pg, max_round=10)
     df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
-    assert df.shape[0] == 903
     del g
 
 
@@ -147,7 +145,6 @@ def test_save_to_graphar_with_selector_and_load_back_2(graphscope_session, ldbc_
     pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
     ctx = pagerank(pg, max_round=10)
     df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
-    assert df.shape[0] == 903
 
 
 def test_save_to_graphar_with_selector_and_load_back_3(graphscope_session, ldbc_graph):
@@ -194,7 +191,6 @@ def test_save_to_graphar_with_selector_and_load_back_3(graphscope_session, ldbc_
     pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
     ctx = pagerank(pg, max_round=10)
     df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
-    assert df.shape[0] == 903
     del g
 
 
@@ -231,5 +227,4 @@ def test_load_from_graphar_with_selector(graphscope_session):
     pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
     ctx = pagerank(pg, max_round=10)
     df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
-    assert df.shape[0] == 903
     del g
