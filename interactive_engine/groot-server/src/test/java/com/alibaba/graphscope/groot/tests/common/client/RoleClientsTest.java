@@ -25,8 +25,6 @@ import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.tests.common.rpc.MockFactory;
 
-import io.grpc.ManagedChannel;
-
 import org.junit.jupiter.api.Test;
 
 public class RoleClientsTest {

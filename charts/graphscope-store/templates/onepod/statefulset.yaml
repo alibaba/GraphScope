@@ -135,7 +135,7 @@ spec:
   {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
         - name: data
           persistentVolumeClaim:
-            claimName: {{ tpl .Values.store.persistence.existingClaim . }}
+            claimName: {{ printf "%s" (tpl .Values.persistence.existingClaim .) }}
   {{- else if not .Values.store.persistence.enabled }}
         - name: data
           emptyDir: {}

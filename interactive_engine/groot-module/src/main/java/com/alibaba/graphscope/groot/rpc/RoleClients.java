@@ -15,8 +15,6 @@ package com.alibaba.graphscope.groot.rpc;
 
 import com.alibaba.graphscope.groot.common.RoleType;
 
-import io.grpc.ManagedChannel;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -52,7 +50,8 @@ public class RoleClients<T extends RpcClient> {
                 client = this.clients.get(clientId);
                 if (client == null) {
                     RpcChannel channel = new RpcChannel(channelManager, targetRole, clientId);
-                    // ManagedChannel channel = this.channelManager.getChannel(targetRole, clientId);
+                    // ManagedChannel channel = this.channelManager.getChannel(targetRole,
+                    // clientId);
                     client = clientBuilder.apply(channel);
                     this.clients.put(clientId, client);
                 }

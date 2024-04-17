@@ -20,7 +20,6 @@ import com.alibaba.graphscope.proto.groot.CollectMetricsRequest;
 import com.alibaba.graphscope.proto.groot.CollectMetricsResponse;
 import com.alibaba.graphscope.proto.groot.MetricsCollectGrpc;
 
-import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Map;
@@ -35,22 +34,23 @@ public class MetricsCollectClient extends RpcClient {
     }
 
     public void collectMetrics(CompletionCallback<Map<String, String>> callback) {
-        getStub().collectMetrics(
-                CollectMetricsRequest.newBuilder().build(),
-                new StreamObserver<CollectMetricsResponse>() {
-                    @Override
-                    public void onNext(CollectMetricsResponse value) {
-                        Map<String, String> metricsMap = value.getMetricsMap();
-                        callback.onCompleted(metricsMap);
-                    }
+        getStub()
+                .collectMetrics(
+                        CollectMetricsRequest.newBuilder().build(),
+                        new StreamObserver<CollectMetricsResponse>() {
+                            @Override
+                            public void onNext(CollectMetricsResponse value) {
+                                Map<String, String> metricsMap = value.getMetricsMap();
+                                callback.onCompleted(metricsMap);
+                            }
 
-                    @Override
-                    public void onError(Throwable t) {
-                        callback.onError(t);
-                    }
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

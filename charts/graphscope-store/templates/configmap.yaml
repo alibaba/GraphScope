@@ -44,7 +44,7 @@ data:
 
     ## Zk Config
     zk.base.path={{ .Values.zkBasePath }}
-    zk.connect.string={{ printf "%s-headless" (include "graphscope-store.zookeeper.fullname" .) | quote }}
+    zk.connect.string={{ printf "%s-headless" (include "graphscope-store.zookeeper.fullname" .) }}
 
     ## Kafka Config
     kafka.servers={{ include "graphscope-store.kafka.brokerlist" . }}

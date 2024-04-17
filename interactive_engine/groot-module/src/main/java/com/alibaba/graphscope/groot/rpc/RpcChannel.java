@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.rpc;
 
 import com.alibaba.graphscope.groot.common.RoleType;
+
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 
@@ -17,7 +18,6 @@ public class RpcChannel {
         this.index = index;
         this.channel = manager.getChannel(targetRole, index);
     }
-
 
     public RpcChannel(ManagedChannel channel) {
         this.channel = channel;

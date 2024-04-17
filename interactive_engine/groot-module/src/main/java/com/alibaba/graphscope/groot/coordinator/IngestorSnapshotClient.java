@@ -34,28 +34,29 @@ public class IngestorSnapshotClient extends RpcClient {
     }
 
     private IngestorSnapshotGrpc.IngestorSnapshotStub getStub() {
-        return  IngestorSnapshotGrpc.newStub(rpcChannel.getChannel());
+        return IngestorSnapshotGrpc.newStub(rpcChannel.getChannel());
     }
 
     public void advanceIngestSnapshotId(long writeSnapshotId, CompletionCallback<Long> callback) {
         AdvanceIngestSnapshotIdRequest req =
                 AdvanceIngestSnapshotIdRequest.newBuilder().setSnapshotId(writeSnapshotId).build();
-        getStub().advanceIngestSnapshotId(
-                req,
-                new StreamObserver<AdvanceIngestSnapshotIdResponse>() {
-                    @Override
-                    public void onNext(AdvanceIngestSnapshotIdResponse response) {
-                        long previousSnapshotId = response.getPreviousSnapshotId();
-                        callback.onCompleted(previousSnapshotId);
-                    }
+        getStub()
+                .advanceIngestSnapshotId(
+                        req,
+                        new StreamObserver<AdvanceIngestSnapshotIdResponse>() {
+                            @Override
+                            public void onNext(AdvanceIngestSnapshotIdResponse response) {
+                                long previousSnapshotId = response.getPreviousSnapshotId();
+                                callback.onCompleted(previousSnapshotId);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

@@ -37,8 +37,7 @@ public class StoreSchemaClient extends RpcClient {
 
     public GraphDef fetchSchema() {
         StoreSchemaGrpc.StoreSchemaBlockingStub stub = getStub();
-        FetchSchemaResponse response =
-                stub.fetchSchema(FetchSchemaRequest.newBuilder().build());
+        FetchSchemaResponse response = stub.fetchSchema(FetchSchemaRequest.newBuilder().build());
         return GraphDef.parseProto(response.getGraphDef());
     }
 }

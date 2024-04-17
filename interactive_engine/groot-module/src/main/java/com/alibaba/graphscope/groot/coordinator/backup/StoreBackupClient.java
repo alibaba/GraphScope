@@ -44,23 +44,26 @@ public class StoreBackupClient extends RpcClient {
     public void createStoreBackup(int globalBackupId, CompletionCallback<StoreBackupId> callback) {
         CreateStoreBackupRequest req =
                 CreateStoreBackupRequest.newBuilder().setGlobalBackupId(globalBackupId).build();
-        getStub().createStoreBackup(
-                req,
-                new StreamObserver<CreateStoreBackupResponse>() {
-                    @Override
-                    public void onNext(CreateStoreBackupResponse response) {
-                        StoreBackupIdPb finishedStoreBackupIdPb = response.getStoreBackupId();
-                        callback.onCompleted(StoreBackupId.parseProto(finishedStoreBackupIdPb));
-                    }
+        getStub()
+                .createStoreBackup(
+                        req,
+                        new StreamObserver<CreateStoreBackupResponse>() {
+                            @Override
+                            public void onNext(CreateStoreBackupResponse response) {
+                                StoreBackupIdPb finishedStoreBackupIdPb =
+                                        response.getStoreBackupId();
+                                callback.onCompleted(
+                                        StoreBackupId.parseProto(finishedStoreBackupIdPb));
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void clearUnavailableBackups(
@@ -79,24 +82,25 @@ public class StoreBackupClient extends RpcClient {
                 ClearUnavailableStoreBackupsRequest.newBuilder()
                         .putAllPartitionToReadyBackupIds(partitionToBackupIdListPb)
                         .build();
-        getStub().clearUnavailableStoreBackups(
-                req,
-                new StreamObserver<ClearUnavailableStoreBackupsResponse>() {
-                    @Override
-                    public void onNext(
-                            ClearUnavailableStoreBackupsResponse
-                                    clearUnavailableStoreBackupsResponse) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .clearUnavailableStoreBackups(
+                        req,
+                        new StreamObserver<ClearUnavailableStoreBackupsResponse>() {
+                            @Override
+                            public void onNext(
+                                    ClearUnavailableStoreBackupsResponse
+                                            clearUnavailableStoreBackupsResponse) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void restoreFromStoreBackup(
@@ -108,23 +112,24 @@ public class StoreBackupClient extends RpcClient {
                         .setStoreBackupId(storeBackupId.toProto())
                         .setRestoreRootPath(storeRestoreRootPath)
                         .build();
-        getStub().restoreFromStoreBackup(
-                req,
-                new StreamObserver<RestoreFromStoreBackupResponse>() {
-                    @Override
-                    public void onNext(
-                            RestoreFromStoreBackupResponse restoreFromStoreBackupResponse) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .restoreFromStoreBackup(
+                        req,
+                        new StreamObserver<RestoreFromStoreBackupResponse>() {
+                            @Override
+                            public void onNext(
+                                    RestoreFromStoreBackupResponse restoreFromStoreBackupResponse) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void verifyStoreBackup(StoreBackupId storeBackupId, CompletionCallback<Void> callback) {
@@ -132,21 +137,23 @@ public class StoreBackupClient extends RpcClient {
                 VerifyStoreBackupRequest.newBuilder()
                         .setStoreBackupId(storeBackupId.toProto())
                         .build();
-        getStub().verifyStoreBackup(
-                req,
-                new StreamObserver<VerifyStoreBackupResponse>() {
-                    @Override
-                    public void onNext(VerifyStoreBackupResponse verifyStoreBackupResponse) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .verifyStoreBackup(
+                        req,
+                        new StreamObserver<VerifyStoreBackupResponse>() {
+                            @Override
+                            public void onNext(
+                                    VerifyStoreBackupResponse verifyStoreBackupResponse) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

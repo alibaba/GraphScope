@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class RpcClient implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
 
-//    protected ManagedChannel channel;
+    //    protected ManagedChannel channel;
 
     protected RpcChannel rpcChannel;
 

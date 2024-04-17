@@ -4,8 +4,6 @@ import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.*;
 
-import io.grpc.ManagedChannel;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

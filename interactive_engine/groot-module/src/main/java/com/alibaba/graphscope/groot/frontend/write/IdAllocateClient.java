@@ -6,8 +6,6 @@ import com.alibaba.graphscope.proto.groot.AllocateIdRequest;
 import com.alibaba.graphscope.proto.groot.AllocateIdResponse;
 import com.alibaba.graphscope.proto.groot.IdAllocateGrpc;
 
-import io.grpc.ManagedChannel;
-
 public class IdAllocateClient extends RpcClient {
     public IdAllocateClient(RpcChannel channel) {
         super(channel);

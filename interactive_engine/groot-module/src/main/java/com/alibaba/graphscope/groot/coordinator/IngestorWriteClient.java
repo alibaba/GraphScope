@@ -19,10 +19,7 @@ import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.*;
 
-import io.grpc.ManagedChannel;
-
 public class IngestorWriteClient extends RpcClient {
-
 
     public IngestorWriteClient(RpcChannel channel) {
         super(channel);

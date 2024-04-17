@@ -22,8 +22,6 @@ import com.alibaba.graphscope.proto.groot.CoordinatorSnapshotServiceGrpc;
 import com.alibaba.graphscope.proto.groot.UpdateMinQuerySnapshotIdRequest;
 import com.alibaba.graphscope.proto.groot.UpdateMinQuerySnapshotIdResponse;
 
-import io.grpc.ManagedChannel;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

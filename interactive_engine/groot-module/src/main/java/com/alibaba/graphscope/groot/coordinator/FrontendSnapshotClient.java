@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class FrontendSnapshotClient extends RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(FrontendSnapshotClient.class);
+
     public FrontendSnapshotClient(RpcChannel channel) {
         super(channel);
     }
@@ -48,22 +49,23 @@ public class FrontendSnapshotClient extends RpcClient {
         if (graphDef != null) {
             builder.setGraphDef(graphDef.toProto());
         }
-        getStub().advanceQuerySnapshot(
-                builder.build(),
-                new StreamObserver<>() {
-                    @Override
-                    public void onNext(AdvanceQuerySnapshotResponse response) {
-                        long previousSnapshotId = response.getPreviousSnapshotId();
-                        callback.onCompleted(previousSnapshotId);
-                    }
+        getStub()
+                .advanceQuerySnapshot(
+                        builder.build(),
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(AdvanceQuerySnapshotResponse response) {
+                                long previousSnapshotId = response.getPreviousSnapshotId();
+                                callback.onCompleted(previousSnapshotId);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }
