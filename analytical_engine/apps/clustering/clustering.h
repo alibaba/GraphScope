@@ -63,13 +63,8 @@ class Clustering
         ctx.global_degree[v] = frag.GetLocalOutDegree(v);
       }
       if (ctx.global_degree[v] > 1) {
-        if (frag.directed()) {
-          messages.SendMsgThroughEdges<fragment_t, int>(
-              frag, v, ctx.global_degree[v], tid);
-        } else {
-          messages.SendMsgThroughOEdges<fragment_t, int>(
-              frag, v, ctx.global_degree[v], tid);
-        }
+        messages.SendMsgThroughEdges<fragment_t, int>(
+            frag, v, ctx.global_degree[v], tid);
       }
     });
     messages.ForceContinue();
@@ -176,15 +171,9 @@ class Clustering
                     }
                   }
 
-                  if (frag.directed()) {
-                    messages.SendMsgThroughEdges<
-                        fragment_t, std::vector<std::pair<vid_t, uint32_t>>>(
-                        frag, v, msg_vec, tid);
-                  } else {
-                    messages.SendMsgThroughOEdges<
-                        fragment_t, std::vector<std::pair<vid_t, uint32_t>>>(
-                        frag, v, msg_vec, tid);
-                  }
+                  messages.SendMsgThroughEdges<
+                      fragment_t, std::vector<std::pair<vid_t, uint32_t>>>(
+                      frag, v, msg_vec, tid);
                 }
               });
       messages.ForceContinue();
