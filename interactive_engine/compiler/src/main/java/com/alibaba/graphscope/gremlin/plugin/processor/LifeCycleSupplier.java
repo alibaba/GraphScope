@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.Context;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -41,7 +42,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
     private final QueryCache queryCache;
     private final ExecutionClient client;
     private final Context ctx;
-    private final long queryId;
+    private final BigInteger queryId;
     private final String queryName;
     private final IrMeta meta;
     private final QueryStatusCallback statusCallback;
@@ -52,7 +53,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
             Context ctx,
             QueryCache queryCache,
             ExecutionClient client,
-            long queryId,
+            BigInteger queryId,
             String queryName,
             IrMeta meta,
             QueryStatusCallback statusCallback,
