@@ -100,6 +100,22 @@ store:
   ##
   schedulerName: ""
 
+  ## @param extraVolumes Optionally specify extra list of additional volumes for the Store pod(s)
+  ## e.g:
+  ## extraVolumes:
+  ##   - name: kafka-jaas
+  ##     secret:
+  ##       secretName: kafka-jaas
+  ##
+  extraVolumes: []
+  ## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the Store container(s)
+  ## extraVolumeMounts:
+  ##   - name: kafka-jaas
+  ##     mountPath: /bitnami/kafka/config/kafka_jaas.conf
+  ##     subPath: kafka_jaas.conf
+  ##
+  extraVolumeMounts: []
+
 ## GraphScope Frontend parameters
 ##
 frontend:
@@ -504,4 +520,5 @@ otel:
       name: "traceidratio"
       arg: "0.1"
 
-distributedDeployment: false
+distributed:
+  enabled: false

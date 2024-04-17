@@ -1,4 +1,4 @@
-{{- if .Values.distributedDeployment }}
+{{- if .Values.distributed.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -123,11 +123,17 @@ spec:
             - name: config
               mountPath: /etc/groot/setup.sh
               subPath: setup.sh
+            {{- if .Values.store.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.store.extraVolumeMounts "context" $) | nindent 12 }}
+            {{- end }}
       volumes:
         - name: config
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
             defaultMode: 0755
+        {{- if .Values.store.extraVolumes }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.store.extraVolumes "context" $) | nindent 8 }}
+        {{- end }}
   {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
         - name: data
           persistentVolumeClaim:

@@ -1,6 +1,6 @@
 1. Get the application URL by running these commands:
 
-{{- if .Values.distributedDeployment }}
+{{- if .Values.distributed.enabled }}
   export SERVICE_NAME={{ include "graphscope-store.frontend.fullname" . }}
 {{- else }}
   export SERVICE_NAME={{ include "graphscope-store.store.fullname" . }}

@@ -29,7 +29,7 @@ spec:
       image: {{ include "graphscope-store.test.image" . }}
       env:
         - name: frontend
-          {{- if .Values.distributedDeployment }}
+          {{- if .Values.distributed.enabled }}
           value: {{ include "graphscope-store.frontend.fullname" . }}
           {{- else }}
           value: {{ include "graphscope-store.store.fullname" . }}

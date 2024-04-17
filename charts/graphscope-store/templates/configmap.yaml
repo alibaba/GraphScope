@@ -15,7 +15,7 @@ data:
   groot.config: |-
     ## Common Config
 
-{{- if .Values.distributedDeployment }}
+{{- if .Values.distributed.enabled }}
     rpc.port=55555
     discovery.mode={{ .Values.discoveryMode }}
     role.name=ROLE
