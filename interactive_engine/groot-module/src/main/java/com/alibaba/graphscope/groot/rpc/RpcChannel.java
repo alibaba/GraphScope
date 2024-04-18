@@ -2,10 +2,13 @@ package com.alibaba.graphscope.groot.rpc;
 
 import com.alibaba.graphscope.groot.common.RoleType;
 
-import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class RpcChannel {
+    public static final Logger logger = LoggerFactory.getLogger(RpcChannel.class);
     private final ChannelManager manager;
     private final RoleType targetRole;
     private final int index;
@@ -16,7 +19,7 @@ public class RpcChannel {
         this.manager = manager;
         this.targetRole = targetRole;
         this.index = index;
-        this.channel = manager.getChannel(targetRole, index);
+        this.channel = null;
     }
 
     public RpcChannel(ManagedChannel channel) {
@@ -27,12 +30,10 @@ public class RpcChannel {
     }
 
     public ManagedChannel getChannel() {
-        ConnectivityState state = channel.getState(false);
-        if (state == ConnectivityState.TRANSIENT_FAILURE || state == ConnectivityState.SHUTDOWN) {
-            if (manager != null) {
-                this.channel = manager.getChannel(targetRole, index);
-            }
+        if (manager != null) {
+            return manager.getChannel(targetRole, index);
+        } else {
+            return channel;
         }
-        return channel;
     }
 }

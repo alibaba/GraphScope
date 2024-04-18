@@ -40,18 +40,28 @@ public class Utils {
                     .build();
 
     public static String getHostTemplate(Configs configs, RoleType role) {
+        String releaseName = DiscoveryConfig.RELEASE_FULL_NAME.get(configs);
+        // template = "{releaseName}-{role}-{}.{releaseName}-{role}-headless";
+        // i.e. demo-graphscope-store-frontend-0.demo-graphscope-store-frontend-headless
+        String svcTemplate = "%s-%s";
+        String svcName = "";
         switch (role) {
             case FRONTEND:
-                return DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
+                svcName = String.format(svcTemplate, releaseName, "frontend");
+                break;
             case COORDINATOR:
-                return DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
+                svcName = String.format(svcTemplate, releaseName, "coordinator");
+                break;
             case STORE:
             case GAIA_RPC:
             case GAIA_ENGINE:
-                return DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
+                svcName = String.format(svcTemplate, releaseName, "store");
+                break;
             default:
                 throw new IllegalArgumentException("invalid role [" + role + "]");
         }
+        String dnsTemplate = "%s-{}.%s-headless";
+        return String.format(dnsTemplate, svcName, svcName);
     }
 
     public static int getPort(Configs configs) {

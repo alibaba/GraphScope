@@ -69,6 +69,9 @@ data:
     pegasus.batch.size=1024
     pegasus.output.capacity=16
 
+    gaia.rpc.port=60000
+    gaia.engine.port=60001
+
     ## Secondary config
     secondary.instance.enabled={{ .Values.secondary.enabled }}
     store.data.secondary.path={{ .Values.secondary.storeDataPath }}
