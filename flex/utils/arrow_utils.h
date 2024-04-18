@@ -179,7 +179,8 @@ class LDBCLongDateParser : public arrow::TimestampParser {
   const char* format() const override { return "LongDateFormat"; }
 };
 
-// convert c++ type to arrow type. support other types likes emptyType, Date
+// convert c++ type to arrow type. support other types likes emptyType,
+// TimeStamp
 template <typename T>
 struct TypeConverter;
 
@@ -273,7 +274,7 @@ struct TypeConverter<std::string_view> {
 };
 
 template <>
-struct TypeConverter<Date> {
+struct TypeConverter<TimeStamp> {
   static PropertyType property_type() { return PropertyType::kDate; }
   using ArrowType = arrow::TimestampType;
   using ArrowArrayType = arrow::TimestampArray;
@@ -283,8 +284,8 @@ struct TypeConverter<Date> {
 };
 
 template <>
-struct TypeConverter<Day> {
-  static PropertyType property_type() { return PropertyType::kDay; }
+struct TypeConverter<Date> {
+  static PropertyType property_type() { return PropertyType::kDate; }
   using ArrowType = arrow::TimestampType;
   using ArrowArrayType = arrow::TimestampArray;
   static std::shared_ptr<arrow::DataType> ArrowTypeValue() {

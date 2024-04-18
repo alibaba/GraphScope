@@ -48,8 +48,8 @@ namespace impl {
 
 enum class PropertyTypeImpl {
   kInt32,
-  kDate,
-  kDay,
+  kDate,       // YYYY-MM-DD
+  kTimeStamp,  // milliseconds since epoch
   kString,
   kEmpty,
   kInt64,
@@ -98,8 +98,8 @@ struct PropertyType {
   static PropertyType Int64();
   static PropertyType UInt64();
   static PropertyType Double();
+  static PropertyType TimeStamp();
   static PropertyType Date();
-  static PropertyType Day();
   static PropertyType String();
   static PropertyType StringMap();
   static PropertyType Varchar(uint16_t max_length);
@@ -117,7 +117,7 @@ struct PropertyType {
   static const PropertyType kUInt64;
   static const PropertyType kDouble;
   static const PropertyType kDate;
-  static const PropertyType kDay;
+  static const PropertyType kTimeStamp;
   static const PropertyType kString;
   static const PropertyType kStringMap;
   static const PropertyType kVertexGlobalId;
@@ -165,14 +165,14 @@ inline bool operator>(const GlobalId& lhs, const GlobalId& rhs) {
   return lhs.global_id > rhs.global_id;
 }
 
-struct __attribute__((packed)) Date {
-  Date() = default;
-  ~Date() = default;
-  Date(int64_t x);
+struct __attribute__((packed)) TimeStamp {
+  TimeStamp() = default;
+  ~TimeStamp() = default;
+  TimeStamp(int64_t x);
 
   std::string to_string() const;
 
-  bool operator<(const Date& rhs) const {
+  bool operator<(const TimeStamp& rhs) const {
     return milli_second < rhs.milli_second;
   }
 
@@ -180,17 +180,16 @@ struct __attribute__((packed)) Date {
 };
 
 struct DayValue {
-  uint32_t year : 18;
-  uint32_t month : 4;
-  uint32_t day : 5;
-  uint32_t hour : 5;
+  uint32_t year : 16;
+  uint32_t month : 8;
+  uint32_t day : 8;
 };
 
-struct Day {
-  Day() = default;
-  ~Day() = default;
+struct Date {
+  Date() = default;
+  ~Date() = default;
 
-  Day(int64_t ts);
+  Date(int64_t ts);
 
   std::string to_string() const;
 
@@ -202,7 +201,7 @@ struct Day {
 
     boost::gregorian::date new_date(year(), month(), day());
     boost::posix_time::ptime new_time_point(
-        new_date, boost::posix_time::time_duration(hour(), 0, 0));
+        new_date, boost::posix_time::time_duration(0, 0, 0));
     boost::posix_time::time_duration diff = new_time_point - epoch;
     int64_t new_timestamp_sec = diff.total_seconds();
 
@@ -215,25 +214,24 @@ struct Day {
     boost::posix_time::ptime time_point =
         epoch + boost::posix_time::seconds(ts_sec);
     boost::posix_time::ptime::date_type date = time_point.date();
-    boost::posix_time::time_duration td = time_point.time_of_day();
     this->value.internal.year = date.year();
     this->value.internal.month = date.month().as_number();
     this->value.internal.day = date.day();
-    this->value.internal.hour = td.hours();
 
     int64_t ts_back = to_timestamp();
     CHECK_EQ(ts, ts_back);
   }
 
-  bool operator<(const Day& rhs) const { return this->to_u32() < rhs.to_u32(); }
-  bool operator==(const Day& rhs) const {
+  bool operator<(const Date& rhs) const {
+    return this->to_u32() < rhs.to_u32();
+  }
+  bool operator==(const Date& rhs) const {
     return this->to_u32() == rhs.to_u32();
   }
 
   int year() const;
   int month() const;
   int day() const;
-  int hour() const;
 
   union {
     DayValue internal;
@@ -261,8 +259,8 @@ union AnyValue {
   GlobalId vertex_gid;
   LabelKey label_key;
 
-  Date d;
-  Day day;
+  TimeStamp d;
+  Date day;
   std::string_view s;
   double db;
   uint8_t u8;
@@ -325,18 +323,18 @@ struct Any {
     value.label_key = v;
   }
 
-  void set_date(int64_t v) {
-    type = PropertyType::kDate;
+  void set_timestamp(int64_t v) {
+    type = PropertyType::kTimeStamp;
     value.d.milli_second = v;
+  }
+
+  void set_timestamp(TimeStamp v) {
+    type = PropertyType::kTimeStamp;
+    value.d = v;
   }
 
   void set_date(Date v) {
     type = PropertyType::kDate;
-    value.d = v;
-  }
-
-  void set_day(Day v) {
-    type = PropertyType::kDay;
     value.day = v;
   }
 
@@ -375,7 +373,7 @@ struct Any {
       //      return value.s.to_string();
     } else if (type == PropertyType::kDate) {
       return value.d.to_string();
-    } else if (type == PropertyType::kDay) {
+    } else if (type == PropertyType::kDate) {
       return value.day.to_string();
     } else if (type == PropertyType::kEmpty) {
       return "NULL";
@@ -449,13 +447,13 @@ struct Any {
     return value.s;
   }
 
-  const Date& AsDate() const {
+  const TimeStamp& AsTimeStamp() const {
     assert(type == PropertyType::kDate);
     return value.d;
   }
 
-  const Day& AsDay() const {
-    assert(type == PropertyType::kDay);
+  const Date& AsDate() const {
+    assert(type == PropertyType::kDate);
     return value.day;
   }
 
@@ -480,9 +478,9 @@ struct Any {
         return value.i == other.value.i;
       } else if (type == PropertyType::kInt64) {
         return value.l == other.value.l;
-      } else if (type == PropertyType::kDate) {
+      } else if (type == PropertyType::kTimeStamp) {
         return value.d.milli_second == other.value.d.milli_second;
-      } else if (type == PropertyType::kDay) {
+      } else if (type == PropertyType::kDate) {
         return value.day == other.value.day;
       } else if (type == PropertyType::kString) {
         return value.s == other.value.s;
@@ -521,9 +519,9 @@ struct Any {
         return value.i < other.value.i;
       } else if (type == PropertyType::kInt64) {
         return value.l < other.value.l;
-      } else if (type == PropertyType::kDate) {
+      } else if (type == PropertyType::kTimeStamp) {
         return value.d.milli_second < other.value.d.milli_second;
-      } else if (type == PropertyType::kDay) {
+      } else if (type == PropertyType::kDate) {
         return value.day < other.value.day;
       } else if (type == PropertyType::kString) {
         return value.s < other.value.s;
@@ -621,17 +619,17 @@ struct ConvertAny<LabelKey> {
 };
 
 template <>
-struct ConvertAny<Date> {
-  static void to(const Any& value, Date& out) {
+struct ConvertAny<TimeStamp> {
+  static void to(const Any& value, TimeStamp& out) {
     CHECK(value.type == PropertyType::kDate);
     out = value.value.d;
   }
 };
 
 template <>
-struct ConvertAny<Day> {
-  static void to(const Any& value, Day& out) {
-    CHECK(value.type == PropertyType::kDay);
+struct ConvertAny<Date> {
+  static void to(const Any& value, Date& out) {
+    CHECK(value.type == PropertyType::kDate);
     out = value.value.day;
   }
 };
@@ -861,6 +859,38 @@ struct AnyConverter<GlobalId> {
 };
 
 template <>
+struct AnyConverter<TimeStamp> {
+  static PropertyType type() { return PropertyType::kDate; }
+
+  static Any to_any(const TimeStamp& value) {
+    Any ret;
+    ret.set_timestamp(value);
+    return ret;
+  }
+
+  static Any to_any(int64_t value) {
+    Any ret;
+    ret.set_timestamp(value);
+    return ret;
+  }
+
+  static AnyValue to_any_value(const TimeStamp& value) {
+    AnyValue ret;
+    ret.d = value;
+    return ret;
+  }
+
+  static const TimeStamp& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kDate);
+    return value.value.d;
+  }
+
+  static const TimeStamp& from_any_value(const AnyValue& value) {
+    return value.d;
+  }
+};
+
+template <>
 struct AnyConverter<Date> {
   static PropertyType type() { return PropertyType::kDate; }
 
@@ -871,54 +901,24 @@ struct AnyConverter<Date> {
   }
 
   static Any to_any(int64_t value) {
+    Date dval(value);
     Any ret;
-    ret.set_date(value);
+    ret.set_date(dval);
     return ret;
   }
 
   static AnyValue to_any_value(const Date& value) {
     AnyValue ret;
-    ret.d = value;
+    ret.day = value;
     return ret;
   }
 
   static const Date& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kDate);
-    return value.value.d;
-  }
-
-  static const Date& from_any_value(const AnyValue& value) { return value.d; }
-};
-
-template <>
-struct AnyConverter<Day> {
-  static PropertyType type() { return PropertyType::kDay; }
-
-  static Any to_any(const Day& value) {
-    Any ret;
-    ret.set_day(value);
-    return ret;
-  }
-
-  static Any to_any(int64_t value) {
-    Day dval(value);
-    Any ret;
-    ret.set_day(dval);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const Day& value) {
-    AnyValue ret;
-    ret.day = value;
-    return ret;
-  }
-
-  static const Day& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kDay);
     return value.value.day;
   }
 
-  static const Day& from_any_value(const AnyValue& value) { return value.day; }
+  static const Date& from_any_value(const AnyValue& value) { return value.day; }
 };
 
 template <>
@@ -1115,12 +1115,12 @@ inline bool operator!=(const grape::EmptyType& a, const grape::EmptyType& b) {
   return false;
 }
 
-inline ostream& operator<<(ostream& os, const gs::Date& dt) {
+inline ostream& operator<<(ostream& os, const gs::TimeStamp& dt) {
   os << dt.to_string();
   return os;
 }
 
-inline ostream& operator<<(ostream& os, const gs::Day& dt) {
+inline ostream& operator<<(ostream& os, const gs::Date& dt) {
   os << dt.to_string();
   return os;
 }
@@ -1146,9 +1146,9 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
     os << "uint64";
   } else if (pt == gs::PropertyType::Double()) {
     os << "double";
-  } else if (pt == gs::PropertyType::Date()) {
+  } else if (pt == gs::PropertyType::TimeStamp()) {
     os << "date";
-  } else if (pt == gs::PropertyType::Day()) {
+  } else if (pt == gs::PropertyType::Date()) {
     os << "day";
   } else if (pt == gs::PropertyType::String()) {
     os << "string";

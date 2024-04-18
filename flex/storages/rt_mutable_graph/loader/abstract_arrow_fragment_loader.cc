@@ -82,10 +82,10 @@ void set_vertex_properties(gs::ColumnBase* col,
     set_single_vertex_column<float>(col, array, vids);
   } else if (col_type == PropertyType::kStringMap) {
     set_vertex_column_from_string_array(col, array, vids);
-  } else if (col_type == PropertyType::kDate) {
+  } else if (col_type == PropertyType::kTimeStamp) {
     set_vertex_column_from_timestamp_array(col, array, vids);
-  } else if (col_type == PropertyType::kDay) {
-    set_vertex_column_from_timestamp_array_to_day(col, array, vids);
+  } else if (col_type == PropertyType::kDate) {
+    set_vertex_column_from_timestamp_array_to_date(col, array, vids);
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     set_vertex_column_from_string_array(col, array, vids);
   } else {
@@ -104,8 +104,9 @@ void set_vertex_column_from_timestamp_array(
       auto casted =
           std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+        col->set_any(
+            vids[cur_ind++],
+            std::move(AnyConverter<TimeStamp>::to_any(casted->Value(k))));
       }
     }
   } else {
@@ -114,7 +115,7 @@ void set_vertex_column_from_timestamp_array(
   }
 }
 
-void set_vertex_column_from_timestamp_array_to_day(
+void set_vertex_column_from_timestamp_array_to_date(
     gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
     const std::vector<vid_t>& vids) {
   auto type = array->type();
@@ -126,7 +127,7 @@ void set_vertex_column_from_timestamp_array_to_day(
           std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
         col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<Day>::to_any(casted->Value(k))));
+                     std::move(AnyConverter<Date>::to_any(casted->Value(k))));
       }
     }
   } else {
@@ -247,13 +248,13 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       addEdgesRecordBatchImpl<bool>(src_label_i, dst_label_i, edge_label_i,
                                     filenames, supplier_creator);
     }
-  } else if (property_types[0] == PropertyType::kDate) {
+  } else if (property_types[0] == PropertyType::kTimeStamp) {
     if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<Date>(src_label_i, dst_label_i,
-                                                      edge_label_i);
+      basic_fragment_loader_.AddNoPropEdgeBatch<TimeStamp>(
+          src_label_i, dst_label_i, edge_label_i);
     } else {
-      addEdgesRecordBatchImpl<Date>(src_label_i, dst_label_i, edge_label_i,
-                                    filenames, supplier_creator);
+      addEdgesRecordBatchImpl<TimeStamp>(src_label_i, dst_label_i, edge_label_i,
+                                         filenames, supplier_creator);
     }
   } else if (property_types[0] == PropertyType::kInt32) {
     if (filenames.empty()) {

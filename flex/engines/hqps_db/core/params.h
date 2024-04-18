@@ -385,11 +385,11 @@ enum Interval {
 template <Interval interval>
 struct DateTimeExtractor;
 
-// Extract Year, month, day, hour, minute, second from Date
+// Extract Year, month, day, hour, minute, second from TimeStamp
 
 template <>
 struct DateTimeExtractor<Interval::YEAR> {
-  static int32_t extract(const Date& date) {
+  static int32_t extract(const TimeStamp& date) {
     auto micro_second = date.milli_second / 1000;
     struct tm tm;
     gmtime_r((time_t*) (&micro_second), &tm);
@@ -399,7 +399,7 @@ struct DateTimeExtractor<Interval::YEAR> {
 
 template <>
 struct DateTimeExtractor<Interval::MONTH> {
-  static int32_t extract(const Date& date) {
+  static int32_t extract(const TimeStamp& date) {
     auto micro_second = date.milli_second / 1000;
     struct tm tm;
     gmtime_r((time_t*) (&micro_second), &tm);
@@ -409,7 +409,7 @@ struct DateTimeExtractor<Interval::MONTH> {
 
 template <>
 struct DateTimeExtractor<Interval::DAY> {
-  static int32_t extract(const Date& date) {
+  static int32_t extract(const TimeStamp& date) {
     auto micro_second = date.milli_second / 1000;
     struct tm tm;
     gmtime_r((time_t*) (&micro_second), &tm);
@@ -419,7 +419,7 @@ struct DateTimeExtractor<Interval::DAY> {
 
 template <>
 struct DateTimeExtractor<Interval::HOUR> {
-  static int32_t extract(const Date& date) {
+  static int32_t extract(const TimeStamp& date) {
     auto micro_second = date.milli_second / 1000;
     struct tm tm;
     gmtime_r((time_t*) (&micro_second), &tm);
@@ -429,7 +429,7 @@ struct DateTimeExtractor<Interval::HOUR> {
 
 template <>
 struct DateTimeExtractor<Interval::MINUTE> {
-  static int32_t extract(const Date& date) {
+  static int32_t extract(const TimeStamp& date) {
     auto micro_second = date.milli_second / 1000;
     struct tm tm;
     gmtime_r((time_t*) (&micro_second), &tm);
@@ -439,7 +439,7 @@ struct DateTimeExtractor<Interval::MINUTE> {
 
 template <>
 struct DateTimeExtractor<Interval::SECOND> {
-  static int32_t extract(const Date& date) {
+  static int32_t extract(const TimeStamp& date) {
     auto micro_second = date.milli_second / 1000;
     struct tm tm;
     gmtime_r((time_t*) (&micro_second), &tm);

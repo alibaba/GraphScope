@@ -227,7 +227,7 @@ using UIntColumn = TypedColumn<uint32_t>;
 using LongColumn = TypedColumn<int64_t>;
 using ULongColumn = TypedColumn<uint64_t>;
 using DateColumn = TypedColumn<Date>;
-using DayColumn = TypedColumn<Day>;
+using TimeStampColumn = TypedColumn<TimeStamp>;
 using DoubleColumn = TypedColumn<double>;
 using FloatColumn = TypedColumn<float>;
 

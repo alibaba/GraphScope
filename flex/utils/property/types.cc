@@ -42,8 +42,8 @@ const PropertyType PropertyType::kDouble =
     PropertyType(impl::PropertyTypeImpl::kDouble);
 const PropertyType PropertyType::kDate =
     PropertyType(impl::PropertyTypeImpl::kDate);
-const PropertyType PropertyType::kDay =
-    PropertyType(impl::PropertyTypeImpl::kDay);
+const PropertyType PropertyType::kTimeStamp =
+    PropertyType(impl::PropertyTypeImpl::kTimeStamp);
 const PropertyType PropertyType::kString =
     PropertyType(impl::PropertyTypeImpl::kString);
 const PropertyType PropertyType::kStringMap =
@@ -108,11 +108,11 @@ PropertyType PropertyType::UInt64() {
 PropertyType PropertyType::Double() {
   return PropertyType(impl::PropertyTypeImpl::kDouble);
 }
+PropertyType PropertyType::TimeStamp() {
+  return PropertyType(impl::PropertyTypeImpl::kTimeStamp);
+}
 PropertyType PropertyType::Date() {
   return PropertyType(impl::PropertyTypeImpl::kDate);
-}
-PropertyType PropertyType::Day() {
-  return PropertyType(impl::PropertyTypeImpl::kDay);
 }
 PropertyType PropertyType::String() {
   return PropertyType(impl::PropertyTypeImpl::kString);
@@ -170,9 +170,9 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << value.type << value.value.ul;
   } else if (value.type == PropertyType::Double()) {
     in_archive << value.type << value.value.db;
-  } else if (value.type == PropertyType::Date()) {
+  } else if (value.type == PropertyType::TimeStamp()) {
     in_archive << value.type << value.value.d.milli_second;
-  } else if (value.type == PropertyType::Day()) {
+  } else if (value.type == PropertyType::Date()) {
     in_archive << value.type << value.value.day.to_u32();
   } else if (value.type == PropertyType::String()) {
     in_archive << value.type << value.value.s;
@@ -208,11 +208,11 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     out_archive >> value.value.ul;
   } else if (value.type == PropertyType::Double()) {
     out_archive >> value.value.db;
+  } else if (value.type == PropertyType::TimeStamp()) {
+    int64_t ts;
+    out_archive >> ts;
+    value.value.d.milli_second = ts;
   } else if (value.type == PropertyType::Date()) {
-    int64_t date_val;
-    out_archive >> date_val;
-    value.value.d.milli_second = date_val;
-  } else if (value.type == PropertyType::Day()) {
     uint32_t val;
     out_archive >> val;
     value.value.day.from_u32(val);
@@ -291,28 +291,27 @@ GlobalId::vid_t GlobalId::vid() const {
 
 std::string GlobalId::to_string() const { return std::to_string(global_id); }
 
-Date::Date(int64_t x) : milli_second(x) {}
+TimeStamp::TimeStamp(int64_t x) : milli_second(x) {}
 
-std::string Date::to_string() const { return std::to_string(milli_second); }
+std::string TimeStamp::to_string() const { return std::to_string(milli_second); }
 
-Day::Day(int64_t ts) { from_timestamp(ts); }
+Date::Date(int64_t ts) { from_timestamp(ts); }
 
-std::string Day::to_string() const {
+std::string Date::to_string() const {
   return std::to_string(static_cast<int>(year())) + "-" +
          std::to_string(static_cast<int>(month())) + "-" +
          std::to_string(static_cast<int>(day()));
 }
 
-uint32_t Day::to_u32() const { return value.integer; }
+uint32_t Date::to_u32() const { return value.integer; }
 
-void Day::from_u32(uint32_t val) { value.integer = val; }
+void Date::from_u32(uint32_t val) { value.integer = val; }
 
-int Day::year() const { return value.internal.year; }
+int Date::year() const { return value.internal.year; }
 
-int Day::month() const { return value.internal.month; }
+int Date::month() const { return value.internal.month; }
 
-int Day::day() const { return value.internal.day; }
+int Date::day() const { return value.internal.day; }
 
-int Day::hour() const { return value.internal.hour; }
 
 }  // namespace gs

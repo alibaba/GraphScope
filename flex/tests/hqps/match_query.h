@@ -835,7 +835,7 @@ struct MatchQuery13Expr0 {
   using result_t = bool;
   MatchQuery13Expr0() {}
 
-  inline auto operator()(Date var0) const {
+  inline auto operator()(TimeStamp var0) const {
     return gs::DateTimeExtractor<Interval::MONTH>::extract(var0) == 7;
   }
 
@@ -847,7 +847,7 @@ struct MatchQuery13Expr1 {
   using result_t = int64_t;
   MatchQuery13Expr1() {}
 
-  inline auto operator()(Date var1) const {
+  inline auto operator()(TimeStamp var1) const {
     return gs::DateTimeExtractor<Interval::MONTH>::extract(var1);
   }
 
@@ -868,16 +868,16 @@ class MatchQuery13 : public AppBase {
     auto ctx1 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(ctx0),
         std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
-            gs::PropertySelector<Date>("birthday"))});
+            gs::PropertySelector<TimeStamp>("birthday"))});
     auto expr0 = gs::make_filter(MatchQuery13Expr0(),
-                                 gs::PropertySelector<Date>("None"));
+                                 gs::PropertySelector<TimeStamp>("None"));
     auto ctx2 = Engine::template Select<INPUT_COL_ID(0)>(graph, std::move(ctx1),
                                                          std::move(expr0));
 
     auto ctx3 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(ctx2),
         std::tuple{gs::make_mapper_with_expr<0>(
-            MatchQuery13Expr1(), gs::PropertySelector<Date>("None"))});
+            MatchQuery13Expr1(), gs::PropertySelector<TimeStamp>("None"))});
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class

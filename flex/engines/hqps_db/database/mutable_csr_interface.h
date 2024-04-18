@@ -881,8 +881,8 @@ class MutableCSRInterface {
       return std::make_shared<TypedRefColumn<uint64_t>>(
           *std::dynamic_pointer_cast<TypedColumn<uint64_t>>(column));
     } else if (type == PropertyType::kDate) {
-      return std::make_shared<TypedRefColumn<Date>>(
-          *std::dynamic_pointer_cast<TypedColumn<Date>>(column));
+      return std::make_shared<TypedRefColumn<TimeStamp>>(
+          *std::dynamic_pointer_cast<TypedColumn<TimeStamp>>(column));
     } else if (type == PropertyType::kString) {
       return std::make_shared<TypedRefColumn<std::string_view>>(
           *std::dynamic_pointer_cast<TypedColumn<std::string_view>>(column));

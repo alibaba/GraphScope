@@ -146,8 +146,8 @@ void template_set_value(common::Value* value, T v) {
 }
 
 template <typename T, typename std::enable_if<
-                          (std::is_same_v<T, gs::Date>)>::type* = nullptr>
-void template_set_value(common::Value* value, gs::Date v) {
+                          (std::is_same_v<T, gs::TimeStamp>)>::type* = nullptr>
+void template_set_value(common::Value* value, gs::TimeStamp v) {
   value->set_i64(v.milli_second);
 }
 
@@ -210,7 +210,7 @@ void set_any_to_element(const Any& any, results::Element* element) {
     element->mutable_object()->set_f64(any.value.db);
   } else if (any.type == PropertyType::Float()) {
     element->mutable_object()->set_f64(any.value.f);
-  } else if (any.type == PropertyType::Date()) {
+  } else if (any.type == PropertyType::TimeStamp()) {
     element->mutable_object()->set_i64(any.value.d.milli_second);
   } else if (any.type == PropertyType::String()) {
     element->mutable_object()->mutable_str()->assign(any.value.s.data(),
@@ -258,7 +258,7 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
     value->set_f64(any.value.db);
   } else if (any.type == PropertyType::Float()) {
     value->set_f64(any.value.f);
-  } else if (any.type == PropertyType::Date()) {
+  } else if (any.type == PropertyType::TimeStamp()) {
     value->set_i64(any.value.d.milli_second);
   } else if (any.type == PropertyType::String()) {
     value->mutable_str()->assign(any.value.s.data(), any.value.s.size());
@@ -292,7 +292,7 @@ void set_edge_property(results::Edge* edge, const std::string& prop_name,
 }
 // set date
 void set_edge_property(results::Edge* edge, const std::string& prop_name,
-                       const std::tuple<gs::Date>& value) {
+                       const std::tuple<gs::TimeStamp>& value) {
   auto prop = edge->add_properties();
   prop->mutable_value()->set_i64(std::get<0>(value).milli_second);
   prop->mutable_key()->set_name(prop_name);

@@ -45,9 +45,9 @@ struct NullRecordCreator<std::string_view> {
 };
 
 template <>
-struct NullRecordCreator<Date> {
-  static inline Date GetNull() {
-    return Date(std::numeric_limits<int64_t>::max());
+struct NullRecordCreator<TimeStamp> {
+  static inline TimeStamp GetNull() {
+    return TimeStamp(std::numeric_limits<int64_t>::max());
   }
 };
 

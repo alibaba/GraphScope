@@ -780,8 +780,8 @@ struct to_string_impl<Dist> {
 };
 
 template <>
-struct to_string_impl<Date> {
-  static inline std::string to_string(const Date& empty) {
+struct to_string_impl<TimeStamp> {
+  static inline std::string to_string(const TimeStamp& empty) {
     return std::to_string(empty.milli_second);
   }
 };

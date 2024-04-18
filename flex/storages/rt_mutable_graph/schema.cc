@@ -442,8 +442,8 @@ std::string PropertyTypeToString(PropertyType type) {
     return DT_BOOL;
   } else if (type == PropertyType::kDate) {
     return DT_DATE;
-  } else if (type == PropertyType::kDay) {
-    return DT_DAY;
+  } else if (type == PropertyType::kTimeStamp) {
+    return DT_TIMESTAMP;
   } else if (type == PropertyType::kString) {
     return DT_STRING;
   } else if (type == PropertyType::kStringMap) {
@@ -470,10 +470,10 @@ PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kUInt32;
   } else if (str == "bool" || str == "BOOL" || str == DT_BOOL) {
     return PropertyType::kBool;
+  } else if (str == "TimeStamp" || str == DT_TIMESTAMP) {
+    return PropertyType::kTimeStamp;
   } else if (str == "Date" || str == DT_DATE) {
     return PropertyType::kDate;
-  } else if (str == "Day" || str == DT_DAY) {
-    return PropertyType::kDay;
   } else if (str == "String" || str == "STRING" || str == DT_STRING) {
     // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);
     return PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
@@ -545,10 +545,10 @@ static bool parse_property_type(YAML::Node node, PropertyType& type) {
     return true;
   } else if (node["date"]) {
     auto format = node["date"].as<std::string>();
-    prop_type_str = DT_DATE;
+    prop_type_str = DT_TIMESTAMP;
   } else if (node["day"]) {
     auto format = node["day"].as<std::string>();
-    prop_type_str = DT_DAY;
+    prop_type_str = DT_DATE;
   } else {
     return false;
   }

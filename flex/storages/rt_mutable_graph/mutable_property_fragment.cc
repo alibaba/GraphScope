@@ -88,7 +88,7 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
     } else if (properties[0] == PropertyType::kUInt32) {
       return new DualCsr<uint32_t>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kDate) {
-      return new DualCsr<Date>(oes, ies, oe_mutable, ie_mutable);
+      return new DualCsr<TimeStamp>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kInt64) {
       return new DualCsr<int64_t>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kUInt64) {
