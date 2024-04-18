@@ -24,23 +24,31 @@ import java.util.concurrent.TimeUnit;
 public abstract class RpcClient implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
 
-    protected ManagedChannel channel;
+    //    protected ManagedChannel channel;
+
+    protected RpcChannel rpcChannel;
+
+    public RpcClient(RpcChannel channel) {
+        this.rpcChannel = channel;
+    }
 
     public RpcClient(ManagedChannel channel) {
-        this.channel = channel;
+        this(new RpcChannel(channel));
     }
 
     public void checkChannelState() {
-        if (channel.getState(true) != ConnectivityState.READY) {
-            logger.warn("Current channel State: " + channel.getState(true));
+        ConnectivityState state = rpcChannel.getChannel().getState(true);
+        if (state != ConnectivityState.READY) {
+            logger.warn("Current channel State: " + state);
         }
     }
 
     public void close() {
+        ManagedChannel channel = rpcChannel.getChannel();
         channel.resetConnectBackoff();
-        this.channel.shutdown();
+        channel.shutdown();
         try {
-            this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);
+            channel.awaitTermination(3000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             // Ignore
         }
