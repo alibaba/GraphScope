@@ -245,6 +245,13 @@ class TestBuiltInApp:
         ans = nx.builtin.clustering(self.p2p)
         self.assert_result_almost_equal(ans, self.p2p_clus_ans)
 
+    def test_clustering_undirected(self):
+        # test undirected graph
+        G = nx.Graph()
+        G.add_nodes_from([1, 2, 3])
+        G.add_edges_from([(1, 2), (2, 3), (3, 1)])
+        nx.builtin.clustering(G) == {1: 1.0, 2: 1.0, 3: 1.0}
+
     def test_triangles(self):
         ans = nx.builtin.triangles(self.p2p_undirected)
         self.assert_result_almost_equal(ans, self.p2p_triangles_ans)

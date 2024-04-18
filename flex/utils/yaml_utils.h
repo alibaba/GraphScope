@@ -23,6 +23,7 @@
 #include "flex/utils/result.h"
 
 #include "glog/logging.h"
+#include "nlohmann/json.hpp"
 
 namespace gs {
 
@@ -32,8 +33,12 @@ Result<std::string> get_json_string_from_yaml(const std::string& file_path);
 
 Result<std::string> get_json_string_from_yaml(const YAML::Node& yaml_node);
 
+Result<nlohmann::json> read_json_from_file(const std::string& file_path);
+
 Status write_yaml_node_to_yaml_string(const YAML::Node& node,
                                       YAML::Emitter& emitter);
+
+Result<std::string> get_yaml_string_from_yaml_node(const YAML::Node& node);
 
 namespace config_parsing {
 template <typename T>

@@ -84,6 +84,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -156,7 +157,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SUCCESS).create());
             return;
         }
-        long jobId = idGenerator.generateId();
+        BigInteger jobId = idGenerator.generateId();
         String jobName = idGenerator.generateName(jobId);
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
@@ -293,7 +294,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
     }
 
-    protected QueryStatusCallback createQueryStatusCallback(String query, long queryId) {
+    protected QueryStatusCallback createQueryStatusCallback(String query, BigInteger queryId) {
         return new QueryStatusCallback(
                 new MetricsCollector(evalOpTimer), new QueryLogger(query, queryId));
     }
@@ -365,7 +366,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // add sink operator
         InterOpCollection.process(opCollection);
 
-        long jobId = queryLogger.getQueryId();
+        BigInteger jobId = queryLogger.getQueryId();
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
         queryLogger.info("Submitted query");
@@ -383,7 +384,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         String jobName = "ir_plan_" + jobId;
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
-                        .setJobId(jobId)
+                        .setJobId(jobId.longValue())
                         .setJobName(jobName)
                         .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(queryConfigs))
                         .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(queryConfigs))
@@ -396,7 +397,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Span outgoing =
                 tracer.spanBuilder("/evalOpInternal").setSpanKind(SpanKind.CLIENT).startSpan();
         try (Scope scope = outgoing.makeCurrent()) {
-            outgoing.setAttribute("query.id", queryLogger.getQueryId());
+            outgoing.setAttribute("query.id", queryLogger.getQueryId().toString());
             outgoing.setAttribute("query.statement", queryLogger.getQuery());
             outgoing.setAttribute("query.plan.logical", irPlanStr);
             this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());

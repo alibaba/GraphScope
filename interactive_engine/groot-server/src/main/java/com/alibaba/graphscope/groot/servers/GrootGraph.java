@@ -34,7 +34,7 @@ public class GrootGraph {
         logger.info("Configs {}", conf);
 
         NodeBase node;
-        if (args.length == 0) {
+        if (args.length == 0 || args[0].equals("all-in-one")) {
             logger.warn("No role type, use MaxNode");
             try {
                 node = new MaxNode(conf);

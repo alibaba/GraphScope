@@ -83,6 +83,66 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Graph'
+              example:
+                - name: demo
+                  store_type: mutable_csr
+                  stored_procedures:
+                    directory: plugins
+                  schema:
+                    vertex_types:
+                      - type_id: 0
+                        type_name: person
+                        properties:
+                          - property_id: 0
+                            property_name: id
+                            property_type:
+                              primitive_type: DT_STRING
+                          - property_id: 1
+                            property_name: name
+                            property_type:
+                              primitive_type: DT_STRING
+                        primary_keys:
+                          - id
+                      - type_id: 1
+                        type_name: software
+                        properties:
+                          - property_id: 0
+                            property_name: id
+                            property_type:
+                              primitive_type: DT_STRING
+                          - property_id: 1
+                            property_name: name
+                            property_type:
+                              primitive_type: DT_STRING
+                        primary_keys:
+                          - id
+                    edge_types:
+                      - type_id: 0
+                        type_name: knows
+                        vertex_type_pair_relations:
+                          - source_vertex: person
+                            destination_vertex: person
+                            relation: MANY_TO_MANY
+                            x_csr_params:
+                              edge_storage_strategy: ONLY_IN
+                        properties:
+                          - property_id: 0
+                            property_name: weight
+                            property_type:
+                              primitive_type: DT_STRING
+                      - type_id: 1
+                        type_name: created
+                        vertex_type_pair_relations:
+                          - source_vertex: person
+                            destination_vertex: software
+                            relation: MANY_TO_MANY
+                            x_csr_params:
+                              edge_storage_strategy: ONLY_IN
+                        properties:
+                          - property_id: 0
+                            property_name: weight
+                            property_type:
+                              primitive_type: DT_STRING
   /api/v1/graph/{graph_name}:
     delete:
       tags:
@@ -121,6 +181,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Schema'
+              example:
+                vertex_types:
+                  - type_id: 0
+                    type_name: person
+                    properties:
+                      - property_id: 0
+                        property_name: id
+                        property_type:
+                          primitive_type: DT_STRING
+                      - property_id: 1
+                        property_name: name
+                        property_type:
+                          primitive_type: DT_STRING
+                    primary_keys:
+                      - id
+                  - type_id: 1
+                    type_name: software
+                    properties:
+                      - property_id: 0
+                        property_name: id
+                        property_type:
+                          primitive_type: DT_STRING
+                      - property_id: 1
+                        property_name: name
+                        property_type:
+                          primitive_type: DT_STRING
+                    primary_keys:
+                      - id
+                edge_types:
+                  - type_id: 0
+                    type_name: knows
+                    vertex_type_pair_relations:
+                      - source_vertex: person
+                        destination_vertex: person
+                        relation: MANY_TO_MANY
+                        x_csr_params:
+                          edge_storage_strategy: ONLY_IN
+                    properties:
+                      - property_id: 0
+                        property_name: weight
+                        property_type:
+                           primitive_type: DT_STRING
+                  - type_id: 1
+                    type_name: created
+                    vertex_type_pair_relations:
+                      - source_vertex: person
+                        destination_vertex: software
+                        relation: MANY_TO_MANY
+                        x_csr_params:
+                          edge_storage_strategy: ONLY_IN
+                    properties:
+                      - property_id: 0
+                        property_name: weight
+                        property_type:
+                           primitive_type: DT_STRING
   /api/v1/graph/{graph_name}/schema/vertex_type:
     post:
       tags:
@@ -272,6 +387,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DataSource'
+              example:
+                vertices_datasource:
+                  - data_source: FILE
+                    type_name: person
+                    location: /home/graphscope/path/to/person.csv
+                    property_mapping:
+                      "0": id
+                      "1": name
+                  - data_source: FILE
+                    type_name: software
+                    location: /home/graphscope/path/to/software.csv
+                    property_mapping:
+                      "0": id
+                      "1": name
+                edges_datasource:
+                  - data_source: FILE
+                    type_name: knows
+                    source_vertex: person
+                    destination_vertex: person
+                    location: /home/graphscope/path/to/person_knows_person.csv
+                    source_pk_column_map:
+                      "0": id
+                    destination_pk_column_map:
+                      "1": id
+                    property_mapping:
+                      "2": weight
+                  - data_source: FILE
+                    type_name: created
+                    source_vertex: person
+                    destination_vertex: software
+                    location: /home/graphscope/path/to/person_created_software.csv
+                    source_pk_column_map:
+                      "0": id
+                    destination_pk_column_map:
+                      "1": id
+                    property_mapping:
+                      "2": weight
   /api/v1/graph/{graph_name}/datasource/vertex_datasource:
     post:
       tags:
@@ -321,6 +473,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VertexDataSource'
+              example:
+                data_source: FILE
+                type_name: person
+                location: /home/graphscope/path/to/person.csv
+                property_mapping:
+                  "0": id
+                  "1": name
     delete:
       tags:
         - datasource
@@ -403,6 +562,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EdgeDataSource'
+              example:
+                data_source: FILE
+                type_name: created
+                source_vertex: person
+                destination_vertex: software
+                location: /home/graphscope/path/to/person_created_software.csv
+                source_pk_column_map:
+                  "0": id
+                destination_pk_column_map:
+                  "1": id
+                property_mapping:
+                  "2": weight
     delete:
       tags:
         - datasource
@@ -451,6 +622,52 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/GrootGraph'
+              example:
+                - name: demo
+                  type: GrootGraph
+                  directed: true
+                  creation_time: 2024-04-01 12:00:00
+                  schema:
+                    vertices:
+                      - label: person
+                        properties:
+                          - id: 0
+                            name: id
+                            type: STRING
+                            is_primary_key: true
+                          - id: 1
+                            name: name
+                            type: STRING
+                            is_primary_key: false
+                      - label: software
+                        properties:
+                          - id: 0
+                            name: id
+                            type: STRING
+                            is_primary_key: true
+                          - id: 1
+                            name: name
+                            type: STRING
+                            is_primary_key: false
+                    edges:
+                      - label: knows
+                        relations:
+                          - src_label: person
+                            dst_label: person
+                        properties:
+                          - id: 0
+                            name: weight
+                            type: DOUBLE
+                            is_primary_key: false
+                      - label: created
+                        relations:
+                          - src_label: person
+                            dst_label: software
+                        properties:
+                          - id: 0
+                            name: weight
+                            type: DOUBLE
+                            is_primary_key: false
   /api/v1/groot/graph/{graph_name}/schema:
     post:
       tags:
@@ -494,6 +711,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GrootSchema'
+              example:
+                vertices:
+                  - label: person
+                    properties:
+                      - id: 0
+                        name: id
+                        type: STRING
+                        is_primary_key: true
+                      - id: 1
+                        name: name
+                        type: STRING
+                        is_primary_key: false
+                  - label: software
+                    properties:
+                      - id: 0
+                        name: id
+                        type: STRING
+                        is_primary_key: true
+                      - id: 1
+                        name: name
+                        type: STRING
+                        is_primary_key: false
+                edges:
+                  - label: knows
+                    relations:
+                      - src_label: person
+                        dst_label: person
+                    properties:
+                      - id: 0
+                        name: weight
+                        type: DOUBLE
+                        is_primary_key: false
+                  - label: created
+                    relations:
+                      - src_label: person
+                        dst_label: software
+                    properties:
+                      - id: 0
+                        name: weight
+                        type: DOUBLE
+                        is_primary_key: false
   /api/v1/groot/graph/{graph_name}/dataloading:
     post:
       tags:
@@ -532,6 +790,46 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/JobStatus'
+              example:
+                - job_id: JOB-QWERTYUIOPASDFGH-1
+                  type: DATA IMPORT
+                  status: RUNNING
+                  start_time: 2024-02-24 00:00:00
+                  end_time: null
+                  log: logging...
+                  detail:
+                    graph_name: demo
+                - job_id: JOB-QWERTYUIOPASDFGH-2
+                  type: DATA IMPORT
+                  status: CANCELLED
+                  start_time: 2024-02-24 00:00:00
+                  end_time: null
+                  log: logging...
+                  detail:
+                    graph_name: demo
+                - job_id: JOB-QWERTYUIOPASDFGH-3
+                  type: DATA IMPORT
+                  status: SUCCESS
+                  start_time: 2024-02-24 00:00:00
+                  end_time:  2024-02-24 12:00:00
+                  log: logging...
+                  detail:
+                    graph_name: demo
+                - job_id: JOB-QWERTYUIOPASDFGH-4
+                  type: DATA IMPORT
+                  status: FAILED
+                  start_time: 2024-02-24 00:00:00
+                  end_time: 2024-02-24 12:00:00
+                  log: logging...
+                  detail:
+                    graph_name: demo
+                - job_id: JOB-QWERTYUIOPASDFGH-5
+                  type: DATA IMPORT
+                  status: WAITING
+                  start_time: null
+                  end_time: null
+                  detail:
+                    graph_name: demo
   /api/v1/job/{job_id}:
     get:
       tags:
@@ -550,6 +848,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobStatus'
+              example:
+                job_id: JOB-QWERTYUIOPASDFGH-1
+                type: DATA IMPORT
+                status: RUNNING
+                start_time: 2024-02-24 00:00:00
+                end_time: null
+                log: logging...
     delete:
       tags:
         - job
@@ -610,6 +915,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SchemaMapping'
+              example:
+                graph: demo
+                loading_config: overwrite
+                format:
+                  type: csv
+                  metadata:
+                    delimiter: "|"
+                vertex_mappings:
+                  - type_name: person
+                    inputs:
+                      - /home/graphscope/path/to/person.csv
+                    column_mappings:
+                      - column:
+                          index: 0
+                          name: id
+                        property: id
+                      - column:
+                          index: 1
+                          name: name
+                        property: name
+                  - type_name: software
+                    inputs:
+                      - /home/graphscope/path/to/software.csv
+                    column_mappings:
+                      - column:
+                          index: 0
+                          name: id
+                        property: id
+                      - column:
+                          index: 1
+                          name: name
+                        property: name
+                edge_mappings:
+                  - type_triplet:
+                      edge: knows
+                      source_vertex:  person
+                      destination_vertex:  person
+                      inputs:
+                        - /home/graphscope/path/to/person_knows_person.csv
+                      source_vertex_mappings:
+                        - column:
+                            index: 0
+                            name: id
+                      destination_vertex_mappings:
+                        - column:
+                            index: 1
+                            name: id
+                      column_mappings:
+                        - column:
+                            index: 2
+                            name: weight
+                          property: weight
+                  - type_triplet:
+                      edge: created
+                      source_vertex:  person
+                      destination_vertex:  software
+                      inputs:
+                        - /home/graphscope/path/to/person_created_software.csv
+                      source_vertex_mappings:
+                        - column:
+                            index: 0
+                            name: id
+                      destination_vertex_mappings:
+                        - column:
+                            index: 1
+                            name: id
+                      column_mappings:
+                        - column:
+                            index: 2
+                            name: weight
+                          property: weight
   /api/v1/procedure:
     get:
       tags:
@@ -625,6 +1001,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Procedure'
+              example:
+                - bound_graph: demo
+                  description: "stored procedure 1"
+                  enable: true
+                  runnable: true
+                  name: procedure-1
+                  query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                  type: cypher
+                  params:
+                    - name: id
+                      type: DT_STRING
+                  returns:
+                    - name: name
+                      type: DT_STRING
   /api/v1/graph/{graph_name}/procedure:
     post:
       tags:
@@ -670,7 +1060,58 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Procedure'
+              example:
+                - bound_graph: demo
+                  description: "stored procedure 1"
+                  enable: true
+                  runnable: true
+                  name: procedure-1
+                  query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                  type: cypher
+                  params:
+                    - name: id
+                      type: DT_STRING
+                  returns:
+                    - name: name
+                      type: DT_STRING
   /api/v1/graph/{graph_name}/procedure/{procedure_name}:
+    get:
+      tags:
+        - procedure
+      description: Get a procedure by name
+      operationId: get_procedure
+      parameters:
+      - name: graph_name
+        in : path
+        required: true
+        schema:
+          type: string
+      - name: procedure_name
+        in : path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Procedure'
+              example:
+                bound_graph: demo
+                description: "stored procedure 1"
+                enable: true
+                runnable: true
+                name: procedure-1
+                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                type: cypher
+                params:
+                  - name: id
+                    type: DT_STRING
+                returns:
+                  - name: name
+                    type: DT_STRING
     put:
       tags:
         - procedure
@@ -735,6 +1176,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeploymentInfo'
+              example:
+                cluster_type: HOSTS
+                creation_time: 2024-02-07 14:21:28
+                graphs_info:
+                  demo:
+                    creation_time: 2024-02-07 14:21:28
+                    last_dataloading_time: 2024-02-08 14:21:28
+                    name: demo
+                    update_time: 2024-02-07 14:21:28
+                name: demo
+                solution: INTERACTIVE
+                version: 0.27.0
   /api/v1/deployment/status:
     get:
       tags:
@@ -800,6 +1253,11 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NodeStatus'
+              example:
+                - node: hostname-1
+                  cpu_usage: 80
+                  memory_usage: 40
+                  disk_usage: 85
   /api/v1/service/start:
     post:
       tags:
@@ -860,13 +1318,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceStatus'
+              example:
+                status: running
+                graph_name: demo
+                sdk_endpoints:
+                  cypher: neo4j://mock.api.cypher:7676
+                  gremlin: ws://mock.api.gremlin/gremlin
+                  hqps: http://mock.api.hqps:10000
+                  grpc: http://mock.api.grpc:10000
   /api/v1/alert/message:
     get:
       tags:
         - alert
       operationId: list_alert_messages
       parameters:
-        - name: type
+        - name: alert_type
           in: query
           required: false
           schema:
@@ -909,6 +1375,34 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AlertMessage'
+              example:
+                - message_id: ALERT-MESSAGE-QWERTYUIOP-1
+                  alert_name: HighDiskUtilization
+                  severity: warning
+                  metric_type: node
+                  target:
+                    - hostname-1
+                  trigger_time: 2023-02-21 11:56:30
+                  status: unsolved
+                  message: Disk usage node1 85.12%, exceeds threshold
+                - message_id: ALERT-MESSAGE-QWERTYUIOP-2
+                  alert_name: HighDiskUtilization
+                  severity: emergency
+                  metric_type: node
+                  target:
+                    - hostname-1
+                  trigger_time: 2023-02-21 11:56:30
+                  status: solved
+                  message: Disk usage node1 85.12%, exceeds threshold
+                - message_id: ALERT-MESSAGE-QWERTYUIOP-3
+                  alert_name: HighDiskUtilization
+                  severity: warning
+                  metric_type: node
+                  target:
+                    - hostname-1
+                  trigger_time: 2023-02-21 11:56:30
+                  status: dealing
+                  message: Disk usage node1 85.12%, exceeds threshold
     put:
       tags:
         - alert
@@ -958,6 +1452,17 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AlertRule'
+              example:
+                - name: HighDiskUtilization
+                  severity: warning
+                  metric_type: node
+                  conditions_description: disk usage >= 85
+                  enable: true
+                - name: GremlinServiceAvailable
+                  severity: emergency
+                  metric_type: node
+                  conditions_description: g.V().limit(1) failed
+                  enable: false
   /api/v1/alert/rule/{rule_name}:
     put:
       tags:
@@ -1029,6 +1534,24 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AlertReceiver'
+              example:
+                - type: webhook
+                  receiver_id: RECEIVER-QWERTYUIOP-1
+                  webhook_url: http://webhook.com
+                  is_at_all: false
+                  at_user_ids:
+                    - 111111
+                    - 222222
+                  enable: false
+                - type: webhook
+                  receiver_id: RECEIVER-QWERTYUIOP-2
+                  webhook_url: http://webhook.com
+                  is_at_all: false
+                  at_user_ids:
+                    - 111111
+                    - 222222
+                  enable: true
+                  message: error message
   /api/v1/alert/receiver/{receiver_id}:
     put:
       tags:
@@ -1125,7 +1648,6 @@ components:
       properties:
         name:
           type: string
-          example: mocking_graph
         store_type:
           type: string
           enum:
@@ -1158,33 +1680,16 @@ components:
         type_id:
           type: integer
           format: int32
-          example: 0
         type_name:
           type: string
-          example: person
         properties:
           type: array
           items:
             $ref: '#/components/schemas/Property'
-          example:
-            - property_id: 0
-              property_name: id
-              property_type:
-                primitive_type: DT_STRING
-            - property_id: 1
-              property_name: name
-              property_type:
-                primitive_type: DT_STRING
-            - property_id: 2
-              property_name: age
-              property_type:
-                primitive_type: DT_SIGNED_INT32
         primary_keys:
           type: array
           items:
             type: string
-          example:
-            - id
     EdgeType:
       x-body-name: edge_type
       type: object
@@ -1192,10 +1697,8 @@ components:
         type_id:
           type: integer
           format: int32
-          example: 0
         type_name:
           type: string
-          example: knows
         vertex_type_pair_relations:
           type: array
           items:
@@ -1222,19 +1725,10 @@ components:
                       - ONLY_IN
                       - ONLY_OUT
                       - BOTH_OUT_IN
-          example:
-            - source_vertex: person
-              destination_vertex: person
-              relation: MANY_TO_MANY
         properties:
           type: array
           items:
             $ref: '#/components/schemas/Property'
-          example:
-            - property_id: 0
-              property_name: weight
-              property_type:
-                primitive_type: DT_DOUBLE
     Property:
       x-body-name: property
       type: object
@@ -1261,22 +1755,17 @@ components:
       properties:
         name:
           type: string
-          example: mocking_procedure
         bound_graph:
           type: string
-          example: mocking_graph
         description:
           type: string
-          example: This a test stored procedure
         type:
           type: string
           enum:
            - cpp
            - cypher
-          example: cypher
         query:
           type: string
-          example: MATCH (n:Person) return n;
         enable:
           type: boolean
         runnable:
@@ -1290,11 +1779,6 @@ components:
                 type: string
               type:
                 type: string
-          example:
-            - name: param1
-              type: DT_DOUBLE
-            - name: param2
-              type: DT_STRING
         returns:
           type: array
           items:
@@ -1304,34 +1788,26 @@ components:
                 type: string
               type:
                 type: string
-          example:
-            - name: rlt
-              type: DT_DOUBLE
     DeploymentInfo:
       x-body-name: deployment_info
       type: object
       properties:
         name:
           type: string
-          example: demo
         cluster_type:
           type: string
           enum:
             - HOSTS
             - KUBERNETES
-          example: HOSTS
         version:
           type: string
-          example: 0.26.0
         solution:
           type: string
           enum:
             - INTERACTIVE
             - GRAPHSCOPE_INSIGHT
-          example: INTERACTIVE
         creation_time:
           type: string
-          example: 2024-02-29 12:00:00
         graphs_info:
           type: object
           additionalProperties:
@@ -1339,16 +1815,12 @@ components:
             properties:
               name:
                 type: string
-                example: mocking_graph
               creation_time:
                 type: string
-                example: 2024-02-29 12:00:00
               update_time:
                 type: string
-                example: 2024-02-29 14:00:00
               last_dataloading_time:
                 type: string
-                example: 2024-02-29 16:00:00
     DeploymentStatus:
       x-body-name: deployment_status
       type: object
@@ -1393,71 +1865,56 @@ components:
       properties:
         node:
           type: string
-          example: node1
         cpu_usage:
           type: number
           format: double
-          example: 80
         memory_usage:
           type: number
           format: double
-          example: 70
         disk_usage:
           type: number
           format: double
-          example: 99
     ServiceStatus:
       x-body-name: service_status
       type: object
       properties:
         status:
           type: string
-          example: running
         graph_name:
           description: which graph is serving now
           type: string
-          example: mocking_graph
         sdk_endpoints:
           type: object
           properties:
             cypher:
               type: string
-              example: neo4j://111.111.111.111:7687
             gremlin:
               type: string
-              example: ws://111.111.111.111:12312/gremlin
             hqps:
               type: string
-              example: neo4j://111.111.111.111:10000
             grpc:
               type: string
-              example: 111.111.111.111:55556
     AlertRule:
       type: object
       x-body-name: alert_rule
       properties:
         name:
           type: string
-          example: HighDiskUtilization
         severity:
           type: string
           enum:
             - warning
             - emergency
-          example: warning
         metric_type:
           type: string
           enum:
             - node
             - service
-          example: node
         conditions_description:
           type: string
-          example: disk_utilization>80
         frequency:
           type: integer
           description: (mins)
-          example: 1
         enable:
           type: boolean
     AlertMessage:
@@ -1467,31 +1924,24 @@ components:
         message_id:
           type: string
           description: Generated in server side
-          example: MESSAGE_ABCDEF123GHIJKL456
         alert_name:
           type: string
-          example: HighDiskUtilization
         severity:
           type: string
           enum:
             - warning
             - emergency
-          example: warning
         metric_type:
           type: string
           enum:
             - node
             - service
-          example: node
         target:
           type: array
           items:
             type: string
-          example:
-            - node1
         trigger_time:
           type: string
-          example: 2024-03-1 12:00:00
         status:
           type: string
           enum:
@@ -1500,7 +1950,6 @@ components:
             - dealing
         message:
           type: string
-          example: Disk usage node1 43.63%, exceeds threshold
     AlertReceiver:
       type: object
       x-body-name: alert_receiver
@@ -1512,17 +1961,12 @@ components:
         receiver_id:
           type: string
           description: Generated in server side
-          example: RECEIVER_ABCDEF123GHIJKL456
         webhook_url:
           type: string
-          example: "http://test/webhook/url.com"
         at_user_ids:
           type: array
           items:
             type: string
-          example:
-            - 111111
-            - 222222
         is_at_all:
           type: boolean
         enable:
@@ -1536,7 +1980,6 @@ components:
       properties:
         graph:
           type: string
-          example: mocking_graph
         loading_config:
           type: object
           properties:
@@ -1552,13 +1995,11 @@ components:
               enum:
                 - init
                 - overwrite
-              example: overwrite
             format:
               type: object
               properties:
                 type:
                   type: string
-                  example: csv
                 metadata:
                   type: object
                   additionalProperties: true
@@ -1576,30 +2017,14 @@ components:
       properties:
         type_name:
           type: string
-          example: person
         inputs:
           type: array
           items:
             type: string
-          example:
-            - /home/graphscope/person.csv
         column_mappings:
           type: array
           items:
             $ref: '#/components/schemas/ColumnMapping'
-          example:
-            - column:
-                index: 0
-                name: id
-              property: id
-            - column:
-                index: 0
-                name: name
-              property: name
-            - column:
-                index: 0
-                name: age
-              property: age
     EdgeMapping:
       x-body-name: edge_mapping
       type: object
@@ -1610,19 +2035,14 @@ components:
           properties:
             edge:
               type: string
-              example: knows
             source_vertex:
               type: string
-              example: person
             destination_vertex:
               type: string
-              example: person
         inputs:
           type: array
           items:
             type: string
-          example:
-            - /home/graphscope/person_knows_person.csv
         source_vertex_mappings:
           type: array
           items:
@@ -1637,10 +2057,6 @@ components:
                     format: int32
                   name:
                     type: string
-            example:
-              column:
-                index: 0
-                name: id
         destination_vertex_mappings:
           type: array
           items:
@@ -1655,19 +2071,10 @@ components:
                     format: int32
                   name:
                     type: string
-            example:
-              column:
-                index: 1
-                name: id
         column_mappings:
           type: array
           items:
             $ref: '#/components/schemas/ColumnMapping'
-          example:
-            - column:
-                index: 2
-                name: weight
-              property: weight
     ColumnMapping:
       x-body-name: column_mapping
       type: object
@@ -1689,10 +2096,8 @@ components:
       properties:
         job_id:
           type: string
-          example: JOB_XKDJEJ27827HDJHDJ
         type:
           type: string
-          example: Data Import
         status:
           type: string
           enum:
@@ -1703,19 +2108,14 @@ components:
             - WAITING
         start_time:
           type: string
-          example: 2024-02-29 14:00:00
         end_time:
           type: string
-          example: null
         log:
           type: string
           description: URL or log string
-          example: logging ...
         detail:
           type: object
           additionalProperties: true
-          example:
-            - graph_name: mocking_graph
     VertexDataSource:
       x-body-name: vertex_data_source
       type: object
@@ -1850,9 +2250,9 @@ components:
         type:
           type: string
           enum:
-            - STRING
-            - LONG
-            - DOUBLE
+            - DT_STRING
+            - DT_SIGNED_INT64
+            - DT_DOUBLE
         is_primary_key:
           type: boolean
     GrootDataloadingJobConfig:

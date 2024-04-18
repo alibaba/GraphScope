@@ -102,6 +102,7 @@ public class KafkaProcessor {
         this.pollThread.setName("store-kafka-poller");
         this.pollThread.setDaemon(true);
         this.pollThread.start();
+        logger.info("Kafka processor started");
     }
 
     public void stop() {
