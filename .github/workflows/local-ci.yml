@@ -85,6 +85,7 @@ jobs:
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/**'
+            - 'python/requirements.txt'
           gie-function-test:
             - 'interactive_engine/**'
             - 'python/graphscope/interactive/**'
