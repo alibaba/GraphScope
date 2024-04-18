@@ -880,7 +880,7 @@ class MutableCSRInterface {
     } else if (type == PropertyType::kUInt64) {
       return std::make_shared<TypedRefColumn<uint64_t>>(
           *std::dynamic_pointer_cast<TypedColumn<uint64_t>>(column));
-    } else if (type == PropertyType::kDate) {
+    } else if (type == PropertyType::kTimeStamp) {
       return std::make_shared<TypedRefColumn<TimeStamp>>(
           *std::dynamic_pointer_cast<TypedColumn<TimeStamp>>(column));
     } else if (type == PropertyType::kString) {
@@ -889,6 +889,9 @@ class MutableCSRInterface {
     } else if (type == PropertyType::kFloat) {
       return std::make_shared<TypedRefColumn<float>>(
           *std::dynamic_pointer_cast<TypedColumn<float>>(column));
+    } else if (type == PropertyType::kDate) {
+      return std::make_shared<TypedRefColumn<Date>>(
+          *std::dynamic_pointer_cast<TypedColumn<Date>>(column));
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type.type_enum);
