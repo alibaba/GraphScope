@@ -250,7 +250,7 @@ public class KafkaProcessor {
         long replayFrom = queueOffsetsRef.get().get(0) + 1;
         logger.info("replay WAL of queue#[{}] from offset [{}]", storeId, replayFrom);
         if (replayFrom == 0) {
-            logger.error("It's not normal to replay from the 0 offset, skipped");
+            logger.warn("It may not useful to replay from the 0 offset, skipped");
             return;
         }
         int replayCount = 0;

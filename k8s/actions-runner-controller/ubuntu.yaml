@@ -23,7 +23,7 @@ spec:
           requests:
             cpu: "27.0"
             memory: "60Gi"
-            ephemeral-storage: 100Gi
+            ephemeral-storage: 200Gi
       # - name: docker
       #   resources:
       #     limits:
