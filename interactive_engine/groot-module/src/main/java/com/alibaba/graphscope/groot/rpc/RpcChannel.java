@@ -2,6 +2,7 @@ package com.alibaba.graphscope.groot.rpc;
 
 import com.alibaba.graphscope.groot.common.RoleType;
 
+import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ public class RpcChannel {
         this.manager = manager;
         this.targetRole = targetRole;
         this.index = index;
-        this.channel = null;
+        this.channel = manager.getChannel(targetRole, index);
     }
 
     public RpcChannel(ManagedChannel channel) {
@@ -30,10 +31,12 @@ public class RpcChannel {
     }
 
     public ManagedChannel getChannel() {
-        if (manager != null) {
-            return manager.getChannel(targetRole, index);
-        } else {
-            return channel;
+        ConnectivityState state = channel.getState(false);
+        if (state == ConnectivityState.TRANSIENT_FAILURE || state == ConnectivityState.SHUTDOWN) {
+            if (manager != null) {
+                this.channel = manager.getChannel(targetRole, index);
+            }
         }
+        return channel;
     }
 }
