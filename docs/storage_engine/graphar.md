@@ -39,10 +39,10 @@ As previously mentioned, each logical vertex/edge table is divided into multiple
 - [Apache Parquet](https://parquet.apache.org/)
 - CSV
 
-See [Gar Information Files](https://alibaba.github.io/GraphAr/cpp/getting-started.html#gar-information-files) and [Gar Data Files](https://alibaba.github.io/GraphAr/cpp/getting-started.html#gar-data-files) for an example.
+See [Information Files](https://graphar.apache.org/docs/specification/format#information-files) and [Data Files](https://graphar.apache.org/docs/specification/format#data-files) for an example.
 
 
-More details about the GraphAr file format can be found in the [GraphAr File Format](https://alibaba.github.io/GraphAr/format/file-format.html).
+More details about the GraphAr file format can be found in the [GraphAr File Format](https://graphar.apache.org/docs/specification/format).
 
 #### Data Types
 
