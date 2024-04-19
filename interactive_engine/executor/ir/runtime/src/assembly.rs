@@ -811,7 +811,7 @@ impl<P: PartitionInfo, C: ClusterInfo> JobAssembly<Record> for IRJobAssembly<P, 
         worker.dataflow(move |input, output| {
             let physical_plan = decode::<pb::PhysicalPlan>(&plan.plan)?;
             if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                debug!("{:#?}", physical_plan);
+                debug!("{:#?}", PhysicalPlanPrinter(&physical_plan));
             }
             // input from a dummy record to trigger the computation
             let source = input.input_from(vec![Record::default()])?;
@@ -852,4 +852,32 @@ fn decode<T: Message + Default>(binary: &[u8]) -> FnGenResult<T> {
 #[inline]
 fn to_op_kind(opr: &pb::PhysicalOpr) -> FnGenResult<OpKind> {
     Ok(opr.try_into()?)
+}
+
+struct PhysicalPlanPrinter<'a>(&'a pb::PhysicalPlan);
+struct PhysicalOprPrinter<'a>(&'a pb::PhysicalOpr);
+
+impl<'a> std::fmt::Debug for PhysicalPlanPrinter<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Plan")
+            .field(
+                "operations",
+                &self
+                    .0
+                    .plan
+                    .iter()
+                    .map(PhysicalOprPrinter)
+                    .collect::<Vec<_>>(),
+            )
+            .finish()
+    }
+}
+
+impl<'a> std::fmt::Debug for PhysicalOprPrinter<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let opr = self.0;
+        f.debug_struct("PhysicalOpr")
+            .field("opr", &opr.opr)
+            .finish()
+    }
 }
