@@ -151,6 +151,12 @@ void template_set_value(common::Value* value, gs::TimeStamp v) {
   value->set_i64(v.milli_second);
 }
 
+template <typename T, typename std::enable_if<
+                          (std::is_same_v<T, gs::Date>)>::type* = nullptr>
+void template_set_value(common::Value* value, gs::Date v) {
+  value->set_i64(v.to_timestamp());
+}
+
 template <size_t Is = 0, typename... T>
 void template_set_tuple_value_impl(results::Collection* collection,
                                    const std::tuple<T...>& t) {

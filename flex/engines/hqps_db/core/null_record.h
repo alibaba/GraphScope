@@ -52,6 +52,15 @@ struct NullRecordCreator<TimeStamp> {
 };
 
 template <>
+struct NullRecordCreator<Date> {
+  static inline Date GetNull() {
+    Date date;
+    date.from_u32(std::numeric_limits<int32_t>::max());
+    return date;
+  }
+};
+
+template <>
 struct NullRecordCreator<Any> {
   static inline Any GetNull() { return Any(); }
 };

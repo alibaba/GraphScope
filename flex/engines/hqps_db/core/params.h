@@ -395,6 +395,8 @@ struct DateTimeExtractor<Interval::YEAR> {
     gmtime_r((time_t*) (&micro_second), &tm);
     return tm.tm_year + 1900;
   }
+
+  static int32_t extract(const Date& date) { return date.year(); }
 };
 
 template <>
@@ -405,6 +407,8 @@ struct DateTimeExtractor<Interval::MONTH> {
     gmtime_r((time_t*) (&micro_second), &tm);
     return tm.tm_mon + 1;
   }
+
+  static int32_t extract(const Date& date) { return date.month(); }
 };
 
 template <>
@@ -415,6 +419,8 @@ struct DateTimeExtractor<Interval::DAY> {
     gmtime_r((time_t*) (&micro_second), &tm);
     return tm.tm_mday;
   }
+
+  static int32_t extract(const Date& date) { return date.day(); }
 };
 
 template <>
