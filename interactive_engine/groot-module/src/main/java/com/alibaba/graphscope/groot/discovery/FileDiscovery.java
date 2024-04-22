@@ -36,9 +36,9 @@ public class FileDiscovery implements NodeDiscovery {
     public FileDiscovery(Configs configs) {
         this.configs = configs;
         // Store related nodes
-        String storePrefix = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
-        String frontendPrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
-        String coordinatorPrefix = DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
+        String storePrefix = Utils.getHostTemplate(configs, STORE);
+        String frontendPrefix = Utils.getHostTemplate(configs, FRONTEND);
+        String coordinatorPrefix = Utils.getHostTemplate(configs, COORDINATOR);
 
         // Frontend nodes
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);

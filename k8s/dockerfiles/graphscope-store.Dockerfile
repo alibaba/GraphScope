@@ -41,7 +41,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
 
 RUN apt-get update -y && \
     apt-get install -y sudo default-jdk dnsutils tzdata lsof \
-        libjemalloc-dev libunwind-dev binutils less python3 python3-pip && \
+        libjemalloc-dev libunwind-dev binutils less && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -56,8 +56,10 @@ RUN sudo chmod a+wrx /tmp
 
 # install coordinator
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
-      pip3 install --upgrade pip \
-      && pip3 install /usr/local/groot/wheel/*.whl; \
+      apt-get update -y && apt-get install -y python3-pip && \
+      apt-get clean -y && rm -rf /var/lib/apt/lists/* && \
+      pip3 install --upgrade pip && \
+      pip3 install /usr/local/groot/wheel/*.whl; \
     fi
 
 USER graphscope

@@ -14,21 +14,22 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.*;
 
-import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Map;
 
 public class FrontendStoreClient extends RpcClient {
 
-    private final FrontendStoreServiceGrpc.FrontendStoreServiceStub stub;
-
-    public FrontendStoreClient(ManagedChannel channel) {
+    public FrontendStoreClient(RpcChannel channel) {
         super(channel);
-        this.stub = FrontendStoreServiceGrpc.newStub(channel);
+    }
+
+    private FrontendStoreServiceGrpc.FrontendStoreServiceStub getStub() {
+        return FrontendStoreServiceGrpc.newStub(rpcChannel.getChannel());
     }
 
     public void storeIngest(
@@ -36,97 +37,102 @@ public class FrontendStoreClient extends RpcClient {
         IngestDataRequest.Builder builder = IngestDataRequest.newBuilder();
         builder.setDataPath(dataPath);
         builder.putAllConfig(config);
-        this.stub.storeIngest(
-                builder.build(),
-                new StreamObserver<>() {
-                    @Override
-                    public void onNext(IngestDataResponse value) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .storeIngest(
+                        builder.build(),
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(IngestDataResponse value) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable t) {
-                        callback.onError(t);
-                    }
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void storeClearIngest(String path, CompletionCallback<Void> callback) {
-        this.stub.storeClearIngest(
-                ClearIngestRequest.newBuilder().setDataPath(path).build(),
-                new StreamObserver<>() {
-                    @Override
-                    public void onNext(ClearIngestResponse storeClearIngestResponse) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .storeClearIngest(
+                        ClearIngestRequest.newBuilder().setDataPath(path).build(),
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(ClearIngestResponse storeClearIngestResponse) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void storeCompact(CompletionCallback<Void> callback) {
-        this.stub.compactDB(
-                CompactDBRequest.newBuilder().build(),
-                new StreamObserver<>() {
-                    @Override
-                    public void onNext(CompactDBResponse value) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .compactDB(
+                        CompactDBRequest.newBuilder().build(),
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(CompactDBResponse value) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable t) {
-                        callback.onError(t);
-                    }
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void reopenSecondary(CompletionCallback<Void> callback) {
-        this.stub.reopenSecondary(
-                ReopenSecondaryRequest.newBuilder().build(),
-                new StreamObserver<>() {
-                    @Override
-                    public void onNext(ReopenSecondaryResponse value) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .reopenSecondary(
+                        ReopenSecondaryRequest.newBuilder().build(),
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(ReopenSecondaryResponse value) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable t) {
-                        callback.onError(t);
-                    }
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void getStoreState(CompletionCallback<GetStoreStateResponse> callback) {
-        this.stub.getState(
-                GetStoreStateRequest.newBuilder().build(),
-                new StreamObserver<>() {
-                    @Override
-                    public void onNext(GetStoreStateResponse value) {
-                        callback.onCompleted(value);
-                    }
+        getStub()
+                .getState(
+                        GetStoreStateRequest.newBuilder().build(),
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(GetStoreStateResponse value) {
+                                callback.onCompleted(value);
+                            }
 
-                    @Override
-                    public void onError(Throwable t) {
-                        callback.onError(t);
-                    }
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

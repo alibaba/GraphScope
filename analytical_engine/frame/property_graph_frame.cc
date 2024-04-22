@@ -15,6 +15,10 @@
 
 #include <memory>
 
+#include "boost/property_tree/exceptions.hpp"
+#include "boost/property_tree/json_parser.hpp"
+#include "boost/property_tree/ptree.hpp"
+
 #include "vineyard/client/client.h"
 #include "vineyard/common/util/macros.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
@@ -47,6 +51,64 @@ static constexpr bool compact_v = _GRAPH_TYPE::compact_v;
 
 namespace bl = boost::leaf;
 namespace detail {
+
+bool isTerminalValue(const boost::property_tree::ptree& pt) {
+  // node is terminal and has no children
+  return pt.empty() && !pt.data().empty();
+}
+/**
+ * Parse the selectors from the property tree and store the vertex and edge
+ * labels selector example:
+ *
+ * selector = {
+ *   "vertices": {
+ *          "person": ["id", "firstName", "secondName"],
+ *          "comment": None  # select all properties
+ *    },
+ *   "edges": {
+ *          "knows": ["CreationDate"],
+ *          "replyOf": None
+ *   }
+ * }
+ *
+ */
+void parse_selectors(const boost::property_tree::ptree& selector,
+                     std::vector<std::string>& selected_vertices,
+                     std::vector<std::string>& selected_edges,
+                     std::unordered_map<std::string, std::vector<std::string>>&
+                         selected_vertex_properties,
+                     std::unordered_map<std::string, std::vector<std::string>>&
+                         selected_edge_properties) {
+  const auto& vertices_node = selector.get_child("vertices");
+  const auto& edges_node = selector.get_child("edges");
+  for (const auto& item : vertices_node) {
+    const std::string& label = item.first;
+    const boost::property_tree::ptree& properties_node = item.second;
+    selected_vertices.push_back(label);
+    if (!isTerminalValue(properties_node)) {
+      // is a list of properties, select only these properties
+      selected_vertex_properties[label] = std::vector<std::string>();
+      for (const auto& sub_item : properties_node) {
+        selected_vertex_properties[label].push_back(
+            sub_item.second.get_value<std::string>());
+      }
+    }
+  }
+
+  for (const auto& item : edges_node) {
+    const auto& edge_label = item.first;
+    const auto& properties_node = item.second;
+    selected_edges.push_back(edge_label);
+    if (!isTerminalValue(properties_node)) {
+      // is a list of properties, select only these properties
+      selected_edge_properties[edge_label] = std::vector<std::string>();
+      for (const auto& sub_item : properties_node) {
+        selected_edge_properties[edge_label].push_back(
+            sub_item.second.get_value<std::string>());
+      }
+    }
+  }
+}
 
 __attribute__((visibility(
     "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
@@ -112,13 +174,37 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
 #ifdef ENABLE_GAR
       BOOST_LEAF_AUTO(graph_info_path,
                       params.Get<std::string>(gs::rpc::GRAPH_INFO_PATH));
-      BOOST_LEAF_ASSIGN(generate_eid, params.Get<bool>(gs::rpc::GENERATE_EID));
-      BOOST_LEAF_ASSIGN(retain_oid, params.Get<bool>(gs::rpc::RETAIN_OID));
+      BOOST_LEAF_AUTO(storage_option,
+                      params.Get<std::string>(gs::rpc::STORAGE_OPTIONS));
+      boost::property_tree::ptree pt;
+      bool store_in_local;
+      std::stringstream ss(storage_option);
+      std::vector<std::string> selected_vertices;
+      std::vector<std::string> selected_edges;
+      std::unordered_map<std::string, std::vector<std::string>>
+          dummy_selected_vertex_properties;
+      std::unordered_map<std::string, std::vector<std::string>>
+          dummy_selected_edge_properties;
+      try {
+        boost::property_tree::read_json(ss, pt);
+        store_in_local = pt.get<bool>("graphar_store_in_local", false);
+        if (pt.find("selector") != pt.not_found()) {
+          const auto& selector_node = pt.get_child("selector");
+          parse_selectors(selector_node, selected_vertices, selected_edges,
+                          dummy_selected_vertex_properties,
+                          dummy_selected_edge_properties);
+        }
+      } catch (boost::property_tree::ptree_error const& e) {
+        RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                        "Invalid write_option: " + std::string(e.what()));
+      }
       using loader_t =
           vineyard::gar_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
-      loader_t loader(client, comm_spec, graph_info_path);
-      MPI_Barrier(comm_spec.comm());
-      BOOST_LEAF_ASSIGN(frag_group_id, loader.LoadFragmentAsFragmentGroup());
+      auto loader = std::make_unique<loader_t>(client, comm_spec);
+      BOOST_LEAF_CHECK(loader->Init(graph_info_path, selected_vertices,
+                                    selected_edges, true, false,
+                                    store_in_local));
+      BOOST_LEAF_ASSIGN(frag_group_id, loader->LoadFragmentAsFragmentGroup());
 #else
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                       "The vineyard is not compiled with GAR support");
@@ -187,18 +273,53 @@ __attribute__((visibility("hidden"))) static bl::result<void> ArchiveGraph(
     vineyard::ObjectID frag_group_id, const grape::CommSpec& comm_spec,
     vineyard::Client& client, const gs::rpc::GSParams& params) {
 #ifdef ENABLE_GAR
-  BOOST_LEAF_AUTO(graph_info_path,
+  BOOST_LEAF_AUTO(output_path,
                   params.Get<std::string>(gs::rpc::GRAPH_INFO_PATH));
-
+  BOOST_LEAF_AUTO(write_option,
+                  params.Get<std::string>(gs::rpc::WRITE_OPTIONS));
+  boost::property_tree::ptree pt;
+  std::string graph_name, file_type;
+  int64_t vertex_chunk_size, edge_chunk_size;
+  bool store_in_local;
+  std::stringstream ss(write_option);
+  std::vector<std::string> selected_vertices;
+  std::vector<std::string> selected_edges;
+  std::unordered_map<std::string, std::vector<std::string>>
+      selected_vertex_properties;
+  std::unordered_map<std::string, std::vector<std::string>>
+      selected_edge_properties;
+  try {
+    boost::property_tree::read_json(ss, pt);
+    graph_name = pt.get<std::string>("graphar_graph_name");
+    file_type = pt.get<std::string>("graphar_file_type", "parquet");
+    vertex_chunk_size =
+        pt.get<int64_t>("graphar_vertex_chunk_size", 262144);  // default 2^18
+    edge_chunk_size =
+        pt.get<int64_t>("graphar_edge_chunk_size", 4194304);  // default 2^22
+    store_in_local = pt.get<bool>("graphar_store_in_local", false);
+    if (pt.find("selector") != pt.not_found()) {
+      const auto& selector_node = pt.get_child("selector");
+      parse_selectors(selector_node, selected_vertices, selected_edges,
+                      selected_vertex_properties, selected_edge_properties);
+    }
+  } catch (boost::property_tree::ptree_error const& e) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                    "Invalid write_option: " + std::string(e.what()));
+  }
   auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
       client.GetObject(frag_group_id));
   auto fid = comm_spec.WorkerToFrag(comm_spec.worker_id());
   auto frag_id = fg->Fragments().at(fid);
   auto frag = std::static_pointer_cast<_GRAPH_TYPE>(client.GetObject(frag_id));
 
-  using archive_t = vineyard::ArrowFragmentWriter<_GRAPH_TYPE>;
-  archive_t archive(frag, comm_spec, graph_info_path);
-  archive.WriteFragment();
+  using writer_t = vineyard::ArrowFragmentWriter<_GRAPH_TYPE>;
+  auto writer = std::make_unique<writer_t>();
+  BOOST_LEAF_CHECK(writer->Init(
+      frag, comm_spec, graph_name, output_path, vertex_chunk_size,
+      edge_chunk_size, file_type, selected_vertices, selected_edges,
+      selected_vertex_properties, selected_edge_properties, store_in_local));
+  BOOST_LEAF_CHECK(writer->WriteGraphInfo(output_path));
+  BOOST_LEAF_CHECK(writer->WriteFragment());
 
   return {};
 #else
