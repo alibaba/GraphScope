@@ -96,21 +96,31 @@ public class ChannelManager {
         logger.debug("role [" + role.getName() + "] registered");
     }
 
+    private ManagedChannel createChannel(RoleType role, int idx) {
+        String host = Utils.getHostTemplate(configs, role).replace("{}", String.valueOf(idx));
+        int port = Utils.getPort(configs, role, idx);
+        logger.info("Create channel to {}#{}, {}:{}", role.getName(), idx, host, port);
+        ManagedChannel channel =
+                ManagedChannelBuilder.forAddress(host, port)
+                        .maxInboundMessageSize(this.rpcMaxBytes)
+                        .usePlaintext()
+                        .build();
+        return channel;
+    }
+
     public ManagedChannel getChannel(RoleType role, int idx) {
         Map<Integer, ManagedChannel> idToChannel = this.roleToChannels.get(role);
         if (idToChannel == null) {
             throw new NodeConnectException("invalid role [" + role + "]");
         }
+        // to avoid thread competition
         if (idToChannel.get(idx) == null) {
-            String host = Utils.getHostTemplate(configs, role).replace("{}", String.valueOf(idx));
-            int port = Utils.getPort(configs, role, idx);
-            logger.info("Create channel to {}#{}, {}:{}", role.getName(), idx, host, port);
-            ManagedChannel channel =
-                    ManagedChannelBuilder.forAddress(host, port)
-                            .maxInboundMessageSize(this.rpcMaxBytes)
-                            .usePlaintext()
-                            .build();
-            idToChannel.put(idx, channel);
+            synchronized (this) {
+                if (idToChannel.get(idx) == null) {
+                    ManagedChannel channel = createChannel(role, idx);
+                    idToChannel.put(idx, channel);
+                }
+            }
         }
         return idToChannel.get(idx);
     }

@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.*;
 
@@ -23,34 +24,34 @@ import io.grpc.ManagedChannel;
 import java.util.List;
 
 public class BackupClient extends RpcClient {
-    private final BackupGrpc.BackupBlockingStub stub;
-
-    public BackupClient(ManagedChannel channel) {
+    public BackupClient(RpcChannel channel) {
         super(channel);
-        this.stub = BackupGrpc.newBlockingStub(channel);
     }
 
     public BackupClient(BackupGrpc.BackupBlockingStub stub) {
-        super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
+        super(new RpcChannel((ManagedChannel) stub.getChannel()));
+    }
+
+    private BackupGrpc.BackupBlockingStub getStub() {
+        return BackupGrpc.newBlockingStub(rpcChannel.getChannel());
     }
 
     public int createNewBackup() {
         CreateNewBackupRequest request = CreateNewBackupRequest.newBuilder().build();
-        CreateNewBackupResponse response = this.stub.createNewBackup(request);
+        CreateNewBackupResponse response = getStub().createNewBackup(request);
         return response.getGlobalBackupId();
     }
 
     public void deleteBackup(int globalBackupId) {
         DeleteBackupRequest request =
                 DeleteBackupRequest.newBuilder().setGlobalBackupId(globalBackupId).build();
-        this.stub.deleteBackup(request);
+        getStub().deleteBackup(request);
     }
 
     public void purgeOldBackups(int keepAliveNum) {
         PurgeOldBackupsRequest request =
                 PurgeOldBackupsRequest.newBuilder().setKeepAliveNumber(keepAliveNum).build();
-        this.stub.purgeOldBackups(request);
+        getStub().purgeOldBackups(request);
     }
 
     public void restoreFromBackup(
@@ -61,18 +62,18 @@ public class BackupClient extends RpcClient {
                         .setMetaRestorePath(metaRestorePath)
                         .setStoreRestorePath(storeRestorePath)
                         .build();
-        this.stub.restoreFromBackup(request);
+        getStub().restoreFromBackup(request);
     }
 
     public void verifyBackup(int globalBackupId) {
         VerifyBackupRequest request =
                 VerifyBackupRequest.newBuilder().setGlobalBackupId(globalBackupId).build();
-        this.stub.verifyBackup(request);
+        getStub().verifyBackup(request);
     }
 
     public List<BackupInfoPb> getBackupInfo() {
         GetBackupInfoRequest request = GetBackupInfoRequest.newBuilder().build();
-        GetBackupInfoResponse response = this.stub.getBackupInfo(request);
+        GetBackupInfoResponse response = getStub().getBackupInfo(request);
         return response.getBackupInfoListList();
     }
 }

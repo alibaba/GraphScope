@@ -1,3 +1,4 @@
+{{- if .Values.distributed.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -30,7 +31,7 @@ spec:
     - name: grpc
       port: {{ .Values.frontend.service.servicePort }}
       protocol: TCP
-      targetPort: service-port
+      targetPort: grpc
       {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.service)) }}
       nodePort: {{ .Values.frontend.service.nodePorts.service }}
       {{- else if eq .Values.frontend.service.type "ClusterIP" }}
@@ -49,3 +50,4 @@ spec:
       {{- end }}
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
+{{- end -}}

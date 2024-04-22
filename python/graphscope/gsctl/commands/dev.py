@@ -195,6 +195,7 @@ def install_deps(
     """Install dependencies for building GraphScope."""
     cmd = [
         "bash",
+        "-e",
         install_deps_script,
         "-t",
         type,
@@ -278,6 +279,7 @@ def make(component, graphscope_repo, install_prefix, storage_type):
 
     cmd = [
         "bash",
+        "-e",
         make_script,
         "-c",
         component,
@@ -339,7 +341,7 @@ def make_image(component, graphscope_repo, registry, tag):
     if component is None:
         component = "all"
 
-    cmd = ["bash", make_image_script, "-c", component, "-r", registry, "-t", tag]
+    cmd = ["bash", "-e", make_image_script, "-c", component, "-r", registry, "-t", tag]
     run_shell_cmd(cmd, graphscope_repo)
 
 
@@ -411,6 +413,7 @@ def test(type, graphscope_repo, testdata, local, storage_type, k8s, nx):
         type = ""
     cmd = [
         "bash",
+        "-e",
         test_script,
         "-t",
         type,
