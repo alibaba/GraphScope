@@ -18,12 +18,10 @@ package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
-import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.runtime.CalciteException;
@@ -210,25 +208,7 @@ public class MatchTest {
     @Test
     public void match_8_test() {
         RelNode multiMatch = Utils.eval("Match (a) Where not (a)-[c]-(b) Return a Limit 1").build();
-        Assert.assertEquals(
-                "GraphLogicalSort(fetch=[1])\n"
-                    + "  GraphLogicalProject(a=[a], isAppend=[false])\n"
-                    + "    LogicalFilter(condition=[NOT(EXISTS({\n"
-                    + "GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[b], opt=[OTHER])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[c], opt=[BOTH])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])\n"
-                    + "}))])\n"
-                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])",
-                multiMatch.explain().trim());
-        RelOptPlanner planner =
-                com.alibaba.graphscope.common.ir.Utils.mockPlanner(
-                        NotMatchToAntiJoinRule.Config.DEFAULT);
-        planner.setRoot(multiMatch);
-        RelNode after = planner.findBestExp();
+        // we convert the NOT MATCH to ANTI JOIN in GraphBuilder directly
         Assert.assertEquals(
                 "GraphLogicalSort(fetch=[1])\n"
                     + "  GraphLogicalProject(a=[a], isAppend=[false])\n"
@@ -243,7 +223,7 @@ public class MatchTest {
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
-                after.explain().trim());
+                multiMatch.explain().trim());
     }
 
     @Test

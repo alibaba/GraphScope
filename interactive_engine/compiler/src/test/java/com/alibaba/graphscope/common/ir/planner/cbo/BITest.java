@@ -46,7 +46,7 @@ public class BITest {
                                 "graph.planner.opt",
                                 "CBO",
                                 "graph.planner.rules",
-                                "NotMatchToAntiJoinRule, FilterIntoJoinRule, FilterMatchRule,"
+                                "FilterIntoJoinRule, FilterMatchRule,"
                                         + " ExtendIntersectRule, ExpandGetVFusionRule",
                                 "graph.planner.cbo.glogue.schema",
                                 "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt"));
