@@ -1107,13 +1107,6 @@ inline std::size_t hash_value(const gs::LabelKey& key) {
 }  // namespace boost
 
 namespace std {
-inline bool operator==(const grape::EmptyType& a, const grape::EmptyType& b) {
-  return true;
-}
-
-inline bool operator!=(const grape::EmptyType& a, const grape::EmptyType& b) {
-  return false;
-}
 
 inline ostream& operator<<(ostream& os, const gs::Date& dt) {
   os << dt.to_string();
@@ -1163,6 +1156,7 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
   }
   return os;
 }
+
 template <>
 struct hash<gs::GlobalId> {
   size_t operator()(const gs::GlobalId& value) const {
@@ -1171,5 +1165,11 @@ struct hash<gs::GlobalId> {
 };
 
 }  // namespace std
+
+namespace grape {
+inline bool operator==(const EmptyType& a, const EmptyType& b) { return true; }
+
+inline bool operator!=(const EmptyType& a, const EmptyType& b) { return false; }
+}  // namespace grape
 
 #endif  // GRAPHSCOPE_TYPES_H_

@@ -41,6 +41,8 @@ class KeyedRowVertexSetIter {
  public:
   using key_t = KEY_T;
   using lid_t = VID_T;
+  using set_t = KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>;
+  using ele_tuple_t = typename set_t::ele_tuple_t;
   using data_tuple_t = typename std::tuple<T...>;
   using self_type_t = KeyedRowVertexSetIter<LabelT, KEY_T, VID_T, T...>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T>;
@@ -63,7 +65,7 @@ class KeyedRowVertexSetIter {
         ind_(other.ind_) {}
   ~KeyedRowVertexSetIter() {}
 
-  lid_t GetElement() const { return vids_[ind_]; }
+  ele_tuple_t GetElement() const { return GlobalId(v_label_, vids_[ind_]); }
 
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(ind_, vids_[ind_]);
@@ -132,6 +134,8 @@ class KeyedRowVertexSetIter<LabelT, KEY_T, VID_T, grape::EmptyType> {
  public:
   using key_t = KEY_T;
   using lid_t = VID_T;
+  using set_t = KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType>;
+  using ele_tuple_t = typename set_t::ele_tuple_t;
   using data_tuple_t = typename std::tuple<grape::EmptyType>;
   using self_type_t =
       KeyedRowVertexSetIter<LabelT, KEY_T, VID_T, grape::EmptyType>;
@@ -154,7 +158,7 @@ class KeyedRowVertexSetIter<LabelT, KEY_T, VID_T, grape::EmptyType> {
         ind_(other.ind_) {}
   ~KeyedRowVertexSetIter() {}
 
-  lid_t GetElement() const { return vids_[ind_]; }
+  ele_tuple_t GetElement() const { return GlobalId(v_label_, vids_[ind_]); }
 
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(ind_, vids_[ind_]);
@@ -507,6 +511,7 @@ class KeyedRowVertexSetImpl {
   using iterator = KeyedRowVertexSetIter<LabelT, KEY_T, VID_T, T...>;
   using filtered_vertex_set = self_type_t;
   using ground_vertex_set_t = RowVertexSet<LabelT, VID_T, T...>;
+  using ele_tuple_t = GlobalId;
   using index_ele_tuple_t = std::tuple<size_t, VID_T>;
   // from this tuple, we can reconstruct the partial set.
   using flat_ele_tuple_t = std::tuple<size_t, VID_T, std::tuple<T...>>;
@@ -727,6 +732,7 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
   using self_type_t =
       KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType>;
   using lid_t = VID_T;
+  using ele_tuple_t = GlobalId;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   using flat_t = self_type_t;
 
