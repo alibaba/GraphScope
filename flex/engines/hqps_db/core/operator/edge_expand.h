@@ -250,7 +250,7 @@ class EdgeExpand {
       const GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>& cur_vertex_set,
       Direction direction, label_id_t edge_label, label_id_t other_label,
       const Filter<TruePredicate, SELECTOR...>& edge_filter,
-      size_t limit = INT_MAX) {
+      std::vector<label_id_t> valid_src_labels = {}, size_t limit = INT_MAX) {
     VLOG(10) << "[EdgeExpandV] for general vertex set size: "
              << cur_vertex_set.Size();
     auto state = EdgeExpandVState(graph, cur_vertex_set, direction, edge_label,
@@ -271,6 +271,12 @@ class EdgeExpand {
       label_id_t dst_label = state.other_label_;
       // std::tie(src_label, dst_label) =
       //     get_graph_label_pair(direction, cur_label, state.other_label_);
+
+      if (valid_src_labels.size() > 0 &&
+          std::find(valid_src_labels.begin(), valid_src_labels.end(),
+                    src_label) == valid_src_labels.end()) {
+        continue;
+      }
 
       VLOG(10) << "[EdgeExpandV]: "
                << "edge label: " << std::to_string(state.edge_label_)
@@ -459,24 +465,27 @@ class EdgeExpand {
     CHECK(edge_triplets.size() > 0);
     // result_set_t is the type of calling EdgeExpandV with cur_vertex_set
     // and edge_triplets[i]
-    using result_set_t = decltype(
-        EdgeExpandV(graph, cur_vertex_set, direction, edge_triplets[0][2],
-                    edge_triplets[0][1], std::move(edge_filter))
-            .first);
+    using result_set_t =
+        decltype(EdgeExpandV(graph, cur_vertex_set, direction,
+                             edge_triplets[0][2], edge_triplets[0][1],
+                             std::move(edge_filter))
+                     .first);
     using result_pair_t = std::pair<result_set_t, std::vector<offset_t>>;
     std::vector<result_pair_t> result_pairs;
     for (size_t i = 0; i < edge_triplets.size(); ++i) {
       if (direction == Direction::In || direction == Direction::Both) {
         auto copied_filter = edge_filter;
-        result_pairs.emplace_back(EdgeExpandV(
-            graph, cur_vertex_set, Direction::In, edge_triplets[i][2],
-            edge_triplets[i][0], std::move(copied_filter)));
+        result_pairs.emplace_back(
+            EdgeExpandV(graph, cur_vertex_set, Direction::In,
+                        edge_triplets[i][2], edge_triplets[i][0],
+                        std::move(copied_filter), {edge_triplets[i][1]}));
       }
       if (direction == Direction::Out || direction == Direction::Both) {
         auto copied_filter = edge_filter;
-        result_pairs.emplace_back(EdgeExpandV(
-            graph, cur_vertex_set, Direction::Out, edge_triplets[i][2],
-            edge_triplets[i][1], std::move(copied_filter)));
+        result_pairs.emplace_back(
+            EdgeExpandV(graph, cur_vertex_set, Direction::Out,
+                        edge_triplets[i][2], edge_triplets[i][1],
+                        std::move(copied_filter), {edge_triplets[i][0]}));
       }
     }
 

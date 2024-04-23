@@ -926,7 +926,7 @@ impl<P: PartitionInfo, C: ClusterInfo> JobAssembly<Record> for IRJobAssembly<P, 
         worker.dataflow(move |input, output| {
             let physical_plan = decode::<pb::PhysicalPlan>(&plan.plan)?;
             if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                debug!("{:#?}", physical_plan);
+                debug!("{:#?}", PhysicalPlanPrinter(&physical_plan));
             }
             // input from a dummy record to trigger the computation
             let source = input.input_from(vec![Record::default()])?;
@@ -967,4 +967,97 @@ fn decode<T: Message + Default>(binary: &[u8]) -> FnGenResult<T> {
 #[inline]
 fn to_op_kind(opr: &pb::PhysicalOpr) -> FnGenResult<OpKind> {
     Ok(opr.try_into()?)
+}
+
+struct PhysicalPlanPrinter<'a>(&'a pb::PhysicalPlan);
+struct PhysicalOprPrinter<'a>(&'a pb::PhysicalOpr);
+
+impl<'a> std::fmt::Debug for PhysicalPlanPrinter<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Plan")
+            .field(
+                "operations",
+                &self
+                    .0
+                    .plan
+                    .iter()
+                    .map(PhysicalOprPrinter)
+                    .collect::<Vec<_>>(),
+            )
+            .finish()
+    }
+}
+
+impl<'a> std::fmt::Debug for PhysicalOprPrinter<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let opr = self.0;
+        if let Some(opr) = &opr.opr {
+            if let Some(op_kind) = &opr.op_kind {
+                match op_kind {
+                    OpKind::Apply(apply) => f
+                        .debug_struct("Apply")
+                        .field("keys", &apply.keys)
+                        .field(
+                            "sub_plan",
+                            &apply
+                                .sub_plan
+                                .as_ref()
+                                .map(|plan| PhysicalPlanPrinter(plan)),
+                        )
+                        .finish(),
+                    OpKind::Join(join) => f
+                        .debug_struct("Join")
+                        .field(
+                            "left_plan",
+                            &join
+                                .left_plan
+                                .as_ref()
+                                .map(|plan| PhysicalPlanPrinter(plan)),
+                        )
+                        .field(
+                            "right_plan",
+                            &join
+                                .right_plan
+                                .as_ref()
+                                .map(|plan| PhysicalPlanPrinter(plan)),
+                        )
+                        .field("join_type", &join.join_kind)
+                        .field("left_keys", &join.left_keys)
+                        .field("right_keys", &join.right_keys)
+                        .finish(),
+                    OpKind::Union(union) => f
+                        .debug_struct("Union")
+                        .field(
+                            "sub_plans",
+                            &union
+                                .sub_plans
+                                .iter()
+                                .map(|plan| PhysicalPlanPrinter(plan))
+                                .collect::<Vec<_>>(),
+                        )
+                        .finish(),
+                    OpKind::Intersect(intersect) => f
+                        .debug_struct("Intersect")
+                        .field(
+                            "sub_plans",
+                            &intersect
+                                .sub_plans
+                                .iter()
+                                .map(|plan| PhysicalPlanPrinter(plan))
+                                .collect::<Vec<_>>(),
+                        )
+                        .finish(),
+                    _ => f
+                        .debug_struct("PhysicalOpr")
+                        .field("opr", op_kind)
+                        .finish(),
+                }
+            } else {
+                f.debug_struct("Empty PhysicalOprOpKind")
+                    .finish()
+            }
+        } else {
+            f.debug_struct("Empty PhysicalOpr").finish()
+        }
+    }
 }
