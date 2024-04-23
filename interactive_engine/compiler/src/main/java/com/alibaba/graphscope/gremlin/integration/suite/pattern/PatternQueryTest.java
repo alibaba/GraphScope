@@ -341,8 +341,8 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Long> get_pattern_5c_test() {
             return g.V().match(
-                            __.as("a").has("gender", "male").outE("KNOWS").inV().as("b"),
-                            __.as("b").has("gender", "female").outE("KNOWS").inV().as("c"),
+                            __.as("a").has("gender", "male").outE("KNOWS").as("d").inV().as("b"),
+                            __.as("b").has("gender", "female").outE("KNOWS").as("e").inV().as("c"),
                             __.as("a").outE("KNOWS").as("f").inV().as("c"))
                     .select("d", "e", "f")
                     .count();

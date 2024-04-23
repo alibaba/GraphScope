@@ -1450,7 +1450,7 @@ mod test {
     #[test]
     fn general_expand_and_intersection_test_02() {
         initialize();
-        // no edge tags, i.e., the optimized intersection
+        // with edge tags, i.e., the general intersection
         let request = init_intersect_edges_job_request(Some(TAG_D), None);
 
         let mut results = submit_query(request, 1);
@@ -1486,7 +1486,7 @@ mod test {
     #[test]
     fn general_expand_and_intersection_test_03() {
         initialize();
-        // no edge tags, i.e., the optimized intersection
+        // with edge tags, i.e., the general intersection
         let request = init_intersect_edges_job_request(None, Some(TAG_E));
 
         let mut results = submit_query(request, 1);
@@ -1522,7 +1522,7 @@ mod test {
     #[test]
     fn general_expand_and_intersection_test_04() {
         initialize();
-        // no edge tags, i.e., the optimized intersection
+        // with edge tags, i.e., the general intersection
         let request = init_intersect_edges_job_request(Some(TAG_D), Some(TAG_E));
 
         let mut results = submit_query(request, 1);
