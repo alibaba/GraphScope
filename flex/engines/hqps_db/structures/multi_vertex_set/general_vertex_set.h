@@ -711,17 +711,20 @@ class GeneralVertexSetIter {
   using lid_t = VID_T;
   using self_type_t = GeneralVertexSetIter<VID_T, LabelT, T...>;
   using index_ele_tuple_t = std::tuple<size_t, size_t, VID_T, std::tuple<T...>>;
-  using ele_tuple_t = std::tuple<size_t, VID_T, std::tuple<T...>>;
+  using ele_tuple_t =
+      typename GeneralVertexSet<VID_T, LabelT, T...>::ele_tuple_t;
   using data_tuple_t = std::tuple<VID_T, std::tuple<T...>>;
 
   GeneralVertexSetIter(const std::vector<VID_T>& vec,
                        const std::vector<std::tuple<T...>>& data_vec,
                        const std::vector<std::string>& prop_names,
-                       const std::vector<grape::Bitset>& bitsets, size_t ind)
+                       const std::vector<grape::Bitset>& bitsets,
+                       const std::vector<LabelT>& labels, size_t ind)
       : vec_(vec),
         data_vec_(data_vec),
         prop_names_(prop_names),
         bitsets_(bitsets),
+        labels_(labels),
         ind_(ind) {}
 
   ele_tuple_t GetElement() const {
@@ -732,7 +735,8 @@ class GeneralVertexSetIter {
         break;
       }
     }
-    return std::make_tuple(label_ind, vec_[ind_], data_vec_[ind_]);
+    return std::make_tuple(GlobalId(labels_[label_ind], vec_[ind_]),
+                           data_vec_[ind_]);
   }
 
   data_tuple_t GetData() const { return vec_[ind_]; }
@@ -783,6 +787,7 @@ class GeneralVertexSetIter {
   const std::vector<std::tuple<T...>>& data_vec_;
   const std::vector<std::string>& prop_names_;
   const std::vector<grape::Bitset>& bitsets_;
+  const std::vector<LabelT>& labels_;
   size_t ind_;
 };
 
@@ -792,12 +797,14 @@ class GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType> {
   using lid_t = VID_T;
   using self_type_t = GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, size_t, VID_T>;
-  using ele_tuple_t = std::tuple<size_t, VID_T>;
+  using ele_tuple_t =
+      typename GeneralVertexSet<VID_T, LabelT, grape::EmptyType>::ele_tuple_t;
   using data_tuple_t = std::tuple<VID_T>;
 
   GeneralVertexSetIter(const std::vector<VID_T>& vec,
-                       const std::vector<grape::Bitset>& bitsets, size_t ind)
-      : vec_(vec), bitsets_(bitsets), ind_(ind) {}
+                       const std::vector<grape::Bitset>& bitsets,
+                       const std::vector<LabelT>& labels, size_t ind)
+      : vec_(vec), bitsets_(bitsets), labels_(labels), ind_(ind) {}
 
   ele_tuple_t GetElement() const {
     size_t label_ind = 0;
@@ -807,7 +814,7 @@ class GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType> {
         break;
       }
     }
-    return std::make_tuple(label_ind, vec_[ind_]);
+    return GlobalId(labels_[label_ind], vec_[ind_]);
   }
 
   data_tuple_t GetData() const { return vec_[ind_]; }
@@ -856,6 +863,7 @@ class GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType> {
  private:
   const std::vector<VID_T>& vec_;
   const std::vector<grape::Bitset>& bitsets_;
+  const std::vector<LabelT>& labels_;
   size_t ind_;
 };
 
@@ -866,7 +874,7 @@ class GeneralVertexSet {
   using self_type_t = GeneralVertexSet<VID_T, LabelT, T...>;
   using iterator = GeneralVertexSetIter<VID_T, LabelT, T...>;
   using index_ele_tuple_t = std::tuple<size_t, size_t, VID_T, std::tuple<T...>>;
-  using ele_tuple_t = std::tuple<size_t, VID_T, std::tuple<T...>>;
+  using ele_tuple_t = std::tuple<GlobalId, std::tuple<T...>>;
   using data_tuple_t = std::tuple<VID_T, std::tuple<T...>>;
   using flat_t = self_type_t;
   using EntityValueType = VID_T;
@@ -931,11 +939,12 @@ class GeneralVertexSet {
   }
 
   iterator begin() const {
-    return iterator(vec_, data_vec_, prop_names_, bitsets_, 0);
+    return iterator(vec_, data_vec_, prop_names_, bitsets_, label_names_, 0);
   }
 
   iterator end() const {
-    return iterator(vec_, data_vec_, prop_names_, bitsets_, vec_.size());
+    return iterator(vec_, data_vec_, prop_names_, bitsets_, label_names_,
+                    vec_.size());
   }
 
   builder_t CreateBuilder() const {
@@ -1257,7 +1266,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
   using self_type_t = GeneralVertexSet<VID_T, LabelT, grape::EmptyType>;
   using iterator = GeneralVertexSetIter<VID_T, LabelT, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, size_t, VID_T>;
-  using ele_tuple_t = std::tuple<size_t, VID_T>;
+  using ele_tuple_t = GlobalId;
   using data_tuple_t = std::tuple<VID_T>;
   using flat_t = self_type_t;
   using EntityValueType = VID_T;
@@ -1311,9 +1320,11 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
     }
   }
 
-  iterator begin() const { return iterator(vec_, bitsets_, 0); }
+  iterator begin() const { return iterator(vec_, bitsets_, label_names_, 0); }
 
-  iterator end() const { return iterator(vec_, bitsets_, vec_.size()); }
+  iterator end() const {
+    return iterator(vec_, bitsets_, label_names_, vec_.size());
+  }
 
   builder_t CreateBuilder() const {
     return builder_t(vec_, label_names_, bitsets_);

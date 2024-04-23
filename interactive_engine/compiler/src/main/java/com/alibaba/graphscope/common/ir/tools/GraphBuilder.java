@@ -337,7 +337,13 @@ public class GraphBuilder extends RelBuilder {
         if (input == null) {
             push(match);
         } else {
-            push(match).join(getJoinRelType(opt), getJoinCondition(input, match));
+            JoinRelType joinType = getJoinRelType(opt);
+            RexNode joinCondition = getJoinCondition(input, match);
+            if (joinType == JoinRelType.ANTI) {
+                push(match).antiJoin(joinCondition);
+            } else {
+                push(match).join(joinType, joinCondition);
+            }
         }
         return this;
     }

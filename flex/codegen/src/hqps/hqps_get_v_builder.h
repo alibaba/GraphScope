@@ -156,7 +156,7 @@ class GetVOpBuilder {
     std::string get_v_code;
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
-    auto append_opt = res_alias_to_append_opt(out_tag_id_);
+    auto append_opt = res_alias_to_append_opt(out_tag_id_, in_tag_id_);
     auto input_col_str = format_input_col(in_tag_id_);
     std::vector<LabelT> tmp = remove_duplicate(vertex_labels_);
     VLOG(10) << "Before deduplicate: " << gs::to_string(vertex_labels_)

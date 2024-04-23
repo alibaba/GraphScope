@@ -1110,7 +1110,8 @@ class SyncEngine : public BaseEngine {
   static inline bool run_expr_filter_impl(
       const EXPR& expr, std::tuple<PROP_GETTER...>& prop_getter_tuple,
       std::tuple<ELE...>& eles, std::index_sequence<Is...>) {
-    return expr(std::get<Is>(prop_getter_tuple).get_from_all_element(eles)...);
+    return expr(
+        std::get<Is>(prop_getter_tuple).get_from_all_index_element(eles)...);
   }
 
   //////////////////////////////////////Group/////////////////////////
