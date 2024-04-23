@@ -1,10 +1,4 @@
-{{- $frontendFullname := include "graphscope-store.frontend.fullname" . }}
-{{- $coordinatorFullname := include "graphscope-store.coordinator.fullname" . }}
-{{- $storeFullname := include "graphscope-store.store.fullname" . }}
-{{- $kafkaFullname := include "graphscope-store.kafka.fullname" . -}}
-{{- $releaseNamespace := .Release.Namespace }}
-{{- $clusterDomain := .Values.clusterDomain }}
-
+{{- if .Values.distributed.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -50,14 +44,6 @@ spec:
       {{- if .Values.store.schedulerName }}
       schedulerName: {{ .Values.store.schedulerName | quote }}
       {{- end }}
-      {{- if .Values.affinity }}
-      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.affinity "context" $) | nindent 8 }}
-      {{- else }}
-      affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAffinityPreset "component" "store" "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAntiAffinityPreset "component" "store" "context" $) | nindent 10 }}
-        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.nodeAffinityPreset.type "key" .Values.nodeAffinityPreset.key "values" .Values.nodeAffinityPreset.values) | nindent 10 }}
-      {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
       {{- end }}
@@ -90,7 +76,7 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-        - name: store
+        - name: default
           image: {{ include "graphscope-store.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           {{- if .Values.containerSecurityContext.enabled }}
@@ -101,30 +87,10 @@ spec:
           args: {{- include "common.tplvalues.render" (dict "value" .Values.args "context" $) | nindent 12 }}
           {{- end }}
           env:
-            - name: GRAPH_NAME
-              value: {{ .Values.graphName | quote }}
-            - name: GROOT_JAVA_OPTS
-              value: {{ .Values.javaOpts | quote }}
             - name: ROLE
               value: "store"
-            - name: FRONTEND_COUNT
-              value: {{ .Values.frontend.replicaCount | quote }}
-            - name: COORDINATOR_COUNT
-              value: {{ .Values.coordinator.replicaCount | quote }}
-            - name: STORE_COUNT
-              value: {{ .Values.store.replicaCount | quote }}
-            - name: DNS_NAME_PREFIX_FRONTEND
-              value: {{ $frontendFullname }}-{}.{{ $frontendFullname }}-headless
-            - name: DNS_NAME_PREFIX_COORDINATOR
-              value: {{ $coordinatorFullname }}-{}.{{ $coordinatorFullname }}-headless
-            - name: DNS_NAME_PREFIX_STORE
-              value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless
-            - name: DNS_NAME_SERVICE_KAFKA
-              value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}
-            - name: KAFKA_SERVERS
-              value: {{ include "graphscope-store.kafka.brokerlist" . }}
           ports:
-            - name: port
+            - name: inner-rpc
               containerPort: 55555
             - name: gaia-rpc
               containerPort: 60000
@@ -132,6 +98,21 @@ spec:
               containerPort: 60001
           {{- if .Values.store.resources }}
           resources: {{- toYaml .Values.store.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: gaia-rpc
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: gaia-rpc
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: gaia-rpc
           {{- end }}
           volumeMounts:
             - name: data
@@ -142,15 +123,21 @@ spec:
             - name: config
               mountPath: /etc/groot/setup.sh
               subPath: setup.sh
+            {{- if .Values.store.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.store.extraVolumeMounts "context" $) | nindent 12 }}
+            {{- end }}
       volumes:
         - name: config
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
             defaultMode: 0755
+        {{- if .Values.store.extraVolumes }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.store.extraVolumes "context" $) | nindent 8 }}
+        {{- end }}
   {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
         - name: data
           persistentVolumeClaim:
-            claimName: {{ tpl .Values.store.persistence.existingClaim . }}
+            claimName: {{ printf "%s" (tpl .Values.store.persistence.existingClaim .) }}
   {{- else if not .Values.store.persistence.enabled }}
         - name: data
           emptyDir: {}
@@ -177,3 +164,4 @@ spec:
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
   {{- end }}
+{{- end -}}

@@ -15,6 +15,7 @@
 #ifndef ENGINES_HTTP_SERVER_HQPS_SERVICE_H_
 #define ENGINES_HTTP_SERVER_HQPS_SERVICE_H_
 
+#include <memory>
 #include <string>
 
 #include "flex/engines/graph_db/database/graph_db.h"
@@ -22,6 +23,8 @@
 #include "flex/engines/http_server/handler/admin_http_handler.h"
 #include "flex/engines/http_server/handler/hqps_http_handler.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
+#include "flex/storages/metadata/graph_meta_store.h"
+#include "flex/storages/metadata/metadata_store_factory.h"
 #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
 
@@ -48,6 +51,7 @@ struct ServiceConfig {
   bool start_admin_service;  // Whether to start the admin service or only
                              // start the query service.
   bool start_compiler;
+  gs::MetadataStoreType metadata_store_type_;
 
   // Those has not default value
   std::string default_graph;
@@ -75,6 +79,8 @@ class HQPSService {
 
   uint16_t get_query_port() const;
 
+  std::shared_ptr<gs::IGraphMetaStore> get_metadata_store() const;
+
   gs::Result<seastar::sstring> service_status();
 
   void run_and_wait_for_exit();
@@ -99,6 +105,10 @@ class HQPSService {
   HQPSService() = default;
 
   std::string find_interactive_class_path();
+  // Insert graph meta into metadata store.
+  gs::GraphId insert_default_graph_meta();
+  void open_default_graph();
+  void clear_running_graph();
 
  private:
   std::unique_ptr<actor_system> actor_sys_;
@@ -110,6 +120,8 @@ class HQPSService {
 
   ServiceConfig service_config_;
   boost::process::child compiler_process_;
+  // handler for metadata store
+  std::shared_ptr<gs::IGraphMetaStore> metadata_store_;
 };
 
 }  // namespace server
@@ -142,6 +154,22 @@ struct convert<server::ServiceConfig> {
       } else {
         LOG(INFO) << "shard_num not found, use default value "
                   << service_config.shard_num;
+      }
+
+      auto metadata_store_node = engine_node["metadata_store"];
+      if (metadata_store_node) {
+        auto metadata_store_type = metadata_store_node["type"];
+        if (metadata_store_type) {
+          auto metadata_store_type_str = metadata_store_type.as<std::string>();
+          if (metadata_store_type_str == "file") {
+            service_config.metadata_store_type_ =
+                gs::MetadataStoreType::kLocalFile;
+          } else {
+            LOG(ERROR) << "Unsupported metadata store type: "
+                       << metadata_store_type_str;
+            return false;
+          }
+        }
       }
     } else {
       LOG(ERROR) << "Fail to find compute_engine configuration";

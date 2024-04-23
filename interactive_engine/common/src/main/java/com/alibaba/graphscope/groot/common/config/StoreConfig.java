@@ -49,4 +49,7 @@ public class StoreConfig {
 
     public static final Config<String> STORE_WAL_DIR =
             Config.stringConfig("store.rocksdb.wal.dir", "");
+
+    public static final Config<Integer> STORE_COMPACT_THREAD_NUM =
+            Config.intConfig("store.compact.thread.num", 1);
 }

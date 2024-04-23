@@ -1,7 +1,7 @@
 apiVersion: actions.summerwind.dev/v1alpha1
 kind: RunnerDeployment
 metadata:
-   name: graphscope-runners-manylinux2014
+   name: graphscope-runners-manylinux2014-ci-test
 spec:
   template:
     spec:
@@ -21,15 +21,6 @@ spec:
             cpu: "24.0"
             memory: "60Gi"
             ephemeral-storage: 100Gi
-      - name: docker
-        resources:
-          limits:
-            cpu: "2.0"
-            memory: "8Gi"
-          requests:
-            cpu: "2.0"
-            memory: "8Gi"
-            ephemeral-storage: 1Gi
 ---
 apiVersion: actions.summerwind.dev/v1alpha1
 kind: HorizontalRunnerAutoscaler
@@ -38,7 +29,8 @@ metadata:
 spec:
   scaleDownDelaySecondsAfterScaleOut: 900
   scaleTargetRef:
-    name: graphscope-runners-manylinux2014
+    kind: RunnerDeployment
+    name: graphscope-runners-manylinux2014-ci-test
     # Uncomment the below in case the target is not RunnerDeployment but RunnerSet
     #kind: RunnerSet
   minReplicas: 0

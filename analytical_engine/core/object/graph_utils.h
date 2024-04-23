@@ -131,7 +131,6 @@ class PropertyGraphUtils : public GSObject {
                                 vineyard::Client& client,
                                 const rpc::GSParams& params) {
     bl::result<void> out;
-
     archive_graph_(frag_id, comm_spec, client, params, out);
     return out;
   }

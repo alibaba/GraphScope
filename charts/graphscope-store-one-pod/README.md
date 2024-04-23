@@ -1,1 +1,0 @@
-GraphScope store chart's variant that put all components within one pod.

@@ -120,8 +120,6 @@ void openDefaultGraph(const std::string workspace, int32_t thread_num,
   }
   LOG(INFO) << "Successfully init graph db for default graph: "
             << default_graph;
-
-  server::WorkDirManipulator::SetRunningGraph(default_graph);
 }
 
 }  // namespace gs

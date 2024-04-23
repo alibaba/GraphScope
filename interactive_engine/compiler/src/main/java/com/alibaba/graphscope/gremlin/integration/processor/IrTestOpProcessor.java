@@ -53,6 +53,7 @@ import org.apache.tinkerpop.gremlin.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -119,7 +120,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             ? true
                                             : false;
                             String script = getScript(byteCode, removeQuoteInExpr);
-                            long queryId = idGenerator.generateId();
+                            BigInteger queryId = idGenerator.generateId();
                             String queryName = idGenerator.generateName(queryId);
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =

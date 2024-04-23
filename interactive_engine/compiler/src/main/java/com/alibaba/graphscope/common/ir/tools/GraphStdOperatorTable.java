@@ -56,6 +56,16 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     GraphInferTypes.FIRST_KNOWN,
                     GraphOperandTypes.MINUS_OPERATOR);
 
+    public static final SqlOperator DATETIME_MINUS =
+            new SqlSpecialOperator(
+                    "DATETIME_MINUS",
+                    SqlKind.OTHER,
+                    40,
+                    true,
+                    ReturnTypes.ARG2_NULLABLE,
+                    InferTypes.FIRST_KNOWN,
+                    GraphOperandTypes.DATETIME_DATETIME_INTERVAL);
+
     public static final SqlBinaryOperator BIT_AND =
             new SqlMonotonicBinaryOperator(
                     "&",

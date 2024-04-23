@@ -38,6 +38,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Sarg;
@@ -272,6 +273,8 @@ public abstract class Utils {
     }
 
     public static final Common.DataType protoBasicDataType(RelDataType basicType) {
+        // hack ways: convert interval type to int64 to avoid complexity
+        if (basicType instanceof IntervalSqlType) return Common.DataType.INT64;
         if (basicType instanceof GraphLabelType) return Common.DataType.INT32;
         switch (basicType.getSqlTypeName()) {
             case NULL:
@@ -435,10 +438,14 @@ public abstract class Utils {
     }
 
     public static final OuterExpression.Extract.Interval protoInterval(RexLiteral literal) {
-        Preconditions.checkArgument(
-                literal.getType().getSqlTypeName() == SqlTypeName.SYMBOL,
-                "interval should be an literal of 'SYMBOL' type");
-        TimeUnit timeUnit = literal.getValueAs(TimeUnit.class);
+        TimeUnit timeUnit;
+        if (literal.getType().getSqlTypeName() == SqlTypeName.SYMBOL) {
+            timeUnit = literal.getValueAs(TimeUnit.class);
+        } else if (literal.getType() instanceof IntervalSqlType) {
+            timeUnit = literal.getType().getIntervalQualifier().getUnit();
+        } else {
+            throw new IllegalArgumentException("cannot get interval field from literal " + literal);
+        }
         switch (timeUnit) {
             case YEAR:
                 return OuterExpression.Extract.Interval.YEAR;
@@ -452,6 +459,8 @@ public abstract class Utils {
                 return OuterExpression.Extract.Interval.MINUTE;
             case SECOND:
                 return OuterExpression.Extract.Interval.SECOND;
+            case MILLISECOND:
+                return OuterExpression.Extract.Interval.MILLISECOND;
             default:
                 throw new UnsupportedOperationException("unsupported interval type " + timeUnit);
         }

@@ -739,6 +739,13 @@ arithmetical | * | multiplication | @.age * 10 | _.age * 10
 arithmetical | / | division | @.age / 10 | _.age / 10
 arithmetical | % | modulo | @.age % 10 | _.age % 10
 arithmetical | POWER | exponentiation | @.age ^^ 3 | POWER(_.age, 3)
+temporal arithmetical | + | Add a duration to a temporal type | unsupported | _.creationDate + duration({years: 1})
+temporal arithmetical | - | Subtract a duration from a temporal type | unsupported | _.creationDate - duration({years: 1})
+temporal arithmetical | - | Subtract two temporal types, returning a duration in milliseconds | unsupported | a.creationDate - b.creationDate
+temporal arithmetical | + | Add two durations | unsupported | duration({years: 1}) + duration({months: 2})
+temporal arithmetical | - | Subtract two durations | unsupported | duration({years: 1}) - duration({months: 2})
+temporal arithmetical | * | Multiply a duration by a numeric value | unsupported | duration({years: 1}) * 2
+temporal arithmetical | / | Divide a duration by a numeric value | unsupported | duration({years: 1}) / 2, (a.creationDate - b.creationDate) / 1000
 bitwise | & | bitwise AND | @.age & 2 | _.age & 2
 bitwise | \| | bitwise OR | @.age \| 2 | _.age \| 2
 bitwise | ^ | bitwise XOR | @.age ^ 2 | _.age ^ 2

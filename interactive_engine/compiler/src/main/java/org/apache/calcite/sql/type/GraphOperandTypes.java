@@ -55,6 +55,9 @@ public abstract class GraphOperandTypes {
     public static final SqlSingleOperandTypeChecker DATETIME_INTERVAL =
             family(SqlTypeFamily.DATETIME, SqlTypeFamily.DATETIME_INTERVAL);
 
+    public static final SqlSingleOperandTypeChecker DATETIME_DATETIME_INTERVAL =
+            family(SqlTypeFamily.DATETIME, SqlTypeFamily.DATETIME, SqlTypeFamily.DATETIME_INTERVAL);
+
     public static final SqlSingleOperandTypeChecker INTERVAL_DATETIME =
             family(SqlTypeFamily.DATETIME_INTERVAL, SqlTypeFamily.DATETIME);
 

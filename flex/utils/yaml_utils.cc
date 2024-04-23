@@ -16,7 +16,7 @@
 
 #include "flex/utils/yaml_utils.h"
 #include <fstream>
-#include "nlohmann/json.hpp"
+
 namespace gs {
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
   std::filesystem::path dir_path = plugin_dir;
@@ -36,7 +36,7 @@ nlohmann::json convert_yaml_node_to_json(const YAML::Node& node) {
   try {
     switch (node.Type()) {
     case YAML::NodeType::Null: {
-      json = nullptr;
+      json = {};
       break;
     }
     case YAML::NodeType::Scalar: {
@@ -101,6 +101,37 @@ Result<std::string> get_json_string_from_yaml(const YAML::Node& node) {
     return Result<std::string>(Status{StatusCode::IOError, e.what()});
   } catch (...) {
     return Result<std::string>(Status{StatusCode::IOError, "Unknown error"});
+  }
+}
+
+Result<std::string> get_yaml_string_from_yaml_node(const YAML::Node& node) {
+  try {
+    YAML::Emitter emitter;
+    write_yaml_node_to_yaml_string(node, emitter);
+    return std::string(emitter.c_str());
+  } catch (const YAML::BadConversion& e) {
+    return Result<std::string>(Status{StatusCode::IOError, e.what()});
+  }
+}
+
+Result<nlohmann::json> read_json_from_file(const std::string& file_path) {
+  if (!std::filesystem::exists(file_path)) {
+    return Result<nlohmann::json>(
+        Status{StatusCode::IOError, "File not exists: " + file_path});
+  }
+  // read string from file_path, and parse into json
+  std::ifstream file(file_path, std::ios::in);
+  if (!file.is_open()) {
+    return Result<nlohmann::json>(
+        Status{StatusCode::IOError, "Failed to open file: " + file_path});
+  }
+  std::string json_str((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
+  file.close();
+  try {
+    return nlohmann::json::parse(json_str);
+  } catch (const nlohmann::json::parse_error& e) {
+    return Result<nlohmann::json>(Status{StatusCode::InternalError, e.what()});
   }
 }
 

@@ -9,23 +9,26 @@ Welcome to the GraphScope Interactive Admin Service documentation. This guide is
 The table below provides an overview of the available APIs:
 
 
-| API name        | Method and URL                        | Explanation                                                        |
-|-----------------|---------------------------------------|--------------------------------------------------------------------|
-| ListGraphs      | GET /v1/graph                             | Get all graphs in current interactive service, the schema for each graph is returned. |
-| GetGraphSchema  | GET /v1/graph/{graph}/schema          | Get the schema for the specified graph.                            |
-| CreateGraph     | POST /v1/graph                             | Create an empty graph with the specified schema.                    |
-| DeleteGraph     | DELETE /v1/graph/{graph}                 | Delete the specified graph.                                        |
-| ImportGraph     | POST /v1/graph/{graph}/dataloading     | Import data to graph.                                              |
-| CreateProcedure | POST /v1/graph/{graph}/procedure      | Create a new stored procedure bound to a graph.                    |
-| ShowProcedures  | GET /v1/graph/{graph}/procedure      | Get all procedures bound to the specified graph.                   |
-| GetProcedure    | GET /v1/graph/{graph}/procedure/{proc_name} | Get the metadata of the procedure.                                 |
-| DeleteProcedure | DELETE /v1/graph/{graph}/procedure/{proc_name} | Delete the specified procedure.                                   |
-| UpdateProcedure | PUT /v1/graph/{graph}/procedure/{proc_name} | Update some metadata for the specified procedure, i.e. update description, enable/disable. |
-| StartService   | POST /v1/service/start                     | Start the query service on the graph specified in request body.          |
+| API name        | Method and URL                                 | Explanation                                                        |
+|-----------------|------------------------------------------------|--------------------------------------------------------------------|
+| ListGraphs      | GET /v1/graph                                  | Get all graphs in current interactive service, the schema for each graph is returned. |
+| GetGraphSchema  | GET /v1/graph/{graph}/schema                   | Get the schema for the specified graph.                            |
+| CreateGraph     | POST /v1/graph                                 | Create an empty graph with the specified schema.                   |
+| DeleteGraph     | DELETE /v1/graph/{graph}                       | Delete the specified graph.                                        |
+| ImportGraph     | POST /v1/graph/{graph}/dataloading             | Import data to graph.                                               |
+| CreateProcedure | POST /v1/graph/{graph}/procedure               | Create a new stored procedure bound to a graph.                    |
+| ShowProcedures  | GET /v1/graph/{graph}/procedure                | Get all procedures bound to the specified graph.                   |
+| GetProcedure    | GET /v1/graph/{graph}/procedure/{proc_name}    | Get the metadata of the procedure.                                 |
+| DeleteProcedure | DELETE /v1/graph/{graph}/procedure/{proc_name} | Delete the specified procedure.                                    |
+| UpdateProcedure | PUT /v1/graph/{graph}/procedure/{proc_name}    | Update some metadata for the specified procedure, i.e. update description, enable/disable. |
+| StartService    | POST /v1/service/start                         | Start the service on the graph specified in request body.          |
+| RestartService    | POST /v1/service/restart                         | Restart the service on the current running graph.         |
 | StopService    | GET /v1/service/stop                     | Stop the query service                                            |
-| ServiceStatus  | GET /v1/service/status                    | Get current service status.                                        |
-| SystemMetrics     | GET /v1/node/status                       | Get the system metrics of current host/pod, i.e. CPU usage, memory usages.                    |
-
+| ServiceStatus   | GET /v1/service/status                         | Get current service status.                                        |
+| SystemMetrics   | GET /v1/node/status                            | Get the system metrics of current host/pod, i.e. CPU usage, memory usages.                    |
+| GetJobById      | GET /v1/job/{job_id}                           | Get the metadata for the specified job.               |
+| GetAllJobs      | GET /v1/job/                                   | Get all jobs's metadata.                | 
+| CancelJob       | DELETE /v1/job/{job_id}                        | Cancel the job with the specified job_id.                           |
 
 ## Detailed API Documentation
 
@@ -318,13 +321,13 @@ Delete a graph by name, including schema, indices and stored procedures.
 
 #### HTTP Request
 - **Method**: DELETE
-- **Endpoint**: `/v1/graph/{graph_name}`
+- **Endpoint**: `/v1/graph/{graph_id}`
 - **Content-type**: `application/json`
 
 
 #### Curl Command Example
 ```bash
-curl -X DELETE  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}"
+curl -X DELETE  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}"
 ```
 
 #### Expected Response
@@ -347,12 +350,12 @@ Get the schema for the specified graph.
 
 #### HTTP Request
 - **Method**: GET
-- **Endpoint**: `/v1/graph/{graph_name}`
+- **Endpoint**: `/v1/graph/{graph_id}`
 - **Content-type**: `application/json`
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}"
+curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}"
 ```
 
 
@@ -361,113 +364,110 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_
 - **Body**:
 ```json
 {
-    "name": "modern",
-    "schema": {
-        "vertex_types": [
-            {
-                "type_id": 0,
-                "type_name": "person",
-                "properties": [
-                    {
-                        "property_id": 0,
-                        "property_name": "id",
-                        "property_type": {
-                            "primitive_type": "DT_SIGNED_INT64"
-                        }
-                    },
-                    {
-                        "property_id": 1,
-                        "property_name": "name",
-                        "property_type": {
-                            "primitive_type": "DT_STRING"
-                        }
-                    },
-                    {
-                        "property_id": 2,
-                        "property_name": "age",
-                        "property_type": {
-                            "primitive_type": "DT_SIGNED_INT32"
-                        }
-                    }
-                ],
-                "primary_keys": [
-                    "id"
-                ]
-            },
-            {
-                "type_id": 1,
-                "type_name": "software",
-                "properties": [
-                    {
-                        "property_id": 0,
-                        "property_name": "id",
-                        "property_type": {
-                            "primitive_type": "DT_SIGNED_INT64"
-                        }
-                    },
-                    {
-                        "property_id": 1,
-                        "property_name": "name",
-                        "property_type": {
-                            "primitive_type": "DT_STRING"
-                        }
-                    },
-                    {
-                        "property_id": 2,
-                        "property_name": "lang",
-                        "property_type": {
-                            "primitive_type": "DT_STRING"
-                        }
-                    }
-                ],
-                "primary_keys": [
-                    "id"
-                ]
-            }
-        ],
-        "edge_types": [
-            {
-                "type_id": 0,
-                "type_name": "knows",
-                "vertex_type_pair_relations": [
-                    {
-                        "source_vertex": "person",
-                        "destination_vertex": "person",
-                        "relation": "MANY_TO_MANY",
-                    }
-                ],
-                "properties": [
-                    {
-                        "property_id": 0,
-                        "property_name": "weight",
-                        "property_type": {
-                            "primitive_type": "DT_DOUBLE"
-                        }
-                    }
-                ]
-            },
-            {
-                "type_id": 1,
-                "type_name": "created",
-                "vertex_type_pair_relations": [
-                    {
-                        "source_vertex": "person",
-                        "destination_vertex": "software",
-                        "relation": "ONE_TO_MANY",
-                    }
-                ],
-                "properties": [
-                    {
-                        "property_id": 0,
-                        "property_name": "weight",
-                        "property_type": {
-                            "primitive_type": "DT_DOUBLE"
-                        }
-                    }
-                ]
-            }
-        ]
-    }
+  "vertex_types": [
+      {
+          "type_id": 0,
+          "type_name": "person",
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "id",
+                  "property_type": {
+                      "primitive_type": "DT_SIGNED_INT64"
+                  }
+              },
+              {
+                  "property_id": 1,
+                  "property_name": "name",
+                  "property_type": {
+                      "primitive_type": "DT_STRING"
+                  }
+              },
+              {
+                  "property_id": 2,
+                  "property_name": "age",
+                  "property_type": {
+                      "primitive_type": "DT_SIGNED_INT32"
+                  }
+              }
+          ],
+          "primary_keys": [
+              "id"
+          ]
+      },
+      {
+          "type_id": 1,
+          "type_name": "software",
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "id",
+                  "property_type": {
+                      "primitive_type": "DT_SIGNED_INT64"
+                  }
+              },
+              {
+                  "property_id": 1,
+                  "property_name": "name",
+                  "property_type": {
+                      "primitive_type": "DT_STRING"
+                  }
+              },
+              {
+                  "property_id": 2,
+                  "property_name": "lang",
+                  "property_type": {
+                      "primitive_type": "DT_STRING"
+                  }
+              }
+          ],
+          "primary_keys": [
+              "id"
+          ]
+      }
+  ],
+  "edge_types": [
+      {
+          "type_id": 0,
+          "type_name": "knows",
+          "vertex_type_pair_relations": [
+              {
+                  "source_vertex": "person",
+                  "destination_vertex": "person",
+                  "relation": "MANY_TO_MANY",
+              }
+          ],
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "weight",
+                  "property_type": {
+                      "primitive_type": "DT_DOUBLE"
+                  }
+              }
+          ]
+      },
+      {
+          "type_id": 1,
+          "type_name": "created",
+          "vertex_type_pair_relations": [
+              {
+                  "source_vertex": "person",
+                  "destination_vertex": "software",
+                  "relation": "ONE_TO_MANY",
+              }
+          ],
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "weight",
+                  "property_type": {
+                      "primitive_type": "DT_DOUBLE"
+                  }
+              }
+          ]
+      }
+  ]
 }
 ```
 
@@ -480,12 +480,14 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_
 
 #### Description
 
-Import data to empty graph.
+Import data to empty graph. This is a non-blocking API as it will directly return the job id after the bulk loading job is created.
+Client can use the returned job_id to [query the status of job](#getjobbyid-jobmanagement-category) or [cancel a runing job](#canceljobbyid-jobmanagement-category).
+
 
 #### HTTP Request
 
 - **Method**: POST
-- **Endpoint**: `/v1/graph/{graph_name}/dataloading`
+- **Endpoint**: `/v1/graph/{graph_id}/dataloading`
 - **Content-type**: `application/json`
 - **Body**:
 ```json
@@ -493,8 +495,8 @@ Import data to empty graph.
   "graph": "graph",
   "loading_config": {
     "data_source": {
-      "scheme": "file"
-	  "location": {path_to_file},
+      "scheme": "file",
+	    "location": "path_to_file",
     },
     "format": {
       "metadata": {
@@ -669,7 +671,7 @@ Import data to empty graph.
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" -d @path/to/json "http://[host]/v1/graph/{graph_name}/dataloading"
+curl -X POST -H "Content-Type: application/json" -d @path/to/json "http://[host]/v1/graph/{graph_id}/dataloading"
 ```
 
 #### Expected Response
@@ -695,7 +697,7 @@ Create a new stored procedure.
 
 #### HTTP Request
 - **Method**: POST
-- **Endpoint**: `/v1/graph/{graph_name}/procedure`
+- **Endpoint**: `/v1/graph/{graph_id}/procedure`
 - **Content-type**: `application/json`
 - **Body**:
 ```json
@@ -711,7 +713,7 @@ Create a new stored procedure.
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" -d @/path/to/json "http://[host]/v1/graph/{graph_name}/procedure"
+curl -X POST -H "Content-Type: application/json" -d @/path/to/json "http://[host]/v1/graph/{graph_id}/procedure"
 ```
 
 
@@ -737,12 +739,12 @@ List all procedures bound to a graph.
 
 #### HTTP Request
 - **Method**: GET
-- **Endpoint**: `/v1/graph/{graph_name}/procedure`
+- **Endpoint**: `/v1/graph/{graph_id}/procedure`
 - **Content-type**: `application/json`
 
 #### Curl Command Example
 ```bash
-curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}/procedure"
+curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}/procedure"
 ```
 
 #### Expected Response
@@ -795,12 +797,12 @@ Get a single procedure's metadata.
 
 #### HTTP Request
 - **Method**: GET
-- **Endpoint**: `/v1/graph/{graph_name}/procedure/{procedure_name}`
+- **Endpoint**: `/v1/graph/{graph_id}/procedure/{procedure_id}`
 - **Content-type**: `application/json`
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}/procedure/{procedure_name}"
+curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 
@@ -853,7 +855,7 @@ Update a procedure's metadata, enable/disable status, description. The procedure
 
 #### HTTP Request
 - **Method**: PUT
-- **Endpoint**: `/v1/graph/{graph_name}/procedure/{procedure_name}`
+- **Endpoint**: `/v1/graph/{graph_id}/procedure/{procedure_id}`
 - **Content-type**: `application/json`
 - **Body**:
 ```json
@@ -865,7 +867,7 @@ Update a procedure's metadata, enable/disable status, description. The procedure
 
 #### Curl Command Example
 ```bash
-curl -X PUT  -H "Content-Type: application/json" -d @/path/to/json "http://[host]//v1/graph/{graph_name}/procedure/{procedure_name}"
+curl -X PUT  -H "Content-Type: application/json" -d @/path/to/json "http://[host]//v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 #### Expected Response
@@ -916,13 +918,13 @@ Delete a procedure bound to the graph.
 #### HTTP Request
 
 - **Method**: DELETE
-- **Endpoint**: `/v1/graph/{graph_name}/procedure/{procedure_name}`
+- **Endpoint**: `/v1/graph/{graph_id}/procedure/{procedure_id}`
 - **Content-type**: `application/json`
 
 
 #### Curl Command Example
 ```bash
-curl -X DELETE -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}/procedure/{procedure_name}"
+curl -X DELETE -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 #### Expected Response
@@ -943,7 +945,7 @@ curl -X DELETE -H "Content-Type: application/json" "http://[host]/v1/graph/{grap
 
 #### Description 
 
-Start the query service on a graph. The `graph_name` param can be empty, indicating restarting on current running graph.
+Start the query service on a graph. The `graph_id` param can be empty, indicating restarting on current running graph.
 
 1. After the AdminService receives this request, the current actor scope for query actors will be cancelled.
 2. During the scope cancellation process of the query actors or after scope cancellation is completed, all requests sent to the query_service will fail and be rejected. 
@@ -965,7 +967,7 @@ The response of the http request will be like
 - **Body**:
 ```json
 {
-	"graph_name": "modern_graph"
+	"graph_id": "modern_graph"
 }
 ```
 
@@ -987,29 +989,65 @@ curl -X POST -H "Content-Type: application/json" "http://[host]/v1/service/start
 - `200 OK`: Request successful.
 - `500 Internal Error`: Server internal Error.
 
-### StopService (ServiceManagement Category)
 
-#### Description 
+### RestartService (ServiceManagement Category)
 
-Stop the current running query service. 
+#### Description
+
+Restart the graph query service on current running graph.
 
 #### HTTP Request
 - **Method**: POST
-- **Endpoint**: `/v1/service/stop`
+- **Endpoint**: `/v1/service/restart`
 - **Content-type**: `application/json`
+- **Body**: EmptyBody.
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" "http://[host]/v1/service/stop"
+curl -X POST "http://[host]/v1/service/restart"
 ```
 
 #### Expected Response
 - **Format**: application/json
 - **Body**:
 ```json
+"Successfully started service"
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+
+
+### StopService (ServiceManagement Category)
+
+#### Description
+
+Stop the graph query service. Note that after service is stopped, the query server is still running, you still can submit queries to the endpoint, 
+but you will receive the following error message to each request:
+```json
 {
-  "message": "message"
+  "code": 500,
+  "message" : "Unable to send message, the target actor has been canceled!"
 }
+```
+
+#### HTTP Request
+- **Method**: POST
+- **Endpoint**: `/v1/service/stop`
+- **Content-type**: `application/json`
+- **Body**: EmptyBody.
+
+#### Curl Command Example
+```bash
+curl -X POST "http://[host]/v1/service/stop"
+```
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+```text
+Successfully stop service
 ```
 
 #### Status Codes
@@ -1032,7 +1070,7 @@ Get the status of current service.
 - **Body**:
 ```json
 {
-  "graph_name": "graph_name",
+  "graph_id": "graph_id",
   "query_port": 6,
   "status": "running"
 }
@@ -1041,7 +1079,6 @@ Get the status of current service.
 #### Status Codes
 - `200 OK`: Request successful.
 - `500 Internal Error`: Server internal Error.
-
 
 ### SystemMetrics (NodeMetrics Category)
 
@@ -1068,6 +1105,124 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/node/status"
   "memory_usage": "0.3"
 }
 ```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+
+
+###  GetJobById (JobManagement Category)
+
+#### Description
+
+Get the metadata of a job with a unique job id.
+The job id is received when you [launch a bulk loading job](#importgraph-graphmanagement-category)
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/job/{job_id}`
+- **Content-type**: `application/json`
+- **Body** : EmptyBody
+
+#### Curl Command Example
+```bash
+curl -X GET "http://[host]/v1/job/{job_id}"
+```
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+```json
+{
+  "detail": {
+    "graph_id": "graph_id"
+  },
+  "job_id": "job_{graph_id}_{create_timestamp}_{process_id}",
+  "log": "line1\nlin2...\n",
+  "start_time": 1706786404768, // create_timestamp
+  "status": "CANCELLED/RUNNING/SUCCESS/FAILED",
+  "type": "bulk_loading"
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Job not found
+
+
+###  GetAllJobs (JobManagement category)
+
+#### Description
+
+Get the metadata of all running/cancelled/success/failed jobs.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/job/`
+- **Content-type**: `application/json`
+- **Body** : EmptyBody
+
+#### Curl Command Example
+```bash
+curl -X GET "http://[host]/v1/job/"
+```
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+```json
+[
+  {
+  "detail": {
+    "graph_id": "graph_id"
+  },
+  "job_id": "job_{graph_id}_{create_timestamp}_{process_id}",
+  "log": "line1\nlin2...\n",
+  "start_time": 1706786404768, // create_timestamp
+  "status": "CANCELLED/RUNNING/SUCCESS/FAILED",
+  "type": "bulk_loading"
+  }
+]
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+
+
+###  CancelJobById (JobManagement category)
+
+#### Description
+
+Cancel a job according to the give job_id.
+
+#### HTTP Request
+- **Method**: DELETE
+- **Endpoint**: `/v1/job/{job_id}`
+- **Content-type**: `application/json`
+- **Body** : EmptyBody
+
+#### Curl Command Example
+```bash
+curl -X DELETE "http://[host]/v1/job/{job_id}"
+```
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+
+
+Fail:
+```text
+Job is not running, can not cancel: {job_id}
+```
+
+Success
+```
+Successfully cancelled job: {job_id}
+```
+
 
 #### Status Codes
 - `200 OK`: Request successful.

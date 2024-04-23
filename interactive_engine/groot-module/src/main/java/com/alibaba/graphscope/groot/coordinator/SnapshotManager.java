@@ -320,7 +320,7 @@ public class SnapshotManager {
         }
         SnapshotInfo receivedSIInfo = Collections.min(this.storeToSnapshotInfo.values());
         if (receivedSIInfo.getSnapshotId() <= this.querySnapshotInfo.getSnapshotId()) {
-            logger.warn("Received SI vs. current: {}, {}", receivedSIInfo, querySnapshotInfo);
+            logger.debug("Received SI vs. current: {}, {}", receivedSIInfo, querySnapshotInfo);
             return;
         }
         synchronized (this.querySnapshotLock) {

@@ -44,6 +44,7 @@ import org.neo4j.values.virtual.MapValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -114,7 +115,7 @@ public class GraphQueryExecutor extends FabricExecutor {
             Preconditions.checkArgument(
                     cacheValue != null,
                     "value should have been loaded automatically in query cache");
-            long jobId = idGenerator.generateId();
+            BigInteger jobId = idGenerator.generateId();
             String jobName = idGenerator.generateName(jobId);
             GraphPlanner.Summary planSummary =
                     new GraphPlanner.Summary(

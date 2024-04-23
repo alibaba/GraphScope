@@ -39,6 +39,7 @@ extern uint32_t shard_adhoc_concurrency;
 extern uint32_t shard_admin_graph_concurrency;
 extern uint32_t shard_admin_node_concurrency;
 extern uint32_t shard_admin_service_concurrency;
+extern uint32_t shard_admin_job_concurrency;
 extern uint32_t shard_admin_procedure_concurrency;
 
 }  // namespace server

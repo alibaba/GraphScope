@@ -157,3 +157,12 @@ Get full broker list.
 {{- end }}
 {{- join "," $brokerList | printf "%s" -}}
 {{- end -}}
+
+
+{{/*
+Create a default fully qualified zookeeper name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "graphscope-store.zookeeper.fullname" -}}
+{{- printf "%s-%s" .Release.Name "zookeeper" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}

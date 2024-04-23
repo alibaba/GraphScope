@@ -41,7 +41,7 @@ void work() {
   using GI = gs::MutableCSRInterface;
   using vertex_id_t = typename GI::vertex_id_t;
   std::vector<vertex_id_t> vids{0};
-  auto set_a = gs::make_default_row_vertex_set(std::move(vids), "a");
+  auto set_a = gs::make_default_row_vertex_set(std::move(vids), 0);
   gs::Context<decltype(set_a), 0, 0, grape::EmptyType> ctx_a(std::move(set_a));
   VLOG(10) << "Finish construct set a";
 
@@ -50,7 +50,7 @@ void work() {
   std::vector<vertex_id_t> vids_b0{1, 2, 1};
   std::vector<size_t> off_b0{0, 3};
 
-  auto set_b = gs::make_default_row_vertex_set(std::move(vids_b0), "b");
+  auto set_b = gs::make_default_row_vertex_set(std::move(vids_b0), 1);
 
   auto ctx_2 =
       ctx_a.AddNode<AppendOpt::Persist>(std::move(set_b), std::move(off_b0));
@@ -61,7 +61,7 @@ void work() {
   std::vector<vertex_id_t> vids_c0{3, 4, 5, 6, 7};
   std::vector<size_t> off_c0{0, 3, 3, 5};
 
-  auto set_c = gs::make_default_row_vertex_set(std::move(vids_c0), "b");
+  auto set_c = gs::make_default_row_vertex_set(std::move(vids_c0), 1);
   auto ctx_3 =
       ctx_2.AddNode<AppendOpt::Persist>(std::move(set_c), std::move(off_c0));
   for (auto iter : ctx_3) {

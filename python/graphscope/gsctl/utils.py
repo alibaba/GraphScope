@@ -276,18 +276,19 @@ class TreeDisplay(object):
                 identifier=f"{datasource_identifier}_{mapping.type_name}",
                 parent=f"{datasource_identifier}_vertex_mappings",
             )
-            for index, property_name in mapping.property_mapping.items():
-                tag = "Property(name: {0}) -> DataSourceColumn(index: {1})".format(
-                    property_name, index
-                )
-                identifier = (
-                    f"{datasource_identifier}_{mapping.type_name}_{property_name}"
-                )
-                self.tree.create_node(
-                    tag=tag,
-                    identifier=identifier,
-                    parent=f"{datasource_identifier}_{mapping.type_name}",
-                )
+            if mapping.property_mapping is not None:
+                for index, property_name in mapping.property_mapping.items():
+                    tag = "Property(name: {0}) -> DataSourceColumn(index: {1})".format(
+                        property_name, index
+                    )
+                    identifier = (
+                        f"{datasource_identifier}_{mapping.type_name}_{property_name}"
+                    )
+                    self.tree.create_node(
+                        tag=tag,
+                        identifier=identifier,
+                        parent=f"{datasource_identifier}_{mapping.type_name}",
+                    )
         # edge mappings
         self.tree.create_node(
             tag="edge mappings",
@@ -338,16 +339,17 @@ class TreeDisplay(object):
                     parent=f"{datasource_identifier}_{edge_label}",
                 )
             # property mapping
-            for index, property_name in mapping.property_mapping.items():
-                tag = "Property(name: {0}) -> DataSourceColumn(index: {1})".format(
-                    property_name, index
-                )
-                identifier = f"{datasource_identifier}_{edge_label}_{property_name}"
-                self.tree.create_node(
-                    tag=tag,
-                    identifier=identifier,
-                    parent=f"{datasource_identifier}_{edge_label}",
-                )
+            if mapping.property_mapping is not None:
+                for index, property_name in mapping.property_mapping.items():
+                    tag = "Property(name: {0}) -> DataSourceColumn(index: {1})".format(
+                        property_name, index
+                    )
+                    identifier = f"{datasource_identifier}_{edge_label}_{property_name}"
+                    self.tree.create_node(
+                        tag=tag,
+                        identifier=identifier,
+                        parent=f"{datasource_identifier}_{edge_label}",
+                    )
 
     def create_datasource_node_for_interactive(self, graph, job_config):
         """Create data source from job configuration"""

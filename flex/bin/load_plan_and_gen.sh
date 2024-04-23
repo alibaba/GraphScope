@@ -268,7 +268,7 @@ compile_hqps_so() {
   cp ${CMAKE_TEMPLATE_PATH} ${cur_dir}/CMakeLists.txt
   # run cmake and make in output path.
   pushd ${cur_dir}
-  cmd="cmake . -DQUERY_NAME=${query_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE_PREFIX}"
+  cmd="cmake . -DQUERY_NAME=${procedure_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE_PREFIX}"
   # if CMAKE_CXX_COMPILER is set, use it.
   if [ ! -z ${CMAKE_CXX_COMPILER} ]; then
     cmd="${cmd} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"

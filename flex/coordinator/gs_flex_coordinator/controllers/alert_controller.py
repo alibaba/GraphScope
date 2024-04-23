@@ -41,13 +41,13 @@ def delete_receiver_by_id(receiver_id):  # noqa: E501
 
 
 @handle_api_exception()
-def list_alert_messages(type=None, status=None, severity=None, start_time=None, end_time=None):  # noqa: E501
+def list_alert_messages(alert_type=None, status=None, severity=None, start_time=None, end_time=None):  # noqa: E501
     """list_alert_messages
 
      # noqa: E501
 
-    :param type:
-    :type type: str
+    :param alert_type:
+    :type alert_type: str
     :param status:
     :type status: str
     :param severity:
@@ -59,7 +59,7 @@ def list_alert_messages(type=None, status=None, severity=None, start_time=None, 
 
     :rtype: Union[List[AlertMessage], Tuple[List[AlertMessage], int], Tuple[List[AlertMessage], int, Dict[str, str]]
     """
-    return alert_manager.list_alert_messages(type, status, severity, start_time, end_time)
+    return alert_manager.list_alert_messages(alert_type, status, severity, start_time, end_time)
 
 
 @handle_api_exception()
