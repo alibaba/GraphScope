@@ -22,7 +22,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class DataValue {
     private final String alias;
     private final @Nullable RexNode filter;
-    // If the value corresponds to a split path expand, the parentAlias here records the alias
+    // indicate whether the value corresponds to a split path expand, the parentAlias here records
+    // the alias
     // associated with the original path expand before the splitting.
     private final @Nullable String parentAlias;
 
