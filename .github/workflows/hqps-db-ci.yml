@@ -190,6 +190,7 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
         PLUGIN_DIR: ${INTERACTIVE_WORKSPACE}/data/modern_graph/plugins
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
+        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         mkdir -p ${PLUGIN_DIR}
         
