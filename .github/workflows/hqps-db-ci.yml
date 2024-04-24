@@ -122,6 +122,7 @@ jobs:
         TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
         LD_LIBRARY_PATH: /usr/local/lib
       run: |
+        rm -rf ${TMP_INTERACTIVE_WORKSPACE}
         cd ${GITHUB_WORKSPACE}/flex/build/
         SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
         BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
@@ -184,16 +185,24 @@ jobs:
           eval ${cmd} || exit 1
         done
 
-    - name: Test cypher procedure generation
+    - name: Test cypher procedure generation and loading
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        PLUGIN_DIR: ${INTERACTIVE_WORKSPACE}/data/modern_graph/plugins
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
       run: |
+        mkdir -p ${PLUGIN_DIR}
+        
         cd ${GITHUB_WORKSPACE}/flex/bin
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/get_person_name.cypher -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
+          --procedure_name=get_person_name \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
-        ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/count_vertex_num.cypher -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
-          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
+        cd ${GITHUB_WORKSPACE}/flex/tests/interactive/
+        bash test_plugin_loading.sh ./modern_graph_schema_v0_0.yaml \
+            ../../interactive/examples/modern_graph/bulk_load.yaml \
+           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
 
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
