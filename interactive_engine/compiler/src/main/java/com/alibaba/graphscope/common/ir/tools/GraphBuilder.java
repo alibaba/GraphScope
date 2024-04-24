@@ -769,7 +769,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.BIT_XOR
                 || (sqlKind == SqlKind.OTHER
                         && (operator.getName().equals("IN")
-                                || operator.getName().equals("DATETIME_MINUS")));
+                                || operator.getName().equals("DATETIME_MINUS")))
+                || sqlKind == SqlKind.ARRAY_CONCAT;
     }
 
     @Override
