@@ -537,6 +537,7 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
       request.library = j["library"].get<std::string>();
     }
     if (j.contains("option")) {
+      request.option = std::unordered_map<std::string, std::string>();
       for (auto& opt : j["option"].items()) {
         request.option->insert({opt.key(), opt.value()});
       }
