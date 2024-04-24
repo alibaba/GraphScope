@@ -49,6 +49,8 @@ public abstract class Utils {
         Map<String, GraphVertex> vertexMap = Maps.newHashMap();
         Map<String, GraphEdge> edgeMap = Maps.newHashMap();
         Map<String, Integer> propNameToIdMap = Maps.newHashMap();
+        GSDataTypeConvertor<DataType> typeConvertor =
+                GSDataTypeConvertor.Factory.create(DataType.class, null);
         builderGraphElementFromYaml(
                 (List)
                         Objects.requireNonNull(
@@ -57,7 +59,8 @@ public abstract class Utils {
                 "VERTEX",
                 vertexMap,
                 edgeMap,
-                propNameToIdMap);
+                propNameToIdMap,
+                typeConvertor);
         builderGraphElementFromYaml(
                 (List)
                         Objects.requireNonNull(
@@ -65,7 +68,8 @@ public abstract class Utils {
                 "EDGE",
                 vertexMap,
                 edgeMap,
-                propNameToIdMap);
+                propNameToIdMap,
+                typeConvertor);
         return new DefaultGraphSchema(vertexMap, edgeMap, propNameToIdMap);
     }
 
@@ -74,7 +78,8 @@ public abstract class Utils {
             String type,
             Map<String, GraphVertex> vertexMap,
             Map<String, GraphEdge> edgeMap,
-            Map<String, Integer> propNameToIdMap) {
+            Map<String, Integer> propNameToIdMap,
+            GSDataTypeConvertor<DataType> typeConvertor) {
         for (Object element : elementList) {
             if (element instanceof Map) {
                 Map<String, Object> elementMap = (Map<String, Object>) element;
@@ -105,7 +110,9 @@ public abstract class Utils {
                                     new DefaultGraphProperty(
                                             propertyId,
                                             propertyName,
-                                            toDataType(propertyMap.get("property_type"))));
+                                            toDataType(
+                                                    propertyMap.get("property_type"),
+                                                    typeConvertor)));
                         }
                     }
                 }
@@ -141,37 +148,8 @@ public abstract class Utils {
         }
     }
 
-    public static DataType toDataType(Object type) {
-        if (type instanceof Map) {
-            Map<String, Object> typeMap = (Map<String, Object>) type;
-            Object value;
-            if ((value = typeMap.get("primitive_type")) != null) {
-                switch (value.toString()) {
-                    case "DT_SIGNED_INT32":
-                        return DataType.INT;
-                    case "DT_SIGNED_INT64":
-                        return DataType.LONG;
-                    case "DT_BOOL":
-                        return DataType.BOOL;
-                    case "DT_FLOAT":
-                        return DataType.FLOAT;
-                    case "DT_DOUBLE":
-                        return DataType.DOUBLE;
-                    case "DT_STRING":
-                        return DataType.STRING;
-                    case "DT_DATE32":
-                        return DataType.DATE;
-                    case "DT_TIME32":
-                        return DataType.TIME32;
-                    case "TIMESTAMP":
-                        return DataType.TIMESTAMP;
-                    default:
-                        throw new UnsupportedOperationException(
-                                "unsupported primitive type: " + value);
-                }
-            }
-        }
-        throw new UnsupportedOperationException("unsupported type: " + type);
+    public static DataType toDataType(Object type, GSDataTypeConvertor<DataType> typeConvertor) {
+        return typeConvertor.convert(new GSDataTypeDesc((Map<String, Object>) type));
     }
 
     /**
