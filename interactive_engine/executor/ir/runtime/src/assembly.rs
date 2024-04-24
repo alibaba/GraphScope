@@ -671,8 +671,10 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     if let Some(edge_expand) = base.edge_expand.take() {
                         if pb::path_expand::ResultOpt::AllVE
                             == unsafe { std::mem::transmute(path.result_opt) }
+                            && pb::edge_expand::ExpandOpt::Vertex
+                                == unsafe { std::mem::transmute(edge_expand.expand_opt) }
                         {
-                            // the case when base expand needs to expand edges + vertices
+                            // the case when base expand is expand vertex, but needs to expand edges + vertices since the result opt is ALLVE
                             let mut edge_expand_e = edge_expand.clone();
                             edge_expand_e.expand_opt = pb::edge_expand::ExpandOpt::Edge as i32;
                             let alias = edge_expand_e.alias.take();
@@ -685,7 +687,6 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                             base_expand_plan.push(edge_expand_e.into());
                             base_expand_plan.push(get_v.into());
                         } else {
-                            // the case when base expand needs to expand vertices
                             base_expand_plan.push(edge_expand.into());
                         }
                     } else {
