@@ -21,7 +21,7 @@ package com.alibaba.graphscope.common.ir.meta.schema;
 import java.util.Map;
 
 public class GSDataTypeDesc {
-    // TODO(yihe.zxl): support more format of GSDataTypeDesc, i.e. JSON, proto, etc.
+    // support more format of GSDataTypeDesc, i.e. JSON, proto, etc.
     private final Map<String, Object> yamlDesc;
 
     public GSDataTypeDesc(Map<String, Object> yamlDesc) {
