@@ -175,9 +175,9 @@ public class SimpleMatchQueries {
                 Arrays.asList(
                         "Record<{aId: 0, bId: 3}>",
                         "Record<{aId: 0, bId: 59}>",
-                        "Record<{aId: 0, bId: 349}>",
-                        "Record<{aId: 0, bId: 933}>",
-                        "Record<{aId: 0, bId: 1454}>");
+                        "Record<{aId: 0, bId: 59}>",
+                        "Record<{aId: 0, bId: 291}>",
+                        "Record<{aId: 0, bId: 349}>");
         return new QueryContext(query, expected);
     }
 
@@ -211,8 +211,8 @@ public class SimpleMatchQueries {
     }
 
     public static QueryContext get_simple_match_query_16_test() {
-        String query = "Match (a)-[c*0..2]->(b) RETURN COUNT (DISTINCT c);";
-        List<String> expected = Arrays.asList("Record<{$f0: 1552803}>");
+        String query = "Match (a:TAG)<-[c*1..2]-(b) RETURN COUNT(c);";
+        List<String> expected = Arrays.asList("Record<{$f0: 325593}>");
         return new QueryContext(query, expected);
     }
 }

@@ -450,80 +450,6 @@ class PathExpand {
     return std::make_pair(std::move(set), std::move(res_offsets));
   }
 
-  template <typename LabelT, typename EDGE_FILTER_T, typename... SELECTOR>
-  static std::tuple<std::vector<vertex_id_t>, std::vector<Dist>,
-                    std::vector<offset_t>>
-  PathExpandRawV2ForSingleV(
-      const GRAPH_INTERFACE& graph, LabelT src_label,
-      const std::vector<vertex_id_t>& src_vertices_vec, Range& range,
-      EdgeExpandOpt<LabelT, EDGE_FILTER_T, SELECTOR...>& edge_expand_opt) {
-    // auto src_label = vertex_set.GetLabel();
-    // auto src_vertices_vec = vertex_set.GetVertices();
-    vertex_id_t src_id = src_vertices_vec[0];
-
-    std::vector<vertex_id_t> gids;
-    std::vector<vertex_id_t> tmp_vec;
-    std::vector<offset_t> offsets;
-    // std::vector<std::vector<vertex_id_t>> gids;
-    // std::vector<std::vector<offset_t>> offsets;
-    std::unordered_set<vertex_id_t> visited_vertices;
-    std::vector<Dist> dists;
-
-    // init for index 0
-    tmp_vec.emplace_back(src_id);
-    visited_vertices.insert(src_id);
-    if (range.start_ == 0) {
-      gids.emplace_back(src_id);
-      dists.emplace_back(0);
-    }
-
-    label_id_t real_src_label, dst_label;
-    std::tie(real_src_label, dst_label) = get_graph_label_pair(
-        edge_expand_opt.dir_, src_label, edge_expand_opt.other_label_);
-
-    double visit_array_time = 0.0;
-    for (size_t cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
-      std::vector<size_t> unused;
-      std::tie(tmp_vec, unused) = graph.GetOtherVerticesV2(
-          real_src_label, dst_label, edge_expand_opt.edge_label_, tmp_vec,
-          gs::to_string(edge_expand_opt.dir_), INT_MAX);
-      // remove duplicate
-      size_t limit = 0;
-      for (size_t i = 0; i < tmp_vec.size(); ++i) {
-        if (visited_vertices.find(tmp_vec[i]) == visited_vertices.end()) {
-          tmp_vec[limit++] = tmp_vec[i];
-        }
-      }
-      tmp_vec.resize(limit);
-      if (cur_hop >= range.start_) {
-        // emplace tmp_vec to gids;
-        for (size_t i = 0; i < tmp_vec.size(); ++i) {
-          auto nbr_gid = tmp_vec[i];
-          auto insert_res = visited_vertices.insert(nbr_gid);
-          if (insert_res.second) {
-            gids.emplace_back(nbr_gid);
-            dists.emplace_back(cur_hop);
-          }
-        }
-      } else {
-        // when cur_hop is not included, we also need to insert vertices into
-        // set, to avoid duplicated.
-        for (size_t i = 0; i < tmp_vec.size(); ++i) {
-          auto nbr_gid = tmp_vec[i];
-          visited_vertices.insert(nbr_gid);
-        }
-      }
-    }
-    LOG(INFO) << "visit array time: " << visit_array_time
-              << ", gid size: " << gids.size();
-    // select vertices that are in range.
-    offsets.emplace_back(0);
-    offsets.emplace_back(gids.size());
-
-    return std::make_tuple(std::move(gids), std::move(dists),
-                           std::move(offsets));
-  }
-
   // TODO: dedup can be used to speed up the query when the input vertices
   // size if 1.
   // const VERTEX_SET_T& vertex_set,
@@ -537,13 +463,6 @@ class PathExpand {
     // auto src_label = vertex_set.GetLabel();
     // auto src_vertices_vec = vertex_set.GetVertices();
     auto src_vertices_size = src_vertices_vec.size();
-    if (src_vertices_size == 1) {
-      LOG(INFO)
-          << "[NOTE:] PathExpandRawVMultiV is used for single vertex expand, "
-             "dedup is enabled.";
-      return PathExpandRawV2ForSingleV(graph, src_label, src_vertices_vec,
-                                       range, edge_expand_opt);
-    }
     std::vector<std::vector<vertex_id_t>> gids;
     std::vector<std::vector<offset_t>> offsets;
 
