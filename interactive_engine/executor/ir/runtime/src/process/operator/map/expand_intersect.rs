@@ -428,13 +428,6 @@ impl GeneralIntersectionEntry {
         }
         return result.into_iter();
     }
-
-    pub fn drain(&mut self) -> impl Iterator<Item = ID> + '_ {
-        self.vertex_vec
-            .drain(..)
-            .zip(&self.count_vec)
-            .flat_map(move |(vertex, count)| std::iter::repeat(vertex).take(*count as usize))
-    }
 }
 
 impl Encode for GeneralIntersectionEntry {
