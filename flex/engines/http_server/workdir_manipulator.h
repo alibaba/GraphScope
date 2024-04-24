@@ -155,6 +155,8 @@ class WorkDirManipulator {
 
   static std::string GetGraphIndicesDir(const std::string& graph_name);
 
+  static std::string GetGraphPluginDir(const std::string& graph_name);
+
   static std::string GetLogDir();
 
   static std::string GetCompilerLogFile();
@@ -188,8 +190,6 @@ class WorkDirManipulator {
 
   static std::string get_graph_lock_file(const std::string& graph_name);
 
-  static std::string get_graph_plugin_dir(const std::string& graph_name);
-
   static std::string get_graph_dir(const std::string& graph_name);
 
   static bool is_graph_exist(const std::string& graph_name);
@@ -198,6 +198,14 @@ class WorkDirManipulator {
 
   static gs::Result<std::string> dump_graph_schema(
       const YAML::Node& yaml_config, const std::string& graph_name);
+
+  static gs::Result<bool> dump_graph_schema_v0_0(
+      YAML::Node yaml_config, const std::string& graph_id,
+      const std::vector<gs::PluginMeta>& plugin_metas);
+
+  static gs::Result<bool> dump_graph_schema_v0_1(
+      YAML::Node yaml_config, const std::string& graph_id,
+      const std::vector<gs::PluginMeta>& plugin_metas);
 
   // Generate the procedure, return the generated yaml config.
   static seastar::future<seastar::sstring> generate_procedure(

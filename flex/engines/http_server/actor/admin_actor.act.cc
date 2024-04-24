@@ -50,6 +50,45 @@ std::string merge_graph_and_plugin_meta(
   return res.empty() ? "{}" : res.dump();
 }
 
+gs::Result<YAML::Node> preprocess_vertex_edge_types(
+    YAML::Node root, const std::string& type_name) {
+  auto types = root[type_name];
+  int32_t cur_type_id = 0;
+  for (auto type : types) {
+    if (type["type_id"]) {
+      auto type_id = type["type_id"].as<int32_t>();
+      if (type_id != cur_type_id) {
+        return gs::Status(gs::StatusCode::InvalidSchema,
+                          "Invalid " + type_name +
+                              " type_id: " + std::to_string(type_id) +
+                              ", expect: " + std::to_string(cur_type_id));
+      }
+    } else {
+      type["type_id"] = cur_type_id;
+    }
+    cur_type_id++;
+    int32_t cur_prop_id = 0;
+    if (type["properties"]) {
+      for (auto prop : type["properties"]) {
+        if (prop["property_id"]) {
+          auto prop_id = prop["property_id"].as<int32_t>();
+          if (prop_id != cur_prop_id) {
+            return gs::Status(gs::StatusCode::InvalidSchema,
+                              "Invalid " + type_name + " property_id: " +
+                                  type["type_name"].as<std::string>() + " : " +
+                                  std::to_string(prop_id) +
+                                  ", expect: " + std::to_string(cur_prop_id));
+          }
+        } else {
+          prop["property_id"] = cur_prop_id;
+        }
+        cur_prop_id++;
+      }
+    }
+  }
+  return types;
+}
+
 // Preprocess the schema to be compatible with the current storage.
 // 1. check if any property_id or type_id is set for each type, If set, then all
 // vertex/edge types should all set.
@@ -58,76 +97,10 @@ gs::Result<YAML::Node> preprocess_graph_schema(YAML::Node&& node) {
   if (node["schema"] && node["schema"]["vertex_types"] &&
       node["schema"]["edge_types"]) {
     // First check whether property_id or type_id is set in the schema
-    auto vertex_types = node["schema"]["vertex_types"];
-    auto edge_types = node["schema"]["edge_types"];
-    int32_t cur_vertex_type_id = 0;
-    for (auto vertex_type : vertex_types) {
-      if (vertex_type["type_id"]) {
-        auto vertex_type_id = vertex_type["type_id"].as<int32_t>();
-        if (vertex_type_id != cur_vertex_type_id) {
-          return gs::Status(
-              gs::StatusCode::InvalidSchema,
-              "Invalid vertex type_id: " + std::to_string(vertex_type_id) +
-                  ", expect: " + std::to_string(cur_vertex_type_id));
-        }
-      } else {
-        vertex_type["type_id"] = cur_vertex_type_id;
-      }
-      cur_vertex_type_id++;
-      int32_t cur_vertex_prop_id = 0;
-      if (vertex_type["properties"]) {
-        for (auto prop : vertex_type["properties"]) {
-          if (prop["property_id"]) {
-            auto prop_id = prop["property_id"].as<int32_t>();
-            if (prop_id != cur_vertex_prop_id) {
-              return gs::Status(
-                  gs::StatusCode::InvalidSchema,
-                  "Invalid vertex property_id for vertex: " +
-                      vertex_type["type_name"].as<std::string>() + " : " +
-                      std::to_string(prop_id) +
-                      ", expect: " + std::to_string(cur_vertex_prop_id));
-            }
-          } else {
-            prop["property_id"] = cur_vertex_prop_id;
-          }
-          cur_vertex_prop_id++;
-        }
-      }
-    }
-    int32_t cur_edge_type_id = 0;
-    for (auto edge_type : edge_types) {
-      if (edge_type["type_id"]) {
-        auto edge_type_id = edge_type["type_id"].as<int32_t>();
-        if (edge_type_id != cur_edge_type_id) {
-          return gs::Status(
-              gs::StatusCode::InvalidSchema,
-              "Invalid edge type_id: " + std::to_string(edge_type_id) +
-                  ", expect: " + std::to_string(cur_edge_type_id));
-        }
-      } else {
-        edge_type["type_id"] = cur_edge_type_id;
-      }
-      cur_edge_type_id++;
-      int32_t cur_edge_prop_id = 0;
-      if (edge_type["properties"]) {
-        for (auto prop : edge_type["properties"]) {
-          if (prop["property_id"]) {
-            auto prop_id = prop["property_id"].as<int32_t>();
-            if (prop_id != cur_edge_prop_id) {
-              return gs::Status(
-                  gs::StatusCode::InvalidSchema,
-                  "Invalid edge property_id for edge: " +
-                      edge_type["type_name"].as<std::string>() + " : " +
-                      std::to_string(prop_id) +
-                      ", expect: " + std::to_string(cur_edge_prop_id));
-            }
-          } else {
-            prop["property_id"] = cur_edge_prop_id;
-          }
-          cur_edge_prop_id++;
-        }
-      }
-    }
+    RETURN_IF_NOT_OK(
+        preprocess_vertex_edge_types(node["schema"], "vertex_types"));
+    RETURN_IF_NOT_OK(
+        preprocess_vertex_edge_types(node["schema"], "edge_types"));
     return node;
   } else {
     return gs::Status(gs::StatusCode::InvalidSchema, "Invalid graph schema: ");

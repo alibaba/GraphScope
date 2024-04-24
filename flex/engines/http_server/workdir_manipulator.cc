@@ -365,7 +365,7 @@ WorkDirManipulator::GetProcedureByGraphAndProcedureName(
         "Fail to load graph schema: " + schema_file + ", error: " + e.what()));
   }
   // get yaml file in plugin directory.
-  auto plugin_dir = get_graph_plugin_dir(graph_id);
+  auto plugin_dir = GetGraphPluginDir(graph_id);
   if (!std::filesystem::exists(plugin_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -398,7 +398,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::CreateProcedure(
                                                         graph_name);
   }
   // check procedure exits
-  auto plugin_dir = get_graph_plugin_dir(graph_name);
+  auto plugin_dir = GetGraphPluginDir(graph_name);
   if (!std::filesystem::exists(plugin_dir)) {
     try {
       std::filesystem::create_directory(plugin_dir);
@@ -436,7 +436,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteProcedure(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
   }
   // remove the plugin file and dynamic lib
-  auto plugin_dir = get_graph_plugin_dir(graph_name);
+  auto plugin_dir = GetGraphPluginDir(graph_name);
   if (!std::filesystem::exists(plugin_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -475,7 +475,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
     const std::string& graph_name, const std::string& procedure_name,
     const std::string& parameters) {
   // check procedure exits.
-  auto plugin_dir = get_graph_plugin_dir(graph_name);
+  auto plugin_dir = GetGraphPluginDir(graph_name);
   if (!std::filesystem::exists(plugin_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -558,7 +558,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetProcedureLibPath(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
   }
   // get the plugin dir and append procedure_name
-  auto plugin_dir = get_graph_plugin_dir(graph_name);
+  auto plugin_dir = GetGraphPluginDir(graph_name);
   if (!std::filesystem::exists(plugin_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -660,7 +660,7 @@ std::string WorkDirManipulator::get_graph_indices_file(
          GRAPH_INDICES_FILE_NAME;
 }
 
-std::string WorkDirManipulator::get_graph_plugin_dir(
+std::string WorkDirManipulator::GetGraphPluginDir(
     const std::string& graph_name) {
   return get_graph_dir(graph_name) + "/" + GRAPH_PLUGIN_DIR_NAME;
 }
@@ -882,7 +882,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
     return seastar::make_exception_future<seastar::sstring>(
         std::runtime_error("Graph not exists: " + graph_id));
   }
-  auto output_dir = get_graph_plugin_dir(graph_id);
+  auto output_dir = GetGraphPluginDir(graph_id);
   if (!std::filesystem::exists(output_dir)) {
     std::filesystem::create_directory(output_dir);
   }
@@ -940,7 +940,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
     const std::string& graph_name,
     const std::vector<std::string>& procedure_names) {
   YAML::Node yaml_list;
-  auto plugin_dir = get_graph_plugin_dir(graph_name);
+  auto plugin_dir = GetGraphPluginDir(graph_name);
   // iterate all .yamls in plugin_dir
   if (std::filesystem::exists(plugin_dir)) {
     for (const auto& entry : std::filesystem::directory_iterator(plugin_dir)) {
@@ -990,7 +990,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
 gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
     const std::string& graph_name) {
   YAML::Node yaml_list;
-  auto plugin_dir = get_graph_plugin_dir(graph_name);
+  auto plugin_dir = GetGraphPluginDir(graph_name);
   // iterate all .yamls in plugin_dir
   if (std::filesystem::exists(plugin_dir)) {
     for (const auto& entry : std::filesystem::directory_iterator(plugin_dir)) {
@@ -1025,7 +1025,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
 gs::Result<seastar::sstring> WorkDirManipulator::get_procedure_yaml(
     const std::string& graph_name, const std::string& procedure_name) {
   auto procedure_yaml_file =
-      get_graph_plugin_dir(graph_name) + "/" + procedure_name + ".yaml";
+      GetGraphPluginDir(graph_name) + "/" + procedure_name + ".yaml";
   if (!std::filesystem::exists(procedure_yaml_file)) {
     LOG(ERROR) << "Procedure yaml file not exists: " << procedure_yaml_file;
     return gs::Result<seastar::sstring>(
