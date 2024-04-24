@@ -199,14 +199,6 @@ class WorkDirManipulator {
   static gs::Result<std::string> dump_graph_schema(
       const YAML::Node& yaml_config, const std::string& graph_name);
 
-  static gs::Result<bool> dump_graph_schema_v0_0(
-      YAML::Node yaml_config, const std::string& graph_id,
-      const std::vector<gs::PluginMeta>& plugin_metas);
-
-  static gs::Result<bool> dump_graph_schema_v0_1(
-      YAML::Node yaml_config, const std::string& graph_id,
-      const std::vector<gs::PluginMeta>& plugin_metas);
-
   // Generate the procedure, return the generated yaml config.
   static seastar::future<seastar::sstring> generate_procedure(
       const std::string& graph_id, const std::string& plugin_id,
