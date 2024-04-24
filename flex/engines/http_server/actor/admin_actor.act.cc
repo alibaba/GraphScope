@@ -29,6 +29,111 @@
 
 namespace server {
 
+std::string merge_graph_and_plugin_meta(
+    std::shared_ptr<gs::IGraphMetaStore> metadata_store,
+    const std::vector<gs::GraphMeta>& graph_metas) {
+  std::vector<gs::GraphMeta> res_graph_metas;
+  for (auto& graph_meta : graph_metas) {
+    res_graph_metas.push_back(graph_meta);
+  }
+  for (auto& graph_meta : res_graph_metas) {
+    auto all_plugin_meta = metadata_store->GetAllPluginMeta(graph_meta.id);
+    graph_meta.plugin_metas.insert(graph_meta.plugin_metas.end(),
+                                   all_plugin_meta.value().begin(),
+                                   all_plugin_meta.value().end());
+  }
+
+  nlohmann::json res;
+  for (auto& graph_meta : res_graph_metas) {
+    res.push_back(nlohmann::json::parse(graph_meta.ToJson()));
+  }
+  return res.empty() ? "{}" : res.dump();
+}
+
+// Preprocess the schema to be compatible with the current storage.
+// 1. check if any property_id or type_id is set for each type, If set, then all
+// vertex/edge types should all set.
+// 2. If property_id or type_id is not set, then set them according to the order
+gs::Result<YAML::Node> preprocess_graph_schema(YAML::Node&& node) {
+  if (node["schema"] && node["schema"]["vertex_types"] &&
+      node["schema"]["edge_types"]) {
+    // First check whether property_id or type_id is set in the schema
+    auto vertex_types = node["schema"]["vertex_types"];
+    auto edge_types = node["schema"]["edge_types"];
+    int32_t cur_vertex_type_id = 0;
+    for (auto vertex_type : vertex_types) {
+      if (vertex_type["type_id"]) {
+        auto vertex_type_id = vertex_type["type_id"].as<int32_t>();
+        if (vertex_type_id != cur_vertex_type_id) {
+          return gs::Status(
+              gs::StatusCode::InvalidSchema,
+              "Invalid vertex type_id: " + std::to_string(vertex_type_id) +
+                  ", expect: " + std::to_string(cur_vertex_type_id));
+        }
+      } else {
+        vertex_type["type_id"] = cur_vertex_type_id;
+      }
+      cur_vertex_type_id++;
+      int32_t cur_vertex_prop_id = 0;
+      if (vertex_type["properties"]) {
+        for (auto prop : vertex_type["properties"]) {
+          if (prop["property_id"]) {
+            auto prop_id = prop["property_id"].as<int32_t>();
+            if (prop_id != cur_vertex_prop_id) {
+              return gs::Status(
+                  gs::StatusCode::InvalidSchema,
+                  "Invalid vertex property_id for vertex: " +
+                      vertex_type["type_name"].as<std::string>() + " : " +
+                      std::to_string(prop_id) +
+                      ", expect: " + std::to_string(cur_vertex_prop_id));
+            }
+          } else {
+            prop["property_id"] = cur_vertex_prop_id;
+          }
+          cur_vertex_prop_id++;
+        }
+      }
+    }
+    int32_t cur_edge_type_id = 0;
+    for (auto edge_type : edge_types) {
+      if (edge_type["type_id"]) {
+        auto edge_type_id = edge_type["type_id"].as<int32_t>();
+        if (edge_type_id != cur_edge_type_id) {
+          return gs::Status(
+              gs::StatusCode::InvalidSchema,
+              "Invalid edge type_id: " + std::to_string(edge_type_id) +
+                  ", expect: " + std::to_string(cur_edge_type_id));
+        }
+      } else {
+        edge_type["type_id"] = cur_edge_type_id;
+      }
+      cur_edge_type_id++;
+      int32_t cur_edge_prop_id = 0;
+      if (edge_type["properties"]) {
+        for (auto prop : edge_type["properties"]) {
+          if (prop["property_id"]) {
+            auto prop_id = prop["property_id"].as<int32_t>();
+            if (prop_id != cur_edge_prop_id) {
+              return gs::Status(
+                  gs::StatusCode::InvalidSchema,
+                  "Invalid edge property_id for edge: " +
+                      edge_type["type_name"].as<std::string>() + " : " +
+                      std::to_string(prop_id) +
+                      ", expect: " + std::to_string(cur_edge_prop_id));
+            }
+          } else {
+            prop["property_id"] = cur_edge_prop_id;
+          }
+          cur_edge_prop_id++;
+        }
+      }
+    }
+    return node;
+  } else {
+    return gs::Status(gs::StatusCode::InvalidSchema, "Invalid graph schema: ");
+  }
+}
+
 void add_runnable_info(gs::PluginMeta& plugin_meta) {
   const auto& graph_db = gs::GraphDB::get();
   const auto& schema = graph_db.schema();
@@ -144,7 +249,16 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
           // the field enable should be parsed from json
           if (json.contains("enable")) {
             internal_plugin_update.enable = json["enable"].get<bool>();
+          } else {
+            internal_plugin_update.enable = true;
           }
+          // update the library path to the full path
+          if (internal_plugin_update.library.has_value()) {
+            internal_plugin_update.library =
+                WorkDirManipulator::GetGraphPluginDir(graph_id) + "/" +
+                internal_plugin_update.library.value();
+          }
+
           auto str = internal_plugin_update.ToString();
           VLOG(10) << "internal plugin update: " << str;
           auto update_res = metadata_store->UpdatePluginMeta(
@@ -164,7 +278,8 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
           metadata_store->DeletePluginMeta(graph_id, old_plugin_id);
           WorkDirManipulator::DeleteProcedure(graph_id, old_plugin_id);
           return seastar::make_exception_future<seastar::sstring>(
-              std::runtime_error("Fail to create plugin: "));
+              std::runtime_error("Fail to create plugin: " +
+                                 std::string(e.what())));
         }
       });
 }
@@ -245,18 +360,31 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::InvalidSchema, "Fail to parse json: ")));
   }
+  // preprocess the schema yaml,
+  auto res_yaml = preprocess_graph_schema(std::move(yaml));
+  if (!res_yaml.ok()) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(res_yaml.status()));
+  }
 
-  auto parse_schema_res = gs::Schema::LoadFromYamlNode(yaml);
+  auto parse_schema_res = gs::Schema::LoadFromYamlNode(res_yaml.value());
   if (!parse_schema_res.ok()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(parse_schema_res.status()));
   }
 
+  auto real_schema_json = gs::get_json_string_from_yaml(res_yaml.value());
+  if (!real_schema_json.ok()) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(real_schema_json.status()));
+  }
+
   auto result = metadata_store_->CreateGraphMeta(
-      gs::CreateGraphMetaRequest::FromJson(query_param.content));
+      gs::CreateGraphMetaRequest::FromJson(real_schema_json.value()));
   // we also need to store a graph.yaml on disk, for other services to read.
   if (result.ok()) {
-    auto dump_res = WorkDirManipulator::DumpGraphSchema(result.value(), yaml);
+    auto dump_res =
+        WorkDirManipulator::DumpGraphSchema(result.value(), res_yaml.value());
     if (!dump_res.ok()) {
       LOG(ERROR) << "Fail to dump graph schema: "
                  << dump_res.status().error_message();
@@ -299,8 +427,8 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_schema(
 seastar::future<admin_query_result> admin_actor::run_list_graphs(
     query_param&& query_param) {
   LOG(INFO) << "List all graphs.";
-  // auto list_result = server::WorkDirManipulator::ListGraphs();
   auto all_graph_meta_res = metadata_store_->GetAllGraphMeta();
+  // The plugin meta are stored separately, so we need to merge them.
   if (!all_graph_meta_res.ok()) {
     LOG(ERROR) << "Fail to list graphs: "
                << all_graph_meta_res.status().error_message();
@@ -309,12 +437,9 @@ seastar::future<admin_query_result> admin_actor::run_list_graphs(
   } else {
     VLOG(10) << "Successfully list graphs";
     // collect all 'schema' field into a json stirng
-    nlohmann::json res;
-    for (auto& graph_meta : all_graph_meta_res.value()) {
-      res.push_back(nlohmann::json::parse(graph_meta.ToJson()));
-    }
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(res.dump()));
+        gs::Result<seastar::sstring>(merge_graph_and_plugin_meta(
+            metadata_store_, all_graph_meta_res.value())));
   }
 }
 
