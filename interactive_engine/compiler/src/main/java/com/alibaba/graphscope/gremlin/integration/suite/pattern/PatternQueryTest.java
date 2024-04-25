@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.integration.suite.pattern;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
@@ -61,6 +63,8 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long> get_pattern_16_test();
 
     public abstract Traversal<Vertex, Long> get_pattern_17_test();
+
+    public abstract Traversal<Vertex, Long> get_st_path_test();
 
     public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_limit_100_group_test();
 
@@ -181,6 +185,20 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         Traversal<Vertex, Long> traversal = this.get_pattern_17_test();
         this.printTraversalForm(traversal);
         Assert.assertEquals(17367L, traversal.next().longValue());
+    }
+
+    @Test
+    public void run_st_path_test() {
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        Traversal<Vertex, Long> traversal = this.get_st_path_test();
+        this.printTraversalForm(traversal);
+        int count = 0;
+        while (traversal.hasNext()) {
+            Long value = traversal.next();
+            Assert.assertEquals(5, value.intValue());
+            ++count;
+        }
+        Assert.assertEquals(4, count);
     }
 
     @Test
@@ -398,6 +416,21 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                                     .hasLabel("TAG")
                                     .as("b"))
                     .count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_st_path_test() {
+            return g.V().match(
+                            ((IrCustomizedTraversal)
+                                            __.as("a")
+                                                    .has("PERSON", "id", 2199023256684L)
+                                                    .out("5..6", "KNOWS")
+                                                    .as("c"))
+                                    .endV()
+                                    .has("PERSON", "id", 8796093023060L)
+                                    .as("b"))
+                    .select("c")
+                    .values("~len");
         }
 
         @Override

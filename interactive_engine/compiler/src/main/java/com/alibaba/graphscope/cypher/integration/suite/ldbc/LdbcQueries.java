@@ -475,4 +475,17 @@ public class LdbcQueries {
                                 + " replyCount: 4}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_st_path() {
+        String query =
+                "Match (a:PERSON {id: 2199023256684})-[c:KNOWS*5..6]->(b:PERSON {id:"
+                        + " 8796093023060}) Return length(c) as len;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{len: 5}>",
+                        "Record<{len: 5}>",
+                        "Record<{len: 5}>",
+                        "Record<{len: 5}>");
+        return new QueryContext(query, expected);
+    }
 }

@@ -98,6 +98,13 @@ public class IrLdbcTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
+    @Test
+    public void run_st_path_test() {
+        QueryContext testQuery = LdbcQueries.get_st_path();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
     @AfterClass
     public static void afterClass() {
         if (session != null) {
