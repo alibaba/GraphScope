@@ -113,6 +113,8 @@ static std::string single_common_data_type_pb_2_str(
     return "std::vector<int32_t>";
   case common::DataType::DATE32:
     return "Date";
+  case common::DataType::TIMESTAMP:
+    return "TimeStamp";
     // TODO: support time32 and timestamp
   default:
     throw std::runtime_error(
@@ -196,6 +198,8 @@ static std::string data_type_2_string(const codegen::DataType& data_type) {
     return LENGTH_KEY_T;
   case codegen::DataType::kEdgeId:
     return EDGE_ID_T;
+  case codegen::DataType::kTimeStamp:
+    return "TimeStamp";
   case codegen::DataType::kDate:
     return "Date";
   case codegen::DataType::kLabelId:

@@ -32,8 +32,8 @@ template class MutableCsr<int32_t>;
 template class SingleMutableCsr<uint32_t>;
 template class MutableCsr<uint32_t>;
 
-template class SingleMutableCsr<Date>;
-template class MutableCsr<Date>;
+template class SingleMutableCsr<TimeStamp>;
+template class MutableCsr<TimeStamp>;
 
 template class SingleMutableCsr<int64_t>;
 template class MutableCsr<int64_t>;

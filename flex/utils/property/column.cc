@@ -102,8 +102,8 @@ using IntEmptyColumn = TypedEmptyColumn<int32_t>;
 using UIntEmptyColumn = TypedEmptyColumn<uint32_t>;
 using LongEmptyColumn = TypedEmptyColumn<int64_t>;
 using ULongEmptyColumn = TypedEmptyColumn<uint64_t>;
+using TimeStampEmptyColumn = TypedEmptyColumn<TimeStamp>;
 using DateEmptyColumn = TypedEmptyColumn<Date>;
-using DayEmptyColumn = TypedEmptyColumn<Day>;
 using BoolEmptyColumn = TypedEmptyColumn<bool>;
 using FloatEmptyColumn = TypedEmptyColumn<float>;
 using DoubleEmptyColumn = TypedEmptyColumn<double>;
@@ -128,8 +128,8 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<FloatEmptyColumn>();
     } else if (type == PropertyType::kDate) {
       return std::make_shared<DateEmptyColumn>();
-    } else if (type == PropertyType::kDay) {
-      return std::make_shared<DayEmptyColumn>();
+    } else if (type == PropertyType::kTimeStamp) {
+      return std::make_shared<TimeStampEmptyColumn>();
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringEmptyColumn>();
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
@@ -157,8 +157,8 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<FloatColumn>(strategy);
     } else if (type == PropertyType::kDate) {
       return std::make_shared<DateColumn>(strategy);
-    } else if (type == PropertyType::kDay) {
-      return std::make_shared<DayColumn>(strategy);
+    } else if (type == PropertyType::kTimeStamp) {
+      return std::make_shared<TimeStampColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringMapColumn<uint8_t>>(strategy);
     } else if (type == PropertyType::kString) {

@@ -30,9 +30,9 @@ std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
     return arrow::float64();
   } else if (type == PropertyType::Float()) {
     return arrow::float32();
-  } else if (type == PropertyType::Date()) {
+  } else if (type == PropertyType::TimeStamp()) {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
-  } else if (type == PropertyType::Day()) {
+  } else if (type == PropertyType::Date()) {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
   } else if (type == PropertyType::String()) {
     return arrow::large_utf8();
