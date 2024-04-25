@@ -24,7 +24,7 @@ RUN cd /home/graphscope/GraphScope/; \
     cp dist/*.whl /home/graphscope/install/
 
 ############### RUNTIME: GLE #######################
-FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS gltorch
+FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS graphlearn-torch
 
 RUN sudo apt-get update -y && \
     sudo apt-get install -y python3-pip && \
