@@ -308,7 +308,6 @@ gs::GraphId HQPSService::insert_default_graph_meta() {
                << schema_str_res.status().error_message();
   }
   auto request = gs::CreateGraphMetaRequest::FromJson(schema_str_res.value());
-  request.is_builtin = true;
   request.data_update_time = gs::GetCurrentTimeStamp();
 
   auto res = metadata_store_->CreateGraphMeta(request);

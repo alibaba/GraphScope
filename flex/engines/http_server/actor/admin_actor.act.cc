@@ -427,14 +427,6 @@ seastar::future<admin_query_result> admin_actor::run_delete_graph(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(get_res.status()));
   }
-  // can not delete a builtin graph
-  if (get_res.value().is_builtin) {
-    LOG(ERROR) << "Can not delete a builtin graph: " << query_param.content;
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(
-            gs::StatusCode::IllegalOperation,
-            "Can not delete a builtin graph: " + query_param.content)));
-  }
 
   auto delete_res = metadata_store_->DeleteGraphMeta(query_param.content);
 
