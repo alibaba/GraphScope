@@ -28,6 +28,9 @@ limitations under the License.
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
+#include <yaml-cpp/yaml.h>
+#include "nlohmann/json.hpp"
+
 namespace grape {
 
 inline bool operator<(const EmptyType& lhs, const EmptyType& rhs) {
@@ -37,6 +40,21 @@ inline bool operator<(const EmptyType& lhs, const EmptyType& rhs) {
 }  // namespace grape
 
 namespace gs {
+
+// primitive types
+static constexpr const char* DT_UNSIGNED_INT8 = "DT_UNSIGNED_INT8";
+static constexpr const char* DT_UNSIGNED_INT16 = "DT_UNSIGNED_INT16";
+static constexpr const char* DT_SIGNED_INT32 = "DT_SIGNED_INT32";
+static constexpr const char* DT_UNSIGNED_INT32 = "DT_UNSIGNED_INT32";
+static constexpr const char* DT_SIGNED_INT64 = "DT_SIGNED_INT64";
+static constexpr const char* DT_UNSIGNED_INT64 = "DT_UNSIGNED_INT64";
+static constexpr const char* DT_BOOL = "DT_BOOL";
+static constexpr const char* DT_FLOAT = "DT_FLOAT";
+static constexpr const char* DT_DOUBLE = "DT_DOUBLE";
+static constexpr const char* DT_STRING = "DT_STRING";
+static constexpr const char* DT_STRINGMAP = "DT_STRINGMAP";
+static constexpr const char* DT_DATE = "DT_DATE32";
+static constexpr const char* DT_DAY = "DT_DAY32";
 
 enum class StorageStrategy {
   kNone,
@@ -126,6 +144,16 @@ struct PropertyType {
   bool operator==(const PropertyType& other) const;
   bool operator!=(const PropertyType& other) const;
 };
+
+namespace config_parsing {
+std::string PrimitivePropertyTypeToString(PropertyType type);
+PropertyType StringToPrimitivePropertyType(const std::string& str);
+}  // namespace config_parsing
+
+// With the help of the following functions, we can serialize and deserialize
+// by json.get<PropertyType>() and operator <</operator =;
+void to_json(nlohmann::json& json, const PropertyType& type);
+void from_json(const nlohmann::json& json, PropertyType& type);
 
 // encoded with label_id and vid_t.
 struct GlobalId {
@@ -1171,5 +1199,62 @@ inline bool operator==(const EmptyType& a, const EmptyType& b) { return true; }
 
 inline bool operator!=(const EmptyType& a, const EmptyType& b) { return false; }
 }  // namespace grape
+
+namespace YAML {
+template <>
+struct convert<gs::PropertyType> {
+  // concurrently preseve backwards compatibility with old config files
+  static bool decode(const Node& config, gs::PropertyType& property_type) {
+    if (config["primitive_type"]) {
+      property_type = gs::config_parsing::StringToPrimitivePropertyType(
+          config["primitive_type"].as<std::string>());
+    } else if (config["string"]) {
+      if (config["string"].IsMap()) {
+        if (config["string"]["long_text"]) {
+          property_type = gs::PropertyType::String();
+        } else if (config["string"]["var_char"]) {
+          if (config["string"]["var_char"]["max_length"]) {
+            property_type = gs::PropertyType::Varchar(
+                config["string"]["var_char"]["max_length"].as<int32_t>());
+          }
+          property_type = gs::PropertyType::Varchar(
+              gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+        } else {
+          LOG(ERROR) << "Unrecognized string type";
+        }
+      } else {
+        LOG(ERROR) << "string should be a map";
+      }
+    } else if (config["temporal"]) {
+      if (config["date32"]) {
+        property_type = gs::PropertyType::Day();
+      } else if (config["timestamp"]) {
+        property_type = gs::PropertyType::Date();
+      } else {
+        LOG(ERROR) << "Unrecognized temporal type";
+      }
+    }
+    // compatibility with old config files
+    else if (config["day"]) {
+      property_type = gs::config_parsing::StringToPrimitivePropertyType(
+          config["type"].as<std::string>());
+    } else if (config["varchar"]) {
+      if (config["varchar"]["max_length"]) {
+        property_type = gs::PropertyType::Varchar(
+            config["varchar"]["max_length"].as<int32_t>());
+      } else {
+        property_type = gs::PropertyType::Varchar(
+            gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+      }
+    } else if (config["date"]) {
+      property_type = gs::PropertyType::Date();
+    } else {
+      LOG(ERROR) << "Unrecognized property type: " << config;
+      return false;
+    }
+    return true;
+  }
+};
+}  // namespace YAML
 
 #endif  // GRAPHSCOPE_TYPES_H_

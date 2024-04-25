@@ -433,66 +433,6 @@ bool Schema::Equals(const Schema& other) const {
 
 namespace config_parsing {
 
-std::string PropertyTypeToString(PropertyType type) {
-  if (type == PropertyType::kInt32) {
-    return DT_SIGNED_INT32;
-  } else if (type == PropertyType::kUInt32) {
-    return DT_UNSIGNED_INT32;
-  } else if (type == PropertyType::kBool) {
-    return DT_BOOL;
-  } else if (type == PropertyType::kDate) {
-    return DT_DATE;
-  } else if (type == PropertyType::kDay) {
-    return DT_DAY;
-  } else if (type == PropertyType::kString) {
-    return DT_STRING;
-  } else if (type == PropertyType::kStringMap) {
-    return DT_STRINGMAP;
-  } else if (type == PropertyType::kEmpty) {
-    return "Empty";
-  } else if (type == PropertyType::kInt64) {
-    return DT_SIGNED_INT64;
-  } else if (type == PropertyType::kUInt64) {
-    return DT_UNSIGNED_INT64;
-  } else if (type == PropertyType::kFloat) {
-    return DT_FLOAT;
-  } else if (type == PropertyType::kDouble) {
-    return DT_DOUBLE;
-  } else {
-    return "Empty";
-  }
-}
-
-PropertyType StringToPropertyType(const std::string& str) {
-  if (str == "int32" || str == "INT" || str == DT_SIGNED_INT32) {
-    return PropertyType::kInt32;
-  } else if (str == "uint32" || str == DT_UNSIGNED_INT32) {
-    return PropertyType::kUInt32;
-  } else if (str == "bool" || str == "BOOL" || str == DT_BOOL) {
-    return PropertyType::kBool;
-  } else if (str == "Date" || str == DT_DATE) {
-    return PropertyType::kDate;
-  } else if (str == "Day" || str == DT_DAY) {
-    return PropertyType::kDay;
-  } else if (str == "String" || str == "STRING" || str == DT_STRING) {
-    // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);
-    return PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
-  } else if (str == DT_STRINGMAP) {
-    return PropertyType::kStringMap;
-  } else if (str == "Empty") {
-    return PropertyType::kEmpty;
-  } else if (str == "int64" || str == "LONG" || str == DT_SIGNED_INT64) {
-    return PropertyType::kInt64;
-  } else if (str == "uint64" || str == DT_UNSIGNED_INT64) {
-    return PropertyType::kUInt64;
-  } else if (str == "float" || str == "FLOAT" || str == DT_FLOAT) {
-    return PropertyType::kFloat;
-  } else if (str == "double" || str == "DOUBLE" || str == DT_DOUBLE) {
-    return PropertyType::kDouble;
-  } else {
-    return PropertyType::kEmpty;
-  }
-}
 void RelationToEdgeStrategy(const std::string& rel_str,
                             EdgeStrategy& ie_strategy,
                             EdgeStrategy& oe_strategy) {
@@ -529,31 +469,13 @@ StorageStrategy StringToStorageStrategy(const std::string& str) {
 }
 
 static bool parse_property_type(YAML::Node node, PropertyType& type) {
-  std::string prop_type_str{};
-  if (node["primitive_type"]) {
-    if (!get_scalar(node, "primitive_type", prop_type_str)) {
-      return false;
-    }
-  } else if (node["varchar"]) {
-    auto varchar_node = node["varchar"];
-    int length{};
-    if (!varchar_node["max_length"] ||
-        !get_scalar(varchar_node, "max_length", length)) {
-      return false;
-    }
-    type = PropertyType::Varchar(length);
+  try {
+    type = node.as<gs::PropertyType>();
     return true;
-  } else if (node["date"]) {
-    auto format = node["date"].as<std::string>();
-    prop_type_str = DT_DATE;
-  } else if (node["day"]) {
-    auto format = node["day"].as<std::string>();
-    prop_type_str = DT_DAY;
-  } else {
+  } catch (const YAML::BadConversion& e) {
+    LOG(ERROR) << "Failed to parse property type: " << e.what();
     return false;
   }
-  type = StringToPropertyType(prop_type_str);
-  return true;
 }
 static bool parse_vertex_properties(YAML::Node node,
                                     const std::string& label_name,
