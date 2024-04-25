@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.cypher.integration.suite.ldbc;
 
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
+import com.google.common.collect.Lists;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -480,12 +481,10 @@ public class LdbcQueries {
         String query =
                 "Match (a:PERSON {id: 2199023256684})-[c:KNOWS*5..6]->(b:PERSON {id:"
                         + " 8796093023060}) Return length(c) as len;";
-        List<String> expected =
-                Arrays.asList(
-                        "Record<{len: 5}>",
-                        "Record<{len: 5}>",
-                        "Record<{len: 5}>",
-                        "Record<{len: 5}>");
+        List<String> expected = Lists.newArrayList();
+        for (int i = 0; i < 10; ++i) {
+            expected.add("Record<{len: 5}>");
+        }
         return new QueryContext(query, expected);
     }
 }

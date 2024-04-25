@@ -198,7 +198,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
             Assert.assertEquals(5, value.intValue());
             ++count;
         }
-        Assert.assertEquals(4, count);
+        Assert.assertEquals(10, count);
     }
 
     @Test
