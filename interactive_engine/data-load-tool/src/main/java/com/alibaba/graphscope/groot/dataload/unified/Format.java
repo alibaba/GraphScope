@@ -1,6 +1,5 @@
 package com.alibaba.graphscope.groot.dataload.unified;
 
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
