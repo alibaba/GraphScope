@@ -568,17 +568,11 @@ public class GraphBuilder extends RelBuilder {
                 List<RelDataTypeField> fields = cur.getRowType().getFieldList();
                 // to support `head` in gremlin
                 if (nodeIdx++ == 0 && AliasInference.isDefaultAlias(alias)) {
-                    if (fields.size() == 1) {
-                        return new ColumnField(
-                                AliasInference.DEFAULT_COLUMN_ID,
-                                new RelDataTypeFieldImpl(
-                                        AliasInference.DEFAULT_NAME,
-                                        AliasInference.DEFAULT_ID,
-                                        fields.get(0).getType()));
-                    } else if (cur
-                            instanceof
-                            CommonTableScan) { // specific implementation for gremlin, to get `head`
-                        // in nested traversal
+                    // by default returning the last field in the cur type as the `head`,
+                    // The criteria for determining whether a 'head' can be returned are quite
+                    // lenient, based solely on the type, some invalid operator compositions may be
+                    // omitted.
+                    if (fields.size() > 0) {
                         return new ColumnField(
                                 AliasInference.DEFAULT_COLUMN_ID,
                                 new RelDataTypeFieldImpl(
