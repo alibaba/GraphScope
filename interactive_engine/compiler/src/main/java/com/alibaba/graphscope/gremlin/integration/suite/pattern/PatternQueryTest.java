@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.gremlin.integration.suite.pattern;
 
-import static org.junit.Assume.assumeTrue;
-
 import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
@@ -189,7 +187,6 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
 
     @Test
     public void run_st_path_test() {
-        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
         Traversal<Vertex, Long> traversal = this.get_st_path_test();
         this.printTraversalForm(traversal);
         int count = 0;
