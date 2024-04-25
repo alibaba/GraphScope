@@ -667,48 +667,63 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                         .filter_map_with_name("PathStart", move |input| path_start_func.exec(input))?;
                     // path base expand
                     let mut base_expand_plan = vec![];
-                    // process edge_expand, with opt = ExpandV given by physical plan.
-                    if let Some(edge_expand) = base.edge_expand.take() {
-                        if pb::path_expand::ResultOpt::AllVE
-                            == unsafe { std::mem::transmute(path.result_opt) }
-                            && pb::edge_expand::ExpandOpt::Vertex
-                                == unsafe { std::mem::transmute(edge_expand.expand_opt) }
-                        {
-                            // the case when base expand is expand vertex, but needs to expand edges + vertices since the result opt is ALLVE
-                            let mut edge_expand_e = edge_expand.clone();
-                            edge_expand_e.expand_opt = pb::edge_expand::ExpandOpt::Edge as i32;
-                            let alias = edge_expand_e.alias.take();
-                            let get_v = pb::GetV {
-                                opt: pb::get_v::VOpt::Other as i32,
-                                tag: None,
-                                params: None,
-                                alias,
-                            };
-                            base_expand_plan.push(edge_expand_e.into());
-                            base_expand_plan.push(get_v.into());
-                        } else {
-                            base_expand_plan.push(edge_expand.into());
-                        }
-                    } else {
-                        Err(FnGenError::from(ParsePbError::ParseError(format!(
+                    // process edge_expand
+                    let edge_expand = base.edge_expand.take().ok_or_else(|| {
+                        FnGenError::from(ParsePbError::ParseError(format!(
                             "empty EdgeExpand of ExpandBase in PathExpand Operator {:?}",
                             base
-                        ))))?;
+                        )))
+                    })?;
+
+                    if pb::path_expand::ResultOpt::AllVE == unsafe { std::mem::transmute(path.result_opt) }
+                        && pb::edge_expand::ExpandOpt::Vertex
+                            == unsafe { std::mem::transmute(edge_expand.expand_opt) }
+                    {
+                        // the case when base expand is expand vertex, but needs to expand edges + vertices since the result opt is ALLVE
+                        // TODO: in the new compilation stack, this case will not happen.
+                        let mut edge_expand_e = edge_expand.clone();
+                        edge_expand_e.expand_opt = pb::edge_expand::ExpandOpt::Edge as i32;
+                        let alias = edge_expand_e.alias.take();
+                        let get_v =
+                            pb::GetV { opt: pb::get_v::VOpt::Other as i32, tag: None, params: None, alias };
+                        base_expand_plan.push(edge_expand_e.into());
+                        base_expand_plan.push(get_v.into());
+                    } else {
+                        base_expand_plan.push(edge_expand.into());
                     }
-                    if let OpKind::Repartition(_) = &prev_op_kind {
+                    let repartition = if let OpKind::Repartition(_) = &prev_op_kind {
                         // the case when base expand needs repartition
-                        base_expand_plan.push(
+                        Some(
                             pb::Repartition {
                                 strategy: Some(pb::repartition::Strategy::ToAnother(
                                     pb::repartition::Shuffle { shuffle_key: None },
                                 )),
                             }
                             .into(),
-                        );
-                    }
-                    // process get_v, with opt = Self, given by physical plan (to deal with filtering on vertices).
+                        )
+                    } else {
+                        None
+                    };
+                    // process get_v
                     if let Some(getv) = base.get_v.take() {
-                        base_expand_plan.push(getv.clone().into());
+                        if (pb::get_v::VOpt::Itself as i32) == getv.opt {
+                            // the case of expandv + auxilia (to deal with filtering on vertices).
+                            if let Some(repartition) = repartition {
+                                base_expand_plan.push(repartition);
+                            }
+                            base_expand_plan.push(getv.clone().into());
+                        } else {
+                            // the case of expande + getv
+                            base_expand_plan.push(getv.clone().into());
+                            if let Some(repartition) = repartition {
+                                base_expand_plan.push(repartition);
+                            }
+                        }
+                    } else {
+                        // the case of expandv
+                        if let Some(repartition) = repartition {
+                            base_expand_plan.push(repartition);
+                        }
                     }
 
                     for _ in 0..range.lower {
