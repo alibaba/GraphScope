@@ -141,7 +141,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
-    public void loadJsonSchema(
+    public void loadSchema(
             LoadSchemaRequest request, StreamObserver<LoadSchemaResponse> responseObserver) {
         try {
             String schemaStr = request.getSchemaStr();

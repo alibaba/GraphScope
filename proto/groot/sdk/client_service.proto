@@ -25,7 +25,7 @@ service Client {
   rpc getSchema(GetSchemaRequest) returns (GetSchemaResponse);
   rpc ingestData(IngestDataRequest) returns (IngestDataResponse);
   rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
-  rpc loadJsonSchema(LoadSchemaRequest) returns (LoadSchemaResponse);
+  rpc loadSchema(LoadSchemaRequest) returns (LoadSchemaResponse);
   rpc dropSchema(DropSchemaRequest) returns (DropSchemaResponse);
   rpc prepareDataLoad(PrepareDataLoadRequest) returns (PrepareDataLoadResponse);
   rpc commitDataLoad(CommitDataLoadRequest) returns (CommitDataLoadResponse);

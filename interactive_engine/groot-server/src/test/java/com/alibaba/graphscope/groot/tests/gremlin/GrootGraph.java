@@ -126,7 +126,7 @@ public class GrootGraph extends RemoteTestGraph {
                                 .getResource(schemaResource)
                                 .toURI());
         String json = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-        this.ddlClient.loadJsonSchema(json);
+        this.ddlClient.loadSchema(json);
     }
 
     public void loadData(LoadGraphWith.GraphData graphData) throws InterruptedException {
