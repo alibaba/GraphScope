@@ -17,6 +17,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
+import com.alibaba.graphscope.groot.common.schema.unified.Graph;
 import com.alibaba.graphscope.groot.common.schema.wrapper.*;
 import com.alibaba.graphscope.groot.common.util.DataLoadTarget;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -141,11 +142,16 @@ public class ClientService extends ClientGrpc.ClientImplBase {
 
     @Override
     public void loadJsonSchema(
-            LoadJsonSchemaRequest request,
-            StreamObserver<LoadJsonSchemaResponse> responseObserver) {
+            LoadSchemaRequest request, StreamObserver<LoadSchemaResponse> responseObserver) {
         try {
-            String schemaJson = request.getSchemaJson();
-            GraphSchema graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
+            String schemaStr = request.getSchemaStr();
+            int schemaType = request.getSchemaType();
+            GraphSchema graphSchema;
+            if (schemaType == 0) {
+                graphSchema = GraphSchemaMapper.parseFromJson(schemaStr).toGraphSchema();
+            } else {
+                graphSchema = Graph.parseFromYaml(schemaStr);
+            }
             DdlRequestBatch.Builder ddlBatchBuilder = DdlRequestBatch.newBuilder();
             for (GraphVertex graphVertex : graphSchema.getVertexList()) {
                 String label = graphVertex.getLabel();
@@ -221,7 +227,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                     snapshotId,
                     () -> {
                         responseObserver.onNext(
-                                LoadJsonSchemaResponse.newBuilder()
+                                LoadSchemaResponse.newBuilder()
                                         .setGraphDef(
                                                 this.snapshotCache
                                                         .getSnapshotWithSchema()

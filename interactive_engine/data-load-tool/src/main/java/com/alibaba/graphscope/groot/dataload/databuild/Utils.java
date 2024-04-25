@@ -3,6 +3,7 @@ package com.alibaba.graphscope.groot.dataload.databuild;
 import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
+import com.alibaba.graphscope.groot.dataload.unified.*;
 import com.alibaba.graphscope.groot.dataload.util.HttpClient;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
@@ -53,6 +54,43 @@ public class Utils {
             throws JsonProcessingException {
         ObjectMapper m = new ObjectMapper();
         return m.readValue(str, new TypeReference<Map<String, FileColumnMapping>>() {});
+    }
+
+    public static Map<String, FileColumnMapping> parseColumnMappingFromUniConfig(UniConfig config) {
+        Map<String, FileColumnMapping> out = new HashMap<>();
+        for (VertexMapping mapping : config.vertexMappings) {
+            String fileName = mapping.getInputFileName();
+            String label = mapping.typeName;
+            Map<Integer, String> properties = new HashMap<>();
+            for (ColumnMapping columnMapping : mapping.columnMappings) {
+                properties.put(columnMapping.column.index, columnMapping.property);
+            }
+            FileColumnMapping value = new FileColumnMapping(label, properties);
+            out.put(fileName, value);
+        }
+        for (EdgeMapping mapping : config.edgeMappings) {
+            String fileName = mapping.getInputFileName();
+            TypeTriplet triplet = mapping.typeTriplet;
+            String edgeLabel = triplet.edge;
+            String srcLabel = triplet.sourceVertex;
+            String dstLabel = triplet.destinationVertex;
+            Map<Integer, String> srcPk = new HashMap<>();
+            Map<Integer, String> dstPk = new HashMap<>();
+            for (ColumnMapping columnMapping : mapping.sourceVertexMappings) {
+                srcPk.put(columnMapping.column.index, columnMapping.property);
+            }
+            for (ColumnMapping columnMapping : mapping.destinationVertexMappings) {
+                srcPk.put(columnMapping.column.index, columnMapping.property);
+            }
+            Map<Integer, String> properties = new HashMap<>();
+            for (ColumnMapping columnMapping : mapping.columnMappings) {
+                properties.put(columnMapping.column.index, columnMapping.property);
+            }
+            FileColumnMapping value =
+                    new FileColumnMapping(edgeLabel, srcLabel, dstLabel, srcPk, dstPk, properties);
+            out.put(fileName, value);
+        }
+        return out;
     }
 
     public static Map<String, ColumnMappingInfo> getMappingInfo(
@@ -134,7 +172,7 @@ public class Utils {
     }
 
     public static boolean parseBoolean(String str) {
-        return str.equalsIgnoreCase("true");
+        return str.equalsIgnoreCase("true") || str.equals("1");
     }
 
     public static String replaceVars(String str, String[] args) {

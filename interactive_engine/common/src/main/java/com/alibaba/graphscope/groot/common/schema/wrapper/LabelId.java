@@ -16,7 +16,7 @@ package com.alibaba.graphscope.groot.common.schema.wrapper;
 import com.alibaba.graphscope.proto.groot.LabelIdPb;
 
 public class LabelId {
-    private int id;
+    private final int id;
 
     public LabelId(int id) {
         this.id = id;
