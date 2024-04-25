@@ -69,6 +69,11 @@ std::string GraphMeta::ToJson() const {
     json["data_import_config"] = nlohmann::json::parse(data_import_config);
   }
   json["schema"] = nlohmann::json::parse(schema);
+  json["stored_procedures"] = nlohmann::json::array();
+  for (auto& plugin_meta : plugin_metas) {
+    json["stored_procedures"].push_back(
+        nlohmann::json::parse(plugin_meta.ToJson()));
+  }
   return json.dump();
 }
 
@@ -97,6 +102,11 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
   }
   if (json.contains("data_import_config")) {
     meta.data_import_config = json["data_import_config"].dump();
+  }
+  if (json.contains("stored_procedures")) {
+    for (auto& plugin : json["stored_procedures"]) {
+      meta.plugin_metas.push_back(PluginMeta::FromJson(plugin));
+    }
   }
   return meta;
 }
@@ -132,6 +142,12 @@ PluginMeta PluginMeta::FromJson(const nlohmann::json& json) {
   }
   if (json.contains("library")) {
     meta.library = json["library"].get<std::string>();
+  }
+  if (json.contains("query")) {
+    meta.query = json["query"].get<std::string>();
+  }
+  if (json.contains("type")) {
+    meta.type = json["type"].get<std::string>();
   }
   if (json.contains("option")) {
     meta.setOptionFromJsonString(json["option"].dump());
@@ -178,6 +194,9 @@ std::string PluginMeta::ToJson() const {
   json["update_time"] = update_time;
   json["enable"] = enable;
   json["runnable"] = runnable;
+  json["library"] = library;
+  json["query"] = query;
+  json["type"] = type;
   return json.dump();
 }
 
@@ -394,6 +413,8 @@ std::string CreatePluginMetaRequest::ToString() const {
   for (auto& opt : option) {
     json["option"][opt.first] = opt.second;
   }
+  json["query"] = query;
+  json["type"] = type;
   json["enable"] = enable;
   return json.dump();
 }
@@ -457,6 +478,12 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
       request.option[opt.key()] = opt.value().get<std::string>();
     }
   }
+  if (j.contains("query")) {
+    request.query = j["query"].get<std::string>();
+  }
+  if (j.contains("type")) {
+    request.type = j["type"].get<std::string>();
+  }
   if (j.contains("enable")) {
     request.enable = j["enable"].get<bool>();
   }
@@ -486,31 +513,31 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
       request.update_time = GetCurrentTimeStamp();
     }
     if (j.contains("params")) {
-      request.params.emplace();
+      request.params = std::vector<Parameter>();
       for (auto& param : j["params"]) {
         Parameter p;
         p.name = param["name"].get<std::string>();
         p.type = config_parsing::StringToPropertyType(
             param["type"].get<std::string>());
 
-        request.params->emplace_back(p);
+        request.params->emplace_back(std::move(p));
       }
     }
     if (j.contains("returns")) {
-      request.returns.emplace();
+      request.returns = std::vector<Parameter>();
       for (auto& ret : j["returns"]) {
         Parameter p;
         p.name = ret["name"].get<std::string>();
         p.type = config_parsing::StringToPropertyType(
             ret["type"].get<std::string>());
-        request.returns->emplace_back(p);
+        request.returns->emplace_back(std::move(p));
       }
     }
     if (j.contains("library")) {
       request.library = j["library"].get<std::string>();
     }
     if (j.contains("option")) {
-      request.option.emplace();
+      request.option = std::unordered_map<std::string, std::string>();
       for (auto& opt : j["option"].items()) {
         request.option->insert({opt.key(), opt.value()});
       }
@@ -581,7 +608,7 @@ std::string UpdatePluginMetaRequest::ToString() const {
       nlohmann::json param_json;
       param_json["name"] = param.name;
       param_json["type"] = config_parsing::PropertyTypeToString(param.type);
-      json["params"].push_back(param_json);
+      json["params"].emplace_back(std::move(param_json));
     }
   }
 
@@ -591,7 +618,7 @@ std::string UpdatePluginMetaRequest::ToString() const {
       nlohmann::json ret_json;
       ret_json["name"] = ret.name;
       ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
-      json["returns"].push_back(ret_json);
+      json["returns"].emplace_back(std::move(ret_json));
     }
   }
   if (library.has_value()) {

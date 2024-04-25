@@ -54,6 +54,7 @@ enum class JobStatus {
 JobStatus parseFromString(const std::string& status_string);
 
 ////////////////// MetaData ///////////////////////
+struct PluginMeta;
 struct GraphMeta {
   GraphId id;
   std::string name;
@@ -63,6 +64,8 @@ struct GraphMeta {
   uint64_t data_update_time;
   std::string data_import_config;
   std::string schema;
+
+  std::vector<PluginMeta> plugin_metas;
 
   std::string ToJson() const;
   static GraphMeta FromJson(const std::string& json_str);
@@ -79,6 +82,8 @@ struct PluginMeta {
   std::string library;
   std::unordered_map<std::string, std::string>
       option;  // other optional configuration
+  std::string query;
+  std::string type;
 
   bool enable;    // whether the plugin is enabled.
   bool runnable;  // whether the plugin is runnable.
@@ -143,6 +148,8 @@ struct CreatePluginMetaRequest {
   std::vector<Parameter> returns;
   std::string library;
   std::unordered_map<std::string, std::string> option;
+  std::string query;
+  std::string type;
   bool enable;  // default true
 
   CreatePluginMetaRequest();

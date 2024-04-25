@@ -155,6 +155,8 @@ class WorkDirManipulator {
 
   static std::string GetGraphIndicesDir(const std::string& graph_name);
 
+  static std::string GetGraphPluginDir(const std::string& graph_name);
+
   static std::string GetLogDir();
 
   static std::string GetCompilerLogFile();
@@ -187,8 +189,6 @@ class WorkDirManipulator {
   static std::string get_graph_indices_file(const std::string& graph_name);
 
   static std::string get_graph_lock_file(const std::string& graph_name);
-
-  static std::string get_graph_plugin_dir(const std::string& graph_name);
 
   static std::string get_graph_dir(const std::string& graph_name);
 
