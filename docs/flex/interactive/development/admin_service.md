@@ -74,14 +74,18 @@ curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph"
               "property_id": "1",
               "property_name": "name",
               "property_type": {
-                "primitive_type": "DT_STRING"
+                "string":{
+                  "long_text": {}
+                }
               }
             },
             {
               "property_id": "2",
               "property_name": "age",
               "property_type": {
-                "primitive_type": "DT_SIGNED_INT32"
+                "string":{
+                  "long_text": {}
+                }
               }
             }
           ],
@@ -104,14 +108,18 @@ curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph"
               "property_id": "1",
               "property_name": "name",
               "property_type": {
-                "primitive_type": "DT_STRING"
+                "string":{
+                  "long_text": {}
+                }
               }
             },
             {
               "property_id": "2",
               "property_name": "lang",
               "property_type": {
-                "primitive_type": "DT_STRING"
+                "string":{
+                  "long_text": {}
+                }
               }
             }
           ],
@@ -202,14 +210,18 @@ This API create a new graph according to the specified schema in request body.
                         "property_id": 1,
                         "property_name": "name",
                         "property_type": {
-                            "primitive_type": "DT_STRING"
+                            "string":{
+                              "long_text": {}
+                            }
                         }
                     },
                     {
                         "property_id": 2,
                         "property_name": "age",
                         "property_type": {
-                            "primitive_type": "DT_SIGNED_INT32"
+                            "string":{
+                              "long_text": {}
+                            }
                         }
                     }
                 ],
@@ -232,14 +244,18 @@ This API create a new graph according to the specified schema in request body.
                         "property_id": 1,
                         "property_name": "name",
                         "property_type": {
-                            "primitive_type": "DT_STRING"
+                            "string":{
+                              "long_text": {}
+                            }
                         }
                     },
                     {
                         "property_id": 2,
                         "property_name": "lang",
                         "property_type": {
-                            "primitive_type": "DT_STRING"
+                            "string":{
+                              "long_text": {}
+                            }
                         }
                     }
                 ],
@@ -380,14 +396,18 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_
                   "property_id": 1,
                   "property_name": "name",
                   "property_type": {
-                      "primitive_type": "DT_STRING"
+                      "string":{
+                          "long_text": {}
+                      }
                   }
               },
               {
                   "property_id": 2,
                   "property_name": "age",
                   "property_type": {
-                      "primitive_type": "DT_SIGNED_INT32"
+                      "string":{
+                          "long_text": {}
+                      }
                   }
               }
           ],
@@ -410,14 +430,18 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_
                   "property_id": 1,
                   "property_name": "name",
                   "property_type": {
-                      "primitive_type": "DT_STRING"
+                      "string":{
+                          "long_text": {}
+                      }
                   }
               },
               {
                   "property_id": 2,
                   "property_name": "lang",
                   "property_type": {
-                      "primitive_type": "DT_STRING"
+                      "string":{
+                          "long_text": {}
+                      }
                   }
               }
           ],

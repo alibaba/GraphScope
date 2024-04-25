@@ -20,15 +20,11 @@
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
+#include "flex/utils/property/types.h"
 #include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
 
 namespace gs {
-
-namespace config_parsing {
-std::string PropertyTypeToString(PropertyType type);
-PropertyType StringToPropertyType(const std::string& str);
-}  // namespace config_parsing
 
 class Schema {
  public:
