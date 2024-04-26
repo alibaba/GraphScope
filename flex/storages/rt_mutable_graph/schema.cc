@@ -46,7 +46,8 @@ void Schema::add_vertex_label(
     const std::vector<std::string>& property_names,
     const std::vector<std::tuple<PropertyType, std::string, size_t>>&
         primary_key,
-    const std::vector<StorageStrategy>& strategies, size_t max_vnum) {
+    const std::vector<StorageStrategy>& strategies, size_t max_vnum,
+    const std::string& description) {
   label_t v_label_id = vertex_label_to_index(label);
   vproperties_[v_label_id] = property_types;
   vprop_names_[v_label_id] = property_names;
@@ -55,6 +56,7 @@ void Schema::add_vertex_label(
                                     StorageStrategy::kMem);
   v_primary_keys_[v_label_id] = primary_key;
   max_vnum_[v_label_id] = max_vnum;
+  v_descriptions_[v_label_id] = description;
 }
 
 void Schema::add_edge_label(const std::string& src_label,
@@ -63,7 +65,8 @@ void Schema::add_edge_label(const std::string& src_label,
                             const std::vector<PropertyType>& properties,
                             const std::vector<std::string>& prop_names,
                             EdgeStrategy oe, EdgeStrategy ie, bool oe_mutable,
-                            bool ie_mutable, bool sort_on_compaction) {
+                            bool ie_mutable, bool sort_on_compaction,
+                            const std::string& description) {
   label_t src_label_id = vertex_label_to_index(src_label);
   label_t dst_label_id = vertex_label_to_index(dst_label);
   label_t edge_label_id = edge_label_to_index(edge_label);
@@ -77,6 +80,7 @@ void Schema::add_edge_label(const std::string& src_label,
   ie_mutability_[label_id] = ie_mutable;
   eprop_names_[label_id] = prop_names;
   sort_on_compactions_[label_id] = sort_on_compaction;
+  e_descriptions_[label_id] = description;
 }
 
 label_t Schema::vertex_label_num() const {
@@ -133,6 +137,18 @@ const std::vector<std::string>& Schema::get_vertex_property_names(
   return vprop_names_[label];
 }
 
+const std::string& Schema::get_vertex_description(
+    const std::string& label) const {
+  label_t index;
+  CHECK(vlabel_indexer_.get_index(label, index));
+  return get_vertex_description(index);
+}
+
+const std::string& Schema::get_vertex_description(label_t label) const {
+  CHECK(label < v_descriptions_.size());
+  return v_descriptions_[label];
+}
+
 const std::vector<StorageStrategy>& Schema::get_vertex_storage_strategies(
     const std::string& label) const {
   label_t index;
@@ -180,6 +196,23 @@ const std::vector<PropertyType>& Schema::get_edge_properties(
   CHECK(label < elabel_indexer_.size());
   uint32_t index = generate_edge_label(src_label, dst_label, label);
   return eproperties_.at(index);
+}
+
+std::string Schema::get_edge_description(const std::string& src_label,
+                                         const std::string& dst_label,
+                                         const std::string& label) const {
+  label_t src, dst, edge;
+  CHECK(vlabel_indexer_.get_index(src_label, src));
+  CHECK(vlabel_indexer_.get_index(dst_label, dst));
+  CHECK(elabel_indexer_.get_index(label, edge));
+  return get_edge_description(src, dst, edge);
+}
+
+std::string Schema::get_edge_description(label_t src_label, label_t dst_label,
+                                         label_t label) const {
+  uint32_t index = generate_edge_label(src_label, dst_label, label);
+  CHECK(index < e_descriptions_.size());
+  return e_descriptions_.at(index);
 }
 
 PropertyType Schema::get_edge_property(label_t src, label_t dst,
@@ -312,7 +345,8 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
   grape::InArchive arc;
   arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
-      << ie_mutability_ << oe_mutability_ << sort_on_compactions_ << max_vnum_;
+      << ie_mutability_ << oe_mutability_ << sort_on_compactions_ << max_vnum_
+      << v_descriptions_ << e_descriptions_ << description_ << version_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -324,7 +358,8 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   CHECK(reader->ReadArchive(arc));
   arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
       eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
-      ie_mutability_ >> oe_mutability_ >> sort_on_compactions_ >> max_vnum_;
+      ie_mutability_ >> oe_mutability_ >> sort_on_compactions_ >> max_vnum_ >>
+      v_descriptions_ >> e_descriptions_ >> description_ >> version_;
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
@@ -336,6 +371,7 @@ label_t Schema::vertex_label_to_index(const std::string& label) {
     max_vnum_.resize(ret + 1);
     vprop_names_.resize(ret + 1);
     v_primary_keys_.resize(ret + 1);
+    v_descriptions_.resize(ret + 1);
   }
   return ret;
 }
@@ -358,6 +394,7 @@ uint32_t Schema::generate_edge_label(label_t src, label_t dst,
 }
 
 bool Schema::Equals(const Schema& other) const {
+  // When compare two schemas, we only compare the properties and strategies
   if (vertex_label_num() != other.vertex_label_num() ||
       edge_label_num() != other.edge_label_num()) {
     return false;
@@ -477,11 +514,13 @@ static bool parse_property_type(YAML::Node node, PropertyType& type) {
     return false;
   }
 }
+
 static bool parse_vertex_properties(YAML::Node node,
                                     const std::string& label_name,
                                     std::vector<PropertyType>& types,
                                     std::vector<std::string>& names,
-                                    std::vector<StorageStrategy>& strategies) {
+                                    std::vector<StorageStrategy>& strategies,
+                                    const std::string& version) {
   if (!node || !node.IsSequence()) {
     LOG(ERROR) << "Expect properties for " << label_name << " to be a sequence";
     return false;
@@ -508,8 +547,8 @@ static bool parse_vertex_properties(YAML::Node node,
     auto prop_type_node = node[i]["property_type"];
     PropertyType prop_type;
     if (!parse_property_type(prop_type_node, prop_type)) {
-      LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
-                 << " is not specified...";
+      LOG(ERROR) << "Fail to parse property type of vertex-" << label_name
+                 << " prop-" << i - 1;
       return false;
     }
     {
@@ -530,7 +569,8 @@ static bool parse_vertex_properties(YAML::Node node,
 static bool parse_edge_properties(YAML::Node node,
                                   const std::string& label_name,
                                   std::vector<PropertyType>& types,
-                                  std::vector<std::string>& names) {
+                                  std::vector<std::string>& names,
+                                  const std::string& version) {
   if (!node) {
     VLOG(10) << "Found no edge properties specified for edge: " << label_name;
     return true;
@@ -589,8 +629,25 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   std::vector<PropertyType> property_types;
   std::vector<std::string> property_names;
   std::vector<StorageStrategy> strategies;
+  std::string description;  // default is empty string
+
+  if (node["description"]) {
+    description = node["description"].as<std::string>();
+  }
+
+  if (node["nullable"]) {
+    LOG(ERROR) << "nullable is not supported yet";
+    return false;
+  }
+
+  if (node["default_value"]) {
+    LOG(ERROR) << "default_value is not supported yet";
+    return false;
+  }
+
   if (!parse_vertex_properties(node["properties"], label_name, property_types,
-                               property_names, strategies)) {
+                               property_names, strategies,
+                               schema.GetVersion())) {
     return false;
   }
   if (!node["primary_keys"]) {
@@ -639,7 +696,7 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   }
 
   schema.add_vertex_label(label_name, property_types, property_names,
-                          primary_keys, strategies, max_num);
+                          primary_keys, strategies, max_num, description);
   // check the type_id equals to storage's label_id
   int32_t type_id;
   if (!get_scalar(node, "type_id", type_id)) {
@@ -678,10 +735,24 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
 
   std::vector<PropertyType> property_types;
   std::vector<std::string> prop_names;
+  std::string description;  // default is empty string
   if (!parse_edge_properties(node["properties"], edge_label_name,
-                             property_types, prop_names)) {
+                             property_types, prop_names, schema.GetVersion())) {
     return false;
   }
+  if (node["description"]) {
+    description = node["description"].as<std::string>();
+  }
+  if (node["nullable"]) {
+    LOG(ERROR) << "nullable is not supported yet";
+    return false;
+  }
+
+  if (node["default_value"]) {
+    LOG(ERROR) << "default_value is not supported yet";
+    return false;
+  }
+
   EdgeStrategy default_ie = EdgeStrategy::kMultiple;
   EdgeStrategy default_oe = EdgeStrategy::kMultiple;
   bool default_sort_on_compaction = false;
@@ -829,7 +900,8 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
              << " properties";
     schema.add_edge_label(src_label_name, dst_label_name, edge_label_name,
                           property_types, prop_names, cur_oe, cur_ie,
-                          oe_mutable, ie_mutable, cur_sort_on_compaction);
+                          oe_mutable, ie_mutable, cur_sort_on_compaction,
+                          description);
   }
 
   // check the type_id equals to storage's label_id
@@ -862,6 +934,86 @@ static bool parse_edges_schema(YAML::Node node, Schema& schema) {
   return true;
 }
 
+static bool parse_stored_procedures_v00(const YAML::Node& stored_procedure_node,
+                                        const std::string& parent_dir,
+                                        Schema& schema) {
+  std::string directory = "plugins";  // default plugin directory
+  if (stored_procedure_node["directory"]) {
+    directory = stored_procedure_node["directory"].as<std::string>();
+  }
+  // check is directory
+  LOG(INFO) << "Parse directory: " << directory;
+  if (!std::filesystem::exists(directory)) {
+    LOG(ERROR) << "plugin directory - " << directory
+               << " not found, try with parent dir:" << parent_dir;
+    directory = parent_dir + "/" + directory;
+    if (!std::filesystem::exists(directory)) {
+      LOG(ERROR) << "plugin directory - " << directory << " not found...";
+    }
+  }
+  schema.SetPluginDir(directory);
+  std::vector<std::pair<std::string, std::string>> plugin_name_or_path;
+  {
+    std::vector<std::string> plugin_names;
+    if (!get_sequence(stored_procedure_node, "enable_lists", plugin_names)) {
+      LOG(ERROR) << "stored_procedures is not set properly";
+      return false;
+    }
+    for (auto& plugin_name : plugin_names) {
+      plugin_name_or_path.emplace_back(plugin_name, "");
+    }
+  }
+
+  // plugin_name_or_path contains the plugin name or path.
+  // for path, we just use it as the plugin name, and emplace into the map,
+  // for name, we try to find the plugin in the directory
+  if (!schema.EmplacePlugins(plugin_name_or_path)) {
+    LOG(ERROR) << "Fail to emplace all plugins";
+    return false;
+  }
+  return true;
+}
+
+static bool parse_stored_procedures_v01(const YAML::Node& stored_procedure_node,
+                                        Schema& schema) {
+  if (!stored_procedure_node.IsSequence()) {
+    LOG(ERROR) << "stored_procedures is not set properly";
+    return false;
+  }
+  std::vector<std::pair<std::string, std::string>> plugin_name_and_path;
+  for (auto& cur_node : stored_procedure_node) {
+    if (cur_node["name"] && cur_node["library"]) {
+      plugin_name_and_path.push_back(
+          std::make_pair(cur_node["name"].as<std::string>(),
+                         cur_node["library"].as<std::string>()));
+    } else {
+      LOG(ERROR) << "Library or name set properly for stored procedure";
+      return false;
+    }
+  }
+  // emplace all the plugins
+  if (!schema.EmplacePlugins(plugin_name_and_path)) {
+    LOG(ERROR) << "Fail to emplace all plugins";
+    return false;
+  }
+  return true;
+}
+
+static bool parse_stored_procedures(const YAML::Node& stored_procedure_node,
+                                    const std::string& parent_dir,
+                                    Schema& schema) {
+  auto version = schema.GetVersion();
+  if (version == "v0.0") {
+    return parse_stored_procedures_v00(stored_procedure_node, parent_dir,
+                                       schema);
+  } else if (version == "v0.1") {
+    return parse_stored_procedures_v01(stored_procedure_node, schema);
+  } else {
+    LOG(ERROR) << "Unrecognized version: " << version;
+    return false;
+  }
+}
+
 static bool parse_schema_from_yaml_node(const YAML::Node& graph_node,
                                         Schema& schema,
                                         const std::string& parent_dir = "") {
@@ -873,6 +1025,28 @@ static bool parse_schema_from_yaml_node(const YAML::Node& graph_node,
     LOG(WARNING) << "store_type is not set properly, use default value: "
                  << "mutable_csr";
   }
+
+  if (graph_node["description"]) {
+    schema.SetDescription(graph_node["description"].as<std::string>());
+  }
+
+  // check whether a version field is specified for the schema, if
+  // specified, we will use it to check the compatibility of the schema.
+  // If not specified, we will use the default version.
+  if (graph_node["version"]) {
+    auto version = graph_node["version"].as<std::string>();
+    const auto& supported_versions = Schema::GetCompatibleVersions();
+    if (std::find(supported_versions.begin(), supported_versions.end(),
+                  version) == supported_versions.end()) {
+      LOG(ERROR) << "Unsupported schema version: " << version;
+      return false;
+    }
+    schema.SetVersion(version);
+  } else {
+    schema.SetVersion(Schema::DEFAULT_SCHEMA_VERSION);
+  }
+  VLOG(10) << "Parse schema version: " << schema.GetVersion();
+
   auto schema_node = graph_node["schema"];
 
   if (!graph_node["schema"]) {
@@ -892,38 +1066,11 @@ static bool parse_schema_from_yaml_node(const YAML::Node& graph_node,
   LOG(INFO) << "Parse stored_procedures";
 
   if (graph_node["stored_procedures"]) {
-    auto stored_procedure_node = graph_node["stored_procedures"];
-    std::string directory = "plugins";  // default plugin directory
-    if (stored_procedure_node["directory"]) {
-      directory = stored_procedure_node["directory"].as<std::string>();
-    }
-    // check is directory
-    LOG(INFO) << "Parse directory: " << directory;
-    if (!std::filesystem::exists(directory)) {
-      LOG(ERROR) << "plugin directory - " << directory
-                 << " not found, try with parent dir:" << parent_dir;
-      directory = parent_dir + "/" + directory;
-      if (!std::filesystem::exists(directory)) {
-        LOG(ERROR) << "plugin directory - " << directory << " not found...";
-        return true;
-      }
-    }
-    schema.SetPluginDir(directory);
-    std::vector<std::string> plugin_name_or_path;
-    if (!get_sequence(stored_procedure_node, "enable_lists",
-                      plugin_name_or_path)) {
-      LOG(ERROR) << "stored_procedures is not set properly";
-      return true;
-    }
-
-    // plugin_name_or_path contains the plugin name or path.
-    // for path, we just use it as the plugin name, and emplace into the map,
-    // for name, we try to find the plugin in the directory
-    if (!schema.EmplacePlugins(plugin_name_or_path)) {
-      LOG(ERROR) << "Fail to emplace all plugins";
+    if (!parse_stored_procedures(graph_node["stored_procedures"], parent_dir,
+                                 schema)) {
+      LOG(ERROR) << "Fail to parse stored procedures";
     }
   }
-
   return true;
 }
 
@@ -941,8 +1088,11 @@ Schema::GetPlugins() const {
   return plugin_name_to_path_and_id_;
 }
 
+// For the input procedures, try to load each of them.
+// Only keep the procedures that are successfully loaded.
 bool Schema::EmplacePlugins(
-    const std::vector<std::string>& plugin_paths_or_names) {
+    const std::vector<std::pair<std::string, std::string>>&
+        plugin_name_and_paths) {
   std::vector<std::string> all_procedure_yamls;
   if (!plugin_dir_.empty()) {
     all_procedure_yamls = get_yaml_files(plugin_dir_);
@@ -952,27 +1102,31 @@ bool Schema::EmplacePlugins(
 
   uint8_t cur_plugin_id = RESERVED_PLUGIN_NUM;
   std::unordered_set<std::string> plugin_names;
-  for (auto& f : plugin_paths_or_names) {
+  for (auto& name_path : plugin_name_and_paths) {
     if (cur_plugin_id > MAX_PLUGIN_ID) {
       LOG(ERROR) << "Too many plugins, max plugin id is " << MAX_PLUGIN_ID;
       return false;
     }
-    if (std::filesystem::exists(f)) {
-      plugin_name_to_path_and_id_.emplace(f,
-                                          std::make_pair(f, cur_plugin_id++));
+    if (name_path.second.empty()) {
+      // if the path is empty, try to find from plugin_dir.
+      plugin_names.insert(name_path.first);
+      continue;
+    }
+    if (std::filesystem::exists(name_path.second)) {
+      plugin_name_to_path_and_id_.emplace(
+          name_path.first, std::make_pair(name_path.second, cur_plugin_id++));
     } else {
-      auto real_file = plugin_dir_ + "/" + f;
+      auto real_file = plugin_dir_ + "/" + name_path.second;
       if (!std::filesystem::exists(real_file)) {
         LOG(ERROR) << "plugin - " << real_file
                    << " file not found, try to "
                       "find the plugin in the directory...";
         // it seems that f is not the filename, but the plugin name, try to
         // find the plugin in the directory
-        VLOG(1) << "plugin - " << f << " found...";
-        plugin_names.insert(f);
+        LOG(ERROR) << "plugin - " << name_path.first << "not found...";
       } else {
         plugin_name_to_path_and_id_.emplace(
-            real_file, std::make_pair(real_file, cur_plugin_id++));
+            name_path.first, std::make_pair(real_file, cur_plugin_id++));
       }
     }
   }
@@ -1031,6 +1185,15 @@ void Schema::RemovePlugin(const std::string& name) {
 }
 
 std::string Schema::GetPluginDir() const { return plugin_dir_; }
+
+std::string Schema::GetDescription() const { return description_; }
+
+void Schema::SetDescription(const std::string& description) {
+  description_ = description;
+}
+
+void Schema::SetVersion(const std::string& version) { version_ = version; }
+std::string Schema::GetVersion() const { return version_; }
 
 // check whether prop in vprop_names, or is the primary key
 bool Schema::vertex_has_property(const std::string& label,
@@ -1114,5 +1277,15 @@ Result<Schema> Schema::LoadFromYamlNode(const YAML::Node& schema_yaml_node) {
   }
   return schema;
 }
+
+const std::vector<std::string>& Schema::GetCompatibleVersions() {
+  return COMPATIBLE_VERSIONS;
+}
+
+const std::vector<std::string> Schema::COMPATIBLE_VERSIONS = {
+    "v0.0",  // v0.0 is the version before schema unified, and is the
+             // default version, if no version is specified
+    "v0.1"   // v0.1 is the version after schema unified
+};
 
 }  // namespace gs

@@ -41,10 +41,10 @@ public class YamlConfigTest {
         StoredProcedureMeta meta = procedures.getStoredProcedure("ldbc_ic2");
         Assert.assertEquals(
                 "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(CHAR(1) name),"
-                    + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
-                    + " Parameter{name='maxDate', dataType=BIGINT}], option={type=cypher,"
-                    + " queryStr=MATCH(n: PERSON ${personId2}) WHERE n.creationDate < ${maxDate}"
-                    + " RETURN n.firstName AS name LIMIT 10;}}",
+                        + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
+                        + " Parameter{name='maxDate', dataType=BIGINT}], option={type=x_cypher,"
+                        + " query=MATCH(n: PERSON ${personId2}) WHERE n.creationDate < ${maxDate}"
+                        + " RETURN n.firstName AS name LIMIT 10;}}",
                 meta.toString());
     }
 
@@ -60,11 +60,6 @@ public class YamlConfigTest {
         Assert.assertEquals(3, (int) PegasusConfig.PEGASUS_WORKER_NUM.get(configs));
         Assert.assertEquals(2048, (int) PegasusConfig.PEGASUS_BATCH_SIZE.get(configs));
         Assert.assertEquals(18, (int) PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs));
-        Assert.assertEquals(
-                "./target/test-classes/config/modern/plugins",
-                GraphConfig.GRAPH_STORED_PROCEDURES.get(configs));
-        Assert.assertEquals(
-                "ldbc_ic2", GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
         Assert.assertEquals(
                 "./target/test-classes/config/modern/graph.yaml",
                 GraphConfig.GRAPH_SCHEMA.get(configs));

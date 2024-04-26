@@ -339,6 +339,10 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(res_yaml.status()));
   }
+  // set default value
+  if (!yaml["store_type"]) {
+    yaml["store_type"] = "mutable_csr";
+  }
 
   auto parse_schema_res = gs::Schema::LoadFromYamlNode(res_yaml.value());
   if (!parse_schema_res.ok()) {
@@ -426,14 +430,6 @@ seastar::future<admin_query_result> admin_actor::run_delete_graph(
     LOG(ERROR) << "Graph not exists: " << query_param.content;
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(get_res.status()));
-  }
-  // can not delete a builtin graph
-  if (get_res.value().is_builtin) {
-    LOG(ERROR) << "Can not delete a builtin graph: " << query_param.content;
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(
-            gs::StatusCode::IllegalOperation,
-            "Can not delete a builtin graph: " + query_param.content)));
   }
 
   auto delete_res = metadata_store_->DeleteGraphMeta(query_param.content);
@@ -980,7 +976,9 @@ seastar::future<admin_query_result> admin_actor::service_status(
   nlohmann::json res;
   if (query_port != 0) {
     res["status"] = hqps_service.is_actors_running() ? "Running" : "Stopped";
-    res["query_port"] = query_port;
+    res["hqps_port"] = query_port;
+    res["bolt_port"] = hqps_service.get_service_config().bolt_port;
+    res["gremlin_port"] = hqps_service.get_service_config().gremlin_port;
     if (running_graph_res.ok()) {
       res["graph_id"] = running_graph_res.value();
     } else {
