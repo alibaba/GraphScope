@@ -29,6 +29,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -40,8 +41,10 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import java.net.URL;
+import java.util.Map;
 
 public class Utils {
     public static final Configs configs =
@@ -95,17 +98,17 @@ public class Utils {
         try {
             URL schemaResource =
                     Thread.currentThread().getContextClassLoader().getResource(schemaJson);
-            URL proceduresResource =
-                    Thread.currentThread()
-                            .getContextClassLoader()
-                            .getResource("config/modern/plugins");
+            String yamlStr = FileUtils.readJsonFromResource("config/modern/graph.yaml");
+            Yaml yaml = new Yaml();
+            Map<String, Object> yamlMap = yaml.load(yamlStr);
+            String proceduresYaml = yaml.dump(yamlMap.get("stored_procedures"));
             Configs configs =
                     new Configs(
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_SCHEMA.getKey(),
                                     schemaResource.toURI().getPath(),
-                                    GraphConfig.GRAPH_STORED_PROCEDURES.getKey(),
-                                    proceduresResource.toURI().getPath()));
+                                    GraphConfig.GRAPH_STORED_PROCEDURES_YAML.getKey(),
+                                    proceduresYaml));
             return new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)).fetch().get();
         } catch (Exception e) {
             throw new RuntimeException(e);

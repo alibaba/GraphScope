@@ -92,27 +92,26 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
                        ", error: " + e.what()),
         false);
   }
-  // add plugins which are enabled on the graph.
   if (!yaml_node["stored_procedures"]) {
-    yaml_node["stored_procedures"] = YAML::Node();
-    // create a new node
-    yaml_node["stored_procedures"]["enable_lists"] = YAML::Node();
+    yaml_node["stored_procedures"] = YAML::Node(YAML::NodeType::Sequence);
   }
-  auto procedures = yaml_node["stored_procedures"]["enable_lists"];
-  // clear the old enabled list
-  for (const auto& plugin_meta : plugin_metas) {
-    if (plugin_meta.enable) {
-      VLOG(10) << "Add enabled plugin: " << plugin_meta.id;
-      procedures.push_back(plugin_meta.id);
+  if (!yaml_node["version"]) {
+    yaml_node["version"] = "v0.1";
+  }
+  auto procedures_node = yaml_node["stored_procedures"];
+  for (auto& plugin : plugin_metas) {
+    if (plugin.enable) {
+      // push back to sequence
+      YAML::Node plugin_node;
+      plugin_node["name"] = plugin.name;
+      plugin_node["library"] = plugin.library;
+      plugin_node["description"] = plugin.description;
+      procedures_node.push_back(plugin_node);
+      VLOG(10) << "Add enabled plugin: " << plugin.name;
+    } else {
+      VLOG(10) << "Plugin is not enabled: " << plugin.name;
     }
   }
-
-  auto schema_res = gs::Schema::LoadFromYamlNode(yaml_node);
-  if (!schema_res.ok()) {
-    return gs::Result<bool>(schema_res.status(), false);
-  }
-  LOG(INFO) << "Finish parsing new schema";
-  // dump schema to file.
   auto dump_res = dump_graph_schema(yaml_node, graph_id);
   if (!dump_res.ok()) {
     return gs::Result<bool>(gs::Status(gs::StatusCode::PermissionError,

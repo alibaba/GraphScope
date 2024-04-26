@@ -76,39 +76,7 @@ public class YamlConfigs extends Configs {
                             }
                         })
                 .put(
-                        "graph.stored.procedures",
-                        (Configs configs) -> {
-                            String workspace = configs.get("directories.workspace");
-                            String subdir = configs.get("directories.subdirs.data");
-                            String graphName = configs.get("default_graph");
-                            try {
-                                if (workspace != null && subdir != null && graphName != null) {
-                                    File schemaFile =
-                                            new File(GraphConfig.GRAPH_SCHEMA.get(configs));
-                                    if (!schemaFile.exists()
-                                            || !schemaFile.getName().endsWith(".yaml")) {
-                                        return null;
-                                    }
-                                    Yaml yaml = new Yaml();
-                                    Map<String, Object> yamlAsMap =
-                                            yaml.load(new FileInputStream(schemaFile));
-                                    Object value;
-                                    if ((value = yamlAsMap.get("stored_procedures")) == null
-                                            || (value = ((Map) value).get("directory")) == null) {
-                                        return null;
-                                    }
-                                    String directory = value.toString();
-                                    return Path.of(workspace, subdir, graphName, directory)
-                                            .toString();
-                                } else {
-                                    return null;
-                                }
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                .put(
-                        "graph.stored.procedures.enable.lists",
+                        "graph.stored.procedures.yaml",
                         (Configs configs) -> {
                             File schemaFile = new File(GraphConfig.GRAPH_SCHEMA.get(configs));
                             if (!schemaFile.exists() || !schemaFile.getName().endsWith(".yaml")) {
@@ -119,11 +87,10 @@ public class YamlConfigs extends Configs {
                                 Map<String, Object> yamlAsMap =
                                         yaml.load(new FileInputStream(schemaFile));
                                 Object value;
-                                if ((value = yamlAsMap.get("stored_procedures")) == null
-                                        || (value = ((Map) value).get("enable_lists")) == null) {
+                                if ((value = yamlAsMap.get("stored_procedures")) == null) {
                                     return null;
                                 }
-                                return value.toString().replace("[", "").replace("]", "");
+                                return yaml.dump(value);
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
