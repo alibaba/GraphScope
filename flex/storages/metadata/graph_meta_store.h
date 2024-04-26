@@ -58,7 +58,6 @@ struct PluginMeta;
 struct GraphMeta {
   GraphId id;
   std::string name;
-  bool is_builtin;
   std::string description;
   uint64_t creation_time;
   uint64_t data_update_time;
@@ -125,13 +124,10 @@ struct JobMeta {
 ////////////////// CreateMetaRequest ///////////////////////
 struct CreateGraphMetaRequest {
   std::string name;
-  std::optional<bool> is_builtin;
   std::string description;
   std::string schema;  // all in one string.
   std::optional<uint64_t> data_update_time;
   int64_t creation_time;
-
-  bool GetIsBuiltin() const;
 
   static CreateGraphMetaRequest FromJson(const std::string& json_str);
 

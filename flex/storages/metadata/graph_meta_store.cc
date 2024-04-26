@@ -53,7 +53,7 @@ UpdateGraphMetaRequest::UpdateGraphMetaRequest(
 std::string Parameter::ToJson() const {
   nlohmann::json json;
   json["name"] = name;
-  json["type"] = config_parsing::PropertyTypeToString(type);
+  json["type"] = type;  // calls to_json implicitly
   return json.dump();
 }
 
@@ -61,7 +61,6 @@ std::string GraphMeta::ToJson() const {
   nlohmann::json json;
   json["id"] = id;
   json["name"] = name;
-  json["is_builtin"] = is_builtin;
   json["description"] = description;
   json["creation_time"] = creation_time;
   json["data_update_time"] = data_update_time;
@@ -91,8 +90,8 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
       meta.id = json["id"].get<GraphId>();
     }
   }
+
   meta.name = json["name"].get<std::string>();
-  meta.is_builtin = json["is_builtin"].get<bool>();
   meta.description = json["description"].get<std::string>();
   meta.creation_time = json["creation_time"].get<int64_t>();
   meta.schema = json["schema"].dump();
@@ -177,14 +176,14 @@ std::string PluginMeta::ToJson() const {
   for (auto& param : params) {
     nlohmann::json p;
     p["name"] = param.name;
-    p["type"] = config_parsing::PropertyTypeToString(param.type);
+    p["type"] = param.type;
     json["params"].push_back(p);
   }
   json["returns"] = nlohmann::json::array();
   for (auto& ret : returns) {
     nlohmann::json r;
     r["name"] = ret.name;
-    r["type"] = config_parsing::PropertyTypeToString(ret.type);
+    r["type"] = ret.type;
     json["returns"].push_back(r);
   }
   for (auto& opt : option) {
@@ -210,8 +209,7 @@ void PluginMeta::setParamsFromJsonString(const std::string& json_str) {
     for (auto& param : j) {
       Parameter p;
       p.name = param["name"].get<std::string>();
-      p.type = config_parsing::StringToPropertyType(
-          param["type"].get<std::string>());
+      p.type = param["type"].get<PropertyType>();
       params.push_back(p);
     }
   } else {
@@ -224,8 +222,7 @@ void PluginMeta::setReturnsFromJsonString(const std::string& json_str) {
   for (auto& ret : j) {
     Parameter p;
     p.name = ret["name"].get<std::string>();
-    p.type =
-        config_parsing::StringToPropertyType(ret["type"].get<std::string>());
+    p.type = ret["type"].get<PropertyType>();
     returns.push_back(p);
   }
 }
@@ -297,13 +294,6 @@ JobMeta JobMeta::FromJson(const nlohmann::json& json) {
   return meta;
 }
 
-bool CreateGraphMetaRequest::GetIsBuiltin() const {
-  if (is_builtin.has_value()) {
-    return is_builtin.value();
-  }
-  return false;
-}
-
 CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
   CreateGraphMetaRequest request;
@@ -314,11 +304,9 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << e.what();
     return request;
   }
+
   if (json.contains("name")) {
     request.name = json["name"].get<std::string>();
-  }
-  if (json.contains("is_builtin")) {
-    request.is_builtin = json["is_builtin"].get<bool>();
   }
   if (json.contains("description")) {
     request.description = json["description"].get<std::string>();
@@ -338,11 +326,6 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
 std::string CreateGraphMetaRequest::ToString() const {
   nlohmann::json json;
   json["name"] = name;
-  if (is_builtin.has_value()) {
-    json["is_builtin"] = is_builtin.value();
-  } else {
-    json["is_builtin"] = false;
-  }
   json["description"] = description;
   json["schema"] = nlohmann::json::parse(schema);
   if (data_update_time.has_value()) {
@@ -359,7 +342,7 @@ std::string CreatePluginMetaRequest::paramsString() const {
   for (auto& param : params) {
     nlohmann::json param_json;
     param_json["name"] = param.name;
-    param_json["type"] = config_parsing::PropertyTypeToString(param.type);
+    param_json["type"] = param.type;
     json.push_back(param_json);
   }
   return json.dump();
@@ -370,7 +353,7 @@ std::string CreatePluginMetaRequest::returnsString() const {
   for (auto& ret : returns) {
     nlohmann::json ret_json;
     ret_json["name"] = ret.name;
-    ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
+    ret_json["type"] = ret.type;
     json.push_back(ret_json);
   }
   return json.dump();
@@ -397,14 +380,14 @@ std::string CreatePluginMetaRequest::ToString() const {
   for (auto& param : params) {
     nlohmann::json param_json;
     param_json["name"] = param.name;
-    param_json["type"] = config_parsing::PropertyTypeToString(param.type);
+    param_json["type"] = param.type;
     json["params"].push_back(param_json);
   }
   json["returns"] = nlohmann::json::array();
   for (auto& ret : returns) {
     nlohmann::json ret_json;
     ret_json["name"] = ret.name;
-    ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
+    ret_json["type"] = ret.type;
     json["returns"].push_back(ret_json);
   }
 
@@ -456,8 +439,7 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
     for (auto& param : j["params"]) {
       Parameter p;
       p.name = param["name"].get<std::string>();
-      p.type = config_parsing::StringToPropertyType(
-          param["type"].get<std::string>());
+      p.type = param["type"].get<PropertyType>();
       request.params.push_back(p);
     }
   }
@@ -465,8 +447,7 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
     for (auto& ret : j["returns"]) {
       Parameter p;
       p.name = ret["name"].get<std::string>();
-      p.type =
-          config_parsing::StringToPropertyType(ret["type"].get<std::string>());
+      p.type = ret["type"].get<PropertyType>();
       request.returns.push_back(p);
     }
   }
@@ -512,24 +493,22 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
     } else {
       request.update_time = GetCurrentTimeStamp();
     }
-    if (j.contains("params")) {
+    if (j.contains("params") && j["params"].is_array()) {
       request.params = std::vector<Parameter>();
       for (auto& param : j["params"]) {
         Parameter p;
         p.name = param["name"].get<std::string>();
-        p.type = config_parsing::StringToPropertyType(
-            param["type"].get<std::string>());
+        p.type = param["type"].get<PropertyType>();
 
         request.params->emplace_back(std::move(p));
       }
     }
-    if (j.contains("returns")) {
+    if (j.contains("returns") && j["returns"].is_array()) {
       request.returns = std::vector<Parameter>();
       for (auto& ret : j["returns"]) {
         Parameter p;
         p.name = ret["name"].get<std::string>();
-        p.type = config_parsing::StringToPropertyType(
-            ret["type"].get<std::string>());
+        p.type = ret["type"].get<PropertyType>();
         request.returns->emplace_back(std::move(p));
       }
     }
@@ -557,7 +536,7 @@ std::string UpdatePluginMetaRequest::paramsString() const {
     for (auto& param : params.value()) {
       nlohmann::json param_json;
       param_json["name"] = param.name;
-      param_json["type"] = config_parsing::PropertyTypeToString(param.type);
+      param_json["type"] = param.type;
       json.push_back(param_json);
     }
   }
@@ -570,7 +549,7 @@ std::string UpdatePluginMetaRequest::returnsString() const {
     for (auto& ret : returns.value()) {
       nlohmann::json ret_json;
       ret_json["name"] = ret.name;
-      ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
+      ret_json["type"] = ret.type;
       json.push_back(ret_json);
     }
   }
@@ -607,7 +586,7 @@ std::string UpdatePluginMetaRequest::ToString() const {
     for (auto& param : params.value()) {
       nlohmann::json param_json;
       param_json["name"] = param.name;
-      param_json["type"] = config_parsing::PropertyTypeToString(param.type);
+      param_json["type"] = param.type;
       json["params"].emplace_back(std::move(param_json));
     }
   }
@@ -617,7 +596,7 @@ std::string UpdatePluginMetaRequest::ToString() const {
     for (auto& ret : returns.value()) {
       nlohmann::json ret_json;
       ret_json["name"] = ret.name;
-      ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
+      ret_json["type"] = ret.type;
       json["returns"].emplace_back(std::move(ret_json));
     }
   }

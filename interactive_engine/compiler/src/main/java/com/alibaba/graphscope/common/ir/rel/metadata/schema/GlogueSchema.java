@@ -70,7 +70,7 @@ public class GlogueSchema {
             HashMap<EdgeTypeId, Double> edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                // seperate by comma
+                // separate by comma
                 String[] parts = line.split(",");
                 // vertex
                 if (parts[0].equals("v")) {
