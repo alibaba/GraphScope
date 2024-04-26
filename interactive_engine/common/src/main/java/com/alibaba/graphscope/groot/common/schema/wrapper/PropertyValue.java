@@ -20,8 +20,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class PropertyValue {
-    private DataType dataType;
-    private byte[] valBytes;
+    private final DataType dataType;
+    private final byte[] valBytes;
     private Object valObject;
 
     public PropertyValue(DataType dataType, byte[] valBytes) {

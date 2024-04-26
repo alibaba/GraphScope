@@ -39,16 +39,16 @@ import java.util.Set;
 
 public class GraphDef implements GraphSchema {
 
-    private long version;
-    private Map<String, LabelId> labelToId;
-    private Map<LabelId, TypeDef> idToType;
-    private Map<LabelId, Set<EdgeKind>> idToKinds;
-    private Map<String, Integer> propertyNameToId;
-    private int labelIdx;
-    private int propertyIdx;
-    private Map<LabelId, Long> vertexTableIds;
-    private Map<EdgeKind, Long> edgeTableIds;
-    private long tableIdx;
+    private final long version;
+    private final Map<String, LabelId> labelToId;
+    private final Map<LabelId, TypeDef> idToType;
+    private final Map<LabelId, Set<EdgeKind>> idToKinds;
+    private final Map<String, Integer> propertyNameToId;
+    private final int labelIdx;
+    private final int propertyIdx;
+    private final Map<LabelId, Long> vertexTableIds;
+    private final Map<EdgeKind, Long> edgeTableIds;
+    private final long tableIdx;
 
     private Map<LabelId, GraphVertex> vertexTypes;
     private Map<LabelId, GraphEdge> edgeTypes;

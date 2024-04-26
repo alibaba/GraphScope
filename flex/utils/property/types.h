@@ -1226,9 +1226,9 @@ struct convert<gs::PropertyType> {
         LOG(ERROR) << "string should be a map";
       }
     } else if (config["temporal"]) {
-      if (config["date32"]) {
+      if (config["temporal"]["date32"]) {
         property_type = gs::PropertyType::Day();
-      } else if (config["timestamp"]) {
+      } else if (config["temporal"]["timestamp"]) {
         property_type = gs::PropertyType::Date();
       } else {
         LOG(ERROR) << "Unrecognized temporal type";
