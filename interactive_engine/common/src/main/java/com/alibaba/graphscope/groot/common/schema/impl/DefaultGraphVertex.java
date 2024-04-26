@@ -25,14 +25,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class DefaultGraphVertex implements GraphVertex {
-    private int labelId;
-    private String label;
-    private List<GraphProperty> propertyList;
-    private List<String> primaryKeyList;
+    private final int labelId;
+    private final String label;
+    private final List<GraphProperty> propertyList;
+    private final List<String> primaryKeyList;
 
-    private int versionId;
+    private final int versionId;
 
-    private long tableId;
+    private final long tableId;
 
     public DefaultGraphVertex(
             int labelId,

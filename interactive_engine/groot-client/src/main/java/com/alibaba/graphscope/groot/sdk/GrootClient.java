@@ -413,14 +413,31 @@ public class GrootClient implements Writer {
 
     public String loadJsonSchema(Path jsonFile) throws IOException {
         String json = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
-        return loadJsonSchema(json);
+        return loadSchema(json, 0);
     }
 
-    public String loadJsonSchema(String json) {
-        LoadJsonSchemaResponse response =
-                this.clientStub.loadJsonSchema(
-                        LoadJsonSchemaRequest.newBuilder().setSchemaJson(json).build());
+    public String loadJsonSchema(String json) throws IOException {
+        return loadSchema(json, 0);
+    }
+
+    /**
+     * Load schema from string, accept json or yaml format
+     * @param str the string represented schema
+     * @param schemaType 0 for json, 1 for yaml
+     * @return graphdef
+     */
+    public String loadSchema(String str, int schemaType) {
+        LoadSchemaResponse response =
+                this.clientStub.loadSchema(
+                        LoadSchemaRequest.newBuilder()
+                                .setSchemaStr(str)
+                                .setSchemaType(schemaType)
+                                .build());
         return response.getGraphDef().toString();
+    }
+
+    public String loadSchema(String str) {
+        return loadSchema(str, 0);
     }
 
     public int getPartitionNum() {
