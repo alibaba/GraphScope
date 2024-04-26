@@ -15,6 +15,7 @@ Within the `graph.yaml` file, vertices are delineated under the `vertex_types` s
 
 ```yaml
 - type_name: person
+  description: all persons
   properties:
     - property_name: id
       property_type:
@@ -34,6 +35,7 @@ Note:
 Edges are defined within the `edge_types` section, characterized by the mandatory fields: `type_name`, `vertex_type_pair_relations`, and `properties`. The type_name and properties fields function similarly to those in vertices. However, the vertex_type_pair_relations field is exclusive to edges, specifying the permissible source and destination vertex types, as well as the relationship detailing how many source and destination vertices can be linked by this edge. Here's an illustrative example:
 ```yaml
 type_name: knows
+description: The relationship between persons.
 vertex_type_pair_relations:
   - source_vertex: person
     destination_vertex: person

@@ -1,4 +1,5 @@
 name: graph_algo
+version: v0.1
 schema:
   vertex_types:
     - type_name: Paper
@@ -8,19 +9,23 @@ schema:
             primitive_type: DT_SIGNED_INT64
         - property_name: conference
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_name: CCFRank
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_name: CCFField
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_name: year
           property_type:
             primitive_type: DT_SIGNED_INT32
         - property_name: paper
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_name: Challenge
@@ -30,7 +35,8 @@ schema:
             primitive_type: DT_SIGNED_INT64
         - property_name: challenge
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_name: Topic
@@ -40,7 +46,8 @@ schema:
             primitive_type: DT_SIGNED_INT64
         - property_name: category
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_name: Task
@@ -50,7 +57,8 @@ schema:
             primitive_type: DT_SIGNED_INT64
         - property_name: task
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_name: Solution
@@ -60,7 +68,8 @@ schema:
             primitive_type: DT_SIGNED_INT64
         - property_name: solution
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_name: CCFField
@@ -70,7 +79,8 @@ schema:
             primitive_type: DT_SIGNED_INT64
         - property_name: field
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
   edge_types:
