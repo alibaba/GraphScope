@@ -20,14 +20,17 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.google.common.base.MoreObjects;
 
 public class DefaultGraphProperty implements GraphProperty {
-    private int id;
-    private String name;
-    private DataType dataType;
+    private final int id;
+    private final String name;
+    private final DataType dataType;
+
+    private final Object defaultValue;
 
     public DefaultGraphProperty(int id, String name, DataType dataType) {
         this.id = id;
         this.name = name;
         this.dataType = dataType;
+        this.defaultValue = null;
     }
 
     @Override
@@ -52,12 +55,12 @@ public class DefaultGraphProperty implements GraphProperty {
 
     @Override
     public boolean hasDefaultValue() {
-        return false;
+        return defaultValue != null;
     }
 
     @Override
     public Object getDefaultValue() {
-        return null;
+        return defaultValue;
     }
 
     @Override

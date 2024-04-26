@@ -4,6 +4,7 @@ import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.dataload.databuild.ColumnMappingInfo;
+import com.alibaba.graphscope.groot.dataload.unified.UniConfig;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,9 +14,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -39,10 +38,7 @@ public abstract class DataCommand {
     }
 
     private void initialize() throws IOException {
-        Properties properties = new Properties();
-        try (InputStream is = new FileInputStream(this.configPath)) {
-            properties.load(is);
-        }
+        UniConfig properties = UniConfig.fromFile(configPath);
         username = properties.getProperty(DataLoadConfig.USER_NAME);
         password = properties.getProperty(DataLoadConfig.PASS_WORD);
         graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);

@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.dataload.unified.UniConfig;
 import com.aliyun.odps.mapred.TaskContext;
 import com.aliyun.odps.mapred.conf.JobConf;
 import com.aliyun.oss.*;
@@ -20,7 +21,6 @@ import java.net.HttpURLConnection;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 public class OSSFS extends AbstractFileSystem {
     private static final Logger logger = LoggerFactory.getLogger(OSSFS.class);
@@ -57,7 +57,7 @@ public class OSSFS extends AbstractFileSystem {
         initClient();
     }
 
-    public OSSFS(Properties properties) throws IOException {
+    public OSSFS(UniConfig properties) throws IOException {
         this.ossAccessID = properties.getProperty(DataLoadConfig.OSS_ACCESS_ID);
         this.ossAccessKey = properties.getProperty(DataLoadConfig.OSS_ACCESS_KEY);
         if (this.ossAccessID == null || this.ossAccessID.isEmpty()) {
