@@ -61,7 +61,6 @@ std::string GraphMeta::ToJson() const {
   nlohmann::json json;
   json["id"] = id;
   json["name"] = name;
-  json["is_builtin"] = is_builtin;
   json["description"] = description;
   json["creation_time"] = creation_time;
   json["data_update_time"] = data_update_time;
@@ -93,7 +92,6 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
   }
 
   meta.name = json["name"].get<std::string>();
-  meta.is_builtin = json["is_builtin"].get<bool>();
   meta.description = json["description"].get<std::string>();
   meta.creation_time = json["creation_time"].get<int64_t>();
   meta.schema = json["schema"].dump();
@@ -296,13 +294,6 @@ JobMeta JobMeta::FromJson(const nlohmann::json& json) {
   return meta;
 }
 
-bool CreateGraphMetaRequest::GetIsBuiltin() const {
-  if (is_builtin.has_value()) {
-    return is_builtin.value();
-  }
-  return false;
-}
-
 CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
   CreateGraphMetaRequest request;
@@ -316,9 +307,6 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
 
   if (json.contains("name")) {
     request.name = json["name"].get<std::string>();
-  }
-  if (json.contains("is_builtin")) {
-    request.is_builtin = json["is_builtin"].get<bool>();
   }
   if (json.contains("description")) {
     request.description = json["description"].get<std::string>();
@@ -338,11 +326,6 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
 std::string CreateGraphMetaRequest::ToString() const {
   nlohmann::json json;
   json["name"] = name;
-  if (is_builtin.has_value()) {
-    json["is_builtin"] = is_builtin.value();
-  } else {
-    json["is_builtin"] = false;
-  }
   json["description"] = description;
   json["schema"] = nlohmann::json::parse(schema);
   if (data_update_time.has_value()) {
