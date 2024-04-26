@@ -90,6 +90,7 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
       meta.id = json["id"].get<GraphId>();
     }
   }
+
   meta.name = json["name"].get<std::string>();
   meta.description = json["description"].get<std::string>();
   meta.creation_time = json["creation_time"].get<int64_t>();
@@ -303,6 +304,7 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << e.what();
     return request;
   }
+
   if (json.contains("name")) {
     request.name = json["name"].get<std::string>();
   }
@@ -491,7 +493,7 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
     } else {
       request.update_time = GetCurrentTimeStamp();
     }
-    if (j.contains("params")) {
+    if (j.contains("params") && j["params"].is_array()) {
       request.params = std::vector<Parameter>();
       for (auto& param : j["params"]) {
         Parameter p;
@@ -501,7 +503,7 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
         request.params->emplace_back(std::move(p));
       }
     }
-    if (j.contains("returns")) {
+    if (j.contains("returns") && j["returns"].is_array()) {
       request.returns = std::vector<Parameter>();
       for (auto& ret : j["returns"]) {
         Parameter p;

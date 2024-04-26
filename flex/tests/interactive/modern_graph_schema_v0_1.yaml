@@ -2,6 +2,15 @@ name: modern_graph # then must have a modern dir under ${data} directory
 version: v0.1
 store_type: mutable_csr  # v6d, groot, gart
 description: A graph with 2 vertex types and 2 edge types
+stored_procedures:
+  - name: query1
+    description: A stored procedure that does something
+    library: /tmp/interactive_workspace/data/modern_graph/plugins/libget_person_name.so
+    type: cpp
+  - name: query2
+    description: A stored procedure that does something else
+    library: /tmp/interactive_workspace/data/modern_graph/plugins/libcount_vertex_num.so
+    type: cpp
 schema:
   vertex_types:
     - type_id: 0

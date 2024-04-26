@@ -108,17 +108,19 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   // is not serialized and deserialized.
   auto& mutable_schema = graph_.mutable_schema();
   mutable_schema.SetPluginDir(schema.GetPluginDir());
-  std::vector<std::string> plugin_paths;
+  std::vector<std::pair<std::string, std::string>> plugin_name_paths;
   const auto& plugins = schema.GetPlugins();
   for (auto plugin_pair : plugins) {
-    plugin_paths.emplace_back(plugin_pair.first);
+    plugin_name_paths.emplace_back(
+        std::make_pair(plugin_pair.first, plugin_pair.second.first));
   }
 
-  std::sort(plugin_paths.begin(), plugin_paths.end(),
-            [&](const std::string& a, const std::string& b) {
-              return plugins.at(a).second < plugins.at(b).second;
+  std::sort(plugin_name_paths.begin(), plugin_name_paths.end(),
+            [&](const std::pair<std::string, std::string>& a,
+                const std::pair<std::string, std::string>& b) {
+              return plugins.at(a.first).second < plugins.at(b.first).second;
             });
-  mutable_schema.EmplacePlugins(plugin_paths);
+  mutable_schema.EmplacePlugins(plugin_name_paths);
 
   last_compaction_ts_ = 0;
   MemoryStrategy allocator_strategy = MemoryStrategy::kMemoryOnly;
