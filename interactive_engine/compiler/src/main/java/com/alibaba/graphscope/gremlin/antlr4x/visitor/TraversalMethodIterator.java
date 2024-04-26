@@ -79,11 +79,6 @@ public class TraversalMethodIterator implements Iterator<GremlinGSParser.Travers
 
     private @Nullable ParseTree getParent(ParseTree child) {
         Class<? extends ParseTree> parentClass = GremlinGSParser.ChainedTraversalContext.class;
-        while (child != null
-                && child.getParent() != null
-                && !child.getParent().getClass().equals(parentClass)) {
-            child = child.getParent();
-        }
         return (child != null
                         && child.getParent() != null
                         && child.getParent().getClass().equals(parentClass))
