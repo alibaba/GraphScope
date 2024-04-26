@@ -24,10 +24,13 @@ public class UniConfig {
     }
 
     public String getProperty(String key) {
-        // Convert all "." to "_", cuz yaml doesn't allow "." in key field
-        String key2 = key.replaceAll("\\.", "_");
-
-        return loadingConfig.format.getProperty(key2);
+        String value = loadingConfig.format.getProperty(key);
+        if (value == null) {
+            // Convert all "." to "_", cuz yaml doesn't allow "." in key field
+            String key2 = key.replaceAll("\\.", "_");
+            value = loadingConfig.format.getProperty(key2);
+        }
+        return value;
     }
 
     public String getProperty(String key, String defaultValue) {
