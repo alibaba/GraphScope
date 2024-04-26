@@ -39,9 +39,11 @@ struct ServiceConfig {
   static constexpr const uint32_t DEFAULT_QUERY_PORT = 10000;
   static constexpr const uint32_t DEFAULT_ADMIN_PORT = 7777;
   static constexpr const uint32_t DEFAULT_BOLT_PORT = 7687;
+  static constexpr const uint32_t DEFAULT_GREMLIN_PORT = 8182;
 
   // Those has default value
   uint32_t bolt_port;
+  uint32_t gremlin_port;
   uint32_t admin_port;
   uint32_t query_port;
   uint32_t shard_num;
@@ -195,6 +197,29 @@ struct convert<server::ServiceConfig> {
       LOG(ERROR) << "Fail to find http_service configuration";
       return false;
     }
+
+    auto compiler_node = config["compiler"];
+    if (compiler_node) {
+      auto endpoint_node = compiler_node["endpoint"];
+      if (endpoint_node) {
+        auto bolt_node = endpoint_node["bolt_connector"];
+        if (bolt_node && bolt_node["port"] &&
+            bolt_node["disabled"].as<bool>() == false) {
+          service_config.bolt_port = bolt_node["port"].as<uint32_t>();
+        } else {
+          LOG(INFO) << "bolt_port not found, or disabled";
+        }
+        auto gremlin_node = endpoint_node["gremlin_connector"];
+        if (gremlin_node && gremlin_node["port"] &&
+            gremlin_node["disabled"].as<bool>() == false) {
+          service_config.gremlin_port = gremlin_node["port"].as<uint32_t>();
+        } else {
+          LOG(INFO) << "gremlin_port not found, use default value "
+                    << service_config.gremlin_port;
+        }
+      }
+    }
+
     auto default_graph_node = config["default_graph"];
     std::string default_graph;
     if (default_graph_node) {

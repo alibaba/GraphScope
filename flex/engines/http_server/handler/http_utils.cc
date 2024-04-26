@@ -20,7 +20,8 @@ namespace server {
 seastar::future<std::unique_ptr<seastar::httpd::reply>> new_bad_request_reply(
     std::unique_ptr<seastar::httpd::reply> rep, const std::string& msg) {
   rep->set_status(seastar::httpd::reply::status_type::bad_request);
-  rep->write_body("application/json", seastar::sstring(msg));
+  rep->set_content_type("application/json");
+  rep->write_body("json", seastar::sstring(msg));
   rep->done();
   return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
       std::move(rep));
@@ -72,7 +73,8 @@ catch_exception_and_return_reply(std::unique_ptr<seastar::httpd::reply> rep,
   } catch (std::exception& e) {
     LOG(ERROR) << "Exception: " << e.what();
     seastar::sstring what = e.what();
-    rep->write_body("application/json", std::move(what));
+    rep->set_content_type("application/json");
+    rep->write_body("json", std::move(what));
     rep->set_status(seastar::httpd::reply::status_type::bad_request);
     rep->done();
     return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
@@ -91,10 +93,11 @@ return_reply_with_result(std::unique_ptr<seastar::httpd::reply> rep,
   auto status_code =
       status_code_to_http_code(result.content.status().error_code());
   rep->set_status(status_code);
+  rep->set_content_type("application/json");
   if (status_code == seastar::httpd::reply::status_type::ok) {
-    rep->write_body("application/json", std::move(result.content.value()));
+    rep->write_body("json", std::move(result.content.value()));
   } else {
-    rep->write_body("application/json",
+    rep->write_body("json",
                     seastar::sstring(result.content.status().error_message()));
   }
   rep->done();
