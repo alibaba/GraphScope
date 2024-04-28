@@ -119,26 +119,6 @@ void add_runnable_info(gs::PluginMeta& plugin_meta) {
   }
 }
 
-// Put the process_id and graph_id into 'detail' field.
-std::string post_process_job_status(const gs::JobMeta& job_meta) {
-  auto str = job_meta.ToJson();
-  try {
-    nlohmann::json json = nlohmann::json::parse(str);
-    if (json.contains("graph_id")) {
-      json["detail"]["graph_id"] = json["graph_id"];
-      json.erase("graph_id");
-    }
-    if (json.contains("process_id")) {
-      json["detail"]["process_id"] = json["process_id"];
-      json.erase("process_id");
-    }
-    return json.dump();
-  } catch (std::exception& e) {
-    LOG(ERROR) << "Fail to parse job meta: " << e.what();
-  }
-  return str;
-}
-
 gs::Result<gs::JobId> invoke_loading_graph(
     std::shared_ptr<gs::IGraphMetaStore> metadata_store,
     const std::string& graph_id, const YAML::Node& loading_config,
@@ -1051,8 +1031,7 @@ seastar::future<admin_query_result> admin_actor::get_job(
   if (job_meta_res.ok()) {
     VLOG(10) << "Successfully get job: " << job_id;
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            post_process_job_status(job_meta_res.value())));
+        gs::Result<seastar::sstring>(job_meta_res.value().ToJson()));
   } else {
     LOG(ERROR) << "Fail to get job: " << job_id
                << ", error message: " << job_meta_res.status().error_message();
