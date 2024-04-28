@@ -119,6 +119,26 @@ void add_runnable_info(gs::PluginMeta& plugin_meta) {
   }
 }
 
+// Put the process_id and graph_id into 'detail' field.
+std::string post_process_job_status(const gs::JobMeta& job_meta) {
+  auto str = job_meta.ToJson();
+  try {
+    nlohmann::json json = nlohmann::json::parse(str);
+    if (json.contains("graph_id")) {
+      json["detail"]["graph_id"] = json["graph_id"];
+      json.erase("graph_id");
+    }
+    if (json.contains("process_id")) {
+      json["detail"]["process_id"] = json["process_id"];
+      json.erase("process_id");
+    }
+    return json.dump();
+  } catch (std::exception& e) {
+    LOG(ERROR) << "Fail to parse job meta: " << e.what();
+  }
+  return str;
+}
+
 gs::Result<gs::JobId> invoke_loading_graph(
     std::shared_ptr<gs::IGraphMetaStore> metadata_store,
     const std::string& graph_id, const YAML::Node& loading_config,
@@ -158,9 +178,12 @@ seastar::future<seastar::sstring> invoke_creating_procedure(
     // Currently we need id== name
     json["id"] = json["name"];
   }
-  json["graph_id"] = graph_id;
+  json["bound_graph"] = graph_id;
   json["creation_time"] = gs::GetCurrentTimeStamp();
   json["update_time"] = json["creation_time"];
+  if (!json.contains("enable")) {
+    json["enable"] = true;
+  }
   auto procedure_meta_request = gs::CreatePluginMetaRequest::FromJson(json);
 
   LOG(INFO) << "parse create plugin meta:" << procedure_meta_request.ToString();
@@ -339,18 +362,19 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(res_yaml.status()));
   }
+  auto& yaml_value = res_yaml.value();
   // set default value
-  if (!yaml["store_type"]) {
-    yaml["store_type"] = "mutable_csr";
+  if (!yaml_value["store_type"]) {
+    yaml_value["store_type"] = "mutable_csr";
   }
 
-  auto parse_schema_res = gs::Schema::LoadFromYamlNode(res_yaml.value());
+  auto parse_schema_res = gs::Schema::LoadFromYamlNode(yaml_value);
   if (!parse_schema_res.ok()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(parse_schema_res.status()));
   }
 
-  auto real_schema_json = gs::get_json_string_from_yaml(res_yaml.value());
+  auto real_schema_json = gs::get_json_string_from_yaml(yaml_value);
   if (!real_schema_json.ok()) {
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(real_schema_json.status()));
@@ -1027,7 +1051,8 @@ seastar::future<admin_query_result> admin_actor::get_job(
   if (job_meta_res.ok()) {
     VLOG(10) << "Successfully get job: " << job_id;
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(job_meta_res.value().ToJson()));
+        gs::Result<seastar::sstring>(
+            post_process_job_status(job_meta_res.value())));
   } else {
     LOG(ERROR) << "Fail to get job: " << job_id
                << ", error message: " << job_meta_res.status().error_message();
