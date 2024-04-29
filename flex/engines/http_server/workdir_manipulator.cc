@@ -106,6 +106,22 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
       plugin_node["name"] = plugin.name;
       plugin_node["library"] = plugin.library;
       plugin_node["description"] = plugin.description;
+      if (plugin.params.size() > 0) {
+        YAML::Node params_node;
+        for (auto& param : plugin.params) {
+          params_node.push_back(YAML::convert<gs::Parameter>::encode(
+              param));  // convert to YAML::Node via encode function
+        }
+        plugin_node["params"] = params_node;
+      }
+      if (plugin.returns.size() > 0) {
+        YAML::Node returns_node;
+        for (auto& ret : plugin.returns) {
+          returns_node.push_back(YAML::convert<gs::Parameter>::encode(
+              ret));  // convert to YAML::Node via encode function
+        }
+        plugin_node["returns"] = returns_node;
+      }
       procedures_node.push_back(plugin_node);
       VLOG(10) << "Add enabled plugin: " << plugin.name;
     } else {
