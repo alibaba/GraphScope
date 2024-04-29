@@ -21,7 +21,7 @@ from setuptools import find_packages, setup  # noqa: H301
 #
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
-NAME = "interactive-sdk"
+NAME = "interactive_sdk"
 VERSION = "0.0.3"
 PYTHON_REQUIRES = ">=3.7"
 REQUIRES = [

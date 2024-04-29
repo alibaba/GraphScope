@@ -112,10 +112,11 @@ flex/interactive/sdk/java/gradlew
 flex/interactive/sdk/java/.travis.yml
 flex/interactive/sdk/java/git_push.sh
 flex/interactive/sdk/java/gradle/
+flex/interactive/sdk/java/.openapi-generator/FILES
+flex/interactive/sdk/java/src/main/AndroidManifest.xml
 flex/interactive/sdk/java/.openapi-generate/
 flex/interactive/sdk/java/settings.gradle
-flex/interactive/sdk/java/src/main/java/org/
-flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/api/
+flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/openapi/
 
 flex/interactive/sdk/python/.github/
 flex/interactive/sdk/python/.gitignore
@@ -125,8 +126,9 @@ flex/interactive/sdk/python/.gitlab-ci.yml
 flex/interactive/sdk/python/.openapi-generator/
 flex/interactive/sdk/python/dist/
 flex/interactive/sdk/python/.travis.yml
+flex/interactive/sdk/python/tox.ini
 flex/interactive/sdk/python/pyproject.toml
-flex/interactive/sdk/python/interactive_sdk/api/
+flex/interactive/sdk/python/interactive_sdk/openapi/
 
 
 **/.cache/

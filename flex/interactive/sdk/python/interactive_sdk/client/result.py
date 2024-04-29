@@ -20,9 +20,9 @@ from typing import Generic, TypeVar
 
 from pydantic import Field
 
-from interactive_sdk.api_response import ApiResponse
+from interactive_sdk.openapi.api_response import ApiResponse
 from interactive_sdk.client.status import Status
-from interactive_sdk.exceptions import ApiException
+from interactive_sdk.openapi.exceptions import ApiException
 
 # Define a generic type placeholder
 T = TypeVar("T")

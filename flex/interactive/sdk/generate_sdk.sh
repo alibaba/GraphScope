@@ -16,7 +16,8 @@
 # This script is used to generate the Java SDK from the Flex Interactive API
 # It uses the Swagger Codegen tool to generate the SDK
 
-PACKAGE_NAME="com.alibaba.graphscope.interactive.generated"
+PACKAGE_NAME="com.alibaba.graphscope.interactive.openapi"
+PYTHON_PACKAGE_NAME="openapi"
 GROUP_ID="com.alibaba.graphscope"
 ARTIFACT_ID="interactive-java-sdk"
 ARTIFACT_URL="https://github.com/alibaba/GraphScope/tree/main/flex/interactive"
@@ -55,7 +56,10 @@ function do_gen_java() {
     addtional_properties="${addtional_properties},artifactVersion=${VERSION},hideGenerationTimestamp=true"
 
     cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g java -o ${OUTPUT_PATH}"
-    cmd=" ${cmd} --api-package ${PACKAGE_NAME}"
+    cmd=" ${cmd} --api-package ${PACKAGE_NAME}.api"
+    cmd=" ${cmd} --model-package ${PACKAGE_NAME}.model"
+    cmd=" ${cmd} --invoker-package ${PACKAGE_NAME}"
+    cmd=" ${cmd} --package-name ${PACKAGE_NAME}"
     cmd=" ${cmd} --artifact-id ${ARTIFACT_ID}"
     cmd=" ${cmd} --group-id ${GROUP_ID}"
     cmd=" ${cmd} --additional-properties=${addtional_properties}"
@@ -68,7 +72,8 @@ function do_gen_python() {
     echo "Generating Python SDK"
     OUTPUT_PATH="${CUR_DIR}/python"
     cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g python -o ${OUTPUT_PATH}"
-    cmd=" ${cmd} --package-name interactive_sdk"
+    cmd=" ${cmd} --invoker-package ${PYTHON_PACKAGE_NAME}"
+    cmd=" ${cmd} --package-name interactive_sdk.openapi"
     cmd=" ${cmd} --additional-properties=packageVersion=${VERSION},pythonVersion=3"
     echo "Running command: ${cmd}"
     eval $cmd

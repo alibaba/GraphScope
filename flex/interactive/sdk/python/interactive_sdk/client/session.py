@@ -21,45 +21,51 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 
 from pydantic import Field, StrictStr
 
-from interactive_sdk.api.admin_service_graph_management_api import \
-    AdminServiceGraphManagementApi
-from interactive_sdk.api.admin_service_job_management_api import \
-    AdminServiceJobManagementApi
-from interactive_sdk.api.admin_service_procedure_management_api import \
-    AdminServiceProcedureManagementApi
-from interactive_sdk.api.admin_service_service_management_api import \
-    AdminServiceServiceManagementApi
-from interactive_sdk.api.graph_service_edge_management_api import \
-    GraphServiceEdgeManagementApi
-from interactive_sdk.api.graph_service_vertex_management_api import \
-    GraphServiceVertexManagementApi
-from interactive_sdk.api.query_service_api import QueryServiceApi
-from interactive_sdk.api_client import ApiClient
+from interactive_sdk.openapi.api.admin_service_graph_management_api import (
+    AdminServiceGraphManagementApi,
+)
+from interactive_sdk.openapi.api.admin_service_job_management_api import (
+    AdminServiceJobManagementApi,
+)
+from interactive_sdk.openapi.api.admin_service_procedure_management_api import (
+    AdminServiceProcedureManagementApi,
+)
+from interactive_sdk.openapi.api.admin_service_service_management_api import (
+    AdminServiceServiceManagementApi,
+)
+from interactive_sdk.openapi.api.graph_service_edge_management_api import (
+    GraphServiceEdgeManagementApi,
+)
+from interactive_sdk.openapi.api.graph_service_vertex_management_api import (
+    GraphServiceVertexManagementApi,
+)
+from interactive_sdk.openapi.api.query_service_api import QueryServiceApi
+from interactive_sdk.openapi.api_client import ApiClient
 from interactive_sdk.client.result import Result
-from interactive_sdk.configuration import Configuration
-from interactive_sdk.models.create_graph_request import CreateGraphRequest
-from interactive_sdk.models.create_graph_response import CreateGraphResponse
-from interactive_sdk.models.create_procedure_request import \
-    CreateProcedureRequest
-from interactive_sdk.models.create_procedure_response import \
-    CreateProcedureResponse
-from interactive_sdk.models.edge_request import EdgeRequest
-from interactive_sdk.models.get_graph_response import GetGraphResponse
-from interactive_sdk.models.get_graph_schema_response import \
-    GetGraphSchemaResponse
-from interactive_sdk.models.get_procedure_response import GetProcedureResponse
-from interactive_sdk.models.graph import Graph
-from interactive_sdk.models.graph_schema import GraphSchema
-from interactive_sdk.models.job_response import JobResponse
-from interactive_sdk.models.job_status import JobStatus
-from interactive_sdk.models.procedure import Procedure
-from interactive_sdk.models.schema_mapping import SchemaMapping
-from interactive_sdk.models.service import Service
-from interactive_sdk.models.service_status import ServiceStatus
-from interactive_sdk.models.start_service_request import StartServiceRequest
-from interactive_sdk.models.update_procedure_request import \
-    UpdateProcedureRequest
-from interactive_sdk.models.vertex_request import VertexRequest
+from interactive_sdk.openapi.configuration import Configuration
+from interactive_sdk.openapi.models.create_graph_request import CreateGraphRequest
+from interactive_sdk.openapi.models.create_graph_response import CreateGraphResponse
+from interactive_sdk.openapi.models.create_procedure_request import (
+    CreateProcedureRequest,
+)
+from interactive_sdk.openapi.models.create_procedure_response import (
+    CreateProcedureResponse,
+)
+from interactive_sdk.openapi.models.edge_request import EdgeRequest
+from interactive_sdk.openapi.models.get_graph_response import GetGraphResponse
+from interactive_sdk.openapi.models.get_graph_schema_response import (
+    GetGraphSchemaResponse,
+)
+from interactive_sdk.openapi.models.get_procedure_response import GetProcedureResponse
+from interactive_sdk.openapi.models.job_response import JobResponse
+from interactive_sdk.openapi.models.job_status import JobStatus
+from interactive_sdk.openapi.models.schema_mapping import SchemaMapping
+from interactive_sdk.openapi.models.service_status import ServiceStatus
+from interactive_sdk.openapi.models.start_service_request import StartServiceRequest
+from interactive_sdk.openapi.models.update_procedure_request import (
+    UpdateProcedureRequest,
+)
+from interactive_sdk.openapi.models.vertex_request import VertexRequest
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -150,7 +156,7 @@ class VertexInterface(metaclass=ABCMeta):
 
 class GraphInterface(metaclass=ABCMeta):
     @abstractmethod
-    def create_graph(self, graph: Graph) -> Result[CreateGraphResponse]:
+    def create_graph(self, graph: CreateGraphRequest) -> Result[CreateGraphResponse]:
         raise NotImplementedError
 
     @abstractmethod
@@ -158,7 +164,7 @@ class GraphInterface(metaclass=ABCMeta):
         graph_id: Annotated[
             StrictStr, Field(description="The name of graph to delete")
         ],
-    ) -> Result[GraphSchema]:
+    ) -> Result[GetGraphSchemaResponse]:
         raise NotImplementedError
 
     @abstractmethod
@@ -170,7 +176,7 @@ class GraphInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def list_graphs(self) -> Result[List[Graph]]:
+    def list_graphs(self) -> Result[List[GetGraphResponse]]:
         raise NotImplementedError
 
     @abstractmethod
@@ -185,8 +191,8 @@ class GraphInterface(metaclass=ABCMeta):
 class ProcedureInterface(metaclass=ABCMeta):
     @abstractmethod
     def create_procedure(
-        self, graph_id: StrictStr, procedure: Procedure
-    ) -> Result[str]:
+        self, graph_id: StrictStr, procedure: CreateProcedureRequest
+    ) -> Result[CreateProcedureResponse]:
         raise NotImplementedError
 
     @abstractmethod
@@ -196,19 +202,21 @@ class ProcedureInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def list_procedures(self, graph_id: StrictStr) -> Result[List[Procedure]]:
+    def list_procedures(
+        self, graph_id: StrictStr
+    ) -> Result[List[GetProcedureResponse]]:
         raise NotImplementedError
 
     @abstractmethod
     def update_procedure(
-        self, graph_id: StrictStr, procedure: Procedure
+        self, graph_id: StrictStr, procedure: UpdateProcedureRequest
     ) -> Result[str]:
         raise NotImplementedError
 
     @abstractmethod
     def get_procedure(
         self, graph_id: StrictStr, procedure_id: StrictStr
-    ) -> Result[Procedure]:
+    ) -> Result[GetProcedureResponse]:
         raise NotImplementedError
 
     @abstractmethod

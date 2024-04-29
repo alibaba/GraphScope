@@ -15,14 +15,14 @@
  */
 package com.alibaba.graphscope.interactive.client.impl;
 
-import com.alibaba.graphscope.ApiClient;
-import com.alibaba.graphscope.ApiException;
-import com.alibaba.graphscope.ApiResponse;
-import com.alibaba.graphscope.interactive.*;
+import com.alibaba.graphscope.interactive.openapi.ApiClient;
+import com.alibaba.graphscope.interactive.openapi.ApiException;
+import com.alibaba.graphscope.interactive.openapi.ApiResponse;
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
 
-import org.openapitools.client.model.*;
+import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.alibaba.graphscope.interactive.openapi.api.*;
 
 import java.io.Closeable;
 import java.util.List;
@@ -169,11 +169,6 @@ public class DefaultSession implements Session {
             e.printStackTrace();
             return Result.fromException(e);
         }
-    }
-
-    @Override
-    public Result<String> updateGraph(String graphId, Graph graph) {
-        return Result.error("Not implemented");
     }
 
     @Override

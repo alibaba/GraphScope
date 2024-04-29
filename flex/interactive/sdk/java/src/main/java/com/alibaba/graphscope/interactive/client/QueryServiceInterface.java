@@ -17,8 +17,7 @@ package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
 
-import org.openapitools.client.model.ServiceStatus;
-import org.openapitools.client.model.StartServiceRequest;
+import com.alibaba.graphscope.interactive.openapi.model.*;
 
 /**
  * Manage the query interface.

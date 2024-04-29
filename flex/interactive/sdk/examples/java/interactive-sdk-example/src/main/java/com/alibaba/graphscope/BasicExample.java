@@ -20,7 +20,7 @@ import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
 
 import org.apache.tinkerpop.gremlin.driver.Client;
-import org.openapitools.client.model.*;
+import com.alibaba.graphscope.interactive.openapi.model.*;
 
 import java.io.File;
 import java.util.ArrayList;

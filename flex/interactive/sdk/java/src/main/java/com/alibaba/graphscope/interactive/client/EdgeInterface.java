@@ -17,8 +17,8 @@ package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
 
-import org.openapitools.client.model.EdgeData;
-import org.openapitools.client.model.EdgeRequest;
+import com.alibaba.graphscope.interactive.openapi.model.EdgeData;
+import com.alibaba.graphscope.interactive.openapi.model.EdgeRequest;
 
 /**
  * Interface for Create/Read/Update/Delete edge.

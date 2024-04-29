@@ -17,8 +17,7 @@ package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
 
-import org.openapitools.client.model.VertexData;
-import org.openapitools.client.model.VertexRequest;
+import com.alibaba.graphscope.interactive.openapi.model.*;
 
 /**
  * Create/Update/Read/Delete vertex

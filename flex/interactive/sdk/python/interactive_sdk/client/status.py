@@ -19,11 +19,15 @@
 
 from enum import Enum
 
-from interactive_sdk.api_response import ApiResponse
-from interactive_sdk.exceptions import (ApiException, BadRequestException,
-                                        ForbiddenException, NotFoundException,
-                                        ServiceException,
-                                        UnauthorizedException)
+from interactive_sdk.openapi.api_response import ApiResponse
+from interactive_sdk.openapi.exceptions import (
+    ApiException,
+    BadRequestException,
+    ForbiddenException,
+    NotFoundException,
+    ServiceException,
+    UnauthorizedException,
+)
 
 
 class StatusCode(Enum):

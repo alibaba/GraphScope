@@ -22,7 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.neo4j.driver.SessionConfig;
-import org.openapitools.client.model.ServiceStatus;
+import com.alibaba.graphscope.interactive.openapi.model.*;
 
 import java.util.logging.Logger;
 

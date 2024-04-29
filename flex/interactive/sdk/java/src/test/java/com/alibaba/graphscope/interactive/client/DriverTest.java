@@ -25,7 +25,7 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.openapitools.client.model.*;
+import com.alibaba.graphscope.interactive.openapi.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
