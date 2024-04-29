@@ -51,9 +51,6 @@ clean:
 	@mkdir -p "$(BUILDDIR)/${TAG}/$@/reference/"
 	@cat Doxyfile-flex | sed 's/_build\/latest\/html\/reference\//$(BUILDDIR)\/${TAG}\/$@\/reference\//g' | doxygen -
 
-
-	# The reference for Interactive Java/Python SDK
-
 doxygen:
 	@mkdir -p _build
 	@doxygen Doxyfile
