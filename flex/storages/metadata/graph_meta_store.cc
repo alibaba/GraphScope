@@ -73,6 +73,7 @@ std::string GraphMeta::ToJson() const {
     json["stored_procedures"].push_back(
         nlohmann::json::parse(plugin_meta.ToJson()));
   }
+  json["store_type"] = store_type;
   return json.dump();
 }
 
@@ -106,6 +107,11 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
     for (auto& plugin : json["stored_procedures"]) {
       meta.plugin_metas.push_back(PluginMeta::FromJson(plugin));
     }
+  }
+  if (json.contains("store_type")) {
+    meta.store_type = json["store_type"].get<std::string>();
+  } else {
+    meta.store_type = "mutable_csr";
   }
   return meta;
 }
@@ -636,8 +642,8 @@ CreateJobMetaRequest CreateJobMetaRequest::NewRunning(
 
 std::string CreateJobMetaRequest::ToString() const {
   nlohmann::json json;
-  json["graph_id"] = graph_id;
-  json["process_id"] = process_id;
+  json["detail"]["graph_id"] = graph_id;
+  json["detail"]["process_id"] = process_id;
   json["start_time"] = start_time;
   json["status"] = std::to_string(status);
   json["log_path"] = log_path;

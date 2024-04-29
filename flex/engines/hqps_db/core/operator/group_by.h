@@ -390,10 +390,7 @@ class GroupByOp {
                           std::integer_sequence<int32_t, 0>>>) {
       auto& builder = std::get<0>(value_set_builder_tuple);
       auto size = ctx.GetHead().Size();
-      std::tuple<std::tuple<grape::EmptyType>> empty_tuple;
-      for (size_t i = 0; i < size; ++i) {
-        builder.insert(0, empty_tuple, empty_tuple);
-      }
+      builder.inc_count(0, size);
     } else {
       for (auto iter : ctx) {
         auto ele_tuple = iter.GetAllIndexElement();
@@ -410,22 +407,6 @@ class GroupByOp {
                               std::make_index_sequence<grouped_value_num>());
     return RES_T(std::move(std::get<0>(value_set_built)),
                  ctx.get_sub_task_start_tag());
-
-    // // create offset array with one-one mapping.
-    // if (grouped_value_num == 1) {
-    // } else {
-    //   auto offset_vec = make_offset_vector(
-    //       grouped_value_num - 1, std::get<0>(value_set_built).size() + 1);
-    //   VLOG(10) << "after group by, the set size: " << keyed_set_built.Size();
-    //   VLOG(10) << "offset vec: " << offset_vec.size();
-    //   VLOG(10) << "," << offset_vec[0].size();
-
-    //   RES_T res(std::move(std::get<grouped_value_num - 1>(value_set_built)),
-    //             std::move(gs::tuple_slice<0, grouped_value_num - 1>(
-    //                 std::move(value_set_built))),
-    //             std::move(offset_vec));
-    //   return res;
-    // }
   }
 
   // group by only one key_alias
