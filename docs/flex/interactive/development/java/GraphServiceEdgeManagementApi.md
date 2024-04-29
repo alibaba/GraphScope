@@ -1,6 +1,6 @@
 # GraphServiceEdgeManagementApi
 
-All URIs are relative to *https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0*
+All URIs are relative to `${INTERACTIVE_ENDPOINT}`
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
@@ -30,7 +30,7 @@ import com.alibaba.graphscope.interactive.GraphServiceEdgeManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     GraphServiceEdgeManagementApi apiInstance = new GraphServiceEdgeManagementApi(defaultClient);
     String graphId = "graphId_example"; // String | 
@@ -97,7 +97,7 @@ import com.alibaba.graphscope.interactive.GraphServiceEdgeManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     GraphServiceEdgeManagementApi apiInstance = new GraphServiceEdgeManagementApi(defaultClient);
     String graphId = "graphId_example"; // String | 
@@ -170,7 +170,7 @@ import com.alibaba.graphscope.interactive.GraphServiceEdgeManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     GraphServiceEdgeManagementApi apiInstance = new GraphServiceEdgeManagementApi(defaultClient);
     String graphId = "graphId_example"; // String | 
@@ -245,7 +245,7 @@ import com.alibaba.graphscope.interactive.GraphServiceEdgeManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     GraphServiceEdgeManagementApi apiInstance = new GraphServiceEdgeManagementApi(defaultClient);
     String graphId = "graphId_example"; // String | 

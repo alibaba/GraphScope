@@ -1,6 +1,6 @@
 # interactive_sdk.AdminServiceProcedureManagementApi
 
-All URIs are relative to *https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0*
+All URIs are relative to `${INTERACTIVE_ENDPOINT}`
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -30,10 +30,10 @@ from interactive_sdk.models.create_procedure_response import CreateProcedureResp
 from interactive_sdk.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
+# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
 configuration = interactive_sdk.Configuration(
-    host = "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
+    host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
@@ -103,10 +103,10 @@ import interactive_sdk
 from interactive_sdk.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
+# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
 configuration = interactive_sdk.Configuration(
-    host = "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
+    host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
@@ -175,10 +175,10 @@ from interactive_sdk.models.get_procedure_response import GetProcedureResponse
 from interactive_sdk.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
+# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
 configuration = interactive_sdk.Configuration(
-    host = "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
+    host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
@@ -247,10 +247,10 @@ from interactive_sdk.models.get_procedure_response import GetProcedureResponse
 from interactive_sdk.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
+# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
 configuration = interactive_sdk.Configuration(
-    host = "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
+    host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
@@ -317,10 +317,10 @@ from interactive_sdk.models.update_procedure_request import UpdateProcedureReque
 from interactive_sdk.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
+# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
 configuration = interactive_sdk.Configuration(
-    host = "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
+    host = "{INTERACTIVE_ENDPOINT}"
 )
 
 

@@ -1,4 +1,4 @@
-# Interactive Java SDK Reference
+# Java SDK Reference
 
 The Interactive Java SDK Reference is a comprehensive guide for developers looking to integrate the Interactive service into their Java applications. This SDK allows users to seamlessly connect to Interactive and leverage its powerful features for graph management, stored procedure management, and query execution.
 
@@ -70,8 +70,6 @@ import com.alibaba.graphscope.interactive.client.Driver;
 import com.alibaba.graphscope.interactive.client.Session;
 
 public class GettingStarted {
-
-
     public static void main(String[] args) {
         //get endpoint from command line
         if (args.length != 1) {
@@ -95,9 +93,9 @@ public class GettingStarted {
 
 For more a more detailed example, please refer to [Java SDK Example](https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/java/interactive-sdk-example/)
 
-## Documentation for API Endpoints
+## Documentation for Service APIs
 
-All URIs are relative to *https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0*
+All URIs are relative to `${INTERACTIVE_ENDPOINT}`
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
@@ -130,7 +128,7 @@ Class | Method | HTTP request | Description
 *QueryServiceApi* | [**procCall**](./QueryServiceApi.md#procCall) | **POST** /v1/graph/{graph_id}/query | run queries on graph
 
 
-## Documentation for Models
+## Documentation for Data Structures
 
  - [BaseEdgeType](./BaseEdgeType.md)
  - [BaseEdgeTypeVertexTypePairRelationsInner](./BaseEdgeTypeVertexTypePairRelationsInner.md)

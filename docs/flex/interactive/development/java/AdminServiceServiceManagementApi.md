@@ -1,6 +1,6 @@
 # AdminServiceServiceManagementApi
 
-All URIs are relative to *https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0*
+All URIs are relative to `${INTERACTIVE_ENDPOINT}`
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
@@ -30,7 +30,7 @@ import com.alibaba.graphscope.interactive.AdminServiceServiceManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     AdminServiceServiceManagementApi apiInstance = new AdminServiceServiceManagementApi(defaultClient);
     try {
@@ -88,7 +88,7 @@ import com.alibaba.graphscope.interactive.AdminServiceServiceManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     AdminServiceServiceManagementApi apiInstance = new AdminServiceServiceManagementApi(defaultClient);
     try {
@@ -146,7 +146,7 @@ import com.alibaba.graphscope.interactive.AdminServiceServiceManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     AdminServiceServiceManagementApi apiInstance = new AdminServiceServiceManagementApi(defaultClient);
     StartServiceRequest startServiceRequest = new StartServiceRequest(); // StartServiceRequest | Start service on a specified graph
@@ -209,7 +209,7 @@ import com.alibaba.graphscope.interactive.AdminServiceServiceManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     AdminServiceServiceManagementApi apiInstance = new AdminServiceServiceManagementApi(defaultClient);
     try {

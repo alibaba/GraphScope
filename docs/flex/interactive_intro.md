@@ -21,5 +21,4 @@ interactive/dev_guide
 interactive/glossary
 interactive/deployment
 interactive/tools
-interactive/sdk
 ```

@@ -1,4 +1,4 @@
-# Interactive Python SDK Reference
+# Python SDK Reference
 
 The Interactive Python SDK Reference is a comprehensive guide designed to assist developers in integrating the Interactive service into their Python applications. This SDK allows users to seamlessly connect to Interactive and harness its powerful features for graph management, stored procedure management, and query execution.
 
@@ -9,7 +9,9 @@ Python 3.7+
 ## Installation & Usage
 ### pip install
 
+```bash
 pip3 install graphscope-interactive
+```
 
 Then import the package:
 ```python
@@ -63,9 +65,9 @@ with driver.getNeo4jSession() as session:
 For a more detailed example, please refer to [Python SDK Example](https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/python/basic_example.py).
 
 
-## Documentation for API Endpoints
+## Documentation for Service APIs
 
-All URIs are relative to *https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0*
+All URIs are relative to `${INTERACTIVE_ENDPOINT}`
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
@@ -98,7 +100,7 @@ Class | Method | HTTP request | Description
 *QueryServiceApi* | [**proc_call**](./QueryServiceApi.md#proc_call) | **POST** /v1/graph/{graph_id}/query | run queries on graph
 
 
-## Documentation For Models
+## Documentation for Data Structures
 
  - [BaseEdgeType](./BaseEdgeType.md)
  - [BaseEdgeTypeVertexTypePairRelationsInner](./BaseEdgeTypeVertexTypePairRelationsInner.md)

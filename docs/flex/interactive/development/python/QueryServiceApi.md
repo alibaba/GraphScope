@@ -1,6 +1,6 @@
 # interactive_sdk.QueryServiceApi
 
-All URIs are relative to *https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0*
+All URIs are relative to `${INTERACTIVE_ENDPOINT}`
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -26,10 +26,10 @@ from interactive_sdk.models.query_request import QueryRequest
 from interactive_sdk.rest import ApiException
 from pprint import pprint
 
-# Defining the host is optional and defaults to https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
+# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
 configuration = interactive_sdk.Configuration(
-    host = "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
+    host = "{INTERACTIVE_ENDPOINT}"
 )
 
 

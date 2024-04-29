@@ -1,6 +1,6 @@
 # AdminServiceJobManagementApi
 
-All URIs are relative to *https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0*
+All URIs are relative to `${INTERACTIVE_ENDPOINT}`
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
@@ -27,7 +27,7 @@ import com.alibaba.graphscope.interactive.AdminServiceJobManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     AdminServiceJobManagementApi apiInstance = new AdminServiceJobManagementApi(defaultClient);
     String jobId = "jobId_example"; // String | 
@@ -87,7 +87,7 @@ import com.alibaba.graphscope.interactive.AdminServiceJobManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     AdminServiceJobManagementApi apiInstance = new AdminServiceJobManagementApi(defaultClient);
     String jobId = "jobId_example"; // String | The id of the job, returned from POST /v1/graph/{graph_id}/dataloading
@@ -147,7 +147,7 @@ import com.alibaba.graphscope.interactive.AdminServiceJobManagementApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0");
+    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
 
     AdminServiceJobManagementApi apiInstance = new AdminServiceJobManagementApi(defaultClient);
     try {
