@@ -50,7 +50,12 @@ public class LocalMetaDataReader implements MetaDataReader {
             return ImmutableList.of();
         }
         Yaml yaml = new Yaml();
-        List<Object> procedureList = yaml.load(storedProceduresYaml);
+        Object raw = yaml.load(storedProceduresYaml);
+        if (!(raw instanceof List)) {
+            logger.error("stored procedures yaml format error");
+            return ImmutableList.of();
+        }
+        List<Object> procedureList = (List<Object>) raw;
         return procedureList.stream()
                 .map(
                         k -> {

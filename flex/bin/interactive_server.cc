@@ -54,9 +54,11 @@ std::string parse_codegen_dir(const bpo::variables_map& vm) {
   return codegen_dir;
 }
 
+// When graph_schema is not specified, codegen proxy will use the running graph
+// schema in hqps_service
 void init_codegen_proxy(const bpo::variables_map& vm,
-                        const std::string& graph_schema_file,
-                        const std::string& engine_config_file) {
+                        const std::string& engine_config_file,
+                        const std::string& graph_schema_file = "") {
   std::string codegen_dir = parse_codegen_dir(vm);
   std::string codegen_bin;
   if (vm.count("codegen-bin") == 0) {
@@ -208,7 +210,7 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Finish init workspace";
     auto schema_file = server::WorkDirManipulator::GetGraphSchemaPath(
         service_config.default_graph);
-    gs::init_codegen_proxy(vm, schema_file, engine_config_file);
+    gs::init_codegen_proxy(vm, engine_config_file);
   } else {
     LOG(INFO) << "Start query service only";
     std::string graph_schema_path, data_path;
@@ -232,7 +234,7 @@ int main(int argc, char** argv) {
     }
 
     // The schema is loaded just to get the plugin dir and plugin list
-    gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
+    gs::init_codegen_proxy(vm, engine_config_file, graph_schema_path);
     db.Close();
     auto load_res =
         db.Open(schema_res.value(), data_path, service_config.shard_num);
