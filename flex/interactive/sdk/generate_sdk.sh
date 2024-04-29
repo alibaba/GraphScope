@@ -16,7 +16,7 @@
 # This script is used to generate the Java SDK from the Flex Interactive API
 # It uses the Swagger Codegen tool to generate the SDK
 
-PACKAGE_NAME="com.alibaba.graphscope.interactive"
+PACKAGE_NAME="com.alibaba.graphscope.interactive.generated"
 GROUP_ID="com.alibaba.graphscope"
 ARTIFACT_ID="interactive-java-sdk"
 ARTIFACT_URL="https://github.com/alibaba/GraphScope/tree/main/flex/interactive"

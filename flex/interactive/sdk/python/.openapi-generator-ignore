@@ -26,6 +26,7 @@
 README.md
 setup.py
 interactive_sdk/__init__.py
+interactive_sdk/client
 requirements.txt
 test-requirements.txt
 test/

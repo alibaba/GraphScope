@@ -25,3 +25,4 @@
 README.md
 pom.xml
 src/test/
+src/main/java/com/alibaba/graphscope/interactive/client
