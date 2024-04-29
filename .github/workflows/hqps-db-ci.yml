@@ -141,6 +141,7 @@ jobs:
         LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/python
+        pip3 install -r test-requirements.txt
         pip3 install .
 
         rm -rf ${TMP_INTERACTIVE_WORKSPACE}     
