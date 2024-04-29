@@ -105,7 +105,7 @@ run_python_sdk_test(){
   pushd ${FLEX_HOME}/interactive/sdk/python/
   pip3 install -r requirements.txt 
   pip3 install -r test-requirements.txt
-  cmd="pytest test/test_driver.py"
+  cmd="python3 -m pytest -s test/test_driver.py"
   echo "Start python sdk test: ${cmd}"
   eval ${cmd} || (err "java python test failed" &&  exit 1)
   info "Finish python sdk test"
