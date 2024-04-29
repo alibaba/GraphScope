@@ -119,7 +119,6 @@ void add_runnable_info(gs::PluginMeta& plugin_meta) {
   }
 }
 
-
 gs::Result<gs::JobId> invoke_loading_graph(
     std::shared_ptr<gs::IGraphMetaStore> metadata_store,
     const std::string& graph_id, const YAML::Node& loading_config,
