@@ -148,7 +148,7 @@ Result<std::vector<PluginMeta>> DefaultGraphMetaStore::GetAllPluginMeta(
     auto plugin_meta = PluginMeta::FromJson(pair.second);
     // the key is id.
     plugin_meta.id = pair.first;
-    if (plugin_meta.graph_id == graph_id) {
+    if (plugin_meta.bound_graph == graph_id) {
       metas.push_back(plugin_meta);
     }
   }
@@ -172,7 +172,7 @@ Result<bool> DefaultGraphMetaStore::DeletePluginMetaByGraphId(
   std::vector<PluginId> plugin_ids;
   for (auto& meta_str : res.value()) {
     auto plugin_meta = PluginMeta::FromJson(meta_str);
-    if (plugin_meta.graph_id == graph_id) {
+    if (plugin_meta.bound_graph == graph_id) {
       plugin_ids.push_back(plugin_meta.id);
     }
   }
@@ -198,12 +198,12 @@ Result<bool> DefaultGraphMetaStore::UpdatePluginMeta(
                                             "Fail to parse old plugin meta"));
         }
         auto plugin_meta = PluginMeta::FromJson(json);
-        if (plugin_meta.graph_id != graph_id) {
+        if (plugin_meta.bound_graph != graph_id) {
           return Result<std::string>(Status(gs::StatusCode::InternalError,
                                             "Plugin not belongs to the graph"));
         }
-        if (update_request.graph_id.has_value()) {
-          if (update_request.graph_id.value() != graph_id) {
+        if (update_request.bound_graph.has_value()) {
+          if (update_request.bound_graph.value() != graph_id) {
             return Result<std::string>(
                 Status(gs::StatusCode::IllegalOperation,
                        "The plugin_id in update payload is not "
