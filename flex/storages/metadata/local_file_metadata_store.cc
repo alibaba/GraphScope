@@ -221,7 +221,13 @@ int32_t LocalFileMetadataStore::get_max_id(const meta_kind_t& meta_kind) const {
     auto file_name = p.path().filename().string();
     if (file_name.find(META_FILE_PREFIX) != std::string::npos) {
       auto id_str = file_name.substr(strlen(META_FILE_PREFIX));
-      auto id = std::stoi(id_str);
+      int32_t id;
+      try {
+        id = std::stoi(id_str);
+      } catch (std::invalid_argument& e) {
+        LOG(ERROR) << "Invalid id: " << id_str;
+        continue;
+      }
       if (id > max_id_) {
         max_id_ = id;
       }
