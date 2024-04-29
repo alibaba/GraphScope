@@ -16,7 +16,6 @@
 package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
-
 import com.alibaba.graphscope.interactive.openapi.model.*;
 
 import java.util.List;

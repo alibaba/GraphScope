@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
+import com.alibaba.graphscope.interactive.openapi.model.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
@@ -25,7 +26,6 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import com.alibaba.graphscope.interactive.openapi.model.*;
 
 import java.util.ArrayList;
 import java.util.List;

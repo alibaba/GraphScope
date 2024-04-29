@@ -140,9 +140,16 @@ jobs:
         TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
         LD_LIBRARY_PATH: /usr/local/lib
       run: |
-        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/python
+        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/
+        bash generate_sdk.sh -g java
+        bash generate_sdk.sh -g python
+        pushd java
+        mvn clean install -DskipTests
+        popd
+        pushd python
         pip3 install -r test-requirements.txt
         pip3 install .
+        popd
 
         rm -rf ${TMP_INTERACTIVE_WORKSPACE}     
         cd ${GITHUB_WORKSPACE}/flex/build/

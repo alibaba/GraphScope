@@ -17,12 +17,12 @@ package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.impl.DefaultSession;
+import com.alibaba.graphscope.interactive.openapi.model.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.neo4j.driver.SessionConfig;
-import com.alibaba.graphscope.interactive.openapi.model.*;
 
 import java.util.logging.Logger;
 
