@@ -101,8 +101,6 @@ struct PluginMeta {
   static PluginMeta FromJson(const nlohmann::json& json);
 };
 
-
-
 struct JobMeta {
   JobId id;
   GraphId graph_id;

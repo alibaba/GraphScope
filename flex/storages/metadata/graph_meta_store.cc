@@ -324,7 +324,6 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
   if (json.contains("creation_time")) {
     request.creation_time = json["creation_time"].get<int64_t>();
   }
-  VLOG(10) << "Finish from json";
   return request;
 }
 
@@ -703,5 +702,3 @@ std::ostream& operator<<(std::ostream& os, const gs::JobStatus& status) {
   return os;
 }
 }  // namespace std
-
-
