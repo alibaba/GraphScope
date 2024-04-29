@@ -1,9 +1,6 @@
 # Interactive Java SDK Reference
 
-GraphScope Interactive use [OpenAPI](https://openapis.org) to define the http interface, and use [OpenAPI-generator](https://openapi-generator.tech) to generate Java SDK.
-
-
-The main part of the documentation is generated via [OpenAPI Generator](https://openapi-generator.tech)*.
+The Interactive Java SDK Reference is a comprehensive guide for developers looking to integrate the Interactive service into their Java applications. This SDK allows users to seamlessly connect to Interactive and leverage its powerful features for graph management, stored procedure management, and query execution.
 
 
 ## Requirements

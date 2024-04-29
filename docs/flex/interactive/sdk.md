@@ -1,6 +1,6 @@
 # GraphScope Interactive SDK
 
-GraphScope Interactive use [OpenAPI-Spec](https://openapis.org) to define the RESTful interface and use use [OpenAPI-generator](https://openapi-generator.tech) to generate python/java SDKs.
+Interactive provides SDKs in two languages, Java and Python. Users can use the SDK in their preferred language to connect to the Interactive service, to manage graphs, manage stored procedures, and submit queries.
 
 ```{toctree} arguments
 ---

@@ -1,9 +1,6 @@
 # Interactive Python SDK Reference
 
-GraphScope Interactive use [OpenAPI](https://openapis.org) to define the http interface, and use [OpenAPI-generator](https://openapi-generator.tech) to generate Python SDK.
-
-
-The main part of the documentation is generated via [OpenAPI Generator](https://openapi-generator.tech)*.
+The Interactive Python SDK Reference is a comprehensive guide designed to assist developers in integrating the Interactive service into their Python applications. This SDK allows users to seamlessly connect to Interactive and harness its powerful features for graph management, stored procedure management, and query execution.
 
 ## Requirements.
 
