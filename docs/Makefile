@@ -51,6 +51,16 @@ clean:
 	@mkdir -p "$(BUILDDIR)/${TAG}/$@/reference/"
 	@cat Doxyfile-flex | sed 's/_build\/latest\/html\/reference\//$(BUILDDIR)\/${TAG}\/$@\/reference\//g' | doxygen -
 
-doxygen:
+interactive-sdk:
+	@echo "Building interactive sdk doc to $(BUILDDIR)/${TAG}/interactive-sdk"
+	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && ./generate_sdk.sh -g java \
+		&& ./generate_sdk.sh -g python
+
+	# copy the generated files to ${WORKING_DIR}/flex/interactive/development/
+	@cp -r ${WORKING_DIR}/../flex/interactive/sdk/java/docs/* ${WORKING_DIR}/flex/interactive/development/java/
+	@cp -r ${WORKING_DIR}/../flex/interactive/sdk/python/docs/* ${WORKING_DIR}/flex/interactive/development/python/
+
+
+doxygen: interactive-sdk
 	@mkdir -p _build
 	@doxygen Doxyfile

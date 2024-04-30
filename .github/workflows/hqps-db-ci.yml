@@ -150,13 +150,11 @@ jobs:
 
         bash generate_sdk.sh -g java
         bash generate_sdk.sh -g python
-        pushd java
+        cd java
         mvn clean install -DskipTests
-        popd
-        pushd python
+        cd ../python
         pip3 install -r test-requirements.txt
         pip3 install .
-        popd
 
         rm -rf ${TMP_INTERACTIVE_WORKSPACE}     
         cd ${GITHUB_WORKSPACE}/flex/build/
