@@ -126,20 +126,19 @@ template <typename FRAG_T>
 using JavaPIEPropertyParallelAppOE = JavaPIEPropertyParallelApp<
     FRAG_T, grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>;
 
-
 template <typename FRAG_T>
 using JavaPIEPropertyParallelAppIE = JavaPIEPropertyParallelApp<
     FRAG_T, grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex>;
 
+template <typename FRAG_T>
+using JavaPIEPropertyParallelAppE =
+    JavaPIEPropertyParallelApp<FRAG_T,
+                               grape::MessageStrategy::kAlongEdgeToOuterVertex>;
 
 template <typename FRAG_T>
-using JavaPIEPropertyParallelAppE = JavaPIEPropertyParallelApp<
-    FRAG_T, grape::MessageStrategy::kAlongEdgeToOuterVertex>;
-
-
-template <typename FRAG_T>
-using JavaPIEPropertyParallelAppSync = JavaPIEPropertyParallelApp<
-    FRAG_T, grape::MessageStrategy::kSyncOnOuterVertex>;
+using JavaPIEPropertyParallelAppSync =
+    JavaPIEPropertyParallelApp<FRAG_T,
+                               grape::MessageStrategy::kSyncOnOuterVertex>;
 
 }  // namespace gs
 #endif
