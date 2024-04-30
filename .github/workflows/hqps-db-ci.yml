@@ -146,7 +146,7 @@ jobs:
         chmod u+x ~/bin/openapitools/openapi-generator-cli
         export PATH=$PATH:~/bin/openapitools/
         export OPENAPI_GENERATOR_VERSION=7.2.0
-        sudo apt-get update && sudo apt-get install jq
+        sudo apt-get update && sudo apt-get -y install jq
 
         bash generate_sdk.sh -g java
         bash generate_sdk.sh -g python
