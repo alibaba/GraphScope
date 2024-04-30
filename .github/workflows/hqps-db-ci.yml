@@ -141,6 +141,12 @@ jobs:
         LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/
+        mkdir -p ~/bin/openapitools
+        curl https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/bin/utils/openapi-generator-cli.sh > ~/bin/openapitools/openapi-generator-cli
+        chmod u+x ~/bin/openapitools/openapi-generator-cli
+        export PATH=$PATH:~/bin/openapitools/
+        export OPENAPI_GENERATOR_VERSION=7.2.0
+
         bash generate_sdk.sh -g java
         bash generate_sdk.sh -g python
         pushd java
