@@ -108,6 +108,22 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
+function install_generator() {
+  # first check openapi-generator-cli is executable
+  if command -v openapi-generator-cli &>/dev/null; then
+    echo "openapi-generator-cli is already installed"
+    return
+  fi
+  mkdir -p ~/bin/openapitools
+  curl https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/bin/utils/openapi-generator-cli.sh > ~/bin/openapitools/openapi-generator-cli
+  chmod u+x ~/bin/openapitools/openapi-generator-cli
+  export PATH=$PATH:~/bin/openapitools/
+  export OPENAPI_GENERATOR_VERSION=7.2.0
+  sudo apt-get update && sudo apt-get -y install jq
+}
+
+install_generator
+
 while [[ $# -gt 0 ]]; do
   key="$1"
 
