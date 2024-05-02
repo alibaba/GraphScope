@@ -1527,8 +1527,8 @@ public class GraphBuilderTest {
     public void g_V_match_as_a_out_as_b_count_test() {
         RelNode node = eval("g.V().match(as(\"a\").out().as(\"b\")).count()");
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[_],"
-                    + " aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[a,"
+                    + " b], aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[b], opt=[END])\n"

@@ -548,7 +548,8 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         switch (functionName) {
             case "count":
                 return (GraphBuilder)
-                        builder.aggregate(builder.groupKey(), builder.countStar(null));
+                        builder.aggregate(
+                                builder.groupKey(), builder.count(builder.variable((String) null)));
             case "sum":
                 return (GraphBuilder)
                         builder.aggregate(

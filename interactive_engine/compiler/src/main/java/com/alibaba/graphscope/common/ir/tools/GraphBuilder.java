@@ -454,13 +454,28 @@ public class GraphBuilder extends RelBuilder {
      */
     public RexGraphVariable variable(@Nullable String alias) {
         alias = AliasInference.isDefaultAlias(alias) ? AliasInference.DEFAULT_NAME : alias;
-        ColumnField columnField = getAliasField(alias);
-        RelDataTypeField aliasField = columnField.right;
-        return RexGraphVariable.of(
-                aliasField.getIndex(),
-                columnField.left,
-                AliasInference.SIMPLE_NAME(alias),
-                aliasField.getType());
+        List<ColumnField> columnFields = getAliasField(alias);
+        if (columnFields.size() == 1) {
+            ColumnField columnField = columnFields.get(0);
+            RelDataTypeField aliasField = columnField.right;
+            return RexGraphVariable.of(
+                    aliasField.getIndex(),
+                    columnField.left,
+                    AliasInference.SIMPLE_NAME(alias),
+                    aliasField.getType());
+        } else {
+            return RexGraphVariableList.of(
+                    columnFields.stream()
+                            .map(
+                                    field ->
+                                            RexGraphVariable.of(
+                                                    field.right.getIndex(),
+                                                    field.left,
+                                                    AliasInference.SIMPLE_NAME(
+                                                            field.right.getName()),
+                                                    field.right.getType()))
+                            .collect(Collectors.toList()));
+        }
     }
 
     /**
@@ -474,7 +489,17 @@ public class GraphBuilder extends RelBuilder {
         alias = AliasInference.isDefaultAlias(alias) ? AliasInference.DEFAULT_NAME : alias;
         Objects.requireNonNull(property);
         String varName = AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property;
-        ColumnField columnField = getAliasField(alias);
+        List<ColumnField> columnFields = getAliasField(alias);
+        if (columnFields.size() != 1) {
+            throw new IllegalArgumentException(
+                    "cannot get property="
+                            + property
+                            + " from alias="
+                            + alias
+                            + ", expected one column, but found "
+                            + columnFields.size());
+        }
+        ColumnField columnField = columnFields.get(0);
         RelDataTypeField aliasField = columnField.right;
         if (property.equals(GraphProperty.LEN_KEY)) {
             if (!(aliasField.getType() instanceof GraphPathType)) {
@@ -557,7 +582,7 @@ public class GraphBuilder extends RelBuilder {
      * @param alias
      * @return
      */
-    private ColumnField getAliasField(String alias) {
+    private List<ColumnField> getAliasField(String alias) {
         Objects.requireNonNull(alias);
         Set<String> aliases = new HashSet<>();
         int nodeIdx = 0;
@@ -568,22 +593,35 @@ public class GraphBuilder extends RelBuilder {
                 List<RelDataTypeField> fields = cur.getRowType().getFieldList();
                 // to support `head` in gremlin
                 if (nodeIdx++ == 0 && AliasInference.isDefaultAlias(alias)) {
-                    // by default returning the last field in the cur type as the `head`,
-                    // The criteria for determining whether a 'head' can be returned are quite
-                    // lenient, based solely on the type, some invalid operator compositions may be
-                    // omitted.
-                    if (fields.size() > 0) {
-                        return new ColumnField(
-                                AliasInference.DEFAULT_COLUMN_ID,
-                                new RelDataTypeFieldImpl(
-                                        AliasInference.DEFAULT_NAME,
-                                        AliasInference.DEFAULT_ID,
-                                        fields.get(fields.size() - 1).getType()));
+                    if (fields.size() == 1) {
+                        return ImmutableList.of(
+                                new ColumnField(
+                                        AliasInference.DEFAULT_COLUMN_ID,
+                                        new RelDataTypeFieldImpl(
+                                                AliasInference.DEFAULT_NAME,
+                                                AliasInference.DEFAULT_ID,
+                                                fields.get(0).getType())));
+                    } else if (cur
+                            instanceof
+                            CommonTableScan) { // specific implementation for gremlin, to get `head`
+                        // in nested traversal
+                        return ImmutableList.of(
+                                new ColumnField(
+                                        AliasInference.DEFAULT_COLUMN_ID,
+                                        new RelDataTypeFieldImpl(
+                                                AliasInference.DEFAULT_NAME,
+                                                AliasInference.DEFAULT_ID,
+                                                fields.get(fields.size() - 1).getType())));
+                    } else { // If the output of the current operator consists of multiple columns,
+                             // we transform `head` into all columns of the current operator.
+                        return fields.stream()
+                                .map(field -> new ColumnField(getColumnIndex(cur, field), field))
+                                .collect(Collectors.toList());
                     }
                 }
                 for (RelDataTypeField field : fields) {
                     if (!AliasInference.isDefaultAlias(alias) && field.getName().equals(alias)) {
-                        return new ColumnField(getColumnIndex(cur, field), field);
+                        return ImmutableList.of(new ColumnField(getColumnIndex(cur, field), field));
                     }
                     aliases.add(AliasInference.SIMPLE_NAME(field.getName()));
                 }
@@ -773,6 +811,8 @@ public class GraphBuilder extends RelBuilder {
 
     @Override
     public GraphBuilder filter(Iterable<? extends RexNode> conditions) {
+        conditions = flatOperands((Iterable<RexNode>) conditions);
+
         RexVisitor propertyChecker = new RexPropertyChecker(true, this);
         for (RexNode condition : conditions) {
             RelDataType type = condition.getType();
@@ -1180,6 +1220,8 @@ public class GraphBuilder extends RelBuilder {
         Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
         RexSimplify simplifier = Utils.getFieldValue(RelBuilder.class, this, "simplifier");
 
+        nodes = flatOperands((Iterable<RexNode>) nodes);
+
         List<RexNode> nodeList = Lists.newArrayList(nodes);
         List<@Nullable String> fieldNameList = Lists.newArrayList(aliases);
 
@@ -1362,7 +1404,7 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     private GroupKey groupKey_(List<RexNode> variables, List<@Nullable String> aliases) {
-        return new GraphGroupKeys(variables, aliases);
+        return new GraphGroupKeys((List<RexNode>) flatOperands(variables), aliases);
     }
 
     // build aggregate functions
@@ -1440,15 +1482,8 @@ public class GraphBuilder extends RelBuilder {
             ImmutableList<RexNode> orderKeys,
             @Nullable String alias,
             ImmutableList<RexNode> operands) {
-        // if operands of the aggregate call is empty, set a variable with (alias = null) by default
-        return new GraphAggCall(
-                        getCluster(),
-                        aggFunction,
-                        ObjectUtils.isNotEmpty(operands)
-                                ? operands
-                                : ImmutableList.of(this.variable((String) null)))
-                .as(alias)
-                .distinct(distinct);
+        operands = ImmutableList.copyOf(flatOperands(operands));
+        return new GraphAggCall(getCluster(), aggFunction, operands).as(alias).distinct(distinct);
     }
 
     @Override
@@ -1529,6 +1564,8 @@ public class GraphBuilder extends RelBuilder {
         if (offsetNode != null && !(offsetNode instanceof RexLiteral)) {
             throw new IllegalArgumentException("FETCH node must be RexLiteral");
         }
+
+        nodes = flatOperands((Iterable<RexNode>) nodes);
 
         RelNode input = requireNonNull(peek(), "frame stack is empty");
 
@@ -1634,6 +1671,8 @@ public class GraphBuilder extends RelBuilder {
 
     public GraphBuilder dedupBy(Iterable<? extends RexNode> nodes) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
+
+        nodes = flatOperands((Iterable<RexNode>) nodes);
 
         List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
 
@@ -1939,5 +1978,18 @@ public class GraphBuilder extends RelBuilder {
         LabelConfig labelConfig = new LabelConfig(tableConfig.isAll());
         labels.forEach(k -> labelConfig.addLabel(k));
         return labelConfig;
+    }
+
+    private Iterable<RexNode> flatOperands(Iterable<RexNode> operands) {
+        List<RexNode> flatOperands = Lists.newArrayList();
+        operands.forEach(
+                operand -> {
+                    if (operand instanceof RexGraphVariableList) {
+                        flatOperands.addAll((RexGraphVariableList) operand);
+                    } else {
+                        flatOperands.add(operand);
+                    }
+                });
+        return flatOperands;
     }
 }
