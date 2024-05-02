@@ -58,7 +58,6 @@ struct PluginMeta;
 struct GraphMeta {
   GraphId id;
   std::string name;
-  bool is_builtin;
   std::string description;
   uint64_t creation_time;
   uint64_t data_update_time;
@@ -75,7 +74,7 @@ struct GraphMeta {
 struct PluginMeta {
   PluginId id;
   std::string name;
-  GraphId graph_id;
+  GraphId bound_graph;
   std::string description;
   std::vector<Parameter> params;
   std::vector<Parameter> returns;
@@ -125,13 +124,10 @@ struct JobMeta {
 ////////////////// CreateMetaRequest ///////////////////////
 struct CreateGraphMetaRequest {
   std::string name;
-  std::optional<bool> is_builtin;
   std::string description;
   std::string schema;  // all in one string.
   std::optional<uint64_t> data_update_time;
   int64_t creation_time;
-
-  bool GetIsBuiltin() const;
 
   static CreateGraphMetaRequest FromJson(const std::string& json_str);
 
@@ -141,7 +137,7 @@ struct CreateGraphMetaRequest {
 struct CreatePluginMetaRequest {
   std::optional<PluginId> id;
   std::string name;
-  GraphId graph_id;
+  GraphId bound_graph;
   int64_t creation_time;
   std::string description;
   std::vector<Parameter> params;
@@ -181,7 +177,7 @@ struct UpdateGraphMetaRequest {
 // Used internally, can update params, returns, library and option.
 struct UpdatePluginMetaRequest {
   std::optional<std::string> name;
-  std::optional<GraphId> graph_id;
+  std::optional<GraphId> bound_graph;
   std::optional<std::string> description;
   std::optional<int64_t> update_time;
   std::optional<std::vector<Parameter>> params;
@@ -299,5 +295,29 @@ std::string to_string(const gs::JobStatus& status);
 
 std::ostream& operator<<(std::ostream& os, const gs::JobStatus& status);
 }  // namespace std
+
+namespace YAML {
+template <>
+struct convert<gs::Parameter> {
+  static bool decode(const Node& config, gs::Parameter& parameter) {
+    if (!config.IsMap()) {
+      return false;
+    }
+    if (!config["name"] || !config["type"]) {
+      return false;
+    }
+    parameter.name = config["name"].as<std::string>();
+    parameter.type = config["type"].as<gs::PropertyType>();
+    return true;
+  }
+
+  static Node encode(const gs::Parameter& parameter) {
+    YAML::Node node;
+    node["name"] = parameter.name;
+    node["type"] = YAML::convert<gs::PropertyType>::encode(parameter.type);
+    return node;
+  }
+};
+}  // namespace YAML
 
 #endif  // FLEX_STORAGES_METADATA_GRAPH_META_STORE_H_

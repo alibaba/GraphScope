@@ -19,14 +19,14 @@ import java.util.Objects;
 
 public class EdgeKind {
 
-    private String edgeLabel;
-    private LabelId edgeLabelId;
+    private final String edgeLabel;
+    private final LabelId edgeLabelId;
 
-    private String srcVertexLabel;
-    private LabelId srcVertexLabelId;
+    private final String srcVertexLabel;
+    private final LabelId srcVertexLabelId;
 
-    private String dstVertexLabel;
-    private LabelId dstVertexLabelId;
+    private final String dstVertexLabel;
+    private final LabelId dstVertexLabelId;
 
     private EdgeKind(
             String edgeLabel,

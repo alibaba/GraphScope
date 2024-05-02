@@ -1226,9 +1226,9 @@ struct convert<gs::PropertyType> {
         LOG(ERROR) << "string should be a map";
       }
     } else if (config["temporal"]) {
-      if (config["date32"]) {
+      if (config["temporal"]["date32"]) {
         property_type = gs::PropertyType::Day();
-      } else if (config["timestamp"]) {
+      } else if (config["temporal"]["timestamp"]) {
         property_type = gs::PropertyType::Date();
       } else {
         LOG(ERROR) << "Unrecognized temporal type";
@@ -1253,6 +1253,32 @@ struct convert<gs::PropertyType> {
       return false;
     }
     return true;
+  }
+
+  static Node encode(const gs::PropertyType& type) {
+    YAML::Node node;
+    if (type == gs::PropertyType::Bool() || type == gs::PropertyType::Int32() ||
+        type == gs::PropertyType::UInt32() ||
+        type == gs::PropertyType::Float() ||
+        type == gs::PropertyType::Int64() ||
+        type == gs::PropertyType::UInt64() ||
+        type == gs::PropertyType::Double()) {
+      node["primitive_type"] =
+          gs::config_parsing::PrimitivePropertyTypeToString(type);
+    } else if (type == gs::PropertyType::String() ||
+               type == gs::PropertyType::StringMap()) {
+      node["string"]["long_text"] = "";
+    } else if (type.IsVarchar()) {
+      node["string"]["var_char"]["max_length"] =
+          type.additional_type_info.max_length;
+    } else if (type == gs::PropertyType::Date()) {
+      node["temporal"]["timestamp"] = "";
+    } else if (type == gs::PropertyType::Day()) {
+      node["temporal"]["date32"] = "";
+    } else {
+      LOG(ERROR) << "Unrecognized property type: " << type;
+    }
+    return node;
   }
 };
 }  // namespace YAML

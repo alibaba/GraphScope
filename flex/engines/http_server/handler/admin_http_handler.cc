@@ -436,7 +436,8 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
     } else if (method == "DELETE") {
       if (!req->param.exists("job_id")) {
         rep->set_status(seastar::httpd::reply::status_type::bad_request);
-        rep->write_body("application/json",
+        rep->set_content_type("application/json");
+        rep->write_body("json",
                         seastar::sstring("expect field 'job_id' in request"));
         rep->done();
         return seastar::make_ready_future<
@@ -451,7 +452,8 @@ class admin_http_job_handler_impl : public seastar::httpd::handler_base {
           });
     } else {
       rep->set_status(seastar::httpd::reply::status_type::bad_request);
-      rep->write_body("application/json",
+      rep->set_content_type("application/json");
+      rep->write_body("json",
                       seastar::sstring("Unsupported method: ") + method);
       rep->done();
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(

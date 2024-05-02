@@ -21,6 +21,9 @@ namespace gs {
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
   std::filesystem::path dir_path = plugin_dir;
   std::vector<std::string> res_yaml_files;
+  if (!std::filesystem::exists(dir_path)) {
+    return res_yaml_files;
+  }
 
   for (auto& entry : std::filesystem::directory_iterator(dir_path)) {
     if (entry.is_regular_file() && ((entry.path().extension() == ".yaml") ||

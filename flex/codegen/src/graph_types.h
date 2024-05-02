@@ -197,6 +197,7 @@ static std::string data_type_2_string(const codegen::DataType& data_type) {
   case codegen::DataType::kEdgeId:
     return EDGE_ID_T;
   case codegen::DataType::kDate:
+  case codegen::DataType::kTimeStamp:
     return "Date";
   case codegen::DataType::kLabelId:
     return "LabelKey";

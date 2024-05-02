@@ -61,7 +61,6 @@ std::string GraphMeta::ToJson() const {
   nlohmann::json json;
   json["id"] = id;
   json["name"] = name;
-  json["is_builtin"] = is_builtin;
   json["description"] = description;
   json["creation_time"] = creation_time;
   json["data_update_time"] = data_update_time;
@@ -91,8 +90,8 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
       meta.id = json["id"].get<GraphId>();
     }
   }
+
   meta.name = json["name"].get<std::string>();
-  meta.is_builtin = json["is_builtin"].get<bool>();
   meta.description = json["description"].get<std::string>();
   meta.creation_time = json["creation_time"].get<int64_t>();
   meta.schema = json["schema"].dump();
@@ -128,8 +127,8 @@ PluginMeta PluginMeta::FromJson(const nlohmann::json& json) {
   if (json.contains("name")) {
     meta.name = json["name"].get<std::string>();
   }
-  if (json.contains("graph_id")) {
-    meta.graph_id = json["graph_id"].get<GraphId>();
+  if (json.contains("bound_graph")) {
+    meta.bound_graph = json["bound_graph"].get<GraphId>();
   }
   if (json.contains("description")) {
     meta.description = json["description"].get<std::string>();
@@ -171,7 +170,7 @@ std::string PluginMeta::ToJson() const {
   nlohmann::json json;
   json["id"] = id;
   json["name"] = name;
-  json["graph_id"] = graph_id;
+  json["bound_graph"] = bound_graph;
   json["description"] = description;
   json["params"] = nlohmann::json::array();
   for (auto& param : params) {
@@ -238,16 +237,16 @@ void PluginMeta::setOptionFromJsonString(const std::string& json_str) {
 std::string JobMeta::ToJson(bool print_log) const {
   nlohmann::json json;
   json["id"] = id;
-  json["graph_id"] = graph_id;
   json["status"] = std::to_string(status);
   json["start_time"] = start_time;
-  json["process_id"] = process_id;
   json["end_time"] = end_time;
   if (print_log) {
     json["log"] = read_file_to_string(log_path);
   } else {
     json["log_path"] = log_path;
   }
+  json["detail"]["graph_id"] = graph_id;
+  json["detail"]["process_id"] = process_id;
   json["type"] = type;
   return json.dump();
 }
@@ -266,16 +265,20 @@ JobMeta JobMeta::FromJson(const nlohmann::json& json) {
       meta.id = json["id"].get<JobId>();
     }
   }
-  if (json.contains("graph_id")) {
-    if (json["graph_id"].is_number()) {
-      meta.graph_id = json["graph_id"].get<int64_t>();
-    } else {
-      meta.graph_id = json["graph_id"].get<GraphId>();
+  if (json.contains("detail")) {
+    auto detail = json["detail"];
+    if (detail.contains("graph_id")) {
+      if (detail["graph_id"].is_number()) {
+        meta.graph_id = detail["graph_id"].get<int64_t>();
+      } else {
+        meta.graph_id = detail["graph_id"].get<GraphId>();
+      }
+    }
+    if (detail.contains("process_id")) {
+      meta.process_id = detail["process_id"].get<int32_t>();
     }
   }
-  if (json.contains("process_id")) {
-    meta.process_id = json["process_id"].get<int32_t>();
-  }
+
   if (json.contains("start_time")) {
     meta.start_time = json["start_time"].get<int64_t>();
   }
@@ -295,13 +298,6 @@ JobMeta JobMeta::FromJson(const nlohmann::json& json) {
   return meta;
 }
 
-bool CreateGraphMetaRequest::GetIsBuiltin() const {
-  if (is_builtin.has_value()) {
-    return is_builtin.value();
-  }
-  return false;
-}
-
 CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
   CreateGraphMetaRequest request;
@@ -312,11 +308,9 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << e.what();
     return request;
   }
+
   if (json.contains("name")) {
     request.name = json["name"].get<std::string>();
-  }
-  if (json.contains("is_builtin")) {
-    request.is_builtin = json["is_builtin"].get<bool>();
   }
   if (json.contains("description")) {
     request.description = json["description"].get<std::string>();
@@ -336,11 +330,6 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
 std::string CreateGraphMetaRequest::ToString() const {
   nlohmann::json json;
   json["name"] = name;
-  if (is_builtin.has_value()) {
-    json["is_builtin"] = is_builtin.value();
-  } else {
-    json["is_builtin"] = false;
-  }
   json["description"] = description;
   json["schema"] = nlohmann::json::parse(schema);
   if (data_update_time.has_value()) {
@@ -387,7 +376,7 @@ std::string CreatePluginMetaRequest::ToString() const {
   if (id.has_value()) {
     json["id"] = id.value();
   }
-  json["graph_id"] = graph_id;
+  json["bound_graph"] = bound_graph;
   json["name"] = name;
   json["creation_time"] = creation_time;
   json["description"] = description;
@@ -437,11 +426,11 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
   if (j.contains("name")) {
     request.name = j["name"].get<std::string>();
   }
-  if (j.contains("graph_id")) {
-    if (j["id"].is_number()) {
-      request.graph_id = j["graph_id"].get<int64_t>();
+  if (j.contains("bound_graph")) {
+    if (j["bound_graph"].is_number()) {
+      request.bound_graph = j["bound_graph"].get<int64_t>();
     } else {
-      request.graph_id = j["graph_id"].get<PluginId>();
+      request.bound_graph = j["bound_graph"].get<PluginId>();
     }
   }
   if (j.contains("creation_time")) {
@@ -508,7 +497,7 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
     } else {
       request.update_time = GetCurrentTimeStamp();
     }
-    if (j.contains("params")) {
+    if (j.contains("params") && j["params"].is_array()) {
       request.params = std::vector<Parameter>();
       for (auto& param : j["params"]) {
         Parameter p;
@@ -518,7 +507,7 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
         request.params->emplace_back(std::move(p));
       }
     }
-    if (j.contains("returns")) {
+    if (j.contains("returns") && j["returns"].is_array()) {
       request.returns = std::vector<Parameter>();
       for (auto& ret : j["returns"]) {
         Parameter p;
@@ -586,8 +575,8 @@ std::string UpdatePluginMetaRequest::ToString() const {
   if (name.has_value()) {
     json["name"] = name.value();
   }
-  if (graph_id.has_value()) {
-    json["graph_id"] = graph_id.value();
+  if (bound_graph.has_value()) {
+    json["bound_graph"] = bound_graph.value();
   }
   if (description.has_value()) {
     json["description"] = description.value();
