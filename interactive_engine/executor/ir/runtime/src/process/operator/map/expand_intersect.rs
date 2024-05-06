@@ -16,6 +16,7 @@
 use std::any::Any;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
+use std::ops::RangeBounds;
 
 use dyn_type::BorrowObject;
 use graph_proxy::apis::graph::element::GraphElement;
@@ -243,15 +244,104 @@ impl FilterMapFuncGen for pb::EdgeExpand {
     }
 }
 
+// EdgeMatching denotes the matching of edges of one EdgeExpand during the intersection,
+// e.g., from a previously matched vertex a1, we expand an edge [a1->c1].
+// We define `EdgeMatching` (rather than use Edge directly), to support duplicated edge matchings,
+// e.g., we may actually expand two a1->c1 (with different edge types).
+#[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
+struct EdgeMatching {
+    matching: Vec<Edge>,
+}
+
+impl Default for EdgeMatching {
+    fn default() -> Self {
+        Self { matching: Vec::new() }
+    }
+}
+
+impl EdgeMatching {
+    fn new(matching: Vec<Edge>) -> EdgeMatching {
+        EdgeMatching { matching }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.matching.is_empty()
+    }
+}
+
+impl Encode for EdgeMatching {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.matching.write_to(writer)
+    }
+}
+
+impl Decode for EdgeMatching {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let matching = <Vec<Edge>>::read_from(reader)?;
+        Ok(EdgeMatching { matching })
+    }
+}
+
+// The EdgeMatchings starting from the same vertex during the intersection.
+// e.g., from a previously matched edge [a1->b1], when expanding `EdgeExpand`s from vertices a1,
+// we have EdgeMatchings of [a1->c1, a1->c2, a1->c3]
+#[derive(Debug, Clone, Hash, PartialEq, PartialOrd, Default)]
+struct EdgeMatchings {
+    matchings: Vec<EdgeMatching>,
+}
+
+impl EdgeMatchings {
+    fn with_capacity(capacity: usize) -> EdgeMatchings {
+        EdgeMatchings { matchings: vec![EdgeMatching::default(); capacity] }
+    }
+
+    fn new(matchings: Vec<EdgeMatching>) -> EdgeMatchings {
+        EdgeMatchings { matchings }
+    }
+
+    fn swap(&mut self, a: usize, b: usize) {
+        self.matchings.swap(a, b);
+    }
+
+    fn drain<R>(&mut self, range: R)
+    where
+        R: RangeBounds<usize>,
+    {
+        self.matchings.drain(range);
+    }
+}
+
+impl Encode for EdgeMatchings {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.matchings.write_to(writer)
+    }
+}
+
+impl Decode for EdgeMatchings {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let matchings = <Vec<EdgeMatching>>::read_from(reader)?;
+        Ok(EdgeMatchings { matchings })
+    }
+}
+
 /// A more general entry implementation for intersection, which preserves the expanded edges if needed;
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub struct GeneralIntersectionEntry {
+    // Preserves the common intersected vertices, e.g., [c1,c2,c3]
     vertex_vec: Vec<ID>,
-    // A list of results output by the EdgeExpand in the intersection.
-    // Each entry is a Vec<Vec<Edge>>, that is, the adjacent edges targeting to each vertex in the vertex_vec (corresponding to the same index).
-    // Note that each entry would be tagged, and the tags are stored in edge_tags.
-    edge_vecs: Vec<Vec<Vec<Edge>>>,
+    // Preserves the EdgeMatchings during the intersection.
+    // Each entry is one EdgeMatchings, that is, the adjacent edges targeting to each vertex in the vertex_vec (corresponding to the same index).
+    // e.g., from a previously matched edge [a1->b1], to intersect two `EdgeExpand`s from a1 and b1 respectively, we may have results:
+    // [
+    //  [a1->c1, a1->c2, a1->c3]
+    //  [b1->c1, b1->c2, b1->c3]
+    // ]
+    edge_vecs: Vec<EdgeMatchings>,
+    // A list of tags, each tags the results of one EdgeExpand during the intersection.
+    // e.g., for two `EdgeExpands`, we may have tags of [TagA, TagB],
+    // then, edge matchings a1->c1, a1->c2, a1->c3 has tag of TagA, and b1->c1, b1->c2, b1->c3 has tag of TagB.
     edge_tags: Vec<KeyId>,
+    // the number of matchings for each intersected vertices
     count_vec: Vec<u32>,
 }
 
@@ -293,11 +383,11 @@ impl GeneralIntersectionEntry {
         for (vertex, edges) in vertex_edge_map.into_iter() {
             vertex_vec.push(vertex);
             count_vec.push(edges.len() as u32);
-            edge_vec.push(edges);
+            edge_vec.push(EdgeMatching::new(edges));
         }
         GeneralIntersectionEntry {
             vertex_vec,
-            edge_vecs: vec![edge_vec],
+            edge_vecs: vec![EdgeMatchings::new(edge_vec)],
             edge_tags: vec![edge_tag],
             count_vec,
         }
@@ -348,7 +438,7 @@ impl GeneralIntersectionEntry {
             }
         }
         let mut idx = 0;
-        let mut new_edge_vec = vec![Vec::new(); len];
+        let mut expanded_edge_matchings = EdgeMatchings::with_capacity(len);
         for (i, edges) in e.into_iter().enumerate() {
             let cnt = edges.len() as u32;
             if cnt != 0 {
@@ -358,7 +448,7 @@ impl GeneralIntersectionEntry {
                     edge_vec.swap(idx, i);
                 }
                 self.count_vec[idx] *= cnt;
-                new_edge_vec[idx] = edges;
+                expanded_edge_matchings.matchings[idx] = EdgeMatching::new(edges);
                 idx += 1;
             }
         }
@@ -367,9 +457,9 @@ impl GeneralIntersectionEntry {
         for edge_vec in self.edge_vecs.iter_mut() {
             edge_vec.drain(idx..);
         }
-        new_edge_vec.drain(idx..);
-        if !new_edge_vec.is_empty() {
-            self.edge_vecs.push(new_edge_vec);
+        expanded_edge_matchings.matchings.drain(idx..);
+        if !expanded_edge_matchings.matchings.is_empty() {
+            self.edge_vecs.push(expanded_edge_matchings);
             self.edge_tags.push(edge_tag);
         }
     }
@@ -393,27 +483,41 @@ impl GeneralIntersectionEntry {
             .flat_map(move |(vertex, count)| std::iter::repeat(vertex).take(*count as usize))
     }
 
-    // output the results of matchings in the intersection, which is a vec of (ID, Vec<Vec<(&Edge, KeyId)>>),
-    // that ID is the target vertex id, and Vec<Vec<(&Edge, KeyId)>> is the matched edges (with aliases) adjacent to the target vertex.
-    // Specifically, each matching is a vec of (Edge, KeyId) pairs, denoting the columns in a record.
+    // output the results of matchings in the intersection.
+    // e.g., edge_vecs preserves
+    // [
+    //  [a1->c1, a1->c2, a1->c3]
+    //  [b1->c1, b1->c2, b1->c3]
+    // ]
+    // with edge_tags as [TagA, TagB],
+    // then the output looks like:
+    // (c1, [(a1->c1, TagA), (b1->c1, TagB)]), (c2, [(a1->c2, TagA), (b1->c2, TagB)]), (c3, [(a1->c3, TagA), (b1->c3, TagB)])
+    // Here, each item corresponds to a record (a complete matching).
     pub fn matchings_iter(&self) -> impl Iterator<Item = (ID, Vec<Vec<(&Edge, KeyId)>>)> {
         if self.edge_vecs.is_empty() {
             return vec![].into_iter();
         }
         let mut result = Vec::with_capacity(self.vertex_vec.len());
-        for i in 0..self.edge_vecs[0].len() {
-            if self.edge_vecs[0][i].len() == 0 {
-                warn!("Empty edge_vecs[0][{}], should be erased", i);
+        for i in 0..self.edge_vecs[0].matchings.len() {
+            if self.edge_vecs[0].matchings[i].is_empty() {
+                warn!(
+                    "The {}-th entry of {:?} is empty in intersection, should be erased",
+                    i, self.edge_vecs[0]
+                );
                 continue;
             }
             // the target vertex id
-            let dst = self.edge_vecs[0][i][0].get_other_id();
+            let dst = self.edge_vecs[0].matchings[i].matching[0].get_other_id();
             // the records with target dst consists of columns of TagA, TagB, ..., which is a cartesian product of all these tags
             let product = (0..self.edge_vecs.len())
-                .map(|tag_idx| &self.edge_vecs[tag_idx][i])
+                .map(|tag_idx| &self.edge_vecs[tag_idx].matchings[i].matching)
                 .multi_cartesian_product();
             let records_num: usize = (0..self.edge_vecs.len())
-                .map(|tag_index| self.edge_vecs[tag_index][i].len())
+                .map(|tag_index| {
+                    self.edge_vecs[tag_index].matchings[i]
+                        .matching
+                        .len()
+                })
                 .product();
             let mut records = Vec::with_capacity(records_num);
             // each combination can be regarded as multiple columns in record (with no alias, so we need to zip it).
@@ -443,7 +547,7 @@ impl Encode for GeneralIntersectionEntry {
 impl Decode for GeneralIntersectionEntry {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let vertex_vec = <Vec<ID>>::read_from(reader)?;
-        let edge_vecs = <Vec<Vec<Vec<Edge>>>>::read_from(reader)?;
+        let edge_vecs = <Vec<EdgeMatchings>>::read_from(reader)?;
         let edge_tags = <Vec<KeyId>>::read_from(reader)?;
         let count_vec = <Vec<u32>>::read_from(reader)?;
         Ok(GeneralIntersectionEntry { vertex_vec, edge_vecs, edge_tags, count_vec })
@@ -655,8 +759,10 @@ mod tests {
 
     fn general_intersect_test(iter1: Vec<(ID, ID)>, iter2: Vec<(ID, ID)>) -> Vec<Vec<(ID, ID, KeyId)>> {
         let mut intersection = GeneralIntersectionEntry::from_edge_iter(to_edge_iter(iter1), EDGE_TAG_A);
+        println!("intersection: {:?}", intersection);
         let seeker = to_edge_iter(iter2);
         intersection.general_intersect(seeker, EDGE_TAG_B);
+        println!("intersection: {:?}", intersection);
         let mut records = vec![];
         let matchings_collect = intersection.matchings_iter();
         for (vid, matchings) in matchings_collect {
