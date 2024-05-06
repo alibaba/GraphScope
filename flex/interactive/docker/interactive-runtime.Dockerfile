@@ -81,6 +81,7 @@ RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/engine_config_test.yaml /opt/flex/share/engine_config.yaml
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/docker/entrypoint.sh /opt/flex/bin/entrypoint.sh
+COPY --from=builder /home/graphscope/GraphScope/flex/third_party/nlohmann-json/single_include/* /opt/flex/include/
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml
 # change the default graph name.
 RUN sed -i 's/default_graph: ldbc/default_graph: gs_interactive_default_graph/g' /opt/flex/share/engine_config.yaml
@@ -90,6 +91,7 @@ RUN rm -rf /opt/flex/bin/run_app
 
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libsnappy*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/include/arrow /usr/include/arrow
+COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libgflags*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libglog*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libyaml-cpp*.so* /usr/lib/$ARCH-linux-gnu/
