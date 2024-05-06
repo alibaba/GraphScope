@@ -20,15 +20,16 @@ import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.metrics.AvgMetric;
-import com.alibaba.graphscope.groot.metrics.MetricsAgent;
-import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.*;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,12 +54,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
-public class StoreService implements MetricsAgent {
+
+public class StoreService {
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
-
-    private static final String PARTITION_WRITE_PER_SECOND_MS = "partition.write.per.second.ms";
 
     private final Configs storeConfigs;
     private final int storeId;
@@ -75,12 +74,15 @@ public class StoreService implements MetricsAgent {
     private final boolean enableGc;
     private volatile boolean shouldStop = true;
     private final boolean isSecondary;
-
-    private volatile long lastUpdateTime;
-    private Map<Integer, AvgMetric> partitionToMetric;
+    private Meter meter;
+    private LongCounter writeRequestSuccessCount;
+    private LongCounter writeRequestFailureCount;
+    private LongHistogram writeRequestLatency;
+    private LongHistogram garbageCollectLatency;
+    private ObservableDoubleGauge diskUsedPercentage;
 
     public StoreService(
-            Configs storeConfigs, MetaService metaService, MetricsCollector metricsCollector) {
+            Configs storeConfigs, MetaService metaService) {
         this.storeConfigs = storeConfigs;
         this.storeId = CommonConfig.NODE_IDX.get(storeConfigs);
         this.enableGc = StoreConfig.STORE_GC_ENABLE.get(storeConfigs);
@@ -88,7 +90,6 @@ public class StoreService implements MetricsAgent {
         this.compactThreadCount = StoreConfig.STORE_COMPACT_THREAD_NUM.get(storeConfigs);
         this.metaService = metaService;
         this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(storeConfigs);
-        metricsCollector.register(this, this::updateMetrics);
     }
 
     public void start() throws IOException {
@@ -213,6 +214,7 @@ public class StoreService implements MetricsAgent {
 
     public boolean batchWrite(StoreDataBatch storeDataBatch)
             throws ExecutionException, InterruptedException {
+        long start = System.currentTimeMillis();
         long snapshotId = storeDataBatch.getSnapshotId();
         List<Map<Integer, OperationBatch>> dataBatch = storeDataBatch.getDataBatch();
         AtomicBoolean hasDdl = new AtomicBoolean(false);
@@ -242,7 +244,7 @@ public class StoreService implements MetricsAgent {
                             if (partitionId != -1) {
                                 // Ignore Marker
                                 // Only support partition operation for now
-                                long beforeWriteTime = System.nanoTime();
+                                long start = System.currentTimeMillis();
                                 GraphPartition partition = this.idToPartition.get(partitionId);
                                 if (partition == null) {
                                     throw new IllegalStateException(
@@ -253,10 +255,8 @@ public class StoreService implements MetricsAgent {
                                 if (partition.writeBatch(snapshotId, batch)) {
                                     hasDdl.set(true);
                                 }
-                                long afterWriteTime = System.nanoTime();
-                                this.partitionToMetric
-                                        .get(partitionId)
-                                        .add(afterWriteTime - beforeWriteTime);
+                                this.writeRequestLatency.record(System.currentTimeMillis() - start);
+                                this.writeRequestSuccessCount.add(batch.getOperationCount());
                             }
                         } catch (Exception ex) {
                             logger.error(
@@ -268,6 +268,10 @@ public class StoreService implements MetricsAgent {
                             if (ex.getMessage().contains(msg)) {
                                 logger.warn("Ignored write in secondary instance, {}", msg);
                             } else {
+                                Attributes attrs =
+                                        Attributes.of(
+                                                AttributeKey.stringKey("partitionID"), ex.getMessage());
+                                this.writeRequestFailureCount.add(batch.getOperationCount(), attrs);
                                 batchNeedRetry.put(partitionId, batch);
                             }
                         }
@@ -400,12 +404,18 @@ public class StoreService implements MetricsAgent {
                         callback.onError(e);
                     }
                 });
+
     }
 
     private void garbageCollectInternal(long snapshotId) throws IOException {
         for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
+            Attributes attrs =
+                    Attributes.of(
+                            AttributeKey.longKey("partitionID"), entry.getKey().longValue());
             GraphPartition partition = entry.getValue();
+            long start = System.currentTimeMillis();
             partition.garbageCollect(snapshotId);
+            this.garbageCollectLatency.record(System.currentTimeMillis() - start, attrs);
         }
     }
 
@@ -471,45 +481,16 @@ public class StoreService implements MetricsAgent {
         }
     }
 
-    private void updateMetrics() {
-        long currentTime = System.nanoTime();
-        long interval = currentTime - this.lastUpdateTime;
-        if (this.partitionToMetric != null) {
-            this.partitionToMetric.values().forEach(m -> m.update(interval));
-        }
-        this.lastUpdateTime = currentTime;
-    }
-
-    @Override
     public void initMetrics() {
-        this.lastUpdateTime = System.nanoTime();
-        this.partitionToMetric = new HashMap<>();
-        for (Integer id : this.idToPartition.keySet()) {
-            this.partitionToMetric.put(id, new AvgMetric());
-        }
-    }
-
-    @Override
-    public Map<String, String> getMetrics() {
-        List<String> partitionWritePerSecondMs =
-                partitionToMetric.entrySet().stream()
-                        .map(
-                                entry ->
-                                        String.format(
-                                                "%s:%s",
-                                                entry.getKey(),
-                                                (int) (1000 * entry.getValue().getAvg())))
-                        .collect(Collectors.toList());
-        return new HashMap<String, String>() {
-            {
-                put(PARTITION_WRITE_PER_SECOND_MS, String.valueOf(partitionWritePerSecondMs));
-            }
-        };
-    }
-
-    @Override
-    public String[] getMetricKeys() {
-        return new String[] {PARTITION_WRITE_PER_SECOND_MS};
+        this.meter = GlobalOpenTelemetry.getMeter("GraphWriter");
+        this.writeRequestSuccessCount = meter.counterBuilder("write-request-success-count").build();
+        this.writeRequestFailureCount = meter.counterBuilder("write-request-failure-count").build();
+        this.writeRequestLatency = meter.histogramBuilder("write-request-latency").ofLongs().setUnit("ms").build();
+        this.garbageCollectLatency = meter.histogramBuilder("garbage-collect-latency").ofLongs().setUnit("ms").build();
+        this.diskUsedPercentage = meter.gaugeBuilder("store-disk-usage").buildWithCallback(result -> {
+            long[] ret = getDiskStatus();
+            result.record(ret[0] * 1.0 / ret[1]);
+        });
     }
 
     public long[] getDiskStatus() {

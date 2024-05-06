@@ -19,8 +19,6 @@ import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
-import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
@@ -60,11 +58,9 @@ public class Store extends NodeBase {
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
-        MetricsCollector metricsCollector = new MetricsCollector(configs);
-        this.storeService = new StoreService(configs, this.metaService, metricsCollector);
+        this.storeService = new StoreService(configs, this.metaService);
         RoleClients<SnapshotCommitClient> snapshotCommitter =
                 new RoleClients<>(channelManager, RoleType.COORDINATOR, SnapshotCommitClient::new);
-        MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         LogService logService = LogServiceFactory.makeLogService(configs);
 
         this.writerAgent =
@@ -72,8 +68,7 @@ public class Store extends NodeBase {
                         configs,
                         this.storeService,
                         this.metaService,
-                        snapshotCommitter,
-                        metricsCollector);
+                        snapshotCommitter);
         this.backupAgent = new BackupAgent(configs, this.storeService);
         StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);
@@ -86,8 +81,7 @@ public class Store extends NodeBase {
                         storeBackupService,
                         storeSchemaService,
                         storeIngestService,
-                        storeSnapshotService,
-                        metricsCollectService);
+                        storeSnapshotService);
         IrServiceProducer serviceProducer = new IrServiceProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);

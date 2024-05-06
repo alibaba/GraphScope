@@ -58,6 +58,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -110,6 +112,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected final QueryCache queryCache;
     protected final ExecutionClient executionClient;
     Tracer tracer;
+    Meter meter;
+    LongHistogram histogram;
 
     public IrStandardOpProcessor(
             Configs configs,
@@ -139,6 +143,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.queryCache = queryCache;
         this.executionClient = executionClient;
         this.tracer = GlobalOpenTelemetry.getTracer("compiler");
+        this.meter = GlobalOpenTelemetry.getMeter("query");
+        this.histogram = meter.histogramBuilder("query").setUnit("ms").ofLongs().build();
     }
 
     @Override
@@ -296,7 +302,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
     protected QueryStatusCallback createQueryStatusCallback(String query, BigInteger queryId) {
         return new QueryStatusCallback(
-                new MetricsCollector(evalOpTimer), new QueryLogger(query, queryId));
+                new MetricsCollector(evalOpTimer), histogram, new QueryLogger(query, queryId));
     }
 
     protected GremlinExecutor.LifeCycle createLifeCycle(
