@@ -10,7 +10,7 @@ COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 SHELL ["/bin/bash", "-c"]
 
 # install arrow
-RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget && \
+RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget libcurl4-openssl-dev && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
     sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
@@ -23,7 +23,7 @@ RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   cargo --version
 
 # install opentelemetry
-RUN cd /tmp && git clone https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
+RUN cd /tmp && git clone -b v1.14.2 --single-branch https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
 cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
 -DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
 -DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
@@ -112,6 +112,7 @@ COPY --from=builder /usr/lib/$ARCH-linux-gnu/libre2*.so* /usr/lib/$ARCH-linux-gn
 COPY --from=builder /usr/include/glog /usr/include/glog
 COPY --from=builder /usr/include/gflags /usr/include/gflags
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libprotobuf* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libfmt*.so* /usr/lib/$ARCH-linux-gnu/
 
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/openmpi/include/ /opt/flex/include
 COPY --from=builder /usr/include/boost /usr/include/boost
