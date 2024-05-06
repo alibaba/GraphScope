@@ -35,6 +35,7 @@ To start the Interactive service, provide the raw graph data and meta info. For 
 bin/gs_interactive service start
 ```
 You should be able to see a message telling you what the `Gremlin/Cypher` endpoint that you should connect to.
+At the same time, you will also see another prompt message displaying the `INTERACTIVE_ENDPOINT`, which you can use [Java SDK](./development/java/java_sdk) or [Python SDK](./development/python/python_sdk) to connect to.
 
 ### Stop the Service
 To stop the Interactive service, simple type in the following command:
