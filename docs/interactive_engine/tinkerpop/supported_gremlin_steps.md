@@ -770,6 +770,7 @@ aggregate | AVG | calculate the average value of the elements | unsupported | AV
 aggregate | COLLECT | fold the elements into a list | unsupported | COLLECT(_.age)
 aggregate | HEAD(COLLECT()) | find the first value of the elements | unsupported | HEAD(COLLECT(_.age))
 other | LABELS | get the labels of the specified tag which is a vertex | @a.~label | LABELS(a)
+other | elementId | get a vertex or an edge identifier, unique by an object type and a database | @a.~id | elementId(a)
 other | TYPE | get the type of the specified tag which is an edge | @a.~label |TYPE(a)
 other | LENGTH | get the length of the specified tag which is a path | @a.~len | LENGTH(a)
 

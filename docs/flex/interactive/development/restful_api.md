@@ -1,8 +1,8 @@
-# GraphScope Interactive Admin Service Documentation
+# RESTful API Documentation
 
 ## Introduction
 
-Welcome to the GraphScope Interactive Admin Service documentation. This guide is tailored for developers and administrators seeking to manage the Interactive service more efficiently. Here, we delve into the intricate workings of the RESTful HTTP interfaces provided by the Interactive Admin service, offering a comprehensive toolkit for real-time service management. This document is crucial for those looking to customize or enhance their GraphScope Interactive experience.
+Welcome to the GraphScope Interactive RESTful API documentation. This guide is tailored for developers and administrators seeking to manage the Interactive service more efficiently. Here, we delve into the intricate workings of the RESTful HTTP interfaces provided by the Interactive Admin service, offering a comprehensive toolkit for real-time service management. This document is crucial for those looking to customize or enhance their GraphScope Interactive experience.
 
 ## API Overview
 

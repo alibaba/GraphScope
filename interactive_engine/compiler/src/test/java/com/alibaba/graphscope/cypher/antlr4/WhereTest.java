@@ -273,4 +273,15 @@ public class WhereTest {
         }
         Assert.fail("should have thrown exceptions for property 'name' is not a date type");
     }
+
+    @Test
+    public void where_11_test() {
+        // the condition is fused into source and identified as primary key filtering
+        RelNode where = Utils.eval("Match (a:person) Where elementId(a) = 2 Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX], uniqueKeyFilters=[=(_.~id, 2)])",
+                where.explain().trim());
+    }
 }
