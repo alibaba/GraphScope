@@ -613,7 +613,7 @@ public class GraphBuilder extends RelBuilder {
                                                 AliasInference.DEFAULT_ID,
                                                 fields.get(fields.size() - 1).getType())));
                     } else { // If the output of the current operator consists of multiple columns,
-                             // we transform `head` into all columns of the current operator.
+                        // we transform `head` into all columns of the current operator.
                         return fields.stream()
                                 .map(field -> new ColumnField(getColumnIndex(cur, field), field))
                                 .collect(Collectors.toList());
