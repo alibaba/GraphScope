@@ -47,6 +47,9 @@ public abstract class AliasInference {
     public static final String DEFAULT_NAME = "_";
     public static final int DEFAULT_ID = -1;
 
+    // denote all columns, to support count star
+    public static final String STAR = "*";
+
     public static final int DEFAULT_COLUMN_ID = 100;
 
     public static final String DELIMITER = ".";
