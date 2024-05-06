@@ -38,14 +38,17 @@ namespace gs {
  *
  * @tparam FRAG_T Should be vineyard::ArrowFragment<...>
  */
-template <typename FRAG_T>
+template <typename FRAG_T,
+          grape::MessageStrategy Strategy =
+              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
 class JavaPIEPropertyParallelApp
     : public ParallelPropertyAppBase<FRAG_T,
                                      JavaPIEPropertyParallelContext<FRAG_T>>,
       public grape::Communicator {
  public:
+  using app_type = JavaPIEPropertyParallelApp<FRAG_T, Strategy>;
   // specialize the templated worker.
-  INSTALL_JAVA_PARALLEL_PROPERTY_WORKER(JavaPIEPropertyParallelApp<FRAG_T>,
+  INSTALL_JAVA_PARALLEL_PROPERTY_WORKER(app_type,
                                         JavaPIEPropertyParallelContext<FRAG_T>,
                                         FRAG_T);
   static constexpr grape::LoadStrategy load_strategy =
@@ -122,33 +125,22 @@ class JavaPIEPropertyParallelApp
 };
 
 template <typename FRAG_T>
-class JavaPIEPropertyParallelAppOE : public JavaPIEPropertyParallelApp<FRAG_T> {
- public:
-  static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
-};
+using JavaPIEPropertyParallelAppOE = JavaPIEPropertyParallelApp<
+    FRAG_T, grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>;
 
 template <typename FRAG_T>
-class JavaPIEPropertyParallelAppIE : public JavaPIEPropertyParallelApp<FRAG_T> {
- public:
-  static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex;
-};
+using JavaPIEPropertyParallelAppIE = JavaPIEPropertyParallelApp<
+    FRAG_T, grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex>;
 
 template <typename FRAG_T>
-class JavaPIEPropertyParallelAppE : public JavaPIEPropertyParallelApp<FRAG_T> {
- public:
-  static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongEdgeToOuterVertex;
-};
+using JavaPIEPropertyParallelAppE =
+    JavaPIEPropertyParallelApp<FRAG_T,
+                               grape::MessageStrategy::kAlongEdgeToOuterVertex>;
 
 template <typename FRAG_T>
-class JavaPIEPropertyParallelAppSync
-    : public JavaPIEPropertyParallelApp<FRAG_T> {
- public:
-  static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kSyncOnOuterVertex;
-};
+using JavaPIEPropertyParallelAppSync =
+    JavaPIEPropertyParallelApp<FRAG_T,
+                               grape::MessageStrategy::kSyncOnOuterVertex>;
 
 }  // namespace gs
 #endif

@@ -1567,4 +1567,15 @@ public class GraphBuilderTest {
                         + " person]}], alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
+
+    @Test
+    public void g_V_as_a_select_expr_id_a_test() {
+        // the condition is fused into source and identified as primary key filtering
+        RelNode node = eval("g.V().as('a').where(expr(elementId(a) = 2))");
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], opt=[VERTEX], uniqueKeyFilters=[=(_.~id, 2)])",
+                node.explain().trim());
+    }
 }

@@ -420,6 +420,13 @@ public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult
                         "'type' can only be applied on edge type");
                 return new ExprVisitorResult(
                         builder.variable(exprCtx.get(0).getText(), GraphProperty.LABEL_KEY));
+            case "ELEMENTID":
+                RexNode idVar = builder.variable(exprCtx.get(0).getText());
+                Preconditions.checkArgument(
+                        idVar.getType() instanceof GraphSchemaType,
+                        "'elementId' can only be applied on vertex or edge type");
+                return new ExprVisitorResult(
+                        builder.variable(exprCtx.get(0).getText(), GraphProperty.ID_KEY));
             case "LENGTH":
                 Preconditions.checkArgument(
                         !exprCtx.isEmpty(), "LENGTH function should have one argument");
