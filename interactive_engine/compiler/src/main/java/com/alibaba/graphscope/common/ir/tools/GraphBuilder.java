@@ -461,7 +461,7 @@ public class GraphBuilder extends RelBuilder {
             return RexGraphVariable.of(
                     aliasField.getIndex(),
                     columnField.left,
-                    AliasInference.SIMPLE_NAME(alias),
+                    aliasField.getName(),
                     aliasField.getType());
         } else {
             return RexGraphVariableList.of(
@@ -584,6 +584,21 @@ public class GraphBuilder extends RelBuilder {
      */
     private List<ColumnField> getAliasField(String alias) {
         Objects.requireNonNull(alias);
+        if (alias.equals(AliasInference.STAR)) {
+            RelNode peek = requireNonNull(peek(), "frame stack is empty");
+            RelDataType outputType =
+                    com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(peek);
+            return outputType.getFieldList().stream()
+                    .map(
+                            field -> {
+                                int columnIdx =
+                                        AliasInference.isDefaultAlias(field.getName())
+                                                ? AliasInference.DEFAULT_COLUMN_ID
+                                                : getColumnIndex(peek, field);
+                                return new ColumnField(columnIdx, field);
+                            })
+                    .collect(Collectors.toList());
+        }
         Set<String> aliases = new HashSet<>();
         int nodeIdx = 0;
         for (int inputOrdinal = 0; inputOrdinal < size(); ++inputOrdinal) {
@@ -811,7 +826,7 @@ public class GraphBuilder extends RelBuilder {
 
     @Override
     public GraphBuilder filter(Iterable<? extends RexNode> conditions) {
-        conditions = flatOperands((Iterable<RexNode>) conditions);
+        conditions = flatExprs((Iterable<RexNode>) conditions);
 
         RexVisitor propertyChecker = new RexPropertyChecker(true, this);
         for (RexNode condition : conditions) {
@@ -1220,7 +1235,7 @@ public class GraphBuilder extends RelBuilder {
         Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
         RexSimplify simplifier = Utils.getFieldValue(RelBuilder.class, this, "simplifier");
 
-        nodes = flatOperands((Iterable<RexNode>) nodes);
+        nodes = flatExprs((Iterable<RexNode>) nodes);
 
         List<RexNode> nodeList = Lists.newArrayList(nodes);
         List<@Nullable String> fieldNameList = Lists.newArrayList(aliases);
@@ -1404,7 +1419,7 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     private GroupKey groupKey_(List<RexNode> variables, List<@Nullable String> aliases) {
-        return new GraphGroupKeys((List<RexNode>) flatOperands(variables), aliases);
+        return new GraphGroupKeys((List<RexNode>) flatExprs(variables), aliases);
     }
 
     // build aggregate functions
@@ -1482,7 +1497,10 @@ public class GraphBuilder extends RelBuilder {
             ImmutableList<RexNode> orderKeys,
             @Nullable String alias,
             ImmutableList<RexNode> operands) {
-        operands = ImmutableList.copyOf(flatOperands(operands));
+        if (operands.isEmpty()) { // to support count star
+            operands = ImmutableList.of(variable(AliasInference.STAR));
+        }
+        operands = ImmutableList.copyOf(flatExprs(operands));
         return new GraphAggCall(getCluster(), aggFunction, operands).as(alias).distinct(distinct);
     }
 
@@ -1565,7 +1583,7 @@ public class GraphBuilder extends RelBuilder {
             throw new IllegalArgumentException("FETCH node must be RexLiteral");
         }
 
-        nodes = flatOperands((Iterable<RexNode>) nodes);
+        nodes = flatExprs((Iterable<RexNode>) nodes);
 
         RelNode input = requireNonNull(peek(), "frame stack is empty");
 
@@ -1672,7 +1690,7 @@ public class GraphBuilder extends RelBuilder {
     public GraphBuilder dedupBy(Iterable<? extends RexNode> nodes) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
 
-        nodes = flatOperands((Iterable<RexNode>) nodes);
+        nodes = flatExprs((Iterable<RexNode>) nodes);
 
         List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
 
@@ -1980,16 +1998,38 @@ public class GraphBuilder extends RelBuilder {
         return labelConfig;
     }
 
-    private Iterable<RexNode> flatOperands(Iterable<RexNode> operands) {
-        List<RexNode> flatOperands = Lists.newArrayList();
-        operands.forEach(
-                operand -> {
-                    if (operand instanceof RexGraphVariableList) {
-                        flatOperands.addAll((RexGraphVariableList) operand);
+    // flat each expression in the given expression list, i.e. flat `RexGraphVariableList([a, b,
+    // c])` to `List of [RexGraphVariable(a), RexGraphVariable(b), RexGraphVariable(c)]`
+    private Iterable<RexNode> flatExprs(Iterable<RexNode> exprs) {
+        List<RexNode> flatExprs = Lists.newArrayList();
+        exprs.forEach(
+                expr -> {
+                    if (expr instanceof RexCall) {
+                        List<RexNode> operands = ((RexCall) expr).getOperands();
+                        if (operands.stream()
+                                .anyMatch(operand -> operand instanceof RexGraphVariableList)) {
+                            switch (expr.getKind()) {
+                                case DESCENDING:
+                                    operands =
+                                            (List<RexNode>)
+                                                    flatExprs(ImmutableList.of(operands.get(0)));
+                                    operands.forEach(operand -> flatExprs.add(desc(operand)));
+                                    break;
+                                default:
+                                    throw new IllegalArgumentException(
+                                            "cannot flat operands of "
+                                                    + expr.getKind()
+                                                    + " operator");
+                            }
+                        } else {
+                            flatExprs.add(expr);
+                        }
+                    } else if (expr instanceof RexGraphVariableList) {
+                        flatExprs.addAll((RexGraphVariableList) expr);
                     } else {
-                        flatOperands.add(operand);
+                        flatExprs.add(expr);
                     }
                 });
-        return flatOperands;
+        return flatExprs;
     }
 }

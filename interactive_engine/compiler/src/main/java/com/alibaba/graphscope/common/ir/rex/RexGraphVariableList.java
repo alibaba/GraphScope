@@ -34,6 +34,8 @@ import java.util.ListIterator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+// denote a list of RexGraphVariable, to handle the special case of gremlin `head` if the input
+// operator outputs multiple columns
 public class RexGraphVariableList extends RexGraphVariable implements List<RexGraphVariable> {
     private final List<RexGraphVariable> innerList;
 
