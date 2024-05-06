@@ -38,7 +38,9 @@ namespace gs {
  *
  * @tparam FRAG_T Should be vineyard::ArrowFragment<...>
  */
-template <typename FRAG_T, grape::MessageStrategy Strategy>
+template <typename FRAG_T,
+          grape::MessageStrategy Strategy =
+              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
 class JavaPIEPropertyParallelApp
     : public ParallelPropertyAppBase<FRAG_T,
                                      JavaPIEPropertyParallelContext<FRAG_T>>,

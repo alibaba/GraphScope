@@ -36,7 +36,9 @@ namespace gs {
  *
  * @tparam FRAG_T Should be gs::ArrowProjectedFragment<...>
  */
-template <typename FRAG_T, grape::MessageStrategy Strategy>
+template <typename FRAG_T,
+          grape::MessageStrategy Strategy =
+              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
 class JavaPIEProjectedParallelApp
     : public grape::ParallelAppBase<FRAG_T,
                                     JavaPIEProjectedParallelContext<FRAG_T>>,
