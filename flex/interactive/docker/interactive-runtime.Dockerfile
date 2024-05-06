@@ -1,5 +1,5 @@
 ARG ARCH=x86_64
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:latest AS builder
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:v0.0.4.0 AS builder
 
 ARG ARCH
 ARG ENABLE_COORDINATOR="false"
