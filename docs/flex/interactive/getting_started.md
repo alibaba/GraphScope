@@ -34,8 +34,13 @@ To start the Interactive service, provide the raw graph data and meta info. For 
 ```bash
 bin/gs_interactive service start
 ```
-You should be able to see a message telling you what the `Gremlin/Cypher` endpoint that you should connect to.
-At the same time, you will also see another prompt message displaying the `INTERACTIVE_ENDPOINT`, which you can use [Java SDK](./development/java/java_sdk) or [Python SDK](./development/python/python_sdk) to connect to.
+You should be able to see the following prompt messages:
+```bash
+export INTERACTIVE_ADMIN_ENDPOINT={}
+export INTERACTIVE_BOLT_ENDPOINT={}
+export INTERACTIVE_GREMLIN_ENDPOINT={}
+```
+You can connect to the `INTERACTIVE_ADMIN_ENDPOINT` with [Java SDK](./development/java/java_sdk) or [Python SDK](./development/python/python_sdk), `INTERACTIVE_BOLT_ENDPOINT` with [Neo4j Cypher SDK](../../interactive_engine/neo4j/cypher_sdk.md) and `INTERACTIVE_GREMLIN_ENDPOINT` with [Tinkerpop Gremlin SDK](../../interactive_engine/tinkerpop/tinkerpop_gremlin.md).
 
 ### Stop the Service
 To stop the Interactive service, simple type in the following command:
