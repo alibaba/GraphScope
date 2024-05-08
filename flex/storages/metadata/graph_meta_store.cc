@@ -53,7 +53,7 @@ UpdateGraphMetaRequest::UpdateGraphMetaRequest(
 std::string Parameter::ToJson() const {
   nlohmann::json json;
   json["name"] = name;
-  json["type"] = config_parsing::PropertyTypeToString(type);
+  json["type"] = type;  // calls to_json implicitly
   return json.dump();
 }
 
@@ -61,7 +61,6 @@ std::string GraphMeta::ToJson() const {
   nlohmann::json json;
   json["id"] = id;
   json["name"] = name;
-  json["is_builtin"] = is_builtin;
   json["description"] = description;
   json["creation_time"] = creation_time;
   json["data_update_time"] = data_update_time;
@@ -69,6 +68,11 @@ std::string GraphMeta::ToJson() const {
     json["data_import_config"] = nlohmann::json::parse(data_import_config);
   }
   json["schema"] = nlohmann::json::parse(schema);
+  json["stored_procedures"] = nlohmann::json::array();
+  for (auto& plugin_meta : plugin_metas) {
+    json["stored_procedures"].push_back(
+        nlohmann::json::parse(plugin_meta.ToJson()));
+  }
   return json.dump();
 }
 
@@ -86,8 +90,8 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
       meta.id = json["id"].get<GraphId>();
     }
   }
+
   meta.name = json["name"].get<std::string>();
-  meta.is_builtin = json["is_builtin"].get<bool>();
   meta.description = json["description"].get<std::string>();
   meta.creation_time = json["creation_time"].get<int64_t>();
   meta.schema = json["schema"].dump();
@@ -97,6 +101,11 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
   }
   if (json.contains("data_import_config")) {
     meta.data_import_config = json["data_import_config"].dump();
+  }
+  if (json.contains("stored_procedures")) {
+    for (auto& plugin : json["stored_procedures"]) {
+      meta.plugin_metas.push_back(PluginMeta::FromJson(plugin));
+    }
   }
   return meta;
 }
@@ -118,8 +127,8 @@ PluginMeta PluginMeta::FromJson(const nlohmann::json& json) {
   if (json.contains("name")) {
     meta.name = json["name"].get<std::string>();
   }
-  if (json.contains("graph_id")) {
-    meta.graph_id = json["graph_id"].get<GraphId>();
+  if (json.contains("bound_graph")) {
+    meta.bound_graph = json["bound_graph"].get<GraphId>();
   }
   if (json.contains("description")) {
     meta.description = json["description"].get<std::string>();
@@ -132,6 +141,12 @@ PluginMeta PluginMeta::FromJson(const nlohmann::json& json) {
   }
   if (json.contains("library")) {
     meta.library = json["library"].get<std::string>();
+  }
+  if (json.contains("query")) {
+    meta.query = json["query"].get<std::string>();
+  }
+  if (json.contains("type")) {
+    meta.type = json["type"].get<std::string>();
   }
   if (json.contains("option")) {
     meta.setOptionFromJsonString(json["option"].dump());
@@ -155,20 +170,20 @@ std::string PluginMeta::ToJson() const {
   nlohmann::json json;
   json["id"] = id;
   json["name"] = name;
-  json["graph_id"] = graph_id;
+  json["bound_graph"] = bound_graph;
   json["description"] = description;
   json["params"] = nlohmann::json::array();
   for (auto& param : params) {
     nlohmann::json p;
     p["name"] = param.name;
-    p["type"] = config_parsing::PropertyTypeToString(param.type);
+    p["type"] = param.type;
     json["params"].push_back(p);
   }
   json["returns"] = nlohmann::json::array();
   for (auto& ret : returns) {
     nlohmann::json r;
     r["name"] = ret.name;
-    r["type"] = config_parsing::PropertyTypeToString(ret.type);
+    r["type"] = ret.type;
     json["returns"].push_back(r);
   }
   for (auto& opt : option) {
@@ -178,6 +193,9 @@ std::string PluginMeta::ToJson() const {
   json["update_time"] = update_time;
   json["enable"] = enable;
   json["runnable"] = runnable;
+  json["library"] = library;
+  json["query"] = query;
+  json["type"] = type;
   return json.dump();
 }
 
@@ -191,8 +209,7 @@ void PluginMeta::setParamsFromJsonString(const std::string& json_str) {
     for (auto& param : j) {
       Parameter p;
       p.name = param["name"].get<std::string>();
-      p.type = config_parsing::StringToPropertyType(
-          param["type"].get<std::string>());
+      p.type = param["type"].get<PropertyType>();
       params.push_back(p);
     }
   } else {
@@ -205,8 +222,7 @@ void PluginMeta::setReturnsFromJsonString(const std::string& json_str) {
   for (auto& ret : j) {
     Parameter p;
     p.name = ret["name"].get<std::string>();
-    p.type =
-        config_parsing::StringToPropertyType(ret["type"].get<std::string>());
+    p.type = ret["type"].get<PropertyType>();
     returns.push_back(p);
   }
 }
@@ -221,16 +237,16 @@ void PluginMeta::setOptionFromJsonString(const std::string& json_str) {
 std::string JobMeta::ToJson(bool print_log) const {
   nlohmann::json json;
   json["id"] = id;
-  json["graph_id"] = graph_id;
   json["status"] = std::to_string(status);
   json["start_time"] = start_time;
-  json["process_id"] = process_id;
   json["end_time"] = end_time;
   if (print_log) {
     json["log"] = read_file_to_string(log_path);
   } else {
     json["log_path"] = log_path;
   }
+  json["detail"]["graph_id"] = graph_id;
+  json["detail"]["process_id"] = process_id;
   json["type"] = type;
   return json.dump();
 }
@@ -249,16 +265,20 @@ JobMeta JobMeta::FromJson(const nlohmann::json& json) {
       meta.id = json["id"].get<JobId>();
     }
   }
-  if (json.contains("graph_id")) {
-    if (json["graph_id"].is_number()) {
-      meta.graph_id = json["graph_id"].get<int64_t>();
-    } else {
-      meta.graph_id = json["graph_id"].get<GraphId>();
+  if (json.contains("detail")) {
+    auto detail = json["detail"];
+    if (detail.contains("graph_id")) {
+      if (detail["graph_id"].is_number()) {
+        meta.graph_id = detail["graph_id"].get<int64_t>();
+      } else {
+        meta.graph_id = detail["graph_id"].get<GraphId>();
+      }
+    }
+    if (detail.contains("process_id")) {
+      meta.process_id = detail["process_id"].get<int32_t>();
     }
   }
-  if (json.contains("process_id")) {
-    meta.process_id = json["process_id"].get<int32_t>();
-  }
+
   if (json.contains("start_time")) {
     meta.start_time = json["start_time"].get<int64_t>();
   }
@@ -278,13 +298,6 @@ JobMeta JobMeta::FromJson(const nlohmann::json& json) {
   return meta;
 }
 
-bool CreateGraphMetaRequest::GetIsBuiltin() const {
-  if (is_builtin.has_value()) {
-    return is_builtin.value();
-  }
-  return false;
-}
-
 CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
   CreateGraphMetaRequest request;
@@ -295,11 +308,9 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     LOG(ERROR) << "CreateGraphMetaRequest::FromJson error: " << e.what();
     return request;
   }
+
   if (json.contains("name")) {
     request.name = json["name"].get<std::string>();
-  }
-  if (json.contains("is_builtin")) {
-    request.is_builtin = json["is_builtin"].get<bool>();
   }
   if (json.contains("description")) {
     request.description = json["description"].get<std::string>();
@@ -319,11 +330,6 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
 std::string CreateGraphMetaRequest::ToString() const {
   nlohmann::json json;
   json["name"] = name;
-  if (is_builtin.has_value()) {
-    json["is_builtin"] = is_builtin.value();
-  } else {
-    json["is_builtin"] = false;
-  }
   json["description"] = description;
   json["schema"] = nlohmann::json::parse(schema);
   if (data_update_time.has_value()) {
@@ -340,7 +346,7 @@ std::string CreatePluginMetaRequest::paramsString() const {
   for (auto& param : params) {
     nlohmann::json param_json;
     param_json["name"] = param.name;
-    param_json["type"] = config_parsing::PropertyTypeToString(param.type);
+    param_json["type"] = param.type;
     json.push_back(param_json);
   }
   return json.dump();
@@ -351,7 +357,7 @@ std::string CreatePluginMetaRequest::returnsString() const {
   for (auto& ret : returns) {
     nlohmann::json ret_json;
     ret_json["name"] = ret.name;
-    ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
+    ret_json["type"] = ret.type;
     json.push_back(ret_json);
   }
   return json.dump();
@@ -370,7 +376,7 @@ std::string CreatePluginMetaRequest::ToString() const {
   if (id.has_value()) {
     json["id"] = id.value();
   }
-  json["graph_id"] = graph_id;
+  json["bound_graph"] = bound_graph;
   json["name"] = name;
   json["creation_time"] = creation_time;
   json["description"] = description;
@@ -378,14 +384,14 @@ std::string CreatePluginMetaRequest::ToString() const {
   for (auto& param : params) {
     nlohmann::json param_json;
     param_json["name"] = param.name;
-    param_json["type"] = config_parsing::PropertyTypeToString(param.type);
+    param_json["type"] = param.type;
     json["params"].push_back(param_json);
   }
   json["returns"] = nlohmann::json::array();
   for (auto& ret : returns) {
     nlohmann::json ret_json;
     ret_json["name"] = ret.name;
-    ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
+    ret_json["type"] = ret.type;
     json["returns"].push_back(ret_json);
   }
 
@@ -394,6 +400,8 @@ std::string CreatePluginMetaRequest::ToString() const {
   for (auto& opt : option) {
     json["option"][opt.first] = opt.second;
   }
+  json["query"] = query;
+  json["type"] = type;
   json["enable"] = enable;
   return json.dump();
 }
@@ -418,11 +426,11 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
   if (j.contains("name")) {
     request.name = j["name"].get<std::string>();
   }
-  if (j.contains("graph_id")) {
-    if (j["id"].is_number()) {
-      request.graph_id = j["graph_id"].get<int64_t>();
+  if (j.contains("bound_graph")) {
+    if (j["bound_graph"].is_number()) {
+      request.bound_graph = j["bound_graph"].get<int64_t>();
     } else {
-      request.graph_id = j["graph_id"].get<PluginId>();
+      request.bound_graph = j["bound_graph"].get<PluginId>();
     }
   }
   if (j.contains("creation_time")) {
@@ -435,8 +443,7 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
     for (auto& param : j["params"]) {
       Parameter p;
       p.name = param["name"].get<std::string>();
-      p.type = config_parsing::StringToPropertyType(
-          param["type"].get<std::string>());
+      p.type = param["type"].get<PropertyType>();
       request.params.push_back(p);
     }
   }
@@ -444,8 +451,7 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
     for (auto& ret : j["returns"]) {
       Parameter p;
       p.name = ret["name"].get<std::string>();
-      p.type =
-          config_parsing::StringToPropertyType(ret["type"].get<std::string>());
+      p.type = ret["type"].get<PropertyType>();
       request.returns.push_back(p);
     }
   }
@@ -456,6 +462,12 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
     for (auto& opt : j["option"].items()) {
       request.option[opt.key()] = opt.value().get<std::string>();
     }
+  }
+  if (j.contains("query")) {
+    request.query = j["query"].get<std::string>();
+  }
+  if (j.contains("type")) {
+    request.type = j["type"].get<std::string>();
   }
   if (j.contains("enable")) {
     request.enable = j["enable"].get<bool>();
@@ -485,32 +497,30 @@ UpdatePluginMetaRequest UpdatePluginMetaRequest::FromJson(
     } else {
       request.update_time = GetCurrentTimeStamp();
     }
-    if (j.contains("params")) {
-      request.params.emplace();
+    if (j.contains("params") && j["params"].is_array()) {
+      request.params = std::vector<Parameter>();
       for (auto& param : j["params"]) {
         Parameter p;
         p.name = param["name"].get<std::string>();
-        p.type = config_parsing::StringToPropertyType(
-            param["type"].get<std::string>());
+        p.type = param["type"].get<PropertyType>();
 
-        request.params->emplace_back(p);
+        request.params->emplace_back(std::move(p));
       }
     }
-    if (j.contains("returns")) {
-      request.returns.emplace();
+    if (j.contains("returns") && j["returns"].is_array()) {
+      request.returns = std::vector<Parameter>();
       for (auto& ret : j["returns"]) {
         Parameter p;
         p.name = ret["name"].get<std::string>();
-        p.type = config_parsing::StringToPropertyType(
-            ret["type"].get<std::string>());
-        request.returns->emplace_back(p);
+        p.type = ret["type"].get<PropertyType>();
+        request.returns->emplace_back(std::move(p));
       }
     }
     if (j.contains("library")) {
       request.library = j["library"].get<std::string>();
     }
     if (j.contains("option")) {
-      request.option.emplace();
+      request.option = std::unordered_map<std::string, std::string>();
       for (auto& opt : j["option"].items()) {
         request.option->insert({opt.key(), opt.value()});
       }
@@ -530,7 +540,7 @@ std::string UpdatePluginMetaRequest::paramsString() const {
     for (auto& param : params.value()) {
       nlohmann::json param_json;
       param_json["name"] = param.name;
-      param_json["type"] = config_parsing::PropertyTypeToString(param.type);
+      param_json["type"] = param.type;
       json.push_back(param_json);
     }
   }
@@ -543,7 +553,7 @@ std::string UpdatePluginMetaRequest::returnsString() const {
     for (auto& ret : returns.value()) {
       nlohmann::json ret_json;
       ret_json["name"] = ret.name;
-      ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
+      ret_json["type"] = ret.type;
       json.push_back(ret_json);
     }
   }
@@ -565,8 +575,8 @@ std::string UpdatePluginMetaRequest::ToString() const {
   if (name.has_value()) {
     json["name"] = name.value();
   }
-  if (graph_id.has_value()) {
-    json["graph_id"] = graph_id.value();
+  if (bound_graph.has_value()) {
+    json["bound_graph"] = bound_graph.value();
   }
   if (description.has_value()) {
     json["description"] = description.value();
@@ -580,8 +590,8 @@ std::string UpdatePluginMetaRequest::ToString() const {
     for (auto& param : params.value()) {
       nlohmann::json param_json;
       param_json["name"] = param.name;
-      param_json["type"] = config_parsing::PropertyTypeToString(param.type);
-      json["params"].push_back(param_json);
+      param_json["type"] = param.type;
+      json["params"].emplace_back(std::move(param_json));
     }
   }
 
@@ -590,8 +600,8 @@ std::string UpdatePluginMetaRequest::ToString() const {
     for (auto& ret : returns.value()) {
       nlohmann::json ret_json;
       ret_json["name"] = ret.name;
-      ret_json["type"] = config_parsing::PropertyTypeToString(ret.type);
-      json["returns"].push_back(ret_json);
+      ret_json["type"] = ret.type;
+      json["returns"].emplace_back(std::move(ret_json));
     }
   }
   if (library.has_value()) {

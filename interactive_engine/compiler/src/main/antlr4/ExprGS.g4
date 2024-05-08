@@ -128,13 +128,15 @@ FOLD : ( 'F' | 'f' ) ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'D' | 'd' );
 MEAN : ( 'M' | 'm' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'N' | 'n' );
 
 oC_ScalarFunctionInvocation
-    :  ( LENGTH | POWER | LABELS | TYPE | HEAD | DURATION ) SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
+    :  ( LENGTH | POWER | LABELS | ELEMENTID | TYPE | HEAD | DURATION ) SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
 
 LENGTH : ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'G' | 'g' ) ( 'T' | 't' ) ( 'H' | 'h' );
 
 POWER : ( 'P' | 'p' ) ( 'O' | 'o' ) ( 'W' | 'w' ) ( 'E' | 'e' ) ( 'R' | 'r' );
 
 LABELS : ( 'L' | 'l' ) ( 'A' | 'a' ) ( 'B' | 'b' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'S' | 's' );
+
+ELEMENTID: ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'D' | 'd' );
 
 TYPE : ( 'T' | 't' ) ( 'Y' | 'y' ) ( 'P' | 'p' ) ( 'E' | 'e' );
 
@@ -361,6 +363,7 @@ oC_SymbolicName
 
 oC_ReservedWord
             : LABELS
+            | ELEMENTID
             | TYPE
             | LENGTH
             | POWER

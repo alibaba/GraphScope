@@ -39,9 +39,11 @@ struct ServiceConfig {
   static constexpr const uint32_t DEFAULT_QUERY_PORT = 10000;
   static constexpr const uint32_t DEFAULT_ADMIN_PORT = 7777;
   static constexpr const uint32_t DEFAULT_BOLT_PORT = 7687;
+  static constexpr const uint32_t DEFAULT_GREMLIN_PORT = 8182;
 
   // Those has default value
   uint32_t bolt_port;
+  uint32_t gremlin_port;
   uint32_t admin_port;
   uint32_t query_port;
   uint32_t shard_num;
@@ -51,6 +53,8 @@ struct ServiceConfig {
   bool start_admin_service;  // Whether to start the admin service or only
                              // start the query service.
   bool start_compiler;
+  bool enable_gremlin;
+  bool enable_bolt;
   gs::MetadataStoreType metadata_store_type_;
 
   // Those has not default value
@@ -100,6 +104,8 @@ class HQPSService {
   bool start_compiler_subprocess(const std::string& graph_schema_path = "");
 
   bool stop_compiler_subprocess();
+
+  bool check_compiler_ready() const;
 
  private:
   HQPSService() = default;
@@ -195,6 +201,37 @@ struct convert<server::ServiceConfig> {
       LOG(ERROR) << "Fail to find http_service configuration";
       return false;
     }
+
+    auto compiler_node = config["compiler"];
+    if (compiler_node) {
+      auto endpoint_node = compiler_node["endpoint"];
+      if (endpoint_node) {
+        auto bolt_node = endpoint_node["bolt_connector"];
+        if (bolt_node && bolt_node["disabled"]) {
+          service_config.enable_bolt = !bolt_node["disabled"].as<bool>();
+        } else {
+          service_config.enable_bolt = true;
+        }
+        if (bolt_node && bolt_node["port"]) {
+          service_config.bolt_port = bolt_node["port"].as<uint32_t>();
+        } else {
+          LOG(INFO) << "bolt_port not found, or disabled";
+        }
+        auto gremlin_node = endpoint_node["gremlin_connector"];
+        if (gremlin_node && gremlin_node["disabled"]) {
+          service_config.enable_gremlin = !gremlin_node["disabled"].as<bool>();
+        } else {
+          service_config.enable_gremlin = true;
+        }
+        if (gremlin_node && gremlin_node["port"]) {
+          service_config.gremlin_port = gremlin_node["port"].as<uint32_t>();
+        } else {
+          LOG(INFO) << "gremlin_port not found, use default value "
+                    << service_config.gremlin_port;
+        }
+      }
+    }
+
     auto default_graph_node = config["default_graph"];
     std::string default_graph;
     if (default_graph_node) {

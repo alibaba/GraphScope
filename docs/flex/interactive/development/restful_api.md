@@ -1,8 +1,8 @@
-# GraphScope Interactive Admin Service Documentation
+# RESTful API Documentation
 
 ## Introduction
 
-Welcome to the GraphScope Interactive Admin Service documentation. This guide is tailored for developers and administrators seeking to manage the Interactive service more efficiently. Here, we delve into the intricate workings of the RESTful HTTP interfaces provided by the Interactive Admin service, offering a comprehensive toolkit for real-time service management. This document is crucial for those looking to customize or enhance their GraphScope Interactive experience.
+Welcome to the GraphScope Interactive RESTful API documentation. This guide is tailored for developers and administrators seeking to manage the Interactive service more efficiently. Here, we delve into the intricate workings of the RESTful HTTP interfaces provided by the Interactive Admin service, offering a comprehensive toolkit for real-time service management. This document is crucial for those looking to customize or enhance their GraphScope Interactive experience.
 
 ## API Overview
 
@@ -74,14 +74,18 @@ curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph"
               "property_id": "1",
               "property_name": "name",
               "property_type": {
-                "primitive_type": "DT_STRING"
+                "string":{
+                  "long_text": {}
+                }
               }
             },
             {
               "property_id": "2",
               "property_name": "age",
               "property_type": {
-                "primitive_type": "DT_SIGNED_INT32"
+                "string":{
+                  "long_text": {}
+                }
               }
             }
           ],
@@ -104,14 +108,18 @@ curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph"
               "property_id": "1",
               "property_name": "name",
               "property_type": {
-                "primitive_type": "DT_STRING"
+                "string":{
+                  "long_text": {}
+                }
               }
             },
             {
               "property_id": "2",
               "property_name": "lang",
               "property_type": {
-                "primitive_type": "DT_STRING"
+                "string":{
+                  "long_text": {}
+                }
               }
             }
           ],
@@ -202,14 +210,18 @@ This API create a new graph according to the specified schema in request body.
                         "property_id": 1,
                         "property_name": "name",
                         "property_type": {
-                            "primitive_type": "DT_STRING"
+                            "string":{
+                              "long_text": {}
+                            }
                         }
                     },
                     {
                         "property_id": 2,
                         "property_name": "age",
                         "property_type": {
-                            "primitive_type": "DT_SIGNED_INT32"
+                            "string":{
+                              "long_text": {}
+                            }
                         }
                     }
                 ],
@@ -232,14 +244,18 @@ This API create a new graph according to the specified schema in request body.
                         "property_id": 1,
                         "property_name": "name",
                         "property_type": {
-                            "primitive_type": "DT_STRING"
+                            "string":{
+                              "long_text": {}
+                            }
                         }
                     },
                     {
                         "property_id": 2,
                         "property_name": "lang",
                         "property_type": {
-                            "primitive_type": "DT_STRING"
+                            "string":{
+                              "long_text": {}
+                            }
                         }
                     }
                 ],
@@ -380,14 +396,18 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_
                   "property_id": 1,
                   "property_name": "name",
                   "property_type": {
-                      "primitive_type": "DT_STRING"
+                      "string":{
+                          "long_text": {}
+                      }
                   }
               },
               {
                   "property_id": 2,
                   "property_name": "age",
                   "property_type": {
-                      "primitive_type": "DT_SIGNED_INT32"
+                      "string":{
+                          "long_text": {}
+                      }
                   }
               }
           ],
@@ -410,14 +430,18 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_
                   "property_id": 1,
                   "property_name": "name",
                   "property_type": {
-                      "primitive_type": "DT_STRING"
+                      "string":{
+                          "long_text": {}
+                      }
                   }
               },
               {
                   "property_id": 2,
                   "property_name": "lang",
                   "property_type": {
-                      "primitive_type": "DT_STRING"
+                      "string":{
+                          "long_text": {}
+                      }
                   }
               }
           ],

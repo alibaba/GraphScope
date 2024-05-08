@@ -20,6 +20,70 @@
 
 namespace gs {
 
+namespace config_parsing {
+
+std::string PrimitivePropertyTypeToString(PropertyType type) {
+  if (type == PropertyType::kInt32) {
+    return DT_SIGNED_INT32;
+  } else if (type == PropertyType::kUInt32) {
+    return DT_UNSIGNED_INT32;
+  } else if (type == PropertyType::kBool) {
+    return DT_BOOL;
+  } else if (type == PropertyType::kDate) {
+    return DT_DATE;
+  } else if (type == PropertyType::kDay) {
+    return DT_DAY;
+  } else if (type == PropertyType::kString) {
+    return DT_STRING;
+  } else if (type == PropertyType::kStringMap) {
+    return DT_STRINGMAP;
+  } else if (type == PropertyType::kEmpty) {
+    return "Empty";
+  } else if (type == PropertyType::kInt64) {
+    return DT_SIGNED_INT64;
+  } else if (type == PropertyType::kUInt64) {
+    return DT_UNSIGNED_INT64;
+  } else if (type == PropertyType::kFloat) {
+    return DT_FLOAT;
+  } else if (type == PropertyType::kDouble) {
+    return DT_DOUBLE;
+  } else {
+    return "Empty";
+  }
+}
+
+PropertyType StringToPrimitivePropertyType(const std::string& str) {
+  if (str == "int32" || str == "INT" || str == DT_SIGNED_INT32) {
+    return PropertyType::kInt32;
+  } else if (str == "uint32" || str == DT_UNSIGNED_INT32) {
+    return PropertyType::kUInt32;
+  } else if (str == "bool" || str == "BOOL" || str == DT_BOOL) {
+    return PropertyType::kBool;
+  } else if (str == "Date" || str == DT_DATE) {
+    return PropertyType::kDate;
+  } else if (str == "Day" || str == DT_DAY) {
+    return PropertyType::kDay;
+  } else if (str == "String" || str == "STRING" || str == DT_STRING) {
+    // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);
+    return PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
+  } else if (str == DT_STRINGMAP) {
+    return PropertyType::kStringMap;
+  } else if (str == "Empty") {
+    return PropertyType::kEmpty;
+  } else if (str == "int64" || str == "LONG" || str == DT_SIGNED_INT64) {
+    return PropertyType::kInt64;
+  } else if (str == "uint64" || str == DT_UNSIGNED_INT64) {
+    return PropertyType::kUInt64;
+  } else if (str == "float" || str == "FLOAT" || str == DT_FLOAT) {
+    return PropertyType::kFloat;
+  } else if (str == "double" || str == "DOUBLE" || str == DT_DOUBLE) {
+    return PropertyType::kDouble;
+  } else {
+    return PropertyType::kEmpty;
+  }
+}
+}  // namespace config_parsing
+
 const PropertyType PropertyType::kEmpty =
     PropertyType(impl::PropertyTypeImpl::kEmpty);
 const PropertyType PropertyType::kBool =
@@ -74,6 +138,58 @@ bool PropertyType::operator!=(const PropertyType& other) const {
 
 bool PropertyType::IsVarchar() const {
   return type_enum == impl::PropertyTypeImpl::kVarChar;
+}
+
+void to_json(nlohmann::json& j, const PropertyType& p) {
+  if (p == PropertyType::Empty()) {
+    j = "empty";
+  } else if (p == PropertyType::Bool() || p == PropertyType::UInt8() ||
+             p == PropertyType::UInt16() || p == PropertyType::Int32() ||
+             p == PropertyType::UInt32() || p == PropertyType::Float() ||
+             p == PropertyType::Int64() || p == PropertyType::UInt64() ||
+             p == PropertyType::Double()) {
+    j["primitive_type"] = config_parsing::PrimitivePropertyTypeToString(p);
+  } else if (p == PropertyType::Date()) {
+    j["temporal"]["timestamp"] = {};
+  } else if (p == PropertyType::Day()) {
+    j["temporal"]["date32"] = {};
+  } else if (p == PropertyType::String() || p == PropertyType::StringMap()) {
+    j["string"]["long_text"] = {};
+  } else if (p.IsVarchar()) {
+    j["string"]["var_char"]["max_length"] = p.additional_type_info.max_length;
+  } else {
+    LOG(ERROR) << "Unknown property type";
+  }
+}
+
+void from_json(const nlohmann::json& j, PropertyType& p) {
+  if (j.contains("primitive_type")) {
+    p = config_parsing::StringToPrimitivePropertyType(
+        j["primitive_type"].get<std::string>());
+  } else if (j.contains("string")) {
+    if (j["string"].contains("long_text")) {
+      p = PropertyType::String();
+    } else if (j.contains("string") && j["string"].contains("var_char")) {
+      if (j["string"]["var_char"].contains("max_length")) {
+        p = PropertyType::Varchar(
+            j["string"]["var_char"]["max_length"].get<int32_t>());
+      } else {
+        p = PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
+      }
+    } else {
+      throw std::invalid_argument("Unknown string type");
+    }
+  } else if (j.contains("temporal")) {
+    if (j["temporal"].contains("timestamp")) {
+      p = PropertyType::Date();
+    } else if (j["temporal"].contains("date32")) {
+      p = PropertyType::Day();
+    } else {
+      throw std::invalid_argument("Unknown temporal type");
+    }
+  } else {
+    LOG(ERROR) << "Unknown property type";
+  }
 }
 
 /////////////////////////////// Get Type Instance

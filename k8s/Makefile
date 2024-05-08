@@ -161,6 +161,17 @@ learning:
 		-t graphscope/learning:${VERSION} \
 		-f $(DOCKERFILES_DIR)/learning.Dockerfile .
 
+graphlearn-torch:
+	cd $(WORKING_DIR)/.. && \
+	docker build \
+	    --target graphlearn-torch \
+		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
+		--build-arg CI=${CI} \
+		-t graphscope/graphlearn-torch:${VERSION} \
+		-f $(DOCKERFILES_DIR)/graphlearn-torch.Dockerfile .
+
 graphscope-store:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
