@@ -112,8 +112,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected final QueryCache queryCache;
     protected final ExecutionClient executionClient;
     Tracer tracer;
-    Meter meter;
-    LongHistogram histogram;
+    LongHistogram queryHistogram;
 
     public IrStandardOpProcessor(
             Configs configs,
@@ -142,9 +141,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
         this.executionClient = executionClient;
-        this.tracer = GlobalOpenTelemetry.getTracer("compiler");
-        this.meter = GlobalOpenTelemetry.getMeter("query");
-        this.histogram = meter.histogramBuilder("query").setUnit("ms").ofLongs().build();
+        initTracer();
+        initMetrics();
     }
 
     @Override
@@ -302,7 +300,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
     protected QueryStatusCallback createQueryStatusCallback(String query, BigInteger queryId) {
         return new QueryStatusCallback(
-                new MetricsCollector(evalOpTimer), histogram, new QueryLogger(query, queryId));
+                new MetricsCollector(evalOpTimer), queryHistogram, new QueryLogger(query, queryId));
     }
 
     protected GremlinExecutor.LifeCycle createLifeCycle(
@@ -401,11 +399,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
         Span outgoing =
-                tracer.spanBuilder("/evalOpInternal").setSpanKind(SpanKind.CLIENT).startSpan();
-        try (Scope scope = outgoing.makeCurrent()) {
+                tracer.spanBuilder("frontend/query").setSpanKind(SpanKind.CLIENT).startSpan();
+        try (Scope ignored = outgoing.makeCurrent()) {
             outgoing.setAttribute("query.id", queryLogger.getQueryId().toString());
             outgoing.setAttribute("query.statement", queryLogger.getQuery());
-            outgoing.setAttribute("query.plan.logical", irPlanStr);
+            outgoing.setAttribute("query.plan", irPlanStr);
             this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
             // request results from remote engine service in blocking way
             resultProcessor.request();
@@ -458,5 +456,19 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         if (this.rpcClient != null) {
             this.rpcClient.shutdown();
         }
+    }
+
+    public void initTracer() {
+        this.tracer = GlobalOpenTelemetry.getTracer("default");
+    }
+
+    public void initMetrics() {
+        Meter meter = GlobalOpenTelemetry.getMeter("default");
+        this.queryHistogram =
+                meter.histogramBuilder("groot.frontend.query.duration")
+                        .setDescription("Duration of gremlin queries.")
+                        .setUnit("ms")
+                        .ofLongs()
+                        .build();
     }
 }

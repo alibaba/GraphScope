@@ -19,7 +19,10 @@ import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,10 +34,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class GraphWriter {
     private static final Logger logger = LoggerFactory.getLogger(GraphWriter.class);
 
-    private Meter meter;
-    private LongCounter writeRequestSuccessCount;
-    private LongCounter writeRequestFailureCount;
-    private LongHistogram writeRequestLatency;
+    private LongCounter writeCounter;
+    private LongHistogram writeHistogram;
     private final SnapshotCache snapshotCache;
     private final EdgeIdGenerator edgeIdGenerator;
     private final AtomicLong lastWrittenSnapshotId = new AtomicLong(0L);
@@ -124,22 +125,27 @@ public class GraphWriter {
         }
         OperationBatch operationBatch = batchBuilder.build();
         long startTime = System.currentTimeMillis();
+        AttributesBuilder attrs = Attributes.builder();
         this.kafkaAppender.ingestBatch(
                 requestId,
                 operationBatch,
                 new IngestCallback() {
                     @Override
                     public void onSuccess(long snapshotId) {
-                        writeRequestSuccessCount.add(writeRequests.size());
-                        writeRequestLatency.record(System.currentTimeMillis() - startTime);
+                        attrs.put("success", true).put("message", "");
+                        writeCounter.add(writeRequests.size(), attrs.build());
+                        writeHistogram.record(
+                                System.currentTimeMillis() - startTime, attrs.build());
                         lastWrittenSnapshotId.updateAndGet(x -> Math.max(x, snapshotId));
                         callback.onCompleted(snapshotId);
                     }
 
                     @Override
                     public void onFailure(Exception e) {
-                        writeRequestFailureCount.add(writeRequests.size());
-                        writeRequestLatency.record(System.currentTimeMillis() - startTime);
+                        attrs.put("success", false).put("message", e.getMessage());
+                        writeCounter.add(writeRequests.size(), attrs.build());
+                        writeHistogram.record(
+                                System.currentTimeMillis() - startTime, attrs.build());
                         callback.onError(e);
                     }
                 });
@@ -452,9 +458,16 @@ public class GraphWriter {
     }
 
     public void initMetrics() {
-        this.meter = GlobalOpenTelemetry.getMeter("GraphWriter");
-        this.writeRequestSuccessCount = meter.counterBuilder("write-request-succeed-count").build();
-        this.writeRequestFailureCount = meter.counterBuilder("write-request-failure-count").build();
-        this.writeRequestLatency = meter.histogramBuilder("write-request-latency").ofLongs().setUnit("ms").build();
+        Meter meter = GlobalOpenTelemetry.getMeter("GraphWriter");
+        this.writeCounter =
+                meter.counterBuilder("groot.frontend.write.count")
+                        .setDescription("Total count of write requests of one store node.")
+                        .build();
+        this.writeHistogram =
+                meter.histogramBuilder("groot.frontend.write.duration")
+                        .setDescription("Duration of write requests that be persist into the disk.")
+                        .ofLongs()
+                        .setUnit("ms")
+                        .build();
     }
 }

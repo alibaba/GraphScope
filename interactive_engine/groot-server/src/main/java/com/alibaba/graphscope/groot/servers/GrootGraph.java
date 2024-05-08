@@ -14,10 +14,14 @@
 package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.groot.CuratorUtils;
+import com.alibaba.graphscope.groot.OTELUtils;
 import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -32,7 +36,8 @@ public class GrootGraph {
         Configs conf = new Configs(configFile);
         conf = reConfig(conf);
         logger.info("Configs {}", conf);
-
+        OpenTelemetry sdk = OTELUtils.openTelemetry();
+        GlobalOpenTelemetry.set(sdk);
         NodeBase node;
         if (args.length == 0 || args[0].equals("all-in-one")) {
             logger.warn("No role type, use MaxNode");

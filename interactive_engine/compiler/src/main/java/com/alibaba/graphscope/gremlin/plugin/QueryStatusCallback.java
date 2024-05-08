@@ -16,29 +16,25 @@
 
 package com.alibaba.graphscope.gremlin.plugin;
 
-import com.codahale.metrics.Histogram;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.Meter;
+import static io.opentelemetry.api.common.AttributeKey.*;
+
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongHistogram;
+
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static io.opentelemetry.api.common.AttributeKey.*;
 
 public class QueryStatusCallback {
     private final MetricsCollector metricsCollector;
     private final QueryLogger queryLogger;
 
-    private LongHistogram histogram;
+    private LongHistogram queryHistogram;
 
-    public QueryStatusCallback(MetricsCollector metricsCollector, LongHistogram histogram, QueryLogger queryLogger) {
+    public QueryStatusCallback(
+            MetricsCollector metricsCollector, LongHistogram histogram, QueryLogger queryLogger) {
         this.metricsCollector = metricsCollector;
         this.queryLogger = queryLogger;
-        this.histogram = histogram;
+        this.queryHistogram = histogram;
     }
 
     public void onStart() {}
@@ -50,12 +46,14 @@ public class QueryStatusCallback {
         }
 
         Attributes attrs =
-                Attributes.of(
-                        stringKey("id"), queryLogger.getQueryId().toString(),
-                        stringKey("query"), queryLogger.getQuery(),
-                        booleanKey("isSucceed"), isSucceed);
-        this.histogram.record(metricsCollector.getElapsedMillis(), attrs);
-        
+                Attributes.builder()
+                        .put("id", queryLogger.getQueryId().toString())
+                        .put("query", queryLogger.getQuery())
+                        .put("success", isSucceed)
+                        .put("message", msg != null ? msg : "")
+                        .build();
+        this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+
         queryLogger.metricsInfo(
                 "{} | {} | {} | {}",
                 isSucceed,

@@ -64,11 +64,7 @@ public class Store extends NodeBase {
         LogService logService = LogServiceFactory.makeLogService(configs);
 
         this.writerAgent =
-                new WriterAgent(
-                        configs,
-                        this.storeService,
-                        this.metaService,
-                        snapshotCommitter);
+                new WriterAgent(configs, this.storeService, this.metaService, snapshotCommitter);
         this.backupAgent = new BackupAgent(configs, this.storeService);
         StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);

@@ -47,11 +47,7 @@ public class WriterAgentTest {
         RoleClients<SnapshotCommitClient> mockSnapshotCommitter = mock(RoleClients.class);
 
         WriterAgent writerAgent =
-                new WriterAgent(
-                        configs,
-                        mockStoreService,
-                        mockMetaService,
-                        mockSnapshotCommitter);
+                new WriterAgent(configs, mockStoreService, mockMetaService, mockSnapshotCommitter);
 
         writerAgent.start();
 

@@ -23,7 +23,7 @@ import com.alibaba.graphscope.groot.rpc.RoleClients;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableLongGauge;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +55,6 @@ public class WriterAgent {
     private ExecutorService commitExecutor;
     private List<Long> consumedQueueOffsets;
     private Thread consumeThread;
-
-    private Meter meter;
-    private ObservableLongGauge bufferQueueSize;
 
     public WriterAgent(
             Configs configs,
@@ -222,7 +219,9 @@ public class WriterAgent {
     }
 
     public void initMetrics() {
-        this.meter = GlobalOpenTelemetry.getMeter("GraphWriter");
-        this.bufferQueueSize = meter.gaugeBuilder("graph-writer-buffer-queue-size").ofLongs().buildWithCallback(result -> result.record(bufferQueue.size()));
+        Meter meter = GlobalOpenTelemetry.getMeter("default");
+        meter.upDownCounterBuilder("groot.writer-agent.queue.size")
+                .setDescription("The buffer queue size of writer agent within the store node.")
+                .buildWithCallback(measurement -> measurement.record(bufferQueue.size()));
     }
 }

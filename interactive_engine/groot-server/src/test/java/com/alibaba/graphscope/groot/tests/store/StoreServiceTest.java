@@ -39,8 +39,7 @@ public class StoreServiceTest {
         MetaService mockMetaService = mock(MetaService.class);
         when(mockMetaService.getPartitionsByStoreId(0)).thenReturn(Arrays.asList(0));
 
-        StoreService spyStoreService =
-                spy(new StoreService(configs, mockMetaService));
+        StoreService spyStoreService = spy(new StoreService(configs, mockMetaService));
 
         GraphPartition mockGraphPartition = mock(GraphPartition.class);
         doReturn(mockGraphPartition).when(spyStoreService).makeGraphPartition(any(), eq(0));

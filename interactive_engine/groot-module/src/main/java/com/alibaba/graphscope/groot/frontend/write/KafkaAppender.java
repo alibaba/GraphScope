@@ -18,6 +18,7 @@ import com.alibaba.graphscope.groot.wal.*;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongGauge;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -312,6 +313,9 @@ public class KafkaAppender {
 
     public void initMetrics() {
         this.meter = GlobalOpenTelemetry.getMeter("KafkaAppender");
-        this.bufferQueueSize = meter.gaugeBuilder("graph-writer-buffer-queue-size").ofLongs().buildWithCallback(result -> result.record(ingestBuffer.size()));
+        this.bufferQueueSize =
+                meter.gaugeBuilder("graph-writer-buffer-queue-size")
+                        .ofLongs()
+                        .buildWithCallback(result -> result.record(ingestBuffer.size()));
     }
 }

@@ -96,10 +96,7 @@ public class Frontend extends NodeBase {
 
         this.clientService =
                 new ClientService(
-                        snapshotCache,
-                        frontendStoreClients,
-                        this.metaService,
-                        batchDdlClient);
+                        snapshotCache, frontendStoreClients, this.metaService, batchDdlClient);
 
         FrontendSnapshotService frontendSnapshotService =
                 new FrontendSnapshotService(snapshotCache);
@@ -110,9 +107,7 @@ public class Frontend extends NodeBase {
 
         LogService logService = LogServiceFactory.makeLogService(configs);
         KafkaAppender kafkaAppender = new KafkaAppender(configs, metaService, logService);
-        this.graphWriter =
-                new GraphWriter(
-                        snapshotCache, edgeIdGenerator, kafkaAppender, configs);
+        this.graphWriter = new GraphWriter(snapshotCache, edgeIdGenerator, kafkaAppender, configs);
         ClientWriteService clientWriteService = new ClientWriteService(graphWriter);
 
         RoleClients<BackupClient> backupClients =

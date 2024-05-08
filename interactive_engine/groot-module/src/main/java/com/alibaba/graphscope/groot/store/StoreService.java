@@ -27,9 +27,10 @@ import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.*;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 public class StoreService {
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
 
@@ -74,15 +74,11 @@ public class StoreService {
     private final boolean enableGc;
     private volatile boolean shouldStop = true;
     private final boolean isSecondary;
-    private Meter meter;
-    private LongCounter writeRequestSuccessCount;
-    private LongCounter writeRequestFailureCount;
-    private LongHistogram writeRequestLatency;
-    private LongHistogram garbageCollectLatency;
-    private ObservableDoubleGauge diskUsedPercentage;
+    private LongCounter writeCounter;
+    private LongHistogram writeHistogram;
+    private LongHistogram gcHistogram;
 
-    public StoreService(
-            Configs storeConfigs, MetaService metaService) {
+    public StoreService(Configs storeConfigs, MetaService metaService) {
         this.storeConfigs = storeConfigs;
         this.storeId = CommonConfig.NODE_IDX.get(storeConfigs);
         this.enableGc = StoreConfig.STORE_GC_ENABLE.get(storeConfigs);
@@ -238,13 +234,14 @@ public class StoreService {
             int partitionId = e.getKey();
             OperationBatch batch = e.getValue();
             logger.debug("writeStore partition [" + partitionId + "]");
+            AttributesBuilder attrs = Attributes.builder().put("partition.id", partitionId);
             this.writeExecutor.execute(
                     () -> {
+                        long start = System.currentTimeMillis();
                         try {
                             if (partitionId != -1) {
                                 // Ignore Marker
                                 // Only support partition operation for now
-                                long start = System.currentTimeMillis();
                                 GraphPartition partition = this.idToPartition.get(partitionId);
                                 if (partition == null) {
                                     throw new IllegalStateException(
@@ -255,8 +252,10 @@ public class StoreService {
                                 if (partition.writeBatch(snapshotId, batch)) {
                                     hasDdl.set(true);
                                 }
-                                this.writeRequestLatency.record(System.currentTimeMillis() - start);
-                                this.writeRequestSuccessCount.add(batch.getOperationCount());
+                                attrs.put("success", true).put("message", "");
+                                this.writeHistogram.record(
+                                        System.currentTimeMillis() - start, attrs.build());
+                                this.writeCounter.add(batch.getOperationCount(), attrs.build());
                             }
                         } catch (Exception ex) {
                             logger.error(
@@ -264,16 +263,18 @@ public class StoreService {
                                     partitionId,
                                     snapshotId,
                                     ex);
+                            attrs.put("message", ex.getMessage());
                             String msg = "Not supported operation in secondary mode";
                             if (ex.getMessage().contains(msg)) {
                                 logger.warn("Ignored write in secondary instance, {}", msg);
+                                attrs.put("success", true);
                             } else {
-                                Attributes attrs =
-                                        Attributes.of(
-                                                AttributeKey.stringKey("partitionID"), ex.getMessage());
-                                this.writeRequestFailureCount.add(batch.getOperationCount(), attrs);
+                                attrs.put("success", false);
+                                this.writeCounter.add(batch.getOperationCount(), attrs.build());
                                 batchNeedRetry.put(partitionId, batch);
                             }
+                            this.writeHistogram.record(
+                                    System.currentTimeMillis() - start, attrs.build());
                         }
                         if (counter.decrementAndGet() == 0) {
                             future.complete(null);
@@ -404,18 +405,15 @@ public class StoreService {
                         callback.onError(e);
                     }
                 });
-
     }
 
     private void garbageCollectInternal(long snapshotId) throws IOException {
         for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
-            Attributes attrs =
-                    Attributes.of(
-                            AttributeKey.longKey("partitionID"), entry.getKey().longValue());
+            Attributes attrs = Attributes.builder().put("partition.id", entry.getKey()).build();
             GraphPartition partition = entry.getValue();
             long start = System.currentTimeMillis();
             partition.garbageCollect(snapshotId);
-            this.garbageCollectLatency.record(System.currentTimeMillis() - start, attrs);
+            this.gcHistogram.record(System.currentTimeMillis() - start, attrs);
         }
     }
 
@@ -482,15 +480,33 @@ public class StoreService {
     }
 
     public void initMetrics() {
-        this.meter = GlobalOpenTelemetry.getMeter("GraphWriter");
-        this.writeRequestSuccessCount = meter.counterBuilder("write-request-success-count").build();
-        this.writeRequestFailureCount = meter.counterBuilder("write-request-failure-count").build();
-        this.writeRequestLatency = meter.histogramBuilder("write-request-latency").ofLongs().setUnit("ms").build();
-        this.garbageCollectLatency = meter.histogramBuilder("garbage-collect-latency").ofLongs().setUnit("ms").build();
-        this.diskUsedPercentage = meter.gaugeBuilder("store-disk-usage").buildWithCallback(result -> {
-            long[] ret = getDiskStatus();
-            result.record(ret[0] * 1.0 / ret[1]);
-        });
+        Meter meter = GlobalOpenTelemetry.getMeter("default");
+        this.writeCounter =
+                meter.counterBuilder("groot.store.write.count")
+                        .setDescription("Total count of write requests of one store node.")
+                        .build();
+        this.writeHistogram =
+                meter.histogramBuilder("groot.store.write.duration")
+                        .setDescription("Duration of write requests that be persist into the disk.")
+                        .ofLongs()
+                        .setUnit("ms")
+                        .build();
+        this.gcHistogram =
+                meter.histogramBuilder("groot.store.gc.duration")
+                        .setDescription("Duration of the garbage collect process.")
+                        .ofLongs()
+                        .setUnit("ms")
+                        .build();
+
+        meter.upDownCounterBuilder("groot.store.disk.usage")
+                .setDescription("Percentage of disk space in use.")
+                .setUnit("percents")
+                .ofDoubles()
+                .buildWithCallback(
+                        result -> {
+                            long[] ret = getDiskStatus();
+                            result.record(ret[0] * 1.0 / ret[1]);
+                        });
     }
 
     public long[] getDiskStatus() {
