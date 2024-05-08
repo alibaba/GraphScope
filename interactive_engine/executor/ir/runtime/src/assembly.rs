@@ -523,8 +523,8 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                         intersected_expands.push((subplan.plan.pop(), expand, None));
                                     } else {
                                         Err(FnGenError::unsupported_error(&format!(
-                                            "Unsupported subplan in Intersection {:?}",
-                                            subplan_clone,
+                                            "Subplan in Intersection in EdgeExpandV {:?}",
+                                            PhysicalPlanPrinter(&subplan_clone),
                                         )))?
                                     }
                                 } else {
@@ -544,19 +544,16 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                         // case2: ExpandE + GetV(Adj)
                                         if get_v.opt == pb::get_v::VOpt::Itself as i32 {
                                             Err(FnGenError::unsupported_error(&format!(
-                                                "Subplan in Intersection {:?}",
-                                                subplan_clone,
+                                                "Subplan in Intersection in EdgeExpandE+GetV {:?}",
+                                                PhysicalPlanPrinter(&subplan_clone),
                                             )))?
                                         }
                                         // note that this get_v won't take filters, as it should be translated to auxilia.
                                         if let Some(params) = &get_v.params {
-                                            if params.has_predicates()
-                                                || params.has_columns()
-                                                || params.has_labels()
-                                            {
+                                            if params.has_predicates() || params.has_columns() {
                                                 Err(FnGenError::unsupported_error(&format!(
-                                                    "Subplan in Intersection {:?}",
-                                                    subplan_clone
+                                                    "Subplan in Intersection in EdgeExpandE+GetV {:?}",
+                                                    PhysicalPlanPrinter(&subplan_clone),
                                                 )))?
                                             }
                                         }
@@ -569,8 +566,8 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                                 ));
                                             } else {
                                                 Err(FnGenError::unsupported_error(&format!(
-                                                    "Subplan in Intersection {:?}",
-                                                    subplan_clone,
+                                                    "Subplan in Intersection in EdgeExpandE+GetV {:?}",
+                                                    PhysicalPlanPrinter(&subplan_clone),
                                                 )))?
                                             }
                                         } else {
@@ -581,8 +578,8 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                         // case3: PathExpand + GetV(EndV)
                                         if get_v.opt != pb::get_v::VOpt::End as i32 {
                                             Err(FnGenError::unsupported_error(&format!(
-                                                "Subplan in Intersection {:?}",
-                                                subplan_clone,
+                                                "Subplan in Intersection in PathExpand + GetV {:?}",
+                                                PhysicalPlanPrinter(&subplan_clone),
                                             )))?
                                         }
                                         let path_repartition = if let Some(opr) = subplan.plan.last() {
@@ -590,8 +587,8 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                                 subplan.plan.pop()
                                             } else {
                                                 Err(FnGenError::unsupported_error(&format!(
-                                                    "Subplan in Intersection {:?}",
-                                                    subplan_clone,
+                                                    "Subplan in Intersection in PathExpand + GetV {:?}",
+                                                    PhysicalPlanPrinter(&subplan_clone),
                                                 )))?
                                             }
                                         } else {
@@ -689,7 +686,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
 
                                     _ => Err(FnGenError::unsupported_error(&format!(
                                         "Subplan in Intersection to intersect: {:?}",
-                                        subplan
+                                        PhysicalPlanPrinter(&subplan),
                                     )))?,
                                 }
                             }
