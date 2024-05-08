@@ -37,7 +37,6 @@ public class GrootGraph {
         conf = reConfig(conf);
         logger.info("Configs {}", conf);
         OpenTelemetry sdk = OTELUtils.openTelemetry();
-        GlobalOpenTelemetry.set(sdk);
         NodeBase node;
         if (args.length == 0 || args[0].equals("all-in-one")) {
             logger.warn("No role type, use MaxNode");
