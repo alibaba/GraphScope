@@ -20,7 +20,6 @@ import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 
 import org.apache.curator.framework.CuratorFramework;

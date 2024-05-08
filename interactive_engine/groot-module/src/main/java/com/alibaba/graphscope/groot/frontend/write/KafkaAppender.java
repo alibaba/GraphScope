@@ -17,7 +17,6 @@ import com.alibaba.graphscope.groot.wal.*;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableLongGauge;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +50,6 @@ public class KafkaAppender {
     private boolean started = false;
 
     private final AtomicLong ingestSnapshotId;
-
-    private Meter meter;
-    private ObservableLongGauge bufferQueueSize;
 
     public KafkaAppender(Configs configs, MetaService metaService, LogService logService) {
         this.metaService = metaService;
@@ -312,10 +308,9 @@ public class KafkaAppender {
     }
 
     public void initMetrics() {
-        this.meter = GlobalOpenTelemetry.getMeter("KafkaAppender");
-        this.bufferQueueSize =
-                meter.gaugeBuilder("graph-writer-buffer-queue-size")
-                        .ofLongs()
-                        .buildWithCallback(result -> result.record(ingestBuffer.size()));
+        Meter meter = GlobalOpenTelemetry.getMeter("default");
+        meter.upDownCounterBuilder("groot.frontend.writer.queue.size")
+                .setDescription("The buffer queue size of writer agent within the frontend node.")
+                .buildWithCallback(measurement -> measurement.record(ingestBuffer.size()));
     }
 }

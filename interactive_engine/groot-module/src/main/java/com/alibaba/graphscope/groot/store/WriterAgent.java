@@ -220,7 +220,7 @@ public class WriterAgent {
 
     public void initMetrics() {
         Meter meter = GlobalOpenTelemetry.getMeter("default");
-        meter.upDownCounterBuilder("groot.writer-agent.queue.size")
+        meter.upDownCounterBuilder("groot.store.writer.queue.size")
                 .setDescription("The buffer queue size of writer agent within the store node.")
                 .buildWithCallback(measurement -> measurement.record(bufferQueue.size()));
     }
