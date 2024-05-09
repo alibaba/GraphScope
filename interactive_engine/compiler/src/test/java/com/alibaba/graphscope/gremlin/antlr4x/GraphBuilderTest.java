@@ -1180,6 +1180,62 @@ public class GraphBuilderTest {
     }
 
     @Test
+    public void g_V_where_as_a_out_as_b_select_a_b_where_as_a_out_as_b_test() {
+        RelNode node =
+                eval(
+                        "g.V().as(\"a\").out().as(\"b\").select(\"a\","
+                                + " \"b\").where(as('a').out('knows').as('b'))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        node = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                        + "  LogicalFilter(condition=[EXISTS({\n"
+                        + "LogicalFilter(condition=[=(_, b)])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[_], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "    GraphLogicalProject(_=[a], isAppend=[true])\n"
+                        + "      CommonTableScan(table=[[common#-630412335]])\n"
+                        + "})])\n"
+                        + "    GraphLogicalProject($f0=[MAP(_UTF-8'a', a, _UTF-8'b', b)],"
+                        + " isAppend=[true])\n"
+                        + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                        + " knows]}], alias=[b], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "        GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_where_as_a_out_as_b_select_a_b_where_as_a_has_name_marko_test() {
+        RelNode node =
+                eval(
+                        "g.V().as(\"a\").out().in().as(\"b\").select(\"a\","
+                                + " \"b\").where(__.as(\"b\").has(\"name\", \"marko\"))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        node = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                        + "  LogicalFilter(condition=[EXISTS({\n"
+                        + "LogicalFilter(condition=[=(_.name, _UTF-8'marko')])\n"
+                        + "  GraphLogicalProject(_=[b], isAppend=[true])\n"
+                        + "    CommonTableScan(table=[[common#1582012392]])\n"
+                        + "})])\n"
+                        + "    GraphLogicalProject($f0=[MAP(_UTF-8'a', a, _UTF-8'b', b)],"
+                        + " isAppend=[true])\n"
+                        + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                        + " knows]}], alias=[b], opt=[IN], physicalOpt=[VERTEX])\n"
+                        + "        GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                        + " knows]}], alias=[_], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "          GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
     public void g_V_where_a_neq_b_by_out_count_test() {
         RelNode node =
                 eval("g.V().as(\"a\").out().as(\"b\").where(\"a\", neq(\"b\")).by(out().count())");
