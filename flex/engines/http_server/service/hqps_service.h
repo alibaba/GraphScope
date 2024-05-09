@@ -53,6 +53,8 @@ struct ServiceConfig {
   bool start_admin_service;  // Whether to start the admin service or only
                              // start the query service.
   bool start_compiler;
+  bool enable_gremlin;
+  bool enable_bolt;
   gs::MetadataStoreType metadata_store_type_;
 
   // Those has not default value
@@ -102,6 +104,8 @@ class HQPSService {
   bool start_compiler_subprocess(const std::string& graph_schema_path = "");
 
   bool stop_compiler_subprocess();
+
+  bool check_compiler_ready() const;
 
  private:
   HQPSService() = default;
@@ -203,15 +207,23 @@ struct convert<server::ServiceConfig> {
       auto endpoint_node = compiler_node["endpoint"];
       if (endpoint_node) {
         auto bolt_node = endpoint_node["bolt_connector"];
-        if (bolt_node && bolt_node["port"] &&
-            bolt_node["disabled"].as<bool>() == false) {
+        if (bolt_node && bolt_node["disabled"]) {
+          service_config.enable_bolt = !bolt_node["disabled"].as<bool>();
+        } else {
+          service_config.enable_bolt = true;
+        }
+        if (bolt_node && bolt_node["port"]) {
           service_config.bolt_port = bolt_node["port"].as<uint32_t>();
         } else {
           LOG(INFO) << "bolt_port not found, or disabled";
         }
         auto gremlin_node = endpoint_node["gremlin_connector"];
-        if (gremlin_node && gremlin_node["port"] &&
-            gremlin_node["disabled"].as<bool>() == false) {
+        if (gremlin_node && gremlin_node["disabled"]) {
+          service_config.enable_gremlin = !gremlin_node["disabled"].as<bool>();
+        } else {
+          service_config.enable_gremlin = true;
+        }
+        if (gremlin_node && gremlin_node["port"]) {
           service_config.gremlin_port = gremlin_node["port"].as<uint32_t>();
         } else {
           LOG(INFO) << "gremlin_port not found, use default value "
