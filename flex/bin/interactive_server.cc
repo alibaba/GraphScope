@@ -56,11 +56,8 @@ std::string parse_codegen_dir(const bpo::variables_map& vm) {
 
 void blockSignal(int sig) {
   sigset_t set;
-  // 初始化信号集
   sigemptyset(&set);
-  // 将指定信号添加到信号集中
   sigaddset(&set, sig);
-  // 将信号集中的信号添加到当前线程的信号掩码中，即阻塞这些信号
   if (pthread_sigmask(SIG_BLOCK, &set, NULL) != 0) {
     perror("pthread_sigmask");
   }
