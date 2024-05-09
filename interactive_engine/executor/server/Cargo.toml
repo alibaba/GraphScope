@@ -31,6 +31,8 @@ itertools = "0.10.2"
 bmcsr = { path = "../store/bmcsr" }
 num = "0.4.1"
 graph_index = { path = "../store/graph_index" }
+mimalloc = {version = "0.1.42", features = ["local_dynamic_tls"]}
+# mimalloc-rust = {version = "0.2.1", features = ["local-dynamic-tls"]}
 
 [build-dependencies]
 tonic-build = { version = "0.8" }
@@ -39,3 +41,6 @@ tonic-build = { version = "0.8" }
 default = []
 # set to generate code in place(generated codes are in current codebase);
 gcip = []
+
+[profile.release]
+debug = true

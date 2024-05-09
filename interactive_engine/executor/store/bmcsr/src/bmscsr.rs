@@ -6,7 +6,7 @@ use std::io::{BufReader, BufWriter, Write};
 use rayon::prelude::*;
 
 use crate::col_table::ColTable;
-use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrOffsetIter, SafeMutPtr, SafePtr};
+use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrIterBeta, NbrOffsetIter, SafeMutPtr, SafePtr};
 use crate::graph::IndexType;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
@@ -189,6 +189,16 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableSingleCsr<I> {
             None
         } else {
             Some(NbrIter::new(&self.nbr_list, src.index(), src.index() + 1))
+        }
+    }
+
+    fn get_edges_beta(&self, u: I) -> NbrIterBeta<I> {
+        if self.nbr_list[u.index()] == <I as IndexType>::max() {
+            NbrIterBeta::new(self.nbr_list.as_ptr(), self.nbr_list.as_ptr())
+        } else {
+            NbrIterBeta::new(unsafe { self.nbr_list.as_ptr().add(u.index()) }, unsafe {
+                self.nbr_list.as_ptr().add(u.index() + 1)
+            })
         }
     }
 

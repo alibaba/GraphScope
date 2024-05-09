@@ -1,7 +1,7 @@
 use crate::bmcsr::BatchMutableCsr;
 use crate::bmscsr::BatchMutableSingleCsr;
 use crate::col_table::ColTable;
-use crate::csr::{CsrTrait, NbrIter, NbrOffsetIter};
+use crate::csr::{CsrTrait, NbrIter, NbrIterBeta, NbrOffsetIter};
 use crate::graph::IndexType;
 use crate::types::{DefaultId, InternalId, LabelId};
 use crate::vertex_map::VertexMap;
@@ -32,6 +32,10 @@ impl<'a, G: Send + Sync + IndexType, I: Send + Sync + IndexType> SubGraph<'a, G,
 
     pub fn get_adj_list(&self, src: I) -> Option<NbrIter<I>> {
         self.csr.get_edges(src)
+    }
+
+    pub fn get_adj_list_beta(&self, src: I) -> NbrIterBeta<I> {
+        self.csr.get_edges_beta(src)
     }
 
     pub fn get_adj_list_with_offset(&self, src: I) -> Option<NbrOffsetIter<I>> {
@@ -85,6 +89,10 @@ where
 
     pub fn get_adj_list(&self, src: I) -> Option<NbrIter<I>> {
         self.csr.get_edges(src)
+    }
+
+    pub fn get_adj_list_beta(&self, src: I) -> NbrIterBeta<I> {
+        self.csr.get_edges_beta(src)
     }
 
     pub fn get_adj_list_with_offset(&self, src: I) -> Option<NbrOffsetIter<I>> {

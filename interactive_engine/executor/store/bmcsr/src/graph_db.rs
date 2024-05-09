@@ -237,6 +237,14 @@ where
         self.vertex_map.get_internal_id(id).unwrap().1
     }
 
+    pub fn get_internal_id_beta(&self, id: G) -> Option<I> {
+        if let Some((_, id)) = self.vertex_map.get_internal_id(id) {
+            Some(id)
+        } else {
+            None
+        }
+    }
+
     fn index_to_local_vertex(&self, label_id: LabelId, index: I, with_property: bool) -> LocalVertex<G, I> {
         if with_property {
             LocalVertex::with_property(

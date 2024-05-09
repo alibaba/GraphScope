@@ -23,6 +23,33 @@ impl<'a, I: IndexType> Iterator for NbrIter<'a, I> {
     }
 }
 
+pub struct NbrIterBeta<I> {
+    start: *const I,
+    end: *const I,
+}
+
+impl<I> NbrIterBeta<I> {
+    pub fn new(start: *const I, end: *const I) -> Self {
+        NbrIterBeta { start, end }
+    }
+}
+
+impl<I: IndexType> Iterator for NbrIterBeta<I> {
+    type Item = I;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            None
+        } else {
+            let ret = unsafe { *self.start };
+            self.start = unsafe { self.start.add(1) };
+            Some(ret)
+        }
+    }
+}
+
+unsafe impl<I: IndexType> Sync for NbrIterBeta<I> {}
+unsafe impl<I: IndexType> Send for NbrIterBeta<I> {}
+
 pub struct NbrOffsetIter<'a, I> {
     inner: std::slice::Iter<'a, I>,
     offset: usize,
@@ -58,6 +85,7 @@ pub trait CsrTrait<I: IndexType>: Send + Sync {
     fn deserialize(&mut self, path: &String);
 
     fn get_edges(&self, u: I) -> Option<NbrIter<I>>;
+    fn get_edges_beta(&self, u: I) -> NbrIterBeta<I>;
     fn get_edges_with_offset(&self, u: I) -> Option<NbrOffsetIter<I>>;
 
     fn as_any(&self) -> &dyn Any;

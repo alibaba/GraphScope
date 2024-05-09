@@ -449,6 +449,16 @@ impl<D: Debug + Send + Sync + 'static> SingleItem<D> {
         self.inner.flat_map(move |single| f(single.0))
     }
 
+    pub fn unfold_with_name<Iter, F>(self, name: &str, f: F) -> Result<Stream<Iter::Item>, BuildJobError>
+    where
+        Iter: Iterator + Send + 'static,
+        Iter::Item: Data,
+        F: Fn(D) -> FnResult<Iter> + Send + 'static,
+    {
+        self.inner
+            .flat_map_with_name(name, move |single| f(single.0))
+    }
+
     pub fn map<T, F>(mut self, f: F) -> Result<SingleItem<T>, BuildJobError>
     where
         T: Debug + Send + Sync + 'static,

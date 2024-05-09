@@ -12,6 +12,14 @@ use rpc_server::queries;
 use rpc_server::queries::register::QueryRegister;
 use rpc_server::queries::rpc::RPCServerConfig;
 
+use mimalloc::MiMalloc;
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
+// use mimalloc_rust::*;
+//
+// #[global_allocator]
+// static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {
     #[structopt(short = "g", long = "graph_data")]

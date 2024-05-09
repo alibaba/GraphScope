@@ -178,6 +178,189 @@ impl QueryRegister {
             .collect()
     }
 
+    pub fn run_precompute(
+        &self, graph: &GraphDB<usize, usize>, graph_index: &mut GraphIndex, worker_num: u32,
+        query_name: &String,
+    ) {
+        for (i, (name, (setting, libc))) in self.precompute_vertex_map.iter().enumerate() {
+            if &setting.precompute_name != query_name {
+                continue;
+            }
+            let start = Instant::now();
+
+            let job_name = format!("{}-{}", name, i);
+            let mut conf = JobConf::new(job_name);
+            conf.set_workers(worker_num);
+            conf.reset_servers(ServerConf::Partial(vec![0]));
+            let label = setting.label.edge_label.unwrap() as LabelId;
+            let src_label = Some(setting.label.src_label.unwrap() as LabelId);
+            let dst_label = Some(setting.label.dst_label.unwrap() as LabelId);
+            let mut properties_info = vec![];
+            let properties_size = setting.properties.len();
+            for i in 0..properties_size {
+                let index_name = setting.properties[i].name.clone();
+                let data_type = graph_index::types::str_to_data_type(&setting.properties[i].data_type);
+                properties_info.push((index_name, data_type));
+            }
+            let property_size = graph.get_vertices_num(label);
+            for i in 0..properties_info.len() {
+                graph_index.init_vertex_index(
+                    properties_info[i].0.clone(),
+                    label,
+                    properties_info[i].1.clone(),
+                    Some(property_size),
+                    Some(Item::Int32(0)),
+                );
+            }
+            let result = {
+                pegasus::run(conf.clone(), || {
+                    libc.Precompute(
+                        conf.clone(),
+                        graph,
+                        graph_index,
+                        &properties_info,
+                        true,
+                        label,
+                        src_label,
+                        dst_label,
+                    )
+                })
+                .expect("submit precompute failure")
+            };
+            let mut result_vec = vec![];
+            for x in result {
+                let (index_set, data_set) = x.expect("Fail to get result");
+                result_vec.push((index_set, data_set));
+            }
+            for (index_set, data_set) in result_vec {
+                for i in 0..properties_size {
+                    graph_index
+                        .add_vertex_index_batch(
+                            label,
+                            &properties_info[i].0,
+                            &index_set,
+                            data_set[i].as_ref(),
+                        )
+                        .unwrap();
+                }
+            }
+            println!(
+                "Finished run query {}, time: {}",
+                &setting.precompute_name,
+                start.elapsed().as_millis()
+            );
+        }
+        for (i, (name, (setting, libc))) in self.precompute_edge_map.iter().enumerate() {
+            if &setting.precompute_name != query_name {
+                continue;
+            }
+            let start = Instant::now();
+
+            let job_name = format!("{}-{}", name, i);
+            let mut conf = JobConf::new(job_name);
+            conf.set_workers(worker_num);
+            conf.reset_servers(ServerConf::Partial(vec![0]));
+            let label = setting.label.edge_label.unwrap() as LabelId;
+            let src_label = Some(setting.label.src_label.unwrap() as LabelId);
+            let dst_label = Some(setting.label.dst_label.unwrap() as LabelId);
+            let mut properties_info = vec![];
+            let properties_size = setting.properties.len();
+            for i in 0..properties_size {
+                let index_name = setting.properties[i].name.clone();
+                let data_type = graph_index::types::str_to_data_type(&setting.properties[i].data_type);
+                properties_info.push((index_name, data_type));
+            }
+            let oe_property_size = graph.get_max_edge_offset(
+                src_label.unwrap(),
+                label,
+                dst_label.unwrap(),
+                Direction::Outgoing,
+            );
+            for i in 0..properties_info.len() {
+                graph_index
+                    .init_outgoing_edge_index(
+                        properties_info[i].0.clone(),
+                        src_label.unwrap(),
+                        dst_label.unwrap(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(oe_property_size),
+                        Some(Item::Int32(0)),
+                    )
+                    .unwrap();
+            }
+            let ie_property_size = graph.get_max_edge_offset(
+                src_label.unwrap(),
+                label,
+                dst_label.unwrap(),
+                Direction::Incoming,
+            );
+            for i in 0..properties_info.len() {
+                graph_index
+                    .init_incoming_edge_index(
+                        properties_info[i].0.clone(),
+                        src_label.unwrap(),
+                        dst_label.unwrap(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(ie_property_size),
+                        Some(Item::Int32(0)),
+                    )
+                    .unwrap();
+            }
+            let result = {
+                pegasus::run(conf.clone(), || {
+                    libc.Precompute(
+                        conf.clone(),
+                        graph,
+                        graph_index,
+                        &properties_info,
+                        true,
+                        label,
+                        src_label,
+                        dst_label,
+                    )
+                })
+                .expect("submit precompute failure")
+            };
+            let mut result_vec = vec![];
+            for x in result {
+                let (in_index_set, in_data_set, out_index_set, out_data_set) =
+                    x.expect("Fail to get result");
+                result_vec.push((in_index_set, in_data_set, out_index_set, out_data_set));
+            }
+            for (in_index_set, in_data_set, out_index_set, out_data_set) in result_vec {
+                for i in 0..properties_size {
+                    graph_index
+                        .add_outgoing_edge_index_batch(
+                            src_label.unwrap(),
+                            label,
+                            dst_label.unwrap(),
+                            &properties_info[i].0,
+                            &out_index_set,
+                            out_data_set[i].as_ref(),
+                        )
+                        .unwrap();
+                    graph_index
+                        .add_incoming_edge_index_batch(
+                            src_label.unwrap(),
+                            label,
+                            dst_label.unwrap(),
+                            &properties_info[i].0,
+                            &in_index_set,
+                            in_data_set[i].as_ref(),
+                        )
+                        .unwrap();
+                }
+            }
+            println!(
+                "Finished run query {}, time: {}",
+                &setting.precompute_name,
+                start.elapsed().as_millis()
+            );
+        }
+    }
+
     pub fn run_precomputes(
         &self, graph: &GraphDB<usize, usize>, graph_index: &mut GraphIndex, worker_num: u32,
     ) {

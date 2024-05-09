@@ -5,7 +5,7 @@ use std::io::{BufReader, BufWriter, Write};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::col_table::ColTable;
-use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrOffsetIter, SafeMutPtr, SafePtr};
+use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrIterBeta, NbrOffsetIter, SafeMutPtr, SafePtr};
 use crate::graph::IndexType;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
@@ -181,6 +181,19 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
             let start = self.offsets[u];
             let end = self.offsets[u] + self.degree[u] as usize;
             Some(NbrIter::new(&self.neighbors, start, end))
+        }
+    }
+
+    fn get_edges_beta(&self, u: I) -> NbrIterBeta<I> {
+        let u = u.index();
+        if u >= self.offsets.len() {
+            NbrIterBeta::new(self.neighbors.as_ptr(), self.neighbors.as_ptr())
+        } else {
+            let start = self.offsets[u];
+            let end = self.offsets[u] + self.degree[u] as usize;
+            let start = unsafe { self.neighbors.as_ptr().add(start) };
+            let end = unsafe { self.neighbors.as_ptr().add(end) };
+            NbrIterBeta::new(start, end)
         }
     }
 

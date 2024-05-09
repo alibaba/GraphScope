@@ -19,7 +19,7 @@ use pegasus_common::buffer::ReadBuffer;
 
 use crate::api::function::{BatchRouteFunction, FnResult, RouteFunction};
 use crate::channel_id::ChannelInfo;
-use crate::communication::buffer::ScopeBufferPool;
+use crate::communication::buffer::{BufSlotPtr, ScopeBufferPool};
 use crate::communication::cancel::{CancelHandle, MultiConsCancelPtr, SingleConsCancel};
 use crate::communication::channel::BatchRoute;
 use crate::communication::decorator::evented::EventEmitPush;
@@ -229,9 +229,14 @@ impl<D: Data> ExchangeByDataPush<D> {
     fn push_inner(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
         let mut has_block = false;
         let tag = batch.tag().clone();
+        let mut buffers: Vec<BufSlotPtr<D>> = vec![];
+        for buf in self.buffers.iter_mut() {
+            buffers.push(buf.fetch_slot_ptr(&tag));
+        }
+
         for item in batch.drain() {
             let target = self.route.route(&item)? as usize;
-            match self.buffers[target].push(&tag, item) {
+            match buffers[target].push(item) {
                 Ok(Some(buf)) => {
                     self.push_to(target, tag.clone(), buf)?;
                 }
@@ -686,7 +691,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
                         let mut new_end = end.clone();
                         new_end.total_send = 0;
                         new_end.global_total_send = 0;
-                        new_end.update_peers(DynPeers::single(self.src),self.total_peers);
+                        new_end.update_peers(DynPeers::single(self.src), self.total_peers);
                         p.push_end(new_end, DynPeers::single(self.src))?;
                     }
                 } else {
@@ -756,7 +761,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
                     }
                 }
 
-                end.update_peers(DynPeers::single(target as u32),self.total_peers);
+                end.update_peers(DynPeers::single(target as u32), self.total_peers);
                 end.total_send = total_send;
                 end.global_total_send = total_send;
                 batch.set_end(end);
@@ -770,7 +775,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
                     new_end.global_total_send = g;
                     if i == target {
                         let mut batch = std::mem::replace(&mut batch, MicroBatch::empty());
-                        new_end.update_peers(c,self.total_peers);
+                        new_end.update_peers(c, self.total_peers);
                         batch.set_end(new_end);
                         self.pushes[i].push(batch)?;
                     } else {
