@@ -110,7 +110,6 @@ HQPSService::~HQPSService() {
   if (metadata_store_) {
     metadata_store_->Close();
   }
-  LOG(INFO) << "High QPS service stopped.";
 }
 
 const ServiceConfig& HQPSService::get_service_config() const {
@@ -163,20 +162,14 @@ void HQPSService::run_and_wait_for_exit() {
   while (running_.load(std::memory_order_relaxed)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
-  LOG(INFO) << "Stopping query handler..";
   query_hdl_->stop();
-  LOG(INFO) << "Query handler stopped.";
   if (admin_hdl_) {
     admin_hdl_->stop();
   }
-  LOG(INFO) << "Terminating actor system";
   actor_sys_->terminate();
 }
 
-void HQPSService::set_exit_state() {
-  LOG(INFO) << "Set exit state";
-  running_.store(false);
-}
+void HQPSService::set_exit_state() { running_.store(false); }
 
 bool HQPSService::is_actors_running() const {
   if (query_hdl_) {
