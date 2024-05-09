@@ -54,6 +54,18 @@ std::string parse_codegen_dir(const bpo::variables_map& vm) {
   return codegen_dir;
 }
 
+void blockSignal(int sig) {
+  sigset_t set;
+  // 初始化信号集
+  sigemptyset(&set);
+  // 将指定信号添加到信号集中
+  sigaddset(&set, sig);
+  // 将信号集中的信号添加到当前线程的信号掩码中，即阻塞这些信号
+  if (pthread_sigmask(SIG_BLOCK, &set, NULL) != 0) {
+    perror("pthread_sigmask");
+  }
+}
+
 // When graph_schema is not specified, codegen proxy will use the running graph
 // schema in hqps_service
 void init_codegen_proxy(const bpo::variables_map& vm,
@@ -130,6 +142,10 @@ void openDefaultGraph(const std::string workspace, int32_t thread_num,
  * The main entrance for InteractiveServer.
  */
 int main(int argc, char** argv) {
+  // block sigint and sigterm in main thread, let seastar handle it
+  gs::blockSignal(SIGINT);
+  gs::blockSignal(SIGTERM);
+
   bpo::options_description desc("Usage:");
   desc.add_options()("help,h", "Display help messages")(
       "enable-admin-service,e", bpo::value<bool>()->default_value(false),
