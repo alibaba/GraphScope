@@ -103,7 +103,7 @@ while [[ $# -gt 0 ]]; do
     exit 0
     ;;
   *) # unknown option
-    err "unknown option $1"
+    echo "unknown option $1"
     usage
     exit 1
     ;;
