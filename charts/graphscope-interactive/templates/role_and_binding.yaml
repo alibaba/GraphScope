@@ -1,0 +1,26 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "graphscope-interactive.name" . }}-role
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups: ["apps", "extensions", ""]
+  resources: ["configmaps", "deployments", "deployments/status", "statefulsets", "statefulsets/status", "endpoints", "events", "pods", "pods/log", "pods/exec", "pods/status", "services", "replicasets"]
+  verbs: ["*"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "rolebindings"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "graphscope-interactive.name" . }}-role-binding
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "graphscope-interactive.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "graphscope-interactive.name" . }}-role
+  apiGroup: rbac.authorization.k8s.io

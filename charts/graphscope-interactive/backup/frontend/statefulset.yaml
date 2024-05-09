@@ -1,5 +1,6 @@
 {{- $frontendFullname := include "graphscope-interactive.frontend.fullname" . }}
-{{- $engineFullName := include "graphscope-interactive.engine.fullname" . }}
+{{- $primaryFullName := include "graphscope-interactive.primary.fullname" . }}
+{{- $secondaryFullName := include "graphscope-interactive.secondary.fullname" . }}
 {{- $releaseNamespace := .Release.Namespace }}
 {{- $clusterDomain := .Values.clusterDomain }}
 
@@ -35,12 +36,32 @@ spec:
         {{- end }}
       labels: {{- include "graphscope-interactive.labels" . | nindent 8 }}
         app.kubernetes.io/component: frontend
-        {{- if .Values.commonLabels }}
-        {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
+        {{- if .Values.frontend.podLabels }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.frontend.podLabels "context" $) | nindent 8 }}
         {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.frontend.hostAliases }}
+      hostAliases: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.frontend.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      hostNetwork: {{ .Values.frontend.hostNetwork }}
+      hostIPC: {{ .Values.frontend.hostIPC }}
+      {{- if .Values.frontend.schedulerName }}
+      schedulerName: {{ .Values.frontend.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dnsPolicy }}
+      dnsPolicy: {{ .Values.dnsPolicy | quote }}
+      {{- end }}
+      {{- if .Values.dnsConfig }}
+      dnsConfig: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.dnsConfig "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "graphscope-interactive.serviceAccountName" . }}
       {{- if .Values.frontend.affinity }}
@@ -84,11 +105,12 @@ spec:
               cmd="java -cp \"${COMPILER_CLASS_PATH}\" -Djna.library.path=${COMPILER_LIBRARY_PATH} "
               cmd="${cmd}  -Dgraph.schema=${GRAPH_SCHEMA_PATH} "
               cmd="${cmd} com.alibaba.graphscope.GraphServer ${REAL_ENGINE_CONFIG_PATH}"
+              # TODO: The real engine config path should point to the virtual server endpoint.
               echo "Start compiler with command: ${cmd}"
               eval ${cmd}
           env:
-            - name: ENGINE_SERVICE_HOST
-              value: {{ $engineFullName }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
+            # - name: ENGINE_SERVICE_HOST
+            #   value: {{ $engineFullName }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: TIMEOUT
               value: {{ .Values.hiactorTimeout | quote }}
             - name: ENGINE_CONFIG_PATH
@@ -133,33 +155,33 @@ spec:
           configMap:
             name: {{ include "graphscope-interactive.configmapName" . }}
             defaultMode: 0755
-  {{- if and .Values.engine.persistence.enabled .Values.engine.persistence.existingClaim }}
+  {{- if and .Values.primary.persistence.enabled .Values.primary.persistence.existingClaim }}
         - name: workspace
           persistentVolumeClaim:
-            claimName: {{ tpl .Values.engine.persistence.existingClaim . }}
-  {{- else if not .Values.engine.persistence.enabled }}
+            claimName: {{ tpl .Values.primary.persistence.existingClaim . }}
+  {{- else if not .Values.primary.persistence.enabled }}
         - name: workspace
           emptyDir: {}
-  {{- else if and .Values.engine.persistence.enabled (not .Values.engine.persistence.existingClaim) }}
+  {{- else if and .Values.primary.persistence.enabled (not .Values.primary.persistence.existingClaim) }}
   volumeClaimTemplates:
     - metadata:
         name: workspace
         {{- if .Values.persistence.annotations }}
-        annotations: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
+        annotations: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
         {{- end }}
         {{- if .Values.persistence.labels }}
-        labels: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
+        labels: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
         {{- end }}
       spec:
         accessModes:
-          {{- range .Values.engine.persistence.accessModes }}
+          {{- range .Values.primary.persistence.accessModes }}
           - {{ . | quote }}
           {{- end }}
         resources:
           requests:
-            storage: {{ .Values.engine.persistence.size | quote }}
+            storage: {{ .Values.primary.persistence.size | quote }}
         {{ include "graphscope-interactive.storageClass" . | nindent 8 }}
-        {{- if .Values.engine.persistence.selector }}
-        selector: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.engine.persistence.selector "context" $) | nindent 10 }}
+        {{- if .Values.primary.persistence.selector }}
+        selector: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.primary.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
   {{- end }}

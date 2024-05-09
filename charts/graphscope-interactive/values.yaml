@@ -18,6 +18,17 @@ commonAnnotations: {}
 ##
 commonLabels: {}
 
+global:
+  #imageRegistry: registry.cn-hongkong.aliyuncs.com
+  storageClass: ""
+
+odps:
+  secretName: "odps-secret"
+  access:
+    id: ""
+    key: ""
+  endpoint: ""
+
 ##
 javaOpts: ""
 
@@ -30,6 +41,7 @@ workspace: "/tmp/interactive_workspace"
 ## default graph
 defaultGraph: modern_graph
 
+nodeSelector: {}
 
 hiactorWorkerNum: 1
 
@@ -79,28 +91,38 @@ persistence:
   ##
   labels: {}
 
+## Ingress configuration
+ingress:
+  hostname: "interactive.example"
+  paths:
+    - path: /
+
 ## GraphScope Interactive parameters
 ##
-engine:
+primary:
   image:
-    registry: registry.cn-hongkong.aliyuncs.com
-    repository: graphscope/interactive
+    # registry: registry.cn-hongkong.aliyuncs.com
+    registry: reg.docker.alibaba-inc.com
+    # repository: graphscope/interactive
+    repository: 7brs/interactive
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "v0.0.3"
+    tag: "debug"
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     ##
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
     ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
     ## Example:
     ## pullSecrets:
     ##   - myRegistryKeySecretName
     ##
-    pullSecrets: [ ]
+    pullSecrets: []
 
   replicaCount: 1
+
+  hangUntilSuccess: false
 
   logLevel: INFO
 
@@ -133,6 +155,7 @@ engine:
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
+  affinity: {}
   # affinity:
   #   nodeAffinity:
   #     requiredDuringSchedulingIgnoredDuringExecution:
@@ -147,6 +170,10 @@ engine:
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
   nodeSelector: {}
+
+  hostAliases: {}
+
+  hostIPC: false
 
   ## Tolerations for GraphScope Interactive pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -170,7 +197,13 @@ engine:
   ## GraphScope Interactive container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##
-  resources: {}
+  resources: 
+    limits:
+      cpu: 16000m
+      memory: 32Gi
+    requests:
+      cpu: 8000m
+      memory: 16Gi
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -210,8 +243,8 @@ engine:
     ## Name of existing PVC to hold GraphScope Interactive data
     ## NOTE: When it's set the rest of persistence parameters are ignored
     ##
-    existingClaim: "graphscope-interactive-pvc"
-    #existingClaim: ""
+    # existingClaim: "graphscope-interactive-pvc"
+    existingClaim: ""
 
     ## Persistent Volume Storage Class
     ## If defined, storageClassName: <storageClass>
@@ -245,10 +278,14 @@ engine:
   service:
     ## Service type
     ##
-    type: ClusterIP
+    type: NodePort
     ## Service port
     ##
-    servicePort: 55557
+    ports:
+      - name: query_port
+        port: 10000
+        targetPort: 10000
+        protocol: TCP
 
     queryPort: 10000
 
@@ -296,23 +333,266 @@ engine:
     ##
     # maxUnavailable: 1
 
-  ## GraphScope Interactive pod label. If labels are same as commonLabels , this will take precedence.
+  # ## GraphScope Interactive pod label. If labels are same as commonLabels , this will take precedence.
+  # ##
+  podLabels: {}
+
+
+## GraphScope Interactive parameters
+##
+secondary:
+  image:
+    # registry: registry.cn-hongkong.aliyuncs.com
+    registry: reg.docker.alibaba-inc.com
+    # repository: graphscope/interactive
+    repository: 7brs/interactive
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "debug"
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: Always
+    ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+
+  replicaCount: 2
+
+  logLevel: INFO
+
+  # Number of thread each worker will use
+  threadNumPerWorker: 1
+
+  ## updateStrategy for GraphScope Interactive statefulset
+  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
   ##
+  updateStrategy: RollingUpdate
+
+  ## GraphScope Interactive pod annotations
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  ##
+  podAnnotations: {}
+
+  ## GraphScope Interactive pod affinity preset
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  ## Allowed values: soft, hard
+  ##
+  podAffinityPreset: ""
+
+  ## GraphScope Interactive pod anti-affinity preset
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  ## Allowed values: soft, hard
+  ##
+  podAntiAffinityPreset: soft
+
+  ## Affinity for GraphScope Interactive pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
+  ##
+  affinity: {}
+  # affinity:
+  #   nodeAffinity:
+  #     requiredDuringSchedulingIgnoredDuringExecution:
+  #       nodeSelectorTerms:
+  #       - matchExpressions:
+  #         - key: app
+  #           operator: In
+  #           values:
+  #           - interactive_single_node
+
+  ## Node labels for GraphScope Interactive pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+
+  hostAliases: {}
+
+  hostIPC: false
+
+  ## Tolerations for GraphScope Interactive pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: []
+
+  ## GraphScope Interactive Pod security context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ##
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+
+  ## GraphScope Interactive container security context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  ##
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+
+  ## GraphScope Interactive container's resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  resources: 
+    limits:
+      cpu: 320000m
+      memory: 200Gi
+    requests:
+      cpu: 32000m
+      memory: 200Gi
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  ## GraphScope Interactive container's liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+  ##
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+
+  ## Enable persistence using Persistent Volume Claims
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    ## If true, use a Persistent Volume Claim, If false, use emptyDir
+    ##
+    enabled: true
+    ## Name of existing PVC to hold GraphScope Interactive data
+    ## NOTE: When it's set the rest of persistence parameters are ignored
+    ##
+    # existingClaim: "graphscope-interactive-pvc"
+    existingClaim: ""
+
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "manual"
+    ## Persistent Volume Claim annotations
+    ##
+    annotations: {}
+    ## Persistent Volume Access Mode
+    ##
+    accessModes:
+      - ReadWriteOnce # read and write by a single node.
+    ## Persistent Volume size
+    ##
+    size: 8Gi
+    ## selector can be used to match an existing PersistentVolume
+    ## selector:
+    ##   matchLabels:
+    ##     app: my-app
+    ##
+    selector: {}
+
+  initContainers: []
+
+  ## GraphScope interactive Service parameters
+  ##
+  service:
+    ## Service type
+    ##
+    #type: NodePort
+    type: ClusterIP
+    # type: LoadBalancer
+    ## Service port
+    ##
+    ports:
+      - name: query_port
+        port: 10000
+        targetPort: 10000
+        protocol: TCP
+
+    queryPort: 10000
+
+    adminPort: 7777
+
+    ## Specify the nodePort value for the LoadBalancer and NodePort service types.
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+    ##
+    nodePorts:
+      service: ""
+      query: ""
+      admin: ""
+    ## Service clusterIP
+    ##
+    # clusterIP: None
+    clusterIP: ""
+    ## Set the LoadBalancer service type to internal only.
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+    ##
+    loadBalancerIP: ""
+    ## Enable client source IP preservation
+    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## Load Balancer sources
+    ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## E.g.
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## Provide any additional annotations which may be required
+    ##
+    annotations: {}
+
+  ## GraphScope Interactive Pod Disruption Budget configuration
+  ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+  ##
+  pdb:
+    enabled: false
+    ## Min number of pods that must still be available after the eviction
+    ##
+    minAvailable: 1
+    ## Max number of pods that can be unavailable after the eviction
+    ##
+    # maxUnavailable: 1
+
+  # ## GraphScope Interactive pod label. If labels are same as commonLabels , this will take precedence.
+  # ##
   podLabels: {}
 
 ## GraphScope Frontend parameters
 ##
 frontend:
   image:
-    registry: registry.cn-hongkong.aliyuncs.com
-    repository: graphscope/interactive
+    # registry: registry.cn-hongkong.aliyuncs.com
+    registry: reg.docker.alibaba-inc.com
+    # repository: graphscope/interactive
+    repository: 7brs/interactive
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "v0.0.3"
+    tag: "debug"
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     ##
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
     ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
     ## Example:
@@ -349,7 +629,7 @@ frontend:
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
-  ## affinity: {}
+  affinity: {}
   # affinity:
   #   nodeAffinity:
   #     requiredDuringSchedulingIgnoredDuringExecution:
@@ -365,15 +645,25 @@ frontend:
   ##
   nodeSelector: {}
 
+  hostIPC: false
+
+  hostAliases: {}
+
   ## Tolerations for GraphScope Interactive pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
-  tolerations: []
+  # tolerations: []
 
   ## GraphScope Interactive container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##
-  resources: {}
+  resources: 
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -410,10 +700,7 @@ frontend:
   service:
     ## Service type
     ##
-    type: LoadBalancer
-    ## Service port
-    ##
-    servicePort: 55556
+    type: ClusterIP
 
     ## Gremlin console port
     ##
@@ -471,5 +758,3 @@ frontend:
   ##
   podLabels: {}
 
-global:
-  storageClass: ""

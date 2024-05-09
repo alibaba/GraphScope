@@ -20,6 +20,7 @@
 #include "opentelemetry/trace/span_startoptions.h"
 #endif  // HAVE_OPENTELEMETRY_CPP
 
+#include <seastar/core/sleep.hh>
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/options.h"
@@ -71,6 +72,33 @@ class optional_param_matcher : public matcher {
 }  // namespace seastar
 
 namespace server {
+
+hqps_heartbeat_handler::hqps_heartbeat_handler() {}
+
+hqps_heartbeat_handler::~hqps_heartbeat_handler() = default;
+
+// TODO: return snapshot_id.
+seastar::future<std::unique_ptr<seastar::httpd::reply>>
+hqps_heartbeat_handler::handle(const seastar::sstring& path,
+                               std::unique_ptr<seastar::httpd::request> req,
+                               std::unique_ptr<seastar::httpd::reply> rep) {
+  if (path.find("sampleQuery") != seastar::sstring::npos) {
+    using namespace std::chrono_literals;
+    LOG(INFO) << "Before sampleQuery";
+    return seastar::sleep(10s).then([rep = std::move(rep)]() mutable {
+      rep->write_body("bin", seastar::sstring{"OK"});
+      rep->done();
+      LOG(INFO) << "Finish sampleQuery";
+      return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+          std::move(rep));
+    });
+  } else {
+    rep->write_body("bin", seastar::sstring{"Heartbeat OK"});
+    rep->done();
+    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+        std::move(rep));
+  }
+}
 
 hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
                                  uint32_t group_inc_step,
@@ -537,6 +565,7 @@ hqps_http_handler::hqps_http_handler(uint16_t http_port, int32_t shard_num)
     : http_port_(http_port), actors_running_(true) {
   ic_handlers_.resize(shard_num);
   adhoc_query_handlers_.resize(shard_num);
+  heart_beat_handler_ = new hqps_heartbeat_handler();
 }
 
 hqps_http_handler::~hqps_http_handler() {
@@ -627,6 +656,10 @@ seastar::future<> hqps_http_handler::set_routes() {
 
     ic_handlers_[hiactor::local_shard_id()] = ic_handler;
     adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler;
+    r.add(seastar::httpd::operation_type::GET,
+          seastar::httpd::url("/heartbeat"), heart_beat_handler_);
+    r.add(seastar::httpd::operation_type::GET,
+          seastar::httpd::url("/sampleQuery"), heart_beat_handler_);
 
     return seastar::make_ready_future<>();
   });

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: http-forwarder
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: / # 如果需要重写URL，否则可以省略
+spec:
+  rules:
+  - host: your.domain.com # 替换为你实际的域名
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: target-service
+            port:
+              number: 10000

@@ -32,6 +32,12 @@ if(BUILD_HQPS)
         install(PROGRAMS load_plan_and_gen.sh DESTINATION bin)
 endif()
 
+if (BUILD_PROXY)
+        add_executable(proxy_server proxy_server.cc)
+        target_link_libraries(proxy_server flex_utils flex_server ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+        install_without_export_flex_target(proxy_server)
+endif()
+
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(bulk_loader bulk_loader.cc)
 target_link_libraries(bulk_loader flex_rt_mutable_graph flex_utils ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} ${Boost_LIBRARIES})

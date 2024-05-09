@@ -1568,6 +1568,14 @@ components:
         loading_config:
           type: object
           properties:
+            data_source:
+              type: object
+              properties:
+                scheme:
+                  type: string
+                  enum:
+                    - odps
+                    - file
             import_option:
               type: string
               enum:

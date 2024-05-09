@@ -12,9 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "flex/engines/http_server/types.h"
 #include "flex/utils/result.h"
-#include "seastar/http/reply.hh"
+
+#include <seastar/http/reply.hh>
 
 #ifndef ENGINES_HTTP_SERVER_HANDLER_HTTP_UTILS_H_
 #define ENGINES_HTTP_SERVER_HANDLER_HTTP_UTILS_H_

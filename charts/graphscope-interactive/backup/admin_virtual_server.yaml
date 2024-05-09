@@ -1,0 +1,25 @@
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: admin-service
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: virtual-server
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  host: admin.interactive.com
+  listener:
+    http: http-7777
+  upstreams:
+  - name: interactive-admin
+    service: {{ include "graphscope-interactive.primary.fullname" . }}
+    port: {{ .Values.primary.service.adminPort }}
+  routes:
+  - path: /
+    action:
+      pass: interactive-admin

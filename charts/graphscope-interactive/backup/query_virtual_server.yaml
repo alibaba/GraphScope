@@ -1,0 +1,49 @@
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: query-service
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: virtual-server
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  host: query.interactive.com
+  listener:
+    http: http-10000
+  upstreams:
+  - name: interactive-post
+    service: {{ include "graphscope-interactive.primary.fullname" . }}
+    port: {{ .Values.primary.service.queryPort }}
+  - name: interactive-get
+    service: {{ include "graphscope-interactive.secondary.fullname" . }}
+    port: {{ .Values.secondary.service.queryPort }}
+  routes:
+  - path: /
+    matches:
+    - conditions:
+      - variable: $request_method
+        value: GET
+      action:
+        pass: interactive-get
+    - conditions:
+      - variable: $request_method
+        value: POST
+      action:
+        pass: interactive-post
+    - conditions:
+      - variable: $request_method
+        value: PUT
+      action:
+        pass: interactive-post
+    - conditions:
+      - variable: $request_method
+        value: DELETE
+      action:
+        pass: interactive-post
+    action:
+      pass: interactive-get

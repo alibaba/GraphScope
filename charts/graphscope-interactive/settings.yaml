@@ -1,0 +1,78 @@
+Kata: &kata
+  #hostNetwork: true
+  schedulerName: unified-batch-scheduler
+  podAnnotations:
+      alibabacloud.com/assign-in-virtual-node: odps-kata
+      alibabacloud.com/skip-kubelet-admission: "[\"cpu\",\"memory\",\"alibabacloud.com/acu\",\"pods\"]"
+  podLabels: &podlabels
+      alibabacloud/qos: LS
+      alibabacloud.com/quota-name: yuansi-child-quotaxy
+
+NoKata: &nokata
+  hostNetwork: false 
+  schedulerName: default-scheduler
+  podAnnotations:
+      #alibabacloud.com/assign-in-virtual-node: odps-kata
+      alibabacloud.com/skip-kubelet-admission: "[\"cpu\",\"memory\",\"alibabacloud.com/acu\",\"pods\"]"
+  podLabels:
+      alibabacloud/qos: LS
+      #alibabacloud.com/quota-name: yuansi-child-quotaxy
+
+Defaults: &defaults
+  dnsPolicy: &dnspolicy None
+  dnsConfig: &dnsconfig
+    # nameservers: ["33.18.9.125"] #118f
+    nameservers: ["11.163.105.32"] #88n
+    searches:
+    - kubetask.svc.cluster.local
+    - svc.cluster.local
+    - cluster.local
+    options:
+    - name: ndots
+      value: "2"
+
+  tolerations: &toleration
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoSchedule
+    key: sigma.ali/resource-pool
+    operator: Exists
+    #value: ackee_pool
+  - effect: NoSchedule
+    key: sigma.ali/is-ecs
+    operator: Exists
+  - effect: NoSchedule
+    key: alibabacloud.com/partition
+    operator: Exists
+  - effect: NoSchedule
+    key: sigma.ali/server-owner
+    operator: Exists
+
+resources: &resource_min
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+global:
+  #imageRegistry: registry.cn-hongkong.aliyuncs.com
+  storageClass: csi-ultron-prjquota
+
+<<: *defaults
+
+primary:
+  <<: *nokata
+
+secondary:
+  <<: *nokata
+
+frontend:
+  <<: *nokata

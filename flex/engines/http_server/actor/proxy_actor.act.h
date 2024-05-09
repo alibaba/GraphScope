@@ -13,36 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
-#define ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
+#ifndef ENGINES_HTTP_SERVER_ACTOR_PROXY_ACTOR_H_
+#define ENGINES_HTTP_SERVER_ACTOR_PROXY_ACTOR_H_
 
-#include <string>
-#include "flex/engines/http_server/handler/http_utils.h"
+
 #include "flex/engines/http_server/types.h"
-#include "flex/utils/service_utils.h"
 
-#include <boost/property_tree/json_parser.hpp>
-#include <seastar/http/common.hh>
+#include <hiactor/core/actor-template.hh>
+#include <hiactor/util/data_type.hh>
 #include <seastar/http/httpd.hh>
 
 namespace server {
 
-class InteractiveAdminService;
-class admin_http_handler {
+class ANNOTATION(actor:impl) proxy_actor : public hiactor::actor {
  public:
-  admin_http_handler(uint16_t http_port);
+  proxy_actor(hiactor::actor_base* exec_ctx, const hiactor::byte_t* addr);
+  ~proxy_actor() override;
 
-  void start();
-  void stop();
+  seastar::future<proxy_query_result> ANNOTATION(actor:method) do_query(proxy_request&& param);
+
+  // DECLARE_RUN_QUERIES;
+  /// Declare `do_work` func here, no need to implement.
+  ACTOR_DO_WORK()
 
  private:
-  seastar::future<> set_routes();
-
- private:
-  const uint16_t http_port_;
-  seastar::httpd::http_server_control server_;
+  int32_t your_private_members_ = 0;
 };
+}
 
-}  // namespace server
-
-#endif  // ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
+#endif  // ENGINES_HTTP_SERVER_ACTOR_PROXY_ACTOR_H_

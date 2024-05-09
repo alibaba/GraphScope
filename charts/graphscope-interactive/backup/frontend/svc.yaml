@@ -6,11 +6,11 @@ metadata:
   labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
     {{- if .Values.commonLabels }}
-    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
   annotations:
     {{- if .Values.commonAnnotations }}
-    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
     {{- end }}
 spec:
   type: {{ .Values.frontend.service.type }}
@@ -28,7 +28,7 @@ spec:
     - name: gremlin
       port: {{ .Values.frontend.service.gremlinPort }}
       protocol: TCP
-      targetPort: gremlin
+      targetPort: {{ .Values.frontend.service.gremlinPort }}
       {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.gremlin)) }}
       {{- if (not (empty .Values.frontend.service.nodePorts.gremlin)) }}
       nodePort: {{ .Values.frontend.service.nodePorts.gremlin }}
@@ -39,7 +39,7 @@ spec:
     - name: cypher
       port: {{ .Values.frontend.service.cypherPort }}
       protocol: TCP
-      targetPort: cypher
+      targetPort: {{ .Values.frontend.service.cypherPort }}
       {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.cypher)) }}
       {{- if (not (empty .Values.frontend.service.nodePorts.cypher)) }}
       nodePort: {{ .Values.frontend.service.nodePorts.cypher }}

@@ -37,10 +37,10 @@ void signal_handler(int signal) {
                << ",Clearing directory: " << work_dir << ", exiting...";
     // remove all files in work_dir
     std::filesystem::remove_all(work_dir);
-    exit(0);
+    exit(signal);
   } else {
     LOG(ERROR) << "Received unexpected signal " << signal << ", exiting...";
-    exit(1);
+    exit(signal);
   }
 }
 

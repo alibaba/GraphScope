@@ -28,6 +28,7 @@ const uint32_t ic_update_group_id = 3;
 const uint32_t ic_adhoc_group_id = 4;
 const uint32_t codegen_group_id = 5;
 const uint32_t proc_query_group_id = 6;
+const uint32_t proxy_group_id = 7;
 
 const uint32_t max_group_id = std::numeric_limits<uint32_t>::max();
 const uint32_t group_inc_step =
@@ -42,6 +43,7 @@ extern uint32_t shard_admin_node_concurrency;
 extern uint32_t shard_admin_service_concurrency;
 extern uint32_t shard_admin_job_concurrency;
 extern uint32_t shard_admin_procedure_concurrency;
+extern uint32_t shard_proxy_concurrency;
 
 }  // namespace server
 

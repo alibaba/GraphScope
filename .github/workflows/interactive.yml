@@ -167,6 +167,20 @@ jobs:
         sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
         sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
 
+    - name: Proxy Server test
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_proxy_server_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+
+    - name: Proxy Server test
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_proxy_server_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+
     - name: Sample Query test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest

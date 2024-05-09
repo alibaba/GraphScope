@@ -27,8 +27,16 @@ If release name contains chart name it will be used as a full name.
 {{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "frontend" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "graphscope-interactive.engine.fullname" -}}
-{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "engine" | trunc 63 | trimSuffix "-" -}}
+{{- define "graphscope-interactive.primary.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "primary" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.secondary.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "secondary" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.ingress.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "ingress" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 
@@ -77,11 +85,28 @@ Return the proper graphscope-interactive frontend image name
 {{- end -}}
 
 {{/*
-Return the proper graphscope-interactive engine image name
+Return the proper graphscope-interactive primary image name
 */}}
-{{- define "graphscope-interactive.engine.image" -}}
+{{- define "graphscope-interactive.primary.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
-{{- with .Values.engine.image -}}
+{{- with .Values.primary.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the proper graphscope-interactive secondary image name
+*/}}
+{{- define "graphscope-interactive.secondary.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.secondary.image -}}
 {{- if .tag -}}
 {{- $tag = .tag | toString -}}
 {{- end -}}

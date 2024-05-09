@@ -86,6 +86,9 @@ class Result {
   Result(const Status& status, ValueType&& value)
       : status_(status), value_(std::move(value)) {}
 
+  Result(Status&& status, ValueType&& value)
+      : status_(std::move(status)), value_(std::move(value)) {}
+
   Result(const Status& status) : status_(status) {}
 
   Result(const Status& status, const ValueType& value)

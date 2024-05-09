@@ -19,6 +19,7 @@
 
 #include <seastar/core/alien.hh>
 #include <seastar/core/print.hh>
+#include <seastar/http/common.hh>
 #include <seastar/http/handlers.hh>
 #include "flex/engines/http_server/generated/actor/admin_actor_ref.act.autogen.h"
 #include "flex/engines/http_server/types.h"

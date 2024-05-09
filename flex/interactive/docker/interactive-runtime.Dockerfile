@@ -4,10 +4,11 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:v0.0.4 AS bui
 ARG ARCH
 ARG ENABLE_COORDINATOR="false"
 
-COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
-
 # change bash as default
 SHELL ["/bin/bash", "-c"]
+
+# install debug tools
+RUN sudo apt-get update  && sudo apt-get install -y vim iputils-ping curl
 
 # install arrow
 RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget libcurl4-openssl-dev && \
@@ -31,8 +32,10 @@ cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_
 -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && make -j  && make install && rm -rf /tmp/opentelemetry-cpp
 
 # install flex
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
-    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF && make -j && make install && \
+    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_ODPS_FRAGMENT_LOADER=ON && make -j && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
     cp target/libs/*.jar /opt/flex/lib/ && \
@@ -56,8 +59,14 @@ ARG ENABLE_COORDINATOR="false"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # g++ + jre 500MB
-RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless && \
+RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless vim iputils-ping curl && \
     locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/* 
+
+RUN cd /tmp && export KUBE_VER=v1.19.2 && \
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VER}/bin/linux/amd64/kubectl && \
+    chmod +x ./kubectl && \
+    cd /tmp && \
+    mv ./kubectl /usr/local/bin/kubectl
 
 # python3
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \

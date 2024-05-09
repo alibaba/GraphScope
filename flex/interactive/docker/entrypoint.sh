@@ -18,10 +18,11 @@ set -e
 DEFAULT_GRAPH_NAME=gs_interactive_default_graph
 BULK_LOADER_BINARY_PATH=/opt/flex/bin/bulk_loader
 INTERACTIVE_SERVER_BIN=/opt/flex/bin/interactive_server
+PROXY_SERVER_BIN=/opt/flex/bin/proxy_server
 
 function usage() {
     cat << EOF
-        Usage: $0 -w[--workspace] <workspace> 
+        Usage: $0 -w[--workspace] <workspace> -t[--type] <type> -e[--endpoints] <endpoints>
           This is the entrypoint script for the interactive container.
             Options:
                 -h, --help: show this help message and exit
@@ -32,6 +33,11 @@ function usage() {
                 -c, --enable-coordinator: Launch the Interactive service along
                  with Coordinator. Must enable this option if you want to use
                  `gsctl` command-line tool.
+                -t, --type: Specify the type of the service to start. 
+                 Default is "engine", which means start the engine service.
+                 Other options are "proxy", which means start the proxy service.
+                -e, --endpoints: Specify the endpoints of the engine service. i.e. 
+                 the address of the engine service. For example, "localhost:9190,localhost:9191"
 EOF
 }
 
@@ -42,16 +48,18 @@ function prepare_workspace() {
         workspace="/tmp/interactive_workspace"
     fi
     #if workspace is not exist, create it
-    if [ ! -d "${workspace}" ]; then
-        mkdir -p ${workspace}
-        mkdir -p ${workspace}/conf/
-    else 
-        echo "Workspace ${workspace} already exists"
+    mkdir -p ${workspace}
+    mkdir -p ${workspace}/conf/
+    # prepare engine_config.yaml
+    builtin_graph_directory="${workspace}/data/${DEFAULT_GRAPH_NAME}"
+    if [ -d "${builtin_graph_directory}" ]; then
+        echo "The builtin graph: ${DEFAULT_GRAPH_NAME} already exists, skip preparing the workspace"
         return 0
     fi
-    # prepare engine_config.yaml
     engine_config_path="${workspace}/conf/engine_config.yaml"
-    cp /opt/flex/share/engine_config.yaml $engine_config_path
+    if [ ! -f "${engine_config_path}" ]; then
+        cp /opt/flex/share/engine_config.yaml $engine_config_path
+    fi
     #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
     sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
     echo "Using default graph: ${DEFAULT_GRAPH_NAME} to start the service"
@@ -106,39 +114,85 @@ EOF
   fi
 }
 
+function launch_proxy_service() {
+  #expect 1 arg
+  if [ $# -ne 3 ]; then
+    echo "Usage: launch_proxy_service <endpoints> <port> <hang-until-success>"
+    echo "       number of args: $#"
+    exit 1
+  fi
+  local endpoints=$1
+  local port=$2
+  local hang_until_success=$3
+  start_cmd="${PROXY_SERVER_BIN} -e '${endpoints}' -p ${port} --hang-until-success ${hang_until_success}"
+  echo "Starting the proxy service with command: $start_cmd"
+  eval $start_cmd
+}
+
 
 ####################  Entry ####################
 
 ENABLE_COORDINATOR=false
 WORKSPACE=/tmp/interactive_workspace
+SERVICE_TYPE="engine"
+PROXY_PORT=10000
+HANG_UNTIL_SUCCESS=false
 while [[ $# -gt 0 ]]; do
-  case $1 in
-    -w | --workspace)
-      shift
-      if [[ $# -eq 0 || $1 == -* ]]; then
-        echo "Option -w requires an argument." >&2
-        exit 1
-      fi
-      WORKSPACE=$1
-      shift
-      ;;
-    -c | --enable-coordinator)
-      ENABLE_COORDINATOR=true
-      shift
-      ;;
-    -h | --help)
-      usage
-      exit 0
-      ;;
-    *)
-      echo "Invalid option: $1" >&2
-      usage
-      exit 1
-      ;;
+  key="$1"
+
+  case $key in
+  -h | --help)
+    usage
+    exit
+    ;;
+  -w | --workspace)
+    shift
+    WORKSPACE="$1"
+    shift
+    ;;
+  -c | --enable-coordinator)
+    ENABLE_COORDINATOR=true
+    shift
+    ;;
+  -t | --type)
+    shift
+    SERVICE_TYPE="$1"
+    shift
+    ;;
+  -e | --endpoints)
+    shift
+    ENDPOINTS="$1"
+    shift
+    ;;
+  -p | --port)
+    shift
+    PROXY_PORT="$1"
+    shift
+    ;;
+  --hang-until-success)
+    shift
+    HANG_UNTIL_SUCCESS="$1"
+    shift
+    ;;
+  *) # unknown option
+    echo "unknown option $1"
+    usage
+    exit 1
+    ;;
   esac
 done
 
-
-prepare_workspace $WORKSPACE
-launch_service $WORKSPACE
-launch_coordinator
+if [ "${SERVICE_TYPE}" != "engine" ] && [ "${SERVICE_TYPE}" != "proxy" ]; then
+    echo "Invalid service type: ${SERVICE_TYPE}"
+    usage
+    exit 1
+fi
+if [ "${SERVICE_TYPE}" == "proxy" ]; then
+    echo "Start the proxy service"
+    launch_proxy_service $ENDPOINTS $PROXY_PORT $HANG_UNTIL_SUCCESS
+else
+    echo "Start the engine service"
+    prepare_workspace $WORKSPACE
+    launch_service $WORKSPACE 
+    launch_coordinator
+fi
