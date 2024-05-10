@@ -247,5 +247,9 @@ int main(int argc, char** argv) {
   server::HQPSService::get().init(service_config);
   server::HQPSService::get().run_and_wait_for_exit();
 
+#ifdef HAVE_OPENTELEMETRY_CPP
+  otel::cleanUpTracer();
+#endif
+
   return 0;
 }

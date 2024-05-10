@@ -27,33 +27,6 @@
 #include "flex/engines/http_server/types.h"
 #include "flex/otel/otel.h"
 
-#ifdef HAVE_OPENTELEMETRY_CPP
-namespace otel {
-template <typename T>
-class HttpTextMapCarrier
-    : public opentelemetry::context::propagation::TextMapCarrier {
- public:
-  HttpTextMapCarrier(T& headers) : headers_(headers) {}
-  HttpTextMapCarrier() = default;
-  virtual opentelemetry::nostd::string_view Get(
-      opentelemetry::nostd::string_view key) const noexcept override {
-    auto it = headers_.find(key.data());
-    if (it != headers_.end()) {
-      return opentelemetry::nostd::string_view(it->second);
-    }
-    return "";
-  }
-
-  virtual void Set(opentelemetry::nostd::string_view key,
-                   opentelemetry::nostd::string_view value) noexcept override {
-    headers_.insert(std::pair{std::string(key), std::string(value)});
-  }
-
-  T headers_;
-};
-}  // namespace otel
-#endif  // HAVE_OPENTELEMETRY_CPP
-
 namespace server {
 
 hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
@@ -272,23 +245,6 @@ bool hqps_adhoc_query_handler::create_actors() {
   return true;
 }
 
-#ifdef HAVE_OPENTELEMETRY_CPP
-opentelemetry::trace::StartSpanOptions get_parent_ctx(
-    opentelemetry::context::Context& context,
-    std::map<std::string, std::string>& headers) {
-  auto propagator = opentelemetry::context::propagation::
-      GlobalTextMapPropagator::GetGlobalPropagator();
-  otel::HttpTextMapCarrier<decltype(headers)> carrier(headers);
-  auto new_context = propagator->Extract(carrier, context);
-
-  opentelemetry::trace::StartSpanOptions options;
-  options.kind = opentelemetry::trace::SpanKind::kServer;
-  auto parent_ctx = opentelemetry::trace::GetSpan(new_context)->GetContext();
-  options.parent = opentelemetry::trace::GetSpan(new_context)->GetContext();
-  return options;
-}
-#endif  // HAVE_OPENTELEMETRY_CPP
-
 seastar::future<std::unique_ptr<seastar::httpd::reply>>
 hqps_adhoc_query_handler::handle(const seastar::sstring& path,
                                  std::unique_ptr<seastar::httpd::request> req,
@@ -303,19 +259,40 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
   std::map<std::string, std::string> headers(req->_headers.begin(),
                                              req->_headers.end());
   auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
-  auto options = get_parent_ctx(current_ctx, headers);
-  auto span = tracer_->StartSpan(path.data(), options);
-  auto scope = tracer_->WithActiveSpan(span);
-#else
-  int span = 0;
+  auto options = otel::get_parent_ctx(current_ctx, headers);
+  auto outer_span = tracer_->StartSpan("adhoc_query_handling", options);
+  auto scope = tracer_->WithActiveSpan(outer_span);
+  // Start a new span for codegen
+  auto codegen_span = tracer_->StartSpan("adhoc_codegen", options);
+  auto codegen_scope = tracer_->WithActiveSpan(codegen_span);
+  // create a new span for query execution, not started.
 #endif  // HAVE_OPENTELEMETRY_CPP
-
   return codegen_actor_refs_[0]
       .do_codegen(query_param{std::move(req->content)})
-      .then([this, dst_executor](auto&& param) {
+      .then([this, dst_executor
+#ifdef HAVE_OPENTELEMETRY_CPP
+             ,
+             codegen_span = codegen_span, &tracer_,
+             codegen_scope = std::move(codegen_scope), options = options
+#endif  // HAVE_OPENTELEMETRY_CPP
+  ](auto&& param) mutable {
+#ifdef HAVE_OPENTELEMETRY_CPP
+        codegen_span->End();
+        auto query_span = tracer_->StartSpan("adhoc_query_execution", options);
+        auto query_scope = tracer_->WithActiveSpan(query_span);
+#endif
         param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
-        return executor_refs_[dst_executor].run_graph_db_query(
-            query_param{std::move(param.content)});
+
+        return executor_refs_[dst_executor]
+            .run_graph_db_query(query_param{std::move(param.content)})
+            .then([query_span = query_span,
+                   query_scope = std::move(query_scope)](auto&& output) {
+#ifdef HAVE_OPENTELEMETRY_CPP
+              query_span->End();
+#endif
+              return seastar::make_ready_future<query_param>(
+                  std::move(output.content));
+            });
       })
       .then([](auto&& output) {
         if (output.content.size() < 4) {
@@ -328,7 +305,7 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
       .then_wrapped([rep = std::move(rep)
 #ifdef HAVE_OPENTELEMETRY_CPP
                          ,
-                     span
+                     outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](seastar::future<query_result>&& fut) mutable {
         if (__builtin_expect(fut.failed(), false)) {
@@ -340,9 +317,9 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
             rep->write_body("bin", seastar::sstring(e.what()));
           }
 #ifdef HAVE_OPENTELEMETRY_CPP
-          span->SetStatus(opentelemetry::trace::StatusCode::kError,
-                          "Internal Server Error");
-          span->End();
+          outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                                "Internal Server Error");
+          outer_span->End();
 #endif  // HAVE_OPENTELEMETRY_CPP
           rep->done();
           return seastar::make_ready_future<
@@ -351,13 +328,13 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         auto result = fut.get0();
         rep->write_body("bin", std::move(result.content));
 #ifdef HAVE_OPENTELEMETRY_CPP
-        span->End();
+        outer_span->End();
 #endif  // HAVE_OPENTELEMETRY_CPP
         rep->done();
         return seastar::make_ready_future<
             std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
       });
-}
+}  // namespace server
 
 seastar::future<std::unique_ptr<seastar::httpd::reply>>
 hqps_exit_handler::handle(const seastar::sstring& path,

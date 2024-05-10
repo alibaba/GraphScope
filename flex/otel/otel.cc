@@ -127,6 +127,13 @@ void initLogger() {
   logs_api::Provider::SetLoggerProvider(provider);
 }
 
+// ===== CLEANUP =====
+
+void cleanUpTracer() {
+  std::shared_ptr<opentelemetry::trace::TracerProvider> none;
+  trace_api::Provider::SetTracerProvider(none);
+}
+
 nostd::shared_ptr<logs_api::Logger> get_logger(std::string scope) {
   auto provider = logs_api::Provider::GetLoggerProvider();
   return provider->GetLogger(name + "_logger", name, OPENTELEMETRY_SDK_VERSION);
@@ -146,6 +153,21 @@ nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
       provider->GetMeter(name, version);
   auto int_counter = meter->CreateUInt64Counter(counter_name);
   return int_counter;
+}
+
+opentelemetry::trace::StartSpanOptions get_parent_ctx(
+    opentelemetry::context::Context& context,
+    std::map<std::string, std::string>& headers) {
+  auto propagator = opentelemetry::context::propagation::
+      GlobalTextMapPropagator::GetGlobalPropagator();
+  otel::HttpTextMapCarrier<decltype(headers)> carrier(headers);
+  auto new_context = propagator->Extract(carrier, context);
+
+  opentelemetry::trace::StartSpanOptions options;
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+  auto parent_ctx = opentelemetry::trace::GetSpan(new_context)->GetContext();
+  options.parent = opentelemetry::trace::GetSpan(new_context)->GetContext();
+  return options;
 }
 }  // namespace otel
 #endif  // HAVE_OPENTELEMETRY_CPP
