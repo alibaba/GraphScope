@@ -366,6 +366,147 @@ Get the schema for the specified graph.
 
 #### HTTP Request
 - **Method**: GET
+- **Endpoint**: `/v1/graph/{graph_id}/schema`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/schema"
+```
+
+
+#### Expected Response
+- **Format**: `application/json`
+- **Body**:
+```json
+{
+  "vertex_types": [
+      {
+          "type_id": 0,
+          "type_name": "person",
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "id",
+                  "property_type": {
+                      "primitive_type": "DT_SIGNED_INT64"
+                  }
+              },
+              {
+                  "property_id": 1,
+                  "property_name": "name",
+                  "property_type": {
+                      "string":{
+                          "long_text": {}
+                      }
+                  }
+              },
+              {
+                  "property_id": 2,
+                  "property_name": "age",
+                  "property_type": {
+                      "string":{
+                          "long_text": {}
+                      }
+                  }
+              }
+          ],
+          "primary_keys": [
+              "id"
+          ]
+      },
+      {
+          "type_id": 1,
+          "type_name": "software",
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "id",
+                  "property_type": {
+                      "primitive_type": "DT_SIGNED_INT64"
+                  }
+              },
+              {
+                  "property_id": 1,
+                  "property_name": "name",
+                  "property_type": {
+                      "string":{
+                          "long_text": {}
+                      }
+                  }
+              },
+              {
+                  "property_id": 2,
+                  "property_name": "lang",
+                  "property_type": {
+                      "string":{
+                          "long_text": {}
+                      }
+                  }
+              }
+          ],
+          "primary_keys": [
+              "id"
+          ]
+      }
+  ],
+  "edge_types": [
+      {
+          "type_id": 0,
+          "type_name": "knows",
+          "vertex_type_pair_relations": [
+              {
+                  "source_vertex": "person",
+                  "destination_vertex": "person",
+                  "relation": "MANY_TO_MANY",
+              }
+          ],
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "weight",
+                  "property_type": {
+                      "primitive_type": "DT_DOUBLE"
+                  }
+              }
+          ]
+      },
+      {
+          "type_id": 1,
+          "type_name": "created",
+          "vertex_type_pair_relations": [
+              {
+                  "source_vertex": "person",
+                  "destination_vertex": "software",
+                  "relation": "ONE_TO_MANY",
+              }
+          ],
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "weight",
+                  "property_type": {
+                      "primitive_type": "DT_DOUBLE"
+                  }
+              }
+          ]
+      }
+  ]
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Graph not found
+
+### GetGraphMeta  (GraphManagement Category)
+
+#### Description
+Get the schema for the specified graph.
+
+#### HTTP Request
+- **Method**: GET
 - **Endpoint**: `/v1/graph/{graph_id}`
 - **Content-type**: `application/json`
 
@@ -380,6 +521,14 @@ curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/
 - **Body**:
 ```json
 {
+  "id" : "123",
+  "name" : "example_graph",
+  "description": "A test description",
+  "store_type" : "mutable_csr",
+  "creation_time" : 11223444,
+  "data_update_time" : 11123445,
+  "data_import_config" : {},
+  "stored_procedures" : {},
   "vertex_types": [
       {
           "type_id": 0,
