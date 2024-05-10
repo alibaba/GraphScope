@@ -160,17 +160,25 @@ class GraphInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_schema(
+    def get_graph_schema(
         graph_id: Annotated[
-            StrictStr, Field(description="The name of graph to delete")
+            StrictStr, Field(description="The id of graph to get")
         ],
     ) -> Result[GetGraphSchemaResponse]:
         raise NotImplementedError
 
     @abstractmethod
+    def get_graph_meta(
+        graph_id: Annotated[
+            StrictStr, Field(description="The id of graph to get")
+        ],
+    ) -> Result[GetGraphResponse]:
+        raise NotImplementedError
+
+    @abstractmethod
     def delete_graph(
         graph_id: Annotated[
-            StrictStr, Field(description="The name of graph to delete")
+            StrictStr, Field(description="The id of graph to delete")
         ],
     ) -> Result[str]:
         raise NotImplementedError
@@ -379,9 +387,9 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def get_schema(
+    def get_graph_schema(
         self,
-        graph_id: Annotated[StrictStr, Field(description="The name of graph to get")],
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphSchemaResponse]:
         try:
             response = self._graph_api.get_schema_with_http_info(graph_id)
@@ -389,10 +397,20 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
+    def get_graph_meta(
+        self,
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
+    ) -> Result[GetGraphResponse]:
+        try:
+            response = self._graph_api.get_graph_with_http_info(graph_id)
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
     def delete_graph(
         self,
         graph_id: Annotated[
-            StrictStr, Field(description="The name of graph to delete")
+            StrictStr, Field(description="The id of graph to delete")
         ],
     ) -> Result[str]:
         try:
