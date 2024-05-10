@@ -98,17 +98,29 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
                 });
       }
     } else if (method == "GET") {
-      if (req->param.exists("graph_id") &&
-          path.find("schema") != seastar::sstring::npos) {
+      if (req->param.exists("graph_id")) {
         auto graph_id = trim_slash(req->param.at("graph_id"));
-        return admin_actor_refs_[dst_executor]
-            .run_get_graph_schema(query_param{std::move(graph_id)})
-            .then_wrapped(
-                [rep = std::move(rep)](
-                    seastar::future<admin_query_result>&& fut) mutable {
-                  return return_reply_with_result(std::move(rep),
-                                                  std::move(fut));
-                });
+        if (path.find("schema") != seastar::sstring::npos) {
+          // get graph schema
+          return admin_actor_refs_[dst_executor]
+              .run_get_graph_schema(query_param{std::move(graph_id)})
+              .then_wrapped(
+                  [rep = std::move(rep)](
+                      seastar::future<admin_query_result>&& fut) mutable {
+                    return return_reply_with_result(std::move(rep),
+                                                    std::move(fut));
+                  });
+        } else {
+          // Get the metadata of graph.
+          return admin_actor_refs_[dst_executor]
+              .run_get_graph_meta(query_param{std::move(graph_id)})
+              .then_wrapped(
+                  [rep = std::move(rep)](
+                      seastar::future<admin_query_result>&& fut) mutable {
+                    return return_reply_with_result(std::move(rep),
+                                                    std::move(fut));
+                  });
+        }
       } else {
         return admin_actor_refs_[dst_executor]
             .run_list_graphs(query_param{std::move(req->content)})
@@ -571,6 +583,16 @@ seastar::future<> admin_http_handler::set_routes() {
           new admin_http_graph_handler_impl(interactive_admin_group_id,
                                             shard_admin_graph_concurrency));
 
+    // Get graph metadata
+    {
+      // by setting full_path = false, we can match /v1/graph/{graph_id}/ and
+      // /v1/graph/{graph_id}/schema
+      auto match_rule = new seastar::httpd::match_rule(admin_graph_handler);
+      match_rule->add_str("/v1/graph").add_param("graph_id", false);
+      // Get graph schema
+      r.add(match_rule, seastar::httpd::operation_type::GET);
+    }
+
     {  // load data to graph
       auto match_rule =
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
@@ -620,6 +642,15 @@ seastar::future<> admin_http_handler::set_routes() {
       seastar::httpd::parameters params;
       auto test_handler = r.get_handler(seastar::httpd::operation_type::GET,
                                         "/v1/graph/abc/schema", params);
+      CHECK(test_handler);
+      CHECK(params.exists("graph_id"));
+      CHECK(params.at("graph_id") == "/abc") << params.at("graph_id");
+    }
+
+    {
+      seastar::httpd::parameters params;
+      auto test_handler = r.get_handler(seastar::httpd::operation_type::GET,
+                                        "/v1/graph/abc", params);
       CHECK(test_handler);
       CHECK(params.exists("graph_id"));
       CHECK(params.at("graph_id") == "/abc") << params.at("graph_id");
