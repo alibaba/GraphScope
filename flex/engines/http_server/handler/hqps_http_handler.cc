@@ -103,37 +103,63 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
   req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
+#ifdef HAVE_OPENTELEMETRY_CPP
+  auto tracer = otel::get_tracer("hqps_procedure_query_handler");
+  // Extract context from headers. This copy is necessary to avoid access after
+  // header content been freed
+  std::map<std::string, std::string> headers(req->_headers.begin(),
+                                             req->_headers.end());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+  auto options = otel::get_parent_ctx(current_ctx, headers);
+  auto outer_span = tracer->StartSpan("procedure_query_handling", options);
+  auto scope = tracer->WithActiveSpan(outer_span);
+#endif  // HAVE_OPENTELEMETRY_CPP
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([](auto&& output) {
+      .then([outer_span = outer_span](auto&& output) {
         if (output.content.size() < 4) {
           LOG(ERROR) << "Invalid output size: " << output.content.size();
+#ifdef HAVE_OPENTELEMETRY_CPP
+          outer_span->End();
+#endif
           return seastar::make_ready_future<query_param>(std::move(output));
         }
         return seastar::make_ready_future<query_param>(
             std::move(output.content.substr(4)));
       })
-      .then_wrapped(
-          [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              rep->set_status(
-                  seastar::httpd::reply::status_type::internal_server_error);
-              try {
-                std::rethrow_exception(fut.get_exception());
-              } catch (std::exception& e) {
-                rep->write_body("bin", seastar::sstring(e.what()));
-              }
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            }
-            auto result = fut.get0();
-            rep->write_body("bin", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-          });
+      .then_wrapped([rep = std::move(rep)
+#ifdef HAVE_OPENTELEMETRY_CPP
+                         ,
+                     outer_span
+#endif  // HAVE_OPENTELEMETRY_CPP
+  ](seastar::future<query_result>&& fut) mutable {
+        if (__builtin_expect(fut.failed(), false)) {
+          rep->set_status(
+              seastar::httpd::reply::status_type::internal_server_error);
+          try {
+            std::rethrow_exception(fut.get_exception());
+          } catch (std::exception& e) {
+            rep->write_body("bin", seastar::sstring(e.what()));
+          }
+#ifdef HAVE_OPENTELEMETRY_CPP
+          outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                                "Internal Server Error");
+          outer_span->End();
+#endif  // HAVE_OPENTELEMETRY_CPP
+          rep->done();
+          return seastar::make_ready_future<
+              std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+        }
+        auto result = fut.get0();
+        rep->write_body("bin", std::move(result.content));
+#ifdef HAVE_OPENTELEMETRY_CPP
+        outer_span->End();
+#endif  // HAVE_OPENTELEMETRY_CPP
+        rep->done();
+        return seastar::make_ready_future<
+            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+      });
 }
 
 // a handler to handle adhoc query.
@@ -253,18 +279,18 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
 
 #ifdef HAVE_OPENTELEMETRY_CPP
-  auto tracer_ = otel::get_tracer("hqps_adhoc_query_handler");
+  auto tracer = otel::get_tracer("hqps_adhoc_query_handler");
   // Extract context from headers. This copy is necessary to avoid access after
   // header content been freed
   std::map<std::string, std::string> headers(req->_headers.begin(),
                                              req->_headers.end());
   auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
   auto options = otel::get_parent_ctx(current_ctx, headers);
-  auto outer_span = tracer_->StartSpan("adhoc_query_handling", options);
-  auto scope = tracer_->WithActiveSpan(outer_span);
+  auto outer_span = tracer->StartSpan("adhoc_query_handling", options);
+  auto scope = tracer->WithActiveSpan(outer_span);
   // Start a new span for codegen
-  auto codegen_span = tracer_->StartSpan("adhoc_codegen", options);
-  auto codegen_scope = tracer_->WithActiveSpan(codegen_span);
+  auto codegen_span = tracer->StartSpan("adhoc_codegen", options);
+  auto codegen_scope = tracer->WithActiveSpan(codegen_span);
   // create a new span for query execution, not started.
 #endif  // HAVE_OPENTELEMETRY_CPP
   return codegen_actor_refs_[0]
@@ -272,17 +298,17 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
       .then([this, dst_executor
 #ifdef HAVE_OPENTELEMETRY_CPP
              ,
-             codegen_span = codegen_span, &tracer_,
-             codegen_scope = std::move(codegen_scope), options = options
+             codegen_span = codegen_span, tracer = tracer, options = options,
+             codegen_scope = std::move(codegen_scope), outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& param) mutable {
 #ifdef HAVE_OPENTELEMETRY_CPP
         codegen_span->End();
-        auto query_span = tracer_->StartSpan("adhoc_query_execution", options);
-        auto query_scope = tracer_->WithActiveSpan(query_span);
+        options.parent = outer_span->GetContext();
+        auto query_span = tracer->StartSpan("adhoc_query_execution", options);
+        auto query_scope = tracer->WithActiveSpan(query_span);
 #endif
         param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
-
         return executor_refs_[dst_executor]
             .run_graph_db_query(query_param{std::move(param.content)})
             .then([query_span = query_span,
