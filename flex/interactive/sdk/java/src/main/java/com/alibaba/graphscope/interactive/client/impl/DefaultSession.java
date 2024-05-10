@@ -182,6 +182,17 @@ public class DefaultSession implements Session {
     }
 
     @Override
+    public Result<GetGraphResponse> getGraphMeta(String graphId) {
+        try {
+            ApiResponse<GetGraphResponse> response = graphApi.getGraphWithHttpInfo(graphId);
+            return Result.fromResponse(response);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        }
+    }
+
+    @Override
     public Result<List<GetGraphResponse>> getAllGraphs() {
         try {
             ApiResponse<List<GetGraphResponse>> response = graphApi.listGraphsWithHttpInfo();
