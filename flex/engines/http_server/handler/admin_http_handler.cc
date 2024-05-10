@@ -587,7 +587,9 @@ seastar::future<> admin_http_handler::set_routes() {
     {
       // by setting full_path = false, we can match /v1/graph/{graph_id}/ and
       // /v1/graph/{graph_id}/schema
-      auto match_rule = new seastar::httpd::match_rule(admin_graph_handler);
+      auto match_rule =
+          new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
+              interactive_admin_group_id, shard_admin_graph_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id", false);
       // Get graph schema
       r.add(match_rule, seastar::httpd::operation_type::GET);
