@@ -383,9 +383,8 @@ hqps_http_handler::~hqps_http_handler() {
   if (is_running()) {
     stop();
   }
-  delete ic_handler_;
-  delete adhoc_query_handler_;
-  delete exit_handler_;
+  // DO NOT DELETE the handler pointers, they will be deleted by
+  // seastar::httpd::match_rule
 }
 
 uint16_t hqps_http_handler::get_port() const { return http_port_; }
@@ -462,8 +461,6 @@ void hqps_http_handler::start_query_actors() {
 
 seastar::future<> hqps_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
-    r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/interactive/query"), ic_handler_);
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/v1/query"), ic_handler_);
     r.add(seastar::httpd::operation_type::POST,
