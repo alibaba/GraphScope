@@ -68,6 +68,8 @@ std::string result_opt_pb_2_str(
     return "gs::ResultOpt::EndV";
   case physical::PathExpand::ResultOpt::PathExpand_ResultOpt_ALL_V:
     return "gs::ResultOpt::AllV";
+  case physical::PathExpand::ResultOpt::PathExpand_ResultOpt_ALL_V_E:
+    return "gs::ResultOpt::AllVE";
   default:
     throw std::runtime_error("unknown result_opt_pb");
   }

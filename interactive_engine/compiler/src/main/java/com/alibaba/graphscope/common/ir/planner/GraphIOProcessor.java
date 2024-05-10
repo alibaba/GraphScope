@@ -59,6 +59,7 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.rex.RexVariable;
+import org.apache.calcite.sql.fun.SqlLibraryOperators;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -470,7 +471,9 @@ public class GraphIOProcessor {
             Map<DataKey, DataValue> edgeDetails = getGlogueEdgeDetails(glogueEdge);
             this.details =
                     createSubDetails(
-                            glogueEdge.getSrcPattern(), glogueEdge.getSrcToTargetOrderMapping());
+                            glogueEdge.getSrcPattern(),
+                            glogueEdge.getSrcToTargetOrderMapping(),
+                            null);
             ExtendStep extendStep = glogueEdge.getExtendStep();
             List<ExtendEdge> extendEdges = extendStep.getExtendEdges();
             RelNode child = visitChildren(intersect).getInput(0);
@@ -525,9 +528,15 @@ public class GraphIOProcessor {
             Map<DataKey, DataValue> parentVertexDetails =
                     getJointVertexDetails(jointVertices, buildOrderMap);
             Map<DataKey, DataValue> probeDetails =
-                    createSubDetails(decomposition.getProbePattern(), probeOrderMap);
+                    createSubDetails(
+                            decomposition.getProbePattern(),
+                            probeOrderMap,
+                            new ParentPattern(decomposition.getParentPatten(), 0));
             Map<DataKey, DataValue> buildDetails =
-                    createSubDetails(decomposition.getBuildPattern(), buildOrderMap);
+                    createSubDetails(
+                            decomposition.getBuildPattern(),
+                            buildOrderMap,
+                            new ParentPattern(decomposition.getParentPatten(), 1));
             this.details = probeDetails;
             RelNode newLeft = visitChild(decomposition, 0, decomposition.getLeft()).getInput(0);
             this.details = buildDetails;
@@ -541,10 +550,84 @@ public class GraphIOProcessor {
                             buildOrderMap,
                             decomposition.getBuildPattern());
             // here we assume all inputs of the join come from different sources
-            return builder.push(newLeft)
-                    .push(newRight)
-                    .join(JoinRelType.INNER, joinCondition)
-                    .build();
+            builder.push(newLeft).push(newRight).join(JoinRelType.INNER, joinCondition);
+            // Handling special cases in decomposition:
+            // When a join splitting is based on path expand, to ensure the consistency of the data
+            // model with the original semantics,
+            // we perform a concat operation on the left path and right path after the path join,
+            // that is, merging them back into the original, un-split path.
+            List<RexNode> concatExprs = Lists.newArrayList();
+            List<String> concatAliases = Lists.newArrayList();
+            jointVertices.forEach(
+                    joint -> {
+                        PatternVertex probeJointVertex =
+                                decomposition
+                                        .getProbePattern()
+                                        .getVertexByOrder(joint.getLeftOrderId());
+                        PatternVertex buildJointVertex =
+                                decomposition
+                                        .getBuildPattern()
+                                        .getVertexByOrder(joint.getRightOrderId());
+                        Set<PatternEdge> probeEdges =
+                                decomposition.getProbePattern().getEdgesOf(probeJointVertex);
+                        Set<PatternEdge> buildEdges =
+                                decomposition.getBuildPattern().getEdgesOf(buildJointVertex);
+                        if (probeEdges.size() == 1 && buildEdges.size() == 1) {
+                            PatternEdge probeEdge = probeEdges.iterator().next();
+                            DataValue probeValue =
+                                    probeDetails.get(
+                                            new EdgeDataKey(
+                                                    decomposition
+                                                            .getProbePattern()
+                                                            .getVertexOrder(
+                                                                    probeEdge.getSrcVertex()),
+                                                    decomposition
+                                                            .getProbePattern()
+                                                            .getVertexOrder(
+                                                                    probeEdge.getDstVertex()),
+                                                    probeEdge.isBoth()
+                                                            ? PatternDirection.BOTH
+                                                            : PatternDirection.OUT));
+                            PatternEdge buildEdge = buildEdges.iterator().next();
+                            DataValue buildValue =
+                                    buildDetails.get(
+                                            new EdgeDataKey(
+                                                    decomposition
+                                                            .getBuildPattern()
+                                                            .getVertexOrder(
+                                                                    buildEdge.getSrcVertex()),
+                                                    decomposition
+                                                            .getBuildPattern()
+                                                            .getVertexOrder(
+                                                                    buildEdge.getDstVertex()),
+                                                    buildEdge.isBoth()
+                                                            ? PatternDirection.BOTH
+                                                            : PatternDirection.OUT));
+                            if (probeValue != null
+                                    && probeValue.getParentAlias() != null
+                                    && buildValue != null
+                                    && buildValue.getParentAlias() != null
+                                    && probeValue
+                                            .getParentAlias()
+                                            .equals(buildValue.getParentAlias())) {
+                                String probeAlias = probeValue.getAlias();
+                                String buildAlias = buildValue.getAlias();
+                                concatExprs.add(
+                                        builder.call(
+                                                SqlLibraryOperators.ARRAY_CONCAT,
+                                                builder.variable(probeAlias),
+                                                builder.variable(buildAlias)));
+                                concatAliases.add(probeValue.getParentAlias());
+                            }
+                        }
+                    });
+            if (!concatExprs.isEmpty()) {
+                // TODO(yihe.zxl): there are additional optimization opportunities here by employing
+                // projects with append=false, the left path and right path prior to merging can be
+                // removed.
+                builder.project(concatExprs, concatAliases, true);
+            }
+            return builder.build();
         }
 
         private RexNode createJoinFilter(
@@ -909,8 +992,20 @@ public class GraphIOProcessor {
             return edgeDetails;
         }
 
+        private class ParentPattern {
+            private final Pattern pattern;
+            private final int subId;
+
+            public ParentPattern(Pattern pattern, int subId) {
+                this.pattern = pattern;
+                this.subId = subId;
+            }
+        }
+
         private Map<DataKey, DataValue> createSubDetails(
-                Pattern subPattern, Map<Integer, Integer> orderMappings) {
+                Pattern subPattern,
+                Map<Integer, Integer> orderMappings,
+                @Nullable ParentPattern parentPattern) {
             Map<DataKey, DataValue> newDetails = Maps.newHashMap();
             subPattern
                     .getVertexSet()
@@ -933,19 +1028,58 @@ public class GraphIOProcessor {
                                 int newDstOrderId = subPattern.getVertexOrder(k.getDstVertex());
                                 Integer oldSrcOrderId = orderMappings.get(newSrcOrderId);
                                 Integer oldDstOrderId = orderMappings.get(newDstOrderId);
+                                PatternDirection direction =
+                                        k.isBoth() ? PatternDirection.BOTH : PatternDirection.OUT;
+                                EdgeDataKey oldKey = null;
+                                boolean splitPathExpand = false;
                                 if (oldSrcOrderId != null && oldDstOrderId != null) {
-                                    PatternDirection direction =
-                                            k.isBoth()
-                                                    ? PatternDirection.BOTH
-                                                    : PatternDirection.OUT;
-                                    EdgeDataKey oldKey =
+                                    oldKey =
                                             new EdgeDataKey(
                                                     oldSrcOrderId, oldDstOrderId, direction);
-                                    EdgeDataKey newKey =
-                                            new EdgeDataKey(
-                                                    newSrcOrderId, newDstOrderId, direction);
+                                } else if (parentPattern != null) {
+                                    // here we use a hack way to find the original edge key in the
+                                    // parent pattern for the split path expand,
+                                    // in <JoinDecompositionRule>, we guarantee the split edge id
+                                    // consistent with the parent's, here we just use the split edge
+                                    // id to find the original edge in the parent pattern.
+                                    Pattern pattern = parentPattern.pattern;
+                                    for (PatternEdge edge : pattern.getEdgeSet()) {
+                                        if (k.getId() == edge.getId()) {
+                                            oldKey =
+                                                    new EdgeDataKey(
+                                                            pattern.getVertexOrder(
+                                                                    edge.getSrcVertex()),
+                                                            pattern.getVertexOrder(
+                                                                    edge.getDstVertex()),
+                                                            direction);
+                                            splitPathExpand = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (oldKey != null) {
                                     DataValue value = details.get(oldKey);
                                     if (value != null) {
+                                        EdgeDataKey newKey =
+                                                new EdgeDataKey(
+                                                        newSrcOrderId, newDstOrderId, direction);
+                                        if (splitPathExpand
+                                                && !AliasInference.isDefaultAlias(
+                                                        value.getAlias())) {
+                                            // assign a new alias tagged with subId for the split
+                                            // path expand, i.e. if the original path expand is
+                                            // '[a:KNOWS*6..7]',
+                                            // after splitting, we get left split path expand
+                                            // '[a$p_0:KNOWS*3..4]', and right split path expand
+                                            // '[a$p_1:KNOWS*3..4]',
+                                            value =
+                                                    new DataValue(
+                                                            value.getAlias()
+                                                                    + "$p_"
+                                                                    + parentPattern.subId,
+                                                            value.getFilter(),
+                                                            value.getAlias());
+                                        }
                                         newDetails.put(newKey, value);
                                     }
                                 }

@@ -54,6 +54,8 @@ pub enum Operand {
     VarMap(Vec<Operand>),
     // TODO: this is the new definition of VarMap. Will replace VarMap soon.
     Map(Vec<(Object, Operand)>),
+    // this is to concat multiple fields (refer to paths, or Strings) into one
+    Concat(Vec<Operand>),
 }
 
 #[derive(Debug, Clone)]
@@ -600,8 +602,8 @@ impl TryFrom<common_pb::ExprOpr> for InnerOpr {
 impl Evaluate for Operand {
     fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
         match self {
-            Self::Const(obj) => Ok(obj.clone()),
-            Self::Var { tag, prop_key } => {
+            Operand::Const(obj) => Ok(obj.clone()),
+            Operand::Var { tag, prop_key } => {
                 if let Some(ctxt) = context {
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         let result = if let Some(property) = prop_key {
@@ -663,14 +665,14 @@ impl Evaluate for Operand {
                     Err(ExprEvalError::MissingContext(InnerOpr::Operand(self.clone()).into()))
                 }
             }
-            Self::Vars(vars) => {
+            Operand::Vars(vars) => {
                 let mut vec = Vec::with_capacity(vars.len());
                 for var in vars {
                     vec.push(get_object(var.eval(context))?);
                 }
                 Ok(Object::Vector(vec))
             }
-            Self::VarMap(vars) => {
+            Operand::VarMap(vars) => {
                 let mut map = BTreeMap::new();
                 for var in vars {
                     let obj_key = match var {
@@ -705,12 +707,15 @@ impl Evaluate for Operand {
                 }
                 Ok(Object::KV(map))
             }
-            Self::Map(vars) => {
+            Operand::Map(vars) => {
                 let mut map = BTreeMap::new();
                 for (obj_key, var) in vars {
                     map.insert(obj_key.clone(), get_object(var.eval(context))?);
                 }
                 Ok(Object::KV(map))
+            }
+            Operand::Concat(_) => {
+                Err(ExprEvalError::Unsupported("evaluating `Concat` is not supported.".to_string()))
             }
         }
     }

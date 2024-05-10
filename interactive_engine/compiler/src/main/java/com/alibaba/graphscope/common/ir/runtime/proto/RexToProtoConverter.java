@@ -58,6 +58,8 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitArrayValueConstructor(call);
         } else if (operator.getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR) {
             return visitMapValueConstructor(call);
+        } else if (operator.getKind() == SqlKind.ARRAY_CONCAT) {
+            return visitArrayConcat(call);
         } else if (operator.getKind() == SqlKind.EXTRACT) {
             return visitExtract(call);
         } else if (operator.getKind() == SqlKind.OTHER
@@ -118,6 +120,25 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .addOperators(
                         OuterExpression.ExprOpr.newBuilder()
                                 .setCase(caseBuilder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private OuterExpression.Expression visitArrayConcat(RexCall call) {
+        OuterExpression.Concat.Builder concatBuilder = OuterExpression.Concat.newBuilder();
+        call.getOperands()
+                .forEach(
+                        operand -> {
+                            Preconditions.checkArgument(
+                                    operand instanceof RexGraphVariable,
+                                    "parameters of 'CONCAT' should be"
+                                            + " 'variable' in ir core structure");
+                            concatBuilder.addVars(operand.accept(this).getOperators(0).getVar());
+                        });
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setConcat(concatBuilder)
                                 .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
                 .build();
     }
