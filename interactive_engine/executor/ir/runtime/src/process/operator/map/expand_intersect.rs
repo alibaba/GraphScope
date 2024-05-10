@@ -324,7 +324,29 @@ impl Decode for EdgeMatchings {
     }
 }
 
-/// A more general entry implementation for intersection, which preserves the expanded edges if needed;
+/// A more general entry implementation for intersection, which preserves the matchings of intermediate expanded edges if needed;
+///
+/// For example, given a triangle pattern [A->B->C<-A],
+/// The plan consists of an EdgeExpand{tag: A, alias: B}, and then a Intersection {EdgeExpand{tag: A, alias:C, edge_alias: TagA}, EdgeExpand{tag: B, alias: C, edge_alias: TagB}}
+/// Then during execution, based on one matching [a1->b1] of Pattern [A->B], we apply the IntersectionOpr, and save the intermediate results in `GeneralIntersectionEntry`
+/// Specifically,
+/// 1. To match Expand[A->C], we have `EdgeMatchings` of [a1->c1, a1->c2, a1->c3, a1->c4], saved in `edge_vecs`.
+/// and then the intersected vertices in `vertex_vec` is [c1,c2,c3, c4], i.e., matchings of vertex C.
+/// A more complicated case is [(a1-knows->c1, a1-family->c1), a1->c2, a1->c3, a1->c4], where the two a1->c1 edges with different types is saved as `EdgeMatching`,
+/// and in this case, the intersected vertices is still [c1,c2,c3, c4], but the count_vec would be marked as [2, 1, 1, 1] (2 c1, 1 c2, etc.).
+/// Moreover, we save the edge_alias of this EdgeExpand in `edge_tags`, i.e., [TagA]
+///
+/// 2. Then to match Expand[B->C], we find matchings [b1->c1, b1->c2, b1->c3]. Thus, we updated GeneralIntersectionEntry as:
+/// `vertex_vec` to save the intersected vertex as [c1,c2,c3], where c4 is filtered. And `count_vec` would be updated accordingly.
+/// `edge_vecs` to save the matchings of the expanded edges as
+/// [
+///  [a1->c1, a1->c2, a1->c3]
+///  [b1->c1, b1->c2, b1->c3]
+/// ]
+/// , where the a1->c4 is filtered.
+/// and `edge_tags` is [TagA, TagB].
+///
+/// 3. Finally, we can apply the `matchings_iter` function, to flatten the GeneralIntersectionEntry into a series of matchings, in a Record-like format.
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub struct GeneralIntersectionEntry {
     // Preserves the common intersected vertices, e.g., [c1,c2,c3]
