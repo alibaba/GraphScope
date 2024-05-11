@@ -24,16 +24,7 @@ DefaultGraphMetaStore::DefaultGraphMetaStore(
   clear_locks();
 }
 
-DefaultGraphMetaStore::~DefaultGraphMetaStore() {
-  if (base_store_ != nullptr) {
-    base_store_->Close();
-  }
-  auto res = Close();
-  if (!res.ok()) {
-    LOG(ERROR) << "Fail to close DefaultGraphMetaStore: "
-               << res.status().error_message();
-  }
-}
+DefaultGraphMetaStore::~DefaultGraphMetaStore() { Close(); }
 
 Result<bool> DefaultGraphMetaStore::Open() { return base_store_->Open(); }
 

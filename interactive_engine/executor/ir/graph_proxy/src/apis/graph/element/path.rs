@@ -20,7 +20,7 @@ use std::hash::{Hash, Hasher};
 use ahash::HashMap;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as pb;
+use ir_common::generated::physical as pb;
 use ir_common::generated::results as result_pb;
 use ir_common::{LabelId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};

@@ -63,7 +63,7 @@ void HQPSService::init(const ServiceConfig& config) {
   }
   actor_sys_ = std::make_unique<actor_system>(
       config.shard_num, config.dpdk_mode, config.enable_thread_resource_pool,
-      config.external_thread_num);
+      config.external_thread_num, [this]() { set_exit_state(); });
   query_hdl_ = std::make_unique<hqps_http_handler>(config.query_port);
   if (config.start_admin_service) {
     admin_hdl_ = std::make_unique<admin_http_handler>(config.admin_port);
@@ -107,7 +107,6 @@ HQPSService::~HQPSService() {
     actor_sys_->terminate();
   }
   stop_compiler_subprocess();
-  clear_running_graph();
   if (metadata_store_) {
     metadata_store_->Close();
   }
@@ -385,16 +384,4 @@ gs::GraphId HQPSService::insert_default_graph_meta() {
   return res.value();
 }
 
-void HQPSService::clear_running_graph() {
-  if (!metadata_store_) {
-    std::cerr << "Metadata store has not been inited!" << std::endl;
-    return;
-  }
-  auto res = metadata_store_->ClearRunningGraph();
-  if (!res.ok()) {
-    std::cerr << "Failed to clear running graph: "
-              << res.status().error_message() << std::endl;
-    return;
-  }
-}
 }  // namespace server

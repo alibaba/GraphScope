@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.cypher.integration.ldbc;
 
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
@@ -94,6 +95,15 @@ public class IrLdbcTest {
     @Test
     public void run_ldbc_12_test() {
         QueryContext testQuery = LdbcQueries.get_ldbc_12();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_st_path_test() {
+        // skip st path test in gs interactive for it is unsupported yet in hiactor engine
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = LdbcQueries.get_st_path();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }

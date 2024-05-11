@@ -404,6 +404,23 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_schema(
   }
 }
 
+// Get the metadata of a graph.
+seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
+    query_param&& query_param) {
+  LOG(INFO) << "Get Graph meta for graph_id: " << query_param.content;
+  auto meta_res = metadata_store_->GetGraphMeta(query_param.content);
+
+  if (meta_res.ok()) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(std::move(meta_res.value().ToJson())));
+  } else {
+    LOG(ERROR) << "Fail to get graph schema: "
+               << meta_res.status().error_message();
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(meta_res.status()));
+  }
+}
+
 // list all graphs
 seastar::future<admin_query_result> admin_actor::run_list_graphs(
     query_param&& query_param) {

@@ -141,7 +141,7 @@ public class MatchTest {
                     + " opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[_], opt=[END])\n"
-                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
                     + " alias=[b])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
