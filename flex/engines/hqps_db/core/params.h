@@ -369,8 +369,9 @@ enum PathOpt {
 };
 
 enum ResultOpt {
-  EndV = 0,  // Get the end vertex of path. i.e. [3],[4]
-  AllV = 1,  // Get all the vertex on path. i.e. [1,2,3],[1,2,4]
+  EndV = 0,   // Get the end vertex of path. i.e. [3],[4]
+  AllV = 1,   // Get all the vertex on path. i.e. [1,2,3],[1,2,4]
+  AllVE = 2,  // Get all the vertex and edge on path. i.e. [1,2,3,4]
 };
 
 enum Interval {

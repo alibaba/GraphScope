@@ -47,7 +47,7 @@ This API lists all graphs currently managed by the Interactive service, providin
 
 #### Curl Command Example
 ```bash
-curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph"
+curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph"
 ```
 
 #### Expected Response
@@ -312,7 +312,7 @@ This API create a new graph according to the specified schema in request body.
 
 #### Curl Command Example
 ```bash
-curl -X POST  -H "Content-Type: application/json" -d @path/to/yourfile.json  "http://[host]/v1/graph"
+curl -X POST  -H "Content-Type: application/json" -d @path/to/yourfile.json  "http://{INTERACTIVE_ENDPOINT}/v1/graph"
 ```
 
 #### Expected Response
@@ -343,7 +343,7 @@ Delete a graph by name, including schema, indices and stored procedures.
 
 #### Curl Command Example
 ```bash
-curl -X DELETE  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}"
+curl -X DELETE  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}"
 ```
 
 #### Expected Response
@@ -366,12 +366,12 @@ Get the schema for the specified graph.
 
 #### HTTP Request
 - **Method**: GET
-- **Endpoint**: `/v1/graph/{graph_id}`
+- **Endpoint**: `/v1/graph/{graph_id}/schema`
 - **Content-type**: `application/json`
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}"
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/schema"
 ```
 
 
@@ -380,6 +380,155 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_
 - **Body**:
 ```json
 {
+  "vertex_types": [
+      {
+          "type_id": 0,
+          "type_name": "person",
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "id",
+                  "property_type": {
+                      "primitive_type": "DT_SIGNED_INT64"
+                  }
+              },
+              {
+                  "property_id": 1,
+                  "property_name": "name",
+                  "property_type": {
+                      "string":{
+                          "long_text": {}
+                      }
+                  }
+              },
+              {
+                  "property_id": 2,
+                  "property_name": "age",
+                  "property_type": {
+                      "string":{
+                          "long_text": {}
+                      }
+                  }
+              }
+          ],
+          "primary_keys": [
+              "id"
+          ]
+      },
+      {
+          "type_id": 1,
+          "type_name": "software",
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "id",
+                  "property_type": {
+                      "primitive_type": "DT_SIGNED_INT64"
+                  }
+              },
+              {
+                  "property_id": 1,
+                  "property_name": "name",
+                  "property_type": {
+                      "string":{
+                          "long_text": {}
+                      }
+                  }
+              },
+              {
+                  "property_id": 2,
+                  "property_name": "lang",
+                  "property_type": {
+                      "string":{
+                          "long_text": {}
+                      }
+                  }
+              }
+          ],
+          "primary_keys": [
+              "id"
+          ]
+      }
+  ],
+  "edge_types": [
+      {
+          "type_id": 0,
+          "type_name": "knows",
+          "vertex_type_pair_relations": [
+              {
+                  "source_vertex": "person",
+                  "destination_vertex": "person",
+                  "relation": "MANY_TO_MANY",
+              }
+          ],
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "weight",
+                  "property_type": {
+                      "primitive_type": "DT_DOUBLE"
+                  }
+              }
+          ]
+      },
+      {
+          "type_id": 1,
+          "type_name": "created",
+          "vertex_type_pair_relations": [
+              {
+                  "source_vertex": "person",
+                  "destination_vertex": "software",
+                  "relation": "ONE_TO_MANY",
+              }
+          ],
+          "properties": [
+              {
+                  "property_id": 0,
+                  "property_name": "weight",
+                  "property_type": {
+                      "primitive_type": "DT_DOUBLE"
+                  }
+              }
+          ]
+      }
+  ]
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Graph not found
+
+### GetGraphMeta  (GraphManagement Category)
+
+#### Description
+Get the schema for the specified graph.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/graph/{graph_id}`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}"
+```
+
+
+#### Expected Response
+- **Format**: `application/json`
+- **Body**:
+```json
+{
+  "id" : "123",
+  "name" : "example_graph",
+  "description": "A test description",
+  "store_type" : "mutable_csr",
+  "creation_time" : 11223444,
+  "data_update_time" : 11123445,
+  "data_import_config" : {},
+  "stored_procedures" : {},
   "vertex_types": [
       {
           "type_id": 0,
@@ -695,7 +844,7 @@ Client can use the returned job_id to [query the status of job](#getjobbyid-jobm
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" -d @path/to/json "http://[host]/v1/graph/{graph_id}/dataloading"
+curl -X POST -H "Content-Type: application/json" -d @path/to/json "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/dataloading"
 ```
 
 #### Expected Response
@@ -737,7 +886,7 @@ Create a new stored procedure.
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" -d @/path/to/json "http://[host]/v1/graph/{graph_id}/procedure"
+curl -X POST -H "Content-Type: application/json" -d @/path/to/json "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/procedure"
 ```
 
 
@@ -768,7 +917,7 @@ List all procedures bound to a graph.
 
 #### Curl Command Example
 ```bash
-curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}/procedure"
+curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/procedure"
 ```
 
 #### Expected Response
@@ -826,7 +975,7 @@ Get a single procedure's metadata.
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}/procedure/{procedure_id}"
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 
@@ -891,7 +1040,7 @@ Update a procedure's metadata, enable/disable status, description. The procedure
 
 #### Curl Command Example
 ```bash
-curl -X PUT  -H "Content-Type: application/json" -d @/path/to/json "http://[host]//v1/graph/{graph_id}/procedure/{procedure_id}"
+curl -X PUT  -H "Content-Type: application/json" -d @/path/to/json "http://{INTERACTIVE_ENDPOINT}//v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 #### Expected Response
@@ -948,7 +1097,7 @@ Delete a procedure bound to the graph.
 
 #### Curl Command Example
 ```bash
-curl -X DELETE -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_id}/procedure/{procedure_id}"
+curl -X DELETE -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 #### Expected Response
@@ -997,7 +1146,7 @@ The response of the http request will be like
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" "http://[host]/v1/service/start"
+curl -X POST -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/service/start"
 ```
 
 #### Expected Response
@@ -1028,7 +1177,7 @@ Restart the graph query service on current running graph.
 
 #### Curl Command Example
 ```bash
-curl -X POST "http://[host]/v1/service/restart"
+curl -X POST "http://{INTERACTIVE_ENDPOINT}/v1/service/restart"
 ```
 
 #### Expected Response
@@ -1064,7 +1213,7 @@ but you will receive the following error message to each request:
 
 #### Curl Command Example
 ```bash
-curl -X POST "http://[host]/v1/service/stop"
+curl -X POST "http://{INTERACTIVE_ENDPOINT}/v1/service/stop"
 ```
 
 #### Expected Response
@@ -1117,7 +1266,7 @@ Get node status.
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/node/status"
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/node/status"
 ```
 
 #### Expected Response
@@ -1150,7 +1299,7 @@ The job id is received when you [launch a bulk loading job](#importgraph-graphma
 
 #### Curl Command Example
 ```bash
-curl -X GET "http://[host]/v1/job/{job_id}"
+curl -X GET "http://{INTERACTIVE_ENDPOINT}/v1/job/{job_id}"
 ```
 
 #### Expected Response
@@ -1189,7 +1338,7 @@ Get the metadata of all running/cancelled/success/failed jobs.
 
 #### Curl Command Example
 ```bash
-curl -X GET "http://[host]/v1/job/"
+curl -X GET "http://{INTERACTIVE_ENDPOINT}/v1/job/"
 ```
 
 #### Expected Response
@@ -1229,7 +1378,7 @@ Cancel a job according to the give job_id.
 
 #### Curl Command Example
 ```bash
-curl -X DELETE "http://[host]/v1/job/{job_id}"
+curl -X DELETE "http://{INTERACTIVE_ENDPOINT}/v1/job/{job_id}"
 ```
 
 #### Expected Response

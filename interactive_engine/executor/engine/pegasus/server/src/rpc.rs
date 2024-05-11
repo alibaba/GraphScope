@@ -191,7 +191,7 @@ where
         let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
         let tracer = global::tracer("executor");
         let _span = tracer
-            .span_builder("/JobServiceImpl/cancel")
+            .span_builder("JobService/cancel")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);
         let pb::CancelRequest { job_id } = req.into_inner();
@@ -203,6 +203,7 @@ where
         debug!("accept new request from {:?};", req.remote_addr());
         let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
         let tracer = global::tracer("executor");
+
         let pb::JobRequest { conf, source, plan, resource } = req.into_inner();
         if conf.is_none() {
             return Err(Status::new(Code::InvalidArgument, "job configuration not found"));
@@ -219,7 +220,7 @@ where
         let job = JobDesc { input: source, plan, resource };
 
         let mut span = tracer
-            .span_builder("/JobServiceImpl/submit")
+            .span_builder("JobService/submit")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);
         span.set_attributes(vec![

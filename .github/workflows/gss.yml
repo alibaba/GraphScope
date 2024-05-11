@@ -77,7 +77,7 @@ jobs:
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         cd ${GITHUB_WORKSPACE}/interactive_engine
         mvn clean install -P groot -Drust.compile.mode=debug -DskipTests --quiet
-
+        mvn clean install -Pgroot-data-load --quiet
         sccache --show-stats
 
     - name: Gremlin Test
