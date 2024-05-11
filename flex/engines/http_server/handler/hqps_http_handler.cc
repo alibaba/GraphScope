@@ -360,7 +360,7 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         return seastar::make_ready_future<
             std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
       });
-}  // namespace server
+}
 
 seastar::future<std::unique_ptr<seastar::httpd::reply>>
 hqps_exit_handler::handle(const seastar::sstring& path,
