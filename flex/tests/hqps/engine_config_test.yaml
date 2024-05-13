@@ -18,11 +18,14 @@ compute_engine:
 compiler:
   planner:
     is_on: true
-    opt: RBO
+    opt: CBO
     rules:
       - FilterIntoJoinRule
       - FilterMatchRule
       - NotMatchToAntiJoinRule
+      - ExpandGetVFusionRule 
+  physical:
+    opt: proto
   endpoint:
     default_listen_address: localhost
     bolt_connector:
