@@ -24,7 +24,7 @@ fi
 cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto graph.planner.opt=CBO graph.planner.cbo.glogue.schema=src/test/resources/statistics/modern_statistics.txt &
 sleep 5s
 # run gremlin standard tests to test calcite-based IR layer
-cd ${base_dir} && make gremlin_calcite_test
+cd ${base_dir} && make gremlin_test
 exit_code=$?
 # clean service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
@@ -44,7 +44,7 @@ RUST_LOG=info DATA_PATH=/tmp/gstest/modern_graph_exp_bin PARTITION_ID=1 ./start_
 # start compiler service
 cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto graph.planner.opt=CBO graph.planner.cbo.glogue.schema=src/test/resources/statistics/modern_statistics.txt pegasus.hosts:=127.0.0.1:1234,127.0.0.1:1235 &
 sleep 5s
-cd ${base_dir} && make gremlin_calcite_test
+cd ${base_dir} && make gremlin_test
 exit_code=$?
 # clean service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true

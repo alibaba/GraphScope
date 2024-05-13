@@ -25,11 +25,11 @@ if [ $exit_code -ne 0 ]; then
     exit 1
 fi
 
-# Test2: run advanced tests (pattern & ldbc) on experimental store via calcite-based ir
+# Test2: run advanced tests (pattern & ldbc & simple match) on experimental store via calcite-based ir
 # start compiler service
 cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto graph.planner.opt=CBO graph.planner.cbo.glogue.schema=src/test/resources/statistics/ldbc1_statistics.txt pegasus.hosts:=127.0.0.1:1234,127.0.0.1:1235 graph.planner.rules=NotMatchToAntiJoinRule,FilterIntoJoinRule,FilterMatchRule,ExtendIntersectRule,ExpandGetVFusionRule &
 sleep 5s
-cd ${base_dir} && make pattern_test && make ldbc_test
+cd ${base_dir} && make pattern_test && make ldbc_test && make simple_test
 exit_code=$?
 # clean service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | awk '{print $2}' | xargs kill -9 || true
