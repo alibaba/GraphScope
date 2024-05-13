@@ -1598,8 +1598,8 @@ components:
       properties:
         status:
           type: string
-        graph_id:
-          type: string
+        graph:
+          $ref: '#/components/schemas/GetGraphResponse'
         bolt_port:
           type: integer
           format: int32

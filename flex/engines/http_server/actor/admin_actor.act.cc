@@ -779,10 +779,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
 
   auto cur_running_graph_res = metadata_store_->GetRunningGraph();
   if (!cur_running_graph_res.ok()) {
-    LOG(ERROR) << "Fail to get running graph: "
-               << cur_running_graph_res.status().error_message();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(cur_running_graph_res.status()));
+    LOG(INFO) << "No running graph, will start on the graph in request";
   }
   auto cur_running_graph = cur_running_graph_res.value();
   LOG(INFO) << "Current running graph: " << cur_running_graph;
@@ -973,17 +970,41 @@ seastar::future<admin_query_result> admin_actor::start_service(
 seastar::future<admin_query_result> admin_actor::stop_service(
     query_param&& query_param) {
   auto& hqps_service = HQPSService::get();
-  return hqps_service.stop_query_actors().then([&hqps_service] {
+  return hqps_service.stop_query_actors().then([this, &hqps_service] {
     LOG(INFO) << "Successfully stopped query handler";
-    if (hqps_service.stop_compiler_subprocess()) {
-      LOG(INFO) << "Successfully stop compiler";
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>("Successfully stop service"));
-    } else {
-      LOG(ERROR) << "Fail to stop compiler";
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(gs::Status(gs::StatusCode::InternalError,
-                                                  "Fail to stop compiler")));
+    // Add also remove current running graph
+    {
+      std::lock_guard<std::mutex> lock(mtx_);
+      // unlock the graph
+      auto cur_running_graph_res = metadata_store_->GetRunningGraph();
+      if (cur_running_graph_res.ok()) {
+        auto unlock_res =
+            metadata_store_->UnlockGraphIndices(cur_running_graph_res.value());
+        if (!unlock_res.ok()) {
+          LOG(ERROR) << "Fail to unlock graph: "
+                     << cur_running_graph_res.value();
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(unlock_res.status()));
+        }
+        if (!metadata_store_->ClearRunningGraph().ok()) {
+          LOG(ERROR) << "Fail to clear running graph";
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(
+                  gs::Status(gs::StatusCode::InternalError,
+                             "Fail to clear running graph")));
+        }
+      }
+
+      if (hqps_service.stop_compiler_subprocess()) {
+        LOG(INFO) << "Successfully stop compiler";
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>("Successfully stop service"));
+      } else {
+        LOG(ERROR) << "Fail to stop compiler";
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>(gs::Status(
+                gs::StatusCode::InternalError, "Fail to stop compiler")));
+      }
     }
   });
 }
@@ -1001,9 +1022,13 @@ seastar::future<admin_query_result> admin_actor::service_status(
     res["bolt_port"] = hqps_service.get_service_config().bolt_port;
     res["gremlin_port"] = hqps_service.get_service_config().gremlin_port;
     if (running_graph_res.ok()) {
-      res["graph_id"] = running_graph_res.value();
+      auto graph_meta =
+          metadata_store_->GetGraphMeta(running_graph_res.value());
+      if (graph_meta.ok()) {
+        res["graph"] = nlohmann::json::parse(graph_meta.value().ToJson());
+      }
     } else {
-      res["graph_id"] = "UNKNOWN";
+      res["graph"] = {};
     }
   } else {
     LOG(INFO) << "Query service has not been inited!";
