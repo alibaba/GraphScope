@@ -39,10 +39,14 @@ public class UniConfig {
     }
 
     public static UniConfig fromProperties(String file) throws IOException {
-        Properties properties = new Properties();
         try (InputStream is = new FileInputStream(file)) {
-            properties.load(is);
+            return fromInputStream(is);
         }
+    }
+
+    public static UniConfig fromInputStream(InputStream in) throws IOException {
+        Properties properties = new Properties();
+        properties.load(in);
         HashMap<String, String> retMap = new HashMap<>();
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             retMap.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));

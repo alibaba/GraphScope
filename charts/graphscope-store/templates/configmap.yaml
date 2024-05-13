@@ -123,8 +123,8 @@ data:
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
 
+    export OTEL_SDK_DISABLED={{ not .Values.otel.enabled }}
     {{- if .Values.otel.enabled }}
-    export JAVA_TOOL_OPTIONS="-javaagent:/home/graphscope/opentelemetry-javaagent.jar"
     export OTEL_SERVICE_NAME="compiler"
     export OTEL_TRACES_SAMPLER={{ .Values.otel.traces.sampler.name }}
     export OTEL_TRACES_SAMPLER_ARG={{ .Values.otel.traces.sampler.arg }}
