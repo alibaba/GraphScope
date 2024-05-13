@@ -56,8 +56,6 @@ class hqps_ic_handler : public seastar::httpd::handler_base {
 #ifdef HAVE_OPENTELEMETRY_CPP
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
       total_counter_;
-  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
-      success_counter_;
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
       latency_histogram_;
 #endif
@@ -94,8 +92,6 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
 #ifdef HAVE_OPENTELEMETRY_CPP
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
       total_counter_;
-  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
-      success_counter_;
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
       latency_histogram_;
 #endif
