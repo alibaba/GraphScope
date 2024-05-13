@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -313,5 +315,11 @@ public class Utils {
         } catch (java.text.ParseException e) {
             return null;
         }
+    }
+
+    public static String readFileAsString(String fileName) throws Exception {
+        String data = "";
+        data = new String(Files.readAllBytes(Paths.get(fileName)));
+        return data;
     }
 }
