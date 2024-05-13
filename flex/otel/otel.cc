@@ -53,6 +53,8 @@ namespace trace_sdk = opentelemetry::sdk::trace;
 
 namespace metrics_api = opentelemetry::metrics;
 namespace metrics_sdk = opentelemetry::sdk::metrics;
+namespace trace_exporter = opentelemetry::exporter::trace;
+namespace metrics_exporter = opentelemetry::exporter::metrics;
 
 namespace logs_api = opentelemetry::logs;
 namespace logs_sdk = opentelemetry::sdk::logs;
@@ -145,7 +147,7 @@ opentelemetry::nostd::shared_ptr<trace_api::Tracer> get_tracer(
   return provider->GetTracer(tracer_name);
 }
 
-nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
+nostd::unique_ptr<metrics_api::Counter<uint64_t>> create_int_counter(
     std::string name, std::string version) {
   std::string counter_name = name + "_counter";
   auto provider = metrics_api::Provider::GetMeterProvider();
@@ -153,6 +155,16 @@ nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
       provider->GetMeter(name, version);
   auto int_counter = meter->CreateUInt64Counter(counter_name);
   return int_counter;
+}
+
+nostd::unique_ptr<metrics_api::Histogram<double>> create_double_histogram(
+    std::string name, std::string version) {
+  std::string histogram_name = name + "_histogram";
+  auto provider = metrics_api::Provider::GetMeterProvider();
+  nostd::shared_ptr<metrics_api::Meter> meter =
+      provider->GetMeter(name, version);
+  auto histogram = meter->CreateDoubleHistogram(histogram_name);
+  return histogram;
 }
 
 opentelemetry::trace::StartSpanOptions get_parent_ctx(

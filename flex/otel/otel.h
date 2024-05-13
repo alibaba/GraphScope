@@ -92,8 +92,11 @@ nostd::shared_ptr<logs_api::Logger> get_logger(std::string scope);
 opentelemetry::nostd::shared_ptr<trace_api::Tracer> get_tracer(
     std::string tracer_name);
 
-nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
-    std::string name, std::string version);
+nostd::unique_ptr<metrics_api::Counter<uint64_t>> create_int_counter(
+    std::string name, std::string version = "");
+
+nostd::unique_ptr<metrics_api::Histogram<double>> create_double_histogram(
+    std::string name, std::string version = "");
 
 opentelemetry::trace::StartSpanOptions get_parent_ctx(
     opentelemetry::context::Context& context,

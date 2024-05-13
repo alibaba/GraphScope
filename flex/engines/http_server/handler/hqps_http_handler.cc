@@ -46,6 +46,12 @@ hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
   for (unsigned i = 0; i < shard_concurrency_; ++i) {
     executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
   }
+#ifdef HAVE_OPENTELEMETRY_CPP
+  total_counter_ = otel::create_int_counter("hqps_procedure_query_total");
+  success_counter_ = otel::create_int_counter("hqps_procedure_query_success");
+  latency_histogram_ =
+      otel::create_double_histogram("hqps_procedure_query_latency");
+#endif
 }
 
 hqps_ic_handler::~hqps_ic_handler() = default;
@@ -104,6 +110,9 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
   req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
 #ifdef HAVE_OPENTELEMETRY_CPP
+  if (total_counter_) {
+    total_counter_->Add(1);
+  }
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
   // Extract context from headers. This copy is necessary to avoid access after
   // header content been freed
@@ -113,6 +122,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
   auto options = otel::get_parent_ctx(current_ctx, headers);
   auto outer_span = tracer->StartSpan("procedure_query_handling", options);
   auto scope = tracer->WithActiveSpan(outer_span);
+  auto start_ts = gs::GetCurrentTimeStamp();
 #endif  // HAVE_OPENTELEMETRY_CPP
 
   return executor_refs_[dst_executor]
@@ -131,7 +141,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
       .then_wrapped([rep = std::move(rep)
 #ifdef HAVE_OPENTELEMETRY_CPP
                          ,
-                     outer_span
+                     this, outer_span, start_ts
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](seastar::future<query_result>&& fut) mutable {
         if (__builtin_expect(fut.failed(), false)) {
@@ -154,7 +164,19 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
         auto result = fut.get0();
         rep->write_body("bin", std::move(result.content));
 #ifdef HAVE_OPENTELEMETRY_CPP
+        success_counter_->Add(1);
         outer_span->End();
+        auto end_ts = gs::GetCurrentTimeStamp();
+        std::map<std::string, std::string> labels = {{"key", "value"}};
+        auto label_kv =
+            opentelemetry::common::KeyValueIterableView<decltype(labels)>{
+                labels};
+#if OPENTELEMETRY_ABI_VERSION_NO >= 2
+        latency_histogram_->Record(end_ts - start_ts, label_kv);
+#else
+        latency_histogram_->Record(end_ts - start_ts, label_kv,
+                                   opentelemetry::context::Context{});
+#endif
 #endif  // HAVE_OPENTELEMETRY_CPP
         rep->done();
         return seastar::make_ready_future<
@@ -193,6 +215,12 @@ hqps_adhoc_query_handler::hqps_adhoc_query_handler(
             hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
     codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
   }
+#ifdef HAVE_OPENTELEMETRY_CPP
+  total_counter_ = otel::create_int_counter("hqps_adhoc_query_total");
+  success_counter_ = otel::create_int_counter("hqps_adhoc_query_success");
+  latency_histogram_ =
+      otel::create_double_histogram("hqps_adhoc_query_latency");
+#endif  // HAVE_OPENTELEMETRY_CPP
 }
 hqps_adhoc_query_handler::~hqps_adhoc_query_handler() = default;
 
@@ -279,6 +307,9 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
 
 #ifdef HAVE_OPENTELEMETRY_CPP
+  if (total_counter_) {
+    total_counter_->Add(1);
+  }
   auto tracer = otel::get_tracer("hqps_adhoc_query_handler");
   // Extract context from headers. This copy is necessary to avoid access after
   // header content been freed
@@ -292,6 +323,9 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
   auto codegen_span = tracer->StartSpan("adhoc_codegen", options);
   auto codegen_scope = tracer->WithActiveSpan(codegen_span);
   // create a new span for query execution, not started.
+  auto start_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
+                      std::chrono::system_clock::now().time_since_epoch())
+                      .count();
 #endif  // HAVE_OPENTELEMETRY_CPP
   return codegen_actor_refs_[0]
       .do_codegen(query_param{std::move(req->content)})
@@ -331,7 +365,7 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
       .then_wrapped([rep = std::move(rep)
 #ifdef HAVE_OPENTELEMETRY_CPP
                          ,
-                     outer_span
+                     this, outer_span, start_ts
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](seastar::future<query_result>&& fut) mutable {
         if (__builtin_expect(fut.failed(), false)) {
@@ -341,12 +375,14 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
             std::rethrow_exception(fut.get_exception());
           } catch (std::exception& e) {
             rep->write_body("bin", seastar::sstring(e.what()));
-          }
 #ifdef HAVE_OPENTELEMETRY_CPP
-          outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
-                                "Internal Server Error");
-          outer_span->End();
+            outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                                  "Internal Server Error");
+            outer_span->SetAttribute(
+                "exception", opentelemetry::common::AttributeValue(e.what()));
+            outer_span->End();
 #endif  // HAVE_OPENTELEMETRY_CPP
+          }
           rep->done();
           return seastar::make_ready_future<
               std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
@@ -354,7 +390,19 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         auto result = fut.get0();
         rep->write_body("bin", std::move(result.content));
 #ifdef HAVE_OPENTELEMETRY_CPP
+        success_counter_->Add(1);
         outer_span->End();
+        auto end_ts = gs::GetCurrentTimeStamp();
+        std::map<std::string, std::string> labels = {{"key", "value"}};
+        auto label_kv =
+            opentelemetry::common::KeyValueIterableView<decltype(labels)>{
+                labels};
+#if OPENTELEMETRY_ABI_VERSION_NO >= 2
+        latency_histogram_->Record(end_ts - start_ts, label_kv);
+#else
+        latency_histogram_->Record(end_ts - start_ts, label_kv,
+                                   opentelemetry::context::Context{});
+#endif
 #endif  // HAVE_OPENTELEMETRY_CPP
         rep->done();
         return seastar::make_ready_future<

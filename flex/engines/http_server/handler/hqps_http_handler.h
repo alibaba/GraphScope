@@ -22,6 +22,11 @@
 #include "flex/engines/http_server/generated/actor/codegen_actor_ref.act.autogen.h"
 #include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 
+#ifdef HAVE_OPENTELEMETRY_CPP
+#include "opentelemetry/metrics/sync_instruments.h"
+#include "opentelemetry/nostd/unique_ptr.h"
+#endif  // HAVE_OPENTELEMETRY_CPP
+
 namespace server {
 
 class hqps_ic_handler : public seastar::httpd::handler_base {
@@ -48,6 +53,14 @@ class hqps_ic_handler : public seastar::httpd::handler_base {
   uint32_t executor_idx_;
   std::vector<executor_ref> executor_refs_;
   bool is_cancelled_;
+#ifdef HAVE_OPENTELEMETRY_CPP
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
+      total_counter_;
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
+      success_counter_;
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
+      latency_histogram_;
+#endif
 };
 
 class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
@@ -78,6 +91,14 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
   std::vector<executor_ref> executor_refs_;
   std::vector<codegen_actor_ref> codegen_actor_refs_;
   bool is_cancelled_;
+#ifdef HAVE_OPENTELEMETRY_CPP
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
+      total_counter_;
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
+      success_counter_;
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
+      latency_histogram_;
+#endif
 };
 
 class hqps_exit_handler : public seastar::httpd::handler_base {
