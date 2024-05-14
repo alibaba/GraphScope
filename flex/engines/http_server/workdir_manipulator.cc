@@ -732,7 +732,9 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
   auto bulk_loading_job_log = get_tmp_bulk_loading_job_log_path(graph_id);
   VLOG(10) << "Bulk loading job log: " << bulk_loading_job_log;
   std::stringstream ss;
-  ss << GRAPH_LOADER_BIN << " -g " << schema_file << " -l " << config_file_path
+  std::string graph_loader_bin;
+  ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(graph_loader_bin, GetGraphLoaderBin());
+  ss << graph_loader_bin << " -g " << schema_file << " -l " << config_file_path
      << " -d " << dst_indices_dir << " -p "
      << std::to_string(loading_thread_num);
   auto cmd_string = ss.str();
@@ -1196,6 +1198,26 @@ gs::Result<seastar::sstring> WorkDirManipulator::dump_yaml_to_file(
   }
   LOG(INFO) << "Successfully dump yaml to file: " << procedure_yaml_file;
   return gs::Result<seastar::sstring>(gs::Status::OK(), "Success");
+}
+
+gs::Result<seastar::sstring> WorkDirManipulator::GetGraphLoaderBin() {
+  // first via relative path
+  std::string graph_loader_bin_path =
+      (gs::get_current_binary_directory() / std::string(GRAPH_LOADER_BIN))
+          .string();
+  if (std::filesystem::exists(graph_loader_bin_path)) {
+    return gs::Result<seastar::sstring>(graph_loader_bin_path);
+  }
+  // test whether executable
+  std::string which_cmd =
+      std::string("which ") + GRAPH_LOADER_BIN + " > /dev/null";
+  if (std::system(which_cmd.c_str()) == 0) {
+    return gs::Result<seastar::sstring>(graph_loader_bin_path);
+  } else {
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Fail to find graph loader binary: " + GRAPH_LOADER_BIN));
+  }
 }
 
 // define LOCK_FILE
