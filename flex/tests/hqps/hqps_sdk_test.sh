@@ -83,7 +83,7 @@ start_engine_service(){
 
     echo "Start engine service with command: ${cmd}"
     eval ${cmd} 
-    sleep 5
+    sleep 10
     #check interactive_server is running, if not, exit
     ps -ef | grep "interactive_server" | grep -v grep
 

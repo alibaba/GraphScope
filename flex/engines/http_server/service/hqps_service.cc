@@ -264,6 +264,8 @@ bool HQPSService::start_compiler_subprocess(
     // check query server port is ready
     if (check_compiler_ready()) {
       LOG(INFO) << "Compiler server is ready!";
+      // sleep another 2 seconds to make sure the server is ready
+      std::this_thread::sleep_for(std::chrono::seconds(2));
       return true;
     }
     sleep_time += sleep_interval;
