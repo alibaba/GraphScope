@@ -151,7 +151,6 @@ class TestDriver(unittest.TestCase):
         )
         print("test bulk loading: ", self._graph_id)
         schema_mapping = SchemaMapping(
-            graph=self._graph_id,
             loading_config=SchemaMappingLoadingConfig(
                 import_option="init",
                 format=SchemaMappingLoadingConfigFormat(type="csv"),

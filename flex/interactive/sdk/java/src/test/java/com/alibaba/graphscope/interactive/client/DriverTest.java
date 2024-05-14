@@ -141,7 +141,6 @@ public class DriverTest {
     @Order(2)
     public void test1BulkLoading() {
         SchemaMapping schemaMapping = new SchemaMapping();
-        schemaMapping.setGraph(graphId);
         {
             SchemaMappingLoadingConfig loadingConfig = new SchemaMappingLoadingConfig();
             loadingConfig.setImportOption(SchemaMappingLoadingConfig.ImportOptionEnum.INIT);

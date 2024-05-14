@@ -1475,8 +1475,6 @@ components:
       x-body-name: schema_mapping
       type: object
       properties:
-        graph:
-          type: string
         loading_config:
           type: object
           properties:
@@ -1598,8 +1596,8 @@ components:
       properties:
         status:
           type: string
-        graph_id:
-          type: string
+        graph:
+          $ref: '#/components/schemas/GetGraphResponse'
         bolt_port:
           type: integer
           format: int32
