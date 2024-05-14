@@ -522,7 +522,10 @@ otel:
 
 uptrace:
   enabled: false
+  # uptrace service endpoint, could be DNS name of uptrace service
+  # for example: "service-name.namespace", "my-uptrace.uptrace"
   service: "uptrace"
+  # token is set within uptrace config
   token: "project2_secret_token"
 
 distributed:
