@@ -21,7 +21,6 @@
 
 use std::convert::TryInto;
 
-use ir_common::error::ParsePbError;
 use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
@@ -31,7 +30,6 @@ use ir_common::KeyId;
 use ir_physical_client::physical_builder::PlanBuilder;
 
 use crate::error::{IrError, IrResult};
-use crate::glogue::combine_get_v_by_query_params;
 use crate::plan::logical::{LogicalPlan, NodeType};
 use crate::plan::meta::PlanMeta;
 
@@ -941,34 +939,17 @@ impl AsPhysical for LogicalPlan {
 }
 
 // Given a->b, we support intersecting their neighbors, e.g., Intersect{{a->c, b->c}, key=c}
-// more cases as follows:
-// 1. To intersect a->d->c and b->c with key=c,
-// if so, translate into two operators, i.e., EdgeExpand{a->d} and Intersect{{d->c, b->c}, key=c}
-// 2. To intersect a->c->d and b->c with key=c,
-// if so, translate into two operators, i.e., Intersect{{a->c, b->c}, key=c} and Expand{c->d}
-// 3. To intersect a->c, b->c with key=c, with filters
-// we support expanding vertices with filters on edges (i.e., filters on a->c, b->c), e.g., Intersect{{a-filter->c, b-filter->c}, key=c};
-// if expanding vertices with filters on vertices (i.e., filters on c), translate into Intersect{{a->c, b->c}, key=c} + Select {filter on c}
-// 4. To intersect a->...->d->c and b->c with key=c, where a->..->d->c is a path from a to c,
-// if so, translate into PathExpand{a->d} + Intersect{d->c, b->c, key=c}.
-
-// Thus, after build intersect, the physical plan looks like:
-// 1. the last ops in intersect's sub_plans are the ones to intersect;
-// 2. the intersect op includes:
-//     1) EdgeExpand with Opt = ExpandV, which is to expand and intersect on id-only vertices; (supported currently)
-//     2) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (although, not considered in Pattern yet);
-
+// Currently, subplans in Intersect could be like:
+// 1. vec![ExpandE, GetV] for edge expand to intersect;
+// 2. vec![PathExpand, GetV] for path expand to intersect
 fn add_intersect_job_builder(
     builder: &mut PlanBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
     subplans: &Vec<LogicalPlan>,
 ) -> IrResult<()> {
-    use pb::logical_plan::operator::Opr::*;
-
     let intersect_tag = intersect_opr
         .key
         .as_ref()
         .ok_or_else(|| IrError::ParsePbError("Empty tag in `Intersect` opr".into()))?;
-    let mut auxilia: Option<pb::GetV> = None;
     let mut intersect_plans: Vec<PlanBuilder> = vec![];
     for subplan in subplans {
         // subplan would be like:
@@ -987,116 +968,12 @@ fn add_intersect_job_builder(
         let last_opr = subplan.get_last_node().ok_or_else(|| {
             IrError::InvalidPattern("Last node Missing for Intersection's subplan".to_string())
         })?;
-        if let Some(Vertex(get_v)) = last_opr.borrow().opr.opr.as_ref() {
-            let mut get_v = get_v.clone();
-            if get_v.alias.is_none() || !get_v.alias.as_ref().unwrap().eq(intersect_tag) {
-                Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
-            }
-            // If the first operator is PathExpand, pick its last expand out from the path
-            let mut edge_expand = if let Some(Edge(edge_expand)) = first_opr.borrow().opr.opr.as_ref() {
-                edge_expand.clone()
-            } else if let Some(Path(path_expand)) = first_opr.borrow().opr.opr.as_ref() {
-                // Process path_expand as follows:
-                // 1. If path_expand range from 0, it is unsupported;
-                // 2. If it is path_expand(1,2), optimized as edge_expand;
-                // 3. Otherwise, translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand,
-                //    and the last edge_expand is the one to intersect.
-                //    Notice that if we have predicates for vertices in path_expand, or for the last vertex of path_expand,
-                //    do the filtering after intersection.
-                // TODO: there might be a bug here:
-                // if path_expand has an alias which indicates that the path would be referred later, it may not as expected.
-                let mut path_expand = path_expand.clone();
-                let path_expand_base = path_expand.base.as_ref().ok_or_else(|| {
-                    ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string())
-                })?;
-                let path_get_v_opt = path_expand_base.get_v.clone();
-                let base_edge_expand = path_expand_base
-                    .edge_expand
-                    .as_ref()
-                    .ok_or_else(|| {
-                        ParsePbError::EmptyFieldError(
-                            "PathExpand::base::edge_expand in Pattern".to_string(),
-                        )
-                    })?;
-                // Ensure the base is ExpandV or ExpandE + GetV
-                if path_get_v_opt == None
-                    && base_edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32
-                {
-                    Err(IrError::Unsupported(
-                        "Edge Only PathExpand in Intersection's subplan has not been supported yet"
-                            .to_string(),
-                    ))?
-                }
-                // Combine the params for the last vertex in path.
-                // That is, it should satisfy both params in `GetV` in PathExpand's ExpandBase,
-                // and the params in `EndV` following PathExpand.
-                if let Some(path_get_v) = path_get_v_opt {
-                    get_v = combine_get_v_by_query_params(get_v, path_get_v);
-                }
-                // pick the last edge expand out from the path expand
-                let mut last_edge_expand = base_edge_expand.clone();
-                last_edge_expand.v_tag = None;
-                let hop_range = path_expand.hop_range.as_mut().ok_or_else(|| {
-                    ParsePbError::EmptyFieldError("pb::PathExpand::hop_range".to_string())
-                })?;
-                if hop_range.lower < 1 {
-                    Err(IrError::Unsupported(format!(
-                        "PathExpand in Intersection with lower range of {:?}",
-                        hop_range.lower
-                    )))?
-                }
-                if hop_range.lower == 1 && hop_range.upper == 2 {
-                    // optimized Path(1..2) to as EdgeExpand
-                    last_edge_expand.v_tag = path_expand.start_tag;
-                } else {
-                    // translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand,
-                    hop_range.lower -= 1;
-                    hop_range.upper -= 1;
-                    let mut end_v = pb::GetV::default();
-                    end_v.opt = pb::get_v::VOpt::End as i32;
-                    // build the path expansion
-                    path_expand.add_job_builder(builder, plan_meta)?;
-                    end_v.add_job_builder(builder, plan_meta)?;
-                }
-                last_edge_expand
-            } else {
-                Err(IrError::InvalidPattern(
-                    "First node of Intersection's subplan is neither EdgeExpand or PathExpand".to_string(),
-                ))?
-            };
-            // build the edge expansion
-            // the opt should be vertex because now only intersection on vertex is supported
-            edge_expand.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
-            edge_expand.alias = get_v.alias.clone();
-            edge_expand.add_job_builder(&mut sub_bldr, plan_meta)?;
-            // vertex parameter after the intersection
-            if let Some(params) = get_v.params.as_ref() {
-                // the case that we need to further process getV's filter.
-                if params.has_predicates() || params.has_columns() || params.has_labels() {
-                    get_v.opt = 4;
-                    auxilia = Some(get_v.clone());
-                }
-            }
-        }
+        first_opr.add_job_builder(&mut sub_bldr, plan_meta)?;
+        last_opr.add_job_builder(&mut sub_bldr, plan_meta)?;
         intersect_plans.push(sub_bldr);
     }
     // intersect
     builder.intersect(intersect_plans, intersect_tag.clone());
-    // unfold the intersection
-    let unfold = pb::Unfold {
-        tag: Some(intersect_tag.clone()),
-        alias: Some(intersect_tag.clone()),
-        meta_data: None,
-    };
-    unfold.add_job_builder(builder, plan_meta)?;
-    // add vertex filters
-    if let Some(mut auxilia) = auxilia {
-        auxilia.tag = Some(intersect_tag.clone());
-        if plan_meta.is_partition() {
-            builder.shuffle(Some(intersect_tag.clone()));
-        }
-        builder.get_v(auxilia);
-    }
     Ok(())
 }
 
@@ -2430,7 +2307,6 @@ mod test {
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()), meta_data: None };
         // extend 0->1
         let fused_expand_ab_opr_vertex = pb::EdgeExpand {
             v_tag: Some(0.into()),
@@ -2450,7 +2326,6 @@ mod test {
         sub_builder_1.edge_expand(expand_ac_opr_vertex.clone());
         sub_builder_2.edge_expand(expand_bc_opr_vertex.clone());
         expected_builder.intersect(vec![sub_builder_1, sub_builder_2], 2.into());
-        expected_builder.unfold(unfold_opr);
         assert_eq!(builder, expected_builder);
     }
 
@@ -2495,10 +2370,6 @@ mod test {
             is_optional: false,
         };
 
-        let mut expand_ac_opr_vertex = expand_ac_opr_edge.clone();
-        expand_ac_opr_vertex.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
-        expand_ac_opr_vertex.alias = Some(2.into());
-
         let expand_bc_opr_edge = pb::EdgeExpand {
             v_tag: Some(1.into()),
             direction: 0,
@@ -2509,10 +2380,6 @@ mod test {
             is_optional: false,
         };
 
-        let mut expand_bc_opr_vertex = expand_bc_opr_edge.clone();
-        expand_bc_opr_vertex.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
-        expand_bc_opr_vertex.alias = Some(2.into());
-
         let get_c = pb::GetV {
             tag: None,
             opt: pb::get_v::VOpt::End as i32,
@@ -2520,10 +2387,6 @@ mod test {
             alias: Some(2.into()),
             meta_data: None,
         };
-
-        let mut get_c_filter = get_c.clone();
-        get_c_filter.tag = Some(2.into());
-        get_c_filter.opt = 4;
 
         // parents are expand_ac_opr and expand_bc_opr
         let intersect_opr = pb::Intersect { parents: vec![4, 6], key: Some(2.into()) };
@@ -2556,7 +2419,6 @@ mod test {
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()), meta_data: None };
         // extend 0->1
         let fused_expand_ab_opr_vertex = pb::EdgeExpand {
             v_tag: Some(0.into()),
@@ -2573,11 +2435,11 @@ mod test {
 
         let mut sub_builder_1 = PlanBuilder::default();
         let mut sub_builder_2 = PlanBuilder::default();
-        sub_builder_1.edge_expand(expand_ac_opr_vertex.clone());
-        sub_builder_2.edge_expand(expand_bc_opr_vertex.clone());
+        sub_builder_1.edge_expand(expand_ac_opr_edge.clone());
+        sub_builder_1.get_v(get_c.clone());
+        sub_builder_2.edge_expand(expand_bc_opr_edge.clone());
+        sub_builder_2.get_v(get_c.clone());
         expected_builder.intersect(vec![sub_builder_1, sub_builder_2], 2.into());
-        expected_builder.unfold(unfold_opr);
-        expected_builder.get_v(get_c_filter);
         assert_eq!(builder, expected_builder);
     }
 
