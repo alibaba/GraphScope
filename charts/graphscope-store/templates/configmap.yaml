@@ -124,11 +124,27 @@ data:
     export GROOT_CONF_FILE=/etc/groot/groot.config
 
     export OTEL_SDK_DISABLED={{ not .Values.otel.enabled }}
+
     {{- if .Values.otel.enabled }}
-    export OTEL_SERVICE_NAME="compiler"
     export OTEL_TRACES_SAMPLER={{ .Values.otel.traces.sampler.name }}
     export OTEL_TRACES_SAMPLER_ARG={{ .Values.otel.traces.sampler.arg }}
+
+    export OTEL_SERVICE_NAME=groot
+    export OTEL_RESOURCE_ATTRIBUTES=service.name=groot,service.version=1.0.0
+    export OTEL_TRACES_EXPORTER=otlp
+    export OTEL_METRICS_EXPORTER=otlp
+    export OTEL_LOGS_EXPORTER=otlp
+
+    export OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=DELTA
+    export OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION=BASE2_EXPONENTIAL_BUCKET_HISTOGRAM
+    export OTEL_EXPORTER_OTLP_COMPRESSION=gzip
     {{- end }}
+
+    {{- if .Values.uptrace.enabled }}
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://{{ .Values.uptrace.service }}:14317
+    export OTEL_EXPORTER_OTLP_HEADERS=uptrace-dsn=http://{{ .Values.uptrace.token }}@${{ .Values.uptrace.service }}:14318?grpc=14317
+    {{- end }}
+
 
     # For core and heap profiling
     # ulimit -c unlimited
