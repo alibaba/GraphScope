@@ -518,18 +518,12 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kIntersect: {
         LOG(INFO) << "Found a intersect operator";
-        // a intersect op must be followed by a unfold op
-        CHECK(i + 1 < size) << " intersect op must be followed by a unfold op";
-        auto& next_op = plan_.plan(i + 1).opr();
-        CHECK(next_op.op_kind_case() ==
-              physical::PhysicalOpr::Operator::kUnfold)
-            << "intersect op must be followed by a unfold op";
+        // Note that intersect operator will not be followed by unfold anymore.
         auto& intersect_op = opr.intersect();
         auto intersect_opt_code = BuildIntersectOp<LabelT>(ctx_, intersect_op);
         for (auto& line : intersect_opt_code) {
           ss << line << std::endl;
         }
-        i += 1;  // skip unfold
         break;
       }
 

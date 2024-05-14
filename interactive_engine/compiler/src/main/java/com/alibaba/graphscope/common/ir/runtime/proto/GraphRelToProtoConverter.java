@@ -841,10 +841,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.Intersect.Builder intersectBuilder =
                 GraphAlgebraPhysical.Intersect.newBuilder();
-        GraphAlgebraPhysical.PhysicalOpr.Builder unfoldOprBuilder =
-                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.Unfold.Builder unfoldBuilder =
-                GraphAlgebraPhysical.Unfold.newBuilder();
 
         List<RexNode> conditions = RelOptUtil.conjunctions(multiJoin.getJoinFilter());
         int intersectKey = -1;
@@ -867,66 +863,19 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         Preconditions.checkArgument(intersectKey != -1, "intersect key should be set");
         intersectBuilder.setKey(intersectKey);
 
-        // then, process operators in the intersect branches;
-        // currently, there are some cases:
-        // case 1: PhysicalExpand;
-        // case 2: PhysicalExpand + PhysicalGetV(filter);
-        // case 3: EdgeExpand + GetV; (not supported yet)
-        // case 4: PathExpand + GetV;
-        // TODO(bingqing): This should be refactored. Directly add these cases as subplans in the
-        // intersect.
-        // Currently, we process these cases in a consistent way with the previous ir-core
-        // implementation.
-        GraphPhysicalGetV auxiliaFilter = null;
+        // then, build subplans for intersect
         for (RelNode input : multiJoin.getInputs()) {
             GraphAlgebraPhysical.PhysicalPlan.Builder subPlanBuilder =
                     GraphAlgebraPhysical.PhysicalPlan.newBuilder();
-            // specifically, if it is PhysicalGetV(filter), we build an auxilia node after
-            // the intersect.
-            if (input instanceof GraphPhysicalGetV
-                    && !ObjectUtils.isEmpty(((GraphPhysicalGetV) input).getFilters())) {
-                auxiliaFilter = (GraphPhysicalGetV) input;
-                auxiliaFilter
-                        .getInput()
-                        .accept(
-                                new GraphRelToProtoConverter(
-                                        isColumnId,
-                                        graphConfig,
-                                        subPlanBuilder,
-                                        this.relToCommons,
-                                        depth + 1));
-            } else if (input instanceof GraphLogicalGetV) {
-                throw new UnsupportedOperationException(
-                        "Unsupported of LogicalEdgeEdge + LogicalGetV in Intersect yet");
-            } else {
-                input.accept(
-                        new GraphRelToProtoConverter(
-                                isColumnId,
-                                graphConfig,
-                                subPlanBuilder,
-                                this.relToCommons,
-                                depth + 1));
-            }
+            input.accept(
+                    new GraphRelToProtoConverter(
+                            isColumnId, graphConfig, subPlanBuilder, this.relToCommons, depth + 1));
             intersectBuilder.addSubPlans(subPlanBuilder);
         }
         intersectOprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
                         .setIntersect(intersectBuilder));
         physicalBuilder.addPlan(intersectOprBuilder.build());
-
-        // after intersect, we need to unfold the result.
-        unfoldBuilder.setTag(Utils.asAliasId(intersectKey));
-        unfoldBuilder.setAlias(Utils.asAliasId(intersectKey));
-        unfoldOprBuilder.setOpr(
-                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setUnfold(unfoldBuilder));
-
-        physicalBuilder.addPlan(unfoldOprBuilder.build());
-
-        // if have filters, we need to add a auxilia node after intersect.
-        if (auxiliaFilter != null) {
-            addAuxilia(physicalBuilder, auxiliaFilter);
-        }
-
         return multiJoin;
     }
 
