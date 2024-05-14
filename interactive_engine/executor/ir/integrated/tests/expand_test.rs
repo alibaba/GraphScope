@@ -27,7 +27,7 @@ mod test {
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
     use ir_common::expr_parse::str_to_expr_pb;
-    use ir_common::generated::{algebra as algebra_pb, physical as pb};
+    use ir_common::generated::{algebra as algebra_pb, common as common_pb, physical as pb};
     use ir_common::KeyId;
     use ir_physical_client::physical_builder::{JobBuilder, PlanBuilder};
     use pegasus::api::{Map, Sink};
@@ -1179,8 +1179,6 @@ mod test {
             meta_data: None,
             is_optional: false,
         };
-        let unfold_opr =
-            algebra_pb::Unfold { tag: Some(TAG_C.into()), alias: Some(TAG_C.into()), meta_data: None };
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_scan_source(source_opr.clone());
@@ -1194,7 +1192,6 @@ mod test {
         plan_builder_2.shuffle(None);
         plan_builder_2.edge_expand(expand_opr3.clone());
         job_builder.intersect(vec![plan_builder_1, plan_builder_2], TAG_C.into());
-        job_builder.unfold(unfold_opr.clone());
         job_builder.sink(default_sink_pb());
         job_builder.build().unwrap()
     }
@@ -1274,6 +1271,452 @@ mod test {
                     let record = parse_result(res).unwrap();
                     if let Some(vertex) = record.get(None).unwrap().as_vertex() {
                         result_collection.push(vertex.id() as DefaultId);
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+
+        result_collection.sort();
+        expected_result_ids.sort();
+        assert_eq!(result_collection, expected_result_ids);
+    }
+
+    // marko (A) -> lop (B); marko (A) <-> (C); lop (B) <- (C)
+    fn init_intersect_edges_job_request(
+        edge_tag_1: Option<KeyId>, edge_tag_2: Option<KeyId>,
+    ) -> JobRequest {
+        // marko (A)
+        let source_opr = algebra_pb::Scan {
+            scan_opt: 0,
+            alias: Some(TAG_A.into()),
+            params: None,
+            idx_predicate: Some(vec![1].into()),
+            is_count_only: false,
+            meta_data: None,
+        };
+
+        // marko (A) -> lop (B);
+        let expand_opr1 = algebra_pb::EdgeExpand {
+            v_tag: Some(TAG_A.into()),
+            direction: 0, // out
+            params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
+            expand_opt: 0,
+            alias: Some(TAG_B.into()),
+            meta_data: None,
+            is_optional: false,
+        };
+
+        let expand_opr2;
+        let mut get_v_opr1 = None;
+
+        if let Some(edge_tag_1) = edge_tag_1 {
+            // a seperate expande + getv
+            // marko (A) -> (C); with edge tag edge_tag_1
+            expand_opr2 = algebra_pb::EdgeExpand {
+                v_tag: Some(TAG_A.into()),
+                direction: 0, // out
+                params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
+                expand_opt: 1, // expand edge
+                alias: Some(edge_tag_1.into()),
+                meta_data: None,
+                is_optional: false,
+            };
+
+            get_v_opr1 = Some(algebra_pb::GetV {
+                tag: None,
+                opt: 1, // EndV
+                params: Some(query_params(vec![], vec![], None)),
+                alias: Some(TAG_C.into()),
+                meta_data: None,
+            });
+        } else {
+            // a fused expandv
+            expand_opr2 = algebra_pb::EdgeExpand {
+                v_tag: Some(TAG_A.into()),
+                direction: 0, // out
+                params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
+                expand_opt: 0, // expand vertex
+                alias: Some(TAG_C.into()),
+                meta_data: None,
+                is_optional: false,
+            };
+        }
+
+        let expand_opr3;
+        let mut get_v_opr2 = None;
+
+        if let Some(edge_tag_2) = edge_tag_2 {
+            // a seperate expande + getv
+            // lop (B) <- (C); with edge tag edge_tag_2
+            expand_opr3 = algebra_pb::EdgeExpand {
+                v_tag: Some(TAG_B.into()),
+                direction: 1, // in
+                params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
+                expand_opt: 1, // expand edge
+                alias: Some(edge_tag_2.into()),
+                meta_data: None,
+                is_optional: false,
+            };
+
+            get_v_opr2 = Some(algebra_pb::GetV {
+                tag: None,
+                opt: 0, // StartV
+                params: Some(query_params(vec![], vec![], None)),
+                alias: Some(TAG_C.into()),
+                meta_data: None,
+            });
+        } else {
+            // a fused expandv
+            expand_opr3 = algebra_pb::EdgeExpand {
+                v_tag: Some(TAG_B.into()),
+                direction: 1, // in
+                params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
+                expand_opt: 0, // expand vertex
+                alias: Some(TAG_C.into()),
+                meta_data: None,
+                is_optional: false,
+            };
+        }
+
+        let mut sink_tags: Vec<_> = vec![TAG_A, TAG_B, TAG_C]
+            .into_iter()
+            .map(|i| common_pb::NameOrIdKey { key: Some(i.into()) })
+            .collect();
+        if let Some(edge_tag_1) = edge_tag_1 {
+            sink_tags.push(common_pb::NameOrIdKey { key: Some(edge_tag_1.into()) });
+        }
+        if let Some(edge_tag_2) = edge_tag_2 {
+            sink_tags.push(common_pb::NameOrIdKey { key: Some(edge_tag_2.into()) });
+        }
+        let sink_pb = algebra_pb::Sink { tags: sink_tags, sink_target: default_sink_target() };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr.clone());
+        job_builder.shuffle(None);
+        job_builder.edge_expand(expand_opr1.clone());
+        let mut plan_builder_1 = PlanBuilder::new(1);
+        plan_builder_1.shuffle(None);
+        plan_builder_1.edge_expand(expand_opr2);
+        if let Some(get_v_opr1) = get_v_opr1 {
+            plan_builder_1.get_v(get_v_opr1);
+        }
+        let mut plan_builder_2 = PlanBuilder::new(2);
+        plan_builder_2.shuffle(None);
+        plan_builder_2.edge_expand(expand_opr3.clone());
+        if let Some(get_v_opr2) = get_v_opr2 {
+            plan_builder_2.get_v(get_v_opr2);
+        }
+        job_builder.intersect(vec![plan_builder_1, plan_builder_2], TAG_C.into());
+
+        job_builder.sink(sink_pb);
+        job_builder.build().unwrap()
+    }
+
+    // marko (A) -> lop (B); marko (A) -> josh (C); lop (B) <- josh (C)
+    #[test]
+    fn general_expand_and_intersection_test_01() {
+        initialize();
+        // no edge tags, i.e., the optimized intersection
+        let request = init_intersect_edges_job_request(None, None);
+
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let mut expected_result_ids = vec![v4];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(Some(TAG_C)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+
+        result_collection.sort();
+        expected_result_ids.sort();
+        assert_eq!(result_collection, expected_result_ids);
+    }
+
+    // marko (A) -> lop (B); marko (A) -> josh (C) with expanding edge tag (D); lop (B) <- josh (C)
+    // preserving edges in the intersection phase
+    #[test]
+    fn general_expand_and_intersection_test_02() {
+        initialize();
+        // with edge tags, i.e., the general intersection
+        let request = init_intersect_edges_job_request(Some(TAG_D), None);
+
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let mut result_edge_collection = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let expected_result_ids = vec![v4];
+        let expected_preserved_edge = vec![(v1, v4)]; // marko -> josh
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(Some(TAG_C)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                    if let Some(edge) = record.get(Some(TAG_D)).unwrap().as_edge() {
+                        result_edge_collection.push((edge.src_id as DefaultId, edge.dst_id as DefaultId));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+
+        assert_eq!(result_collection, expected_result_ids);
+        assert_eq!(result_edge_collection, expected_preserved_edge);
+    }
+
+    // marko (A) -> lop (B); marko (A) -> josh (C); lop (B) <- josh (C) with expanding edge tag (E);
+    // preserving edges in the intersection phase
+    #[test]
+    fn general_expand_and_intersection_test_03() {
+        initialize();
+        // with edge tags, i.e., the general intersection
+        let request = init_intersect_edges_job_request(None, Some(TAG_E));
+
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let mut result_edge_collection = vec![];
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let expected_result_ids = vec![v4];
+        let expected_preserved_edge = vec![(v4, v3)]; // josh -> lop
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(Some(TAG_C)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                    if let Some(edge) = record.get(Some(TAG_E)).unwrap().as_edge() {
+                        result_edge_collection.push((edge.src_id as DefaultId, edge.dst_id as DefaultId));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+
+        assert_eq!(result_collection, expected_result_ids);
+        assert_eq!(result_edge_collection, expected_preserved_edge);
+    }
+
+    // marko (A) -> lop (B); marko (A) -> josh (C) with expanding edge tag (D); lop (B) <- josh (C) with expanding edge tag (E);
+    // preserving edges in the intersection phase
+    #[test]
+    fn general_expand_and_intersection_test_04() {
+        initialize();
+        // with edge tags, i.e., the general intersection
+        let request = init_intersect_edges_job_request(Some(TAG_D), Some(TAG_E));
+
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let mut result_edge_collection = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let expected_result_ids = vec![v4];
+        let expected_preserved_edge = vec![((v1, v4), TAG_D), ((v4, v3), TAG_E)]; // marko -> josh, lop -> josh
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(Some(TAG_C)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                    if let Some(edge) = record.get(Some(TAG_D)).unwrap().as_edge() {
+                        result_edge_collection
+                            .push(((edge.src_id as DefaultId, edge.dst_id as DefaultId), TAG_D));
+                    }
+                    if let Some(edge) = record.get(Some(TAG_E)).unwrap().as_edge() {
+                        result_edge_collection
+                            .push(((edge.src_id as DefaultId, edge.dst_id as DefaultId), TAG_E));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+
+        assert_eq!(result_collection, expected_result_ids);
+        assert_eq!(result_edge_collection, expected_preserved_edge);
+    }
+
+    // marko (A) -> lop (B) with optional edge_tag; marko (A) -2..3-> (B);
+    fn init_intersect_path_edges_job_request(edge_tag: Option<KeyId>) -> JobRequest {
+        // marko (A)
+        let source_opr = algebra_pb::Scan {
+            scan_opt: 0,
+            alias: Some(TAG_A.into()),
+            params: None,
+            idx_predicate: Some(vec![1].into()),
+            is_count_only: false,
+            meta_data: None,
+        };
+
+        // marko (A) -> lop (B);
+        let expand_opr1;
+        let mut get_v_opr1 = None;
+
+        if let Some(edge_tag) = edge_tag {
+            // a seperate expande + getv
+            // marko (A) -> (B); with edge tag edge_tag
+            expand_opr1 = algebra_pb::EdgeExpand {
+                v_tag: Some(TAG_A.into()),
+                direction: 0, // out
+                params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
+                expand_opt: 1,
+                alias: Some(edge_tag.into()),
+                meta_data: None,
+                is_optional: false,
+            };
+
+            get_v_opr1 = Some(algebra_pb::GetV {
+                tag: None,
+                opt: 1, // EndV
+                params: Some(query_params(vec![], vec![], None)),
+                alias: Some(TAG_B.into()),
+                meta_data: None,
+            });
+        } else {
+            // a fused expandv
+            expand_opr1 = algebra_pb::EdgeExpand {
+                v_tag: Some(TAG_A.into()),
+                direction: 0, // out
+                params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
+                expand_opt: 0, // expand vertex
+                alias: Some(TAG_B.into()),
+                meta_data: None,
+                is_optional: false,
+            };
+        }
+
+        // marko (A) -2..3-> (B): path expand B;
+        let expand_opr2 = algebra_pb::EdgeExpand {
+            v_tag: None,
+            direction: 2, // both
+            params: Some(query_params(vec![], vec![], None)),
+            expand_opt: 0,
+            alias: None,
+            meta_data: None,
+            is_optional: false,
+        };
+        let path_opr = algebra_pb::PathExpand {
+            alias: None,
+            base: Some(algebra_pb::path_expand::ExpandBase {
+                edge_expand: Some(expand_opr2.clone()),
+                get_v: None,
+            }),
+            start_tag: Some(TAG_A.into()),
+            hop_range: Some(algebra_pb::Range { lower: 2, upper: 3 }),
+            path_opt: 1,   // simple
+            result_opt: 0, // endv
+            condition: None,
+            is_optional: false,
+        };
+
+        let endv = algebra_pb::GetV {
+            tag: None,
+            opt: 1, // EndV
+            params: Some(query_params(vec![], vec![], None)),
+            alias: Some(TAG_B.into()),
+            meta_data: None,
+        };
+
+        let mut sink_tags: Vec<_> = vec![TAG_A, TAG_B]
+            .into_iter()
+            .map(|i| common_pb::NameOrIdKey { key: Some(i.into()) })
+            .collect();
+        if let Some(edge_tag) = edge_tag {
+            sink_tags.push(common_pb::NameOrIdKey { key: Some(edge_tag.into()) });
+        }
+        let sink_pb = algebra_pb::Sink { tags: sink_tags, sink_target: default_sink_target() };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr.clone());
+        let mut plan_builder_1 = PlanBuilder::new(1);
+        plan_builder_1.shuffle(None);
+        plan_builder_1.edge_expand(expand_opr1);
+        if let Some(get_v_opr1) = get_v_opr1 {
+            plan_builder_1.get_v(get_v_opr1);
+        }
+        let mut plan_builder_2 = PlanBuilder::new(2);
+        plan_builder_2.shuffle(None);
+        plan_builder_2.path_expand(path_opr.clone());
+        plan_builder_2.get_v(endv);
+        job_builder.intersect(vec![plan_builder_1, plan_builder_2], TAG_B.into());
+
+        job_builder.sink(sink_pb);
+        job_builder.build().unwrap()
+    }
+
+    #[test]
+    fn general_expand_multi_hop_path_and_intersect_test_01() {
+        initialize();
+        // no edge tags, i.e., the optimized intersection
+        let request = init_intersect_path_edges_job_request(None);
+
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let mut expected_result_ids = vec![v3];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(Some(TAG_B)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+
+        result_collection.sort();
+        expected_result_ids.sort();
+        assert_eq!(result_collection, expected_result_ids);
+    }
+
+    #[test]
+    fn general_expand_multi_hop_path_and_intersect_test_02() {
+        initialize();
+        // with edge tags, i.e., the general intersection
+        let request = init_intersect_path_edges_job_request(Some(TAG_C));
+
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let mut expected_result_ids = vec![v3];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(Some(TAG_B)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                    if let Some(edge) = record.get(Some(TAG_C)).unwrap().as_edge() {
+                        assert_eq!(edge.src_id as DefaultId, v1);
+                        assert_eq!(edge.dst_id as DefaultId, v3);
                     }
                 }
                 Err(e) => {
