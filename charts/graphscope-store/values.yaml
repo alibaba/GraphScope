@@ -520,5 +520,10 @@ otel:
       name: "traceidratio"
       arg: "0.1"
 
+uptrace:
+  enabled: false
+  service: "uptrace"
+  token: "project2_secret_token"
+
 distributed:
   enabled: false
