@@ -1475,8 +1475,6 @@ components:
       x-body-name: schema_mapping
       type: object
       properties:
-        graph:
-          type: string
         loading_config:
           type: object
           properties:

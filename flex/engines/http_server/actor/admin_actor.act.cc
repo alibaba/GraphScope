@@ -446,6 +446,20 @@ seastar::future<admin_query_result> admin_actor::run_delete_graph(
     query_param&& query_param) {
   LOG(INFO) << "Delete graph: " << query_param.content;
 
+  auto lock_info = metadata_store_->GetGraphIndicesLocked(query_param.content);
+  if (!lock_info.ok()) {
+    LOG(ERROR) << "Fail to get lock info for graph: " << query_param.content;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(lock_info.status()));
+  }
+  if (lock_info.value()) {
+    LOG(ERROR) << "Graph is running, cannot delete: " << query_param.content;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::AlreadyLocked,
+            "Graph is running, cannot delete: " + query_param.content)));
+  }
+
   auto get_res = metadata_store_->GetGraphMeta(query_param.content);
   if (!get_res.ok()) {
     LOG(ERROR) << "Graph not exists: " << query_param.content;
