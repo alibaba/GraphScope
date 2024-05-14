@@ -226,6 +226,8 @@ class WorkDirManipulator {
 
   static gs::Result<seastar::sstring> dump_yaml_to_file(
       const YAML::Node& node, const std::string& file_path);
+
+  static gs::Result<seastar::sstring> GetGraphLoaderBin();
 };
 }  // namespace server
 

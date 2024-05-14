@@ -302,8 +302,8 @@ std::string HQPSService::find_interactive_class_path() {
     }
   }
   // if not, try the relative path from current binary's path
-  auto current_binary_path = boost::filesystem::canonical("/proc/self/exe");
-  auto current_binary_dir = current_binary_path.parent_path();
+  auto current_binary_dir = gs::get_current_binary_directory();
+
   auto ir_core_lib_path =
       current_binary_dir /
       "../../../interactive_engine/executor/ir/target/release/";
