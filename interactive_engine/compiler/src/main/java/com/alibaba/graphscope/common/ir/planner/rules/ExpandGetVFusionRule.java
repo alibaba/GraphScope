@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalGetV;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -33,6 +34,10 @@ import org.apache.calcite.rel.rules.TransformationRule;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 // This rule try to fuse GraphLogicalExpand and GraphLogicalGetV if GraphLogicalExpand has no alias
 // (that it won't be visited individually later):
@@ -57,7 +62,7 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
                         && getV.getOpt().equals(GraphOpt.GetV.START)
                 || expand.getOpt().equals(GraphOpt.Expand.BOTH)
                         && getV.getOpt().equals(GraphOpt.GetV.OTHER)) {
-            if (ObjectUtils.isEmpty(getV.getFilters())) {
+            if (canFuse(getV, expand)) {
                 GraphPhysicalExpand physicalExpand =
                         GraphPhysicalExpand.create(
                                 expand.getCluster(),
@@ -93,6 +98,36 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
         } else {
             return getV;
         }
+    }
+
+    private boolean canFuse(GraphLogicalGetV getV, GraphLogicalExpand expand) {
+        List<GraphLabelType.Entry> edgeParamLabels =
+                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(expand)
+                        .getLabelsEntry();
+        Set<Integer> edgeExpandedVLabels = new HashSet<>();
+        GraphOpt.Expand direction = expand.getOpt();
+        for (GraphLabelType.Entry edgeLabel : edgeParamLabels) {
+            switch (direction) {
+                case OUT:
+                    edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
+                    break;
+                case IN:
+                    edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+                default:
+                    edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
+                    edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+            }
+        }
+
+        List<GraphLabelType.Entry> vertexParamLabels =
+                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(getV).getLabelsEntry();
+        Set<Integer> vertexExpandedVLabels = new HashSet<>();
+        for (GraphLabelType.Entry vertexLabel : vertexParamLabels) {
+            vertexExpandedVLabels.add(vertexLabel.getLabelId());
+        }
+
+        return ObjectUtils.isEmpty(getV.getFilters())
+                && edgeExpandedVLabels.equals(vertexExpandedVLabels);
     }
 
     // transform expande + getv to GraphPhysicalExpandGetV
