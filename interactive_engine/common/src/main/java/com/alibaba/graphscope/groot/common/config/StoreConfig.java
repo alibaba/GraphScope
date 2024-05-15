@@ -29,17 +29,14 @@ public class StoreConfig {
     public static final Config<Long> STORE_QUEUE_WAIT_MS =
             Config.longConfig("store.queue.wait.ms", 3000L);
 
-    public static final Config<Long> STORE_COMMIT_INTERVAL_MS =
-            Config.longConfig("store.commit.interval.ms", 1000L);
-
     public static final Config<Boolean> STORE_GC_ENABLE =
             Config.boolConfig("store.gc.enable", true);
 
     public static final Config<Long> STORE_GC_INTERVAL_MS =
-            Config.longConfig("store.gc.interval.ms", 5000L);
+            Config.longConfig("store.gc.interval.ms", 3600000L);
 
     public static final Config<Long> STORE_CATCHUP_INTERVAL_MS =
-            Config.longConfig("store.catchup.interval.ms", 30000L);
+            Config.longConfig("store.catchup.interval.ms", 5000L);
 
     // set by IS_SECONDARY_INSTANCE, used in graph.rs
     public static final Config<String> STORE_STORAGE_ENGINE =
