@@ -113,6 +113,9 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
         // consists of "person-create->post" and "person-create->comment",
         // we do not fuse them directly. Instead, we create a EdgeExpand(V) with type "create" and
         // an Auxilia with type "post" as the filter.
+        // 3. a special case is that, currently, for gremlin query like g.V().out("create"), we have
+        // not infer precise types for getV yet (getV may contain all vertex types).
+        // In this case, if getV's types contains all the types that expand will generate, we can fuse them
         Set<Integer> edgeExpandedVLabels = new HashSet<>();
         // the optTables in expand preserves the full schema information for the edges
         // that is, for edge type "create", it contains both "person-create->post" and
@@ -151,7 +154,7 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
             vertexExpandedVLabels.add(vertexLabel.getLabelId());
         }
         return ObjectUtils.isEmpty(getV.getFilters())
-                && edgeExpandedVLabels.equals(vertexExpandedVLabels);
+                && vertexExpandedVLabels.containsAll(edgeExpandedVLabels);
     }
 
     // transform expande + getv to GraphPhysicalExpandGetV
