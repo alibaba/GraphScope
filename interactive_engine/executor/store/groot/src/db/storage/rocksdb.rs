@@ -87,7 +87,7 @@ impl RocksDB {
         unsafe {
             // Convert 'Shared' back to 'Arc' for deferred dropping
             // guard.defer_destroy(old_db_shared)
-            guard.defer(move || {
+            guard.defer_unchecked(move || {
                 info!("Dropped RocksDB {:}", path);
                 drop(old_db_shared.into_owned())
             })
