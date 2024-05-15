@@ -18,7 +18,6 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
-import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
@@ -85,14 +84,18 @@ public class Utils {
         return values;
     }
 
-    public static GraphLabelType getGraphLabels(AbstractBindableTableScan tableScan) {
-        List<RelDataTypeField> fields = tableScan.getRowType().getFieldList();
-        Preconditions.checkArgument(
-                !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
-                "data type of graph operators should be %s ",
-                GraphSchemaType.class);
-        GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
-        return schemaType.getLabelType();
+    public static GraphLabelType getGraphLabels(RelDataType rowType) {
+        if (rowType instanceof GraphSchemaType) {
+            return ((GraphSchemaType) rowType).getLabelType();
+        } else {
+            List<RelDataTypeField> fields = rowType.getFieldList();
+            Preconditions.checkArgument(
+                    !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
+                    "data type of graph operators should be %s ",
+                    GraphSchemaType.class);
+            GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
+            return schemaType.getLabelType();
+        }
     }
 
     /**

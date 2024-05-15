@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.planner.rules;
 
+import com.alibaba.graphscope.common.ir.meta.schema.GraphOptTable;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
@@ -28,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.TransformationRule;
@@ -101,31 +103,53 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
     }
 
     private boolean canFuse(GraphLogicalGetV getV, GraphLogicalExpand expand) {
-        List<GraphLabelType.Entry> edgeParamLabels =
-                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(expand)
-                        .getLabelsEntry();
+        // If GraphLogicalGetV has filters, then we cannot fuse them directly. Instead, we create a
+        // EdgeExpand(V) with an Auxilia for the filters.
+        // If GraphLogicalGetV has no filters, then:
+        // 1. if we want to expand "person-knows->person", and the type in getV is "person",
+        // we can fuse them into one EdgeExpand with type "knows" (where "knows" will be given in
+        // EdgeExpand's QueryParam in PhysicalPlan)
+        // 2. if we want to expand "person-create->post", while in schema, a "create" actually
+        // consists of "person-create->post" and "person-create->comment",
+        // we do not fuse them directly. Instead, we create a EdgeExpand(V) with type "create" and
+        // an Auxilia with type "post" as the filter.
         Set<Integer> edgeExpandedVLabels = new HashSet<>();
-        GraphOpt.Expand direction = expand.getOpt();
-        for (GraphLabelType.Entry edgeLabel : edgeParamLabels) {
-            switch (direction) {
-                case OUT:
-                    edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
-                    break;
-                case IN:
-                    edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
-                default:
-                    edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
-                    edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+        // the optTables in expand preserves the full schema information for the edges
+        // that is, for edge type "create", it contains both "person-create->post" and
+        // "person-create->comment".
+        List<RelOptTable> optTables = expand.getTableConfig().getTables();
+        for (RelOptTable optTable : optTables) {
+            if (optTable instanceof GraphOptTable) {
+                GraphOptTable graphOptTable = (GraphOptTable) optTable;
+                List<GraphLabelType.Entry> edgeParamLabels =
+                        com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(
+                                        graphOptTable.getRowType())
+                                .getLabelsEntry();
+                GraphOpt.Expand direction = expand.getOpt();
+                for (GraphLabelType.Entry edgeLabel : edgeParamLabels) {
+                    switch (direction) {
+                        case OUT:
+                            edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
+                            break;
+                        case IN:
+                            edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+                            break;
+                        case BOTH:
+                            edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
+                            edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+                            break;
+                    }
+                }
             }
         }
 
         List<GraphLabelType.Entry> vertexParamLabels =
-                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(getV).getLabelsEntry();
+                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(getV.getRowType())
+                        .getLabelsEntry();
         Set<Integer> vertexExpandedVLabels = new HashSet<>();
         for (GraphLabelType.Entry vertexLabel : vertexParamLabels) {
             vertexExpandedVLabels.add(vertexLabel.getLabelId());
         }
-
         return ObjectUtils.isEmpty(getV.getFilters())
                 && edgeExpandedVLabels.equals(vertexExpandedVLabels);
     }

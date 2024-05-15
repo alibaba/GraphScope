@@ -171,7 +171,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             GraphAlgebra.QueryParams.Builder adjParamsBuilder = defaultQueryParams();
             addQueryTables(
                     adjParamsBuilder,
-                    com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(getV)
+                    com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(getV.getRowType())
                             .getLabelsEntry());
             adjVertexBuilder.setParams(adjParamsBuilder);
             if (getV.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
@@ -1016,7 +1016,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebra.QueryParams.Builder paramsBuilder = defaultQueryParams();
         addQueryTables(
                 paramsBuilder,
-                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(tableScan)
+                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(tableScan.getRowType())
                         .getLabelsEntry());
         addQueryFilters(paramsBuilder, tableScan.getFilters());
         return paramsBuilder;
