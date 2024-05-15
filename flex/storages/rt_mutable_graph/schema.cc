@@ -1002,8 +1002,6 @@ static Status parse_stored_procedures_v00(
     std::vector<std::string> plugin_names;
     if (!get_sequence(stored_procedure_node, "enable_lists", plugin_names)) {
       LOG(ERROR) << "stored_procedures is not set properly";
-      return Status(StatusCode::InvalidSchema,
-                    "stored_procedures is not set properly");
     }
     for (auto& plugin_name : plugin_names) {
       plugin_name_or_path.emplace_back(plugin_name, "");
