@@ -332,6 +332,47 @@ public class ExpandGetVFusionTest {
                 after.explain().trim());
     }
 
+    // g.V().hasLabel("person").outE("likes").inV().hasLabel("comment"), can not be fused into
+    // GraphPhysicalExpand since we actually have person-likes-comment and person-likes-post.
+    @Test
+    public void expand_getv_fusion_7_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder("schema/ldbc.json");
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("PERSON")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("LIKES")))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("COMMENT")))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[COMMENT]}],"
+                        + " alias=[_], opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}],"
+                        + " alias=[_], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                        + " alias=[_], opt=[VERTEX])",
+                before.explain().trim());
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[COMMENT]}], alias=[_],"
+                        + " opt=[END], physicalOpt=[ITSELF])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}],"
+                        + " alias=[_], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                        + " alias=[_], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
     // path expand: g.V().hasLabel("person").out('1..3', "knows").with('PATH_OPT',
     // SIMPLE).with('RESULT_OPT', ALL_V)
     @Test
