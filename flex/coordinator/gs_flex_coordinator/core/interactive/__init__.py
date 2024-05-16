@@ -19,10 +19,4 @@
 import os
 import sys
 
-try:
-    sys.path.insert(0, os.path.dirname(__file__))
-    import hqps_client
-except ImportError:
-    raise
-
 from gs_flex_coordinator.core.interactive.hqps import init_hqps_client

@@ -17,6 +17,10 @@
 #
 
 import logging
+import warnings
+
+# Disable warnings
+warnings.filterwarnings("ignore", category=Warning)
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s",

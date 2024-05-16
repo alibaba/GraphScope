@@ -3,9 +3,11 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from gs_flex_coordinator.models.base_model import Model
+from gs_flex_coordinator.models.get_graph_response import GetGraphResponse
 from gs_flex_coordinator.models.service_status_sdk_endpoints import ServiceStatusSdkEndpoints
 from gs_flex_coordinator import util
 
+from gs_flex_coordinator.models.get_graph_response import GetGraphResponse  # noqa: E501
 from gs_flex_coordinator.models.service_status_sdk_endpoints import ServiceStatusSdkEndpoints  # noqa: E501
 
 class ServiceStatus(Model):
@@ -14,30 +16,30 @@ class ServiceStatus(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, status=None, graph_name=None, sdk_endpoints=None):  # noqa: E501
+    def __init__(self, status=None, graph=None, sdk_endpoints=None):  # noqa: E501
         """ServiceStatus - a model defined in OpenAPI
 
         :param status: The status of this ServiceStatus.  # noqa: E501
         :type status: str
-        :param graph_name: The graph_name of this ServiceStatus.  # noqa: E501
-        :type graph_name: str
+        :param graph: The graph of this ServiceStatus.  # noqa: E501
+        :type graph: GetGraphResponse
         :param sdk_endpoints: The sdk_endpoints of this ServiceStatus.  # noqa: E501
         :type sdk_endpoints: ServiceStatusSdkEndpoints
         """
         self.openapi_types = {
             'status': str,
-            'graph_name': str,
+            'graph': GetGraphResponse,
             'sdk_endpoints': ServiceStatusSdkEndpoints
         }
 
         self.attribute_map = {
             'status': 'status',
-            'graph_name': 'graph_name',
+            'graph': 'graph',
             'sdk_endpoints': 'sdk_endpoints'
         }
 
         self._status = status
-        self._graph_name = graph_name
+        self._graph = graph
         self._sdk_endpoints = sdk_endpoints
 
     @classmethod
@@ -69,31 +71,35 @@ class ServiceStatus(Model):
         :param status: The status of this ServiceStatus.
         :type status: str
         """
+        allowed_values = ["Running", "Stopped"]  # noqa: E501
+        if status not in allowed_values:
+            raise ValueError(
+                "Invalid value for `status` ({0}), must be one of {1}"
+                .format(status, allowed_values)
+            )
 
         self._status = status
 
     @property
-    def graph_name(self) -> str:
-        """Gets the graph_name of this ServiceStatus.
+    def graph(self) -> GetGraphResponse:
+        """Gets the graph of this ServiceStatus.
 
-        which graph is serving now  # noqa: E501
 
-        :return: The graph_name of this ServiceStatus.
-        :rtype: str
+        :return: The graph of this ServiceStatus.
+        :rtype: GetGraphResponse
         """
-        return self._graph_name
+        return self._graph
 
-    @graph_name.setter
-    def graph_name(self, graph_name: str):
-        """Sets the graph_name of this ServiceStatus.
+    @graph.setter
+    def graph(self, graph: GetGraphResponse):
+        """Sets the graph of this ServiceStatus.
 
-        which graph is serving now  # noqa: E501
 
-        :param graph_name: The graph_name of this ServiceStatus.
-        :type graph_name: str
+        :param graph: The graph of this ServiceStatus.
+        :type graph: GetGraphResponse
         """
 
-        self._graph_name = graph_name
+        self._graph = graph
 
     @property
     def sdk_endpoints(self) -> ServiceStatusSdkEndpoints:

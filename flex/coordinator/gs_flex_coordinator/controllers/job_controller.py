@@ -3,36 +3,21 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from gs_flex_coordinator.core import client_wrapper
-from gs_flex_coordinator.core import handle_api_exception
+from gs_flex_coordinator.models.create_dataloading_job_response import CreateDataloadingJobResponse  # noqa: E501
+from gs_flex_coordinator.models.dataloading_job_config import DataloadingJobConfig  # noqa: E501
+from gs_flex_coordinator.models.error import Error  # noqa: E501
 from gs_flex_coordinator.models.job_status import JobStatus  # noqa: E501
-from gs_flex_coordinator.models.schema_mapping import SchemaMapping  # noqa: E501
 from gs_flex_coordinator import util
 
-
-@handle_api_exception()
-def create_dataloading_job(graph_name, schema_mapping):  # noqa: E501
-    """create_dataloading_job
-
-     # noqa: E501
-
-    :param graph_name: 
-    :type graph_name: str
-    :param schema_mapping: 
-    :type schema_mapping: dict | bytes
-
-    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
-    """
-    if connexion.request.is_json:
-        schema_mapping = SchemaMapping.from_dict(connexion.request.get_json())  # noqa: E501
-    return client_wrapper.create_dataloading_job(graph_name, schema_mapping)
+from gs_flex_coordinator.core import client_wrapper
+from gs_flex_coordinator.core import handle_api_exception
 
 
 @handle_api_exception()
 def delete_job_by_id(job_id):  # noqa: E501
     """delete_job_by_id
 
-     # noqa: E501
+    Delete job by ID # noqa: E501
 
     :param job_id: 
     :type job_id: str
@@ -43,10 +28,24 @@ def delete_job_by_id(job_id):  # noqa: E501
 
 
 @handle_api_exception()
+def get_dataloading_job_config(graph_id):  # noqa: E501
+    """get_dataloading_job_config
+
+    Get the data loading configuration # noqa: E501
+
+    :param graph_id:
+    :type graph_id: str
+
+    :rtype: Union[DataloadingJobConfig, Tuple[DataloadingJobConfig, int], Tuple[DataloadingJobConfig, int, Dict[str, str]]
+    """
+    return client_wrapper.get_dataloading_job_config(graph_id)
+
+
+@handle_api_exception()
 def get_job_by_id(job_id):  # noqa: E501
     """get_job_by_id
 
-     # noqa: E501
+    Get job status by ID # noqa: E501
 
     :param job_id: 
     :type job_id: str
@@ -60,7 +59,7 @@ def get_job_by_id(job_id):  # noqa: E501
 def list_jobs():  # noqa: E501
     """list_jobs
 
-     # noqa: E501
+    List all jobs # noqa: E501
 
 
     :rtype: Union[List[JobStatus], Tuple[List[JobStatus], int], Tuple[List[JobStatus], int, Dict[str, str]]
@@ -69,14 +68,18 @@ def list_jobs():  # noqa: E501
 
 
 @handle_api_exception()
-def get_dataloading_config(graph_name):  # noqa: E501
-    """get_dataloading_config
+def submit_dataloading_job(graph_id, dataloading_job_config):  # noqa: E501
+    """submit_dataloading_job
 
-    get dataloading configuration # noqa: E501
+    Submit a dataloading job # noqa: E501
 
-    :param graph_name:
-    :type graph_name: str
+    :param graph_id:
+    :type graph_id: str
+    :param dataloading_job_config:
+    :type dataloading_job_config: dict | bytes
 
-    :rtype: Union[List[SchemaMapping], Tuple[List[SchemaMapping], int], Tuple[List[SchemaMapping], int, Dict[str, str]]
+    :rtype: Union[CreateDataloadingJobResponse, Tuple[CreateDataloadingJobResponse, int], Tuple[CreateDataloadingJobResponse, int, Dict[str, str]]
     """
-    return client_wrapper.get_dataloading_config(graph_name)
+    if connexion.request.is_json:
+        dataloading_job_config = DataloadingJobConfig.from_dict(connexion.request.get_json())  # noqa: E501
+    return client_wrapper.submit_dataloading_job(graph_id, dataloading_job_config)

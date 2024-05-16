@@ -20,17 +20,20 @@ import click
 import yaml
 
 from graphscope.gsctl.config import get_current_context
-from graphscope.gsctl.impl import create_dataloading_job
+from graphscope.gsctl.impl import submit_dataloading_job
 from graphscope.gsctl.impl import create_procedure
 from graphscope.gsctl.impl import delete_job_by_id
-from graphscope.gsctl.impl import delete_procedure_by_name
-from graphscope.gsctl.impl import get_dataloading_config
+from graphscope.gsctl.impl import delete_procedure_by_id
 from graphscope.gsctl.impl import get_job_by_id
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_jobs
+from graphscope.gsctl.impl import bind_datasource_in_batch
+from graphscope.gsctl.impl import get_datasource_by_id
 from graphscope.gsctl.impl import list_procedures
 from graphscope.gsctl.impl import switch_context
-from graphscope.gsctl.impl import update_procedure
+from graphscope.gsctl.impl import unbind_edge_datasource
+from graphscope.gsctl.impl import unbind_vertex_datasource
+from graphscope.gsctl.impl import get_graph_id_by_name
 from graphscope.gsctl.utils import TreeDisplay
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
@@ -46,25 +49,19 @@ def cli():
 
 @cli.group()
 def create():
-    """Create stored procedure, loader job from file"""
+    """Create stored procedure, data source, loader job from file"""
     pass
 
 
 @cli.group()
 def delete():
-    """Delete stored procedure, loader job by identifier"""
-    pass
-
-
-@cli.group()
-def update():
-    """Update stored procedure from file"""
+    """Delete stored procedure, data source, loader job by id"""
     pass
 
 
 @cli.group()
 def desc():
-    """Show details of job status and stored procedure by identifier"""
+    """Show details of job status and stored procedure by id"""
     pass
 
 
@@ -84,16 +81,16 @@ def ls():  # noqa: F811
         graphs = list_graphs()
         using_graph = None
         for g in graphs:
-            if g.name == current_context.context:
+            if g.id == current_context.context:
                 using_graph = g
                 break
         # schema
         tree.create_graph_node(using_graph)
-        # get data source from job configuration
-        job_config = get_dataloading_config(using_graph.name)
-        tree.create_datasource_node_for_interactive(using_graph, job_config)
+        # data source mapping
+        datasource_mapping = get_datasource_by_id(using_graph.id)
+        tree.create_datasource_mapping_node(using_graph, datasource_mapping)
         # stored procedure
-        procedures = list_procedures(using_graph.name)
+        procedures = list_procedures(using_graph.id)
         tree.create_procedure_node(using_graph, procedures)
         # job
         jobs = list_jobs()
@@ -117,12 +114,10 @@ def procedure(filename):
         err(f"Invalid file: {filename}")
         return
     current_context = get_current_context()
-    graph_name = current_context.context
+    graph_identifier = current_context.context
     try:
         procedure = read_yaml_file(filename)
-        # overwrite graph name
-        procedure["bound_graph"] = graph_name
-        create_procedure(graph_name, procedure)
+        create_procedure(graph_identifier, procedure)
     except Exception as e:
         err(f"Failed to create stored procedure: {str(e)}")
     else:
@@ -134,38 +129,72 @@ def procedure(filename):
 def procedure(identifier):  # noqa: F811
     """Delete a stored procedure, see identifier with `ls` command"""
     current_context = get_current_context()
-    graph_name = current_context.context
+    graph_identifier = current_context.context
     try:
-        delete_procedure_by_name(graph_name, identifier)
+        delete_procedure_by_id(graph_identifier, identifier)
     except Exception as e:
         err(f"Failed to delete stored procedure: {str(e)}")
     else:
         succ(f"Delete stored procedure {identifier} successfully.")
 
 
-@update.command()
+@create.command
 @click.option(
     "-f",
     "--filename",
     required=True,
     help="Path of yaml file",
 )
-def procedure(filename):  # noqa: F811
-    """Update a stored procedure from file"""
+def datasource(filename):  # noqa: F811
+    """Bind data source mapping from file"""
     if not is_valid_file_path(filename):
         err(f"Invalid file: {filename}")
         return
     current_context = get_current_context()
-    graph_name = current_context.context
+    graph_identifier = current_context.context
     try:
-        procedure = read_yaml_file(filename)
-        # overwrite graph name
-        procedure["bound_graph"] = graph_name
-        update_procedure(graph_name, procedure)
+        datasource = read_yaml_file(filename)
+        bind_datasource_in_batch(graph_identifier, datasource)
     except Exception as e:
-        err(f"Failed to update stored procedure: {str(e)}")
+         err(f"Failed to bind data source: {str(e)}")
     else:
-        succ(f"Update stored procedure {procedure['name']} successfully.")
+        succ("Bind data source successfully.")
+
+
+@delete.command
+@click.option(
+    "-t",
+    "--type",
+    required=True,
+    help="Vertex or edge type",
+)
+@click.option(
+    "-s",
+    "--source_vertex_type",
+    required=False,
+    help="Source vertex type of the edge [edge only]",
+)
+@click.option(
+    "-d",
+    "--destination_vertex_type",
+    required=False,
+    help="Destination vertex type of the edge [edge only]",
+)
+def datasource(type, source_vertex_type, destination_vertex_type):  # noqa: F811
+    """Unbind data source mapping on vertex or edge type"""
+    try:
+        current_context = get_current_context()
+        graph_identifier = current_context.context
+        if source_vertex_type is not None and destination_vertex_type is not None:
+            unbind_edge_datasource(
+                graph_identifier, type, source_vertex_type, destination_vertex_type
+            )
+        else:
+            unbind_vertex_datasource(graph_identifier, type)
+    except Exception as e:
+        err(f"Failed to unbind data source: {str(e)}")
+    else:
+        succ(f"Unbind data source successfully.")
 
 
 @create.command()
@@ -176,17 +205,15 @@ def procedure(filename):  # noqa: F811
     help="Path of yaml file",
 )
 def loaderjob(filename):  # noqa: F811
-    """Create a dataloading job from file"""
+    """Create a data loading job from file"""
     if not is_valid_file_path(filename):
         err(f"Invalid file: {filename}")
         return
     current_context = get_current_context()
-    graph_name = current_context.context
+    graph_identifier = current_context.context
     try:
         config = read_yaml_file(filename)
-        # overwrite graph name
-        config["graph"] = graph_name
-        jobid = create_dataloading_job(graph_name, config)
+        jobid = submit_dataloading_job(graph_identifier, config)
     except Exception as e:
         err(f"Failed to create a job: {str(e)}")
     else:
@@ -222,23 +249,23 @@ def job(identifier):  # noqa: F811
 def procedure(identifier):  # noqa: F811
     """Show details of stored procedure, see identifier with `ls` command"""
     current_context = get_current_context()
-    graph_name = current_context.context
+    graph_id = current_context.context
     try:
-        procedures = list_procedures(graph_name)
+        procedures = list_procedures(graph_id)
     except Exception as e:
         err(f"Failed to list procedures: {str(e)}")
     else:
         if not procedures:
-            info(f"No stored procedures found on {graph_name}.")
+            info(f"No stored procedures found on {graph_id}.")
             return
         specific_procedure_exist = False
         for procedure in procedures:
-            if identifier == procedure.name:
+            if identifier == procedure.id:
                 info(yaml.dump(procedure.to_dict()))
                 specific_procedure_exist = True
                 break
         if not specific_procedure_exist:
-            err(f"Procedure {identifier} not found on {graph_name}.")
+            err(f"Procedure {identifier} not found on {graph_id}.")
 
 
 @use.command(name="GLOBAL")

@@ -12,21 +12,21 @@ class StartServiceRequest(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, graph_name=None):  # noqa: E501
+    def __init__(self, graph_id=None):  # noqa: E501
         """StartServiceRequest - a model defined in OpenAPI
 
-        :param graph_name: The graph_name of this StartServiceRequest.  # noqa: E501
-        :type graph_name: str
+        :param graph_id: The graph_id of this StartServiceRequest.  # noqa: E501
+        :type graph_id: str
         """
         self.openapi_types = {
-            'graph_name': str
+            'graph_id': str
         }
 
         self.attribute_map = {
-            'graph_name': 'graph_name'
+            'graph_id': 'graph_id'
         }
 
-        self._graph_name = graph_name
+        self._graph_id = graph_id
 
     @classmethod
     def from_dict(cls, dikt) -> 'StartServiceRequest':
@@ -34,28 +34,28 @@ class StartServiceRequest(Model):
 
         :param dikt: A dict.
         :type: dict
-        :return: The start_service_request of this StartServiceRequest.  # noqa: E501
+        :return: The StartServiceRequest of this StartServiceRequest.  # noqa: E501
         :rtype: StartServiceRequest
         """
         return util.deserialize_model(dikt, cls)
 
     @property
-    def graph_name(self) -> str:
-        """Gets the graph_name of this StartServiceRequest.
+    def graph_id(self) -> str:
+        """Gets the graph_id of this StartServiceRequest.
 
 
-        :return: The graph_name of this StartServiceRequest.
+        :return: The graph_id of this StartServiceRequest.
         :rtype: str
         """
-        return self._graph_name
+        return self._graph_id
 
-    @graph_name.setter
-    def graph_name(self, graph_name: str):
-        """Sets the graph_name of this StartServiceRequest.
+    @graph_id.setter
+    def graph_id(self, graph_id: str):
+        """Sets the graph_id of this StartServiceRequest.
 
 
-        :param graph_name: The graph_name of this StartServiceRequest.
-        :type graph_name: str
+        :param graph_id: The graph_id of this StartServiceRequest.
+        :type graph_id: str
         """
 
-        self._graph_name = graph_name
+        self._graph_id = graph_id

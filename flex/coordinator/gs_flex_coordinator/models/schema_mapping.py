@@ -4,12 +4,10 @@ from typing import List, Dict  # noqa: F401
 
 from gs_flex_coordinator.models.base_model import Model
 from gs_flex_coordinator.models.edge_mapping import EdgeMapping
-from gs_flex_coordinator.models.schema_mapping_loading_config import SchemaMappingLoadingConfig
 from gs_flex_coordinator.models.vertex_mapping import VertexMapping
 from gs_flex_coordinator import util
 
 from gs_flex_coordinator.models.edge_mapping import EdgeMapping  # noqa: E501
-from gs_flex_coordinator.models.schema_mapping_loading_config import SchemaMappingLoadingConfig  # noqa: E501
 from gs_flex_coordinator.models.vertex_mapping import VertexMapping  # noqa: E501
 
 class SchemaMapping(Model):
@@ -18,34 +16,24 @@ class SchemaMapping(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, graph=None, loading_config=None, vertex_mappings=None, edge_mappings=None):  # noqa: E501
+    def __init__(self, vertex_mappings=None, edge_mappings=None):  # noqa: E501
         """SchemaMapping - a model defined in OpenAPI
 
-        :param graph: The graph of this SchemaMapping.  # noqa: E501
-        :type graph: str
-        :param loading_config: The loading_config of this SchemaMapping.  # noqa: E501
-        :type loading_config: SchemaMappingLoadingConfig
         :param vertex_mappings: The vertex_mappings of this SchemaMapping.  # noqa: E501
         :type vertex_mappings: List[VertexMapping]
         :param edge_mappings: The edge_mappings of this SchemaMapping.  # noqa: E501
         :type edge_mappings: List[EdgeMapping]
         """
         self.openapi_types = {
-            'graph': str,
-            'loading_config': SchemaMappingLoadingConfig,
             'vertex_mappings': List[VertexMapping],
             'edge_mappings': List[EdgeMapping]
         }
 
         self.attribute_map = {
-            'graph': 'graph',
-            'loading_config': 'loading_config',
             'vertex_mappings': 'vertex_mappings',
             'edge_mappings': 'edge_mappings'
         }
 
-        self._graph = graph
-        self._loading_config = loading_config
         self._vertex_mappings = vertex_mappings
         self._edge_mappings = edge_mappings
 
@@ -59,48 +47,6 @@ class SchemaMapping(Model):
         :rtype: SchemaMapping
         """
         return util.deserialize_model(dikt, cls)
-
-    @property
-    def graph(self) -> str:
-        """Gets the graph of this SchemaMapping.
-
-
-        :return: The graph of this SchemaMapping.
-        :rtype: str
-        """
-        return self._graph
-
-    @graph.setter
-    def graph(self, graph: str):
-        """Sets the graph of this SchemaMapping.
-
-
-        :param graph: The graph of this SchemaMapping.
-        :type graph: str
-        """
-
-        self._graph = graph
-
-    @property
-    def loading_config(self) -> SchemaMappingLoadingConfig:
-        """Gets the loading_config of this SchemaMapping.
-
-
-        :return: The loading_config of this SchemaMapping.
-        :rtype: SchemaMappingLoadingConfig
-        """
-        return self._loading_config
-
-    @loading_config.setter
-    def loading_config(self, loading_config: SchemaMappingLoadingConfig):
-        """Sets the loading_config of this SchemaMapping.
-
-
-        :param loading_config: The loading_config of this SchemaMapping.
-        :type loading_config: SchemaMappingLoadingConfig
-        """
-
-        self._loading_config = loading_config
 
     @property
     def vertex_mappings(self) -> List[VertexMapping]:
@@ -120,6 +66,8 @@ class SchemaMapping(Model):
         :param vertex_mappings: The vertex_mappings of this SchemaMapping.
         :type vertex_mappings: List[VertexMapping]
         """
+        if vertex_mappings is None:
+            raise ValueError("Invalid value for `vertex_mappings`, must not be `None`")  # noqa: E501
 
         self._vertex_mappings = vertex_mappings
 
@@ -141,5 +89,7 @@ class SchemaMapping(Model):
         :param edge_mappings: The edge_mappings of this SchemaMapping.
         :type edge_mappings: List[EdgeMapping]
         """
+        if edge_mappings is None:
+            raise ValueError("Invalid value for `edge_mappings`, must not be `None`")  # noqa: E501
 
         self._edge_mappings = edge_mappings

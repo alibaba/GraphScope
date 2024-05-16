@@ -73,53 +73,6 @@ class GenerateFlexServer(Command):
         )
 
 
-class GenerateInteractiveSDK(Command):
-    description = "generate interactive client sdk from openapi specification file"
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        # remove
-        tempdir = os.path.join("/", tempfile.gettempprefix(), "flex_interactive")
-        if os.path.exists(tempdir):
-            shutil.rmtree(tempdir)
-        targetdir = os.path.join(
-            pkg_root, "gs_flex_coordinator", "core", "interactive", "hqps_client"
-        )
-        if os.path.exists(targetdir):
-            shutil.rmtree(targetdir)
-        # generate
-        specification = os.path.join(
-            pkg_root, "..", "openapi", "openapi_interactive.yaml"
-        )
-        cmd = [
-            "openapi-generator-cli",
-            "generate",
-            "-g",
-            "python",
-            "-i",
-            str(specification),
-            "-o",
-            str(tempdir),
-            "--package-name",
-            "hqps_client",
-        ]
-        print(" ".join(cmd))
-        env = os.environ.copy()
-        env["OPENAPI_GENERATOR_VERSION"] = "7.3.0"
-        subprocess.check_call(
-            cmd,
-            env=env,
-        )
-        # cp
-        subprocess.run(["cp", "-r", os.path.join(tempdir, "hqps_client"), targetdir])
-
-
 setup(
     name=NAME,
     version=VERSION,
@@ -132,7 +85,6 @@ setup(
     package_data={"": ["openapi/openapi.yaml", "VERSION"]},
     cmdclass={
         "generate_flex_server": GenerateFlexServer,
-        "generate_interactive_sdk": GenerateInteractiveSDK,
     },
     include_package_data=True,
     entry_points={

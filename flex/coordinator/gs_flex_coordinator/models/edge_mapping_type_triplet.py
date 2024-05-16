@@ -67,6 +67,8 @@ class EdgeMappingTypeTriplet(Model):
         :param edge: The edge of this EdgeMappingTypeTriplet.
         :type edge: str
         """
+        if edge is None:
+            raise ValueError("Invalid value for `edge`, must not be `None`")  # noqa: E501
 
         self._edge = edge
 
@@ -88,6 +90,8 @@ class EdgeMappingTypeTriplet(Model):
         :param source_vertex: The source_vertex of this EdgeMappingTypeTriplet.
         :type source_vertex: str
         """
+        if source_vertex is None:
+            raise ValueError("Invalid value for `source_vertex`, must not be `None`")  # noqa: E501
 
         self._source_vertex = source_vertex
 
@@ -109,5 +113,7 @@ class EdgeMappingTypeTriplet(Model):
         :param destination_vertex: The destination_vertex of this EdgeMappingTypeTriplet.
         :type destination_vertex: str
         """
+        if destination_vertex is None:
+            raise ValueError("Invalid value for `destination_vertex`, must not be `None`")  # noqa: E501
 
         self._destination_vertex = destination_vertex

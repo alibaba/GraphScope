@@ -4,14 +4,10 @@ from typing import List, Dict  # noqa: F401
 
 from gs_flex_coordinator.models.base_model import Model
 from gs_flex_coordinator.models.column_mapping import ColumnMapping
-from gs_flex_coordinator.models.edge_mapping_destination_vertex_mappings_inner import EdgeMappingDestinationVertexMappingsInner
-from gs_flex_coordinator.models.edge_mapping_source_vertex_mappings_inner import EdgeMappingSourceVertexMappingsInner
 from gs_flex_coordinator.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet
 from gs_flex_coordinator import util
 
 from gs_flex_coordinator.models.column_mapping import ColumnMapping  # noqa: E501
-from gs_flex_coordinator.models.edge_mapping_destination_vertex_mappings_inner import EdgeMappingDestinationVertexMappingsInner  # noqa: E501
-from gs_flex_coordinator.models.edge_mapping_source_vertex_mappings_inner import EdgeMappingSourceVertexMappingsInner  # noqa: E501
 from gs_flex_coordinator.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet  # noqa: E501
 
 class EdgeMapping(Model):
@@ -28,17 +24,17 @@ class EdgeMapping(Model):
         :param inputs: The inputs of this EdgeMapping.  # noqa: E501
         :type inputs: List[str]
         :param source_vertex_mappings: The source_vertex_mappings of this EdgeMapping.  # noqa: E501
-        :type source_vertex_mappings: List[EdgeMappingSourceVertexMappingsInner]
+        :type source_vertex_mappings: List[ColumnMapping]
         :param destination_vertex_mappings: The destination_vertex_mappings of this EdgeMapping.  # noqa: E501
-        :type destination_vertex_mappings: List[EdgeMappingDestinationVertexMappingsInner]
+        :type destination_vertex_mappings: List[ColumnMapping]
         :param column_mappings: The column_mappings of this EdgeMapping.  # noqa: E501
         :type column_mappings: List[ColumnMapping]
         """
         self.openapi_types = {
             'type_triplet': EdgeMappingTypeTriplet,
             'inputs': List[str],
-            'source_vertex_mappings': List[EdgeMappingSourceVertexMappingsInner],
-            'destination_vertex_mappings': List[EdgeMappingDestinationVertexMappingsInner],
+            'source_vertex_mappings': List[ColumnMapping],
+            'destination_vertex_mappings': List[ColumnMapping],
             'column_mappings': List[ColumnMapping]
         }
 
@@ -85,6 +81,8 @@ class EdgeMapping(Model):
         :param type_triplet: The type_triplet of this EdgeMapping.
         :type type_triplet: EdgeMappingTypeTriplet
         """
+        if type_triplet is None:
+            raise ValueError("Invalid value for `type_triplet`, must not be `None`")  # noqa: E501
 
         self._type_triplet = type_triplet
 
@@ -106,48 +104,54 @@ class EdgeMapping(Model):
         :param inputs: The inputs of this EdgeMapping.
         :type inputs: List[str]
         """
+        if inputs is None:
+            raise ValueError("Invalid value for `inputs`, must not be `None`")  # noqa: E501
 
         self._inputs = inputs
 
     @property
-    def source_vertex_mappings(self) -> List[EdgeMappingSourceVertexMappingsInner]:
+    def source_vertex_mappings(self) -> List[ColumnMapping]:
         """Gets the source_vertex_mappings of this EdgeMapping.
 
 
         :return: The source_vertex_mappings of this EdgeMapping.
-        :rtype: List[EdgeMappingSourceVertexMappingsInner]
+        :rtype: List[ColumnMapping]
         """
         return self._source_vertex_mappings
 
     @source_vertex_mappings.setter
-    def source_vertex_mappings(self, source_vertex_mappings: List[EdgeMappingSourceVertexMappingsInner]):
+    def source_vertex_mappings(self, source_vertex_mappings: List[ColumnMapping]):
         """Sets the source_vertex_mappings of this EdgeMapping.
 
 
         :param source_vertex_mappings: The source_vertex_mappings of this EdgeMapping.
-        :type source_vertex_mappings: List[EdgeMappingSourceVertexMappingsInner]
+        :type source_vertex_mappings: List[ColumnMapping]
         """
+        if source_vertex_mappings is None:
+            raise ValueError("Invalid value for `source_vertex_mappings`, must not be `None`")  # noqa: E501
 
         self._source_vertex_mappings = source_vertex_mappings
 
     @property
-    def destination_vertex_mappings(self) -> List[EdgeMappingDestinationVertexMappingsInner]:
+    def destination_vertex_mappings(self) -> List[ColumnMapping]:
         """Gets the destination_vertex_mappings of this EdgeMapping.
 
 
         :return: The destination_vertex_mappings of this EdgeMapping.
-        :rtype: List[EdgeMappingDestinationVertexMappingsInner]
+        :rtype: List[ColumnMapping]
         """
         return self._destination_vertex_mappings
 
     @destination_vertex_mappings.setter
-    def destination_vertex_mappings(self, destination_vertex_mappings: List[EdgeMappingDestinationVertexMappingsInner]):
+    def destination_vertex_mappings(self, destination_vertex_mappings: List[ColumnMapping]):
         """Sets the destination_vertex_mappings of this EdgeMapping.
 
 
         :param destination_vertex_mappings: The destination_vertex_mappings of this EdgeMapping.
-        :type destination_vertex_mappings: List[EdgeMappingDestinationVertexMappingsInner]
+        :type destination_vertex_mappings: List[ColumnMapping]
         """
+        if destination_vertex_mappings is None:
+            raise ValueError("Invalid value for `destination_vertex_mappings`, must not be `None`")  # noqa: E501
 
         self._destination_vertex_mappings = destination_vertex_mappings
 

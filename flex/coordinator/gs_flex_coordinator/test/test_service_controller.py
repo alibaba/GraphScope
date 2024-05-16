@@ -2,6 +2,7 @@ import unittest
 
 from flask import json
 
+from gs_flex_coordinator.models.error import Error  # noqa: E501
 from gs_flex_coordinator.models.service_status import ServiceStatus  # noqa: E501
 from gs_flex_coordinator.models.start_service_request import StartServiceRequest  # noqa: E501
 from gs_flex_coordinator.test import BaseTestCase
@@ -45,7 +46,7 @@ class TestServiceController(BaseTestCase):
 
         
         """
-        start_service_request = gs_flex_coordinator.StartServiceRequest()
+        start_service_request = {"graph_id":"graph_id"}
         headers = { 
             'Accept': 'application/json',
             'Content-Type': 'application/json',

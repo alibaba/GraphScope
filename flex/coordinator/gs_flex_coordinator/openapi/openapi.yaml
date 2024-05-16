@@ -14,15 +14,25 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   title: GraphScope FLEX HTTP SERVICE API
-  version: 0.9.1
+  version: 1.0.0
 externalDocs:
   description: Find out More about GraphScope
   url: http://graphscope.io
 servers:
 - url: /
+tags:
+- name: Deployment
+- name: Graph
+- name: DataSource
+- name: Job
+- name: Procedure
+- name: Service
+- name: Alert
+- name: Utils
 paths:
   /api/v1/alert/message:
     get:
+      description: List all alert messages
       operationId: list_alert_messages
       parameters:
       - explode: true
@@ -69,12 +79,20 @@ paths:
         schema:
           type: string
         style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          format: int32
+          type: integer
+        style: form
       responses:
         "200":
           content:
             application/json:
               example:
-              - message_id: ALERT-MESSAGE-QWERTYUIOP-1
+              - id: ALERT-MESSAGE-QWERTYUIOP-1
                 alert_name: HighDiskUtilization
                 severity: warning
                 metric_type: node
@@ -83,7 +101,7 @@ paths:
                 trigger_time: 2023-02-21 11:56:30
                 status: unsolved
                 message: "Disk usage node1 85.12%, exceeds threshold"
-              - message_id: ALERT-MESSAGE-QWERTYUIOP-2
+              - id: ALERT-MESSAGE-QWERTYUIOP-2
                 alert_name: HighDiskUtilization
                 severity: emergency
                 metric_type: node
@@ -92,7 +110,7 @@ paths:
                 trigger_time: 2023-02-21 11:56:30
                 status: solved
                 message: "Disk usage node1 85.12%, exceeds threshold"
-              - message_id: ALERT-MESSAGE-QWERTYUIOP-3
+              - id: ALERT-MESSAGE-QWERTYUIOP-3
                 alert_name: HighDiskUtilization
                 severity: warning
                 metric_type: node
@@ -103,50 +121,91 @@ paths:
                 message: "Disk usage node1 85.12%, exceeds threshold"
               schema:
                 items:
-                  $ref: '#/components/schemas/AlertMessage'
+                  $ref: '#/components/schemas/GetAlertMessageResponse'
                 type: array
-          description: Successful operation
+          description: Successfully returned the alert messages
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
-    put:
-      description: Update alert messages in batch
-      operationId: update_alert_messages
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/update_alert_messages_request'
+  /api/v1/alert/message-collection:
+    delete:
+      description: Delete alert message in batch
+      operationId: delete_alert_message_in_batch
+      parameters:
+      - description: "A list of message id separated by comma, e.g. id1,id2,id3"
+        explode: true
+        in: query
+        name: message_ids
+        required: true
+        schema:
+          type: string
+        style: form
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
-        "404":
-          description: Alert message not found
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the alert message
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
+      x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
+  /api/v1/alert/message-collection/status:
+    put:
+      description: Update the message status in batch
+      operationId: update_alert_message_in_batch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAlertMessageStatusRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
   /api/v1/alert/receiver:
     get:
-      operationId: list_receivers
+      description: List all alert receivers
+      operationId: list_alert_receivers
       responses:
         "200":
           content:
             application/json:
               example:
-              - type: webhook
-                receiver_id: RECEIVER-QWERTYUIOP-1
+              - id: RECEIVER-QWERTYUIOP-1
+                type: webhook
                 webhook_url: http://webhook.com
                 is_at_all: false
                 at_user_ids:
                 - 111111
                 - 222222
                 enable: false
-              - type: webhook
-                receiver_id: RECEIVER-QWERTYUIOP-2
+              - id: RECEIVER-QWERTYUIOP-2
+                type: webhook
                 webhook_url: http://webhook.com
                 is_at_all: false
                 at_user_ids:
@@ -156,33 +215,47 @@ paths:
                 message: error message
               schema:
                 items:
-                  $ref: '#/components/schemas/AlertReceiver'
+                  $ref: '#/components/schemas/GetAlertReceiverResponse'
                 type: array
-          description: Successful operation
+          description: Successfully returned the alert receivers
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
     post:
-      operationId: register_receiver
+      description: Create a new alert receiver
+      operationId: create_alert_receiver
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AlertReceiver'
+              $ref: '#/components/schemas/CreateAlertReceiverRequest'
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully created the alert receiver
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
   /api/v1/alert/receiver/{receiver_id}:
     delete:
-      operationId: delete_receiver_by_id
+      description: Delete the alert receiver by ID
+      operationId: delete_alert_receiver_by_id
       parameters:
       - explode: false
         in: path
@@ -196,15 +269,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
-        "404":
-          description: Receiver not found
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the alert receiver
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
     put:
-      operationId: update_receiver_by_id
+      description: Update alert receiver by ID
+      operationId: update_alert_receiver_by_id
       parameters:
       - explode: false
         in: path
@@ -217,52 +295,65 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AlertReceiver'
+              $ref: '#/components/schemas/CreateAlertReceiverRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
-        "404":
-          description: Receiver not found
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully updated the alert receiver
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
   /api/v1/alert/rule:
     get:
+      description: List all alert rules
       operationId: list_alert_rules
       responses:
         "200":
           content:
             application/json:
               example:
-              - name: HighDiskUtilization
+              - id: ALERTRULE-1
+                name: HighDiskUtilization
                 severity: warning
                 metric_type: node
                 conditions_description: disk usage >= 85
                 enable: true
-              - name: GremlinServiceAvailable
+              - id: ALERTRULE-2
+                name: GremlinServiceAvailable
                 severity: emergency
                 metric_type: node
                 conditions_description: g.V().limit(1) failed
                 enable: false
               schema:
                 items:
-                  $ref: '#/components/schemas/AlertRule'
+                  $ref: '#/components/schemas/GetAlertRuleResponse'
                 type: array
-          description: Successful operation
+          description: Successfully returned the alert rules
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
-  /api/v1/alert/rule/{rule_name}:
+  /api/v1/alert/rule/{rule_id}:
     delete:
-      operationId: delete_alert_rule_by_name
+      operationId: delete_alert_rule_by_id
       parameters:
       - explode: false
         in: path
-        name: rule_name
+        name: rule_id
         required: true
         schema:
           type: string
@@ -272,17 +363,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the alert rule
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
     put:
-      operationId: update_alert_rule_by_name
+      operationId: update_alert_rule_by_id
       parameters:
       - explode: false
         in: path
-        name: rule_name
+        name: rule_id
         required: true
         schema:
           type: string
@@ -291,53 +388,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AlertRule'
+              $ref: '#/components/schemas/CreateAlertRuleRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully updated the alert rule
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - alert
+      - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
-  /api/v1/connection:
-    delete:
-      description: Close the connection with coordinator
-      operationId: close
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Close connection successfully
-      tags:
-      - connection
-      x-openapi-router-controller: gs_flex_coordinator.controllers.connection_controller
-    post:
-      description: Connect to coordinator service
-      operationId: connect
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Connection'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConnectionStatus'
-          description: Connect coordinator service successfully
-      tags:
-      - connection
-      x-openapi-router-controller: gs_flex_coordinator.controllers.connection_controller
   /api/v1/deployment/info:
     get:
-      description: Get deployment's meta info
+      description: Deployment information
       operationId: get_deployment_info
       responses:
         "200":
@@ -345,81 +415,21 @@ paths:
             application/json:
               example:
                 cluster_type: HOSTS
-                creation_time: 2024-02-07 14:21:28
-                graphs_info:
-                  demo:
-                    creation_time: 2024-02-07 14:21:28
-                    last_dataloading_time: 2024-02-08 14:21:28
-                    name: demo
-                    update_time: 2024-02-07 14:21:28
-                name: demo
+                creation_time: 2024-01-01 00:00:00
+                instance_name: demo
                 solution: INTERACTIVE
                 version: 0.27.0
               schema:
-                $ref: '#/components/schemas/DeploymentInfo'
-          description: successful operation
-      tags:
-      - deployment
-      x-openapi-router-controller: gs_flex_coordinator.controllers.deployment_controller
-  /api/v1/deployment/log:
-    get:
-      operationId: fetch_log
-      parameters:
-      - explode: true
-        in: query
-        name: component
-        required: true
-        schema:
-          type: string
-        style: form
-      - explode: true
-        in: query
-        name: pod_name
-        required: true
-        schema:
-          type: string
-        style: form
-      - explode: true
-        in: query
-        name: container_name
-        required: true
-        schema:
-          type: string
-        style: form
-      - explode: true
-        in: query
-        name: since_seconds
-        required: true
-        schema:
-          type: integer
-        style: form
-      responses:
-        "200":
+                $ref: '#/components/schemas/RunningDeploymentInfo'
+          description: Successfully returned the deployment information
+        "500":
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/DeploymentStatus'
-                type: array
-          description: successful operation
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - deployment
-      x-openapi-router-controller: gs_flex_coordinator.controllers.deployment_controller
-  /api/v1/deployment/status:
-    get:
-      description: Get deployment's status (k8s only)
-      operationId: get_deployment_status
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/DeploymentStatus'
-                type: array
-          description: successful operation
-      tags:
-      - deployment
+      - Deployment
       x-openapi-router-controller: gs_flex_coordinator.controllers.deployment_controller
   /api/v1/file/uploading:
     post:
@@ -428,17 +438,23 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/upload_file_request'
+              $ref: '#/components/schemas/uploadFile_request'
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/UploadFileResponse'
           description: successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - utils
+      - Utils
       x-openapi-router-controller: gs_flex_coordinator.controllers.utils_controller
   /api/v1/graph:
     get:
@@ -449,10 +465,28 @@ paths:
           content:
             application/json:
               example:
-              - name: demo
-                store_type: mutable_csr
+              - id: GRAPHID
+                name: demo
+                creation_time: 2024-01-01 00:00:00
+                schema_update_time: 2024-01-02 00:00:00
+                data_update_time: 2024-01-03 00:00:00
                 stored_procedures:
-                  directory: plugins
+                - id: PROCEDUREID
+                  name: procedure_name
+                  type: cypher
+                  query: MATCH(a) return COUNT(a);
+                  library: /path/to/library
+                  params:
+                  - name: param1
+                    type:
+                      string:
+                        long_text: null
+                  returns:
+                  - name: return1
+                    type:
+                      PrimitiveType: DT_SIGNED_INT64
+                  bound_graph: demo
+                  runnable: true
                 schema:
                   vertex_types:
                   - type_id: 0
@@ -461,11 +495,13 @@ paths:
                     - property_id: 0
                       property_name: id
                       property_type:
-                        primitive_type: DT_STRING
+                        string:
+                          long_text: null
                     - property_id: 1
                       property_name: name
                       property_type:
-                        primitive_type: DT_STRING
+                        string:
+                          long_text: null
                     primary_keys:
                     - id
                   - type_id: 1
@@ -474,11 +510,13 @@ paths:
                     - property_id: 0
                       property_name: id
                       property_type:
-                        primitive_type: DT_STRING
+                        string:
+                          long_text: null
                     - property_id: 1
                       property_name: name
                       property_type:
-                        primitive_type: DT_STRING
+                        string:
+                          long_text: null
                     primary_keys:
                     - id
                   edge_types:
@@ -494,7 +532,7 @@ paths:
                     - property_id: 0
                       property_name: weight
                       property_type:
-                        primitive_type: DT_STRING
+                        primitive_type: DT_DOUBLE
                   - type_id: 1
                     type_name: created
                     vertex_type_pair_relations:
@@ -507,14 +545,20 @@ paths:
                     - property_id: 0
                       property_name: weight
                       property_type:
-                        primitive_type: DT_STRING
+                        primitive_type: DT_DOUBLE
               schema:
                 items:
-                  $ref: '#/components/schemas/Graph'
+                  $ref: '#/components/schemas/GetGraphResponse'
                 type: array
-          description: Successful operation
+          description: Successfully returned all graphs
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - graph
+      - Graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
     post:
       description: Create a new graph
@@ -523,26 +567,38 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Graph'
+              $ref: '#/components/schemas/CreateGraphRequest'
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/CreateGraphResponse'
+          description: The graph was created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - graph
+      - Graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
-  /api/v1/graph/{graph_name}:
+  /api/v1/graph/{graph_id}:
     delete:
-      description: Delete a graph by name
-      operationId: delete_graph
+      description: Delete graph by ID
+      operationId: delete_graph_by_id
       parameters:
       - explode: false
         in: path
-        name: graph_name
+        name: graph_id
         required: true
         schema:
           type: string
@@ -552,18 +608,298 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the graph
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - graph
+      - Graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
-  /api/v1/graph/{graph_name}/dataloading:
-    post:
-      operationId: create_dataloading_job
+    get:
+      description: Get graph by ID
+      operationId: get_graph_by_id
       parameters:
       - explode: false
         in: path
-        name: graph_name
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: GRAPHID
+                name: demo
+                creation_time: 2024-01-01 00:00:00
+                schema_update_time: 2024-01-02 00:00:00
+                data_update_time: 2024-01-03 00:00:00
+                stored_procedures:
+                - id: PROCEDUREID
+                  name: procedure_name
+                  type: cypher
+                  query: MATCH(a) return COUNT(a);
+                  library: /path/to/library
+                  params:
+                  - name: param1
+                    type:
+                      string:
+                        long_text: null
+                  returns:
+                  - name: return1
+                    type:
+                      PrimitiveType: DT_SIGNED_INT64
+                  bound_graph: demo
+                  runnable: true
+                schema:
+                  vertex_types:
+                  - type_id: 0
+                    type_name: person
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        string:
+                          long_text: null
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        string:
+                          long_text: null
+                    primary_keys:
+                    - id
+                  - type_id: 1
+                    type_name: software
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        string:
+                          long_text: null
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        string:
+                          long_text: null
+                    primary_keys:
+                    - id
+                  edge_types:
+                  - type_id: 0
+                    type_name: knows
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: person
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_DOUBLE
+                  - type_id: 1
+                    type_name: created
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: software
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_DOUBLE
+              schema:
+                $ref: '#/components/schemas/GetGraphResponse'
+          description: Successfully returned the graph
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
+  /api/v1/graph/{graph_id}/dataloading:
+    post:
+      description: Submit a dataloading job
+      operationId: submit_dataloading_job
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataloadingJobConfig'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDataloadingJobResponse'
+          description: Successfully submitted the job
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+  /api/v1/graph/{graph_id}/dataloading/config:
+    get:
+      description: Get the data loading configuration
+      operationId: get_dataloading_job_config
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataloadingJobConfig'
+          description: Successfully returned the dataloading job configuration
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+  /api/v1/graph/{graph_id}/datasource:
+    get:
+      description: Get data source by ID
+      operationId: get_datasource_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                vertex_mappings:
+                - type_name: person
+                  inputs:
+                  - file:///path/to/person.csv
+                  column_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  - column:
+                      index: 1
+                      name: name
+                    property: name
+                - type_name: software
+                  inputs:
+                  - file:///path/to/software.csv
+                  column_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  - column:
+                      index: 1
+                      name: name
+                    property: name
+                edge_mappings:
+                - type_triplet:
+                    edge: knows
+                    source_vertex: person
+                    destination_vertex: person
+                  inputs:
+                  - file:///path/to/knows.csv
+                  source_vertex_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  destination_vertex_mappings:
+                  - column:
+                      index: 1
+                      name: id
+                    property: id
+                  column_mappings:
+                  - column:
+                      index: 2
+                      name: weight
+                    property: weight
+                - type_triplet:
+                    edge: created
+                    source_vertex: person
+                    destination_vertex: software
+                  inputs:
+                  - file:///path/to/created.csv
+                  source_vertex_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  destination_vertex_mappings:
+                  - column:
+                      index: 1
+                      name: id
+                    property: id
+                  column_mappings:
+                  - column:
+                      index: 2
+                      name: weight
+                    property: weight
+              schema:
+                $ref: '#/components/schemas/SchemaMapping'
+          description: Successful returned all data sources
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - DataSource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.data_source_controller
+    post:
+      description: Bind data sources in batches
+      operationId: bind_datasource_in_batch
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
         required: true
         schema:
           type: string
@@ -579,226 +915,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
-      tags:
-      - job
-      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
-  /api/v1/graph/{graph_name}/dataloading/config:
-    get:
-      description: get dataloading configuration
-      operationId: get_dataloading_config
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                graph: demo
-                loading_config: overwrite
-                format:
-                  type: csv
-                  metadata:
-                    delimiter: '|'
-                vertex_mappings:
-                - type_name: person
-                  inputs:
-                  - /home/graphscope/path/to/person.csv
-                  column_mappings:
-                  - column:
-                      index: 0
-                      name: id
-                    property: id
-                  - column:
-                      index: 1
-                      name: name
-                    property: name
-                - type_name: software
-                  inputs:
-                  - /home/graphscope/path/to/software.csv
-                  column_mappings:
-                  - column:
-                      index: 0
-                      name: id
-                    property: id
-                  - column:
-                      index: 1
-                      name: name
-                    property: name
-                edge_mappings:
-                - type_triplet:
-                    edge: knows
-                    source_vertex: person
-                    destination_vertex: person
-                    inputs:
-                    - /home/graphscope/path/to/person_knows_person.csv
-                    source_vertex_mappings:
-                    - column:
-                        index: 0
-                        name: id
-                    destination_vertex_mappings:
-                    - column:
-                        index: 1
-                        name: id
-                    column_mappings:
-                    - column:
-                        index: 2
-                        name: weight
-                      property: weight
-                - type_triplet:
-                    edge: created
-                    source_vertex: person
-                    destination_vertex: software
-                    inputs:
-                    - /home/graphscope/path/to/person_created_software.csv
-                    source_vertex_mappings:
-                    - column:
-                        index: 0
-                        name: id
-                    destination_vertex_mappings:
-                    - column:
-                        index: 1
-                        name: id
-                    column_mappings:
-                    - column:
-                        index: 2
-                        name: weight
-                      property: weight
-              schema:
-                $ref: '#/components/schemas/SchemaMapping'
-          description: Successful operation
-      tags:
-      - job
-      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
-  /api/v1/graph/{graph_name}/datasource:
-    get:
-      description: List data source on graph
-      operationId: get_datasource
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                vertices_datasource:
-                - data_source: FILE
-                  type_name: person
-                  location: /home/graphscope/path/to/person.csv
-                  property_mapping:
-                    "0": id
-                    "1": name
-                - data_source: FILE
-                  type_name: software
-                  location: /home/graphscope/path/to/software.csv
-                  property_mapping:
-                    "0": id
-                    "1": name
-                edges_datasource:
-                - data_source: FILE
-                  type_name: knows
-                  source_vertex: person
-                  destination_vertex: person
-                  location: /home/graphscope/path/to/person_knows_person.csv
-                  source_pk_column_map:
-                    "0": id
-                  destination_pk_column_map:
-                    "1": id
-                  property_mapping:
-                    "2": weight
-                - data_source: FILE
-                  type_name: created
-                  source_vertex: person
-                  destination_vertex: software
-                  location: /home/graphscope/path/to/person_created_software.csv
-                  source_pk_column_map:
-                    "0": id
-                  destination_pk_column_map:
-                    "1": id
-                  property_mapping:
-                    "2": weight
-              schema:
-                $ref: '#/components/schemas/DataSource'
-          description: Successful operation
-      tags:
-      - datasource
-      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
-    post:
-      description: Import data source in batch
-      operationId: import_datasource
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DataSource'
-        required: true
-      responses:
-        "200":
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful bind the data sources
+        "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
-      tags:
-      - datasource
-      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
-  /api/v1/graph/{graph_name}/datasource/edge_datasource:
-    post:
-      description: Bind data source on edge type
-      operationId: bind_edge_datasource
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EdgeDataSource'
-        required: true
-      responses:
-        "200":
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - datasource
-      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
-  /api/v1/graph/{graph_name}/datasource/edge_datasource/{type_name}:
+      - DataSource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.data_source_controller
+  /api/v1/graph/{graph_id}/datasource/edge/{type_name}:
     delete:
-      description: Unbind datasource on an edge type
+      description: Unbind datas ource on an edge type
       operationId: unbind_edge_datasource
       parameters:
       - explode: false
         in: path
-        name: graph_name
+        name: graph_id
         required: true
         schema:
           type: string
@@ -829,101 +970,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
-      tags:
-      - datasource
-      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
-    get:
-      description: Get edge data source
-      operationId: get_edge_datasource
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: type_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: true
-        in: query
-        name: source_vertex_type
-        required: true
-        schema:
-          type: string
-        style: form
-      - explode: true
-        in: query
-        name: destination_vertex_type
-        required: true
-        schema:
-          type: string
-        style: form
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                data_source: FILE
-                type_name: created
-                source_vertex: person
-                destination_vertex: software
-                location: /home/graphscope/path/to/person_created_software.csv
-                source_pk_column_map:
-                  "0": id
-                destination_pk_column_map:
-                  "1": id
-                property_mapping:
-                  "2": weight
-              schema:
-                $ref: '#/components/schemas/EdgeDataSource'
-          description: Successful operation
-      tags:
-      - datasource
-      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
-  /api/v1/graph/{graph_name}/datasource/vertex_datasource:
-    post:
-      description: Bind data source on vertex type
-      operationId: bind_vertex_datasource
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VertexDataSource'
-        required: true
-      responses:
-        "200":
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully unbind the data source
+        "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - datasource
-      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
-  /api/v1/graph/{graph_name}/datasource/vertex_datasource/{type_name}:
+      - DataSource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.data_source_controller
+  /api/v1/graph/{graph_id}/datasource/vertex/{type_name}:
     delete:
-      description: Unbind datasource on a vertex type
+      description: Unbind data source on a vertex type
       operationId: unbind_vertex_datasource
       parameters:
       - explode: false
         in: path
-        name: graph_name
+        name: graph_id
         required: true
         schema:
           type: string
@@ -940,223 +1005,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully unbind the data source
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - datasource
-      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+      - DataSource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.data_source_controller
+  /api/v1/graph/{graph_id}/schema:
     get:
-      description: Get vertex data source
-      operationId: get_vertex_datasource
+      description: Get graph schema by ID
+      operationId: get_schema_by_id
       parameters:
       - explode: false
         in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: type_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                data_source: FILE
-                type_name: person
-                location: /home/graphscope/path/to/person.csv
-                property_mapping:
-                  "0": id
-                  "1": name
-              schema:
-                $ref: '#/components/schemas/VertexDataSource'
-          description: Successful operation
-      tags:
-      - datasource
-      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
-  /api/v1/graph/{graph_name}/procedure:
-    get:
-      description: List stored procedures on a certain graph
-      operationId: list_procedures_by_graph
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-              - bound_graph: demo
-                description: stored procedure 1
-                enable: true
-                runnable: true
-                name: procedure-1
-                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
-                type: cypher
-                params:
-                - name: id
-                  type: DT_STRING
-                returns:
-                - name: name
-                  type: DT_STRING
-              schema:
-                items:
-                  $ref: '#/components/schemas/Procedure'
-                type: array
-          description: Successful operation
-      tags:
-      - procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    post:
-      description: Create a new stored procedure on a certain graph
-      operationId: create_procedure
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Procedure'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
-      tags:
-      - procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-  /api/v1/graph/{graph_name}/procedure/{procedure_name}:
-    delete:
-      description: Delete a stored procedure on a certain graph
-      operationId: delete_procedure
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
-      tags:
-      - procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    get:
-      description: Get a procedure by name
-      operationId: get_procedure
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                bound_graph: demo
-                description: stored procedure 1
-                enable: true
-                runnable: true
-                name: procedure-1
-                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
-                type: cypher
-                params:
-                - name: id
-                  type: DT_STRING
-                returns:
-                - name: name
-                  type: DT_STRING
-              schema:
-                $ref: '#/components/schemas/Procedure'
-          description: successful operation
-      tags:
-      - procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    put:
-      description: Update stored procedure on a certain graph
-      operationId: update_procedure
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Procedure'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
-      tags:
-      - procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-  /api/v1/graph/{graph_name}/schema:
-    get:
-      description: Get graph schema by name
-      operationId: get_schema
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
+        name: graph_id
         required: true
         schema:
           type: string
@@ -1173,11 +1040,13 @@ paths:
                   - property_id: 0
                     property_name: id
                     property_type:
-                      primitive_type: DT_STRING
+                      string:
+                        long_text: null
                   - property_id: 1
                     property_name: name
                     property_type:
-                      primitive_type: DT_STRING
+                      string:
+                        long_text: null
                   primary_keys:
                   - id
                 - type_id: 1
@@ -1186,11 +1055,13 @@ paths:
                   - property_id: 0
                     property_name: id
                     property_type:
-                      primitive_type: DT_STRING
+                      string:
+                        long_text: null
                   - property_id: 1
                     property_name: name
                     property_type:
-                      primitive_type: DT_STRING
+                      string:
+                        long_text: null
                   primary_keys:
                   - id
                 edge_types:
@@ -1206,7 +1077,7 @@ paths:
                   - property_id: 0
                     property_name: weight
                     property_type:
-                      primitive_type: DT_STRING
+                      primitive_type: DT_DOUBLE
                 - type_id: 1
                   type_name: created
                   vertex_type_pair_relations:
@@ -1219,21 +1090,105 @@ paths:
                   - property_id: 0
                     property_name: weight
                     property_type:
-                      primitive_type: DT_STRING
+                      primitive_type: DT_DOUBLE
               schema:
-                $ref: '#/components/schemas/Schema'
-          description: Successful operation
+                $ref: '#/components/schemas/GetGraphSchemaResponse'
+          description: Successfully returned the graph schema
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - graph
+      - Graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
-  /api/v1/graph/{graph_name}/schema/edge_edge/{type_name}:
-    delete:
-      description: Delete a edge type by name
-      operationId: delete_edge_type
+    post:
+      description: Import graph schema
+      operationId: import_schema_by_id
       parameters:
       - explode: false
         in: path
-        name: graph_name
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGraphSchemaRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful imported the graph schema
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
+  /api/v1/graph/{graph_id}/schema/edge:
+    post:
+      description: Create a edge type
+      operationId: create_edge_type
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEdgeType'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful created the edge type
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
+  /api/v1/graph/{graph_id}/schema/edge/{type_name}:
+    delete:
+      description: Delete edge type by name
+      operationId: delete_edge_type_by_name
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
         required: true
         schema:
           type: string
@@ -1264,47 +1219,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
-      tags:
-      - graph
-      x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
-  /api/v1/graph/{graph_name}/schema/edge_type:
-    post:
-      description: Create a edge type
-      operationId: create_edge_type
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EdgeType'
-        required: true
-      responses:
-        "200":
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful deleted the edge type
+        "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - graph
+      - Graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
-  /api/v1/graph/{graph_name}/schema/vertex_type:
+  /api/v1/graph/{graph_id}/schema/vertex:
     post:
       description: Create a vertex type
       operationId: create_vertex_type
       parameters:
       - explode: false
         in: path
-        name: graph_name
+        name: graph_id
         required: true
         schema:
           type: string
@@ -1313,26 +1246,38 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VertexType'
+              $ref: '#/components/schemas/CreateVertexType'
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful created a vertex type
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - graph
+      - Graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
-  /api/v1/graph/{graph_name}/schema/vertex_type/{type_name}:
+  /api/v1/graph/{graph_id}/schema/vertex/{type_name}:
     delete:
-      description: Delete a vertex type by name
-      operationId: delete_vertex_type
+      description: Delete vertex type by name
+      operationId: delete_vertex_type_by_name
       parameters:
       - explode: false
         in: path
-        name: graph_name
+        name: graph_id
         required: true
         schema:
           type: string
@@ -1349,223 +1294,48 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful deleted the vertex type
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - graph
+      - Graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
-  /api/v1/groot/graph:
-    get:
-      description: list groot graph
-      operationId: list_groot_graph
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-              - name: demo
-                type: GrootGraph
-                directed: true
-                creation_time: 2024-04-01 12:00:00
-                schema:
-                  vertices:
-                  - label: person
-                    properties:
-                    - id: 0
-                      name: id
-                      type: STRING
-                      is_primary_key: true
-                    - id: 1
-                      name: name
-                      type: STRING
-                      is_primary_key: false
-                  - label: software
-                    properties:
-                    - id: 0
-                      name: id
-                      type: STRING
-                      is_primary_key: true
-                    - id: 1
-                      name: name
-                      type: STRING
-                      is_primary_key: false
-                  edges:
-                  - label: knows
-                    relations:
-                    - src_label: person
-                      dst_label: person
-                    properties:
-                    - id: 0
-                      name: weight
-                      type: DOUBLE
-                      is_primary_key: false
-                  - label: created
-                    relations:
-                    - src_label: person
-                      dst_label: software
-                    properties:
-                    - id: 0
-                      name: weight
-                      type: DOUBLE
-                      is_primary_key: false
-              schema:
-                items:
-                  $ref: '#/components/schemas/GrootGraph'
-                type: array
-          description: Successful operation
-      tags:
-      - legacy
-      x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
-  /api/v1/groot/graph/{graph_name}/dataloading:
-    post:
-      operationId: create_groot_dataloading_job
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GrootDataloadingJobConfig'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
-      tags:
-      - legacy
-      x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
-  /api/v1/groot/graph/{graph_name}/schema:
-    get:
-      description: Get graph schema by name
-      operationId: get_groot_schema
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                vertices:
-                - label: person
-                  properties:
-                  - id: 0
-                    name: id
-                    type: STRING
-                    is_primary_key: true
-                  - id: 1
-                    name: name
-                    type: STRING
-                    is_primary_key: false
-                - label: software
-                  properties:
-                  - id: 0
-                    name: id
-                    type: STRING
-                    is_primary_key: true
-                  - id: 1
-                    name: name
-                    type: STRING
-                    is_primary_key: false
-                edges:
-                - label: knows
-                  relations:
-                  - src_label: person
-                    dst_label: person
-                  properties:
-                  - id: 0
-                    name: weight
-                    type: DOUBLE
-                    is_primary_key: false
-                - label: created
-                  relations:
-                  - src_label: person
-                    dst_label: software
-                  properties:
-                  - id: 0
-                    name: weight
-                    type: DOUBLE
-                    is_primary_key: false
-              schema:
-                $ref: '#/components/schemas/GrootSchema'
-          description: Successful operation
-      tags:
-      - legacy
-      x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
-    post:
-      description: Import schema to groot graph
-      operationId: import_groot_schema
-      parameters:
-      - explode: false
-        in: path
-        name: graph_name
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GrootSchema'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
-      tags:
-      - legacy
-      x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
   /api/v1/job:
     get:
+      description: List all jobs
       operationId: list_jobs
       responses:
         "200":
           content:
             application/json:
               example:
-              - job_id: JOB-QWERTYUIOPASDFGH-1
+              - id: JOB-QWERTYUIOPASDFGH-1
                 type: DATA IMPORT
                 status: RUNNING
                 start_time: 2024-02-24 00:00:00
-                end_time: null
                 log: logging...
                 detail:
                   graph_name: demo
-              - job_id: JOB-QWERTYUIOPASDFGH-2
+              - id: JOB-QWERTYUIOPASDFGH-2
                 type: DATA IMPORT
                 status: CANCELLED
                 start_time: 2024-02-24 00:00:00
-                end_time: null
                 log: logging...
                 detail:
                   graph_name: demo
-              - job_id: JOB-QWERTYUIOPASDFGH-3
+              - id: JOB-QWERTYUIOPASDFGH-3
                 type: DATA IMPORT
                 status: SUCCESS
                 start_time: 2024-02-24 00:00:00
                 end_time: 2024-02-24 12:00:00
-                log: logging...
                 detail:
                   graph_name: demo
-              - job_id: JOB-QWERTYUIOPASDFGH-4
+              - id: JOB-QWERTYUIOPASDFGH-4
                 type: DATA IMPORT
                 status: FAILED
                 start_time: 2024-02-24 00:00:00
@@ -1573,23 +1343,28 @@ paths:
                 log: logging...
                 detail:
                   graph_name: demo
-              - job_id: JOB-QWERTYUIOPASDFGH-5
+              - id: JOB-QWERTYUIOPASDFGH-5
                 type: DATA IMPORT
                 status: WAITING
-                start_time: null
-                end_time: null
                 detail:
                   graph_name: demo
               schema:
                 items:
                   $ref: '#/components/schemas/JobStatus'
                 type: array
-          description: successful operation
+          description: Successful returned all the jobs
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - job
+      - Job
       x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
   /api/v1/job/{job_id}:
     delete:
+      description: Delete job by ID
       operationId: delete_job_by_id
       parameters:
       - explode: false
@@ -1604,12 +1379,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: Successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfuly cancelled the job
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - job
+      - Job
       x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
     get:
+      description: Get job status by ID
       operationId: get_job_by_id
       parameters:
       - explode: false
@@ -1623,70 +1405,18 @@ paths:
         "200":
           content:
             application/json:
-              example:
-                job_id: JOB-QWERTYUIOPASDFGH-1
-                type: DATA IMPORT
-                status: RUNNING
-                start_time: 2024-02-24 00:00:00
-                end_time: null
-                log: logging...
               schema:
                 $ref: '#/components/schemas/JobStatus'
-          description: successful operation
+          description: Successfully returned the job status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - job
+      - Job
       x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
-  /api/v1/node/status:
-    get:
-      description: "Get node status (cpu/memory/disk, local only)"
-      operationId: get_node_status
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-              - node: hostname-1
-                cpu_usage: 80
-                memory_usage: 40
-                disk_usage: 85
-              schema:
-                items:
-                  $ref: '#/components/schemas/NodeStatus'
-                type: array
-          description: successful operation
-      tags:
-      - deployment
-      x-openapi-router-controller: gs_flex_coordinator.controllers.deployment_controller
-  /api/v1/procedure:
-    get:
-      description: List all the stored procedures
-      operationId: list_procedures
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-              - bound_graph: demo
-                description: stored procedure 1
-                enable: true
-                runnable: true
-                name: procedure-1
-                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
-                type: cypher
-                params:
-                - name: id
-                  type: DT_STRING
-                returns:
-                - name: name
-                  type: DT_STRING
-              schema:
-                items:
-                  $ref: '#/components/schemas/Procedure'
-                type: array
-          description: Successful operation
-      tags:
-      - procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
   /api/v1/service/restart:
     post:
       description: Restart current service
@@ -1696,10 +1426,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully restarted the service
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - service
+      - Service
       x-openapi-router-controller: gs_flex_coordinator.controllers.service_controller
   /api/v1/service/start:
     post:
@@ -1709,16 +1445,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/start_service_request'
+              $ref: '#/components/schemas/StartServiceRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully started the service
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - service
+      - Service
       x-openapi-router-controller: gs_flex_coordinator.controllers.service_controller
   /api/v1/service/status:
     get:
@@ -1729,8 +1477,89 @@ paths:
           content:
             application/json:
               example:
-                status: running
-                graph_name: demo
+                status: Running
+                graph:
+                  id: GRAPHID
+                  name: demo
+                  creation_time: 2024-01-01 00:00:00
+                  schema_update_time: 2024-01-02 00:00:00
+                  data_update_time: 2024-01-03 00:00:00
+                  stored_procedures:
+                  - id: PROCEDUREID
+                    name: procedure_name
+                    type: cypher
+                    query: MATCH(a) return COUNT(a);
+                    library: /path/to/library
+                    params:
+                    - name: param1
+                      type:
+                        string:
+                          long_text: null
+                    returns:
+                    - name: return1
+                      type:
+                        PrimitiveType: DT_SIGNED_INT64
+                    bound_graph: demo
+                    runnable: true
+                  schema:
+                    vertex_types:
+                    - type_id: 0
+                      type_name: person
+                      properties:
+                      - property_id: 0
+                        property_name: id
+                        property_type:
+                          string:
+                            long_text: null
+                      - property_id: 1
+                        property_name: name
+                        property_type: null
+                        string:
+                          long_text: null
+                      primary_keys:
+                      - id
+                    - type_id: 1
+                      type_name: software
+                      properties:
+                      - property_id: 0
+                        property_name: id
+                        property_type:
+                          string:
+                            long_text: null
+                      - property_id: 1
+                        property_name: name
+                        property_type:
+                          string:
+                            long_text: null
+                      primary_keys:
+                      - id
+                    edge_types:
+                    - type_id: 0
+                      type_name: knows
+                      vertex_type_pair_relations:
+                      - source_vertex: person
+                        destination_vertex: person
+                        relation: MANY_TO_MANY
+                        x_csr_params:
+                          edge_storage_strategy: ONLY_IN
+                      properties:
+                      - property_id: 0
+                        property_name: weight
+                        property_type:
+                          primitive_type: DT_DOUBLE
+                    - type_id: 1
+                      type_name: created
+                      vertex_type_pair_relations:
+                      - source_vertex: person
+                        destination_vertex: software
+                        relation: MANY_TO_MANY
+                        x_csr_params:
+                          edge_storage_strategy: ONLY_IN
+                      properties:
+                      - property_id: 0
+                        property_name: weight
+                        property_type:
+                          primitive_type: DT_DOUBLE
                 sdk_endpoints:
                   cypher: neo4j://mock.api.cypher:7676
                   gremlin: ws://mock.api.gremlin/gremlin
@@ -1738,9 +1567,15 @@ paths:
                   grpc: http://mock.api.grpc:10000
               schema:
                 $ref: '#/components/schemas/ServiceStatus'
-          description: successful operation
+          description: Successfully returned current service status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - service
+      - Service
       x-openapi-router-controller: gs_flex_coordinator.controllers.service_controller
   /api/v1/service/stop:
     post:
@@ -1751,406 +1586,303 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-          description: successful operation
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully stopped the service
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
       tags:
-      - service
+      - Service
       x-openapi-router-controller: gs_flex_coordinator.controllers.service_controller
+  /v1/graph/{graph_id}/procedure:
+    get:
+      description: List all stored procedures on a certain graph
+      operationId: list_procedures
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: PROCEDUREID-1
+                name: procedure_name_1
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: true
+              - id: PROCEDUREID-2
+                name: procedure_name_2
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: false
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetProcedureResponse'
+                type: array
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    post:
+      description: Create a new stored procedure on a certain graph
+      operationId: create_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProcedureRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateProcedureResponse'
+          description: Successfully created a procedure
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+  /v1/graph/{graph_id}/procedure/{procedure_id}:
+    delete:
+      description: Delete a stored procedure by ID
+      operationId: delete_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    get:
+      description: Get a stored procedure by ID
+      operationId: get_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: PROCEDUREID
+                name: procedure_name
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: true
+              schema:
+                $ref: '#/components/schemas/GetProcedureResponse'
+          description: Successfully returned the procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    put:
+      description: Update a stored procedure by ID
+      operationId: update_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcedureRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully updated the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
 components:
+  responses:
+    "400":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Bad request
+    "404":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Not found
+    "500":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Server error
   schemas:
-    ApiResponse:
-      example: operation successful
+    APIResponse:
       type: string
-    Connection:
+    Error:
       example:
-        coordinator_endpoint: coordinator_endpoint
+        code: 0
+        message: message
       properties:
-        coordinator_endpoint:
-          title: coordinator_endpoint
-          type: string
-      title: Connection
-      type: object
-      x-body-name: connection
-    ConnectionStatus:
-      example:
-        solution: INTERACTIVE
-        status: CONNECTED
-      properties:
-        status:
-          enum:
-          - CONNECTED
-          title: status
-          type: string
-        solution:
-          enum:
-          - INTERACTIVE
-          - GRAPHSCOPE_INSIGHT
-          title: solution
-          type: string
-      title: ConnectionStatus
-      type: object
-      x-body-name: connection_status
-    Graph:
-      example:
-        schema:
-          vertex_types:
-          - type_name: type_name
-            primary_keys:
-            - primary_keys
-            - primary_keys
-            type_id: 0
-            properties:
-            - property_type:
-                primitive_type: DT_DOUBLE
-              property_id: 6
-              property_name: property_name
-            - property_type:
-                primitive_type: DT_DOUBLE
-              property_id: 6
-              property_name: property_name
-          - type_name: type_name
-            primary_keys:
-            - primary_keys
-            - primary_keys
-            type_id: 0
-            properties:
-            - property_type:
-                primitive_type: DT_DOUBLE
-              property_id: 6
-              property_name: property_name
-            - property_type:
-                primitive_type: DT_DOUBLE
-              property_id: 6
-              property_name: property_name
-          edge_types:
-          - type_name: type_name
-            type_id: 1
-            vertex_type_pair_relations:
-            - source_vertex: source_vertex
-              destination_vertex: destination_vertex
-              x_csr_params:
-                edge_storage_strategy: ONLY_IN
-              relation: MANY_TO_MANY
-            - source_vertex: source_vertex
-              destination_vertex: destination_vertex
-              x_csr_params:
-                edge_storage_strategy: ONLY_IN
-              relation: MANY_TO_MANY
-            properties:
-            - property_type:
-                primitive_type: DT_DOUBLE
-              property_id: 6
-              property_name: property_name
-            - property_type:
-                primitive_type: DT_DOUBLE
-              property_id: 6
-              property_name: property_name
-          - type_name: type_name
-            type_id: 1
-            vertex_type_pair_relations:
-            - source_vertex: source_vertex
-              destination_vertex: destination_vertex
-              x_csr_params:
-                edge_storage_strategy: ONLY_IN
-              relation: MANY_TO_MANY
-            - source_vertex: source_vertex
-              destination_vertex: destination_vertex
-              x_csr_params:
-                edge_storage_strategy: ONLY_IN
-              relation: MANY_TO_MANY
-            properties:
-            - property_type:
-                primitive_type: DT_DOUBLE
-              property_id: 6
-              property_name: property_name
-            - property_type:
-                primitive_type: DT_DOUBLE
-              property_id: 6
-              property_name: property_name
-        stored_procedures:
-          directory: plugins
-        name: name
-        store_type: mutable_csr
-      properties:
-        name:
-          title: name
-          type: string
-        store_type:
-          enum:
-          - mutable_csr
-          title: store_type
-          type: string
-        stored_procedures:
-          $ref: '#/components/schemas/Graph_stored_procedures'
-        schema:
-          $ref: '#/components/schemas/Schema'
-      title: Graph
-      type: object
-      x-body-name: graph
-    Schema:
-      example:
-        vertex_types:
-        - type_name: type_name
-          primary_keys:
-          - primary_keys
-          - primary_keys
-          type_id: 0
-          properties:
-          - property_type:
-              primitive_type: DT_DOUBLE
-            property_id: 6
-            property_name: property_name
-          - property_type:
-              primitive_type: DT_DOUBLE
-            property_id: 6
-            property_name: property_name
-        - type_name: type_name
-          primary_keys:
-          - primary_keys
-          - primary_keys
-          type_id: 0
-          properties:
-          - property_type:
-              primitive_type: DT_DOUBLE
-            property_id: 6
-            property_name: property_name
-          - property_type:
-              primitive_type: DT_DOUBLE
-            property_id: 6
-            property_name: property_name
-        edge_types:
-        - type_name: type_name
-          type_id: 1
-          vertex_type_pair_relations:
-          - source_vertex: source_vertex
-            destination_vertex: destination_vertex
-            x_csr_params:
-              edge_storage_strategy: ONLY_IN
-            relation: MANY_TO_MANY
-          - source_vertex: source_vertex
-            destination_vertex: destination_vertex
-            x_csr_params:
-              edge_storage_strategy: ONLY_IN
-            relation: MANY_TO_MANY
-          properties:
-          - property_type:
-              primitive_type: DT_DOUBLE
-            property_id: 6
-            property_name: property_name
-          - property_type:
-              primitive_type: DT_DOUBLE
-            property_id: 6
-            property_name: property_name
-        - type_name: type_name
-          type_id: 1
-          vertex_type_pair_relations:
-          - source_vertex: source_vertex
-            destination_vertex: destination_vertex
-            x_csr_params:
-              edge_storage_strategy: ONLY_IN
-            relation: MANY_TO_MANY
-          - source_vertex: source_vertex
-            destination_vertex: destination_vertex
-            x_csr_params:
-              edge_storage_strategy: ONLY_IN
-            relation: MANY_TO_MANY
-          properties:
-          - property_type:
-              primitive_type: DT_DOUBLE
-            property_id: 6
-            property_name: property_name
-          - property_type:
-              primitive_type: DT_DOUBLE
-            property_id: 6
-            property_name: property_name
-      properties:
-        vertex_types:
-          items:
-            $ref: '#/components/schemas/VertexType'
-          title: vertex_types
-          type: array
-        edge_types:
-          items:
-            $ref: '#/components/schemas/EdgeType'
-          title: edge_types
-          type: array
-      title: Schema
-      type: object
-      x-body-name: schema
-    VertexType:
-      example:
-        type_name: type_name
-        primary_keys:
-        - primary_keys
-        - primary_keys
-        type_id: 0
-        properties:
-        - property_type:
-            primitive_type: DT_DOUBLE
-          property_id: 6
-          property_name: property_name
-        - property_type:
-            primitive_type: DT_DOUBLE
-          property_id: 6
-          property_name: property_name
-      properties:
-        type_id:
+        code:
+          description: Error code
           format: int32
-          title: type_id
+          title: code
           type: integer
-        type_name:
-          title: type_name
+        message:
+          description: Error message
+          title: message
           type: string
-        properties:
-          items:
-            $ref: '#/components/schemas/Property'
-          title: properties
-          type: array
-        primary_keys:
-          items:
-            type: string
-          title: primary_keys
-          type: array
-      title: VertexType
-      type: object
-      x-body-name: vertex_type
-    EdgeType:
-      example:
-        type_name: type_name
-        type_id: 1
-        vertex_type_pair_relations:
-        - source_vertex: source_vertex
-          destination_vertex: destination_vertex
-          x_csr_params:
-            edge_storage_strategy: ONLY_IN
-          relation: MANY_TO_MANY
-        - source_vertex: source_vertex
-          destination_vertex: destination_vertex
-          x_csr_params:
-            edge_storage_strategy: ONLY_IN
-          relation: MANY_TO_MANY
-        properties:
-        - property_type:
-            primitive_type: DT_DOUBLE
-          property_id: 6
-          property_name: property_name
-        - property_type:
-            primitive_type: DT_DOUBLE
-          property_id: 6
-          property_name: property_name
-      properties:
-        type_id:
-          format: int32
-          title: type_id
-          type: integer
-        type_name:
-          title: type_name
-          type: string
-        vertex_type_pair_relations:
-          items:
-            $ref: '#/components/schemas/EdgeType_vertex_type_pair_relations_inner'
-          title: vertex_type_pair_relations
-          type: array
-        properties:
-          items:
-            $ref: '#/components/schemas/Property'
-          title: properties
-          type: array
-      title: EdgeType
-      type: object
-      x-body-name: edge_type
-    Property:
-      example:
-        property_type:
-          primitive_type: DT_DOUBLE
-        property_id: 6
-        property_name: property_name
-      properties:
-        property_id:
-          format: int32
-          title: property_id
-          type: integer
-        property_name:
-          title: property_name
-          type: string
-        property_type:
-          $ref: '#/components/schemas/Property_property_type'
-      title: Property
-      type: object
-      x-body-name: property
-    Procedure:
-      example:
-        runnable: true
-        bound_graph: bound_graph
-        enable: true
-        query: query
-        name: name
-        description: description
-        returns:
-        - name: name
-          type: type
-        - name: name
-          type: type
-        type: cpp
-        params:
-        - name: name
-          type: type
-        - name: name
-          type: type
-      properties:
-        name:
-          title: name
-          type: string
-        bound_graph:
-          title: bound_graph
-          type: string
-        description:
-          title: description
-          type: string
-        type:
-          enum:
-          - cpp
-          - cypher
-          title: type
-          type: string
-        query:
-          title: query
-          type: string
-        enable:
-          title: enable
-          type: boolean
-        runnable:
-          title: runnable
-          type: boolean
-        params:
-          items:
-            $ref: '#/components/schemas/Procedure_params_inner'
-          title: params
-          type: array
-        returns:
-          items:
-            $ref: '#/components/schemas/Procedure_params_inner'
-          title: returns
-          type: array
-      title: Procedure
-      type: object
-      x-body-name: procedure
-    DeploymentInfo:
+      required:
+      - code
+      - message
+      title: Error
+    AnyValue:
+      title: default_value
+    RunningDeploymentInfo:
       example:
         creation_time: creation_time
-        graphs_info:
-          key:
-            creation_time: creation_time
-            update_time: update_time
-            last_dataloading_time: last_dataloading_time
-            name: name
+        instance_name: instance_name
         solution: INTERACTIVE
-        name: name
         cluster_type: HOSTS
         version: version
       properties:
-        name:
-          title: name
+        instance_name:
+          title: instance_name
           type: string
         cluster_type:
           enum:
@@ -2170,130 +1902,1490 @@ components:
         creation_time:
           title: creation_time
           type: string
-        graphs_info:
-          additionalProperties:
-            $ref: '#/components/schemas/DeploymentInfo_graphs_info_value'
-          title: graphs_info
-          type: object
-      title: DeploymentInfo
-      type: object
-      x-body-name: deployment_info
-    DeploymentStatus:
-      description: K8s only
+      required:
+      - cluster_type
+      - creation_time
+      - instance_name
+      - solution
+      - version
+      title: RunningDeploymentInfo
+    StartServiceRequest:
       example:
-        container:
-        - container
-        - container
-        creation_time: creation_time
-        image:
-        - image
-        - image
-        node: node
-        restart_count: 0
-        memory_value: 1
-        cpu_value: 6
-        name: name
-        labels:
-        - labels
-        - labels
-        status: status
-        timestamp: timestamp
+        graph_id: graph_id
       properties:
-        name:
-          title: name
+        graph_id:
+          title: graph_id
           type: string
-        container:
-          items:
-            type: string
-          title: container
-          type: array
-        image:
-          items:
-            type: string
-          title: image
-          type: array
-        labels:
-          items:
-            type: string
-          title: labels
-          type: array
-        node:
-          title: node
-          type: string
-        status:
-          title: status
-          type: string
-        restart_count:
-          format: int32
-          title: restart_count
-          type: integer
-        cpu_value:
-          description: cpu value in millicore
-          format: int32
-          title: cpu_value
-          type: integer
-        memory_value:
-          description: memory value in megabytes
-          format: int32
-          title: memory_value
-          type: integer
-        timestamp:
-          title: timestamp
-          type: string
-        creation_time:
-          title: creation_time
-          type: string
-      title: DeploymentStatus
-      type: object
-      x-body-name: deployment_status
-    NodeStatus:
-      example:
-        node: node
-        memory_usage: 6.027456183070403
-        disk_usage: 1.4658129805029452
-        cpu_usage: 0.8008281904610115
-      properties:
-        node:
-          title: node
-          type: string
-        cpu_usage:
-          format: double
-          title: cpu_usage
-          type: number
-        memory_usage:
-          format: double
-          title: memory_usage
-          type: number
-        disk_usage:
-          format: double
-          title: disk_usage
-          type: number
-      title: NodeStatus
-      type: object
-      x-body-name: node_status
+      title: StartServiceRequest
+      x-body-name: start_service_request
     ServiceStatus:
       example:
-        graph_name: graph_name
         sdk_endpoints:
           gremlin: gremlin
           cypher: cypher
           hqps: hqps
           grpc: grpc
-        status: status
+        graph:
+          creation_time: creation_time
+          schema:
+            vertex_types:
+            - type_name: type_name
+              primary_keys:
+              - primary_keys
+              - primary_keys
+              x_csr_params:
+                max_vertex_num: 0
+              type_id: 6
+              description: description
+              properties:
+              - nullable: true
+                property_type:
+                  primitive_type: DT_SIGNED_INT32
+                description: description
+                default_value: ""
+                property_id: 1
+                property_name: property_name
+              - nullable: true
+                property_type:
+                  primitive_type: DT_SIGNED_INT32
+                description: description
+                default_value: ""
+                property_id: 1
+                property_name: property_name
+            - type_name: type_name
+              primary_keys:
+              - primary_keys
+              - primary_keys
+              x_csr_params:
+                max_vertex_num: 0
+              type_id: 6
+              description: description
+              properties:
+              - nullable: true
+                property_type:
+                  primitive_type: DT_SIGNED_INT32
+                description: description
+                default_value: ""
+                property_id: 1
+                property_name: property_name
+              - nullable: true
+                property_type:
+                  primitive_type: DT_SIGNED_INT32
+                description: description
+                default_value: ""
+                property_id: 1
+                property_name: property_name
+            edge_types:
+            - type_name: type_name
+              directed: true
+              primary_keys:
+              - primary_keys
+              - primary_keys
+              vertex_type_pair_relations:
+              - source_vertex: source_vertex
+                destination_vertex: destination_vertex
+                x_csr_params:
+                  edge_storage_strategy: ONLY_IN
+                relation: MANY_TO_MANY
+              - source_vertex: source_vertex
+                destination_vertex: destination_vertex
+                x_csr_params:
+                  edge_storage_strategy: ONLY_IN
+                relation: MANY_TO_MANY
+              type_id: 5
+              description: description
+              properties:
+              - nullable: true
+                property_type:
+                  primitive_type: DT_SIGNED_INT32
+                description: description
+                default_value: ""
+                property_id: 1
+                property_name: property_name
+              - nullable: true
+                property_type:
+                  primitive_type: DT_SIGNED_INT32
+                description: description
+                default_value: ""
+                property_id: 1
+                property_name: property_name
+            - type_name: type_name
+              directed: true
+              primary_keys:
+              - primary_keys
+              - primary_keys
+              vertex_type_pair_relations:
+              - source_vertex: source_vertex
+                destination_vertex: destination_vertex
+                x_csr_params:
+                  edge_storage_strategy: ONLY_IN
+                relation: MANY_TO_MANY
+              - source_vertex: source_vertex
+                destination_vertex: destination_vertex
+                x_csr_params:
+                  edge_storage_strategy: ONLY_IN
+                relation: MANY_TO_MANY
+              type_id: 5
+              description: description
+              properties:
+              - nullable: true
+                property_type:
+                  primitive_type: DT_SIGNED_INT32
+                description: description
+                default_value: ""
+                property_id: 1
+                property_name: property_name
+              - nullable: true
+                property_type:
+                  primitive_type: DT_SIGNED_INT32
+                description: description
+                default_value: ""
+                property_id: 1
+                property_name: property_name
+          stored_procedures:
+          - runnable: true
+            bound_graph: bound_graph
+          - runnable: true
+            bound_graph: bound_graph
+          name: name
+          description: description
+          schema_update_time: schema_update_time
+          id: id
+          store_type: mutable_csr
+          data_update_time: data_update_time
+        status: Running
       properties:
         status:
+          enum:
+          - Running
+          - Stopped
           title: status
           type: string
-        graph_name:
-          description: which graph is serving now
-          title: graph_name
-          type: string
+        graph:
+          $ref: '#/components/schemas/GetGraphResponse'
         sdk_endpoints:
           $ref: '#/components/schemas/ServiceStatus_sdk_endpoints'
+      required:
+      - status
       title: ServiceStatus
-      type: object
-      x-body-name: service_status
-    AlertRule:
+    UploadFileResponse:
+      example:
+        file_path: file_path
+      properties:
+        file_path:
+          title: file_path
+          type: string
+      required:
+      - file_path
+      title: UploadFileResponse
+    LongText:
+      properties:
+        long_text:
+          nullable: true
+          title: long_text
+          type: string
+      required:
+      - long_text
+      title: LongText
+    PrimitiveType:
+      example:
+        primitive_type: DT_SIGNED_INT32
+      properties:
+        primitive_type:
+          enum:
+          - DT_SIGNED_INT32
+          - DT_UNSIGNED_INT32
+          - DT_SIGNED_INT64
+          - DT_UNSIGNED_INT64
+          - DT_BOOL
+          - DT_FLOAT
+          - DT_DOUBLE
+          title: primitive_type
+          type: string
+      required:
+      - primitive_type
+      title: PrimitiveType
+    StringType:
+      properties:
+        string:
+          $ref: '#/components/schemas/StringType_string'
+      required:
+      - string
+      title: StringType
+    GSDataType:
+      oneOf:
+      - $ref: '#/components/schemas/PrimitiveType'
+      - $ref: '#/components/schemas/StringType'
+      title: GSDataType
+    Parameter:
+      properties:
+        name:
+          title: name
+          type: string
+        type:
+          $ref: '#/components/schemas/GSDataType'
+      required:
+      - name
+      - type
+      title: Parameter
+    BasePropertyMeta:
+      properties:
+        property_name:
+          title: property_name
+          type: string
+        property_type:
+          $ref: '#/components/schemas/GSDataType'
+        nullable:
+          title: nullable
+          type: boolean
+        default_value:
+          title: default_value
+        description:
+          title: description
+          type: string
+      required:
+      - property_name
+      - property_type
+      title: BasePropertyMeta
+    CreatePropertyMeta:
+      allOf:
+      - $ref: '#/components/schemas/BasePropertyMeta'
+      example:
+        nullable: true
+        property_type:
+          primitive_type: DT_SIGNED_INT32
+        description: description
+        default_value: ""
+        property_name: property_name
+      title: CreatePropertyMeta
+      x-body-name: create_property_meta
+    GetPropertyMeta:
+      allOf:
+      - $ref: '#/components/schemas/BasePropertyMeta'
+      - properties:
+          property_id:
+            format: int32
+            type: integer
+        required:
+        - property_id
+        type: object
+      example:
+        nullable: true
+        property_type:
+          primitive_type: DT_SIGNED_INT32
+        description: description
+        default_value: ""
+        property_id: 1
+        property_name: property_name
+      title: GetPropertyMeta
+      x-body-name: get_property_meta
+    BaseVertexType:
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        primary_keys:
+          items:
+            type: string
+          title: primary_keys
+          type: array
+        x_csr_params:
+          $ref: '#/components/schemas/BaseVertexType_x_csr_params'
+      required:
+      - primary_keys
+      - type_name
+      title: BaseVertexType
+    CreateVertexType:
+      allOf:
+      - $ref: '#/components/schemas/BaseVertexType'
+      - properties:
+          properties:
+            items:
+              $ref: '#/components/schemas/CreatePropertyMeta'
+            type: array
+          description:
+            type: string
+        required:
+        - properties
+        type: object
+      example:
+        type_name: type_name
+        primary_keys:
+        - primary_keys
+        - primary_keys
+        x_csr_params:
+          max_vertex_num: 0
+        description: description
+        properties:
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_name: property_name
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_name: property_name
+      title: CreateVertexType
+      x-body-name: create_vertex_type
+    BaseEdgeType:
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        vertex_type_pair_relations:
+          items:
+            $ref: '#/components/schemas/BaseEdgeType_vertex_type_pair_relations_inner'
+          title: vertex_type_pair_relations
+          type: array
+        directed:
+          title: directed
+          type: boolean
+        primary_keys:
+          items:
+            type: string
+          title: primary_keys
+          type: array
+      required:
+      - type_name
+      - vertex_type_pair_relations
+      title: BaseEdgeType
+    CreateEdgeType:
+      allOf:
+      - $ref: '#/components/schemas/BaseEdgeType'
+      - properties:
+          properties:
+            items:
+              $ref: '#/components/schemas/CreatePropertyMeta'
+            type: array
+          description:
+            type: string
+        required:
+        - properties
+        type: object
+      example:
+        type_name: type_name
+        directed: true
+        primary_keys:
+        - primary_keys
+        - primary_keys
+        vertex_type_pair_relations:
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        description: description
+        properties:
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_name: property_name
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_name: property_name
+      title: CreateEdgeType
+      x-body-name: create_edge_type
+    CreateProcedureRequest:
+      example:
+        query: query
+        name: name
+        description: description
+        type: cpp
+      properties:
+        name:
+          title: name
+          type: string
+        description:
+          title: description
+          type: string
+        type:
+          enum:
+          - cpp
+          - cypher
+          title: type
+          type: string
+        query:
+          title: query
+          type: string
+      required:
+      - name
+      - query
+      - type
+      title: CreateProcedureRequest
+      x-body-name: create_procedure_request
+    CreateProcedureResponse:
+      example:
+        procedure_id: procedure_id
+      properties:
+        procedure_id:
+          title: procedure_id
+          type: string
+      required:
+      - procedure_id
+      title: CreateProcedureResponse
+    CreateGraphSchemaRequest:
+      example:
+        vertex_types:
+        - type_name: type_name
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          x_csr_params:
+            max_vertex_num: 0
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+        - type_name: type_name
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          x_csr_params:
+            max_vertex_num: 0
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+        edge_types:
+        - type_name: type_name
+          directed: true
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          vertex_type_pair_relations:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+        - type_name: type_name
+          directed: true
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          vertex_type_pair_relations:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+      properties:
+        vertex_types:
+          items:
+            $ref: '#/components/schemas/CreateVertexType'
+          title: vertex_types
+          type: array
+        edge_types:
+          items:
+            $ref: '#/components/schemas/CreateEdgeType'
+          title: edge_types
+          type: array
+      required:
+      - edge_types
+      - vertex_types
+      title: CreateGraphSchemaRequest
+      x-body-name: create_graph_schema_request
+    CreateGraphRequest:
+      example:
+        schema:
+          vertex_types:
+          - type_name: type_name
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            x_csr_params:
+              max_vertex_num: 0
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+          - type_name: type_name
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            x_csr_params:
+              max_vertex_num: 0
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+          edge_types:
+          - type_name: type_name
+            directed: true
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            vertex_type_pair_relations:
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+          - type_name: type_name
+            directed: true
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            vertex_type_pair_relations:
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+        stored_procedures:
+        - query: query
+          name: name
+          description: description
+          type: cpp
+        - query: query
+          name: name
+          description: description
+          type: cpp
+        name: name
+        description: description
+      properties:
+        name:
+          title: name
+          type: string
+        description:
+          title: description
+          type: string
+        stored_procedures:
+          items:
+            $ref: '#/components/schemas/CreateProcedureRequest'
+          title: stored_procedures
+          type: array
+        schema:
+          $ref: '#/components/schemas/CreateGraphSchemaRequest'
+      required:
+      - name
+      - schema
+      title: CreateGraphRequest
+      x-body-name: create_graph_request
+    CreateGraphResponse:
+      example:
+        graph_id: graph_id
+      properties:
+        graph_id:
+          title: graph_id
+          type: string
+      required:
+      - graph_id
+      title: CreateGraphResponse
+    StoredProcedureMeta:
+      allOf:
+      - $ref: '#/components/schemas/CreateProcedureRequest'
+      - properties:
+          id:
+            type: string
+          library:
+            type: string
+          params:
+            items:
+              $ref: '#/components/schemas/Parameter'
+            type: array
+          returns:
+            items:
+              $ref: '#/components/schemas/Parameter'
+            type: array
+        required:
+        - id
+        - library
+        - params
+        - returns
+        type: object
+      title: StoredProcedureMeta
+    GetProcedureResponse:
+      allOf:
+      - $ref: '#/components/schemas/StoredProcedureMeta'
+      - properties:
+          bound_graph:
+            type: string
+          runnable:
+            type: boolean
+        required:
+        - bound_graph
+        - runnable
+        type: object
+      example:
+        runnable: true
+        bound_graph: bound_graph
+      title: GetProcedureResponse
+    UpdateProcedureRequest:
+      example:
+        description: description
+      properties:
+        description:
+          title: description
+          type: string
+      required:
+      - description
+      title: UpdateProcedureRequest
+      x-body-name: update_procedure_request
+    GetVertexType:
+      allOf:
+      - $ref: '#/components/schemas/BaseVertexType'
+      - properties:
+          type_id:
+            format: int32
+            type: integer
+          properties:
+            items:
+              $ref: '#/components/schemas/GetPropertyMeta'
+            type: array
+          description:
+            type: string
+        required:
+        - properties
+        - type_id
+        type: object
+      example:
+        type_name: type_name
+        primary_keys:
+        - primary_keys
+        - primary_keys
+        x_csr_params:
+          max_vertex_num: 0
+        type_id: 6
+        description: description
+        properties:
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_id: 1
+          property_name: property_name
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_id: 1
+          property_name: property_name
+      title: GetVertexType
+    GetEdgeType:
+      allOf:
+      - $ref: '#/components/schemas/BaseEdgeType'
+      - properties:
+          type_id:
+            format: int32
+            type: integer
+          properties:
+            items:
+              $ref: '#/components/schemas/GetPropertyMeta'
+            type: array
+          description:
+            type: string
+        required:
+        - properties
+        - type_id
+        type: object
+      example:
+        type_name: type_name
+        directed: true
+        primary_keys:
+        - primary_keys
+        - primary_keys
+        vertex_type_pair_relations:
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        type_id: 5
+        description: description
+        properties:
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_id: 1
+          property_name: property_name
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_id: 1
+          property_name: property_name
+      title: GetEdgeType
+    GetGraphSchemaResponse:
+      example:
+        vertex_types:
+        - type_name: type_name
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          x_csr_params:
+            max_vertex_num: 0
+          type_id: 6
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+        - type_name: type_name
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          x_csr_params:
+            max_vertex_num: 0
+          type_id: 6
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+        edge_types:
+        - type_name: type_name
+          directed: true
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          vertex_type_pair_relations:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          type_id: 5
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+        - type_name: type_name
+          directed: true
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          vertex_type_pair_relations:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          type_id: 5
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+      properties:
+        vertex_types:
+          items:
+            $ref: '#/components/schemas/GetVertexType'
+          title: vertex_types
+          type: array
+        edge_types:
+          items:
+            $ref: '#/components/schemas/GetEdgeType'
+          title: edge_types
+          type: array
+      required:
+      - edge_types
+      - vertex_types
+      title: GetGraphSchemaResponse
+    GetGraphResponse:
+      example:
+        creation_time: creation_time
+        schema:
+          vertex_types:
+          - type_name: type_name
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            x_csr_params:
+              max_vertex_num: 0
+            type_id: 6
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+          - type_name: type_name
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            x_csr_params:
+              max_vertex_num: 0
+            type_id: 6
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+          edge_types:
+          - type_name: type_name
+            directed: true
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            vertex_type_pair_relations:
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            type_id: 5
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+          - type_name: type_name
+            directed: true
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            vertex_type_pair_relations:
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            type_id: 5
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+        stored_procedures:
+        - runnable: true
+          bound_graph: bound_graph
+        - runnable: true
+          bound_graph: bound_graph
+        name: name
+        description: description
+        schema_update_time: schema_update_time
+        id: id
+        store_type: mutable_csr
+        data_update_time: data_update_time
+      properties:
+        id:
+          title: id
+          type: string
+        name:
+          title: name
+          type: string
+        description:
+          title: description
+          type: string
+        store_type:
+          enum:
+          - mutable_csr
+          title: store_type
+          type: string
+        creation_time:
+          title: creation_time
+          type: string
+        data_update_time:
+          title: data_update_time
+          type: string
+        schema_update_time:
+          title: schema_update_time
+          type: string
+        stored_procedures:
+          items:
+            $ref: '#/components/schemas/GetProcedureResponse'
+          title: stored_procedures
+          type: array
+        schema:
+          $ref: '#/components/schemas/GetGraphSchemaResponse'
+      required:
+      - creation_time
+      - data_update_time
+      - id
+      - name
+      - schema
+      - schema_update_time
+      title: GetGraphResponse
+    ColumnMapping:
+      example:
+        column:
+          name: name
+          index: 0
+        property: property
+      properties:
+        column:
+          $ref: '#/components/schemas/ColumnMapping_column'
+        property:
+          description: must align with the schema
+          title: property
+          type: string
+      required:
+      - column
+      - property
+      title: ColumnMapping
+    VertexMapping:
+      example:
+        type_name: type_name
+        inputs:
+        - file:///path/to/file.csv
+        - file:///path/to/file.csv
+        column_mappings:
+        - column:
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        inputs:
+          items:
+            example: file:///path/to/file.csv
+            type: string
+          title: inputs
+          type: array
+        column_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          title: column_mappings
+          type: array
+      required:
+      - column_mappings
+      - inputs
+      - type_name
+      title: VertexMapping
+      x-body-name: vertex_mapping
+    EdgeMapping:
+      example:
+        inputs:
+        - inputs
+        - inputs
+        source_vertex_mappings:
+        - column:
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
+        destination_vertex_mappings:
+        - column:
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
+        column_mappings:
+        - column:
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
+        type_triplet:
+          edge: edge
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+      properties:
+        type_triplet:
+          $ref: '#/components/schemas/EdgeMapping_type_triplet'
+        inputs:
+          items:
+            type: string
+          title: inputs
+          type: array
+        source_vertex_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          title: source_vertex_mappings
+          type: array
+        destination_vertex_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          title: destination_vertex_mappings
+          type: array
+        column_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          title: column_mappings
+          type: array
+      required:
+      - destination_vertex_mappings
+      - inputs
+      - source_vertex_mappings
+      - type_triplet
+      title: EdgeMapping
+      x-body-name: edge_mapping
+    SchemaMapping:
+      example:
+        edge_mappings:
+        - inputs:
+          - inputs
+          - inputs
+          source_vertex_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          destination_vertex_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          column_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          type_triplet:
+            edge: edge
+            source_vertex: source_vertex
+            destination_vertex: destination_vertex
+        - inputs:
+          - inputs
+          - inputs
+          source_vertex_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          destination_vertex_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          column_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          type_triplet:
+            edge: edge
+            source_vertex: source_vertex
+            destination_vertex: destination_vertex
+        vertex_mappings:
+        - type_name: type_name
+          inputs:
+          - file:///path/to/file.csv
+          - file:///path/to/file.csv
+          column_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+        - type_name: type_name
+          inputs:
+          - file:///path/to/file.csv
+          - file:///path/to/file.csv
+          column_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+      properties:
+        vertex_mappings:
+          items:
+            $ref: '#/components/schemas/VertexMapping'
+          title: vertex_mappings
+          type: array
+        edge_mappings:
+          items:
+            $ref: '#/components/schemas/EdgeMapping'
+          title: edge_mappings
+          type: array
+      required:
+      - edge_mappings
+      - vertex_mappings
+      title: SchemaMapping
+      x-body-name: schema_mapping
+    DataloadingJobConfig:
+      example:
+        schedule: schedule
+        loading_config:
+          format:
+            metadata:
+              key: ""
+            type: type
+          import_option: overwrite
+        vertices:
+        - type_name: type_name
+        - type_name: type_name
+        repeat: once
+        edges:
+        - type_name: type_name
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+        - type_name: type_name
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+      properties:
+        loading_config:
+          $ref: '#/components/schemas/DataloadingJobConfig_loading_config'
+        vertices:
+          items:
+            $ref: '#/components/schemas/DataloadingJobConfig_vertices_inner'
+          title: vertices
+          type: array
+        edges:
+          items:
+            $ref: '#/components/schemas/DataloadingJobConfig_edges_inner'
+          title: edges
+          type: array
+        schedule:
+          description: format with '2023-02-21 11:56:30'
+          nullable: true
+          title: schedule
+          type: string
+        repeat:
+          enum:
+          - once
+          - day
+          - week
+          nullable: true
+          title: repeat
+          type: string
+      required:
+      - edges
+      - loading_config
+      - vertices
+      title: DataloadingJobConfig
+      x-body-name: dataloading_job_config
+    JobStatus:
+      example:
+        start_time: start_time
+        log: log
+        end_time: end_time
+        id: id
+        detail:
+          key: ""
+        type: type
+        status: RUNNING
+      properties:
+        id:
+          title: id
+          type: string
+        type:
+          title: type
+          type: string
+        status:
+          enum:
+          - RUNNING
+          - SUCCESS
+          - FAILED
+          - CANCELLED
+          - WAITING
+          title: status
+          type: string
+        start_time:
+          title: start_time
+          type: string
+        end_time:
+          title: end_time
+          type: string
+        log:
+          description: logview URL or log string
+          title: log
+          type: string
+        detail:
+          additionalProperties: true
+          title: detail
+          type: object
+      required:
+      - id
+      - status
+      - type
+      title: JobStatus
+    CreateDataloadingJobResponse:
+      example:
+        job_id: job_id
+      properties:
+        job_id:
+          title: job_id
+          type: string
+      required:
+      - job_id
+      title: CreateDataloadingJobResponse
+    CreateAlertRuleRequest:
       example:
         severity: warning
         conditions_description: conditions_description
@@ -2327,15 +3419,39 @@ components:
         enable:
           title: enable
           type: boolean
-      title: AlertRule
-      type: object
-      x-body-name: alert_rule
-    AlertMessage:
+      required:
+      - conditions_description
+      - enable
+      - frequency
+      - metric_type
+      - name
+      - severity
+      title: CreateAlertRuleRequest
+      x-body-name: create_alert_rule_request
+    GetAlertRuleResponse:
+      allOf:
+      - $ref: '#/components/schemas/CreateAlertRuleRequest'
+      - properties:
+          id:
+            type: string
+        required:
+        - id
+        type: object
+      example:
+        severity: warning
+        conditions_description: conditions_description
+        enable: true
+        name: name
+        metric_type: node
+        id: id
+        frequency: 0
+      title: GetAlertRuleResponse
+    GetAlertMessageResponse:
       example:
         severity: warning
         trigger_time: trigger_time
         metric_type: node
-        message_id: message_id
+        id: id
         message: message
         alert_name: alert_name
         target:
@@ -2343,9 +3459,9 @@ components:
         - target
         status: unsolved
       properties:
-        message_id:
+        id:
           description: Generated in server side
-          title: message_id
+          title: id
           type: string
         alert_name:
           title: alert_name
@@ -2380,29 +3496,54 @@ components:
         message:
           title: message
           type: string
-      title: AlertMessage
-      type: object
-      x-body-name: alert_message
-    AlertReceiver:
+      required:
+      - alert_name
+      - id
+      - message
+      - metric_type
+      - severity
+      - status
+      - target
+      - trigger_time
+      title: GetAlertMessageResponse
+    UpdateAlertMessageStatusRequest:
+      example:
+        message_ids:
+        - message_ids
+        - message_ids
+        status: unsolved
+      properties:
+        message_ids:
+          items:
+            type: string
+          title: message_ids
+          type: array
+        status:
+          enum:
+          - unsolved
+          - solved
+          - dealing
+          title: status
+          type: string
+      required:
+      - message_ids
+      - status
+      title: UpdateAlertMessageStatusRequest
+      x-body-name: update_alert_message_status_request
+    CreateAlertReceiverRequest:
       example:
         webhook_url: webhook_url
         is_at_all: true
-        receiver_id: receiver_id
         enable: true
         at_user_ids:
         - at_user_ids
         - at_user_ids
         type: webhook
-        message: message
       properties:
         type:
           enum:
           - webhook
           title: type
-          type: string
-        receiver_id:
-          description: Generated in server side
-          title: receiver_id
           type: string
         webhook_url:
           title: webhook_url
@@ -2418,729 +3559,80 @@ components:
         enable:
           title: enable
           type: boolean
-        message:
-          description: error message generated in server side
-          title: message
-          type: string
-      title: AlertReceiver
-      type: object
-      x-body-name: alert_receiver
-    SchemaMapping:
-      example:
-        loading_config:
-          format:
-            metadata:
-              key: ""
-            type: type
-          import_option: init
-          data_source:
-            scheme: file
-        edge_mappings:
-        - inputs:
-          - inputs
-          - inputs
-          source_vertex_mappings:
-          - column:
-              name: name
-              index: 0
-          - column:
-              name: name
-              index: 0
-          destination_vertex_mappings:
-          - column:
-              name: name
-              index: 0
-          - column:
-              name: name
-              index: 0
-          column_mappings:
-          - column:
-              name: name
-              index: 0
-            property: property
-          - column:
-              name: name
-              index: 0
-            property: property
-          type_triplet:
-            edge: edge
-            source_vertex: source_vertex
-            destination_vertex: destination_vertex
-        - inputs:
-          - inputs
-          - inputs
-          source_vertex_mappings:
-          - column:
-              name: name
-              index: 0
-          - column:
-              name: name
-              index: 0
-          destination_vertex_mappings:
-          - column:
-              name: name
-              index: 0
-          - column:
-              name: name
-              index: 0
-          column_mappings:
-          - column:
-              name: name
-              index: 0
-            property: property
-          - column:
-              name: name
-              index: 0
-            property: property
-          type_triplet:
-            edge: edge
-            source_vertex: source_vertex
-            destination_vertex: destination_vertex
-        graph: graph
-        vertex_mappings:
-        - type_name: type_name
-          inputs:
-          - inputs
-          - inputs
-          column_mappings:
-          - column:
-              name: name
-              index: 0
-            property: property
-          - column:
-              name: name
-              index: 0
-            property: property
-        - type_name: type_name
-          inputs:
-          - inputs
-          - inputs
-          column_mappings:
-          - column:
-              name: name
-              index: 0
-            property: property
-          - column:
-              name: name
-              index: 0
-            property: property
-      properties:
-        graph:
-          title: graph
-          type: string
-        loading_config:
-          $ref: '#/components/schemas/SchemaMapping_loading_config'
-        vertex_mappings:
-          items:
-            $ref: '#/components/schemas/VertexMapping'
-          title: vertex_mappings
-          type: array
-        edge_mappings:
-          items:
-            $ref: '#/components/schemas/EdgeMapping'
-          title: edge_mappings
-          type: array
-      title: SchemaMapping
-      type: object
-      x-body-name: schema_mapping
-    VertexMapping:
-      example:
-        type_name: type_name
-        inputs:
-        - inputs
-        - inputs
-        column_mappings:
-        - column:
-            name: name
-            index: 0
-          property: property
-        - column:
-            name: name
-            index: 0
-          property: property
-      properties:
-        type_name:
-          title: type_name
-          type: string
-        inputs:
-          items:
+      required:
+      - at_user_ids
+      - enable
+      - is_at_all
+      - type
+      - webhook_url
+      title: CreateAlertReceiverRequest
+      x-body-name: create_alert_receiver_request
+    GetAlertReceiverResponse:
+      allOf:
+      - $ref: '#/components/schemas/CreateAlertReceiverRequest'
+      - properties:
+          id:
             type: string
-          title: inputs
-          type: array
-        column_mappings:
-          items:
-            $ref: '#/components/schemas/ColumnMapping'
-          title: column_mappings
-          type: array
-      title: VertexMapping
-      type: object
-      x-body-name: vertex_mapping
-    EdgeMapping:
-      example:
-        inputs:
-        - inputs
-        - inputs
-        source_vertex_mappings:
-        - column:
-            name: name
-            index: 0
-        - column:
-            name: name
-            index: 0
-        destination_vertex_mappings:
-        - column:
-            name: name
-            index: 0
-        - column:
-            name: name
-            index: 0
-        column_mappings:
-        - column:
-            name: name
-            index: 0
-          property: property
-        - column:
-            name: name
-            index: 0
-          property: property
-        type_triplet:
-          edge: edge
-          source_vertex: source_vertex
-          destination_vertex: destination_vertex
-      properties:
-        type_triplet:
-          $ref: '#/components/schemas/EdgeMapping_type_triplet'
-        inputs:
-          items:
+          message:
+            description: Error message generated in server side
             type: string
-          title: inputs
-          type: array
-        source_vertex_mappings:
-          items:
-            $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner'
-          title: source_vertex_mappings
-          type: array
-        destination_vertex_mappings:
-          items:
-            $ref: '#/components/schemas/EdgeMapping_destination_vertex_mappings_inner'
-          title: destination_vertex_mappings
-          type: array
-        column_mappings:
-          items:
-            $ref: '#/components/schemas/ColumnMapping'
-          title: column_mappings
-          type: array
-      title: EdgeMapping
-      type: object
-      x-body-name: edge_mapping
-    ColumnMapping:
+        required:
+        - id
+        - message
+        type: object
       example:
-        column:
-          name: name
-          index: 0
-        property: property
-      properties:
-        column:
-          $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
-        property:
-          description: must align with the schema
-          title: property
-          type: string
-      title: ColumnMapping
-      type: object
-      x-body-name: column_mapping
-    JobStatus:
-      example:
-        start_time: start_time
-        log: log
-        job_id: job_id
-        end_time: end_time
-        detail:
-          key: ""
-        type: type
-        status: RUNNING
-      properties:
-        job_id:
-          title: job_id
-          type: string
-        type:
-          title: type
-          type: string
-        status:
-          enum:
-          - RUNNING
-          - SUCCESS
-          - FAILED
-          - CANCELLED
-          - WAITING
-          title: status
-          type: string
-        start_time:
-          title: start_time
-          type: string
-        end_time:
-          title: end_time
-          type: string
-        log:
-          description: URL or log string
-          title: log
-          type: string
-        detail:
-          additionalProperties: true
-          title: detail
-          type: object
-      title: JobStatus
-      type: object
-      x-body-name: job_status
-    VertexDataSource:
-      example:
-        type_name: type_name
-        property_mapping:
-          key: ""
-        location: location
-        data_source: ODPS
-      properties:
-        data_source:
-          enum:
-          - ODPS
-          - FILE
-          title: data_source
-          type: string
-        type_name:
-          title: type_name
-          type: string
-        location:
-          title: location
-          type: string
-        property_mapping:
-          additionalProperties: true
-          title: property_mapping
-          type: object
-      title: VertexDataSource
-      type: object
-      x-body-name: vertex_data_source
-    EdgeDataSource:
-      example:
-        source_pk_column_map:
-          key: ""
-        type_name: type_name
-        destination_pk_column_map:
-          key: ""
-        source_vertex: source_vertex
-        destination_vertex: destination_vertex
-        property_mapping:
-          key: ""
-        location: location
-        data_source: ODPS
-      properties:
-        data_source:
-          enum:
-          - ODPS
-          - FILE
-          title: data_source
-          type: string
-        type_name:
-          title: type_name
-          type: string
-        source_vertex:
-          title: source_vertex
-          type: string
-        destination_vertex:
-          title: destination_vertex
-          type: string
-        location:
-          title: location
-          type: string
-        source_pk_column_map:
-          additionalProperties: true
-          title: source_pk_column_map
-          type: object
-        destination_pk_column_map:
-          additionalProperties: true
-          title: destination_pk_column_map
-          type: object
-        property_mapping:
-          additionalProperties: true
-          title: property_mapping
-          type: object
-      title: EdgeDataSource
-      type: object
-      x-body-name: edge_data_source
-    DataSource:
-      example:
-        edges_datasource:
-        - source_pk_column_map:
-            key: ""
-          type_name: type_name
-          destination_pk_column_map:
-            key: ""
-          source_vertex: source_vertex
-          destination_vertex: destination_vertex
-          property_mapping:
-            key: ""
-          location: location
-          data_source: ODPS
-        - source_pk_column_map:
-            key: ""
-          type_name: type_name
-          destination_pk_column_map:
-            key: ""
-          source_vertex: source_vertex
-          destination_vertex: destination_vertex
-          property_mapping:
-            key: ""
-          location: location
-          data_source: ODPS
-        vertices_datasource:
-        - type_name: type_name
-          property_mapping:
-            key: ""
-          location: location
-          data_source: ODPS
-        - type_name: type_name
-          property_mapping:
-            key: ""
-          location: location
-          data_source: ODPS
-      properties:
-        vertices_datasource:
-          items:
-            $ref: '#/components/schemas/VertexDataSource'
-          title: vertices_datasource
-          type: array
-        edges_datasource:
-          items:
-            $ref: '#/components/schemas/EdgeDataSource'
-          title: edges_datasource
-          type: array
-      title: DataSource
-      type: object
-      x-body-name: data_source
-    GrootGraph:
-      example:
-        creation_time: creation_time
-        schema:
-          vertices:
-          - label: label
-            properties:
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: DT_STRING
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: DT_STRING
-          - label: label
-            properties:
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: DT_STRING
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: DT_STRING
-          edges:
-          - label: label
-            relations:
-            - src_label: src_label
-              dst_label: dst_label
-            - src_label: src_label
-              dst_label: dst_label
-            properties:
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: DT_STRING
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: DT_STRING
-          - label: label
-            relations:
-            - src_label: src_label
-              dst_label: dst_label
-            - src_label: src_label
-              dst_label: dst_label
-            properties:
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: DT_STRING
-            - is_primary_key: true
-              name: name
-              id: 0
-              type: DT_STRING
-        directed: true
-        gremlin_interface:
-          grpc_endpoint: grpc_endpoint
-          password: password
-          gremlin_endpoint: gremlin_endpoint
-          username: username
-        name: name
-        type: GrootGraph
-      properties:
-        name:
-          title: name
-          type: string
-        type:
-          enum:
-          - GrootGraph
-          title: type
-          type: string
-        directed:
-          title: directed
-          type: boolean
-        creation_time:
-          title: creation_time
-          type: string
-        schema:
-          $ref: '#/components/schemas/GrootSchema'
-        gremlin_interface:
-          $ref: '#/components/schemas/GrootGraph_gremlin_interface'
-      title: GrootGraph
-      type: object
-      x-body-name: groot_graph
-    GrootSchema:
-      example:
-        vertices:
-        - label: label
-          properties:
-          - is_primary_key: true
-            name: name
-            id: 0
-            type: DT_STRING
-          - is_primary_key: true
-            name: name
-            id: 0
-            type: DT_STRING
-        - label: label
-          properties:
-          - is_primary_key: true
-            name: name
-            id: 0
-            type: DT_STRING
-          - is_primary_key: true
-            name: name
-            id: 0
-            type: DT_STRING
-        edges:
-        - label: label
-          relations:
-          - src_label: src_label
-            dst_label: dst_label
-          - src_label: src_label
-            dst_label: dst_label
-          properties:
-          - is_primary_key: true
-            name: name
-            id: 0
-            type: DT_STRING
-          - is_primary_key: true
-            name: name
-            id: 0
-            type: DT_STRING
-        - label: label
-          relations:
-          - src_label: src_label
-            dst_label: dst_label
-          - src_label: src_label
-            dst_label: dst_label
-          properties:
-          - is_primary_key: true
-            name: name
-            id: 0
-            type: DT_STRING
-          - is_primary_key: true
-            name: name
-            id: 0
-            type: DT_STRING
-      properties:
-        vertices:
-          items:
-            $ref: '#/components/schemas/GrootVertexType'
-          title: vertices
-          type: array
-        edges:
-          items:
-            $ref: '#/components/schemas/GrootEdgeType'
-          title: edges
-          type: array
-      title: GrootSchema
-      type: object
-      x-body-name: groot_schema
-    GrootVertexType:
-      example:
-        label: label
-        properties:
-        - is_primary_key: true
-          name: name
-          id: 0
-          type: DT_STRING
-        - is_primary_key: true
-          name: name
-          id: 0
-          type: DT_STRING
-      properties:
-        label:
-          title: label
-          type: string
-        properties:
-          items:
-            $ref: '#/components/schemas/GrootProperty'
-          title: properties
-          type: array
-      title: GrootVertexType
-      type: object
-      x-body-name: groot_vertex_type
-    GrootEdgeType:
-      example:
-        label: label
-        relations:
-        - src_label: src_label
-          dst_label: dst_label
-        - src_label: src_label
-          dst_label: dst_label
-        properties:
-        - is_primary_key: true
-          name: name
-          id: 0
-          type: DT_STRING
-        - is_primary_key: true
-          name: name
-          id: 0
-          type: DT_STRING
-      properties:
-        label:
-          title: label
-          type: string
-        relations:
-          items:
-            $ref: '#/components/schemas/GrootEdgeType_relations_inner'
-          title: relations
-          type: array
-        properties:
-          items:
-            $ref: '#/components/schemas/GrootProperty'
-          title: properties
-          type: array
-      title: GrootEdgeType
-      type: object
-      x-body-name: groot_edge_type
-    GrootProperty:
-      example:
-        is_primary_key: true
-        name: name
-        id: 0
-        type: DT_STRING
-      properties:
-        id:
-          format: int32
-          title: id
-          type: integer
-        name:
-          title: name
-          type: string
-        type:
-          enum:
-          - DT_STRING
-          - DT_SIGNED_INT64
-          - DT_DOUBLE
-          title: type
-          type: string
-        is_primary_key:
-          title: is_primary_key
-          type: boolean
-      title: GrootProperty
-      type: object
-      x-body-name: groot_property
-    GrootDataloadingJobConfig:
-      example:
-        schedule: schedule
-        vertices:
-        - vertices
-        - vertices
-        repeat: once
-        edges:
-        - type_name: type_name
-          source_vertex: source_vertex
-          destination_vertex: destination_vertex
-        - type_name: type_name
-          source_vertex: source_vertex
-          destination_vertex: destination_vertex
-      properties:
-        vertices:
-          items:
-            type: string
-          title: vertices
-          type: array
-        edges:
-          items:
-            $ref: '#/components/schemas/GrootDataloadingJobConfig_edges_inner'
-          title: edges
-          type: array
-        schedule:
-          description: format with '2023-02-21 11:56:30'
-          title: schedule
-          type: string
-        repeat:
-          enum:
-          - once
-          - day
-          - week
-          title: repeat
-          type: string
-      title: GrootDataloadingJobConfig
-      type: object
-      x-body-name: groot_dataloading_job_config
-    start_service_request:
-      properties:
-        graph_name:
-          title: graph_name
-          type: string
-      title: start_service_request
-      type: object
-    update_alert_messages_request:
-      properties:
-        messages:
-          items:
-            $ref: '#/components/schemas/AlertMessage'
-          title: messages
-          type: array
-        batch_status:
-          description: Override the status of each message
-          enum:
-          - solved
-          - unsolved
-          - dealing
-          title: batch_status
-          type: string
-        batch_delete:
-          default: false
-          description: True will delete all the messages in request body
-          title: batch_delete
-          type: boolean
-      title: update_alert_messages_request
-      type: object
-    upload_file_request:
+        webhook_url: webhook_url
+        is_at_all: true
+        enable: true
+        at_user_ids:
+        - at_user_ids
+        - at_user_ids
+        id: id
+        type: webhook
+        message: message
+      title: GetAlertReceiverResponse
+    uploadFile_request:
       properties:
         filestorage:
           format: binary
           type: string
       type: object
-    Graph_stored_procedures:
+    ServiceStatus_sdk_endpoints:
       example:
-        directory: plugins
+        gremlin: gremlin
+        cypher: cypher
+        hqps: hqps
+        grpc: grpc
       properties:
-        directory:
-          enum:
-          - plugins
-          title: directory
+        cypher:
+          title: cypher
           type: string
-      title: Graph_stored_procedures
+        gremlin:
+          title: gremlin
+          type: string
+        hqps:
+          title: hqps
+          type: string
+        grpc:
+          title: grpc
+          type: string
+      title: ServiceStatus_sdk_endpoints
+    StringType_string:
+      oneOf:
+      - $ref: '#/components/schemas/LongText'
+      title: StringType_string
       type: object
-    EdgeType_vertex_type_pair_relations_inner_x_csr_params:
+    BaseVertexType_x_csr_params:
+      description: Used for storage optimization
+      example:
+        max_vertex_num: 0
+      properties:
+        max_vertex_num:
+          title: max_vertex_num
+          type: integer
+      title: BaseVertexType_x_csr_params
+      type: object
+    BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params:
       description: Used for storage optimization
       example:
         edge_storage_strategy: ONLY_IN
@@ -3152,9 +3644,8 @@ components:
           - BOTH_OUT_IN
           title: edge_storage_strategy
           type: string
-      title: EdgeType_vertex_type_pair_relations_inner_x_csr_params
-      type: object
-    EdgeType_vertex_type_pair_relations_inner:
+      title: BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params
+    BaseEdgeType_vertex_type_pair_relations_inner:
       example:
         source_vertex: source_vertex
         destination_vertex: destination_vertex
@@ -3177,127 +3668,25 @@ components:
           title: relation
           type: string
         x_csr_params:
-          $ref: '#/components/schemas/EdgeType_vertex_type_pair_relations_inner_x_csr_params'
-      title: EdgeType_vertex_type_pair_relations_inner
-      type: object
-    Property_property_type:
-      example:
-        primitive_type: DT_DOUBLE
-      properties:
-        primitive_type:
-          enum:
-          - DT_DOUBLE
-          - DT_STRING
-          - DT_SIGNED_INT32
-          - DT_SIGNED_INT64
-          - DT_DATE32
-          title: primitive_type
-          type: string
-      title: Property_property_type
-      type: object
-    Procedure_params_inner:
+          $ref: '#/components/schemas/BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params'
+      required:
+      - destination_vertex
+      - relation
+      - source_vertex
+      title: BaseEdgeType_vertex_type_pair_relations_inner
+    ColumnMapping_column:
       example:
         name: name
-        type: type
+        index: 0
       properties:
+        index:
+          format: int32
+          title: index
+          type: integer
         name:
           title: name
           type: string
-        type:
-          title: type
-          type: string
-      title: Procedure_params_inner
-      type: object
-    DeploymentInfo_graphs_info_value:
-      example:
-        creation_time: creation_time
-        update_time: update_time
-        last_dataloading_time: last_dataloading_time
-        name: name
-      properties:
-        name:
-          title: name
-          type: string
-        creation_time:
-          title: creation_time
-          type: string
-        update_time:
-          title: update_time
-          type: string
-        last_dataloading_time:
-          title: last_dataloading_time
-          type: string
-      title: DeploymentInfo_graphs_info_value
-      type: object
-    ServiceStatus_sdk_endpoints:
-      example:
-        gremlin: gremlin
-        cypher: cypher
-        hqps: hqps
-        grpc: grpc
-      properties:
-        cypher:
-          title: cypher
-          type: string
-        gremlin:
-          title: gremlin
-          type: string
-        hqps:
-          title: hqps
-          type: string
-        grpc:
-          title: grpc
-          type: string
-      title: ServiceStatus_sdk_endpoints
-      type: object
-    SchemaMapping_loading_config_data_source:
-      example:
-        scheme: file
-      properties:
-        scheme:
-          enum:
-          - file
-          title: scheme
-          type: string
-      title: SchemaMapping_loading_config_data_source
-      type: object
-    SchemaMapping_loading_config_format:
-      example:
-        metadata:
-          key: ""
-        type: type
-      properties:
-        type:
-          title: type
-          type: string
-        metadata:
-          additionalProperties: true
-          title: metadata
-          type: object
-      title: SchemaMapping_loading_config_format
-      type: object
-    SchemaMapping_loading_config:
-      example:
-        format:
-          metadata:
-            key: ""
-          type: type
-        import_option: init
-        data_source:
-          scheme: file
-      properties:
-        data_source:
-          $ref: '#/components/schemas/SchemaMapping_loading_config_data_source'
-        import_option:
-          enum:
-          - init
-          - overwrite
-          title: import_option
-          type: string
-        format:
-          $ref: '#/components/schemas/SchemaMapping_loading_config_format'
-      title: SchemaMapping_loading_config
-      type: object
+      title: ColumnMapping_column
     EdgeMapping_type_triplet:
       description: "source label -> [edge label] -> destination label"
       example:
@@ -3314,79 +3703,53 @@ components:
         destination_vertex:
           title: destination_vertex
           type: string
+      required:
+      - destination_vertex
+      - edge
+      - source_vertex
       title: EdgeMapping_type_triplet
-      type: object
-    EdgeMapping_source_vertex_mappings_inner_column:
+    DataloadingJobConfig_loading_config_format:
       example:
-        name: name
-        index: 0
+        metadata:
+          key: ""
+        type: type
       properties:
-        index:
-          format: int32
-          title: index
-          type: integer
-        name:
-          title: name
+        type:
+          title: type
           type: string
-      title: EdgeMapping_source_vertex_mappings_inner_column
-      type: object
-    EdgeMapping_source_vertex_mappings_inner:
-      description: Mapping column index to the primary key of source vertex
+        metadata:
+          additionalProperties: true
+          title: metadata
+          type: object
+      title: DataloadingJobConfig_loading_config_format
+    DataloadingJobConfig_loading_config:
       example:
-        column:
-          name: name
-          index: 0
+        format:
+          metadata:
+            key: ""
+          type: type
+        import_option: overwrite
       properties:
-        column:
-          $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
-      title: EdgeMapping_source_vertex_mappings_inner
-      type: object
-    EdgeMapping_destination_vertex_mappings_inner:
-      description: Mapping column index to the primary key of destination vertex
+        import_option:
+          enum:
+          - init
+          - overwrite
+          example: overwrite
+          title: import_option
+          type: string
+        format:
+          $ref: '#/components/schemas/DataloadingJobConfig_loading_config_format'
+      title: DataloadingJobConfig_loading_config
+    DataloadingJobConfig_vertices_inner:
       example:
-        column:
-          name: name
-          index: 0
+        type_name: type_name
       properties:
-        column:
-          $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
-      title: EdgeMapping_destination_vertex_mappings_inner
+        type_name:
+          title: type_name
+          type: string
+      title: DataloadingJobConfig_vertices_inner
       type: object
-    GrootGraph_gremlin_interface:
-      example:
-        grpc_endpoint: grpc_endpoint
-        password: password
-        gremlin_endpoint: gremlin_endpoint
-        username: username
-      properties:
-        gremlin_endpoint:
-          title: gremlin_endpoint
-          type: string
-        grpc_endpoint:
-          title: grpc_endpoint
-          type: string
-        username:
-          title: username
-          type: string
-        password:
-          title: password
-          type: string
-      title: GrootGraph_gremlin_interface
-      type: object
-    GrootEdgeType_relations_inner:
-      example:
-        src_label: src_label
-        dst_label: dst_label
-      properties:
-        src_label:
-          title: src_label
-          type: string
-        dst_label:
-          title: dst_label
-          type: string
-      title: GrootEdgeType_relations_inner
-      type: object
-    GrootDataloadingJobConfig_edges_inner:
+    DataloadingJobConfig_edges_inner:
       example:
         type_name: type_name
         source_vertex: source_vertex
@@ -3401,5 +3764,5 @@ components:
         destination_vertex:
           title: destination_vertex
           type: string
-      title: GrootDataloadingJobConfig_edges_inner
+      title: DataloadingJobConfig_edges_inner
       type: object

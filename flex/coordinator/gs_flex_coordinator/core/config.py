@@ -32,7 +32,7 @@ def str_to_bool(s):
 try:
     WORKSPACE = os.environ["GRAPHSCOPE_RUNTIME"]
 except KeyError:
-    WORKSPACE = os.path.expanduser("~/.graphscope/gs")
+    WORKSPACE = os.path.expanduser("~/.graphscope/runtime/coordinator")
 # make sure we have permission to create instance workspace
 try:
     os.makedirs(os.path.join(WORKSPACE, ".ignore"), exist_ok=True)
@@ -79,7 +79,7 @@ else:
 
 # kubernetes
 NAMESPACE = os.environ.get("NAMESPACE", "kubetask")
-INSTANCE_NAME = os.environ.get("INSTANCE_NAME", "default-graph")
+INSTANCE_NAME = os.environ.get("INSTANCE_NAME", "demo")
 
 
 # groot

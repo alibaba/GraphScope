@@ -2,33 +2,57 @@ import unittest
 
 from flask import json
 
-from gs_flex_coordinator.models.alert_message import AlertMessage  # noqa: E501
-from gs_flex_coordinator.models.alert_receiver import AlertReceiver  # noqa: E501
-from gs_flex_coordinator.models.alert_rule import AlertRule  # noqa: E501
-from gs_flex_coordinator.models.update_alert_messages_request import UpdateAlertMessagesRequest  # noqa: E501
+from gs_flex_coordinator.models.create_alert_receiver_request import CreateAlertReceiverRequest  # noqa: E501
+from gs_flex_coordinator.models.create_alert_rule_request import CreateAlertRuleRequest  # noqa: E501
+from gs_flex_coordinator.models.error import Error  # noqa: E501
+from gs_flex_coordinator.models.get_alert_message_response import GetAlertMessageResponse  # noqa: E501
+from gs_flex_coordinator.models.get_alert_receiver_response import GetAlertReceiverResponse  # noqa: E501
+from gs_flex_coordinator.models.get_alert_rule_response import GetAlertRuleResponse  # noqa: E501
+from gs_flex_coordinator.models.update_alert_message_status_request import UpdateAlertMessageStatusRequest  # noqa: E501
 from gs_flex_coordinator.test import BaseTestCase
 
 
 class TestAlertController(BaseTestCase):
     """AlertController integration test stubs"""
 
-    def test_delete_alert_rule(self):
-        """Test case for delete_alert_rule
+    def test_create_alert_receiver(self):
+        """Test case for create_alert_receiver
 
         
         """
+        create_alert_receiver_request = {"webhook_url":"webhook_url","is_at_all":True,"enable":True,"at_user_ids":["at_user_ids","at_user_ids"],"type":"webhook"}
+        headers = { 
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+        response = self.client.open(
+            '/api/v1/alert/receiver',
+            method='POST',
+            headers=headers,
+            data=json.dumps(create_alert_receiver_request),
+            content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_delete_alert_message_in_batch(self):
+        """Test case for delete_alert_message_in_batch
+
+        
+        """
+        query_string = [('message_ids', 'message_ids_example')]
         headers = { 
             'Accept': 'application/json',
         }
         response = self.client.open(
-            '/api/v1/alert/rule/{rule_name}'.format(rule_name='rule_name_example'),
+            '/api/v1/alert/message-collection',
             method='DELETE',
-            headers=headers)
+            headers=headers,
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_delete_receiverby_id(self):
-        """Test case for delete_receiverby_id
+    def test_delete_alert_receiver_by_id(self):
+        """Test case for delete_alert_receiver_by_id
 
         
         """
@@ -42,16 +66,32 @@ class TestAlertController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_delete_alert_rule_by_id(self):
+        """Test case for delete_alert_rule_by_id
+
+        
+        """
+        headers = { 
+            'Accept': 'application/json',
+        }
+        response = self.client.open(
+            '/api/v1/alert/rule/{rule_id}'.format(rule_id='rule_id_example'),
+            method='DELETE',
+            headers=headers)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_list_alert_messages(self):
         """Test case for list_alert_messages
 
         
         """
-        query_string = [('type', 'type_example'),
+        query_string = [('alert_type', 'alert_type_example'),
                         ('status', 'status_example'),
                         ('severity', 'severity_example'),
                         ('start_time', 'start_time_example'),
-                        ('end_time', 'end_time_example')]
+                        ('end_time', 'end_time_example'),
+                        ('limit', 56)]
         headers = { 
             'Accept': 'application/json',
         }
@@ -60,6 +100,21 @@ class TestAlertController(BaseTestCase):
             method='GET',
             headers=headers,
             query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_list_alert_receivers(self):
+        """Test case for list_alert_receivers
+
+        
+        """
+        headers = { 
+            'Accept': 'application/json',
+        }
+        response = self.client.open(
+            '/api/v1/alert/receiver',
+            method='GET',
+            headers=headers)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
@@ -78,84 +133,31 @@ class TestAlertController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_list_receivers(self):
-        """Test case for list_receivers
+    def test_update_alert_message_in_batch(self):
+        """Test case for update_alert_message_in_batch
 
         
         """
-        headers = { 
-            'Accept': 'application/json',
-        }
-        response = self.client.open(
-            '/api/v1/alert/receiver',
-            method='GET',
-            headers=headers)
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_register_receiver(self):
-        """Test case for register_receiver
-
-        
-        """
-        alert_receiver = {"webhook_url":"webhook_url","is_at_all":True,"receiver_id":"receiver_id","enable":True,"at_user_ids":["at_user_ids","at_user_ids"],"type":"webhook","message":"message"}
+        update_alert_message_status_request = {"message_ids":["message_ids","message_ids"],"status":"unsolved"}
         headers = { 
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         }
         response = self.client.open(
-            '/api/v1/alert/receiver',
-            method='POST',
-            headers=headers,
-            data=json.dumps(alert_receiver),
-            content_type='application/json')
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_update_alert_messages(self):
-        """Test case for update_alert_messages
-
-        
-        """
-        update_alert_messages_request = gs_flex_coordinator.UpdateAlertMessagesRequest()
-        headers = { 
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        }
-        response = self.client.open(
-            '/api/v1/alert/message',
+            '/api/v1/alert/message-collection/status',
             method='PUT',
             headers=headers,
-            data=json.dumps(update_alert_messages_request),
+            data=json.dumps(update_alert_message_status_request),
             content_type='application/json')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_update_alert_rule_by_name(self):
-        """Test case for update_alert_rule_by_name
+    def test_update_alert_receiver_by_id(self):
+        """Test case for update_alert_receiver_by_id
 
         
         """
-        alert_rule = {"severity":"warning","conditions_description":"conditions_description","enable":True,"name":"name","metric_type":"node","frequency":0}
-        headers = { 
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        }
-        response = self.client.open(
-            '/api/v1/alert/rule/{rule_name}'.format(rule_name='rule_name_example'),
-            method='PUT',
-            headers=headers,
-            data=json.dumps(alert_rule),
-            content_type='application/json')
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_update_receiverby_id(self):
-        """Test case for update_receiverby_id
-
-        
-        """
-        alert_receiver = {"webhook_url":"webhook_url","is_at_all":True,"receiver_id":"receiver_id","enable":True,"at_user_ids":["at_user_ids","at_user_ids"],"type":"webhook","message":"message"}
+        create_alert_receiver_request = {"webhook_url":"webhook_url","is_at_all":True,"enable":True,"at_user_ids":["at_user_ids","at_user_ids"],"type":"webhook"}
         headers = { 
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -164,7 +166,26 @@ class TestAlertController(BaseTestCase):
             '/api/v1/alert/receiver/{receiver_id}'.format(receiver_id='receiver_id_example'),
             method='PUT',
             headers=headers,
-            data=json.dumps(alert_receiver),
+            data=json.dumps(create_alert_receiver_request),
+            content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_update_alert_rule_by_id(self):
+        """Test case for update_alert_rule_by_id
+
+        
+        """
+        create_alert_rule_request = {"severity":"warning","conditions_description":"conditions_description","enable":True,"name":"name","metric_type":"node","frequency":0}
+        headers = { 
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+        response = self.client.open(
+            '/api/v1/alert/rule/{rule_id}'.format(rule_id='rule_id_example'),
+            method='PUT',
+            headers=headers,
+            data=json.dumps(create_alert_rule_request),
             content_type='application/json')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))

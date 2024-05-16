@@ -20,8 +20,7 @@ import click
 import yaml
 
 from graphscope.gsctl.impl import create_graph
-from graphscope.gsctl.impl import delete_graph_by_name
-from graphscope.gsctl.impl import get_dataloading_config
+from graphscope.gsctl.impl import delete_graph_by_id
 from graphscope.gsctl.impl import get_service_status
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_jobs
@@ -30,6 +29,8 @@ from graphscope.gsctl.impl import restart_service
 from graphscope.gsctl.impl import start_service
 from graphscope.gsctl.impl import stop_service
 from graphscope.gsctl.impl import switch_context
+from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import get_graph_id_by_name
 from graphscope.gsctl.utils import TreeDisplay
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
@@ -70,17 +71,7 @@ def service():
 def use(context, graph_identifier):
     """Switch to GRAPH context, see identifier with `ls` command"""
     try:
-        graphs = list_graphs()
-        graph_exist = False
-        for g in graphs:
-            if graph_identifier == g.name:
-                graph_exist = True
-                break
-        if not graph_exist:
-            raise RuntimeError(
-                f"Graph '{graph_identifier}' not exists, see graph identifier with `ls` command."
-            )
-        switch_context(graph_identifier)
+        switch_context(get_graph_id_by_name(graph_identifier))
     except Exception as e:
         err(f"Failed to switch context: {str(e)}")
     else:
@@ -98,11 +89,11 @@ def ls(l):  # noqa: F811, E741
             # schema
             tree.create_graph_node(g, recursive=l)
             if l:
-                # get data source from job configuration
-                job_config = get_dataloading_config(g.name)
-                tree.create_datasource_node_for_interactive(g, job_config)
+                # data source mappin
+                datasource_mapping = get_datasource_by_id(g.id)
+                tree.create_datasource_mapping_node(g, datasource_mapping)
                 # stored procedure
-                procedures = list_procedures(g.name)
+                procedures = list_procedures(g.id)
                 tree.create_procedure_node(g, procedures)
                 # job
                 jobs = list_jobs()
@@ -141,7 +132,7 @@ def graph(filename):  # noqa: F811
 def graph(graph_identifier):  # noqa: F811
     """Delete a graph, see graph identifier with `ls` command"""
     try:
-        delete_graph_by_name(graph_identifier)
+        delete_graph_by_id(get_graph_id_by_name(graph_identifier))
     except Exception as e:
         err(f"Failed to delete graph {graph_identifier}: {str(e)}")
     else:
@@ -169,7 +160,7 @@ def stop():  # noqa: F811
 def start(graph_identifier):  # noqa: F811
     """Start database service on a certain graph"""
     try:
-        start_service(graph_identifier)
+        start_service(get_graph_id_by_name(graph_identifier))
     except Exception as e:
         err(f"Failed to start service on graph {graph_identifier}: {str(e)}")
     else:
@@ -192,16 +183,20 @@ def ls():  # noqa: F811
     """Display current service status"""
 
     def _construct_and_display_data(status):
-        head = ["STATUS", "SERVING_GRAPH", "CYPHER_ENDPOINT", "HQPS_ENDPOINT"]
+        head = ["STATUS", "SERVING_GRAPH(IDENTIFIER)", "CYPHER_ENDPOINT", "HQPS_ENDPOINT", "GREMLIN_ENDPOINT"]
         data = [head]
-        data.append(
-            [
-                status.status,
-                status.graph_name,
-                status.sdk_endpoints.cypher,
-                status.sdk_endpoints.hqps,
-            ]
-        )
+        if status.status == "Stopped":
+            data.append([status.status, "-", "-", "-", "-"])
+        else:
+            data.append(
+                [
+                    status.status,
+                    status.graph.id,
+                    status.sdk_endpoints.cypher,
+                    status.sdk_endpoints.hqps,
+                    status.sdk_endpoints.gremlin,
+                ]
+            )
         terminal_display(data)
 
     try:

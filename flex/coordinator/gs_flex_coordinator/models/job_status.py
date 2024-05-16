@@ -12,11 +12,11 @@ class JobStatus(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, job_id=None, type=None, status=None, start_time=None, end_time=None, log=None, detail=None):  # noqa: E501
+    def __init__(self, id=None, type=None, status=None, start_time=None, end_time=None, log=None, detail=None):  # noqa: E501
         """JobStatus - a model defined in OpenAPI
 
-        :param job_id: The job_id of this JobStatus.  # noqa: E501
-        :type job_id: str
+        :param id: The id of this JobStatus.  # noqa: E501
+        :type id: str
         :param type: The type of this JobStatus.  # noqa: E501
         :type type: str
         :param status: The status of this JobStatus.  # noqa: E501
@@ -31,7 +31,7 @@ class JobStatus(Model):
         :type detail: Dict[str, object]
         """
         self.openapi_types = {
-            'job_id': str,
+            'id': str,
             'type': str,
             'status': str,
             'start_time': str,
@@ -41,7 +41,7 @@ class JobStatus(Model):
         }
 
         self.attribute_map = {
-            'job_id': 'job_id',
+            'id': 'id',
             'type': 'type',
             'status': 'status',
             'start_time': 'start_time',
@@ -50,7 +50,7 @@ class JobStatus(Model):
             'detail': 'detail'
         }
 
-        self._job_id = job_id
+        self._id = id
         self._type = type
         self._status = status
         self._start_time = start_time
@@ -70,25 +70,27 @@ class JobStatus(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def job_id(self) -> str:
-        """Gets the job_id of this JobStatus.
+    def id(self) -> str:
+        """Gets the id of this JobStatus.
 
 
-        :return: The job_id of this JobStatus.
+        :return: The id of this JobStatus.
         :rtype: str
         """
-        return self._job_id
+        return self._id
 
-    @job_id.setter
-    def job_id(self, job_id: str):
-        """Sets the job_id of this JobStatus.
+    @id.setter
+    def id(self, id: str):
+        """Sets the id of this JobStatus.
 
 
-        :param job_id: The job_id of this JobStatus.
-        :type job_id: str
+        :param id: The id of this JobStatus.
+        :type id: str
         """
+        if id is None:
+            raise ValueError("Invalid value for `id`, must not be `None`")  # noqa: E501
 
-        self._job_id = job_id
+        self._id = id
 
     @property
     def type(self) -> str:
@@ -108,6 +110,8 @@ class JobStatus(Model):
         :param type: The type of this JobStatus.
         :type type: str
         """
+        if type is None:
+            raise ValueError("Invalid value for `type`, must not be `None`")  # noqa: E501
 
         self._type = type
 
@@ -184,7 +188,7 @@ class JobStatus(Model):
     def log(self) -> str:
         """Gets the log of this JobStatus.
 
-        URL or log string  # noqa: E501
+        logview URL or log string  # noqa: E501
 
         :return: The log of this JobStatus.
         :rtype: str
@@ -195,7 +199,7 @@ class JobStatus(Model):
     def log(self, log: str):
         """Sets the log of this JobStatus.
 
-        URL or log string  # noqa: E501
+        logview URL or log string  # noqa: E501
 
         :param log: The log of this JobStatus.
         :type log: str

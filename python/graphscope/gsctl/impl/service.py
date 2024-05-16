@@ -31,14 +31,14 @@ def get_service_status() -> ServiceStatus:
         return api_instance.get_service_status()
 
 
-def start_service(graph_name: str) -> str:
+def start_service(graph_identifier: str) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.ServiceApi(api_client)
         return api_instance.start_service(
-            StartServiceRequest.from_dict({"graph_name": graph_name})
+            StartServiceRequest.from_dict({"graph_id": graph_identifier})
         )
 
 

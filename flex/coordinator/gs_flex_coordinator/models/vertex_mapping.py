@@ -69,6 +69,8 @@ class VertexMapping(Model):
         :param type_name: The type_name of this VertexMapping.
         :type type_name: str
         """
+        if type_name is None:
+            raise ValueError("Invalid value for `type_name`, must not be `None`")  # noqa: E501
 
         self._type_name = type_name
 
@@ -90,6 +92,8 @@ class VertexMapping(Model):
         :param inputs: The inputs of this VertexMapping.
         :type inputs: List[str]
         """
+        if inputs is None:
+            raise ValueError("Invalid value for `inputs`, must not be `None`")  # noqa: E501
 
         self._inputs = inputs
 
@@ -111,5 +115,7 @@ class VertexMapping(Model):
         :param column_mappings: The column_mappings of this VertexMapping.
         :type column_mappings: List[ColumnMapping]
         """
+        if column_mappings is None:
+            raise ValueError("Invalid value for `column_mappings`, must not be `None`")  # noqa: E501
 
         self._column_mappings = column_mappings

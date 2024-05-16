@@ -1,13 +1,15 @@
-from typing import Dict, Tuple, Union
-
 import connexion
+from typing import Dict
+from typing import Tuple
+from typing import Union
 
+from gs_flex_coordinator.models.error import Error  # noqa: E501
+from gs_flex_coordinator.models.service_status import ServiceStatus  # noqa: E501
+from gs_flex_coordinator.models.start_service_request import StartServiceRequest  # noqa: E501
 from gs_flex_coordinator import util
-from gs_flex_coordinator.core import client_wrapper, handle_api_exception
-from gs_flex_coordinator.models.service_status import \
-    ServiceStatus  # noqa: E501
-from gs_flex_coordinator.models.start_service_request import \
-    StartServiceRequest  # noqa: E501
+
+from gs_flex_coordinator.core import client_wrapper
+from gs_flex_coordinator.core import handle_api_exception
 
 
 @handle_api_exception()
@@ -40,15 +42,13 @@ def start_service(start_service_request=None):  # noqa: E501
 
     Start service # noqa: E501
 
-    :param start_service_request:
+    :param start_service_request: 
     :type start_service_request: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        start_service_request = StartServiceRequest.from_dict(
-            connexion.request.get_json()
-        )  # noqa: E501
+        start_service_request = StartServiceRequest.from_dict(connexion.request.get_json())  # noqa: E501
     return client_wrapper.start_service(start_service_request)
 
 
