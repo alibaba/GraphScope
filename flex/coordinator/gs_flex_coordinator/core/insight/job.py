@@ -17,10 +17,12 @@
 #
 
 import pandas as pd
-from graphscope.framework.record import EdgeRecordKey, VertexRecordKey
+from graphscope.framework.record import EdgeRecordKey
+from graphscope.framework.record import VertexRecordKey
 
 from gs_flex_coordinator.core.scheduler import Scheduler
-from gs_flex_coordinator.core.utils import encode_datetime, get_current_time
+from gs_flex_coordinator.core.utils import encode_datetime
+from gs_flex_coordinator.core.utils import get_current_time
 from gs_flex_coordinator.models import JobStatus
 
 
@@ -56,7 +58,10 @@ class DataloadingJobScheduler(Scheduler):
         return detail
 
     def get_edge_full_label(
-        self, type_name: str, source_vertex_type: str, destination_vertex_type: str
+        self,
+        type_name: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
     ) -> str:
         return f"{source_vertex_type}_{type_name}_{destination_vertex_type}"
 
@@ -66,7 +71,9 @@ class DataloadingJobScheduler(Scheduler):
         for vlabel in self._job_config["vertices"]:
             primary_key = self._graph.get_vertex_primary_key(vlabel)
             datasource = self._data_source["vertices_datasource"][vlabel]
-            data = pd.read_csv(datasource["location"], sep=",|\|", engine="python")
+            data = pd.read_csv(
+                datasource["location"], sep=",|\|", engine="python"
+            )  # noqa: W605
             for record in data.itertuples(index=False):
                 primary_key_dict = {}
                 property_mapping = {}
@@ -76,7 +83,10 @@ class DataloadingJobScheduler(Scheduler):
                     else:
                         property_mapping[v] = record[int(k)]
                 vertices.append(
-                    [VertexRecordKey(vlabel, primary_key_dict), property_mapping]
+                    [
+                        VertexRecordKey(vlabel, primary_key_dict),
+                        property_mapping,
+                    ]
                 )
         edges = []
         for e in self._job_config["edges"]:
@@ -101,7 +111,8 @@ class DataloadingJobScheduler(Scheduler):
                             e["type_name"],
                             VertexRecordKey(e["source_vertex"], source_pk_column_map),
                             VertexRecordKey(
-                                e["destination_vertex"], destination_pk_column_map
+                                e["destination_vertex"],
+                                destination_pk_column_map,
                             ),
                         ),
                         property_mapping,

@@ -20,17 +20,19 @@ import datetime
 import logging
 import os
 import pickle
-from typing import List, Union
+from typing import List
+from typing import Union
 
 from gs_flex_coordinator.core.alert.alert_receiver import DingTalkReceiver
-from gs_flex_coordinator.core.alert.builtin_rules import \
-    init_builtin_alert_rules
-from gs_flex_coordinator.core.alert.message_collector import \
-    AlertMessageCollector
+from gs_flex_coordinator.core.alert.builtin_rules import init_builtin_alert_rules
+from gs_flex_coordinator.core.alert.message_collector import AlertMessageCollector
 from gs_flex_coordinator.core.config import ALERT_WORKSPACE
 from gs_flex_coordinator.core.scheduler import schedule
-from gs_flex_coordinator.core.utils import decode_datetimestr, encode_datetime
-from gs_flex_coordinator.models import AlertMessage, AlertReceiver, AlertRule
+from gs_flex_coordinator.core.utils import decode_datetimestr
+from gs_flex_coordinator.core.utils import encode_datetime
+from gs_flex_coordinator.models import AlertMessage
+from gs_flex_coordinator.models import AlertReceiver
+from gs_flex_coordinator.models import AlertRule
 
 
 class AlertManager(object):
@@ -146,7 +148,10 @@ class AlertManager(object):
         return rlt
 
     def update_alert_messages(
-        self, messages: List[AlertMessage], batch_status: str, batch_delete: bool
+        self,
+        messages: List[AlertMessage],
+        batch_status: str,
+        batch_delete: bool,
     ):
         for message in messages:
             date = decode_datetimestr(message.trigger_time)

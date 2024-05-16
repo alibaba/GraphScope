@@ -27,5 +27,5 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-from gs_flex_coordinator.core.client_wrapper import client_wrapper
-from gs_flex_coordinator.core.utils import handle_api_exception
+from gs_flex_coordinator.core.client_wrapper import client_wrapper  # noqa: F401, E402
+from gs_flex_coordinator.core.utils import handle_api_exception  # noqa: F401, E402

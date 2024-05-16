@@ -17,10 +17,10 @@
 #
 
 import datetime
-import json
 import random
 import time
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 from string import ascii_uppercase
 
 import schedule
@@ -38,9 +38,10 @@ class Schedule(object):
 
     def __init__(self):
         self._schedule = schedule.Scheduler()
-        self._run_pending_thread = StoppableThread(target=self.run_pending, args=())
-        self._run_pending_thread.daemon = True
-        self._run_pending_thread.start()
+        # thread
+        self._run_pending_trd = StoppableThread(target=self.run_pending, args=())
+        self._run_pending_trd.daemon = True
+        self._run_pending_trd.start()
 
     @property
     def schedule(self):
@@ -80,13 +81,14 @@ class Scheduler(metaclass=ABCMeta):
         # repeat every day or week, or run job once(no repeat)
         # optional value "day", "week", "once"
         self._repeat = repeat
-        # job running thread, note that:
-        # the last job should be end of execution at the beginning of the next job
+        # job running thread, note that the last job should be
+        # end of execution at the beginning of the next job
         self._running_thread = None
         # tags
         self._tags = []
 
-        # when the job actually scheduled, the following variables will be generated and overridden.
+        # the following variables will be generated and overridden
+        # when the job actually scheduled
         self._jobid = None
         self._last_run = None
 
@@ -129,9 +131,7 @@ class Scheduler(metaclass=ABCMeta):
 
     @property
     def timestr(self):
-        """return str of the time object.
-        time([hour[, minute[, second[, microsecond[, tzinfo]]]]]) --> a time object
-        """
+        """return str of the time object."""
         return str(self._at_time.time())
 
     @property
@@ -185,9 +185,14 @@ class Scheduler(metaclass=ABCMeta):
         self._running_thread.start()
 
     def submit(self):
-        if not self._run_now and self._repeat not in ["week", "day", "once", None]:
+        if not self._run_now and self._repeat not in [
+            "week",
+            "day",
+            "once",
+            None,
+        ]:
             raise RuntimeError(
-                "Submit schedule job failed: at_time is '{0}', repeat is '{1}'".format(
+                "Submit schedule job failed: at_time: '{0}', repeat: '{1}'".format(
                     self._at_time, self._repeat
                 )
             )

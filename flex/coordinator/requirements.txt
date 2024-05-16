@@ -9,4 +9,4 @@ pydantic >= 2
 typing-extensions >= 4.7.1
 psutil
 schedule
-graphscope-client >= 0.26.0
+interactive-sdk == 0.0.3

@@ -22,38 +22,31 @@ import warnings
 warnings.filterwarnings("ignore", category=Warning)
 
 import time
-import pytest
 
+import pytest
 from click.testing import CliRunner
 
+from graphscope.gsctl.impl import bind_datasource_in_batch
 from graphscope.gsctl.impl import connect_coordinator
-from graphscope.gsctl.impl import disconnect_coordinator
-
 from graphscope.gsctl.impl import create_graph
+from graphscope.gsctl.impl import create_procedure
 from graphscope.gsctl.impl import delete_graph_by_id
-from graphscope.gsctl.impl import list_graphs
-
+from graphscope.gsctl.impl import delete_procedure_by_id
+from graphscope.gsctl.impl import disconnect_coordinator
+from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import get_job_by_id
+from graphscope.gsctl.impl import get_procedure_by_id
 from graphscope.gsctl.impl import get_service_status
+from graphscope.gsctl.impl import list_graphs
+from graphscope.gsctl.impl import list_procedures
 from graphscope.gsctl.impl import restart_service
 from graphscope.gsctl.impl import start_service
 from graphscope.gsctl.impl import stop_service
-
-from graphscope.gsctl.impl import create_procedure
-from graphscope.gsctl.impl import list_procedures
-from graphscope.gsctl.impl import delete_procedure_by_id
-from graphscope.gsctl.impl import update_procedure_by_id
-from graphscope.gsctl.impl import get_procedure_by_id
-
-from graphscope.gsctl.impl import bind_datasource_in_batch
-from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import submit_dataloading_job
 from graphscope.gsctl.impl import unbind_edge_datasource
 from graphscope.gsctl.impl import unbind_vertex_datasource
-
-from graphscope.gsctl.impl import submit_dataloading_job
-from graphscope.gsctl.impl import get_job_by_id
-
+from graphscope.gsctl.impl import update_procedure_by_id
 from graphscope.gsctl.impl import upload_file
-
 
 COORDINATOR_ENDPOINT = "http://127.0.0.1:8080"
 
@@ -233,9 +226,7 @@ class TestE2EInteractive(object):
                 },
             },
             "vertices": [
-                {
-                    "type_name": "person"
-                },
+                {"type_name": "person"},
             ],
             "edges": [
                 {

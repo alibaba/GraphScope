@@ -21,27 +21,24 @@ import logging
 import os
 import pickle
 import time
-import requests
-from typing import List, Union
+from typing import List
+from typing import Union
 
 import interactive_sdk.openapi
+import requests
 from interactive_sdk.openapi import CreateGraphRequest
 from interactive_sdk.openapi import CreateProcedureRequest
-from interactive_sdk.openapi import UpdateProcedureRequest
-from interactive_sdk.openapi import StartServiceRequest
 from interactive_sdk.openapi import SchemaMapping
+from interactive_sdk.openapi import StartServiceRequest
+from interactive_sdk.openapi import UpdateProcedureRequest
 
+from gs_flex_coordinator.core.config import CLUSTER_TYPE
+from gs_flex_coordinator.core.config import HQPS_ADMIN_SERVICE_PORT
+from gs_flex_coordinator.core.config import WORKSPACE
 from gs_flex_coordinator.core.datasource import DataSourceManager
-from gs_flex_coordinator.core.config import (
-    CLUSTER_TYPE,
-    HQPS_ADMIN_SERVICE_PORT,
-    WORKSPACE,
-)
-from gs_flex_coordinator.core.utils import (
-    encode_datetime,
-    get_internal_ip,
-    get_public_ip,
-)
+from gs_flex_coordinator.core.utils import encode_datetime
+from gs_flex_coordinator.core.utils import get_internal_ip
+from gs_flex_coordinator.core.utils import get_public_ip
 
 
 class HQPSClient(object):
@@ -62,13 +59,14 @@ class HQPSClient(object):
             with open(self._job_config_pickle_path, "wb") as f:
                 pickle.dump(self._job_config, f)
         except Exception as e:
-             logging.warn("Failed to dump job config file: %s", str(e))
+            logging.warn("Failed to dump job config file: %s", str(e))
 
     def try_to_recover_from_disk(self):
         try:
             if os.path.exists(self._job_config_pickle_path):
                 logging.info(
-                    "Recover job config from file %s", self._job_config_pickle_path
+                    "Recover job config from file %s",
+                    self._job_config_pickle_path,
                 )
             with open(self._job_config_pickle_path, "rb") as f:
                 self._job_config = pickle.load(f)
@@ -90,7 +88,9 @@ class HQPSClient(object):
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(
+                api_client
+            )
             graphs = [g.to_dict() for g in api_instance.list_graphs()]
             for g in graphs:
                 # `schema_update_time` is same to `creation_time` in Interactive
@@ -105,14 +105,18 @@ class HQPSClient(object):
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(
+                api_client
+            )
             return api_instance.get_schema(graph_id).to_dict()
 
     def create_graph(self, graph: dict) -> dict:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(
+                api_client
+            )
             response = api_instance.create_graph(CreateGraphRequest.from_dict(graph))
             return response.to_dict()
 
@@ -120,7 +124,9 @@ class HQPSClient(object):
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(
+                api_client
+            )
             rlt = api_instance.delete_graph(graph_id)
             return rlt
 
@@ -128,8 +134,9 @@ class HQPSClient(object):
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(api_client)
-            a = api_instance.get_graph(graph_id)
+            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(
+                api_client
+            )
             g = api_instance.get_graph(graph_id).to_dict()
             # `schema_update_time` is same to `creation_time` in Interactive
             g["schema_update_time"] = g["creation_time"]
@@ -148,14 +155,22 @@ class HQPSClient(object):
     def delete_vertex_type_by_name(self, graph_id: str, type_name: str):
         raise RuntimeError("Create vertex type is not supported yet!")
 
-    def delete_edge_type_by_name(self, graph_id: str, edge_type: str, source_vertex_type: str, destination_vertex_type: str):
+    def delete_edge_type_by_name(
+        self,
+        graph_id: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ):
         raise RuntimeError("Create vertex type is not supported yet!")
 
     def create_procedure(self, graph_id: str, procedure: dict) -> dict:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(
+                api_client
+            )
             response = api_instance.create_procedure(
                 graph_id, CreateProcedureRequest.from_dict(procedure)
             )
@@ -166,7 +181,9 @@ class HQPSClient(object):
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
             procedures = []
-            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(
+                api_client
+            )
             procedures = [p.to_dict() for p in api_instance.list_procedures(graph_id)]
             return procedures
 
@@ -176,30 +193,40 @@ class HQPSClient(object):
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(
+                api_client
+            )
             return api_instance.update_procedure(
-                graph_id, procedure_id, UpdateProcedureRequest.from_dict(procedure)
+                graph_id,
+                procedure_id,
+                UpdateProcedureRequest.from_dict(procedure),
             )
 
     def delete_procedure_by_id(self, graph_id: str, procedure_id: str) -> str:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(
+                api_client
+            )
             return api_instance.delete_procedure(graph_id, procedure_id)
 
     def get_procedure_by_id(self, graph_id: str, procedure_id: str) -> dict:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(
+                api_client
+            )
             return api_instance.get_procedure(graph_id, procedure_id).to_dict()
 
     def get_service_status(self) -> dict:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(
+                api_client
+            )
             response = api_instance.get_service_status()
             # transfer
             if CLUSTER_TYPE == "HOSTS":
@@ -221,33 +248,40 @@ class HQPSClient(object):
                     status["graph"] = graph
                 return status
 
-
     def stop_service(self) -> str:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(
+                api_client
+            )
             return api_instance.stop_service()
 
     def restart_service(self) -> str:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(
+                api_client
+            )
             return api_instance.restart_service()
 
     def start_service(self, graph_id: str) -> str:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(
+                api_client
+            )
             return api_instance.start_service(StartServiceRequest(graph_id=graph_id))
 
     def list_jobs(self) -> List[dict]:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(
+                api_client
+            )
             rlt = []
             for s in api_instance.list_jobs():
                 job_status = s.to_dict()
@@ -265,7 +299,9 @@ class HQPSClient(object):
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(
+                api_client
+            )
             job_status = api_instance.get_job_by_id(job_id).to_dict()
             job_status["start_time"] = encode_datetime(
                 datetime.datetime.fromtimestamp(job_status["start_time"] / 1000)
@@ -280,7 +316,9 @@ class HQPSClient(object):
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(
+                api_client
+            )
             return api_instance.delete_job_by_id(job_id)
 
     def submit_dataloading_job(
@@ -297,7 +335,12 @@ class HQPSClient(object):
             if vds:
                 schema_mapping["vertex_mappings"].append(vds)
         for e in config["edges"]:
-            eds = ds_manager.get_edge_datasource(graph_id, e["type_name"], e["source_vertex"], e["destination_vertex"])
+            eds = ds_manager.get_edge_datasource(
+                graph_id,
+                e["type_name"],
+                e["source_vertex"],
+                e["destination_vertex"],
+            )
             if eds:
                 schema_mapping["edge_mappings"].append(eds)
         # set job configuration before submission
@@ -307,7 +350,9 @@ class HQPSClient(object):
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(api_client)
+            api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(
+                api_client
+            )
             response = api_instance.create_dataloading_job(
                 graph_id, SchemaMapping.from_dict(schema_mapping)
             )

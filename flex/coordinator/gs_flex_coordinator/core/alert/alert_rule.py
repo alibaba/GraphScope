@@ -18,10 +18,12 @@
 
 import datetime
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 
 from gs_flex_coordinator.core.alert.alert_message import AlertMessage
-from gs_flex_coordinator.core.scheduler import cancel_job, schedule
+from gs_flex_coordinator.core.scheduler import cancel_job
+from gs_flex_coordinator.core.scheduler import schedule
 
 
 class AlertRule(metaclass=ABCMeta):

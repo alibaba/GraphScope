@@ -34,5 +34,5 @@ class StoppableThread(threading.Thread):
         self._stop_event.set()
 
     def stopped(self):
-        """The thread itself should check regularly for the stopped() condition."""
+        """Thread itself should check regularly for the stopped() condition."""
         return self._stop_event.is_set()

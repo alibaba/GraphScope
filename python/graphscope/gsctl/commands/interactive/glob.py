@@ -21,6 +21,8 @@ import yaml
 
 from graphscope.gsctl.impl import create_graph
 from graphscope.gsctl.impl import delete_graph_by_id
+from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import get_graph_id_by_name
 from graphscope.gsctl.impl import get_service_status
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_jobs
@@ -29,8 +31,6 @@ from graphscope.gsctl.impl import restart_service
 from graphscope.gsctl.impl import start_service
 from graphscope.gsctl.impl import stop_service
 from graphscope.gsctl.impl import switch_context
-from graphscope.gsctl.impl import get_datasource_by_id
-from graphscope.gsctl.impl import get_graph_id_by_name
 from graphscope.gsctl.utils import TreeDisplay
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
@@ -183,7 +183,13 @@ def ls():  # noqa: F811
     """Display current service status"""
 
     def _construct_and_display_data(status):
-        head = ["STATUS", "SERVING_GRAPH(IDENTIFIER)", "CYPHER_ENDPOINT", "HQPS_ENDPOINT", "GREMLIN_ENDPOINT"]
+        head = [
+            "STATUS",
+            "SERVING_GRAPH(IDENTIFIER)",
+            "CYPHER_ENDPOINT",
+            "HQPS_ENDPOINT",
+            "GREMLIN_ENDPOINT",
+        ]
         data = [head]
         if status.status == "Stopped":
             data.append([status.status, "-", "-", "-", "-"])

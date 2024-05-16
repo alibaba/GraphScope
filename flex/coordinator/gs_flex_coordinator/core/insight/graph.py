@@ -20,24 +20,31 @@ import itertools
 import logging
 import os
 import time
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 
 import graphscope
 from dateutil import tz
-from graphscope.deploy.kubernetes.utils import (get_service_endpoints,
-                                                resolve_api_client)
+from graphscope.deploy.kubernetes.utils import get_service_endpoints
+from graphscope.deploy.kubernetes.utils import resolve_api_client
 from gremlin_python.driver.client import Client
 from kubernetes import client as kube_client
 from kubernetes import config as kube_config
 
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE, CREATION_TIME,
-                                             ENABLE_DNS, GROOT_GREMLIN_PORT,
-                                             GROOT_GRPC_PORT, GROOT_PASSWORD,
-                                             GROOT_USERNAME, INSTANCE_NAME,
-                                             NAMESPACE, WORKSPACE)
+from gs_flex_coordinator.core.config import CLUSTER_TYPE
+from gs_flex_coordinator.core.config import CREATION_TIME
+from gs_flex_coordinator.core.config import ENABLE_DNS
+from gs_flex_coordinator.core.config import GROOT_GREMLIN_PORT
+from gs_flex_coordinator.core.config import GROOT_GRPC_PORT
+from gs_flex_coordinator.core.config import GROOT_PASSWORD
+from gs_flex_coordinator.core.config import GROOT_USERNAME
+from gs_flex_coordinator.core.config import INSTANCE_NAME
+from gs_flex_coordinator.core.config import NAMESPACE
+from gs_flex_coordinator.core.config import WORKSPACE
 from gs_flex_coordinator.core.scheduler import schedule
-from gs_flex_coordinator.core.utils import (data_type_to_groot,
-                                            encode_datetime, get_internal_ip)
+from gs_flex_coordinator.core.utils import data_type_to_groot
+from gs_flex_coordinator.core.utils import encode_datetime
+from gs_flex_coordinator.core.utils import get_internal_ip
 from gs_flex_coordinator.version import __version__
 
 
@@ -260,7 +267,7 @@ class GrootGraph(Graph):
                     or vertex_type == relation["dst_label"]
                 ):
                     raise RuntimeError(
-                        "Can not delete '{0}' type, cause exists in edge type '{1}'".format(
+                        "Can not delete '{0}' type, cause exists in edge '{1}'".format(
                             vertex_type, edge_schema["label"]
                         ),
                     )
@@ -295,7 +302,7 @@ def get_groot_graph_from_local():
             client.submit(
                 "g.with('evaluationTimeout', 5000).V().limit(1)"
             ).all().result()
-        except Exception as e:  # noqa: B110
+        except Exception:  # noqa: B110
             pass
         else:
             break
@@ -316,8 +323,8 @@ def get_groot_graph_from_k8s():
     app_api = kube_client.AppsV1Api(api_client)
     # frontend statefulset and service name
     name = "{0}-graphscope-store-frontend".format(INSTANCE_NAME)
-    respoonse = app_api.read_namespaced_stateful_set(name, NAMESPACE)
-    labels = response.metadata.labels
+    response = app_api.read_namespaced_stateful_set(name, NAMESPACE)
+    app_api.read_namespaced_stateful_set(name, NAMESPACE)
     # creation time
     creation_time = response.metadata.creation_timestamp.astimezone(
         tz.tzlocal()

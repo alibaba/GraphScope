@@ -73,6 +73,47 @@ class GenerateFlexServer(Command):
         )
 
 
+class FormatAndLint(Command):
+    description = "format and lint code"
+    user_options = []
+
+    user_options = [("inplace=", "i", "Run code formatter and linter inplace")]
+
+    def initialize_options(self):
+        self.inplace = False
+
+    def finalize_options(self):
+        if self.inplace or self.inplace == "True" or self.inplace == "true":
+            self.inplace = True
+        else:
+            self.inplace = False
+
+    def run(self):
+        codedir = os.path.join(pkg_root, "gs_flex_coordinator", "core")
+        if self.inplace:
+            subprocess.check_call(
+                [sys.executable, "-m", "isort", codedir], cwd=pkg_root
+            )
+            subprocess.check_call(
+                [sys.executable, "-m", "black", codedir], cwd=pkg_root
+            )
+            subprocess.check_call(
+                [sys.executable, "-m", "flake8", codedir], cwd=pkg_root
+            )
+        else:
+            subprocess.check_call(
+                [sys.executable, "-m", "isort", "--check", "--diff", codedir],
+                cwd=pkg_root,
+            )
+            subprocess.check_call(
+                [sys.executable, "-m", "black", "--check", "--diff", codedir],
+                cwd=pkg_root,
+            )
+            subprocess.check_call(
+                [sys.executable, "-m", "flake8", codedir], cwd=pkg_root
+            )
+
+
 setup(
     name=NAME,
     version=VERSION,
@@ -85,6 +126,7 @@ setup(
     package_data={"": ["openapi/openapi.yaml", "VERSION"]},
     cmdclass={
         "generate_flex_server": GenerateFlexServer,
+        "lint": FormatAndLint,
     },
     include_package_data=True,
     entry_points={

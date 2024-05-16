@@ -398,10 +398,10 @@ class TreeDisplay(object):
                         property_column_mapping.column.index,
                         property_column_mapping.column.name,
                     )
-                    property_mapping_identifier = f"{specific_vertex_mapping_identifier}_{property_column_mapping.var_property}"
+                    p_mapping_identifier = f"{specific_vertex_mapping_identifier}_{property_column_mapping.var_property}"
                     self.tree.create_node(
                         tag=tag,
-                        identifier=property_mapping_identifier,
+                        identifier=p_mapping_identifier,
                         parent=specific_vertex_mapping_identifier,
                     )
         # edge mapping
@@ -463,10 +463,10 @@ class TreeDisplay(object):
                         property_column_mapping.column.index,
                         property_column_mapping.column.name,
                     )
-                    property_mapping_identifier = f"{specific_edge_mapping_identifier}_{property_column_mapping.var_property}"
+                    p_mapping_identifier = f"{specific_edge_mapping_identifier}_{property_column_mapping.var_property}"
                     self.tree.create_node(
                         tag=tag,
-                        identifier=property_mapping_identifier,
+                        identifier=p_mapping_identifier,
                         parent=specific_edge_mapping_identifier,
                     )
 

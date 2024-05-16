@@ -25,9 +25,9 @@ from gremlin_python.driver.client import Client
 
 from gs_flex_coordinator.core import client_wrapper
 from gs_flex_coordinator.core.alert.alert_rule import AlertRule
-from gs_flex_coordinator.core.alert.message_collector import \
-    AlertMessageCollector
-from gs_flex_coordinator.core.config import CLUSTER_TYPE, SOLUTION
+from gs_flex_coordinator.core.alert.message_collector import AlertMessageCollector
+from gs_flex_coordinator.core.config import CLUSTER_TYPE
+from gs_flex_coordinator.core.config import SOLUTION
 
 
 class HighDiskUtilizationAlert(AlertRule):

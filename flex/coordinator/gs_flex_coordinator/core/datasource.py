@@ -37,7 +37,8 @@ class DataSourceManager(object):
         try:
             if os.path.exists(self._pickle_path):
                 logging.info(
-                    "Recover data source mapping from file %s", self._pickle_path
+                    "Recover data source mapping from file %s",
+                    self._pickle_path,
                 )
                 with open(self._pickle_path, "rb") as f:
                     self._datasource_mapping = pickle.load(f)
@@ -52,7 +53,10 @@ class DataSourceManager(object):
             logging.warn("Failed to dump data source mapping: %s", str(e))
 
     def get_edge_full_label(
-        self, type_name: str, source_vertex_type: str, destination_vertex_type: str
+        self,
+        type_name: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
     ) -> str:
         return f"{source_vertex_type}_{type_name}_{destination_vertex_type}"
 

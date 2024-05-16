@@ -17,9 +17,9 @@
 #
 
 import graphscope.flex.rest
-from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.config import get_current_context
 from graphscope.gsctl.config import load_gs_config
+from graphscope.gsctl.impl import list_graphs
 
 
 def upload_file(location: str) -> str:
@@ -41,7 +41,6 @@ def switch_context(context: str):
 def get_graph_id_by_name(name_or_id: str):
     graphs = list_graphs()
     id_candidate = []
-    graph_exist = False
     for g in graphs:
         if name_or_id == g.id:
             return name_or_id

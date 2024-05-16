@@ -17,7 +17,6 @@
 #
 
 import datetime
-import logging
 import os
 import tempfile
 
@@ -51,8 +50,9 @@ DATASET_WORKSPACE = os.path.join(WORKSPACE, "dataset")
 os.makedirs(DATASET_WORKSPACE, exist_ok=True)
 
 
-# we use the solution encompasses the various applications and use cases of the
-# product across different industries and business scenarios, e.g. "INTERACTIVE",
+# we use the solution encompasses the various applications
+# and use cases of the product across different industries
+# and business scenarios, e.g. "INTERACTIVE",
 # "GRAPHSCOPE INSIGHT".
 SOLUTION = os.environ["SOLUTION"]
 

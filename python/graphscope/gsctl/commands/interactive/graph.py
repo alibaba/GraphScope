@@ -20,20 +20,20 @@ import click
 import yaml
 
 from graphscope.gsctl.config import get_current_context
-from graphscope.gsctl.impl import submit_dataloading_job
+from graphscope.gsctl.impl import bind_datasource_in_batch
 from graphscope.gsctl.impl import create_procedure
 from graphscope.gsctl.impl import delete_job_by_id
 from graphscope.gsctl.impl import delete_procedure_by_id
+from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import get_graph_id_by_name
 from graphscope.gsctl.impl import get_job_by_id
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_jobs
-from graphscope.gsctl.impl import bind_datasource_in_batch
-from graphscope.gsctl.impl import get_datasource_by_id
 from graphscope.gsctl.impl import list_procedures
+from graphscope.gsctl.impl import submit_dataloading_job
 from graphscope.gsctl.impl import switch_context
 from graphscope.gsctl.impl import unbind_edge_datasource
 from graphscope.gsctl.impl import unbind_vertex_datasource
-from graphscope.gsctl.impl import get_graph_id_by_name
 from graphscope.gsctl.utils import TreeDisplay
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
@@ -156,7 +156,7 @@ def datasource(filename):  # noqa: F811
         datasource = read_yaml_file(filename)
         bind_datasource_in_batch(graph_identifier, datasource)
     except Exception as e:
-         err(f"Failed to bind data source: {str(e)}")
+        err(f"Failed to bind data source: {str(e)}")
     else:
         succ("Bind data source successfully.")
 
@@ -194,7 +194,7 @@ def datasource(type, source_vertex_type, destination_vertex_type):  # noqa: F811
     except Exception as e:
         err(f"Failed to unbind data source: {str(e)}")
     else:
-        succ(f"Unbind data source successfully.")
+        succ("Unbind data source successfully.")
 
 
 @create.command()

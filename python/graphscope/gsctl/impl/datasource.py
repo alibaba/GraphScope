@@ -16,12 +16,11 @@
 # limitations under the License.
 #
 
-import os
 import itertools
+import os
 
 import graphscope.flex.rest
 from graphscope.flex.rest import SchemaMapping
-
 from graphscope.gsctl.config import get_current_context
 from graphscope.gsctl.impl.utils import upload_file
 

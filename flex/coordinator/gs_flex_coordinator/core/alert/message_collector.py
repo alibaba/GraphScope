@@ -23,7 +23,8 @@ import pickle
 
 from gs_flex_coordinator.core.alert.alert_message import AlertMessage
 from gs_flex_coordinator.core.config import ALERT_WORKSPACE
-from gs_flex_coordinator.core.scheduler import cancel_job, schedule
+from gs_flex_coordinator.core.scheduler import cancel_job
+from gs_flex_coordinator.core.scheduler import schedule
 from gs_flex_coordinator.core.utils import decode_datetimestr
 
 
@@ -59,7 +60,9 @@ class OneDayAlertMessageCollector(object):
             self.dump_to_disk()
         except Exception as e:
             logging.warn(
-                "Failed to dump alert message on date %s: %s", str(self._date), str(e)
+                "Failed to dump alert message on date %s: %s",
+                str(self._date),
+                str(e),
             )
 
     def _try_to_recover_from_disk(self):
@@ -109,7 +112,8 @@ class OneDayAlertMessageCollector(object):
                 cancel_job(self._pickle_messages_job, delete_scheduler=True)
                 self._pickle_messages_job = None
                 logging.info(
-                    "%s: current alert message collector cleaned", str(self._date)
+                    "%s: current alert message collector cleaned",
+                    str(self._date),
                 )
         except:  # noqa: E722, B110
             pass

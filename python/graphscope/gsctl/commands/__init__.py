@@ -22,6 +22,7 @@ import click
 
 from graphscope.gsctl.commands.common import cli as common
 from graphscope.gsctl.commands.dev import cli as dev
+
 # from graphscope.gsctl.commands.insight.graph import cli as insight_graph
 from graphscope.gsctl.commands.interactive.glob import cli as interactive
 from graphscope.gsctl.commands.interactive.graph import cli as interactive_graph
