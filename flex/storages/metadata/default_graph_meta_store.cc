@@ -272,7 +272,6 @@ Result<bool> DefaultGraphMetaStore::DeleteJobMeta(const JobId& job_id) {
 
 Result<bool> DefaultGraphMetaStore::UpdateJobMeta(
     const JobId& job_id, const UpdateJobMetaRequest& update_request) {
-  LOG(INFO) << "Update job meta: " << job_id;
   return base_store_->UpdateMeta(
       JOB_META, job_id, [&update_request](const std::string& old_meta) {
         nlohmann::json json;
@@ -283,7 +282,6 @@ Result<bool> DefaultGraphMetaStore::UpdateJobMeta(
           return Result<std::string>(
               Status(StatusCode::InternalError, "Fail to parse old job meta"));
         }
-        LOG(INFO) << "old job meta: " << json.dump();
         auto job_meta = JobMeta::FromJson(json);
         if (update_request.status.has_value()) {
           job_meta.status = update_request.status.value();
