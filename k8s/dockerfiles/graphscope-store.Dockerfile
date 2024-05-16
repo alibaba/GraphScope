@@ -65,9 +65,6 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
 USER graphscope
 WORKDIR /home/graphscope
 
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /home/graphscope/
-RUN sudo chown $(id -u):$(id -g) /home/graphscope/opentelemetry-javaagent.jar
-
 ENV PATH=${PATH}:/home/graphscope/.local/bin
 ENV SOLUTION=GRAPHSCOPE_INSIGHT
 
