@@ -113,40 +113,85 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
         // consists of "person-create->post" and "person-create->comment",
         // we do not fuse them directly. Instead, we create a EdgeExpand(V) with type "create" and
         // an Auxilia with type "post" as the filter.
-        // 3. a special case is that, currently, for gremlin query like g.V().out("create"), we have
+        // 3. if we want to expand "person-islocatedin->city", while in schema, a "islocatedin"
+        // actually
+        // consists of "person-islocatedin->city" and "post-islocatedin->country".
+        // Thought the edge type of "islocatedin" may generate "city" and "country", we can still
+        // fuse them into a single EdgeExpand(V) with type "islocatedin" directly if we can confirm
+        // that the expand starts from "person".
+        // 4. a special case is that, currently, for gremlin query like g.V().out("create"), we have
         // not infer precise types for getV yet (getV may contain all vertex types).
         // In this case, if getV's types contains all the types that expand will generate, we can
-        // fuse them
+        // fuse them.
+
         Set<Integer> edgeExpandedVLabels = new HashSet<>();
-        // the optTables in expand preserves the full schema information for the edges
+        // the optTables in expand preserves the full schema information for the edges,
         // that is, for edge type "create", it contains both "person-create->post" and
-        // "person-create->comment".
+        // "person-create->comment", "user-create->post" etc.
         List<RelOptTable> optTables = expand.getTableConfig().getTables();
+        // the edgeParamLabels in expand preserves the inferred schema information for the edges,
+        // that is, for edge type "create", it contains only "person-create->post" if user queries
+        // like g.V().hasLabel("person").out("create").hasLabel("post")
+        GraphLabelType edgeParamType =
+                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(expand.getRowType());
+        List<GraphLabelType.Entry> edgeParamLabels = edgeParamType.getLabelsEntry();
+        GraphOpt.Expand direction = expand.getOpt();
+        // First, we get all the source vertex types where the edge will be expanded from.
+        // e.g., expand from "person"
+        Set<Integer> edgeExpandedSrcVLabels = new HashSet<>();
+        for (GraphLabelType.Entry edgeLabel : edgeParamLabels) {
+            switch (direction) {
+                case OUT:
+                    edgeExpandedSrcVLabels.add(edgeLabel.getSrcLabelId());
+                    break;
+                case IN:
+                    edgeExpandedSrcVLabels.add(edgeLabel.getDstLabelId());
+                    break;
+                case BOTH:
+                    edgeExpandedSrcVLabels.add(edgeLabel.getDstLabelId());
+                    edgeExpandedSrcVLabels.add(edgeLabel.getSrcLabelId());
+                    break;
+            }
+        }
+        // Then, we get all the destination vertex types where the edge will be expanded to.
+        // e.g., expand "likes"
         for (RelOptTable optTable : optTables) {
             if (optTable instanceof GraphOptTable) {
                 GraphOptTable graphOptTable = (GraphOptTable) optTable;
-                List<GraphLabelType.Entry> edgeParamLabels =
+                List<GraphLabelType.Entry> edgeUserGivenParamLabels =
                         com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(
                                         graphOptTable.getRowType())
                                 .getLabelsEntry();
-                GraphOpt.Expand direction = expand.getOpt();
-                for (GraphLabelType.Entry edgeLabel : edgeParamLabels) {
+                for (GraphLabelType.Entry edgeLabel : edgeUserGivenParamLabels) {
                     switch (direction) {
                         case OUT:
-                            edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
+                            if (edgeExpandedSrcVLabels.contains(edgeLabel.getSrcLabelId())) {
+                                edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
+                            }
                             break;
                         case IN:
-                            edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+                            if (edgeExpandedSrcVLabels.contains(edgeLabel.getDstLabelId())) {
+                                edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+                            }
                             break;
                         case BOTH:
-                            edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
-                            edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+                            if (edgeExpandedSrcVLabels.contains(edgeLabel.getSrcLabelId())) {
+                                edgeExpandedVLabels.add(edgeLabel.getDstLabelId());
+                            }
+                            if (edgeExpandedSrcVLabels.contains(edgeLabel.getDstLabelId())) {
+                                edgeExpandedVLabels.add(edgeLabel.getSrcLabelId());
+                            }
                             break;
                     }
                 }
             }
         }
 
+        // Finally, we check if the vertex types in getV to see if the type filter for the expanded
+        // vertex is necessary.
+        //  e.g., if getV is "post" and expand type is "likes", then we cannot fuse them directly.
+        // Instead, we should create an EdgeExpand(V) with type "likes" and an Auxilia with type
+        // "post" as the filter.
         List<GraphLabelType.Entry> vertexParamLabels =
                 com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(getV.getRowType())
                         .getLabelsEntry();
