@@ -332,8 +332,8 @@ public class ExpandGetVFusionTest {
                 after.explain().trim());
     }
 
-    // g.V().hasLabel("person").outE("likes").inV().hasLabel("comment"), can not be fused into
-    // GraphPhysicalExpand since we actually have person-likes-comment and person-likes-post.
+    // g.V().hasLabel("person").outE("likes").inV().hasLabel("comment"), can not be fused into a
+    // single GraphPhysicalExpand since we actually have person-likes-comment and person-likes-post.
     @Test
     public void expand_getv_fusion_7_test() {
         GraphBuilder builder = Utils.mockGraphBuilder("schema/ldbc.json");
@@ -369,6 +369,42 @@ public class ExpandGetVFusionTest {
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}],"
                         + " alias=[_], opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                        + " alias=[_], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    // g.V().hasLabel("person").outE("likes").inV(), can be fused into a single GraphPhysicalExpand
+    // even without type infer for GetV
+    @Test
+    public void expand_getv_fusion_8_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder("schema/ldbc.json");
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("PERSON")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("LIKES")))
+                        .getV(new GetVConfig(GraphOpt.GetV.END, new LabelConfig(true)))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=true, tables=[PERSON, POST, TAG,"
+                    + " ORGANISATION, PLACE, TAGCLASS, COMMENT, FORUM]}], alias=[_], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}], alias=[_],"
+                    + " opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[_], opt=[VERTEX])",
+                before.explain().trim());
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}], alias=[_],"
+                        + " opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
                         + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
