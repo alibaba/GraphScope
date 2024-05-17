@@ -426,8 +426,15 @@ class CountBuilder {
     return true;
   }
 
+  bool inc_count(size_t ind, int32_t v) {
+    while (vec_.size() <= ind) {
+      vec_.emplace_back(0);
+    }
+    vec_[ind] += v;
+    return true;
+  }
+
   Collection<int64_t> Build() {
-    // VLOG(10) << "Finish building counter" << gs::to_string(vec_);
     return Collection<int64_t>(std::move(vec_));
   }
 
