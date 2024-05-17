@@ -196,8 +196,8 @@ jobs:
         rm -rf /tmp/csr-data-dir/
 
         cd ${GITHUB_WORKSPACE}/flex/build/
-        SCHEMA_FILE=${GS_TEST_DIR}/type_test/graph.yaml
-        BULK_LOAD_FILE=${GS_TEST_DIR}/type_test/import.yaml
+        SCHEMA_FILE=${GS_TEST_DIR}/flex/type_test/graph.yaml
+        BULK_LOAD_FILE=${GS_TEST_DIR}/flex/type_test/import.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/ -p 2
 
     - name: Test Graph Loading on LDBC SNB sf0.1

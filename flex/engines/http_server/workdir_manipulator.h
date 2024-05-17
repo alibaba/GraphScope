@@ -166,7 +166,8 @@ class WorkDirManipulator {
   static std::string CleanTempIndicesDir(const std::string& graph_name);
 
   // Move the temp indices to the graph indices dir.
-  static std::string CommitTempIndices(const std::string& graph_name);
+  static gs::Result<std::string> CommitTempIndices(
+      const std::string& graph_name);
 
  private:
   static std::string get_tmp_bulk_loading_job_log_path(
