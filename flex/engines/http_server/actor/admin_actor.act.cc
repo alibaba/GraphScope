@@ -50,6 +50,20 @@ std::string merge_graph_and_plugin_meta(
   return res.empty() ? "{}" : res.dump();
 }
 
+gs::Result<YAML::Node> preprocess_vertex_schema(YAML::Node root,
+                                                const std::string& type_name) {
+  // 1. To support open a empty graph, we should check if the x_csr_params is
+  // set for each vertex type, if not set, we set it to a rather small max_vnum,
+  // to avoid to much memory usage.
+  auto types = root[type_name];
+  for (auto type : types) {
+    if (!type["x_csr_params"]) {
+      type["x_csr_params"]["max_vertex_num"] = 8192;
+    }
+  }
+  return types;
+}
+
 gs::Result<YAML::Node> preprocess_vertex_edge_types(
     YAML::Node root, const std::string& type_name) {
   auto types = root[type_name];
@@ -94,13 +108,16 @@ gs::Result<YAML::Node> preprocess_vertex_edge_types(
 // vertex/edge types should all set.
 // 2. If property_id or type_id is not set, then set them according to the order
 gs::Result<YAML::Node> preprocess_graph_schema(YAML::Node&& node) {
-  if (node["schema"] && node["schema"]["vertex_types"] &&
-      node["schema"]["edge_types"]) {
+  if (node["schema"] && node["schema"]["vertex_types"]) {
     // First check whether property_id or type_id is set in the schema
     RETURN_IF_NOT_OK(
         preprocess_vertex_edge_types(node["schema"], "vertex_types"));
-    RETURN_IF_NOT_OK(
-        preprocess_vertex_edge_types(node["schema"], "edge_types"));
+    RETURN_IF_NOT_OK(preprocess_vertex_schema(node["schema"], "vertex_types"));
+    if (node["schema"]["edge_types"]) {
+      // edge_type could be optional.
+      RETURN_IF_NOT_OK(
+          preprocess_vertex_edge_types(node["schema"], "edge_types"));
+    }
     return node;
   } else {
     return gs::Status(gs::StatusCode::InvalidSchema, "Invalid graph schema: ");
@@ -925,6 +942,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
       // use the previous thread num
       auto thread_num = db.SessionNum();
       db.Close();
+      VLOG(10) << "Closed the previous graph db";
       if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
         LOG(ERROR) << "Fail to load graph from data directory: "
                    << data_dir_value;
@@ -938,6 +956,8 @@ seastar::future<admin_query_result> admin_actor::start_service(
                 gs::StatusCode::InternalError,
                 "Fail to load graph from data directory: " + data_dir_value)));
       }
+      LOG(INFO) << "Successfully load graph from data directory: "
+                << data_dir_value;
       // unlock the previous graph
       if (graph_name != cur_running_graph) {
         auto unlock_res =
@@ -951,6 +971,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
               gs::Result<seastar::sstring>(unlock_res.status()));
         }
       }
+      LOG(INFO) << "Update running graph to: " << graph_name;
       auto set_res = metadata_store_->SetRunningGraph(graph_name);
       if (!set_res.ok()) {
         LOG(ERROR) << "Fail to set running graph: " << graph_name;
