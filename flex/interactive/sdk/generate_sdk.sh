@@ -109,7 +109,12 @@ if [ $# -eq 0 ]; then
 fi
 
 function install_generator() {
-  # first check openapi-generator-cli is executable
+  # first check openapi-generator-cli exists is executable
+  if [ -f ~/bin/openapitools/openapi-generator-cli ]; then
+    echo "openapi-generator-cli is already installed"
+    export PATH=$PATH:~/bin/openapitools/
+    return
+  fi
   if command -v openapi-generator-cli &>/dev/null; then
     echo "openapi-generator-cli is already installed"
     return
@@ -119,7 +124,19 @@ function install_generator() {
   chmod u+x ~/bin/openapitools/openapi-generator-cli
   export PATH=$PATH:~/bin/openapitools/
   export OPENAPI_GENERATOR_VERSION=7.2.0
-  sudo apt-get update && sudo apt-get -y install jq
+  # on ubuntu apt-get jq on mac brew install jq
+  if command -v jq &>/dev/null; then
+    echo "jq is already installed"
+    return
+  fi
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    sudo apt-get update && sudo apt-get -y install jq
+  elif [[ "$(uname -s)" == "Darwin" ]]; then
+    brew install jq
+  else
+    echo "Unsupported OS"
+    exit 1
+  fi
 }
 
 install_generator
