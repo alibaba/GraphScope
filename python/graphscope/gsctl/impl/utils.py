@@ -19,7 +19,6 @@
 import graphscope.flex.rest
 from graphscope.gsctl.config import get_current_context
 from graphscope.gsctl.config import load_gs_config
-from graphscope.gsctl.impl import list_graphs
 
 
 def upload_file(location: str) -> str:
@@ -36,22 +35,3 @@ def switch_context(context: str):
     current_context = get_current_context()
     current_context.switch_context(context)
     config.update_and_write(current_context)
-
-
-def get_graph_id_by_name(name_or_id: str):
-    graphs = list_graphs()
-    id_candidate = []
-    for g in graphs:
-        if name_or_id == g.id:
-            return name_or_id
-        if name_or_id == g.name:
-            id_candidate.append(g.id)
-    if not id_candidate:
-        raise RuntimeError(
-            f"Graph '{name_or_id}' not exists, see graph information with `ls` command."
-        )
-    if len(id_candidate) > 1:
-        raise RuntimeError(
-            f"Found multiple id candidates {id_candidate} for graph {name_or_id}, please choose one."
-        )
-    return id_candidate[0]

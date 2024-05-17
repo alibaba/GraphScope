@@ -24,6 +24,7 @@ from graphscope.gsctl.impl.datasource import unbind_edge_datasource
 from graphscope.gsctl.impl.datasource import unbind_vertex_datasource
 from graphscope.gsctl.impl.graph import create_graph
 from graphscope.gsctl.impl.graph import delete_graph_by_id
+from graphscope.gsctl.impl.graph import get_graph_id_by_name
 from graphscope.gsctl.impl.graph import list_graphs
 from graphscope.gsctl.impl.job import delete_job_by_id
 from graphscope.gsctl.impl.job import get_job_by_id
@@ -38,6 +39,5 @@ from graphscope.gsctl.impl.service import get_service_status
 from graphscope.gsctl.impl.service import restart_service
 from graphscope.gsctl.impl.service import start_service
 from graphscope.gsctl.impl.service import stop_service
-from graphscope.gsctl.impl.utils import get_graph_id_by_name
 from graphscope.gsctl.impl.utils import switch_context
 from graphscope.gsctl.impl.utils import upload_file

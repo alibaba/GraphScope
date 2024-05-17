@@ -317,7 +317,7 @@ class ProcedureApi:
 
         return self.api_client.param_serialize(
             method='POST',
-            resource_path='/v1/graph/{graph_id}/procedure',
+            resource_path='/api/v1/graph/{graph_id}/procedure',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -592,7 +592,7 @@ class ProcedureApi:
 
         return self.api_client.param_serialize(
             method='DELETE',
-            resource_path='/v1/graph/{graph_id}/procedure/{procedure_id}',
+            resource_path='/api/v1/graph/{graph_id}/procedure/{procedure_id}',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -867,7 +867,7 @@ class ProcedureApi:
 
         return self.api_client.param_serialize(
             method='GET',
-            resource_path='/v1/graph/{graph_id}/procedure/{procedure_id}',
+            resource_path='/api/v1/graph/{graph_id}/procedure/{procedure_id}',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1130,7 +1130,7 @@ class ProcedureApi:
 
         return self.api_client.param_serialize(
             method='GET',
-            resource_path='/v1/graph/{graph_id}/procedure',
+            resource_path='/api/v1/graph/{graph_id}/procedure',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1433,7 +1433,7 @@ class ProcedureApi:
 
         return self.api_client.param_serialize(
             method='PUT',
-            resource_path='/v1/graph/{graph_id}/procedure/{procedure_id}',
+            resource_path='/api/v1/graph/{graph_id}/procedure/{procedure_id}',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

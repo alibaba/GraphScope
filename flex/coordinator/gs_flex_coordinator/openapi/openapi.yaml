@@ -1016,6 +1016,239 @@ paths:
       tags:
       - DataSource
       x-openapi-router-controller: gs_flex_coordinator.controllers.data_source_controller
+  /api/v1/graph/{graph_id}/procedure:
+    get:
+      description: List all stored procedures on a certain graph
+      operationId: list_procedures
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: PROCEDUREID-1
+                name: procedure_name_1
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: true
+              - id: PROCEDUREID-2
+                name: procedure_name_2
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: false
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetProcedureResponse'
+                type: array
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    post:
+      description: Create a new stored procedure on a certain graph
+      operationId: create_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProcedureRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateProcedureResponse'
+          description: Successfully created a procedure
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+  /api/v1/graph/{graph_id}/procedure/{procedure_id}:
+    delete:
+      description: Delete a stored procedure by ID
+      operationId: delete_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    get:
+      description: Get a stored procedure by ID
+      operationId: get_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: PROCEDUREID
+                name: procedure_name
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: true
+              schema:
+                $ref: '#/components/schemas/GetProcedureResponse'
+          description: Successfully returned the procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    put:
+      description: Update a stored procedure by ID
+      operationId: update_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcedureRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully updated the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
   /api/v1/graph/{graph_id}/schema:
     get:
       description: Get graph schema by ID
@@ -1597,239 +1830,6 @@ paths:
       tags:
       - Service
       x-openapi-router-controller: gs_flex_coordinator.controllers.service_controller
-  /v1/graph/{graph_id}/procedure:
-    get:
-      description: List all stored procedures on a certain graph
-      operationId: list_procedures
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-              - id: PROCEDUREID-1
-                name: procedure_name_1
-                type: cypher
-                query: MATCH(a) return COUNT(a);
-                library: /path/to/library
-                params:
-                - name: param1
-                  type:
-                    string:
-                      long_text: null
-                returns:
-                - name: return1
-                  type:
-                    PrimitiveType: DT_SIGNED_INT64
-                bound_graph: demo
-                runnable: true
-              - id: PROCEDUREID-2
-                name: procedure_name_2
-                type: cypher
-                query: MATCH(a) return COUNT(a);
-                library: /path/to/library
-                params:
-                - name: param1
-                  type:
-                    string:
-                      long_text: null
-                returns:
-                - name: return1
-                  type:
-                    PrimitiveType: DT_SIGNED_INT64
-                bound_graph: demo
-                runnable: false
-              schema:
-                items:
-                  $ref: '#/components/schemas/GetProcedureResponse'
-                type: array
-          description: Successful operation
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Bad request
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    post:
-      description: Create a new stored procedure on a certain graph
-      operationId: create_procedure
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProcedureRequest'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateProcedureResponse'
-          description: Successfully created a procedure
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Bad request
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-  /v1/graph/{graph_id}/procedure/{procedure_id}:
-    delete:
-      description: Delete a stored procedure by ID
-      operationId: delete_procedure_by_id
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-          description: Successfully deleted the stored procedure
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    get:
-      description: Get a stored procedure by ID
-      operationId: get_procedure_by_id
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                id: PROCEDUREID
-                name: procedure_name
-                type: cypher
-                query: MATCH(a) return COUNT(a);
-                library: /path/to/library
-                params:
-                - name: param1
-                  type:
-                    string:
-                      long_text: null
-                returns:
-                - name: return1
-                  type:
-                    PrimitiveType: DT_SIGNED_INT64
-                bound_graph: demo
-                runnable: true
-              schema:
-                $ref: '#/components/schemas/GetProcedureResponse'
-          description: Successfully returned the procedure
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    put:
-      description: Update a stored procedure by ID
-      operationId: update_procedure_by_id
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProcedureRequest'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-          description: Successfully updated the stored procedure
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
 components:
   responses:
     "400":

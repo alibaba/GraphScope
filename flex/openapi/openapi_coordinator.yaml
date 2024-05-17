@@ -1614,7 +1614,7 @@ paths:
         500:
           $ref: "#/components/responses/500"
 
-  /v1/graph/{graph_id}/procedure:
+  /api/v1/graph/{graph_id}/procedure:
     post:
       tags: [Procedure]
       description: Create a new stored procedure on a certain graph
@@ -1700,7 +1700,7 @@ paths:
         500:
           $ref: "#/components/responses/500"
 
-  /v1/graph/{graph_id}/procedure/{procedure_id}:
+  /api/v1/graph/{graph_id}/procedure/{procedure_id}:
     get:
       tags: [Procedure]
       description: Get a stored procedure by ID

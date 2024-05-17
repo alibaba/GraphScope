@@ -93,6 +93,12 @@ class HQPSClient(object):
             )
             graphs = [g.to_dict() for g in api_instance.list_graphs()]
             for g in graphs:
+                g["creation_time"] = encode_datetime(
+                    datetime.datetime.fromtimestamp(g["creation_time"] / 1000)
+                )
+                g["data_update_time"] = encode_datetime(
+                    datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
+                )
                 # `schema_update_time` is same to `creation_time` in Interactive
                 g["schema_update_time"] = g["creation_time"]
                 # we do not have edge's primary key in Interactive
@@ -138,6 +144,12 @@ class HQPSClient(object):
                 api_client
             )
             g = api_instance.get_graph(graph_id).to_dict()
+            g["creation_time"] = encode_datetime(
+                datetime.datetime.fromtimestamp(g["creation_time"] / 1000)
+            )
+            g["data_update_time"] = encode_datetime(
+                datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
+            )
             # `schema_update_time` is same to `creation_time` in Interactive
             g["schema_update_time"] = g["creation_time"]
             # we do not have edge's primary key in Interactive
@@ -242,10 +254,16 @@ class HQPSClient(object):
                     },
                 }
                 if response.graph is not None:
-                    graph = response.graph.to_dict()
+                    g = response.graph.to_dict()
+                    g["creation_time"] = encode_datetime(
+                        datetime.datetime.fromtimestamp(g["creation_time"] / 1000)
+                    )
+                    g["data_update_time"] = encode_datetime(
+                        datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
+                    )
                     # `schema_update_time` is same to `creation_time` in Interactive
-                    graph["schema_update_time"] = graph["creation_time"]
-                    status["graph"] = graph
+                    g["schema_update_time"] = g["creation_time"]
+                    status["graph"] = g
                 return status
 
     def stop_service(self) -> str:
