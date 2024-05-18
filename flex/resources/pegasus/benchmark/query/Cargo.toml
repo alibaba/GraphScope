@@ -10,7 +10,7 @@ pegasus = { path = "../../../../../interactive_engine/executor/engine/pegasus/pe
 pegasus_common = { path = "../../../../../interactive_engine/executor/engine/pegasus/common" }
 pegasus_network = { path = "../../../../../interactive_engine/executor/engine/pegasus/network" }
 chrono = "0.4"
-tonic = { version = "0.5", features = ["default", "compression"] }
+tonic = { version = "0.8", features = ["default", "compression"] }
 prost = "0.8"
 tokio = { version = "1.0", features = ["macros", "sync", "rt-multi-thread"] }
 structopt = "0.3"
@@ -23,7 +23,7 @@ itertools = "0.10.2"
 mcsr = { path = "../../../../../interactive_engine/executor/store/mcsr" }
 
 [build-dependencies]
-tonic-build = { version = "0.5", features = ["default", "compression"] }
+tonic-build = { version = "0.8", features = ["default", "compression"] }
 
 [features]
 default = []
