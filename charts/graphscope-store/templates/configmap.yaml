@@ -20,11 +20,13 @@ data:
     discovery.mode={{ .Values.discoveryMode }}
     role.name=ROLE
     node.idx=INDEX
+    release.full.name={{ include "graphscope-store.fullname" . }}
 {{- else }}
     rpc.port=0
     discovery.mode=zookeeper
     role.name=""
     node.idx=0
+    release.full.name=localhost
 {{- end }}
 
     store.node.count={{ .Values.store.replicaCount }}
@@ -58,7 +60,6 @@ data:
     neo4j.bolt.server.disabled=true
 
     log4rs.config=LOG4RS_CONFIG
-    release.full.name={{ include "graphscope-store.fullname" . }}
     ## Auth config
     auth.username={{ .Values.auth.username }}
     auth.password={{ .Values.auth.password }}
@@ -79,7 +80,6 @@ data:
     store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
 
     write.ha.enabled={{ .Values.backup.enabled }}
-    tracing.enabled={{ .Values.otel.enabled }}
 
     ## Coordinator Config
     rpc.max.bytes.mb={{ .Values.rpcMaxBytesMb }}
@@ -141,8 +141,9 @@ data:
     {{- end }}
 
     {{- if .Values.uptrace.enabled }}
+    export UPTRACE_DSN=http://{{ .Values.uptrace.token }}@${{ .Values.uptrace.service }}:14318?grpc=14317
     export OTEL_EXPORTER_OTLP_ENDPOINT=http://{{ .Values.uptrace.service }}:14317
-    export OTEL_EXPORTER_OTLP_HEADERS=uptrace-dsn=http://{{ .Values.uptrace.token }}@${{ .Values.uptrace.service }}:14318?grpc=14317
+    export OTEL_EXPORTER_OTLP_HEADERS=uptrace-dsn=${UPTRACE_DSN}
     {{- end }}
 
 

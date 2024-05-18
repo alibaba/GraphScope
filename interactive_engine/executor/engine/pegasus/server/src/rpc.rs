@@ -292,9 +292,6 @@ where
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
-    if server_config.enable_tracing.unwrap_or(false) {
-        let _tracer = init_tracer().expect("Failed to initialize tracer.");
-    }
     let server_id = server_config.server_id();
     if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
         listener.on_server_start(server_id, server_addr)?;
