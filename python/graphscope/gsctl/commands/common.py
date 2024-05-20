@@ -83,12 +83,12 @@ def close():
 
 
 disclaimer = """
-Disclaimer: The `estimate` command is a roughly estimation of the memory usage of the graphscope engine.
+Disclaimer: The `estimate` command would do a rough estimation of the total memory usage of the GAE.
 The actual memory usage may vary vastly due to the complexity of the graph algorithm and the data distribution.
 
 The estimation is based on the following formulas:
 let #V = number of vertices, #E = number of edges,
-assume load_factor of hashmap is 0.41, sizeof(inner_id) = sizeof(edge_id) = sizeof(vertex_id) = 8 bytes,
+assuming load_factor of hashmap is 0.41, sizeof(inner_id) = sizeof(edge_id) = sizeof(vertex_id) = 8 bytes,
 where vertex_id is the original representation of vertex, it could be string though, in this case, the memory usage will grow.
 Graph:
     1. vertex
@@ -102,7 +102,7 @@ Graph:
         - outer vertex ID to local ID map:
         - local ID to outer vertex ID array:
 
-This is the minimum memory usage of the graphscope engine with 1 partition, the actual memory usage would be larger than this estimation.
+This is the minimum usage of the GAE with 1 partition, the actual memory usage would be larger than this estimation.
 User should enlarge it by a multiple it by some factor (e.g. 2) to simulate the memory usage of the graphscope engine.
 """
 
