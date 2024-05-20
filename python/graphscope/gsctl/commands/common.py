@@ -83,18 +83,18 @@ def close():
 
 
 disclaimer = """
-Disclaimer: The `estimate` command serves as a estimator for various kind of GraphScope resources.
+Disclaimer: The `estimate` command serves as an estimator for various kinds of GraphScope resources.
     - GAE memory usage estimator:
         It would do a rough estimation of the total memory usage of the GAE.
-        The actual memory usage may vary vastly due to the complexity of the graph algorithm and the data distribution.
+        The actual memory usage may vary vastly due to the complexity of the graph algorithms and the data distribution.
 
         Here's some assumption when estimating the memory usage:
             1. Assuming the graph is a simple graph, e.g. only has 1 label and at most 1 property for each label.
-            2. Assuming the graph algorithms has a fixed amount of memory consumption, e.g. PageRank, SSSP, CC;
+            2. Assuming the graph algorithm has a fixed amount of memory consumption, e.g. PageRank, SSSP, CC;
                It should not generate a huge amount of intermediate result, like K-Hop, Louvain.
-            3. Assuming the vertex map is global vertex map
+            3. Assuming the vertex map type is global vertex map
 
-        User should take this estimation as a reference and a start point for tuning,
+        Users should take this estimation as a reference and a starting point for tuning,
         and adjust the memory allocation according to the actual situation.
 """
 
@@ -106,8 +106,8 @@ def estimate_gae_memory_usage_for_graph(
     The estimation is based on the following formulas:
     let #V = number of vertices, #E = number of edges,
     assuming load_factor of hashmap is 0.41, sizeof(inner_id) = sizeof(edge_id) = sizeof(vertex_id) = 8 bytes,
-    where vertex_id is the primary key of vertex, default to int64,
-    could be string though, in this case, the memory usage will grow.
+    where vertex_id is the primary key of the vertex, default to int64,
+    it could be string though, in that case, the memory usage will grow.
     Graph:
         1. vertex
             - vertex map: #V * (sizeof(vertex_id) + sizeof(inner_id)) * (1 / load_factor)
@@ -168,7 +168,7 @@ def estimate_gae_memory_usage_for_algorithm(v_num):
 @click.option("-ef", "--e-file-size", type=float, help="Size of edge files in GB")
 @click.option("-p", "--partition", type=int, help="Number of partitions", default=1)
 def estimate(engine, v_num, e_num, v_file_size, e_file_size, partition):
-    """Estimate the memory usage of the graphscope engine"""
+    """Estimate the resources requirement for various kinds of GraphScope components"""
     if engine == "gae":
         if v_num is None or e_num is None or v_file_size is None or e_file_size is None:
             err("Please provide the required parameters.")
@@ -183,7 +183,7 @@ def estimate(engine, v_num, e_num, v_file_size, e_file_size, partition):
             f"The estimated memory usage is {memory_usage:.2f} GB per pod for {partition} pods.\n"
         )
     else:
-        err(f"Estimate usage of engine {engine} is not supported yet.")
+        err(f"Estimating usage of engine {engine} is not supported yet.")
 
 
 if __name__ == "__main__":
