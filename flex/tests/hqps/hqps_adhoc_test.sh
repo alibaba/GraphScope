@@ -20,19 +20,18 @@ SERVER_BIN=${FLEX_HOME}/build/bin/interactive_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
 # 
-if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "Receives: $# args, need 3 or 4 args"
-  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <ENGINE_CONFIG> [TEST_TYPE(cypher/gremlin/all)]"
+if [ $# -lt 4 ] || [ $# -gt 5 ]; then
+  echo "Receives: $# args, need 4 or 5 args"
+  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <ENGINE_CONFIG> <TEST_TYPE(cypher/gremlin/all)> [STATISTIC]"
   exit 1
 fi
 
 INTERACTIVE_WORKSPACE=$1
 GRAPH_NAME=$2
 ENGINE_CONFIG_PATH=$3
-if [ $# -eq 4 ]; then
-  TEST_TYPE=$4
-else
-  TEST_TYPE="cypher" # default run cypher tests
+TEST_TYPE=$4
+if [ $# -eq 5 ]; then
+  STATISTIC_FILE=$4
 fi
 
 # check TEST_TYPE is valid
@@ -119,6 +118,10 @@ start_compiler_service(){
   echo "try to start compiler service"
   pushd ${GIE_HOME}/compiler
   cmd="make run graph.schema=${GRAPH_SCHEMA_YAML} config.path=${ENGINE_CONFIG_PATH}"
+  # if STATISTIC_FILE is set, add it to cmd
+  if [ -n "${STATISTIC_FILE}" ]; then
+    cmd="${cmd} graph.planner.cbo.glogue.schema=${STATISTIC_FILE}"
+  fi
   echo "Start compiler service with command: ${cmd}"
   ${cmd} &
   sleep 5
