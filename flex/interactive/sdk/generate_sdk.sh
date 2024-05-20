@@ -134,12 +134,10 @@ function install_generator() {
   if command -v jq &>/dev/null; then
     echo "jq is already installed"
     JQ_INSTALLED=true
-    return
   fi
   if command -v mvn &>/dev/null; then
     echo "maven is already installed"
     MVN_INSTALLED=true
-    return
   fi
   if [[ "$(uname -s)" == "Linux" ]]; then
     if ! $JQ_INSTALLED; then
