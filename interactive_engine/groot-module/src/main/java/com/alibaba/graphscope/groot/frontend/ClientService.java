@@ -75,6 +75,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     public void prepareDataLoad(
             PrepareDataLoadRequest request,
             StreamObserver<PrepareDataLoadResponse> responseObserver) {
+        logger.info("Preparing data load");
         DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
         for (DataLoadTargetPb dataLoadTargetPb : request.getDataLoadTargetsList()) {
             DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(dataLoadTargetPb);

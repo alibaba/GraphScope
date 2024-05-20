@@ -63,7 +63,7 @@ void HQPSService::init(const ServiceConfig& config) {
   }
   actor_sys_ = std::make_unique<actor_system>(
       config.shard_num, config.dpdk_mode, config.enable_thread_resource_pool,
-      config.external_thread_num);
+      config.external_thread_num, [this]() { set_exit_state(); });
   query_hdl_ = std::make_unique<hqps_http_handler>(config.query_port);
   if (config.start_admin_service) {
     admin_hdl_ = std::make_unique<admin_http_handler>(config.admin_port);
@@ -107,7 +107,6 @@ HQPSService::~HQPSService() {
     actor_sys_->terminate();
   }
   stop_compiler_subprocess();
-  clear_running_graph();
   if (metadata_store_) {
     metadata_store_->Close();
   }
@@ -265,6 +264,8 @@ bool HQPSService::start_compiler_subprocess(
     // check query server port is ready
     if (check_compiler_ready()) {
       LOG(INFO) << "Compiler server is ready!";
+      // sleep another 2 seconds to make sure the server is ready
+      std::this_thread::sleep_for(std::chrono::seconds(2));
       return true;
     }
     sleep_time += sleep_interval;
@@ -303,8 +304,8 @@ std::string HQPSService::find_interactive_class_path() {
     }
   }
   // if not, try the relative path from current binary's path
-  auto current_binary_path = boost::filesystem::canonical("/proc/self/exe");
-  auto current_binary_dir = current_binary_path.parent_path();
+  auto current_binary_dir = gs::get_current_binary_directory();
+
   auto ir_core_lib_path =
       current_binary_dir /
       "../../../interactive_engine/executor/ir/target/release/";
@@ -385,16 +386,4 @@ gs::GraphId HQPSService::insert_default_graph_meta() {
   return res.value();
 }
 
-void HQPSService::clear_running_graph() {
-  if (!metadata_store_) {
-    std::cerr << "Metadata store has not been inited!" << std::endl;
-    return;
-  }
-  auto res = metadata_store_->ClearRunningGraph();
-  if (!res.ok()) {
-    std::cerr << "Failed to clear running graph: "
-              << res.status().error_message() << std::endl;
-    return;
-  }
-}
 }  // namespace server

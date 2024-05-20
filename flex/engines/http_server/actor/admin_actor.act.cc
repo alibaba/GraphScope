@@ -50,6 +50,20 @@ std::string merge_graph_and_plugin_meta(
   return res.empty() ? "{}" : res.dump();
 }
 
+gs::Result<YAML::Node> preprocess_vertex_schema(YAML::Node root,
+                                                const std::string& type_name) {
+  // 1. To support open a empty graph, we should check if the x_csr_params is
+  // set for each vertex type, if not set, we set it to a rather small max_vnum,
+  // to avoid to much memory usage.
+  auto types = root[type_name];
+  for (auto type : types) {
+    if (!type["x_csr_params"]) {
+      type["x_csr_params"]["max_vertex_num"] = 8192;
+    }
+  }
+  return types;
+}
+
 gs::Result<YAML::Node> preprocess_vertex_edge_types(
     YAML::Node root, const std::string& type_name) {
   auto types = root[type_name];
@@ -94,13 +108,16 @@ gs::Result<YAML::Node> preprocess_vertex_edge_types(
 // vertex/edge types should all set.
 // 2. If property_id or type_id is not set, then set them according to the order
 gs::Result<YAML::Node> preprocess_graph_schema(YAML::Node&& node) {
-  if (node["schema"] && node["schema"]["vertex_types"] &&
-      node["schema"]["edge_types"]) {
+  if (node["schema"] && node["schema"]["vertex_types"]) {
     // First check whether property_id or type_id is set in the schema
     RETURN_IF_NOT_OK(
         preprocess_vertex_edge_types(node["schema"], "vertex_types"));
-    RETURN_IF_NOT_OK(
-        preprocess_vertex_edge_types(node["schema"], "edge_types"));
+    RETURN_IF_NOT_OK(preprocess_vertex_schema(node["schema"], "vertex_types"));
+    if (node["schema"]["edge_types"]) {
+      // edge_type could be optional.
+      RETURN_IF_NOT_OK(
+          preprocess_vertex_edge_types(node["schema"], "edge_types"));
+    }
     return node;
   } else {
     return gs::Status(gs::StatusCode::InvalidSchema, "Invalid graph schema: ");
@@ -404,6 +421,23 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_schema(
   }
 }
 
+// Get the metadata of a graph.
+seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
+    query_param&& query_param) {
+  LOG(INFO) << "Get Graph meta for graph_id: " << query_param.content;
+  auto meta_res = metadata_store_->GetGraphMeta(query_param.content);
+
+  if (meta_res.ok()) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(std::move(meta_res.value().ToJson())));
+  } else {
+    LOG(ERROR) << "Fail to get graph schema: "
+               << meta_res.status().error_message();
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(meta_res.status()));
+  }
+}
+
 // list all graphs
 seastar::future<admin_query_result> admin_actor::run_list_graphs(
     query_param&& query_param) {
@@ -428,6 +462,20 @@ seastar::future<admin_query_result> admin_actor::run_list_graphs(
 seastar::future<admin_query_result> admin_actor::run_delete_graph(
     query_param&& query_param) {
   LOG(INFO) << "Delete graph: " << query_param.content;
+
+  auto lock_info = metadata_store_->GetGraphIndicesLocked(query_param.content);
+  if (!lock_info.ok()) {
+    LOG(ERROR) << "Fail to get lock info for graph: " << query_param.content;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(lock_info.status()));
+  }
+  if (lock_info.value()) {
+    LOG(ERROR) << "Graph is running, cannot delete: " << query_param.content;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::AlreadyLocked,
+            "Graph is running, cannot delete: " + query_param.content)));
+  }
 
   auto get_res = metadata_store_->GetGraphMeta(query_param.content);
   if (!get_res.ok()) {
@@ -762,10 +810,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
 
   auto cur_running_graph_res = metadata_store_->GetRunningGraph();
   if (!cur_running_graph_res.ok()) {
-    LOG(ERROR) << "Fail to get running graph: "
-               << cur_running_graph_res.status().error_message();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(cur_running_graph_res.status()));
+    LOG(INFO) << "No running graph, will start on the graph in request";
   }
   auto cur_running_graph = cur_running_graph_res.value();
   LOG(INFO) << "Current running graph: " << cur_running_graph;
@@ -897,6 +942,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
       // use the previous thread num
       auto thread_num = db.SessionNum();
       db.Close();
+      VLOG(10) << "Closed the previous graph db";
       if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
         LOG(ERROR) << "Fail to load graph from data directory: "
                    << data_dir_value;
@@ -910,6 +956,8 @@ seastar::future<admin_query_result> admin_actor::start_service(
                 gs::StatusCode::InternalError,
                 "Fail to load graph from data directory: " + data_dir_value)));
       }
+      LOG(INFO) << "Successfully load graph from data directory: "
+                << data_dir_value;
       // unlock the previous graph
       if (graph_name != cur_running_graph) {
         auto unlock_res =
@@ -923,6 +971,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
               gs::Result<seastar::sstring>(unlock_res.status()));
         }
       }
+      LOG(INFO) << "Update running graph to: " << graph_name;
       auto set_res = metadata_store_->SetRunningGraph(graph_name);
       if (!set_res.ok()) {
         LOG(ERROR) << "Fail to set running graph: " << graph_name;
@@ -956,17 +1005,41 @@ seastar::future<admin_query_result> admin_actor::start_service(
 seastar::future<admin_query_result> admin_actor::stop_service(
     query_param&& query_param) {
   auto& hqps_service = HQPSService::get();
-  return hqps_service.stop_query_actors().then([&hqps_service] {
+  return hqps_service.stop_query_actors().then([this, &hqps_service] {
     LOG(INFO) << "Successfully stopped query handler";
-    if (hqps_service.stop_compiler_subprocess()) {
-      LOG(INFO) << "Successfully stop compiler";
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>("Successfully stop service"));
-    } else {
-      LOG(ERROR) << "Fail to stop compiler";
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(gs::Status(gs::StatusCode::InternalError,
-                                                  "Fail to stop compiler")));
+    // Add also remove current running graph
+    {
+      std::lock_guard<std::mutex> lock(mtx_);
+      // unlock the graph
+      auto cur_running_graph_res = metadata_store_->GetRunningGraph();
+      if (cur_running_graph_res.ok()) {
+        auto unlock_res =
+            metadata_store_->UnlockGraphIndices(cur_running_graph_res.value());
+        if (!unlock_res.ok()) {
+          LOG(ERROR) << "Fail to unlock graph: "
+                     << cur_running_graph_res.value();
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(unlock_res.status()));
+        }
+        if (!metadata_store_->ClearRunningGraph().ok()) {
+          LOG(ERROR) << "Fail to clear running graph";
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(
+                  gs::Status(gs::StatusCode::InternalError,
+                             "Fail to clear running graph")));
+        }
+      }
+
+      if (hqps_service.stop_compiler_subprocess()) {
+        LOG(INFO) << "Successfully stop compiler";
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>("Successfully stop service"));
+      } else {
+        LOG(ERROR) << "Fail to stop compiler";
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>(gs::Status(
+                gs::StatusCode::InternalError, "Fail to stop compiler")));
+      }
     }
   });
 }
@@ -984,9 +1057,13 @@ seastar::future<admin_query_result> admin_actor::service_status(
     res["bolt_port"] = hqps_service.get_service_config().bolt_port;
     res["gremlin_port"] = hqps_service.get_service_config().gremlin_port;
     if (running_graph_res.ok()) {
-      res["graph_id"] = running_graph_res.value();
+      auto graph_meta =
+          metadata_store_->GetGraphMeta(running_graph_res.value());
+      if (graph_meta.ok()) {
+        res["graph"] = nlohmann::json::parse(graph_meta.value().ToJson());
+      }
     } else {
-      res["graph_id"] = "UNKNOWN";
+      res["graph"] = {};
     }
   } else {
     LOG(INFO) << "Query service has not been inited!";

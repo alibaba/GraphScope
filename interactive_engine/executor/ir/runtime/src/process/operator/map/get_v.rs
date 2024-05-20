@@ -156,7 +156,15 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     // pruning by labels
                     return Ok(None);
                 } else if !self.query_params.has_predicates() && !self.query_params.has_columns() {
-                    // if only filter by labels, directly return the results.
+                    // if only filter by labels, return the results.
+                    // if it has alias, append without moving head
+                    if let Some(alias) = self.alias {
+                        // append without moving head
+                        let entry_clone = entry.clone();
+                        input
+                            .get_columns_mut()
+                            .insert(alias as usize, entry_clone);
+                    }
                     return Ok(Some(input));
                 }
             }

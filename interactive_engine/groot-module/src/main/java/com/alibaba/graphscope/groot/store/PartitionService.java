@@ -24,8 +24,7 @@ public class PartitionService {
     public PartitionService(Configs configs, StoreService storeService) {
         this.storeService = storeService;
         this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
-        this.storeCatchupIntervalMS = StoreConfig.STORE_GC_INTERVAL_MS.get(configs);
-        // this.storeCatchupIntervalMS = StoreConfig.STORE_CATCHUP_INTERVAL_MS.get(configs);
+        this.storeCatchupIntervalMS = StoreConfig.STORE_CATCHUP_INTERVAL_MS.get(configs);
 
         this.scheduler =
                 Executors.newScheduledThreadPool(

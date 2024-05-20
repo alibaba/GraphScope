@@ -33,6 +33,7 @@
 #include "nlohmann/json.hpp"
 
 #include <glog/logging.h>
+#include <boost/filesystem.hpp>
 
 namespace gs {
 
@@ -43,6 +44,10 @@ inline int64_t GetCurrentTimeStamp() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
              std::chrono::system_clock::now().time_since_epoch())
       .count();
+}
+
+inline boost::filesystem::path get_current_binary_directory() {
+  return boost::filesystem::canonical("/proc/self/exe").parent_path();
 }
 
 class FlexException : public std::exception {

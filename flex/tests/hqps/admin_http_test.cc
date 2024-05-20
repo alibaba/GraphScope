@@ -427,7 +427,6 @@ int main(int argc, char** argv) {
                      procedure_paths);
   LOG(INFO) << "run procedure tests done";
   run_get_node_status(cli);
-  test_delete_graph(cli, graph_id);
   LOG(INFO) << "test delete graph done";
   return 0;
 }

@@ -50,6 +50,9 @@ public class OfflineBuildOdps {
         }
 
         String configFile = args[0];
+
+        System.out.println("Config is:");
+        System.out.println(Utils.readFileAsString(configFile));
         UniConfig properties = UniConfig.fromFile(configFile);
 
         odps = SessionState.get().getOdps();
@@ -183,7 +186,7 @@ public class OfflineBuildOdps {
             throw new IOException(e);
         }
 
-        String _tmp = properties.getProperty(DataLoadConfig.LOAD_AFTER_BUILD, "false");
+        String _tmp = properties.getProperty(DataLoadConfig.LOAD_AFTER_BUILD, "true");
         boolean loadAfterBuild = Utils.parseBoolean(_tmp);
         if (loadAfterBuild) {
             fullQualifiedDataPath = fullQualifiedDataPath + uniquePath;

@@ -841,6 +841,13 @@ impl From<physical_pb::PathExpand> for physical_pb::PhysicalOpr {
     }
 }
 
+impl From<physical_pb::Unfold> for physical_pb::PhysicalOpr {
+    fn from(unfold: physical_pb::Unfold) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Unfold(unfold);
+        op_kind.into()
+    }
+}
+
 impl From<pb::Project> for physical_pb::Project {
     fn from(project: pb::Project) -> Self {
         let mappings = project
@@ -1007,6 +1014,21 @@ impl common_pb::Logical {
             | common_pb::Logical::And
             | common_pb::Logical::Or
             | common_pb::Logical::Regex => true,
+            _ => false,
+        }
+    }
+}
+
+impl physical_pb::PhysicalOpr {
+    pub fn is_repartition(&self) -> bool {
+        match self {
+            physical_pb::PhysicalOpr {
+                opr:
+                    Some(physical_pb::physical_opr::Operator {
+                        op_kind: Some(physical_pb::physical_opr::operator::OpKind::Repartition(_)),
+                    }),
+                ..
+            } => true,
             _ => false,
         }
     }

@@ -24,16 +24,7 @@ DefaultGraphMetaStore::DefaultGraphMetaStore(
   clear_locks();
 }
 
-DefaultGraphMetaStore::~DefaultGraphMetaStore() {
-  if (base_store_ != nullptr) {
-    base_store_->Close();
-  }
-  auto res = Close();
-  if (!res.ok()) {
-    LOG(ERROR) << "Fail to close DefaultGraphMetaStore: "
-               << res.status().error_message();
-  }
-}
+DefaultGraphMetaStore::~DefaultGraphMetaStore() { Close(); }
 
 Result<bool> DefaultGraphMetaStore::Open() { return base_store_->Open(); }
 
@@ -132,6 +123,10 @@ Result<PluginMeta> DefaultGraphMetaStore::GetPluginMeta(
   }
   std::string meta_str = res.move_value();
   auto meta = PluginMeta::FromJson(meta_str);
+  if (meta.bound_graph != graph_id) {
+    return Result<PluginMeta>(
+        Status(StatusCode::InValidArgument, "Plugin not belongs to the graph"));
+  }
   meta.id = plugin_id;
   return Result<PluginMeta>(meta);
 }
@@ -171,7 +166,7 @@ Result<bool> DefaultGraphMetaStore::DeletePluginMetaByGraphId(
   }
   std::vector<PluginId> plugin_ids;
   for (auto& meta_str : res.value()) {
-    auto plugin_meta = PluginMeta::FromJson(meta_str);
+    auto plugin_meta = PluginMeta::FromJson(meta_str.second);
     if (plugin_meta.bound_graph == graph_id) {
       plugin_ids.push_back(plugin_meta.id);
     }

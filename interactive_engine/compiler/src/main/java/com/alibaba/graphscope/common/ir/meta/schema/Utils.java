@@ -61,15 +61,18 @@ public abstract class Utils {
                 edgeMap,
                 propNameToIdMap,
                 typeConvertor);
-        builderGraphElementFromYaml(
-                (List)
-                        Objects.requireNonNull(
-                                schemaMap.get("edge_types"), "edge_types not exist in yaml config"),
-                "EDGE",
-                vertexMap,
-                edgeMap,
-                propNameToIdMap,
-                typeConvertor);
+        if (schemaMap.get("edge_types") != null) {
+            builderGraphElementFromYaml(
+                    (List)
+                            Objects.requireNonNull(
+                                    schemaMap.get("edge_types"),
+                                    "edge_types not exist in yaml config"),
+                    "EDGE",
+                    vertexMap,
+                    edgeMap,
+                    propNameToIdMap,
+                    typeConvertor);
+        }
         return new DefaultGraphSchema(vertexMap, edgeMap, propNameToIdMap);
     }
 

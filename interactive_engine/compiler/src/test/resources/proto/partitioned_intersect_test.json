@@ -66,6 +66,14 @@
     }]
   }, {
     "opr": {
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 1
+        }
+      }
+    }
+  }, {
+    "opr": {
       "edge": {
         "vTag": 1,
         "direction": "IN",
@@ -103,6 +111,14 @@
         "subPlans": [{
           "plan": [{
             "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 0
+                }
+              }
+            }
+          }, {
+            "opr": {
               "edge": {
                 "vTag": 0,
                 "params": {
@@ -138,6 +154,14 @@
           }]
         }, {
           "plan": [{
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 1
+                }
+              }
+            }
+          }, {
             "opr": {
               "edge": {
                 "vTag": 1,
