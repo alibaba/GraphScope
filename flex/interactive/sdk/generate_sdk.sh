@@ -109,30 +109,52 @@ if [ $# -eq 0 ]; then
 fi
 
 function install_generator() {
+  CLI_INSTALLED=false
+  JQ_INSTALLED=false
+  MVN_INSTALLED=false
   # first check openapi-generator-cli exists is executable
   if [ -f ~/bin/openapitools/openapi-generator-cli ]; then
     echo "openapi-generator-cli is already installed"
     export PATH=$PATH:~/bin/openapitools/
-    return
   fi
   if command -v openapi-generator-cli &>/dev/null; then
     echo "openapi-generator-cli is already installed"
-    return
+    CLI_INSTALLED=true
   fi
-  mkdir -p ~/bin/openapitools
-  curl https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/bin/utils/openapi-generator-cli.sh > ~/bin/openapitools/openapi-generator-cli
-  chmod u+x ~/bin/openapitools/openapi-generator-cli
-  export PATH=$PATH:~/bin/openapitools/
-  export OPENAPI_GENERATOR_VERSION=7.2.0
+  if ! $CLI_INSTALLED; then
+    echo "Installing openapi-generator-cli"
+    mkdir -p ~/bin/openapitools
+    curl https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/bin/utils/openapi-generator-cli.sh > ~/bin/openapitools/openapi-generator-cli
+    chmod u+x ~/bin/openapitools/openapi-generator-cli
+    export PATH=$PATH:~/bin/openapitools/
+    export OPENAPI_GENERATOR_VERSION=7.2.0
+  fi
   # on ubuntu apt-get jq on mac brew install jq
+
   if command -v jq &>/dev/null; then
     echo "jq is already installed"
+    JQ_INSTALLED=true
+    return
+  fi
+  if command -v mvn &>/dev/null; then
+    echo "maven is already installed"
+    MVN_INSTALLED=true
     return
   fi
   if [[ "$(uname -s)" == "Linux" ]]; then
-    sudo apt-get update && sudo apt-get -y install jq
+    if ! $JQ_INSTALLED; then
+      sudo apt-get update && sudo apt-get -y install jq
+    fi
+    if ! $MVN_INSTALLED; then
+      sudo apt-get update && sudo apt-get -y install maven
+    fi
   elif [[ "$(uname -s)" == "Darwin" ]]; then
-    brew install jq
+    if ! $JQ_INSTALLED; then
+      brew install jq
+    fi
+    if ! $MVN_INSTALLED; then
+      brew install maven
+    fi
   else
     echo "Unsupported OS"
     exit 1
