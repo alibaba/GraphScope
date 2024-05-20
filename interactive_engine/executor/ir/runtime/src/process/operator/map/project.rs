@@ -199,8 +199,13 @@ impl FilterMapFuncGen for pb::Project {
                             let val = key_val.value.as_ref().ok_or_else(|| {
                                 ParsePbError::EmptyFieldError(format!("value in Map Expr {:?}", key_val))
                             })?;
-                            let tag_key = TagKey::try_from(val.clone())?;
-                            key_value_vec.push((Some(key_obj), tag_key));
+                            match val {
+                                common_pb::variable_key_value::Value::Val(v) => {
+                                    let tag_key = TagKey::try_from(v.clone())?;
+                                    key_value_vec.push((Some(key_obj), tag_key));
+                                }
+                                common_pb::variable_key_value::Value::Nested(n) => todo!(),
+                            }
                         }
                         Projector::MultiGraphElementProjector(key_value_vec)
                     }

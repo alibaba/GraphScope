@@ -597,17 +597,21 @@ impl TryFrom<result_pb::Entry> for DynEntry {
                     let mut map = BTreeMap::new();
                     for key_val in kv.key_values {
                         let key = key_val.key.unwrap();
-                        let val_inner = key_val.value.unwrap().inner.unwrap();
-                        // currently, convert kv into Object::KV
-                        let key_obj: Object = Object::try_from(key)?;
-                        let val_obj: Object = match val_inner {
-                            result_pb::element::Inner::Object(obj) => Object::try_from(obj)?,
-                            _ => Err(ParsePbError::Unsupported(format!(
-                                "unsupported kvs value inner {:?}",
-                                val_inner,
-                            )))?,
-                        };
-                        map.insert(key_obj, val_obj);
+                        let value_inner = key_val.value.unwrap();
+                        match value_inner {
+                            result_pb::key_values::key_value::Value::Element(val) => {
+                                let val_inner = val.inner.unwrap();
+                                let val_obj: Object = match val_inner {
+                                    result_pb::element::Inner::Object(obj) => Object::try_from(obj)?,
+                                    _ => Err(ParsePbError::Unsupported(format!(
+                                        "unsupported kvs value inner {:?}",
+                                        val_inner,
+                                    )))?,
+                                };
+                                map.insert(Object::try_from(key)?, val_obj);
+                            }
+                            result_pb::key_values::key_value::Value::Nested(_) => todo!(),
+                        }
                     }
                     Ok(DynEntry::new(Object::KV(map)))
                 }

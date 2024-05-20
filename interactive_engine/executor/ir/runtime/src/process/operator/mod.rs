@@ -289,7 +289,7 @@ pub(crate) mod tests {
             .into_iter()
             .map(|(key, value)| common_pb::VariableKeyValue {
                 key: Some(common_pb::Value::from(key)),
-                value: Some(to_var_pb(value.0, value.1)),
+                value: Some(common_pb::variable_key_value::Value::Val(to_var_pb(value.0, value.1))),
             })
             .collect();
         common_pb::Expression {
