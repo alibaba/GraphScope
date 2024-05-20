@@ -52,7 +52,7 @@ def connect(coordinator_endpoint):
         context = get_current_context()
         if context is None:
             err(
-                "No available context found, try to connect by `gsctl conenct --coordinator-endpoint <addr>`."
+                "No available context found, try to connect by `gsctl connect --coordinator-endpoint <addr>`."
             )
             return
         coordinator_endpoint = context.coordinator_endpoint
@@ -80,6 +80,71 @@ def close():
             info(f"Disconnecting from the context: {context.to_dict()}")
             succ("Coordinator service disconnected.\n")
             info("Try 'gsctl --help' for help.")
+
+
+disclaimer = """
+Disclaimer: The `estimate` command is a roughly estimation of the memory usage of the graphscope engine.
+The actual memory usage may vary vastly due to the complexity of the graph algorithm and the data distribution.
+
+The estimation is based on the following formulas:
+let #V = number of vertices, #E = number of edges,
+assume load_factor of hashmap is 0.41, sizeof(inner_id) = sizeof(edge_id) = sizeof(vertex_id) = 8 bytes,
+where vertex_id is the original representation of vertex, it could be string though, in this case, the memory usage will grow.
+Graph:
+    1. vertex
+        - vertex map: #V * (sizeof(vertex_id) + sizeof(inner_id)) * (1 / load_factor)
+        - vertex table: size of vertex files in uncompressed CSV format, unit is GB
+    2. edge
+        - CSR + CSC: 2 * #E * (sizeof(inner_id) + sizeof(edge_id))
+        - offset array: #V * sizeof(size_t)
+        - edge table: size of vertex files in uncompressed CSV format, unit is GB
+    3. additional data structure when graph is partitioned:
+        - outer vertex ID to local ID map:
+        - local ID to outer vertex ID array:
+
+This is the minimum memory usage of the graphscope engine with 1 partition, the actual memory usage would be larger than this estimation.
+User should enlarge it by a multiple it by some factor (e.g. 2) to simulate the memory usage of the graphscope engine.
+"""
+
+
+def estimate_gae_memory_usage(v_num, e_num, v_file_size, e_file_size):
+    gb = 1024 * 1024 * 1024
+    # vertex map
+    vertex_map = v_num * (8 + 8) * (1 / 0.41) / gb
+    # vertex table
+    vertex_table = v_file_size
+    # edge
+    edge = 2 * e_num * (8 + 8) / gb
+    # offset array
+    offset_array = v_num * 8 / gb
+    # edge table
+    edge_table = e_file_size
+    return vertex_map + vertex_table + edge + offset_array + edge_table
+
+
+@cli.command()
+@click.option(
+    "-s",
+    "--storage",
+    type=click.Choice(["gae"], case_sensitive=False),
+    help="Storage type",
+    required=True,
+)
+@click.option("-v", "--v-num", type=int, help="Number of vertices")
+@click.option("-e", "--e-num", type=int, help="Number of edges")
+@click.option("-vf", "--v-file-size", type=float, help="Size of vertex files in GB")
+@click.option("-ef", "--e-file-size", type=float, help="Size of edge files in GB")
+def estimate(storage, v_num, e_num, v_file_size, e_file_size):
+    """Estimate the memory usage of the graphscope engine"""
+    if storage == "gae":
+        if v_num is None or e_num is None or v_file_size is None or e_file_size is None:
+            err("Please provide the required parameters.")
+            return
+        memory_usage = estimate_gae_memory_usage(v_num, e_num, v_file_size, e_file_size)
+        info(disclaimer)
+        print(f"The estimated memory usage is {memory_usage:.2f} GB.\n")
+    else:
+        err(f"Estimate usage of storage {storage} is not supported yet.")
 
 
 if __name__ == "__main__":
