@@ -909,29 +909,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/QueryRequest'
-          # application/json:
-          #   schema:
-          #     type: string
-          #   examples:
-          #     example1:
-          #       value:
-          #         type: "native/proc_call/adhoc"
-          #         payload: |
-          #           binary bytes
-          #     example2:
-          #       value:
-          #         type: "native"
-          #         payload: "0,123,david(encoded in binary)"
-          #     example3:
-          #       value:
-          #         type: "adhoc"
-          #         payload:
-          #           "json[scan{}, edge_expand{}]"
-          #     example4:
-          #       value:
-          #         type: "proc_call"
-          #         payload:
-          #           "json{proc_name: procA, params: []}"
       responses:
         '200':
           description: Successfully runned. Empty if failed?

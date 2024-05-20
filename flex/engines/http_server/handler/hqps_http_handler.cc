@@ -123,7 +123,12 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([this, outer_span = outer_span](auto&& output) {
+      .then([this
+#ifdef HAVE_OPENTELEMETRY_CPP
+             ,
+             outer_span = outer_span
+#endif
+  ](auto&& output) {
         if (output.content.size() < 4) {
           LOG(ERROR) << "Invalid output size: " << output.content.size();
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -340,8 +345,12 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
         return executor_refs_[dst_executor]
             .run_graph_db_query(query_param{std::move(param.content)})
-            .then([query_span = query_span,
-                   query_scope = std::move(query_scope)](auto&& output) {
+            .then([
+#ifdef HAVE_OPENTELEMETRY_CPP
+                      query_span = query_span,
+                      query_scope = std::move(query_scope)
+#endif  // HAVE_OPENTELEMETRY_CPP
+        ](auto&& output) {
 #ifdef HAVE_OPENTELEMETRY_CPP
               query_span->End();
 #endif  // HAVE_OPENTELEMETRY_CPP
@@ -349,7 +358,12 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
                   std::move(output.content));
             });
       })
-      .then([this, outer_span = outer_span](auto&& output) {
+      .then([this
+#ifdef HAVE_OPENTELEMETRY_CPP
+             ,
+             outer_span = outer_span
+#endif  // HAVE_OPENTELEMETRY_CPP
+  ](auto&& output) {
         if (output.content.size() < 4) {
           LOG(ERROR) << "Invalid output size: " << output.content.size();
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -425,6 +439,8 @@ hqps_http_handler::hqps_http_handler(uint16_t http_port)
     : http_port_(http_port) {
   ic_handler_ = new hqps_ic_handler(ic_query_group_id, max_group_id,
                                     group_inc_step, shard_query_concurrency);
+  proc_handler_ = new hqps_proc_handler(
+      c_query_group_id, max_group_id, group_inc_step, shard_query_concurrency);
   adhoc_query_handler_ = new hqps_adhoc_query_handler(
       ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
       shard_adhoc_concurrency);
@@ -514,7 +530,10 @@ void hqps_http_handler::start_query_actors() {
 seastar::future<> hqps_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/v1/query"), ic_handler_);
+          seastar::httpd::url("/v1/internal/query"), ic_handler_);
+    // TODO: add a handler to handler stored procedure queries from sdk
+    r.add(seastar::httpd::operation_type::POST,
+          seastar::httpd::url("/v1/query"), proc_handler_);  //
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/adhoc_query"),
           adhoc_query_handler_);
