@@ -17,11 +17,13 @@ package com.alibaba.graphscope.interactive.client.impl;
 
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
+import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.openapi.ApiClient;
 import com.alibaba.graphscope.interactive.openapi.ApiException;
 import com.alibaba.graphscope.interactive.openapi.ApiResponse;
 import com.alibaba.graphscope.interactive.openapi.api.*;
 import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.Closeable;
 import java.util.List;
@@ -299,14 +301,21 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<CollectiveResults> callProcedure(String graphName, QueryRequest request) {
+    public Result<IrResult.CollectiveResults> callProcedure(String graphName, QueryRequest request) {
         try {
-            ApiResponse<CollectiveResults> response =
+            ApiResponse<String> response =
                     queryApi.procCallWithHttpInfo(graphName, request);
-            return Result.fromResponse(response);
+            if (response.getStatusCode() != 200) {
+                return Result.fromException(new ApiException(response.getStatusCode(),  response.getData()));
+            }
+            IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(response.getData().getBytes());
+            return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            return Result.error(e.getMessage());
         }
     }
 
