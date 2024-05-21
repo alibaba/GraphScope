@@ -39,8 +39,8 @@ public class CypherAntlr4Parser extends Antlr4Parser {
         this(ImmutableList.of());
     }
 
-    public CypherAntlr4Parser(List<Class<? extends ParseTree>> writeModeTrees) {
-        super(writeModeTrees);
+    public CypherAntlr4Parser(List<Class<? extends ParseTree>> writeOperations) {
+        super(writeOperations);
     }
 
     @Override
