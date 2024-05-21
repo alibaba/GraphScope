@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.google.common.base.Preconditions;
@@ -79,6 +80,7 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
             plan = getPlanAsJson(physicalBuilder.build());
             int planId = Objects.hash(logicalPlan);
             physicalBuilder.setPlanId(planId);
+            physicalBuilder.setQueryMode(Common.QueryMode.valueOf(logicalPlan.getMode().name()));
             GraphAlgebraPhysical.PhysicalPlan physicalPlan = physicalBuilder.build();
             byte[] bytes = physicalPlan.toByteArray();
             return new PhysicalPlan(bytes, plan);

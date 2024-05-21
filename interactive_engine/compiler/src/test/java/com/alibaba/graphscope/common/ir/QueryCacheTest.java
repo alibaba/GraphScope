@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.QueryMode;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
@@ -37,8 +38,8 @@ public class QueryCacheTest {
                 new GraphPlanner(
                         configs,
                         (GraphBuilder builder, IrMeta irMeta, String q) ->
-                                new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)));
+                                new LogicalPlanVisitor(builder, irMeta, QueryMode.READ)
+                                        .visit(new CypherAntlr4Parser().parse(q).getParseTree()));
         QueryCache cache = new QueryCache(configs, graphPlanner);
         QueryCache.Key key1 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
         Assert.assertEquals(
@@ -60,8 +61,8 @@ public class QueryCacheTest {
                 new GraphPlanner(
                         configs,
                         (GraphBuilder builder, IrMeta irMeta, String q) ->
-                                new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)));
+                                new LogicalPlanVisitor(builder, irMeta, QueryMode.READ)
+                                        .visit(new CypherAntlr4Parser().parse(q).getParseTree()));
         QueryCache cache = new QueryCache(configs, graphPlanner);
         QueryCache.Key key1 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
         QueryCache.Key key2 = cache.createKey("Match (n {age: 10}) Return n", Utils.schemaMeta);

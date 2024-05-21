@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope;
 
+import com.alibaba.graphscope.common.antlr4.ParseResult;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
@@ -36,6 +37,7 @@ import com.alibaba.graphscope.gremlin.antlr4x.visitor.GraphBuilderVisitor;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
@@ -79,11 +81,16 @@ public class GraphServer {
             GraphPlanner graphPlanner =
                     new GraphPlanner(
                             configs,
-                            (GraphBuilder builder, IrMeta irMeta, String query) ->
-                                    new LogicalPlan(
-                                            new GraphBuilderVisitor(builder)
-                                                    .visit(new GremlinAntlr4Parser().parse(query))
-                                                    .build()));
+                            (GraphBuilder builder, IrMeta irMeta, String query) -> {
+                                ParseResult result = new GremlinAntlr4Parser().parse(query);
+                                return new LogicalPlan(
+                                        new GraphBuilderVisitor(builder)
+                                                .visit(result.getParseTree())
+                                                .build(),
+                                        null,
+                                        ImmutableList.of(),
+                                        result.getMode());
+                            });
             QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.gremlinServer =
                     new IrGremlinServer(
@@ -100,9 +107,11 @@ public class GraphServer {
             GraphPlanner graphPlanner =
                     new GraphPlanner(
                             configs,
-                            (GraphBuilder builder, IrMeta irMeta, String query) ->
-                                    new LogicalPlanVisitor(builder, irMeta)
-                                            .visit(new CypherAntlr4Parser().parse(query)));
+                            (GraphBuilder builder, IrMeta irMeta, String query) -> {
+                                ParseResult result = new CypherAntlr4Parser().parse(query);
+                                return new LogicalPlanVisitor(builder, irMeta, result.getMode())
+                                        .visit(result.getParseTree());
+                            });
             QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.cypherBootstrapper =
                     new CypherBootstrapper(

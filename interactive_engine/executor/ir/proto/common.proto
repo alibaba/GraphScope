@@ -107,3 +107,11 @@ enum DataType {
   TIME32 = 13;
   TIMESTAMP = 14;
 }
+
+// Differentiate between read-only and read-write query modes. 
+// Here, there is no distinct classification for WRITE_ONLY and READ_WRITE.
+// As long as the query contains any operator that performs a write operation, then the query is considered to belong to the WRITE category.
+enum QueryMode {
+  READ = 0; // READ_ONLY
+  WRITE = 1; // READ_WRITE or WRITE_ONLY
+}

@@ -43,7 +43,7 @@ public class GraphBuilderTest {
     public static RelNode eval(String query) {
         GraphBuilder builder = Utils.mockGraphBuilder();
         GraphBuilderVisitor visitor = new GraphBuilderVisitor(builder);
-        ParseTree parseTree = new GremlinAntlr4Parser().parse(query);
+        ParseTree parseTree = new GremlinAntlr4Parser().parse(query).getParseTree();
         return visitor.visit(parseTree).build();
     }
 

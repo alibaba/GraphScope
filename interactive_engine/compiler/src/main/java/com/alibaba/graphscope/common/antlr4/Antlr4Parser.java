@@ -16,11 +16,56 @@
 
 package com.alibaba.graphscope.common.antlr4;
 
+import com.alibaba.graphscope.common.ir.meta.QueryMode;
+
+import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.RuleNode;
+
+import java.util.List;
 
 /**
  * parse DSL statement to antlr tree
  */
-public interface Antlr4Parser {
-    ParseTree parse(String statement);
+public abstract class Antlr4Parser {
+    protected final List<Class<? extends ParseTree>> writeOperators;
+
+    public Antlr4Parser(List<Class<? extends ParseTree>> writeOperators) {
+        this.writeOperators = writeOperators;
+    }
+
+    public ParseResult parse(String statement) {
+        ParseTree parseTree = parse0(statement);
+        return new ParseResult(parseTree, (new QueryModeVisitor(writeOperators)).visit(parseTree));
+    }
+
+    protected abstract ParseTree parse0(String statement);
+
+    // help to determine whether a query which denoted by AST tree contains any write operations
+    static class QueryModeVisitor extends AbstractParseTreeVisitor<QueryMode> {
+        public final List<Class<? extends ParseTree>> writeOperations;
+
+        public QueryModeVisitor(List<Class<? extends ParseTree>> writeOperations) {
+            this.writeOperations = writeOperations;
+        }
+
+        public QueryMode visitChildren(RuleNode node) {
+            if (writeOperations.stream().anyMatch(k -> k.isInstance(node))) {
+                return QueryMode.WRITE;
+            }
+            return super.visitChildren(node);
+        }
+
+        @Override
+        protected QueryMode aggregateResult(QueryMode aggregate, QueryMode nextResult) {
+            return (aggregate == QueryMode.WRITE || nextResult == QueryMode.WRITE)
+                    ? QueryMode.WRITE
+                    : QueryMode.READ;
+        }
+
+        @Override
+        protected QueryMode defaultResult() {
+            return QueryMode.READ;
+        }
+    }
 }

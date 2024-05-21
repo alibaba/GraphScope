@@ -16,10 +16,12 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
+import com.alibaba.graphscope.common.ir.meta.QueryMode;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedures;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
@@ -28,11 +30,12 @@ import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
+import org.javatuples.Pair;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ProcedureCallVisitor extends CypherGSBaseVisitor<RexNode> {
+public class ProcedureCallVisitor extends CypherGSBaseVisitor<LogicalPlan> {
     private final GraphBuilder builder;
     private final ExpressionVisitor expressionVisitor;
     private final IrMeta irMeta;
@@ -44,12 +47,12 @@ public class ProcedureCallVisitor extends CypherGSBaseVisitor<RexNode> {
     }
 
     @Override
-    public RexNode visitOC_Cypher(CypherGSParser.OC_CypherContext ctx) {
+    public LogicalPlan visitOC_Cypher(CypherGSParser.OC_CypherContext ctx) {
         return visitOC_Statement(ctx.oC_Statement());
     }
 
     @Override
-    public RexNode visitOC_StandaloneCall(CypherGSParser.OC_StandaloneCallContext ctx) {
+    public LogicalPlan visitOC_StandaloneCall(CypherGSParser.OC_StandaloneCallContext ctx) {
         if (ctx.oC_ExplicitProcedureInvocation() != null) {
             return visitOC_ExplicitProcedureInvocation(ctx.oC_ExplicitProcedureInvocation());
         } else {
@@ -58,25 +61,32 @@ public class ProcedureCallVisitor extends CypherGSBaseVisitor<RexNode> {
     }
 
     @Override
-    public RexNode visitOC_ExplicitProcedureInvocation(
+    public LogicalPlan visitOC_ExplicitProcedureInvocation(
             CypherGSParser.OC_ExplicitProcedureInvocationContext ctx) {
-        SqlOperator operator = visitOC_ProcedureNameAsOperator(ctx.oC_ProcedureName());
+        Pair<SqlOperator, QueryMode> operatorModePair =
+                visitOC_ProcedureNameAsOperator(ctx.oC_ProcedureName());
         List<RexNode> operands =
                 ctx.oC_Expression().stream()
-                        .map(this::visitOC_Expression)
+                        .map(this::visitOC_Expression0)
                         .collect(Collectors.toList());
-        return builder.call(operator, operands);
+        RexNode procedureCall = builder.call(operatorModePair.getValue0(), operands);
+        return new LogicalPlan(
+                null, procedureCall, ImmutableList.of(), operatorModePair.getValue1());
     }
 
     @Override
-    public RexNode visitOC_ImplicitProcedureInvocation(
+    public LogicalPlan visitOC_ImplicitProcedureInvocation(
             CypherGSParser.OC_ImplicitProcedureInvocationContext ctx) {
-        SqlOperator operator = visitOC_ProcedureNameAsOperator(ctx.oC_ProcedureName());
-        return builder.call(operator, ImmutableList.of());
+        Pair<SqlOperator, QueryMode> operatorModePair =
+                visitOC_ProcedureNameAsOperator(ctx.oC_ProcedureName());
+        RexNode procedureCall = builder.call(operatorModePair.getValue0(), ImmutableList.of());
+        return new LogicalPlan(
+                null, procedureCall, ImmutableList.of(), operatorModePair.getValue1());
     }
 
     // visit procedure name
-    public SqlOperator visitOC_ProcedureNameAsOperator(CypherGSParser.OC_ProcedureNameContext ctx) {
+    private Pair<SqlOperator, QueryMode> visitOC_ProcedureNameAsOperator(
+            CypherGSParser.OC_ProcedureNameContext ctx) {
         String procedureName = ctx.getText();
         StoredProcedureMeta meta = null;
         StoredProcedures procedures = irMeta.getStoredProcedures();
@@ -84,12 +94,11 @@ public class ProcedureCallVisitor extends CypherGSBaseVisitor<RexNode> {
                 procedures != null && (meta = procedures.getStoredProcedure(procedureName)) != null,
                 "procedure %s not found",
                 procedureName);
-        return GraphStdOperatorTable.USER_DEFINED_PROCEDURE(meta);
+        return Pair.with(GraphStdOperatorTable.USER_DEFINED_PROCEDURE(meta), meta.getMode());
     }
 
     // visit procedure parameters
-    @Override
-    public RexNode visitOC_Expression(CypherGSParser.OC_ExpressionContext ctx) {
+    private RexNode visitOC_Expression0(CypherGSParser.OC_ExpressionContext ctx) {
         return expressionVisitor.visitOC_Expression(ctx).getExpr();
     }
 }

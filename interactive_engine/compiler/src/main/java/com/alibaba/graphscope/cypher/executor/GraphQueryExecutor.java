@@ -29,6 +29,7 @@ import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
 
+import org.neo4j.bolt.runtime.AccessMode;
 import org.neo4j.fabric.config.FabricConfig;
 import org.neo4j.fabric.eval.CatalogManager;
 import org.neo4j.fabric.eval.UseEvaluation;
@@ -109,6 +110,8 @@ public class GraphQueryExecutor extends FabricExecutor {
             if (statement.equals(GET_ROUTING_TABLE_STATEMENT) || statement.equals(PING_STATEMENT)) {
                 return super.run(fabricTransaction, statement, parameters);
             }
+            AccessMode mode = fabricTransaction.getTransactionInfo().getAccessMode();
+            logger.info("query mode is {}", mode);
             irMeta = metaQueryCallback.beforeExec();
             QueryCache.Key cacheKey = queryCache.createKey(statement, irMeta);
             QueryCache.Value cacheValue = queryCache.get(cacheKey);
