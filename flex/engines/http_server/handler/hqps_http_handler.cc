@@ -123,7 +123,12 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([this, outer_span = outer_span](auto&& output) {
+      .then([this
+#ifdef HAVE_OPENTELEMETRY_CPP
+             ,
+             outer_span = outer_span
+#endif  // HAVE_OPENTELEMETRY_CPP
+  ](auto&& output) {
         if (output.content.size() < 4) {
           LOG(ERROR) << "Invalid output size: " << output.content.size();
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -132,7 +137,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
           outer_span->End();
           std::map<std::string, std::string> labels = {{"status", "fail"}};
           total_counter_->Add(1, labels);
-#endif
+#endif  // HAVE_OPENTELEMETRY_CPP
           return seastar::make_ready_future<query_param>(std::move(output));
         }
         return seastar::make_ready_future<query_param>(
@@ -340,8 +345,12 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
         return executor_refs_[dst_executor]
             .run_graph_db_query(query_param{std::move(param.content)})
-            .then([query_span = query_span,
-                   query_scope = std::move(query_scope)](auto&& output) {
+            .then([
+#ifdef HAVE_OPENTELEMETRY_CPP
+                      query_span = query_span,
+                      query_scope = std::move(query_scope)
+#endif  // HAVE_OPENTELEMETRY_CPP
+        ](auto&& output) {
 #ifdef HAVE_OPENTELEMETRY_CPP
               query_span->End();
 #endif  // HAVE_OPENTELEMETRY_CPP
@@ -349,7 +358,12 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
                   std::move(output.content));
             });
       })
-      .then([this, outer_span = outer_span](auto&& output) {
+      .then([this
+#ifdef HAVE_OPENTELEMETRY_CPP
+             ,
+             outer_span = outer_span
+#endif  // HAVE_OPENTELEMETRY_CPP
+  ](auto&& output) {
         if (output.content.size() < 4) {
           LOG(ERROR) << "Invalid output size: " << output.content.size();
 #ifdef HAVE_OPENTELEMETRY_CPP
