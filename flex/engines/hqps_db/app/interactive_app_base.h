@@ -19,37 +19,76 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/proto_generated_gie/results.pb.h"
-
+#include "nlohmann/json.hpp"
 namespace gs {
 
 template <typename... ARGS>
-class InteractiveAppBase : public AppBase {
+std::tuple<ARGS...> deserialize(std::string_view sv) {
+  std::tuple<ARGS...> tuple;
+  auto j = nlohmann::json::parse(sv);
+  auto arguments_list = j["arguments"];
+  for (int i = 0; i < sizeof...(ARGS); i++) {
+    // fixme: check if the type is matched
+    std::get<i>(tuple) = arguments_list[i]["value"];
+  }
+  return tuple;
+}
+// for cypher procedure
+template <typename... ARGS>
+class TypedInteractiveApp : public AppBase {
  public:
-  InteractiveAppBase(GraphDBSession& graph);
+  TypedInteractiveApp(GraphDBSession& graph) : graph_(graph) {}
+
+  std::string type() const override { return "cypher procedure"; }
 
   bool Query(Decoder& input, Encoder& output) override {
     //
-    auto tuple = input.template Get<ARGS...>();
+    auto sv = input.get_string();
+    char protocol = sv.back();
+    size_t len = input.size();
+    input.reset(input.data(), len - 1);
+
+    auto tuple = deserialize<ARGS...>(sv);
     if (!tuple) {
       return false;
     }
+
     // unpack tuple
-    auto res = QueryImpl(tuple, output);
+    auto res = unpackedAndInvoke(tuple);
     // write output
-    output.put_string_view(res.DebugString());
+    std::string out;
+    res.SerializeToString(&out);
+
+    output.put_string(out);
     return true;
   }
 
-  results::Collection QueryImpl(std::tuple<ARGS...>& tuple) {
-    return std::apply(
-        [this, &output](ARGS... args) { return this->QueryImpl(args...); },
-        tuple);
+  results::CollectiveResults unpackedAndInvoke(std::tuple<ARGS...>& tuple) {
+    return std::apply([this](ARGS... args) { return this->QueryImpl(args...); },
+                      tuple);
   }
 
-  virtual results::Collection QueryImpl(ARGS... args) = 0;
+  virtual results::CollectiveResults QueryImpl(ARGS... args) = 0;
 
  private:
-  InteractiveAppBase& graph_;
+  GraphDBSession& graph_;
+};
+
+// for c++ procedure
+class UnTypedInteractiveApp : public AppBase {
+ public:
+  UnTypedInteractiveApp(GraphDBSession& graph) : graph_(graph) {}
+
+  std::string type() const override { return "c++ procedure"; }
+
+  bool Query(Decoder& input, Encoder& output) override {
+    return QueryImpl(input, output);
+  }
+
+  virtual bool QueryImpl(Decoder& decoder, Encoder& encoder) = 0;
+
+ private:
+  GraphDBSession& graph_;
 };
 
 }  // namespace gs

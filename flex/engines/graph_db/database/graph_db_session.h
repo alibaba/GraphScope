@@ -35,6 +35,11 @@ class WalWriter;
 
 class GraphDBSession {
  public:
+  enum class InputFormat : uint8_t {
+    kCppEncoder = 0,
+    kCypherJson = 1,
+  };
+
   static constexpr int32_t MAX_RETRY = 3;
   static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
@@ -94,6 +99,7 @@ class GraphDBSession {
   AppBase* GetApp(int idx);
 
  private:
+  uint8_t parse_query_type(const std::string& input, char tag);
   GraphDB& db_;
   Allocator& alloc_;
   WalWriter& logger_;

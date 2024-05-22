@@ -31,6 +31,14 @@ namespace gs {
 
 class AppBase {
  public:
+  enum class Mode {
+    READ,
+    WRITE,
+  };
+  virtual std::string name() const { return ""; };
+  virtual std::string description() const { return ""; };
+  virtual std::string type() const { return ""; }
+  virtual Mode mode() const { return Mode::READ; }
   AppBase() {}
   virtual ~AppBase() {}
 

@@ -166,6 +166,7 @@ class hqps_http_handler {
   hqps_ic_handler* ic_handler_;
   hqps_adhoc_query_handler* adhoc_query_handler_;
   hqps_exit_handler* exit_handler_;
+  hqps_proc_handler* proc_handler_;
 };
 
 }  // namespace server

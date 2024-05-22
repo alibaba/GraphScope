@@ -19,7 +19,7 @@
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/utils/app_utils.h"
-
+#include "nlohmann/json.hpp"
 namespace gs {
 
 ReadTransaction GraphDBSession::GetReadTransaction() {
@@ -101,11 +101,55 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
   }
 }
 
+uint8_t GraphDBSession::parse_query_type(const std::string& input,
+                                         char input_tag) {
+  size_t len = input.size();
+  if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
+    // for c++ encoder
+    return input[len - 2];
+  } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
+    // for cypher
+    std::string_view str_view(input.data(), len - 1);
+    nlohmann::json j = nlohmann::json::parse(str_view);
+    auto query_name = j["query_name"].get<std::string>();
+    const auto& app_name_to_path_index = schema().GetPlugins();
+    if (app_name_to_path_index.count(query_name) <= 0) {
+      LOG(ERROR) << "Query name is not registered: " << query_name;
+      return 0;
+    }
+    return app_name_to_path_index.at(query_name).second;
+  }
+  LOG(ERROR) << "Invalid input tag: " << input_tag;
+  return 0;
+}
+
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   const auto start = std::chrono::high_resolution_clock::now();
-  uint8_t type = input.back();
+
+  if (input.size() < 2) {
+    return Result<std::vector<char>>(
+        StatusCode::InValidArgument,
+        "Invalid input, input size: " + std::to_string(input.size()),
+        std::vector<char>());
+  }
+
   const char* str_data = input.data();
-  size_t str_len = input.size() - 1;
+  char input_tag = input.back();
+  size_t str_len{};
+
+  if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
+    // for c++ encoder
+    str_len = input.size() - 2;
+  } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
+    // for cypher
+    str_len = input.size() - 1;
+  } else {
+    return Result<std::vector<char>>(
+        StatusCode::InValidArgument,
+        "Invalid input tag: " + std::to_string(static_cast<int>(input_tag)),
+        std::vector<char>());
+  }
+  uint8_t type = parse_query_type(input, input_tag);
 
   std::vector<char> result_buffer;
 
