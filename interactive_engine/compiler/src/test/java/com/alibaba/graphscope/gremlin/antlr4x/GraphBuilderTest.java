@@ -1607,7 +1607,7 @@ public class GraphBuilderTest {
                 node.explain().trim());
     }
 
-    // id is not the primary key of label 'software', should be fused as 'uniqueKeyFilters'
+    // id is not the primary key of label 'software', should be fused as 'fusedFilter'
     @Test
     public void g_V_has_label_software_id_test() {
         RelNode node = eval("g.V().has(\"software\", \"id\", 1)");
