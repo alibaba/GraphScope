@@ -292,27 +292,6 @@ public class GraphTypeInference {
                                 minHop,
                                 maxHop);
                 return pathTypeInfer.infer();
-                //                RelDataType newExpandType =
-                //                        restrictParent(
-                //                                relGraph,
-                //                                child,
-                //                                pxd.getExpand(),
-                //                                ((GraphPathType)
-                // parentType).getComponentType().getExpandType());
-                //                RelNode oldExpand =
-                //                        pxd.getExpand()
-                //                                .copy(pxd.getExpand().getTraitSet(),
-                // ImmutableList.of(child));
-                //                RelNode newExpand = newRel(oldExpand, newExpandType);
-                //                RelDataType newGetVType =
-                //                        restrictParent(
-                //                                relGraph,
-                //                                newExpand,
-                //                                pxd.getGetV(),
-                //                                ((GraphPathType)
-                // parentType).getComponentType().getGetVType());
-                //                return new GraphPathType(new
-                // GraphPathType.ElementType(newExpandType, newGetVType));
             }
             throw new IllegalArgumentException(
                     "graph generic type error: unable to establish an extension relationship"
