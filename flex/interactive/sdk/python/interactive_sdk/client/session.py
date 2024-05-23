@@ -231,8 +231,12 @@ class ProcedureInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def call_procedure(
-        self, graph_id: StrictStr, procedure_id: StrictStr, params: Dict[str, Any]
-    ) -> Result[str]:
+        self, graph_id: StrictStr, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
         raise NotImplementedError
 
 
@@ -496,7 +500,7 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def call_procedure(
-        self, graph_id: StrictStr, procedure_id: StrictStr, params: QueryRequest
+        self, graph_id: StrictStr, params: QueryRequest
     ) -> Result[CollectiveResults]:
         try:
             params_str = params.to_json() + chr(1)
@@ -509,7 +513,7 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def call_procedure_raw(self, graph_id: StrictStr, procedure_id: StrictStr, params: StrictStr) -> Result[str]:
+    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
         try:
             params = params + chr(0)
             response = self._procedure_api.call_procedure_with_http_info(
