@@ -27,22 +27,26 @@
 
 #include <glog/logging.h>
 
+class GraphDBSession;
+
 namespace gs {
+
+enum class AppType : uint8_t {
+  kCpp = 0,
+  kCypherGenerated = 1,
+};
+
+enum class AppMode : uint8_t {
+  kRead = 0,
+  kWrite = 1,
+};
 
 class AppBase {
  public:
-  enum class Mode {
-    READ,
-    WRITE,
-  };
-  virtual std::string name() const { return ""; };
-  virtual std::string description() const { return ""; };
-  virtual std::string type() const { return ""; }
-  virtual Mode mode() const { return Mode::READ; }
-  AppBase() {}
+  virtual AppType type() = 0;
+  virtual AppMode mode() = 0;
+  virtual bool run(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
   virtual ~AppBase() {}
-
-  virtual bool Query(Decoder& input, Encoder& output) = 0;
 };
 
 class AppWrapper {

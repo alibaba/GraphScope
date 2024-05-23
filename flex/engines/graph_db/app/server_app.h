@@ -23,9 +23,7 @@ namespace gs {
 
 class ServerApp : public AppBase {
  public:
-  ServerApp(GraphDBSession& graph) : graph_(graph) {}
-
-  bool Query(Decoder& input, Encoder& output) override;
+  bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:
   struct vertex_range {

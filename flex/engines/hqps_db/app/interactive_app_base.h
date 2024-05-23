@@ -66,20 +66,45 @@ std::tuple<ARGS...> deserialize(std::string_view sv) {
   return deserialize_impl<0, ARGS...>(arguments_list);
 }
 
+class ReadAppBase : public AppBase {
+ public:
+  AppMode mode() override { return AppMode::kRead; }
+
+  AppType type() override { return AppType::kCpp; }
+
+  bool run(GraphDBSession& db, Decoder& input, Encoder& output) override {
+    return this->Query(db, input, output);
+  }
+
+  virtual bool Query(const GraphDBSession& db, Decoder& input,
+                     Encoder& output) = 0;
+};
+
+class WriteAppBase : public AppBase {
+ public:
+  AppMode mode() override { return AppMode::kWrite; }
+
+  AppType type() override { return AppType::kCpp; }
+
+  bool run(GraphDBSession& db, Decoder& input, Encoder& output) override {
+    return this->Query(db, input, output);
+  }
+
+  virtual bool Query(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
+};
+
 // for cypher procedure
 template <typename... ARGS>
-class TypedInteractiveApp : public AppBase {
+class CypherReadAppBase : public AppBase {
  public:
-  TypedInteractiveApp(GraphDBSession& graph) : graph_(graph) {}
+  AppType type() override { return AppType::kCypherGenerated; }
 
-  std::string type() const override { return "cypher procedure"; }
+  virtual results::CollectiveResults Query(const GraphDBSession& db,
+                                           ARGS... args) = 0;
 
-  bool Query(Decoder& input, Encoder& output) override {
-    //
+  bool Query(const GraphDBSession& db, Decoder& input,
+             Encoder& output) override {
     auto sv = input.get_string();
-    char protocol = sv.back();
-    size_t len = input.size();
-    input.reset(input.data(), len - 1);
 
     auto tuple = deserialize<ARGS...>(sv);
     if (!tuple) {
@@ -96,34 +121,40 @@ class TypedInteractiveApp : public AppBase {
     return true;
   }
 
-  results::CollectiveResults unpackedAndInvoke(std::tuple<ARGS...>& tuple) {
-    return std::apply([this](ARGS... args) { return this->QueryImpl(args...); },
-                      tuple);
+  results::CollectiveResults unpackedAndInvoke(const GraphDBSession& db,
+                                               std::tuple<ARGS...>& tuple) {
+    return std::apply(
+        [this, &db](ARGS... args) { return this->Query(db, args...); }, tuple);
   }
-
-  virtual results::CollectiveResults QueryImpl(ARGS... args) = 0;
 
  private:
   GraphDBSession& graph_;
 };
 
-// for c++ procedure
-class UnTypedInteractiveApp : public AppBase {
+template <typename... ARGS>
+class CypherWriteAppBase : public AppBase {
  public:
-  UnTypedInteractiveApp(GraphDBSession& graph) : graph_(graph) {}
+  AppType type() override { return AppType::kCypherGenerated; }
 
-  std::string type() const override { return "c++ procedure"; }
+  virtual bool Query(GraphDBSession& db, ARGS... args) = 0;
 
-  bool Query(Decoder& input, Encoder& output) override {
-    return QueryImpl(input, output);
+  bool Query(GraphDBSession& db, Decoder& input, Encoder& output) override {
+    auto sv = input.get_string();
+
+    auto tuple = deserialize<ARGS...>(sv);
+    if (!tuple) {
+      return false;
+    }
+
+    // unpack tuple
+    unpackedAndInvoke(db, tuple);
+    return true;
   }
 
-  virtual bool QueryImpl(Decoder& decoder, Encoder& encoder) = 0;
-
- private:
-  GraphDBSession& graph_;
+  void unpackedAndInvoke(GraphDBSession& db, std::tuple<ARGS...>& tuple) {
+    std::apply([this, &db](ARGS... args) { this->Query(db, args...); }, tuple);
+  }
 };
-
 }  // namespace gs
 
 #endif  // ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
