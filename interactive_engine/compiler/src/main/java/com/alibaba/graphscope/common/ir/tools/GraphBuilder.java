@@ -994,6 +994,8 @@ public class GraphBuilder extends RelBuilder {
                     }
                     if (!extraFilters.isEmpty()) {
                         extraFilters.forEach(k -> k.accept(propertyChecker));
+                        builder.filter(extraFilters);
+                        extraFilters.clear();
                     }
                     tableScan = (AbstractBindableTableScan) builder.build();
                 }
