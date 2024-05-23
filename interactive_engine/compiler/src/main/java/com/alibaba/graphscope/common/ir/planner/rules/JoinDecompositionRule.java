@@ -380,7 +380,10 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
         // details.
         int newEdgeId = oldEdge.getId();
         ElementDetails newDetails =
-                new ElementDetails(oldEdge.getElementDetails().getSelectivity(), newRange);
+                new ElementDetails(
+                        oldEdge.getElementDetails().getSelectivity(),
+                        newRange,
+                        oldEdge.getElementDetails().getPxdInnerGetVTypes());
         return (oldEdge instanceof SinglePatternEdge)
                 ? new SinglePatternEdge(
                         newSrc,

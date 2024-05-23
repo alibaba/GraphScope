@@ -248,4 +248,17 @@ public class GraphTypeInferenceTest {
         }
         Assert.fail();
     }
+
+    @Test
+    public void graph_path_type_inference_test() {
+        //        RelNode node = com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+        //                        "Match (a)-[b]->(c) Return b",
+        //                        Utils.mockGraphBuilder("schema/ldbc.json"))
+        //                .build();
+        //        GraphLabelType allEdgeTypes = ((GraphSchemaType)
+        // node.getRowType().getFieldList().get(0).getType()).getLabelType();
+        //        GraphLabelType personT
+        //        GraphPathTypeInference typeInference = new GraphPathTypeInference(new
+        // GraphLabelType())
+    }
 }

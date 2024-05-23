@@ -76,4 +76,35 @@ public class STPathTest {
                 FileUtils.readJsonFromResource("proto/st_path_test.json"),
                 physicalBuilder.build().explain().trim());
     }
+
+    @Test
+    public void st_path_between_person_and_place() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a:PERSON{id:933})-[c*2..3]->(b:PLACE{id:999}) Return"
+                                        + " count(a);",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[a],"
+                    + " aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                    + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PLACE]}], alias=[b],"
+                    + " fusedFilter=[[=(_.id, 999)]], opt=[END])\n"
+                    + "    GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[[EdgeLabel(ISPARTOF,"
+                    + " PLACE, PLACE), EdgeLabel(ISLOCATEDIN, PERSON, PLACE), EdgeLabel(KNOWS,"
+                    + " PERSON, PERSON), EdgeLabel(LIKES, PERSON, COMMENT), EdgeLabel(LIKES,"
+                    + " PERSON, POST), EdgeLabel(STUDYAT, PERSON, ORGANISATION), EdgeLabel(WORKAT,"
+                    + " PERSON, ORGANISATION), EdgeLabel(ISLOCATEDIN, COMMENT, PLACE),"
+                    + " EdgeLabel(ISLOCATEDIN, POST, PLACE), EdgeLabel(ISLOCATEDIN, ORGANISATION,"
+                    + " PLACE)]], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON, POST,"
+                    + " ORGANISATION, PLACE, COMMENT]}], alias=[_], opt=[END])\n"
+                    + "], offset=[2], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
+                    + " alias=[c], start_alias=[a])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[a], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 933)])",
+                after.explain().trim());
+    }
 }
