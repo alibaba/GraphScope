@@ -79,16 +79,16 @@ function find_resources(){
 # Generate a yaml contains the metadata about the c++ procedure
 generate_cpp_yaml() {
   if [ $# -ne 5 ]; then
-    echo "Usage: generate_cpp_yaml <procedure_name> <procedure_description> <output_so_path> <procedure_query_string> <output_yaml_file>"
+    echo "Usage: generate_cpp_yaml <procedure_name> <procedure_description> <output_so_name> <procedure_query_string> <output_yaml_file>"
     echo " but receive: "$#
     exit 1
   fi
-  procedure_name=$1
-  procedure_description=$2
-  output_so_path=$3
-  procedure_query=$4
-  output_yaml_file=$5
-  template_str="""
+  local procedure_name=$1
+  local procedure_description=$2
+  local output_so_name=$3
+  local rocedure_query=$4
+  local output_yaml_file=$5
+  local template_str="""
   name: ${procedure_name}
   description: ${procedure_description}
   library: ${output_so_path}

@@ -214,7 +214,7 @@ jobs:
           eval ${cmd} || exit 1
         done
 
-    - name: Test cypher procedure generation and loading
+    - name: Test cypher&cpp procedure generation and loading
       env:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
         PLUGIN_DIR: ${INTERACTIVE_WORKSPACE}/data/modern_graph/plugins
