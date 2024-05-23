@@ -15,9 +15,9 @@
  */
 package com.alibaba.graphscope.groot.common.schema.impl;
 
-import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
-import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
+import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
+import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.google.common.collect.Maps;
 
 import org.slf4j.Logger;
@@ -27,14 +27,14 @@ import java.util.Map;
 
 public class DefaultGraphStatistics implements GraphStatistics {
     private static final Logger logger = LoggerFactory.getLogger(DefaultGraphStatistics.class);
-    private Map<GraphVertex, Integer> vertexTypeCounts = Maps.newHashMap();
-    private Map<GraphEdge, Integer> edgeTypeCounts = Maps.newHashMap();
+    private Map<LabelId, Integer> vertexTypeCounts = Maps.newHashMap();
+    private Map<EdgeKind, Integer> edgeTypeCounts = Maps.newHashMap();
     private Integer totalVertexCount;
     private Integer totalEdgeCount;
 
     public DefaultGraphStatistics(
-            Map<GraphVertex, Integer> vertexTypeCounts,
-            Map<GraphEdge, Integer> edgeTypeCounts,
+            Map<LabelId, Integer> vertexTypeCounts,
+            Map<EdgeKind, Integer> edgeTypeCounts,
             Integer totalVertexCount,
             Integer totalEdgeCount) {
         this.vertexTypeCounts = vertexTypeCounts;
@@ -49,22 +49,26 @@ public class DefaultGraphStatistics implements GraphStatistics {
     }
 
     @Override
-    public Double getVertexCount() {
-        return totalVertexCount.doubleValue();
+    public Integer getVertexCount() {
+        return totalVertexCount;
     }
 
     @Override
-    public Double getEdgeCount() {
-        return totalEdgeCount.doubleValue();
+    public Integer getEdgeCount() {
+        return totalEdgeCount;
     }
 
     @Override
-    public Double getVertexTypeCount(GraphVertex vertex) {
-        return vertexTypeCounts.get(vertex).doubleValue();
+    public Integer getVertexTypeCount(int vertexTypeId) {
+        return vertexTypeCounts.get(new LabelId(vertexTypeId));
     }
 
     @Override
-    public Double getEdgeTypeCount(GraphEdge edge) {
-        return edgeTypeCounts.get(edge).doubleValue();
+    public Integer getEdgeTypeCount(int edgeTypeId, int sourceTypeId, int targetTypeId) {
+        EdgeKind edgeKind = EdgeKind.newBuilder().setEdgeLabelId(new LabelId(edgeTypeId))
+                .setSrcVertexLabelId(new LabelId(sourceTypeId))
+                .setDstVertexLabelId(new LabelId(targetTypeId))
+                .build();
+        return edgeTypeCounts.get(edgeKind);
     }
 }
