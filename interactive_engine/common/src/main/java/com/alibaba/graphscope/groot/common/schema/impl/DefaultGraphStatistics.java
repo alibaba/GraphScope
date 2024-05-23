@@ -16,7 +16,6 @@
 package com.alibaba.graphscope.groot.common.schema.impl;
 
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
-import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.collect.Maps;
@@ -29,9 +28,9 @@ import java.util.Map;
 public class DefaultGraphStatistics implements GraphStatistics {
     private static final Logger logger = LoggerFactory.getLogger(DefaultGraphStatistics.class);
     private Map<GraphVertex, Integer> vertexTypeCounts = Maps.newHashMap();
-    private  Map<GraphEdge, Integer> edgeTypeCounts = Maps.newHashMap();
-    private  Integer totalVertexCount;
-    private  Integer totalEdgeCount;
+    private Map<GraphEdge, Integer> edgeTypeCounts = Maps.newHashMap();
+    private Integer totalVertexCount;
+    private Integer totalEdgeCount;
 
     public DefaultGraphStatistics(
             Map<GraphVertex, Integer> vertexTypeCounts,
@@ -43,11 +42,6 @@ public class DefaultGraphStatistics implements GraphStatistics {
         this.totalVertexCount = totalVertexCount;
         this.totalEdgeCount = totalEdgeCount;
     }
-
-    public static GraphSchema buildSchemaFromJson(String schemaJson) {
-        // TODO: implement this method
-          throw new UnsupportedOperationException("Unimplemented method 'buildSchemaFromJson'");
-      }
 
     @Override
     public int getVersion() {

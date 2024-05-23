@@ -15,7 +15,6 @@
  */
 package com.alibaba.graphscope.groot.common.schema.api;
 
-
 public interface GraphStatistics {
 
     Double getVertexCount();
