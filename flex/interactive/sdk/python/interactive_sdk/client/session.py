@@ -505,7 +505,7 @@ class DefaultSession(Session):
         try:
             params_str = params.to_json() + chr(1)
             response = self._procedure_api.call_procedure_with_http_info(
-                graph_id, procedure_id, params
+                graph_id, params_str
             )
             result = CollectiveResults()
             result.ParseFromString(response)
@@ -517,7 +517,7 @@ class DefaultSession(Session):
         try:
             params = params + chr(0)
             response = self._procedure_api.call_procedure_with_http_info(
-                graph_id, procedure_id, params
+                graph_id, params
             )
             return Result.from_response(response)
         except Exception as e:

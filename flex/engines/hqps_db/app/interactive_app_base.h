@@ -32,7 +32,7 @@ template <size_t I, typename T, typename... ARGS>
 std::tuple<T, ARGS...> deserialize_impl(const nlohmann::json& arguments_list) {
   T value{};
   PropertyType type{};
-  from_json(arguments_list[I]["type"], type);
+  gs::from_json(arguments_list[I]["type"], type);
   if constexpr (std::is_same<T, std::string>::value ||
                 std::is_same<T, std::string_view>::value) {
     if (type != PropertyType::kString && !type.IsVarchar()) {

@@ -56,7 +56,7 @@ from interactive_sdk.openapi.models.start_service_request import StartServiceReq
 from interactive_sdk.openapi.models.string_type import StringType
 from interactive_sdk.openapi.models.string_type_string import StringTypeString
 from interactive_sdk.openapi.models.vertex_mapping import VertexMapping
-
+from interactive_sdk.openapi.models.query_request import QueryRequest
 
 class TestDriver(unittest.TestCase):
     """Test usage of driver"""
@@ -91,6 +91,7 @@ class TestDriver(unittest.TestCase):
         self.runCypherQuery()
         self.runGremlinQuery()
         self.createProcedure()
+        self.callProcedureWithHttp()
         self.restart()
         self.callProcedure()
 
@@ -216,6 +217,14 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.create_procedure(self._graph_id, create_proc_request)
         assert resp.is_ok()
         print("create procedure: ", resp.get_value())
+    
+    def callProcedureWithHttp(self):
+        req = QueryRequest(
+            query_name=self._procedure_name
+        )
+        resp = self._sess.call_procedure(self._graph_id, req)
+        assert resp.is_ok()
+        print("call procedure result: ", resp.get_value())
 
     def restart(self):
         resp = self._sess.start_service(

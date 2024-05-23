@@ -26,10 +26,14 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import com.alibaba.graphscope.gaia.proto.IrResult;
 
+import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import javax.management.Query;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class DriverTest {
@@ -253,15 +257,16 @@ public class DriverTest {
     @Test
     @Order(8)
     public void test7CallProcedure() {
-        /**
-        Result<String> resp = session.callProcedure(graphId, procedureId);
+        QueryRequest request = new QueryRequest();
+        request.setQueryName("testProcedure");
+        Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
         assertOk(resp);
-        logger.info("result: " + resp.getValue());*/
     }
+
 
     @Test
     @Order(9)
-    public void test7Restart() {
+    public void test8Restart() {
         Result<String> resp = session.restartService();
         assertOk(resp);
         // Sleep 5 seconds to wait for the service to restart
@@ -275,7 +280,7 @@ public class DriverTest {
 
     @Test
     @Order(10)
-    public void test8CallProcedureViaNeo4j() {
+    public void test9CallProcedureViaNeo4j() {
         org.neo4j.driver.Result result = neo4jSession.run("CALL testProcedure() YIELD *;");
         logger.info("result: " + result.toString());
     }
