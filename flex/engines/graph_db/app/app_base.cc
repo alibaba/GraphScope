@@ -49,7 +49,7 @@ SharedLibraryAppFactory::~SharedLibraryAppFactory() {
   }
 }
 
-AppWrapper SharedLibraryAppFactory::CreateApp(GraphDBSession& db) {
+AppWrapper SharedLibraryAppFactory::CreateApp(const GraphDB& db) {
   if (func_creator_ == NULL) {
     LOG(ERROR) << "Failed to create app from " << app_path_
                << ". Reason: func_creator_ is NULL";

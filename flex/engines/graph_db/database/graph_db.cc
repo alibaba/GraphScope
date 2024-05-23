@@ -306,7 +306,7 @@ AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
                << " is not registered.";
     return AppWrapper(NULL, NULL);
   } else {
-    return app_factories_[app_type]->CreateApp(contexts_[thread_id].session);
+    return app_factories_[app_type]->CreateApp(*this);
   }
 }
 

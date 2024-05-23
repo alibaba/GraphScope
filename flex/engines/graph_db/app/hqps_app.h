@@ -26,12 +26,14 @@ namespace gs {
  */
 class HQPSAdhocApp : public AppBase {
  public:
-  HQPSAdhocApp(GraphDBSession& graph);
+  HQPSAdhocApp(const GraphDB& graph);
+  AppMode mode() const override { return AppMode::kRead; }
+  AppType type() const override { return AppType::kCypherAdhoc; }
 
-  bool Query(Decoder& input, Encoder& output) override;
+  bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:
-  GraphDBSession& graph_;
+  const GraphDB& graph_;
 };
 
 /**
@@ -40,12 +42,14 @@ class HQPSAdhocApp : public AppBase {
  */
 class HQPSProcedureApp : public AppBase {
  public:
-  HQPSProcedureApp(GraphDBSession& graph);
+  HQPSProcedureApp(const GraphDB& graph);
+  AppMode mode() const override { return AppMode::kRead; }
+  AppType type() const override { return AppType::kCypherProcedure; }
 
-  bool Query(Decoder& input, Encoder& output) override;
+  bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:
-  GraphDBSession& graph_;
+  const GraphDB& graph_;
 };
 
 // Factory
@@ -54,7 +58,7 @@ class HQPSAdhocAppFactory : public AppFactoryBase {
   HQPSAdhocAppFactory();
   ~HQPSAdhocAppFactory();
 
-  AppWrapper CreateApp(GraphDBSession& graph) override;
+  AppWrapper CreateApp(const GraphDB& graph) override;
 };
 
 // Factory
@@ -63,7 +67,7 @@ class HQPSProcedureAppFactory : public AppFactoryBase {
   HQPSProcedureAppFactory();
   ~HQPSProcedureAppFactory();
 
-  AppWrapper CreateApp(GraphDBSession& graph) override;
+  AppWrapper CreateApp(const GraphDB& graph) override;
 };
 }  // namespace gs
 

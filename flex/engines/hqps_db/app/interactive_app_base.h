@@ -17,12 +17,12 @@
 #define ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 
 #include "flex/engines/graph_db/app/app_base.h"
-#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/proto_generated_gie/results.pb.h"
 #include "flex/utils/property/types.h"
 #include "nlohmann/json.hpp"
 namespace gs {
 
+class GraphDBSession;
 template <size_t I>
 std::tuple<> deserialize_impl(const nlohmann::json& sv) {
   return std::make_tuple();
@@ -68,9 +68,9 @@ std::tuple<ARGS...> deserialize(std::string_view sv) {
 
 class ReadAppBase : public AppBase {
  public:
-  AppMode mode() override { return AppMode::kRead; }
+  AppMode mode() const override { return AppMode::kRead; }
 
-  AppType type() override { return AppType::kCpp; }
+  AppType type() const override { return AppType::kCppProcedure; }
 
   bool run(GraphDBSession& db, Decoder& input, Encoder& output) override {
     return this->Query(db, input, output);
@@ -82,9 +82,9 @@ class ReadAppBase : public AppBase {
 
 class WriteAppBase : public AppBase {
  public:
-  AppMode mode() override { return AppMode::kWrite; }
+  AppMode mode() const override { return AppMode::kWrite; }
 
-  AppType type() override { return AppType::kCpp; }
+  AppType type() const override { return AppType::kCppProcedure; }
 
   bool run(GraphDBSession& db, Decoder& input, Encoder& output) override {
     return this->Query(db, input, output);
@@ -97,7 +97,7 @@ class WriteAppBase : public AppBase {
 template <typename... ARGS>
 class CypherReadAppBase : public AppBase {
  public:
-  AppType type() override { return AppType::kCypherGenerated; }
+  AppType type() const override { return AppType::kCypherProcedure; }
 
   virtual results::CollectiveResults Query(const GraphDBSession& db,
                                            ARGS... args) = 0;
@@ -134,7 +134,7 @@ class CypherReadAppBase : public AppBase {
 template <typename... ARGS>
 class CypherWriteAppBase : public AppBase {
  public:
-  AppType type() override { return AppType::kCypherGenerated; }
+  AppType type() const override { return AppType::kCypherProcedure; }
 
   virtual bool Query(GraphDBSession& db, ARGS... args) = 0;
 

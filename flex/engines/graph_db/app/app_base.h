@@ -27,24 +27,26 @@
 
 #include <glog/logging.h>
 
-class GraphDBSession;
-
 namespace gs {
 
-enum class AppType : uint8_t {
-  kCpp = 0,
-  kCypherGenerated = 1,
-};
-
-enum class AppMode : uint8_t {
-  kRead = 0,
-  kWrite = 1,
-};
-
+class GraphDBSession;
+class GraphDB;
 class AppBase {
  public:
-  virtual AppType type() = 0;
-  virtual AppMode mode() = 0;
+  enum class AppType : uint8_t {
+    kCppProcedure = 0,
+    kCypherProcedure = 1,
+    kCypherAdhoc = 2,
+    kBuiltIn = 3,
+  };
+
+  enum class AppMode : uint8_t {
+    kRead = 0,
+    kWrite = 1,
+  };
+
+  virtual AppType type() const = 0;
+  virtual AppMode mode() const = 0;
   virtual bool run(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
   virtual ~AppBase() {}
 };
@@ -91,7 +93,7 @@ class AppFactoryBase {
   AppFactoryBase() {}
   virtual ~AppFactoryBase() {}
 
-  virtual AppWrapper CreateApp(GraphDBSession& db) = 0;
+  virtual AppWrapper CreateApp(const GraphDB& db) = 0;
 };
 
 class SharedLibraryAppFactory : public AppFactoryBase {
@@ -100,13 +102,13 @@ class SharedLibraryAppFactory : public AppFactoryBase {
 
   ~SharedLibraryAppFactory();
 
-  AppWrapper CreateApp(GraphDBSession& db) override;
+  AppWrapper CreateApp(const GraphDB& db) override;
 
  private:
   std::string app_path_;
   void* app_handle_;
 
-  void* (*func_creator_)(GraphDBSession&);
+  void* (*func_creator_)(const GraphDB&);
   void (*func_deletor_)(void*);
 };
 

@@ -21,6 +21,7 @@
 
 #endif  // HAVE_OPENTELEMETRY_CPP
 
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/service/hqps_service.h"
@@ -108,6 +109,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
   req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
+  req->content.append(gs::GraphDBSession::kCypherInternal, 1);
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
   // Extract context from headers. This copy is necessary to avoid access after
@@ -496,6 +498,7 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         auto query_scope = tracer->WithActiveSpan(query_span);
 #endif  // HAVE_OPENTELEMETRY_CPP
         param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
+        param.content.append(gs::GraphDBSession::kCypherInternal, 1);
         return executor_refs_[dst_executor]
             .run_graph_db_query(query_param{std::move(param.content)})
             .then([

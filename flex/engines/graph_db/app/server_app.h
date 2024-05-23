@@ -17,13 +17,17 @@
 #define GRAPHSCOPE_SERVER_APP_H_
 
 #include "flex/engines/graph_db/app/app_base.h"
+#include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 
 namespace gs {
 
 class ServerApp : public AppBase {
  public:
+  ServerApp(const GraphDB& graph) : graph_(graph) {}
   bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
+  AppMode mode() const override { return AppMode::kRead; }
+  AppType type() const override { return AppType::kBuiltIn; }
 
  private:
   struct vertex_range {
@@ -37,7 +41,7 @@ class ServerApp : public AppBase {
     uint32_t to;
   };
 
-  GraphDBSession& graph_;
+  const GraphDB& graph_;
 };
 
 class ServerAppFactory : public AppFactoryBase {
@@ -45,7 +49,7 @@ class ServerAppFactory : public AppFactoryBase {
   ServerAppFactory() {}
   ~ServerAppFactory() {}
 
-  AppWrapper CreateApp(GraphDBSession& graph) override;
+  AppWrapper CreateApp(const GraphDB& graph) override;
 };
 
 }  // namespace gs

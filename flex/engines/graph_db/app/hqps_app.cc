@@ -39,9 +39,9 @@ void put_argument(gs::Encoder& encoder, const query::Argument& argument) {
   }
 }
 
-HQPSAdhocApp::HQPSAdhocApp(GraphDBSession& graph) : graph_(graph) {}
+HQPSAdhocApp::HQPSAdhocApp(const GraphDB& graph) : graph_(graph) {}
 
-bool HQPSAdhocApp::Query(Decoder& input, Encoder& output) {
+bool HQPSAdhocApp::run(GraphDBSession& graph, Decoder& input, Encoder& output) {
   if (input.size() <= 4) {
     LOG(ERROR) << "Invalid input for HQPSAdhocApp, input size: "
                << input.size();
@@ -63,12 +63,13 @@ bool HQPSAdhocApp::Query(Decoder& input, Encoder& output) {
     return false;
   }
 
-  return app_wrapper.app()->Query(input, output);
+  return app_wrapper.app()->run(graph, input, output);
 }
 
-HQPSProcedureApp::HQPSProcedureApp(GraphDBSession& graph) : graph_(graph) {}
+HQPSProcedureApp::HQPSProcedureApp(const GraphDB& graph) : graph_(graph) {}
 
-bool HQPSProcedureApp::Query(Decoder& input, Encoder& output) {
+bool HQPSProcedureApp::run(GraphDBSession& graph, Decoder& input,
+                           Encoder& output) {
   if (input.size() <= 0) {
     LOG(ERROR) << "Invalid input for HQPSProcedureApp, input size: "
                << input.size();
@@ -95,7 +96,7 @@ bool HQPSProcedureApp::Query(Decoder& input, Encoder& output) {
     LOG(ERROR) << "Query name is empty";
     return false;
   }
-  auto& app_name_to_path_index = graph_.schema().GetPlugins();
+  auto& app_name_to_path_index = graph.schema().GetPlugins();
   // get procedure id from name.
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
@@ -104,24 +105,24 @@ bool HQPSProcedureApp::Query(Decoder& input, Encoder& output) {
 
   // get app
   auto type = app_name_to_path_index.at(query_name).second;
-  auto app = graph_.GetApp(type);
+  auto app = graph.GetApp(type);
   if (!app) {
     LOG(ERROR) << "Fail to get app for query: " << query_name
                << ", type: " << type;
     return false;
   }
-  return app->Query(input_decoder, output);
+  return app->run(graph, input_decoder, output);
 }
 
 HQPSAdhocAppFactory::HQPSAdhocAppFactory() {}
 HQPSAdhocAppFactory::~HQPSAdhocAppFactory() {}
-AppWrapper HQPSAdhocAppFactory::CreateApp(GraphDBSession& graph) {
+AppWrapper HQPSAdhocAppFactory::CreateApp(const GraphDB& graph) {
   return AppWrapper(new HQPSAdhocApp(graph), NULL);
 }
 
 HQPSProcedureAppFactory::HQPSProcedureAppFactory() {}
 HQPSProcedureAppFactory::~HQPSProcedureAppFactory() {}
-AppWrapper HQPSProcedureAppFactory::CreateApp(GraphDBSession& graph) {
+AppWrapper HQPSProcedureAppFactory::CreateApp(const GraphDB& graph) {
   return AppWrapper(new HQPSProcedureApp(graph), NULL);
 }
 
