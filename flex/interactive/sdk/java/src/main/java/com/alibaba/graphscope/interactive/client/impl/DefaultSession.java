@@ -300,11 +300,21 @@ public class DefaultSession implements Session {
         }
     }
 
+    //TODO
+    @Override
+    public Result<Decoder> callProcedureRaw(String graphName, Encoder encoder) {
+        //Get the string in encoder
+        // Call the procedure
+    }
+
+    //TODO
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(String graphName, QueryRequest request) {
         try {
+            String str = request.toJson();
+            //get bytes and add tag 0/1
             ApiResponse<String> response =
-                    queryApi.procCallWithHttpInfo(graphName, request);
+                    queryApi.procCallWithHttpInfo(graphName, str);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(new ApiException(response.getStatusCode(),  response.getData()));
             }

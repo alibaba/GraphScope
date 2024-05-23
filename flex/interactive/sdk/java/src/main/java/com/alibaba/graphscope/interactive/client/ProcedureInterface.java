@@ -39,4 +39,6 @@ public interface ProcedureInterface {
             String graphId, String procedureId, UpdateProcedureRequest procedure);
 
     Result<IrResult.CollectiveResults> callProcedure(String graphId, QueryRequest request);
+
+    Result<Decoder> callProcedureRaw(String graphId, Encoder encoder);
 }
