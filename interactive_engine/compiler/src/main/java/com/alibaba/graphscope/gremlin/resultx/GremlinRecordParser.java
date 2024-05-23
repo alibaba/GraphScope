@@ -161,7 +161,7 @@ public class GremlinRecordParser implements RecordParser<Object> {
                 .getKeyValuesList()
                 .forEach(
                         entry -> {
-                            Object value = parseElement(entry.getValue(), valueType);
+                            Object value = parseElement(entry, valueType);
                             if (value != null) {
                                 valueMap.put(parseMapKey(entry.getKey().getStr()), value);
                             }
@@ -183,7 +183,7 @@ public class GremlinRecordParser implements RecordParser<Object> {
         Map<Object, Object> valueMap = Maps.newLinkedHashMap();
         for (int i = 0; i < entries.size(); ++i) {
             IrResult.KeyValues.KeyValue entry = entries.get(i);
-            Object value = parseElement(entry.getValue(), valueTypes.get(i));
+            Object value = parseElement(entry, valueTypes.get(i));
             if (value != null) {
                 valueMap.put(parseMapKey(entry.getKey().getStr()), value);
             }
@@ -216,6 +216,30 @@ public class GremlinRecordParser implements RecordParser<Object> {
             case OBJECT:
             default:
                 return parseValue(element.getObject(), type);
+        }
+    }
+
+    private Object parseElement(IrResult.KeyValues.KeyValue value, RelDataType type) {
+        switch (value.getValueCase()) {
+            case ELEMENT:
+                return parseElement(value.getElement(), type);
+            case NESTED:
+                if (type instanceof ArbitraryMapType) {
+                    return parseKeyValues(
+                            value.getNested(),
+                            ((ArbitraryMapType) type).getKeyTypes(),
+                            ((ArbitraryMapType) type).getValueTypes());
+                } else {
+                    return parseKeyValues(
+                            value.getNested(), type.getKeyType(), type.getValueType());
+                }
+            default:
+                throw new GremlinResultParserException(
+                        "keyValue ["
+                                + value
+                                + "] has invalid value type ["
+                                + value.getValueCase()
+                                + "]");
         }
     }
 
