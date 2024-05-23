@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.antlr4.ParseResult;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
@@ -203,11 +202,9 @@ public class GraphPlanner {
         GraphPlanner planner =
                 new GraphPlanner(
                         configs,
-                        (GraphBuilder builder, IrMeta irMeta, String q) -> {
-                            ParseResult result = new CypherAntlr4Parser().parse(q);
-                            return new LogicalPlanVisitor(builder, irMeta, result.getMode())
-                                    .visit(result.getParseTree());
-                        });
+                        (GraphBuilder builder, IrMeta irMeta, String q) ->
+                                new LogicalPlanVisitor(builder, irMeta)
+                                        .visit(new CypherAntlr4Parser().parse(q)));
         PlannerInstance instance = planner.instance(query, metaFetcher.fetch().get());
         Summary summary = instance.plan();
         // write physical plan to file

@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.antlr4.SyntaxErrorListener;
 import com.alibaba.graphscope.grammar.CypherGSLexer;
 import com.alibaba.graphscope.grammar.CypherGSParser;
-import com.google.common.collect.ImmutableList;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -28,23 +27,12 @@ import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.List;
-
 /**
  * parse cypher DSL to antlr tree
  */
-public class CypherAntlr4Parser extends Antlr4Parser {
-
-    public CypherAntlr4Parser() {
-        this(ImmutableList.of());
-    }
-
-    public CypherAntlr4Parser(List<Class<? extends ParseTree>> writeOperations) {
-        super(writeOperations);
-    }
-
+public class CypherAntlr4Parser implements Antlr4Parser {
     @Override
-    public ParseTree parse0(String statement) {
+    public ParseTree parse(String statement) {
         CypherGSLexer lexer = new CypherGSLexer(CharStreams.fromString(statement));
         // reset error listeners on lexer
         lexer.removeErrorListeners();

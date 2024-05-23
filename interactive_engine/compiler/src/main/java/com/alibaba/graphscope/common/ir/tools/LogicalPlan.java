@@ -50,14 +50,20 @@ public class LogicalPlan {
     }
 
     public LogicalPlan(RelNode regularQuery, List<StoredProcedureMeta.Parameter> dynamicParams) {
-        this(regularQuery, null, dynamicParams, QueryMode.READ);
+        this(regularQuery, null, dynamicParams, analyzeMode(regularQuery));
     }
 
-    public LogicalPlan(RexNode procedureCall) {
-        this(null, procedureCall, ImmutableList.of(), QueryMode.READ);
+    private static QueryMode analyzeMode(RelNode relNode) {
+        QueryModeVisitor visitor = new QueryModeVisitor();
+        visitor.go(relNode);
+        return visitor.getMode();
     }
 
-    public LogicalPlan(
+    public LogicalPlan(RexNode procedureCall, QueryMode mode) {
+        this(null, procedureCall, ImmutableList.of(), mode);
+    }
+
+    protected LogicalPlan(
             RelNode regularQuery,
             RexNode procedureCall,
             List<StoredProcedureMeta.Parameter> dynamicParams,

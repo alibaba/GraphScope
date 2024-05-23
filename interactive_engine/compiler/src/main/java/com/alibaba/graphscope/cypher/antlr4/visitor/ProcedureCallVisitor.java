@@ -70,8 +70,7 @@ public class ProcedureCallVisitor extends CypherGSBaseVisitor<LogicalPlan> {
                         .map(this::visitOC_Expression0)
                         .collect(Collectors.toList());
         RexNode procedureCall = builder.call(operatorModePair.getValue0(), operands);
-        return new LogicalPlan(
-                null, procedureCall, ImmutableList.of(), operatorModePair.getValue1());
+        return new LogicalPlan(procedureCall, operatorModePair.getValue1());
     }
 
     @Override
@@ -80,8 +79,7 @@ public class ProcedureCallVisitor extends CypherGSBaseVisitor<LogicalPlan> {
         Pair<SqlOperator, QueryMode> operatorModePair =
                 visitOC_ProcedureNameAsOperator(ctx.oC_ProcedureName());
         RexNode procedureCall = builder.call(operatorModePair.getValue0(), ImmutableList.of());
-        return new LogicalPlan(
-                null, procedureCall, ImmutableList.of(), operatorModePair.getValue1());
+        return new LogicalPlan(procedureCall, operatorModePair.getValue1());
     }
 
     // visit procedure name

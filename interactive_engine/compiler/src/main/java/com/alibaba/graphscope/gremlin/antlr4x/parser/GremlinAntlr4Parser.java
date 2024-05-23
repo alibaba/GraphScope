@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.antlr4.SyntaxErrorListener;
 import com.alibaba.graphscope.grammar.GremlinGSLexer;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
-import com.google.common.collect.ImmutableList;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -31,13 +30,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 /**
  * parse gremlin DSL to antlr tree
  */
-public class GremlinAntlr4Parser extends Antlr4Parser {
-    public GremlinAntlr4Parser() {
-        super(ImmutableList.of());
-    }
-
+public class GremlinAntlr4Parser implements Antlr4Parser {
     @Override
-    public ParseTree parse0(String statement) {
+    public ParseTree parse(String statement) {
         GremlinGSLexer lexer = new GremlinGSLexer(CharStreams.fromString(statement));
         // reset error listeners on lexer
         lexer.removeErrorListeners();
