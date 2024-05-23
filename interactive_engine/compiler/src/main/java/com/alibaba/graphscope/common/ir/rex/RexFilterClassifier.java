@@ -298,7 +298,7 @@ public class RexFilterClassifier extends RexVisitorImpl<RexFilterClassifier.Filt
                 ImmutableBitSet propertyIds = getPropertyIds(var.getProperty(), schemaType);
                 TableConfig tableConfig = ((AbstractBindableTableScan) tableScan).getTableConfig();
                 if (!propertyIds.isEmpty()
-                        && tableConfig.getTables().stream().anyMatch(k -> k.isKey(propertyIds))) {
+                        && tableConfig.getTables().stream().allMatch(k -> k.isKey(propertyIds))) {
                     return true;
                 }
             case LABEL:
