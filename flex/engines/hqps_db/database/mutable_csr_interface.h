@@ -75,7 +75,7 @@ void get_tuple_from_column_tuple(size_t index, std::tuple<T...>& t,
  */
 class MutableCSRInterface {
  public:
-  const GraphDBSession& GetDBSession() const { return db_session_; }
+  const GraphDB& GetDB() const { return db_; }
 
   using vertex_id_t = vid_t;
   using gid_t = uint64_t;
@@ -108,13 +108,11 @@ class MutableCSRInterface {
 
   MutableCSRInterface(const MutableCSRInterface&) = delete;
 
-  MutableCSRInterface(MutableCSRInterface&& other)
-      : db_session_(other.db_session_) {}
+  MutableCSRInterface(MutableCSRInterface&& other) : db_(other.db_) {}
 
-  explicit MutableCSRInterface(const GraphDBSession& session)
-      : db_session_(session) {}
+  explicit MutableCSRInterface(const GraphDB& session) : db_(session) {}
 
-  const Schema& schema() const { return db_session_.schema(); }
+  const Schema& schema() const { return db_.schema(); }
 
   /**
    * @brief Get the Vertex Label id
@@ -124,9 +122,9 @@ class MutableCSRInterface {
    */
   label_id_t GetVertexLabelId(const std::string& label) const {
     LOG(INFO) << "GetVertexLabelId: " << label;
-    LOG(INFO) << "label num: " << db_session_.schema().vertex_label_num();
-    LOG(INFO) << "edge labelnum: " << db_session_.schema().edge_label_num();
-    return db_session_.schema().get_vertex_label_id(label);
+    LOG(INFO) << "label num: " << db_.schema().vertex_label_num();
+    LOG(INFO) << "edge labelnum: " << db_.schema().edge_label_num();
+    return db_.schema().get_vertex_label_id(label);
   }
 
   /**
@@ -136,7 +134,7 @@ class MutableCSRInterface {
    * @return label_id_t
    */
   label_id_t GetEdgeLabelId(const std::string& label) const {
-    return db_session_.schema().get_edge_label_id(label);
+    return db_.schema().get_edge_label_id(label);
   }
 
   /**
@@ -152,7 +150,7 @@ class MutableCSRInterface {
   void ScanVertices(const std::string& label,
                     const std::tuple<SELECTOR...>& props, const FUNC_T& func,
                     bool filter_null = false) const {
-    auto label_id = db_session_.schema().get_vertex_label_id(label);
+    auto label_id = db_.schema().get_vertex_label_id(label);
     return ScanVertices(label_id, props, func);
   }
 
@@ -169,7 +167,7 @@ class MutableCSRInterface {
   void ScanVertices(const label_id_t& label_id,
                     const std::tuple<SELECTOR...>& selectors,
                     const FUNC_T& func, bool filter_null = false) const {
-    auto vnum = db_session_.graph().vertex_num(label_id);
+    auto vnum = db_.graph().vertex_num(label_id);
     std::tuple<typename SELECTOR::prop_t...> t;
     if constexpr (sizeof...(SELECTOR) == 0) {
       for (size_t v = 0; v != vnum; ++v) {
@@ -201,8 +199,8 @@ class MutableCSRInterface {
   template <typename OID_T>
   vertex_id_t ScanVerticesWithOid(const std::string& label, OID_T oid,
                                   vertex_id_t& vid) const {
-    auto label_id = db_session_.schema().get_vertex_label_id(label);
-    return db_session_.graph().get_lid(label_id, Any::From(oid), vid);
+    auto label_id = db_.schema().get_vertex_label_id(label);
+    return db_.graph().get_lid(label_id, Any::From(oid), vid);
   }
 
   /**
@@ -214,7 +212,7 @@ class MutableCSRInterface {
   template <typename OID_T>
   vertex_id_t ScanVerticesWithOid(const label_id_t& label_id, OID_T oid,
                                   vertex_id_t& vid) const {
-    return db_session_.graph().get_lid(label_id, Any::From(oid), vid);
+    return db_.graph().get_lid(label_id, Any::From(oid), vid);
   }
 
   /**
@@ -228,8 +226,8 @@ class MutableCSRInterface {
   template <typename FUNC_T>
   void ScanVerticesWithoutProperty(const std::string& label,
                                    const FUNC_T& func) const {
-    auto label_id = db_session_.schema().get_vertex_label_id(label);
-    auto vnum = db_session_.graph().vertex_num(label_id);
+    auto label_id = db_.schema().get_vertex_label_id(label);
+    auto vnum = db_.graph().vertex_num(label_id);
     for (size_t v = 0; v != vnum; ++v) {
       func(v);
     }
@@ -248,14 +246,14 @@ class MutableCSRInterface {
       const std::string& label, const std::vector<int64_t> oids,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
-    auto label_id = db_session_.schema().get_vertex_label_id(label);
+    auto label_id = db_.schema().get_vertex_label_id(label);
     std::tuple<const TypedColumn<T>*...> columns;
     get_tuple_column_from_graph(label_id, prop_names, columns);
     std::vector<vertex_id_t> vids(oids.size());
     std::vector<std::tuple<T...>> props(oids.size());
 
     for (size_t i = 0; i < oids.size(); ++i) {
-      db_session_.graph().get_lid(label_id, Any::From(oids[i]), vids[i]);
+      db_.graph().get_lid(label_id, Any::From(oids[i]), vids[i]);
       get_tuple_from_column_tuple(vids[i], props[i], columns);
     }
 
@@ -274,7 +272,7 @@ class MutableCSRInterface {
       const std::string& label, const std::vector<vertex_id_t>& vids,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
-    auto label_id = db_session_.schema().get_vertex_label_id(label);
+    auto label_id = db_.schema().get_vertex_label_id(label);
     std::tuple<std::shared_ptr<TypedRefColumn<T>>...> columns;
     get_tuple_column_from_graph(label_id, prop_names, columns);
     std::vector<std::tuple<T...>> props(vids.size());
@@ -294,8 +292,8 @@ class MutableCSRInterface {
       const label_id_t& label_id, const std::vector<vertex_id_t>& vids,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
-    // auto label_id = db_session_.schema().get_vertex_label_id(label);
-    CHECK(label_id < db_session_.schema().vertex_label_num());
+    // auto label_id = db_.schema().get_vertex_label_id(label);
+    CHECK(label_id < db_.schema().vertex_label_num());
     std::tuple<std::shared_ptr<TypedRefColumn<T>>...> columns;
     get_tuple_column_from_graph(label_id, prop_names, columns);
     std::vector<std::tuple<T...>> props(vids.size());
@@ -362,7 +360,7 @@ class MutableCSRInterface {
           prop_names) const {
     std::array<label_id_t, num_labels> label_ids;
     for (size_t i = 0; i < num_labels; ++i) {
-      label_ids[i] = db_session_.schema().get_vertex_label_id(labels[i]);
+      label_ids[i] = db_.schema().get_vertex_label_id(labels[i]);
     }
     return GetVertexPropsFromVidV2<T...>(vids, label_ids, bitset, prop_names);
   }
@@ -388,7 +386,7 @@ class MutableCSRInterface {
     std::vector<std::tuple<T...>> props(total_size);
     std::vector<label_t> label_ids;
     for (label_id_t label : labels) {
-      CHECK(label < db_session_.schema().vertex_label_num());
+      CHECK(label < db_.schema().vertex_label_num());
       label_ids.emplace_back(label);
     }
     using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
@@ -512,8 +510,7 @@ class MutableCSRInterface {
     const CsrBase *csr = nullptr, *other_csr = nullptr;
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
-      csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                           edge_label_id);
+      csr = db_.graph().get_oe_csr(src_label_id, dst_label_id, edge_label_id);
       return std::vector<sub_graph_t>{
           sub_graph_t{csr,
                       {src_label_id, dst_label_id, edge_label_id},
@@ -521,8 +518,7 @@ class MutableCSRInterface {
                       Direction::Out}};
     } else if (direction_str == "in" || direction_str == "In" ||
                direction_str == "IN") {
-      csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
-                                           edge_label_id);
+      csr = db_.graph().get_ie_csr(dst_label_id, src_label_id, edge_label_id);
       return std::vector<sub_graph_t>{
           sub_graph_t{csr,
                       {dst_label_id, src_label_id, edge_label_id},
@@ -530,10 +526,9 @@ class MutableCSRInterface {
                       Direction::In}};
     } else if (direction_str == "both" || direction_str == "Both" ||
                direction_str == "BOTH") {
-      csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                           edge_label_id);
-      other_csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
-                                                 edge_label_id);
+      csr = db_.graph().get_oe_csr(src_label_id, dst_label_id, edge_label_id);
+      other_csr =
+          db_.graph().get_ie_csr(dst_label_id, src_label_id, edge_label_id);
       return std::vector<sub_graph_t>{
           sub_graph_t{csr,
                       {src_label_id, dst_label_id, edge_label_id},
@@ -557,20 +552,20 @@ class MutableCSRInterface {
           prop_names) const {
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
-      auto csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                                edge_label_id);
+      auto csr =
+          db_.graph().get_oe_csr(src_label_id, dst_label_id, edge_label_id);
       return mutable_csr_graph_impl::AdjListArray<T...>(csr, vids);
     } else if (direction_str == "in" || direction_str == "In" ||
                direction_str == "IN") {
-      auto csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
-                                                edge_label_id);
+      auto csr =
+          db_.graph().get_ie_csr(dst_label_id, src_label_id, edge_label_id);
       return mutable_csr_graph_impl::AdjListArray<T...>(csr, vids);
     } else if (direction_str == "both" || direction_str == "Both" ||
                direction_str == "BOTH") {
-      auto csr0 = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                                 edge_label_id);
-      auto csr1 = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
-                                                 edge_label_id);
+      auto csr0 =
+          db_.graph().get_oe_csr(src_label_id, dst_label_id, edge_label_id);
+      auto csr1 =
+          db_.graph().get_ie_csr(dst_label_id, src_label_id, edge_label_id);
       // CHECK(csr0);
       // CHECK(csr1);
       return mutable_csr_graph_impl::AdjListArray<T...>(csr0, csr1, vids);
@@ -587,9 +582,9 @@ class MutableCSRInterface {
       const std::string& direction_str, size_t limit,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
-    auto src_label_id = db_session_.schema().get_vertex_label_id(src_label);
-    auto dst_label_id = db_session_.schema().get_vertex_label_id(dst_label);
-    auto edge_label_id = db_session_.schema().get_edge_label_id(edge_label);
+    auto src_label_id = db_.schema().get_vertex_label_id(src_label);
+    auto dst_label_id = db_.schema().get_vertex_label_id(dst_label);
+    auto edge_label_id = db_.schema().get_edge_label_id(edge_label);
 
     return GetEdges<T...>(src_label_id, dst_label_id, edge_label_id, vids,
                           direction_str, limit, prop_names);
@@ -599,9 +594,9 @@ class MutableCSRInterface {
       const std::string& src_label, const std::string& dst_label,
       const std::string& edge_label, const std::vector<vertex_id_t>& vids,
       const std::string& direction_str, size_t limit) const {
-    auto src_label_id = db_session_.schema().get_vertex_label_id(src_label);
-    auto dst_label_id = db_session_.schema().get_vertex_label_id(dst_label);
-    auto edge_label_id = db_session_.schema().get_edge_label_id(edge_label);
+    auto src_label_id = db_.schema().get_vertex_label_id(src_label);
+    auto dst_label_id = db_.schema().get_vertex_label_id(dst_label);
+    auto edge_label_id = db_.schema().get_edge_label_id(edge_label);
 
     return GetOtherVerticesV2(src_label_id, dst_label_id, edge_label_id, vids,
                               direction_str, limit);
@@ -617,8 +612,8 @@ class MutableCSRInterface {
 
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
-      auto csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                                edge_label_id);
+      auto csr =
+          db_.graph().get_oe_csr(src_label_id, dst_label_id, edge_label_id);
       auto size = 0;
       for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
@@ -639,8 +634,8 @@ class MutableCSRInterface {
       }
     } else if (direction_str == "in" || direction_str == "In" ||
                direction_str == "IN") {
-      auto csr = db_session_.graph().get_ie_csr(src_label_id, dst_label_id,
-                                                edge_label_id);
+      auto csr =
+          db_.graph().get_ie_csr(src_label_id, dst_label_id, edge_label_id);
       auto size = 0;
       for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
@@ -661,10 +656,10 @@ class MutableCSRInterface {
       }
     } else if (direction_str == "both" || direction_str == "Both" ||
                direction_str == "BOTH") {
-      auto ie_csr = db_session_.graph().get_ie_csr(src_label_id, dst_label_id,
-                                                   edge_label_id);
-      auto oe_csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                                   edge_label_id);
+      auto ie_csr =
+          db_.graph().get_ie_csr(src_label_id, dst_label_id, edge_label_id);
+      auto oe_csr =
+          db_.graph().get_oe_csr(src_label_id, dst_label_id, edge_label_id);
       auto size = 0;
       for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
@@ -702,9 +697,9 @@ class MutableCSRInterface {
       const std::string& src_label, const std::string& dst_label,
       const std::string& edge_label, const std::vector<vertex_id_t>& vids,
       const std::string& direction_str, size_t limit) const {
-    auto src_label_id = db_session_.schema().get_vertex_label_id(src_label);
-    auto dst_label_id = db_session_.schema().get_vertex_label_id(dst_label);
-    auto edge_label_id = db_session_.schema().get_edge_label_id(edge_label);
+    auto src_label_id = db_.schema().get_vertex_label_id(src_label);
+    auto dst_label_id = db_.schema().get_vertex_label_id(dst_label);
+    auto edge_label_id = db_.schema().get_edge_label_id(edge_label);
     return GetOtherVertices(src_label_id, dst_label_id, edge_label_id, vids,
                             direction_str, limit);
   }
@@ -717,8 +712,8 @@ class MutableCSRInterface {
     ret.resize(vids.size());
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
-      auto csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                                edge_label_id);
+      auto csr =
+          db_.graph().get_oe_csr(src_label_id, dst_label_id, edge_label_id);
       if (csr) {
         for (size_t i = 0; i < vids.size(); ++i) {
           auto v = vids[i];
@@ -732,8 +727,8 @@ class MutableCSRInterface {
       }
     } else if (direction_str == "in" || direction_str == "In" ||
                direction_str == "IN") {
-      auto csr = db_session_.graph().get_ie_csr(src_label_id, dst_label_id,
-                                                edge_label_id);
+      auto csr =
+          db_.graph().get_ie_csr(src_label_id, dst_label_id, edge_label_id);
       if (csr) {
         for (size_t i = 0; i < vids.size(); ++i) {
           auto v = vids[i];
@@ -747,10 +742,10 @@ class MutableCSRInterface {
       }
     } else if (direction_str == "both" || direction_str == "Both" ||
                direction_str == "BOTH") {
-      auto ocsr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                                 edge_label_id);
-      auto icsr = db_session_.graph().get_ie_csr(src_label_id, dst_label_id,
-                                                 edge_label_id);
+      auto ocsr =
+          db_.graph().get_oe_csr(src_label_id, dst_label_id, edge_label_id);
+      auto icsr =
+          db_.graph().get_ie_csr(src_label_id, dst_label_id, edge_label_id);
       // the reason why we use (src_label_id, dst_label_id) is that, when the
       // src_label and dst_label argument denote the labels on two sides.
       // And src labels are vertices we have.
@@ -786,7 +781,7 @@ class MutableCSRInterface {
   mutable_csr_graph_impl::MultiPropGetter<T...> GetMultiPropGetter(
       const std::string& label,
       const std::array<std::string, sizeof...(T)>& prop_names) const {
-    auto label_id = db_session_.schema().get_vertex_label_id(label);
+    auto label_id = db_.schema().get_vertex_label_id(label);
     return GetMultiPropGetter<T...>(label_id, prop_names);
   }
 
@@ -803,7 +798,7 @@ class MutableCSRInterface {
   template <typename T>
   mutable_csr_graph_impl::SinglePropGetter<T> GetSinglePropGetter(
       const std::string& label, const std::string& prop_name) const {
-    auto label_id = db_session_.schema().get_vertex_label_id(label);
+    auto label_id = db_.schema().get_vertex_label_id(label);
     return GetSinglePropGetter<T>(label_id, prop_name);
   }
 
@@ -829,9 +824,9 @@ class MutableCSRInterface {
     }
     if (prop_name == "id" || prop_name == "ID" || prop_name == "Id") {
       column = std::dynamic_pointer_cast<TypedRefColumn<T>>(
-          db_session_.get_vertex_id_column(label_id));
+          db_.get_vertex_id_column(label_id));
     } else {
-      auto ptr = db_session_.get_vertex_property_column(label_id, prop_name);
+      auto ptr = db_.get_vertex_property_column(label_id, prop_name);
       if (ptr) {
         column = std::dynamic_pointer_cast<TypedRefColumn<T>>(
             create_ref_column(ptr));
@@ -845,12 +840,12 @@ class MutableCSRInterface {
   std::shared_ptr<RefColumnBase> GetRefColumnBase(
       const label_t& label_id, const std::string& prop_name) const {
     if (prop_name == "id" || prop_name == "ID" || prop_name == "Id") {
-      return db_session_.get_vertex_id_column(label_id);
+      return db_.get_vertex_id_column(label_id);
     } else if (prop_name == "Label" || prop_name == "LabelKey") {
       return std::make_shared<TypedRefColumn<LabelKey>>(label_id);
     } else {
       return create_ref_column(
-          db_session_.get_vertex_property_column(label_id, prop_name));
+          db_.get_vertex_property_column(label_id, prop_name));
     }
   }
 
@@ -935,7 +930,7 @@ class MutableCSRInterface {
           prop_names,
       std::tuple<std::shared_ptr<TypedRefColumn<T>>...>& columns) const {}
 
-  const GraphDBSession& db_session_;
+  const GraphDB& db_;
 };
 
 }  // namespace gs

@@ -38,7 +38,7 @@ class SampleQuery : public ReadAppBase {
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
-  SampleQuery(const GraphDBSession& session) : graph(session) {}
+  SampleQuery(const GraphDB& graph) : graph(graph) {}
   bool Query(const GraphDBSession&, Decoder& input, Encoder& output) override {
     int64_t id = input.get_long();
     int64_t maxDate = input.get_long();

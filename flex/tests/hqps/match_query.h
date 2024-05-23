@@ -57,7 +57,7 @@ class MatchQuery : public ReadAppBase {
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
-  MatchQuery(const GraphDBSession& session) : graph(session) {}
+  MatchQuery(const GraphDB& graph) : graph(graph) {}
   bool Query(const GraphDBSession&, Decoder& decoder,
              Encoder& encoder) override {
     // decoding params from decoder, and call real query func
@@ -124,7 +124,7 @@ class MatchQuery1 : public ReadAppBase {
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
   // Query function for query class
-  MatchQuery1(const GraphDBSession& session) : graph(session) {}
+  MatchQuery1(const GraphDB& graph) : graph(graph) {}
   results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, std::array<label_id_t, 8>{0, 1, 2, 3, 4, 5, 6, 7},
@@ -173,7 +173,7 @@ class MatchQuery2 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery2(const GraphDBSession& session) : graph(session) {}
+  MatchQuery2(const GraphDB& graph) : graph(graph) {}
 
   // Query function for query class
   results::CollectiveResults Query() const {
@@ -237,7 +237,7 @@ class MatchQuery3 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery3(const GraphDBSession& session) : graph(session) {}
+  MatchQuery3(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
@@ -313,7 +313,7 @@ class MatchQuery4 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery4(const GraphDBSession& session) : graph(session) {}
+  MatchQuery4(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(Query0expr0());
@@ -414,7 +414,7 @@ class MatchQuery5 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery5(const GraphDBSession& session) : graph(session) {}
+  MatchQuery5(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto expr0 =
@@ -472,7 +472,7 @@ class MatchQuery7 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery7(const GraphDBSession& session) : graph(session) {}
+  MatchQuery7(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
@@ -523,7 +523,7 @@ class MatchQuery9 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery9(const GraphDBSession& session) : graph(session) {}
+  MatchQuery9(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(Query0expr0());
@@ -598,7 +598,7 @@ class MatchQuery10 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery10(const GraphDBSession& session) : graph(session) {}
+  MatchQuery10(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(
@@ -705,7 +705,7 @@ class MatchQuery11 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery11(const GraphDBSession& session) : graph(session) {}
+  MatchQuery11(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(MatchQuery11Expr0(),
@@ -811,7 +811,7 @@ class MatchQuery12 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery12(const GraphDBSession& session) : graph(session) {}
+  MatchQuery12(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
@@ -870,7 +870,7 @@ class MatchQuery13 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery13(const GraphDBSession& session) : graph(session) {}
+  MatchQuery13(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
@@ -912,7 +912,7 @@ class MatchQuery14 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery14(const GraphDBSession& session) : graph(session) {}
+  MatchQuery14(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(Query0expr0());
@@ -959,7 +959,7 @@ class MatchQuery15 : public ReadAppBase {
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
-  MatchQuery15(const GraphDBSession& session) : graph(session) {}
+  MatchQuery15(const GraphDB& graph) : graph(graph) {}
   // Query function for query class
   results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(Query0expr0());

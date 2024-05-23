@@ -300,6 +300,33 @@ std::shared_ptr<ColumnBase> GraphDB::get_vertex_property_column(
   return graph_.get_vertex_table(label).get_column(col_name);
 }
 
+std::shared_ptr<RefColumnBase> GraphDB::get_vertex_id_column(
+    uint8_t label) const {
+  if (graph().lf_indexers_[label].get_type() == PropertyType::kInt64) {
+    return std::make_shared<TypedRefColumn<int64_t>>(
+        dynamic_cast<const TypedColumn<int64_t>&>(
+            graph().lf_indexers_[label].get_keys()));
+  } else if (graph().lf_indexers_[label].get_type() == PropertyType::kInt32) {
+    return std::make_shared<TypedRefColumn<int32_t>>(
+        dynamic_cast<const TypedColumn<int32_t>&>(
+            graph().lf_indexers_[label].get_keys()));
+  } else if (graph().lf_indexers_[label].get_type() == PropertyType::kUInt64) {
+    return std::make_shared<TypedRefColumn<uint64_t>>(
+        dynamic_cast<const TypedColumn<uint64_t>&>(
+            graph().lf_indexers_[label].get_keys()));
+  } else if (graph().lf_indexers_[label].get_type() == PropertyType::kUInt32) {
+    return std::make_shared<TypedRefColumn<uint32_t>>(
+        dynamic_cast<const TypedColumn<uint32_t>&>(
+            graph().lf_indexers_[label].get_keys()));
+  } else if (graph().lf_indexers_[label].get_type() == PropertyType::kString) {
+    return std::make_shared<TypedRefColumn<std::string_view>>(
+        dynamic_cast<const TypedColumn<std::string_view>&>(
+            graph().lf_indexers_[label].get_keys()));
+  } else {
+    return nullptr;
+  }
+}
+
 AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
   if (app_factories_[app_type] == nullptr) {
     LOG(ERROR) << "Stored procedure " << static_cast<int>(app_type)
