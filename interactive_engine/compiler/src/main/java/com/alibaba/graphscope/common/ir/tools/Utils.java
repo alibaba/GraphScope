@@ -18,6 +18,9 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
@@ -79,6 +82,20 @@ public class Utils {
             values.add(value);
         }
         return values;
+    }
+
+    public static GraphLabelType getGraphLabels(RelDataType rowType) {
+        if (rowType instanceof GraphSchemaType) {
+            return ((GraphSchemaType) rowType).getLabelType();
+        } else {
+            List<RelDataTypeField> fields = rowType.getFieldList();
+            Preconditions.checkArgument(
+                    !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
+                    "data type of graph operators should be %s ",
+                    GraphSchemaType.class);
+            GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
+            return schemaType.getLabelType();
+        }
     }
 
     /**

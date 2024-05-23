@@ -33,7 +33,6 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt.PhysicalGetVOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -170,7 +169,10 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     Utils.protoGetVOpt(PhysicalGetVOpt.valueOf(getV.getOpt().name())));
             // 1. build adjV without filter
             GraphAlgebra.QueryParams.Builder adjParamsBuilder = defaultQueryParams();
-            addQueryTables(adjParamsBuilder, getGraphLabels(getV).getLabelsEntry());
+            addQueryTables(
+                    adjParamsBuilder,
+                    com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(getV.getRowType())
+                            .getLabelsEntry());
             adjVertexBuilder.setParams(adjParamsBuilder);
             if (getV.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
                 adjVertexBuilder.setTag(Utils.asAliasId(getV.getStartAlias().getAliasId()));
@@ -975,16 +977,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return indexPredicate;
     }
 
-    private GraphLabelType getGraphLabels(AbstractBindableTableScan tableScan) {
-        List<RelDataTypeField> fields = tableScan.getRowType().getFieldList();
-        Preconditions.checkArgument(
-                !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
-                "data type of graph operators should be %s ",
-                GraphSchemaType.class);
-        GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
-        return schemaType.getLabelType();
-    }
-
     private GraphAlgebra.QueryParams.Builder defaultQueryParams() {
         GraphAlgebra.QueryParams.Builder paramsBuilder = GraphAlgebra.QueryParams.newBuilder();
         // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as default.
@@ -1022,7 +1014,10 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     private GraphAlgebra.QueryParams.Builder buildQueryParams(AbstractBindableTableScan tableScan) {
         GraphAlgebra.QueryParams.Builder paramsBuilder = defaultQueryParams();
-        addQueryTables(paramsBuilder, getGraphLabels(tableScan).getLabelsEntry());
+        addQueryTables(
+                paramsBuilder,
+                com.alibaba.graphscope.common.ir.tools.Utils.getGraphLabels(tableScan.getRowType())
+                        .getLabelsEntry());
         addQueryFilters(paramsBuilder, tableScan.getFilters());
         return paramsBuilder;
     }
