@@ -63,6 +63,7 @@ struct GraphMeta {
   uint64_t data_update_time;
   std::string data_import_config;
   std::string schema;
+  std::string store_type{"mutable_csr"};
 
   std::vector<PluginMeta> plugin_metas;
 

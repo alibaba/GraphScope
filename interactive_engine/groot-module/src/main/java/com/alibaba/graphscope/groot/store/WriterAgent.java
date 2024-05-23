@@ -167,8 +167,8 @@ public class WriterAgent {
                     this.consumeSI = batchSI;
                     this.availSnapshotInfoRef.set(new SnapshotInfo(availSI, availDdlSI));
                     this.commitExecutor.execute(this::asyncCommit);
-                } else {
-                    logger.warn("consumedSI {} >= batchSI {}, ignored", consumeSI, batchSI);
+                } else { // a flurry of batches with same snapshot ID
+                    logger.debug("consumedSI {} >= batchSI {}, ignored", consumeSI, batchSI);
                 }
                 if (hasDdl) {
                     this.consumeDdlSnapshotId = batchSI;

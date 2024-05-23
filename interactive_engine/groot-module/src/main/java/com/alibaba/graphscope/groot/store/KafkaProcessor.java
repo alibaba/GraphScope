@@ -107,6 +107,11 @@ public class KafkaProcessor {
 
     public void stop() {
         this.shouldStop = true;
+        try {
+            updateQueueOffsets();
+        } catch (IOException ex) {
+            logger.error("update queue offset failed", ex);
+        }
         if (this.persistOffsetsScheduler != null) {
             this.persistOffsetsScheduler.shutdown();
             try {
@@ -163,8 +168,7 @@ public class KafkaProcessor {
         boolean changed = false;
         List<Long> consumedOffsets = writerAgent.getConsumedQueueOffsets();
         for (int qId = 0; qId < queueOffsets.size(); qId++) {
-            long minOffset = Long.MAX_VALUE;
-            minOffset = Math.min(consumedOffsets.get(qId), minOffset);
+            long minOffset = Math.min(consumedOffsets.get(qId), Long.MAX_VALUE);
             if (minOffset != Long.MAX_VALUE && minOffset > newQueueOffsets.get(qId)) {
                 newQueueOffsets.set(qId, minOffset);
                 changed = true;

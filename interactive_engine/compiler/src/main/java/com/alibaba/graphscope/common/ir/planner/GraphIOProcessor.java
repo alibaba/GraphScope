@@ -296,7 +296,15 @@ public class GraphIOProcessor {
                                     dst = left;
                             }
                             PatternEdge edge = visitEdge(expand, src, dst);
-                            inputPattern.addEdge(src, dst, edge);
+                            boolean added = inputPattern.addEdge(src, dst, edge);
+                            if (!added) {
+                                throw new UnsupportedOperationException(
+                                        "edge "
+                                                + edge
+                                                + " already exists in the pattern, and pattern with"
+                                                + " multi-edges are not supported yet");
+                            }
+
                             vertexOrEdgeDetails.put(
                                     edge, new DataValue(expand.getAliasName(), getFilters(expand)));
                             return edge;
@@ -352,7 +360,14 @@ public class GraphIOProcessor {
                                                     expandEdge.getId(),
                                                     expandEdge.isBoth(),
                                                     newDetails);
-                            inputPattern.addEdge(src, dst, expandEdge);
+                            boolean added = inputPattern.addEdge(src, dst, expandEdge);
+                            if (!added) {
+                                throw new UnsupportedOperationException(
+                                        "edge "
+                                                + expandEdge
+                                                + " already exists in the pattern, and pattern with"
+                                                + " multi-edges are not supported yet");
+                            }
                             vertexOrEdgeDetails.put(
                                     expandEdge,
                                     new DataValue(pxd.getAliasName(), getFilters(expand)));

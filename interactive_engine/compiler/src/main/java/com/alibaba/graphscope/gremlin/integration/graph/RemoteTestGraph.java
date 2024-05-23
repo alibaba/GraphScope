@@ -1421,6 +1421,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_valueMap_matchXa_selectXnameX_bX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
         reason = "unsupported")
+@Graph.OptOut(
+        method = "g_V_matchXa_created_b__b_0created_aX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "multi-edge pattern unsupported")
 
 // steps nested in match is unsupported yet, will be supported latter, i.e values('name')
 @Graph.OptOut(
