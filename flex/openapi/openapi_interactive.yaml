@@ -908,7 +908,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QueryRequest'
+              type: string
       responses:
         '200':
           description: Successfully runned. Empty if failed?
