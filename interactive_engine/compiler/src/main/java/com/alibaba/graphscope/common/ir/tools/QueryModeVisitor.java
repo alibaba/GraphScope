@@ -27,6 +27,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
+/**
+ * visit each {@code RelNode}, if any write operation is found, set the mode to {@code QueryMode.WRITE}
+ */
 public class QueryModeVisitor extends RelVisitor {
     private QueryMode mode;
     private final List<Class<? extends RelNode>> writeOperations;
