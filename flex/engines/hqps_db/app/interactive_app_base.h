@@ -30,62 +30,31 @@ std::tuple<> deserialize_impl(const nlohmann::json& sv) {
 
 template <size_t I, typename T, typename... ARGS>
 std::tuple<T, ARGS...> deserialize_impl(const nlohmann::json& arguments_list) {
-  T value = arguments_list[I]["value"].get<T>();
+  T value{};
   PropertyType type{};
   from_json(arguments_list[I]["type"], type);
-  if (type != AnyConverter<T>::value) {
-    throw std::runtime_error("Type mismatch");
+  if constexpr (std::is_same<T, std::string>::value ||
+                std::is_same<T, std::string_view>::value) {
+    if (type != PropertyType::kString && !type.IsVarchar()) {
+      throw std::runtime_error("Argument type mismatch");
+    }
+    value = arguments_list[I]["value"].get<std::string>();
+  } else if constexpr (std::is_same<T, gs::Date>::value) {
+    if (type != PropertyType::kDate) {
+      throw std::runtime_error("Argument type mismatch");
+    }
+    value.milli_second = gs::Date{arguments_list[I]["value"].get<int64_t>()};
+  } else if constexpr (std::is_same<T, gs::Day>::value) {
+    if (type != PropertyType::kDay) {
+      throw std::runtime_error("Argument type mismatch");
+    }
+    value.day = gs::Day{arguments_list[I]["value"].get<uint32_t>()};
+  } else {
+    if (type != AnyConverter<T>::value) {
+      throw std::runtime_error("Argument type mismatch");
+    }
+    value = arguments_list[I]["value"].get<T>();
   }
-
-  return std::tuple_cat(std::make_tuple(value),
-                        deserialize_impl<I + 1, ARGS...>(arguments_list));
-}
-
-template <size_t I, typename T, typename... ARGS,
-          typename std::enable_if<(std::is_same<T, std::string>::value ||
-                                   std::is_same<T, std::string_view>::value),
-                                  int>::type = 0>
-std::tuple<std::string, ARGS...> deserialize_impl(
-    const nlohmann::json& arguments_list) {
-  std::string value = arguments_list[I]["value"].get<std::string>();
-  PropertyType type{};
-  from_json(arguments_list[I]["type"], type);
-  if (type != PropertyType::kString && !type.IsVarchar()) {
-    throw std::runtime_error("Type mismatch");
-  }
-  return std::tuple_cat(std::make_tuple(value),
-                        deserialize_impl<I + 1, ARGS...>(arguments_list));
-}
-
-template <
-    size_t I, typename T, typename... ARGS,
-    typename std::enable_if<std::is_same<T, gs::Date>::value, int>::type = 0>
-std::tuple<gs::Date, ARGS...> deserialize_impl(
-    const nlohmann::json& arguments_list) {
-  gs::Date value;
-  value.milli_second = arguments_list[I]["value"].get<int64_t>();
-  PropertyType type{};
-  from_json(arguments_list[I]["type"], type);
-  if (type != PropertyType::kDate) {
-    throw std::runtime_error("Type mismatch");
-  }
-
-  return std::tuple_cat(std::make_tuple(value),
-                        deserialize_impl<I + 1, ARGS...>(arguments_list));
-}
-
-template <
-    size_t I, typename T, typename... ARGS,
-    typename std::enable_if<std::is_same<T, gs::Day>::value, int>::type = 0>
-std::tuple<gs::Day, ARGS...> deserialize_impl(nlohmann::json arguments_list) {
-  gs::Day value;
-  value.day = arguments_list[I]["value"].get<uint32_t>();
-  PropertyType type{};
-  from_json(arguments_list[I]["type"], type);
-  if (type != PropertyType::kDay) {
-    throw std::runtime_error("Type mismatch");
-  }
-
   return std::tuple_cat(std::make_tuple(value),
                         deserialize_impl<I + 1, ARGS...>(arguments_list));
 }
