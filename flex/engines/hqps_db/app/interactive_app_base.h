@@ -72,10 +72,11 @@ class TypedInteractiveApp : public AppBase {
  public:
   TypedInteractiveApp(GraphDBSession& graph) : graph_(graph) {}
 
-  std::string type() const override { return "cypher procedure"; }
+  AppBase::AppType type() const override {
+    return AppBase::AppType::kCypherProcedure;
+  }
 
   bool Query(Decoder& input, Encoder& output) override {
-    //
     auto sv = input.get_string();
     char protocol = sv.back();
     size_t len = input.size();
@@ -112,7 +113,9 @@ class UnTypedInteractiveApp : public AppBase {
  public:
   UnTypedInteractiveApp(GraphDBSession& graph) : graph_(graph) {}
 
-  std::string type() const override { return "c++ procedure"; }
+  AppBase::AppType type() const override {
+    return AppBase::AppType::kCppProcedure;
+  }
 
   bool Query(Decoder& input, Encoder& output) override {
     return QueryImpl(input, output);

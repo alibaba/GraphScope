@@ -118,6 +118,8 @@ uint8_t GraphDBSession::parse_query_type(const std::string& input,
       return 0;
     }
     return app_name_to_path_index.at(query_name).second;
+  } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherInternal)) {
+    return input[len - 2];
   }
   LOG(ERROR) << "Invalid input tag: " << input_tag;
   return 0;
@@ -143,6 +145,8 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
     // for cypher
     str_len = input.size() - 1;
+  } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherInternal)) {
+    str_len = input.size() - 2;
   } else {
     return Result<std::vector<char>>(
         StatusCode::InValidArgument,

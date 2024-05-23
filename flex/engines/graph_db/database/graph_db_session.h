@@ -37,11 +37,13 @@ class GraphDBSession {
  public:
   enum class InputFormat : uint8_t {
     kCppEncoder = 0,
-    kCypherJson = 1,
+    kCypherJson = 1,      // External usage format
+    kCypherInternal = 2,  // Internal format
   };
 
   static constexpr int32_t MAX_RETRY = 3;
   static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
+  static constexpr const char* kCypherInternal = "\x02";
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),

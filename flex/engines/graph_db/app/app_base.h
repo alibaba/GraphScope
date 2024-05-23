@@ -35,9 +35,12 @@ class AppBase {
     READ,
     WRITE,
   };
-  virtual std::string name() const { return ""; };
-  virtual std::string description() const { return ""; };
-  virtual std::string type() const { return ""; }
+  enum class AppType {
+    kCypherProcedure,
+    kCypherAdhoc,
+    kCppProcedure,
+  };
+  virtual AppType type() const { return AppType::kCppProcedure; }
   virtual Mode mode() const { return Mode::READ; }
   AppBase() {}
   virtual ~AppBase() {}
