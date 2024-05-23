@@ -1607,6 +1607,9 @@ components:
         gremlin_port:
           type: integer
           format: int32
+        start_time:
+          type: integer
+          format: int32
     JobResponse:
       type: object
       x-body-name: job_response
