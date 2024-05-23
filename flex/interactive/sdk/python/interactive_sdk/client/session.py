@@ -499,6 +499,19 @@ class DefaultSession(Session):
         self, graph_id: StrictStr, procedure_id: StrictStr, params: QueryRequest
     ) -> Result[CollectiveResults]:
         try:
+            params_str = params.to_json() + chr(1)
+            response = self._procedure_api.call_procedure_with_http_info(
+                graph_id, procedure_id, params
+            )
+            result = CollectiveResults()
+            result.ParseFromString(response)
+            return Result.from_response(result)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def call_procedure_raw(self, graph_id: StrictStr, procedure_id: StrictStr, params: StrictStr) -> Result[str]:
+        try:
+            params = params + chr(0)
             response = self._procedure_api.call_procedure_with_http_info(
                 graph_id, procedure_id, params
             )

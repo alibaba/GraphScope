@@ -303,8 +303,10 @@ public class DefaultSession implements Session {
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(String graphName, QueryRequest request) {
         try {
+            StringBuilder sb = new StringBuilder(request.toJson());
+            sb.append((char) 1);
             ApiResponse<String> response =
-                    queryApi.procCallWithHttpInfo(graphName, request);
+                    queryApi.procCallWithHttpInfo(graphName, sb.toString());
             if (response.getStatusCode() != 200) {
                 return Result.fromException(new ApiException(response.getStatusCode(), response.getData()));
             }
@@ -320,10 +322,15 @@ public class DefaultSession implements Session {
     }
     
     @Override
-    public Result<byte[]> callProcedureRaw(String graphName, byte[] request) {
+    public Result<String> callProcedureRaw(String graphName, String request) {
         try {
-            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, request);
-            return Result.fromResponse(response);
+            StringBuilder sb = new StringBuilder(request);
+            sb.append((char) 0);
+            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, sb.toString());
+            if (response.getStatusCode() != 200) {
+                return Result.fromException(new ApiException(response.getStatusCode(), response.getData()));
+            }
+            return new Result<String>(response.getData());
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);
