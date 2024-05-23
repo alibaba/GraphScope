@@ -41,7 +41,8 @@ void put_argument(gs::Encoder& encoder, const query::Argument& argument) {
 
 HQPSAdhocApp::HQPSAdhocApp(const GraphDB& graph) : graph_(graph) {}
 
-bool HQPSAdhocApp::run(GraphDBSession& graph, Decoder& input, Encoder& output) {
+bool HQPSAdhocApp::Query(GraphDBSession& graph, Decoder& input,
+                         Encoder& output) {
   if (input.size() <= 4) {
     LOG(ERROR) << "Invalid input for HQPSAdhocApp, input size: "
                << input.size();
@@ -68,8 +69,8 @@ bool HQPSAdhocApp::run(GraphDBSession& graph, Decoder& input, Encoder& output) {
 
 HQPSProcedureApp::HQPSProcedureApp(const GraphDB& graph) : graph_(graph) {}
 
-bool HQPSProcedureApp::run(GraphDBSession& graph, Decoder& input,
-                           Encoder& output) {
+bool HQPSProcedureApp::Query(GraphDBSession& graph, Decoder& input,
+                             Encoder& output) {
   if (input.size() <= 0) {
     LOG(ERROR) << "Invalid input for HQPSProcedureApp, input size: "
                << input.size();

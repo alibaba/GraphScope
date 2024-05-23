@@ -51,14 +51,15 @@ struct Query5expr1 {
  private:
 };
 
-class MatchQuery : public AppBase {
+class MatchQuery : public ReadAppBase {
  public:
   using GRAPH_INTERFACE = gs::MutableCSRInterface;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
   MatchQuery(const GraphDBSession& session) : graph(session) {}
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -117,7 +118,7 @@ class MatchQuery : public AppBase {
   gs::MutableCSRInterface graph;
 };
 
-class MatchQuery1 : public AppBase {
+class MatchQuery1 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -153,7 +154,8 @@ class MatchQuery1 : public AppBase {
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{0});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -166,7 +168,7 @@ class MatchQuery1 : public AppBase {
   gs::MutableCSRInterface graph;
 };
 
-class MatchQuery2 : public AppBase {
+class MatchQuery2 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -216,7 +218,8 @@ class MatchQuery2 : public AppBase {
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -229,7 +232,7 @@ class MatchQuery2 : public AppBase {
   gs::MutableCSRInterface graph;
 };
 
-class MatchQuery3 : public AppBase {
+class MatchQuery3 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -290,7 +293,8 @@ class MatchQuery3 : public AppBase {
     return Engine::Sink(graph, ctx6, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -304,7 +308,7 @@ class MatchQuery3 : public AppBase {
 };
 
 // Query4
-class MatchQuery4 : public AppBase {
+class MatchQuery4 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -392,7 +396,8 @@ class MatchQuery4 : public AppBase {
   }
 
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -404,7 +409,7 @@ class MatchQuery4 : public AppBase {
   }
   gs::MutableCSRInterface graph;
 };
-class MatchQuery5 : public AppBase {
+class MatchQuery5 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -448,7 +453,8 @@ class MatchQuery5 : public AppBase {
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -461,7 +467,7 @@ class MatchQuery5 : public AppBase {
   gs::MutableCSRInterface graph;
 };
 
-class MatchQuery7 : public AppBase {
+class MatchQuery7 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -498,7 +504,8 @@ class MatchQuery7 : public AppBase {
     return Engine::Sink(graph, ctx5, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -511,7 +518,7 @@ class MatchQuery7 : public AppBase {
   gs::MutableCSRInterface graph;
 };
 
-class MatchQuery9 : public AppBase {
+class MatchQuery9 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -547,7 +554,8 @@ class MatchQuery9 : public AppBase {
     return Engine::Sink(graph, ctx4, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -585,7 +593,7 @@ struct Query10expr1 {
 
  private:
 };
-class MatchQuery10 : public AppBase {
+class MatchQuery10 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -657,7 +665,8 @@ class MatchQuery10 : public AppBase {
     return Engine::Sink(graph, ctx7, std::array<int32_t, 4>{4, 5, 6, 7});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -691,7 +700,7 @@ struct MatchQuery11Expr1 {
  private:
 };
 
-class MatchQuery11 : public AppBase {
+class MatchQuery11 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -783,7 +792,8 @@ class MatchQuery11 : public AppBase {
     return Engine::Sink(graph, ctx4, std::array<int32_t, 2>{0, 1});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -796,7 +806,7 @@ class MatchQuery11 : public AppBase {
   gs::MutableCSRInterface graph;
 };
 
-class MatchQuery12 : public AppBase {
+class MatchQuery12 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -817,7 +827,8 @@ class MatchQuery12 : public AppBase {
     return res;
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -854,7 +865,7 @@ struct MatchQuery13Expr1 {
  private:
 };
 
-class MatchQuery13 : public AppBase {
+class MatchQuery13 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -881,7 +892,8 @@ class MatchQuery13 : public AppBase {
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession& graph, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -895,7 +907,7 @@ class MatchQuery13 : public AppBase {
 };
 
 // Auto generated query class definition
-class MatchQuery14 : public AppBase {
+class MatchQuery14 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -928,7 +940,8 @@ class MatchQuery14 : public AppBase {
     return Engine::Sink(graph, ctx2, std::array<int32_t, 2>{2, 3});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();
@@ -941,7 +954,7 @@ class MatchQuery14 : public AppBase {
   gs::MutableCSRInterface graph;
 };
 
-class MatchQuery15 : public AppBase {
+class MatchQuery15 : public ReadAppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -1011,7 +1024,8 @@ class MatchQuery15 : public AppBase {
     return Engine::Sink(graph, ctx4, std::array<int32_t, 2>{2, 3});
   }
   // Wrapper query function for query class
-  bool Query(Decoder& decoder, Encoder& encoder) override {
+  bool Query(const GraphDBSession&, Decoder& decoder,
+             Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
     auto res = Query();

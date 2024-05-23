@@ -24,13 +24,11 @@ namespace gs {
 /**
  * @brief HQPSAdhocApp is a builtin, proxy app used to evaluate adhoc query.
  */
-class HQPSAdhocApp : public AppBase {
+class HQPSAdhocApp : public WriteAppBase {
  public:
   HQPSAdhocApp(const GraphDB& graph);
-  AppMode mode() const override { return AppMode::kRead; }
-  AppType type() const override { return AppType::kCypherAdhoc; }
 
-  bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
+  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:
   const GraphDB& graph_;
@@ -40,13 +38,11 @@ class HQPSAdhocApp : public AppBase {
  * @brief HQPSProcedureApp is a builtin, proxy app used to evaluate procedure
  * query.
  */
-class HQPSProcedureApp : public AppBase {
+class HQPSProcedureApp : public WriteAppBase {
  public:
   HQPSProcedureApp(const GraphDB& graph);
-  AppMode mode() const override { return AppMode::kRead; }
-  AppType type() const override { return AppType::kCypherProcedure; }
 
-  bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
+  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:
   const GraphDB& graph_;

@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish Sample query";
   }
   {
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery test";
   }
 
@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery1 test";
   }
 
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery2 test";
   }
 
@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery3 test";
   }
 
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery4 test";
   }
 
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery5 test";
   }
 
@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery7 test";
   }
 
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery9 test";
   }
 
@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery10 test";
   }
 
@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery11 test";
   }
 
@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery12 test";
   }
 
@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
     gs::MutableCSRInterface graph(sess);
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery14 test";
   }
 
@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    query.Query(input, output);
+    query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery15 test";
   }
 

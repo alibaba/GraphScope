@@ -22,12 +22,10 @@
 
 namespace gs {
 
-class ServerApp : public AppBase {
+class ServerApp : public WriteAppBase {
  public:
   ServerApp(const GraphDB& graph) : graph_(graph) {}
-  bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
-  AppMode mode() const override { return AppMode::kRead; }
-  AppType type() const override { return AppType::kBuiltIn; }
+  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:
   struct vertex_range {
