@@ -252,6 +252,14 @@ public class DriverTest {
 
     @Test
     @Order(8)
+    public void test7CallProcedure() {
+        Result<String> resp = session.callProcedure(graphId, procedureId);
+        assertOk(resp);
+        logger.info("result: " + resp.getValue());
+    }
+
+    @Test
+    @Order(8)
     public void test7Restart() {
         Result<String> resp = session.restartService();
         assertOk(resp);
@@ -270,6 +278,8 @@ public class DriverTest {
         org.neo4j.driver.Result result = neo4jSession.run("CALL testProcedure() YIELD *;");
         logger.info("result: " + result.toString());
     }
+
+    
 
     @AfterAll
     public static void afterClass() {

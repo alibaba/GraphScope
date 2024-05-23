@@ -65,7 +65,9 @@ from interactive_sdk.openapi.models.start_service_request import StartServiceReq
 from interactive_sdk.openapi.models.update_procedure_request import (
     UpdateProcedureRequest,
 )
+from interactive_sdk.openapi.models.query_request import QueryRequest
 from interactive_sdk.openapi.models.vertex_request import VertexRequest
+from interactive_sdk.client.generated.results_pb2 import CollectiveResults
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -494,9 +496,15 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def call_procedure(
-        self, graph_id: StrictStr, procedure_id: StrictStr, params: Dict[str, Any]
-    ) -> Result[str]:
-        raise NotImplementedError
+        self, graph_id: StrictStr, procedure_id: StrictStr, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        try:
+            response = self._procedure_api.call_procedure_with_http_info(
+                graph_id, procedure_id, params
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     ################ QueryService Interfaces ##########
     def get_service_status(self) -> Result[ServiceStatus]:

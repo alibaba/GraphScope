@@ -31,7 +31,25 @@ REQUIRES = [
     "typing-extensions >= 4.7.1",
     "neo4j >= 4.4.19",
     "gremlinpython >= 3.4.10",
+    "protobuf >= 3.17.3",
 ]
+
+import os
+import sys
+import subprocess
+import glob
+from setuptools.command.build_py import build_py as _build_py
+
+class BuildProto(_build_py):
+    def run(self):
+        proto_path = "../../../../interactive_engine/executor/ir/proto/"
+        proto_files = glob.glob(os.path.join(proto_path, '*.proto'))
+        output_dir = "./interactive_sdk/client/generated/"
+        os.makedirs(output_dir, exist_ok=True)
+        for proto_file in proto_files:
+            if proto_file.endswith(".proto"):
+                subprocess.run(["protoc", f"--python_out={output_dir}", f"--proto_path={proto_path}", f"{proto_file}"], check=True)
+        super().run()
 
 setup(
     name=NAME,
@@ -50,4 +68,5 @@ setup(
     This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query. 
     """,  # noqa: E501
     package_data={"interactive_sdk": ["py.typed"]},
+    cmdclass={"build_py": BuildProto}, 
 )

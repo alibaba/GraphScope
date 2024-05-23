@@ -306,7 +306,7 @@ public class DefaultSession implements Session {
             ApiResponse<String> response =
                     queryApi.procCallWithHttpInfo(graphName, request);
             if (response.getStatusCode() != 200) {
-                return Result.fromException(new ApiException(response.getStatusCode(),  response.getData()));
+                return Result.fromException(new ApiException(response.getStatusCode(), response.getData()));
             }
             IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(response.getData().getBytes());
             return new Result<>(results);
@@ -316,6 +316,17 @@ public class DefaultSession implements Session {
         } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
             return Result.error(e.getMessage());
+        }
+    }
+    
+    @Override
+    public Result<byte[]> callProcedureRaw(String graphName, byte[] request) {
+        try {
+            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, request);
+            return Result.fromResponse(response);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
         }
     }
 
