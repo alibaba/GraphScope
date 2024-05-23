@@ -428,10 +428,14 @@ void GraphDB::initApps(
   // Builtin apps
   app_factories_[0] = std::make_shared<ServerAppFactory>();
 #ifdef BUILD_HQPS
-  app_factories_[Schema::HQPS_ADHOC_PLUGIN_ID] =
-      std::make_shared<HQPSAdhocAppFactory>();
-  app_factories_[Schema::HQPS_PROCEDURE_PLUGIN_ID] =
-      std::make_shared<HQPSProcedureAppFactory>();
+  app_factories_[Schema::HQPS_READ_ADHOC_PLUGIN_ID] =
+      std::make_shared<HQPSReadAdhocAppFactory>();
+  app_factories_[Schema::HQPS_WRITE_ADHOC_PLUGIN_ID] =
+      std::make_shared<HQPSWriteAdhocAppFactory>();
+  app_factories_[Schema::HQPS_READ_PROCEDURE_PLUGIN_ID] =
+      std::make_shared<HQPSReadProcedureAppFactory>();
+  app_factories_[Schema::HQPS_WRITE_PROCEDURE_PLUGIN_ID] =
+      std::make_shared<HQPSWriteProcedureAppFactory>();
 #endif  // BUILD_HQPS
 
   size_t valid_plugins = 0;

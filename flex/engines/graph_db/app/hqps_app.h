@@ -24,47 +24,98 @@ namespace gs {
 /**
  * @brief HQPSAdhocApp is a builtin, proxy app used to evaluate adhoc query.
  */
-class HQPSAdhocApp : public WriteAppBase {
+class AbstractHQPSAdhocApp : public AppBase {
  public:
-  HQPSAdhocApp(const GraphDB& graph);
+  AbstractHQPSAdhocApp(const GraphDB& graph);
 
-  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
+  AppType type() const override { return AppType::kCypherAdhoc; }
+
+  bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:
   const GraphDB& graph_;
+};
+
+class HqpsReadAdhocApp : public AbstractHQPSAdhocApp {
+ public:
+  HqpsReadAdhocApp(const GraphDB& graph) : AbstractHQPSAdhocApp(graph) {}
+
+  AppMode mode() const override { return AppMode::kRead; }
+};
+
+class HqpsWriteAdhocApp : public AbstractHQPSAdhocApp {
+ public:
+  HqpsWriteAdhocApp(const GraphDB& graph) : AbstractHQPSAdhocApp(graph) {}
+
+  AppMode mode() const override { return AppMode::kWrite; }
 };
 
 /**
  * @brief HQPSProcedureApp is a builtin, proxy app used to evaluate procedure
  * query.
  */
-class HQPSProcedureApp : public WriteAppBase {
+class AbstractHQPSProcedureApp : public AppBase {
  public:
-  HQPSProcedureApp(const GraphDB& graph);
+  AbstractHQPSProcedureApp(const GraphDB& graph);
 
-  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
+  AppType type() const override { return AppType::kCypherProcedure; }
+
+  bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:
   const GraphDB& graph_;
 };
 
-// Factory
-class HQPSAdhocAppFactory : public AppFactoryBase {
+class HqpsReadProcedureApp : public AbstractHQPSProcedureApp {
  public:
-  HQPSAdhocAppFactory();
-  ~HQPSAdhocAppFactory();
+  HqpsReadProcedureApp(const GraphDB& graph)
+      : AbstractHQPSProcedureApp(graph) {}
+
+  AppMode mode() const override { return AppMode::kRead; }
+};
+
+class HqpsWriteProcedureApp : public AbstractHQPSProcedureApp {
+ public:
+  HqpsWriteProcedureApp(const GraphDB& graph)
+      : AbstractHQPSProcedureApp(graph) {}
+
+  AppMode mode() const override { return AppMode::kWrite; }
+};
+
+// Factory
+class HQPSReadAdhocAppFactory : public AppFactoryBase {
+ public:
+  HQPSReadAdhocAppFactory() = default;
+  ~HQPSReadAdhocAppFactory() = default;
+
+  AppWrapper CreateApp(const GraphDB& graph) override;
+};
+
+class HQPSWriteAdhocAppFactory : public AppFactoryBase {
+ public:
+  HQPSWriteAdhocAppFactory() = default;
+  ~HQPSWriteAdhocAppFactory() = default;
 
   AppWrapper CreateApp(const GraphDB& graph) override;
 };
 
 // Factory
-class HQPSProcedureAppFactory : public AppFactoryBase {
+class HQPSReadProcedureAppFactory : public AppFactoryBase {
  public:
-  HQPSProcedureAppFactory();
-  ~HQPSProcedureAppFactory();
+  HQPSReadProcedureAppFactory() = default;
+  ~HQPSReadProcedureAppFactory() = default;
 
   AppWrapper CreateApp(const GraphDB& graph) override;
 };
+
+class HQPSWriteProcedureAppFactory : public AppFactoryBase {
+ public:
+  HQPSWriteProcedureAppFactory() = default;
+  ~HQPSWriteProcedureAppFactory() = default;
+
+  AppWrapper CreateApp(const GraphDB& graph) override;
+};
+
 }  // namespace gs
 
 #endif  // ENGINES_GRAPH_DB_APP_HQPS_APP_H_

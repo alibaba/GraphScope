@@ -75,7 +75,7 @@ void get_tuple_from_column_tuple(size_t index, std::tuple<T...>& t,
  */
 class MutableCSRInterface {
  public:
-  const GraphDB& GetDB() const { return db_; }
+  const GraphDBSession& GetDBSession() const { return db_; }
 
   using vertex_id_t = vid_t;
   using gid_t = uint64_t;
@@ -110,7 +110,7 @@ class MutableCSRInterface {
 
   MutableCSRInterface(MutableCSRInterface&& other) : db_(other.db_) {}
 
-  explicit MutableCSRInterface(const GraphDB& session) : db_(session) {}
+  explicit MutableCSRInterface(const GraphDBSession& session) : db_(session) {}
 
   const Schema& schema() const { return db_.schema(); }
 
@@ -930,7 +930,7 @@ class MutableCSRInterface {
           prop_names,
       std::tuple<std::shared_ptr<TypedRefColumn<T>>...>& columns) const {}
 
-  const GraphDB& db_;
+  const GraphDBSession& db_;
 };
 
 }  // namespace gs

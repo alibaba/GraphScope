@@ -20,6 +20,22 @@
 
 namespace gs {
 
+AppBase::AppMode ReadAppBase::mode() const { return AppMode::kRead; }
+
+AppBase::AppType ReadAppBase::type() const { return AppType::kCppProcedure; }
+
+bool ReadAppBase::run(GraphDBSession& db, Decoder& input, Encoder& output) {
+  return this->Query(db, input, output);
+}
+
+AppBase::AppMode WriteAppBase::mode() const { return AppMode::kWrite; }
+
+AppBase::AppType WriteAppBase::type() const { return AppType::kCppProcedure; }
+
+bool WriteAppBase::run(GraphDBSession& db, Decoder& input, Encoder& output) {
+  return this->Query(db, input, output);
+}
+
 SharedLibraryAppFactory::SharedLibraryAppFactory(const std::string& path)
     : app_path_(path) {
   app_handle_ = dlopen(app_path_.c_str(), RTLD_LAZY);

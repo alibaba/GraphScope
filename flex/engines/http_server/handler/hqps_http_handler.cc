@@ -108,7 +108,9 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-  req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
+  // TODO(zhanglei): choose read or write based on the request, after the
+  // read/write info is supported in physical plan
+  req->content.append(gs::Schema::HQPS_WRITE_PROCEDURE_PLUGIN_ID_STR, 1);
   req->content.append(gs::GraphDBSession::kCypherInternal, 1);
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
@@ -497,7 +499,9 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         auto query_span = tracer->StartSpan("adhoc_query_execution", options);
         auto query_scope = tracer->WithActiveSpan(query_span);
 #endif  // HAVE_OPENTELEMETRY_CPP
-        param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
+        // TODO(zhanglei): choose read or write based on the request, after the
+        //  read/write info is supported in physical plan
+        param.content.append(gs::Schema::HQPS_WRITE_ADHOC_PLUGIN_ID_STR, 1);
         param.content.append(gs::GraphDBSession::kCypherInternal, 1);
         return executor_refs_[dst_executor]
             .run_graph_db_query(query_param{std::move(param.content)})

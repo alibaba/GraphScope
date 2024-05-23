@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     for (gs::MutableCSRInterface::vertex_id_t i = 0; i < max_v_num; ++i) {
       vids[i] = i;
     }
-    gs::MutableCSRInterface interface(db);
+    gs::MutableCSRInterface interface(sess);
     std::array<std::string, 1> prop_names{"creationDate"};
     auto edges =
         interface.GetEdges<int64_t>(1, 1, 8, vids, "Both", INT_MAX, prop_names);
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
   }
 
   {
-    gs::SampleQuery query(db);
+    gs::SampleQuery query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     input_encoder.put_long(19791209300143);
@@ -85,164 +85,152 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Finish Sample query";
   }
   {
-    gs::MatchQuery query(db);
+    gs::MatchQuery query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery test";
   }
 
   {
-    gs::MatchQuery1 query(db);
+    gs::MatchQuery1 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery1 test";
   }
 
   {
-    gs::MatchQuery2 query(db);
+    gs::MatchQuery2 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery2 test";
   }
 
   {
-    gs::MatchQuery3 query(db);
+    gs::MatchQuery3 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery3 test";
   }
 
   {
-    gs::MatchQuery4 query(db);
+    gs::MatchQuery4 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery4 test";
   }
 
   {
-    gs::MatchQuery5 query(db);
+    gs::MatchQuery5 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery5 test";
   }
 
   {
-    gs::MatchQuery7 query(db);
+    gs::MatchQuery7 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery7 test";
   }
 
   {
-    gs::MatchQuery9 query(db);
+    gs::MatchQuery9 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery9 test";
   }
 
   {
-    gs::MatchQuery10 query(db);
+    gs::MatchQuery10 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery10 test";
   }
 
   {
-    gs::MatchQuery11 query(db);
+    gs::MatchQuery11 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery11 test";
   }
 
   {
-    gs::MatchQuery12 query(db);
+    gs::MatchQuery12 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery12 test";
   }
 
   {
-    gs::MatchQuery14 query(db);
+    gs::MatchQuery14 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;
     gs::Encoder output(output_array);
     gs::Decoder input(encoder_array.data(), encoder_array.size());
 
-    gs::MutableCSRInterface graph(db);
     query.Query(sess, input, output);
     LOG(INFO) << "Finish MatchQuery14 test";
   }
 
   {
     // test PathExpand with multiple edge triplets.
-    gs::MatchQuery15 query(db);
+    gs::MatchQuery15 query;
     std::vector<char> encoder_array;
     gs::Encoder input_encoder(encoder_array);
     std::vector<char> output_array;

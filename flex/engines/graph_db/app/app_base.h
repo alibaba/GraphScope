@@ -51,6 +51,29 @@ class AppBase {
   virtual ~AppBase() {}
 };
 
+class ReadAppBase : public AppBase {
+ public:
+  AppMode mode() const override;
+
+  AppType type() const override;
+
+  bool run(GraphDBSession& db, Decoder& input, Encoder& output) override;
+
+  virtual bool Query(const GraphDBSession& db, Decoder& input,
+                     Encoder& output) = 0;
+};
+
+class WriteAppBase : public AppBase {
+ public:
+  AppMode mode() const override;
+
+  AppType type() const override;
+
+  bool run(GraphDBSession& db, Decoder& input, Encoder& output) override;
+
+  virtual bool Query(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
+};
+
 class AppWrapper {
  public:
   AppWrapper() : app_(NULL), func_deletor_(NULL) {}

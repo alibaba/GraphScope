@@ -66,33 +66,6 @@ std::tuple<ARGS...> deserialize(std::string_view sv) {
   return deserialize_impl<0, ARGS...>(arguments_list);
 }
 
-class ReadAppBase : public AppBase {
- public:
-  AppMode mode() const override { return AppMode::kRead; }
-
-  AppType type() const override { return AppType::kCppProcedure; }
-
-  bool run(GraphDBSession& db, Decoder& input, Encoder& output) override {
-    return this->Query(db, input, output);
-  }
-
-  virtual bool Query(const GraphDBSession& db, Decoder& input,
-                     Encoder& output) = 0;
-};
-
-class WriteAppBase : public AppBase {
- public:
-  AppMode mode() const override { return AppMode::kWrite; }
-
-  AppType type() const override { return AppType::kCppProcedure; }
-
-  bool run(GraphDBSession& db, Decoder& input, Encoder& output) override {
-    return this->Query(db, input, output);
-  }
-
-  virtual bool Query(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
-};
-
 // for cypher procedure
 template <typename... ARGS>
 class CypherReadAppBase : public AppBase {

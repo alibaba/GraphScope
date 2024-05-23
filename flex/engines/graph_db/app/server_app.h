@@ -25,6 +25,7 @@ namespace gs {
 class ServerApp : public WriteAppBase {
  public:
   ServerApp(const GraphDB& graph) : graph_(graph) {}
+  AppBase::AppType type() const override;
   bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
  private:

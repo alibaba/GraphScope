@@ -39,12 +39,13 @@ void put_argument(gs::Encoder& encoder, const query::Argument& argument) {
   }
 }
 
-HQPSAdhocApp::HQPSAdhocApp(const GraphDB& graph) : graph_(graph) {}
+AbstractHQPSAdhocApp::AbstractHQPSAdhocApp(const GraphDB& graph)
+    : graph_(graph) {}
 
-bool HQPSAdhocApp::Query(GraphDBSession& graph, Decoder& input,
-                         Encoder& output) {
+bool AbstractHQPSAdhocApp::run(GraphDBSession& graph, Decoder& input,
+                               Encoder& output) {
   if (input.size() <= 4) {
-    LOG(ERROR) << "Invalid input for HQPSAdhocApp, input size: "
+    LOG(ERROR) << "Invalid input for AbstractHQPSAdhocApp, input size: "
                << input.size();
     return false;
   }
@@ -67,12 +68,13 @@ bool HQPSAdhocApp::Query(GraphDBSession& graph, Decoder& input,
   return app_wrapper.app()->run(graph, input, output);
 }
 
-HQPSProcedureApp::HQPSProcedureApp(const GraphDB& graph) : graph_(graph) {}
+AbstractHQPSProcedureApp::AbstractHQPSProcedureApp(const GraphDB& graph)
+    : graph_(graph) {}
 
-bool HQPSProcedureApp::Query(GraphDBSession& graph, Decoder& input,
-                             Encoder& output) {
+bool AbstractHQPSProcedureApp::run(GraphDBSession& graph, Decoder& input,
+                                   Encoder& output) {
   if (input.size() <= 0) {
-    LOG(ERROR) << "Invalid input for HQPSProcedureApp, input size: "
+    LOG(ERROR) << "Invalid input for AbstractHQPSProcedureApp, input size: "
                << input.size();
     return false;
   }
@@ -115,16 +117,20 @@ bool HQPSProcedureApp::Query(GraphDBSession& graph, Decoder& input,
   return app->run(graph, input_decoder, output);
 }
 
-HQPSAdhocAppFactory::HQPSAdhocAppFactory() {}
-HQPSAdhocAppFactory::~HQPSAdhocAppFactory() {}
-AppWrapper HQPSAdhocAppFactory::CreateApp(const GraphDB& graph) {
-  return AppWrapper(new HQPSAdhocApp(graph), NULL);
+AppWrapper HQPSReadAdhocAppFactory::CreateApp(const GraphDB& graph) {
+  return AppWrapper(new HqpsReadAdhocApp(graph), NULL);
 }
 
-HQPSProcedureAppFactory::HQPSProcedureAppFactory() {}
-HQPSProcedureAppFactory::~HQPSProcedureAppFactory() {}
-AppWrapper HQPSProcedureAppFactory::CreateApp(const GraphDB& graph) {
-  return AppWrapper(new HQPSProcedureApp(graph), NULL);
+AppWrapper HQPSWriteAdhocAppFactory::CreateApp(const GraphDB& graph) {
+  return AppWrapper(new HqpsWriteAdhocApp(graph), NULL);
+}
+
+AppWrapper HQPSReadProcedureAppFactory::CreateApp(const GraphDB& graph) {
+  return AppWrapper(new HqpsReadProcedureApp(graph), NULL);
+}
+
+AppWrapper HQPSWriteProcedureAppFactory::CreateApp(const GraphDB& graph) {
+  return AppWrapper(new HqpsWriteProcedureApp(graph), NULL);
 }
 
 }  // namespace gs
