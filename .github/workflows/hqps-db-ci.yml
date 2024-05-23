@@ -229,6 +229,11 @@ jobs:
           --procedure_name=get_person_name \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
+        ./load_plan_and_gen.sh -e=hqps -i=../tests/interactive/sample_app.cc -w=/tmp/codegen \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
+          --procedure_name=sample_app \
+          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
+
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/count_vertex_num.cypher -w=/tmp/codegen \
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml  -o=${PLUGIN_DIR} \
           --procedure_name=count_vertex_num \
