@@ -1,0 +1,81 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: gae
+spec:
+  slotsPerWorker: 1
+  runPolicy:
+    cleanPodPolicy: Running
+    ttlSecondsAfterFinished: 60
+  sshAuthMountPath: /home/graphscope/.ssh
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          containers:
+          - image: registry.cn-hongkong.aliyuncs.com/graphscope/analytical:latest
+            env:
+            - name: APPLICATION
+              value: wcc
+            - name: VFILE
+              value: /mnt/data/gstest/p2p-31.v
+            - name: EFILE
+              value: /mnt/data/gstest/p2p-31.e
+            - name: OUTPUT
+              value: /mnt/data/output
+            - name: OMPI_MCA_btl_vader_single_copy_mechanism
+              value: none
+            - name: OMPI_MCA_orte_allowed_exit_without_sync
+              value: "1"
+            - name: OMPI_MCA_odls_base_sigkill_timeout
+              value: "0"
+            - name: PATH
+              value: "/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/opt/graphscope/bin:/home/graphscope/.local/bin"
+            - name: VINEYARD_IPC_SOCKET
+              value: "/tmp/vineyard.sock"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            name: mpi-launcher
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              runAsUser: 1001
+            args:
+              - /bin/bash
+              - -c
+              - |
+                  set +ex
+                  nohup vineyardd &
+                  mpirun -x PATH -x LD_LIBRARY_PATH -x VINEYARD_IPC_SOCKET -n 2 \
+                  /opt/graphscope/bin/run_app --vfile ${VFILE} --efile ${EFILE} --application ${APPLICATION} --out_prefix ${OUTPUT}
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+    Worker:
+      replicas: 2
+      template:
+        spec:
+          containers:
+          - image: registry.cn-hongkong.aliyuncs.com/graphscope/analytical:latest
+            name: worker
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              runAsUser: 1001
+            command:
+            - /usr/sbin/sshd
+            args:
+            - -De
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+            volumeMounts:
+              - mountPath: "/mnt/data"
+                name: task-pv-storage
+          volumes:
+            - name: task-pv-storage    # Put gstest under this path and make sure uid 1001 has the permission to read/write
+              persistentVolumeClaim:
+                claimName: task-pv-claim
