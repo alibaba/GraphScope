@@ -13,18 +13,19 @@ use pegasus::{tag, Configuration, JobConf, ServerConf};
 use rpc_server::queries::register::QueryRegister;
 use rpc_server::queries::rpc::RPCServerConfig;
 
+#[cfg(feature = "use_mimalloc")]
 use mimalloc::MiMalloc;
+
+#[cfg(feature = "use_mimalloc")]
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 
-// use jemallocator::Jemalloc;
-// #[global_allocator]
-// static GLOBAL: Jemalloc = Jemalloc;
+#[cfg(feature = "use_mimalloc_rust")]
+use mimalloc_rust::*;
 
-// use mimalloc_rust::*;
-//
-// #[global_allocator]
-// static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
+#[cfg(feature = "use_mimalloc_rust")]
+#[global_allocator]
+static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
 
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {
