@@ -1003,11 +1003,11 @@ public class GraphBuilder extends RelBuilder {
         }
         if (tableScan instanceof GraphLogicalSource && !uniqueKeyFilters.isEmpty()) {
             GraphLogicalSource source = (GraphLogicalSource) tableScan;
-            Preconditions.checkArgument(
-                    source.getUniqueKeyFilters() == null,
-                    "can not add unique key filters if original is not empty");
-            source.setUniqueKeyFilters(
-                    RexUtil.composeDisjunction(this.getRexBuilder(), uniqueKeyFilters));
+            if (source.getUniqueKeyFilters() != null || uniqueKeyFilters.size() > 1) {
+                extraFilters.addAll(uniqueKeyFilters);
+            } else {
+                source.setUniqueKeyFilters(uniqueKeyFilters.get(0));
+            }
         }
         if (!extraFilters.isEmpty()) {
             ImmutableList originalFilters = tableScan.getFilters();
