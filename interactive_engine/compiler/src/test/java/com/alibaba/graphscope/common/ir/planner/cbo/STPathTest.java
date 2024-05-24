@@ -53,11 +53,9 @@ public class STPathTest {
                                 "graph.planner.rules",
                                 "NotMatchToAntiJoinRule, FilterIntoJoinRule, FilterMatchRule,"
                                         + " ExtendIntersectRule, JoinDecompositionRule,"
-                                        + " ExpandGetVFusionRule",
-                                "graph.planner.cbo.glogue.schema",
-                                "target/test-classes/statistics/ldbc30_statistics.txt"));
+                                        + " ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockSchemaMeta("schema/ldbc.json");
+        irMeta = Utils.mockIrMeta("schema/ldbc.json", "statistics/ldbc30_statistics.json");
     }
 
     @Test
