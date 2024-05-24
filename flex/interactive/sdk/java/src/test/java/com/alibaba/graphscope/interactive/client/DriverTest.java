@@ -262,7 +262,7 @@ public class DriverTest {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
         procedure.setName("cppProcedure");
         procedure.setDescription("a simple test procedure");
-        //sampleAppFilePath is under the resources folder,with name sample_app.cc
+        // sampleAppFilePath is under the resources folder,with name sample_app.cc
         String sampleAppFilePath = "sample_app.cc";
         String sampleAppContent = "";
         try {
@@ -318,7 +318,6 @@ public class DriverTest {
         org.neo4j.driver.Result result = neo4jSession.run(query);
         logger.info("result: " + result.toString());
     }
-
 
     @AfterAll
     public static void afterClass() {

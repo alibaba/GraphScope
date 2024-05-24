@@ -45,7 +45,7 @@ public class DefaultSession implements Session {
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_WRITE_TIMEOUT = 30000;
 
-    private final ApiClient client,queryClient;
+    private final ApiClient client, queryClient;
 
     public static DefaultSession newInstance(String uri) {
         return new DefaultSession(uri);
@@ -75,9 +75,10 @@ public class DefaultSession implements Session {
 
         Result<ServiceStatus> status = getServiceStatus();
         if (!status.isOk()) {
-            throw new RuntimeException("Failed to connect to the server: " + status.getStatusMessage());
+            throw new RuntimeException(
+                    "Failed to connect to the server: " + status.getStatusMessage());
         }
-        //TODO: should construct queryService from a endpoint, not a port
+        // TODO: should construct queryService from a endpoint, not a port
         Integer queryPort = status.getValue().getHqpsPort();
 
         // Replace the port with the query port, http:://host:port -> http:://host:queryPort
@@ -318,7 +319,7 @@ public class DefaultSession implements Session {
 
     private String encodeString(String jsonStr, int lastByte) {
         byte[] bytes = new byte[jsonStr.length() + 1];
-        //copy string to byte array
+        // copy string to byte array
         for (int i = 0; i < jsonStr.length(); i++) {
             bytes[i] = (byte) jsonStr.charAt(i);
         }
@@ -338,7 +339,8 @@ public class DefaultSession implements Session {
                         new ApiException(response.getStatusCode(), response.getData()));
             }
             IrResult.CollectiveResults results =
-                    IrResult.CollectiveResults.parseFrom(response.getData().getBytes(StandardCharsets.UTF_8));
+                    IrResult.CollectiveResults.parseFrom(
+                            response.getData().getBytes(StandardCharsets.UTF_8));
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
