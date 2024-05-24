@@ -86,15 +86,20 @@ generate_cpp_yaml() {
   local procedure_name=$1
   local procedure_description=$2
   local output_so_name=$3
-  local rocedure_query=$4
+  local procedure_query=$4
   local output_yaml_file=$5
   local template_str="""
   name: ${procedure_name}
   description: ${procedure_description}
   library: ${output_so_name}
   type: cpp
-  query: "${procedure_query}"
+  query: |
   """
+  # for each line in procedure_query, add 2 spaces
+  while IFS= read -r line; do
+    # add newline after each line
+    template_str="${template_str}  ${line}\n"
+  done <<< "${procedure_query}"
   echo "${template_str}" > ${output_yaml_file}
   info "Generate yaml file to ${output_yaml_file}"
 }
@@ -283,6 +288,7 @@ compile_hqps_so() {
   elif [[ $last_file_name == *.cc ]]; then
     # read the input_path into a long string into procedure_query_str
     procedure_query_str=$(cat ${input_path})
+    echo "Procedure query string: ${procedure_query_str}"
     # Generate the .yaml file
     echo "Generating yaml file for ${procedure_name}, description: ${procedure_description}"
     generate_cpp_yaml ${procedure_name} "${procedure_description}" ${dst_so_name} "${procedure_query_str}" ${output_yaml_path}

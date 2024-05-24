@@ -105,6 +105,7 @@ run_python_sdk_test(){
   pushd ${FLEX_HOME}/interactive/sdk/python/
   pip3 install -r requirements.txt 
   pip3 install -r test-requirements.txt
+  export PATH=${HOME}/.local/bin:$PATH
   python3 setup.py build_proto
   cmd="python3 -m pytest -s test/test_driver.py"
   echo "Start python sdk test: ${cmd}"

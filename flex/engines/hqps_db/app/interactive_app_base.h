@@ -24,47 +24,106 @@
 namespace gs {
 
 class GraphDBSession;
-template <size_t I>
-std::tuple<> deserialize_impl(const nlohmann::json& sv) {
-  return std::make_tuple();
+template <size_t I, typename TUPLE_T>
+bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
+  return true;
 }
 
-template <size_t I, typename T, typename... ARGS>
-std::tuple<T, ARGS...> deserialize_impl(const nlohmann::json& arguments_list) {
-  T value{};
-  PropertyType type{};
-  type = arguments_list[I]["type"];
+template <size_t I, typename TUPLE_T, typename T, typename... ARGS>
+bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
+  PropertyType type = json[I]["type"].get<PropertyType>();
+  if (I == json.size()) {
+    LOG(ERROR) << "Arguments size mismatch: " << I << " vs " << json.size()
+               << ", reach end of json: " << json;
+    return false;
+  }
   if constexpr (std::is_same<T, std::string>::value ||
                 std::is_same<T, std::string_view>::value) {
     if (type != PropertyType::kString && !type.IsVarchar()) {
-      throw std::runtime_error("Argument type mismatch");
+      LOG(ERROR) << "Argument type mismatch, expected string, but got: "
+                 << type;
+      return false;
     }
-    value = arguments_list[I]["value"].get<std::string>();
-  } else if constexpr (std::is_same<T, gs::Date>::value) {
+  } else if constexpr (std::is_same<T, int32_t>::value) {
+    if (type != PropertyType::kInt32) {
+      LOG(ERROR) << "Argument type mismatch, expected int32, but got: " << type;
+      return false;
+    }
+  } else if constexpr (std::is_same<T, int64_t>::value) {
+    if (type != PropertyType::kInt64) {
+      LOG(ERROR) << "Argument type mismatch, expected int64, but got: " << type;
+      return false;
+    }
+  } else if constexpr (std::is_same<T, uint32_t>::value) {
+    if (type != PropertyType::kUInt32) {
+      LOG(ERROR) << "Argument type mismatch, expected uint32, but got: "
+                 << type;
+      return false;
+    }
+  } else if constexpr (std::is_same<T, uint64_t>::value) {
+    if (type != PropertyType::kUInt64) {
+      LOG(ERROR) << "Argument type mismatch, expected uint64, but got: "
+                 << type;
+      return false;
+    }
+  } else if constexpr (std::is_same<T, double>::value) {
+    if (type != PropertyType::kDouble) {
+      LOG(ERROR) << "Argument type mismatch, expected double, but got: "
+                 << type;
+      return false;
+    }
+  } else if constexpr (std::is_same<T, float>::value) {
+    if (type != PropertyType::kFloat) {
+      LOG(ERROR) << "Argument type mismatch, expected float, but got: " << type;
+      return false;
+    }
+  } else if constexpr (std::is_same<T, Date>::value) {
     if (type != PropertyType::kDate) {
-      throw std::runtime_error("Argument type mismatch");
+      LOG(ERROR) << "Argument type mismatch, expected date, but got: " << type;
+      return false;
     }
-    value.milli_second = gs::Date{arguments_list[I]["value"].get<int64_t>()};
-  } else if constexpr (std::is_same<T, gs::Day>::value) {
+  } else if constexpr (std::is_same<T, Day>::value) {
     if (type != PropertyType::kDay) {
-      throw std::runtime_error("Argument type mismatch");
+      LOG(ERROR) << "Argument type mismatch, expected day, but got: " << type;
+      return false;
     }
-    value.day = gs::Day{arguments_list[I]["value"].get<uint32_t>()};
   } else {
-    if (type != AnyConverter<T>::value) {
-      throw std::runtime_error("Argument type mismatch");
-    }
-    value = arguments_list[I]["value"].get<T>();
+    LOG(ERROR) << "Unsupported argument type";
+    return false;
   }
-  return std::tuple_cat(std::make_tuple(value),
-                        deserialize_impl<I + 1, ARGS...>(arguments_list));
+  if (json[I].contains("value")) {
+    std::get<I>(tuple) = json[I]["value"].get<T>();
+  } else {
+    LOG(ERROR) << "No value found in input";
+    return false;
+  }
+  return deserialize_impl<I + 1, TUPLE_T, ARGS...>(tuple, json);
 }
 
 template <typename... ARGS>
-std::tuple<ARGS...> deserialize(std::string_view sv) {
+bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
   auto j = nlohmann::json::parse(sv);
+  if (!j.contains("arguments")) {
+    LOG(ERROR) << "No arguments found in input";
+    return false;
+  }
   auto arguments_list = j["arguments"];
-  return deserialize_impl<0, ARGS...>(arguments_list);
+  if (arguments_list.is_array()) {
+    if (arguments_list.size() != sizeof...(ARGS)) {
+      LOG(ERROR) << "Arguments size mismatch: " << arguments_list.size()
+                 << " vs " << sizeof...(ARGS);
+      return false;
+    }
+    if (arguments_list.size() == 0) {
+      VLOG(10) << "No arguments found in input";
+      return true;
+    }
+    return deserialize_impl<0, std::tuple<ARGS...>, ARGS...>(tuple,
+                                                             arguments_list);
+  } else {
+    LOG(ERROR) << "Arguments should be an array";
+    return false;
+  }
 }
 
 // for cypher procedure
@@ -80,13 +139,14 @@ class CypherReadAppBase : public ReadAppBase {
              Encoder& output) override {
     auto sv = input.get_string();
 
-    auto tuple = deserialize<ARGS...>(sv);
-    if (!tuple) {
+    std::tuple<ARGS...> tuple;
+    if (!deserialize<ARGS...>(tuple, sv)) {
+      LOG(ERROR) << "Failed to deserialize arguments";
       return false;
     }
 
     // unpack tuple
-    auto res = unpackedAndInvoke(tuple);
+    auto res = unpackedAndInvoke(db, tuple);
     // write output
     std::string out;
     res.SerializeToString(&out);
@@ -100,9 +160,6 @@ class CypherReadAppBase : public ReadAppBase {
     return std::apply(
         [this, &db](ARGS... args) { return this->Query(db, args...); }, tuple);
   }
-
- private:
-  GraphDBSession& graph_;
 };
 
 template <typename... ARGS>
@@ -116,13 +173,14 @@ class CypherWriteAppBase : public WriteAppBase {
   bool Query(GraphDBSession& db, Decoder& input, Encoder& output) override {
     auto sv = input.get_string();
 
-    auto tuple = deserialize<ARGS...>(sv);
-    if (!tuple) {
+    std::tuple<ARGS...> tuple;
+    if (!deserialize<ARGS...>(tuple, sv)) {
+      LOG(ERROR) << "Failed to deserialize arguments";
       return false;
     }
 
     // unpack tuple
-    auto res = unpackedAndInvoke(tuple);
+    auto res = unpackedAndInvoke(db, tuple);
     // write output
     std::string out;
     res.SerializeToString(&out);
