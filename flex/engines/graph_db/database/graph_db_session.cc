@@ -146,7 +146,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
     // for cypher
     str_len = input.size() - 1;
   } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherInternal)) {
-    str_len = input.size() - 2;
+    str_len = input.size() - 2;  // the second last byte is the query id.
   } else {
     return Result<std::vector<char>>(
         StatusCode::InValidArgument,

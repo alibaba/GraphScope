@@ -47,38 +47,8 @@ class hqps_ic_handler : public seastar::httpd::handler_base {
       std::unique_ptr<seastar::httpd::reply> rep) override;
 
  private:
-  uint32_t cur_group_id_;
-  const uint32_t max_group_id_, group_inc_step_;
-  const uint32_t shard_concurrency_;
-  uint32_t executor_idx_;
-  std::vector<executor_ref> executor_refs_;
-  bool is_cancelled_;
-#ifdef HAVE_OPENTELEMETRY_CPP
-  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
-      total_counter_;
-  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
-      latency_histogram_;
-#endif
-};
+  bool is_running_graph(const seastar::sstring& graph_id) const;
 
-class hqps_proc_handler : public seastar::httpd::handler_base {
- public:
-  hqps_proc_handler(uint32_t init_group_id, uint32_t max_group_id,
-                    uint32_t group_inc_step, uint32_t shard_concurrency);
-  ~hqps_proc_handler() override;
-
-  bool create_actors();
-
-  seastar::future<> cancel_current_scope();
-
-  bool is_current_scope_cancelled() const;
-
-  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
-      const seastar::sstring& path,
-      std::unique_ptr<seastar::httpd::request> req,
-      std::unique_ptr<seastar::httpd::reply> rep) override;
-
- private:
   uint32_t cur_group_id_;
   const uint32_t max_group_id_, group_inc_step_;
   const uint32_t shard_concurrency_;
@@ -166,7 +136,6 @@ class hqps_http_handler {
   hqps_ic_handler* ic_handler_;
   hqps_adhoc_query_handler* adhoc_query_handler_;
   hqps_exit_handler* exit_handler_;
-  hqps_proc_handler* proc_handler_;
 };
 
 }  // namespace server

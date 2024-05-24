@@ -18,7 +18,6 @@
 #include "opentelemetry/context/context.h"
 #include "opentelemetry/trace/span_metadata.h"
 #include "opentelemetry/trace/span_startoptions.h"
-
 #endif  // HAVE_OPENTELEMETRY_CPP
 
 #include "flex/engines/graph_db/database/graph_db_session.h"
@@ -107,11 +106,34 @@ bool hqps_ic_handler::create_actors() {
   return true;
 }
 
+bool hqps_ic_handler::is_running_graph(const seastar::sstring& graph_id) const {
+  std::string graph_id_str(graph_id.data(), graph_id.size());
+  auto running_graph_res =
+      HQPSService::get().get_metadata_store()->GetRunningGraph();
+  if (!running_graph_res.ok()) {
+    LOG(ERROR) << "Failed to get running graph: "
+               << running_graph_res.status().error_message();
+    return false;
+  }
+  return running_graph_res.value() == graph_id_str;
+}
+
+// Handles both /v1/graph/{graph_id}/query and /v1/query/
 seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     const seastar::sstring& path, std::unique_ptr<seastar::httpd::request> req,
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+  if (req->param.exists("graph_id")) {
+    if (!is_running_graph(req->param["graph_id"])) {
+      rep->set_status(
+          seastar::httpd::reply::status_type::internal_server_error);
+      rep->write_body("bin", seastar::sstring("Failed to get running graph!"));
+      rep->done();
+      return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+          std::move(rep));
+    }
+  }
   // TODO(zhanglei): choose read or write based on the request, after the
   // read/write info is supported in physical plan
   req->content.append(gs::Schema::HQPS_WRITE_PROCEDURE_PLUGIN_ID_STR, 1);
@@ -178,198 +200,6 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
         }
         auto result = fut.get0();
         rep->write_body("bin", std::move(result.content));
-#ifdef HAVE_OPENTELEMETRY_CPP
-        outer_span->End();
-        std::map<std::string, std::string> labels = {{"status", "success"}};
-        total_counter_->Add(1, labels);
-        auto end_ts = gs::GetCurrentTimeStamp();
-#if OPENTELEMETRY_ABI_VERSION_NO >= 2
-        latency_histogram_->Record(end_ts - start_ts);
-#else
-        latency_histogram_->Record(end_ts - start_ts,
-                                   opentelemetry::context::Context{});
-#endif
-#endif  // HAVE_OPENTELEMETRY_CPP
-        rep->done();
-        return seastar::make_ready_future<
-            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-      });
-}
-
-// a handler to handle stored procedure queries from sdk
-
-hqps_proc_handler::hqps_proc_handler(uint32_t init_group_id,
-                                     uint32_t max_group_id,
-                                     uint32_t group_inc_step,
-                                     uint32_t shard_concurrency)
-    : cur_group_id_(init_group_id),
-      max_group_id_(max_group_id),
-      group_inc_step_(group_inc_step),
-      shard_concurrency_(shard_concurrency),
-      executor_idx_(0),
-      is_cancelled_(false) {
-  executor_refs_.reserve(shard_concurrency_);
-  hiactor::scope_builder builder;
-  builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-  for (unsigned i = 0; i < shard_concurrency_; ++i) {
-    executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-  }
-#ifdef HAVE_OPENTELEMETRY_CPP
-  total_counter_ = otel::create_int_counter("hqps_procedure_query_total");
-  latency_histogram_ =
-      otel::create_double_histogram("hqps_procedure_query_latency");
-#endif  // HAVE_OPENTELEMETRY_CPP
-}
-
-hqps_proc_handler::~hqps_proc_handler() = default;
-
-seastar::future<> hqps_proc_handler::cancel_current_scope() {
-  if (is_cancelled_) {
-    LOG(INFO) << "The current scope has been already cancelled!";
-    return seastar::make_ready_future<>();
-  }
-  hiactor::scope_builder builder;
-  builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-  return hiactor::actor_engine()
-      .cancel_scope_request(builder, false)
-      .then([this] {
-        LOG(INFO) << "Cancel procedure scope successfully!";
-        // clear the actor refs
-        executor_refs_.clear();
-        is_cancelled_ = true;
-        return seastar::make_ready_future<>();
-      });
-}
-
-bool hqps_proc_handler::is_current_scope_cancelled() const {
-  return is_cancelled_;
-}
-
-bool hqps_proc_handler::create_actors() {
-  if (executor_refs_.size() > 0) {
-    LOG(ERROR) << "The actors have been already created!";
-    return false;
-  }
-
-  VLOG(10) << "Create actors with a different sub scope id: " << cur_group_id_;
-  if (cur_group_id_ + group_inc_step_ > max_group_id_) {
-    LOG(ERROR) << "The max group id is reached, cannot create more actors!";
-    return false;
-  }
-  if (cur_group_id_ + group_inc_step_ < cur_group_id_) {
-    LOG(ERROR) << "overflow detected!";
-    return false;
-  }
-  cur_group_id_ += group_inc_step_;
-  hiactor::scope_builder builder;
-  builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-  for (unsigned i = 0; i < shard_concurrency_; ++i) {
-    executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-  }
-  is_cancelled_ = false;  // locked outside
-  return true;
-}
-
-seastar::future<std::unique_ptr<seastar::httpd::reply>>
-hqps_proc_handler::handle(const seastar::sstring& path,
-                          std::unique_ptr<seastar::httpd::request> req,
-                          std::unique_ptr<seastar::httpd::reply> rep) {
-  auto dst_executor = executor_idx_;
-  executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-  // Get graph_id
-  if (!req->param.exists("graph_id")) {
-    LOG(ERROR) << "No graph_id found in the request!";
-    rep->set_status(seastar::httpd::reply::status_type::bad_request);
-    rep->write_body("bin",
-                    seastar::sstring("No graph_id found in the request!"));
-    rep->done();
-    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
-        std::move(rep));
-  }
-  auto graph_id = req->param["graph_id"];
-  std::string graph_id_str(graph_id.data(), graph_id.size());
-  // check whether is the running graph
-  auto running_graph_res =
-      HQPSService::get().get_metadata_store()->GetRunningGraph();
-  if (!running_graph_res.ok()) {
-    LOG(ERROR) << "Failed to get running graph: "
-               << running_graph_res.status().error_message();
-    rep->set_status(seastar::httpd::reply::status_type::internal_server_error);
-    rep->write_body("bin", seastar::sstring("Failed to get running graph!"));
-    rep->done();
-    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
-        std::move(rep));
-  }
-  if (running_graph_res.value() != graph_id_str) {
-    LOG(ERROR) << "The graph with id " << graph_id << " is not running";
-    rep->set_status(seastar::httpd::reply::status_type::bad_request);
-    rep->write_body("bin", seastar::sstring(std::string("The graph with id ") +
-                                            graph_id_str + " is not running!"));
-    rep->done();
-    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
-        std::move(rep));
-  }
-
-  // TODO(zhanglei): choose read or write based on the request, after the
-  // read/write info is supported in physical plan
-#ifdef HAVE_OPENTELEMETRY_CPP
-  auto tracer = otel::get_tracer("hqps_procedure_query_handler");
-  // Extract context from headers. This copy is necessary to avoid access after
-  // header content been freed
-  std::map<std::string, std::string> headers(req->_headers.begin(),
-                                             req->_headers.end());
-  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
-  auto options = otel::get_parent_ctx(current_ctx, headers);
-  auto outer_span = tracer->StartSpan("procedure_query_handling", options);
-  auto scope = tracer->WithActiveSpan(outer_span);
-  auto start_ts = gs::GetCurrentTimeStamp();
-#endif  // HAVE_OPENTELEMETRY_CPP
-
-  return executor_refs_[dst_executor]
-      .run_graph_db_query(query_param{std::move(req->content)})
-      .then([
-#ifdef HAVE_OPENTELEMETRY_CPP
-                outer_span = outer_span
-#endif
-  ](auto&& output) {
-        return seastar::make_ready_future<query_param>(
-            std::move(output.content.substr(4)));
-      })
-      .then_wrapped([rep = std::move(rep)
-#ifdef HAVE_OPENTELEMETRY_CPP
-                         ,
-                     this, outer_span, start_ts
-#endif  // HAVE_OPENTELEMETRY_CPP
-  ](seastar::future<query_result>&& fut) mutable {
-        if (__builtin_expect(fut.failed(), false)) {
-          rep->set_status(
-              seastar::httpd::reply::status_type::internal_server_error);
-          try {
-            std::rethrow_exception(fut.get_exception());
-          } catch (std::exception& e) {
-            rep->write_body("bin", seastar::sstring(e.what()));
-          }
-
-#ifdef HAVE_OPENTELEMETRY_CPP
-          outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
-                                "Internal Server Error");
-          outer_span->End();
-          std::map<std::string, std::string> labels = {{"status", "fail"}};
-          total_counter_->Add(1, labels);
-#endif  // HAVE_OPENTELEMETRY_CPP
-          rep->done();
-          return seastar::make_ready_future<
-              std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-        }
-        auto result = fut.get0();
-        rep->write_body("bin", std::move(result.content));
-
 #ifdef HAVE_OPENTELEMETRY_CPP
         outer_span->End();
         std::map<std::string, std::string> labels = {{"status", "success"}};
@@ -646,9 +476,9 @@ hqps_http_handler::hqps_http_handler(uint16_t http_port)
     : http_port_(http_port) {
   ic_handler_ = new hqps_ic_handler(ic_query_group_id, max_group_id,
                                     group_inc_step, shard_query_concurrency);
-  proc_handler_ =
-      new hqps_proc_handler(proc_query_group_id, max_group_id, group_inc_step,
-                            shard_query_concurrency);
+  // proc_handler_ = new hqps_ic_handler(proc_query_group_id, max_group_id,
+  //                                     group_inc_step,
+  //                                     shard_query_concurrency);
   adhoc_query_handler_ = new hqps_adhoc_query_handler(
       ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
       shard_adhoc_concurrency);
@@ -669,8 +499,7 @@ bool hqps_http_handler::is_running() const { return running_.load(); }
 
 bool hqps_http_handler::is_actors_running() const {
   return !ic_handler_->is_current_scope_cancelled() &&
-         !adhoc_query_handler_->is_current_scope_cancelled() &&
-         !proc_handler_->is_current_scope_cancelled();
+         !adhoc_query_handler_->is_current_scope_cancelled();
 }
 
 void hqps_http_handler::start() {
@@ -709,10 +538,6 @@ seastar::future<> hqps_http_handler::stop_query_actors() {
         LOG(INFO) << "Cancel ic scope";
         return adhoc_query_handler_->cancel_current_scope();
       })
-      .then([this] {
-        LOG(INFO) << "Cancel adhoc scope";
-        return proc_handler_->cancel_current_scope();
-      })
       .then([] {
         LOG(INFO) << "Cancel proc scope";
         return seastar::make_ready_future<>();
@@ -722,16 +547,15 @@ seastar::future<> hqps_http_handler::stop_query_actors() {
 void hqps_http_handler::start_query_actors() {
   ic_handler_->create_actors();
   adhoc_query_handler_->create_actors();
-  proc_handler_->create_actors();
   LOG(INFO) << "Restart all actors";
 }
 
 seastar::future<> hqps_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/v1/internal/query"), ic_handler_);
+          seastar::httpd::url("/v1/query"), ic_handler_);
     {
-      auto rule_proc = new seastar::httpd::match_rule(proc_handler_);
+      auto rule_proc = new seastar::httpd::match_rule(ic_handler_);
       rule_proc->add_str("/v1/graph").add_param("graph_id").add_str("/query");
       // Get All procedures
       r.add(rule_proc, seastar::httpd::operation_type::POST);
