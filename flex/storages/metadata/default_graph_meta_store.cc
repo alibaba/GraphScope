@@ -112,7 +112,7 @@ Result<PluginId> DefaultGraphMetaStore::CreatePluginMeta(
                                            request.ToString()));
   } else {
     LOG(ERROR) << "Can not create plugin meta without id";
-    return Result<PluginId>(Status(StatusCode::InvalidArgument,
+    return Result<PluginId>(Status(StatusCode::InValidArgument,
                                    "Can not create plugin meta without id"));
   }
   return Result<PluginId>(plugin_id);
