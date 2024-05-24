@@ -15,9 +15,9 @@
  */
 package com.alibaba.graphscope.interactive.client.impl;
 
+import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.openapi.ApiClient;
 import com.alibaba.graphscope.interactive.openapi.ApiException;
 import com.alibaba.graphscope.interactive.openapi.ApiResponse;
@@ -301,16 +301,18 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<IrResult.CollectiveResults> callProcedure(String graphName, QueryRequest request) {
+    public Result<IrResult.CollectiveResults> callProcedure(
+            String graphName, QueryRequest request) {
         try {
             StringBuilder sb = new StringBuilder(request.toJson());
             sb.append((char) 1);
-            ApiResponse<String> response =
-                    queryApi.procCallWithHttpInfo(graphName, sb.toString());
+            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, sb.toString());
             if (response.getStatusCode() != 200) {
-                return Result.fromException(new ApiException(response.getStatusCode(), response.getData()));
+                return Result.fromException(
+                        new ApiException(response.getStatusCode(), response.getData()));
             }
-            IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(response.getData().getBytes());
+            IrResult.CollectiveResults results =
+                    IrResult.CollectiveResults.parseFrom(response.getData().getBytes());
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -320,7 +322,7 @@ public class DefaultSession implements Session {
             return Result.error(e.getMessage());
         }
     }
-    
+
     @Override
     public Result<String> callProcedureRaw(String graphName, String request) {
         try {
@@ -328,7 +330,8 @@ public class DefaultSession implements Session {
             sb.append((char) 0);
             ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, sb.toString());
             if (response.getStatusCode() != 200) {
-                return Result.fromException(new ApiException(response.getStatusCode(), response.getData()));
+                return Result.fromException(
+                        new ApiException(response.getStatusCode(), response.getData()));
             }
             return new Result<String>(response.getData());
         } catch (ApiException e) {

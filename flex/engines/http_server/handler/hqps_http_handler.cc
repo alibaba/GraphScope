@@ -289,10 +289,9 @@ hqps_proc_handler::handle(const seastar::sstring& path,
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([this
+      .then([
 #ifdef HAVE_OPENTELEMETRY_CPP
-             ,
-             outer_span = outer_span
+                outer_span = outer_span
 #endif
   ](auto&& output) {
         return seastar::make_ready_future<query_param>(

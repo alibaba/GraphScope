@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
+import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.openapi.model.*;
 
@@ -26,14 +27,10 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import com.alibaba.graphscope.gaia.proto.IrResult;
 
-import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
-import javax.management.Query;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class DriverTest {
@@ -45,7 +42,8 @@ public class DriverTest {
     private static Client gremlinClient;
     private static String graphId;
     private static String jobId;
-    private static String procedureId;
+    private static String cypherProcedureId;
+    private static String cppProcedureId;
 
     @BeforeAll
     public static void beforeClass() {
@@ -243,31 +241,64 @@ public class DriverTest {
 
     @Test
     @Order(7)
-    public void test6CreateProcedure() {
+    public void test6CreateCypherProcedure() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
-        procedure.setName("testProcedure");
+        procedure.setName("cypherProcedure");
         procedure.setDescription("a simple test procedure");
         procedure.setQuery("MATCH(p:person) RETURN COUNT(p);");
         procedure.setType(CreateProcedureRequest.TypeEnum.CYPHER);
         Result<CreateProcedureResponse> resp = session.createProcedure(graphId, procedure);
         assertOk(resp);
-        procedureId = "testProcedure";
+        cypherProcedureId = "cypherProcedure";
     }
 
     @Test
     @Order(8)
-    public void test7CallProcedure() {
+    public void test6CreateCppProcedure() {
+        CreateProcedureRequest procedure = new CreateProcedureRequest();
+        procedure.setName("cypherProcedure");
+        procedure.setDescription("a simple test procedure");
+        procedure.setQuery("MATCH(p:person) RETURN COUNT(p);");
+        procedure.setType(CreateProcedureRequest.TypeEnum.CYPHER);
+        Result<CreateProcedureResponse> resp = session.createProcedure(graphId, procedure);
+        assertOk(resp);
+        cppProcedureId = "cypherProcedure";
+    }
+
+    @Test
+    @Order(8)
+    public void test7Restart() {
+        Result<String> resp = session.restartService();
+        assertOk(resp);
+        // Sleep 10 seconds to wait for the service to restart
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        logger.info("service restarted: " + resp.getValue());
+    }
+
+    @Test
+    @Order(8)
+    public void test8CallProcedure() {
         QueryRequest request = new QueryRequest();
         request.setQueryName("testProcedure");
         Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
         assertOk(resp);
     }
 
+    @Test
+    @Order(10)
+    public void test9CallProcedureViaNeo4j() {
+        org.neo4j.driver.Result result = neo4jSession.run("CALL testProcedure() YIELD *;");
+        logger.info("result: " + result.toString());
+    }
 
     @Test
-    @Order(9)
-    public void test8Restart() {
-        Result<String> resp = session.restartService();
+    @Order(11)
+    public void test10RestartOnInitGraph(){
+        Result<String> resp = session.restartService(new StartServiceRequest().graphId(1));
         assertOk(resp);
         // Sleep 5 seconds to wait for the service to restart
         try {
@@ -278,21 +309,16 @@ public class DriverTest {
         logger.info("service restarted: " + resp.getValue());
     }
 
-    @Test
-    @Order(10)
-    public void test9CallProcedureViaNeo4j() {
-        org.neo4j.driver.Result result = neo4jSession.run("CALL testProcedure() YIELD *;");
-        logger.info("result: " + result.toString());
-    }
-
-    
-
     @AfterAll
     public static void afterClass() {
         logger.info("clean up");
         if (graphId != null) {
-            if (procedureId != null) {
-                Result<String> resp = session.deleteProcedure(graphId, procedureId);
+            if (cypherProcedureId != null) {
+                Result<String> resp = session.deleteProcedure(graphId, cypherProcedureId);
+                logger.info("procedure deleted: " + resp.getValue());
+            }
+            if (cppProcedureId != null) {
+                Result<String> resp = session.deleteProcedure(graphId, cppProcedureId);
                 logger.info("procedure deleted: " + resp.getValue());
             }
             Result<String> resp = session.deleteGraph(graphId);

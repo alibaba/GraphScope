@@ -39,9 +39,6 @@ void put_argument(gs::Encoder& encoder, const query::Argument& argument) {
   }
 }
 
-AbstractHQPSAdhocApp::AbstractHQPSAdhocApp(const GraphDB& graph)
-    : graph_(graph) {}
-
 bool AbstractHQPSAdhocApp::run(GraphDBSession& graph, Decoder& input,
                                Encoder& output) {
   if (input.size() <= 4) {
@@ -67,9 +64,6 @@ bool AbstractHQPSAdhocApp::run(GraphDBSession& graph, Decoder& input,
 
   return app_wrapper.app()->run(graph, input, output);
 }
-
-AbstractHQPSProcedureApp::AbstractHQPSProcedureApp(const GraphDB& graph)
-    : graph_(graph) {}
 
 bool AbstractHQPSProcedureApp::run(GraphDBSession& graph, Decoder& input,
                                    Encoder& output) {

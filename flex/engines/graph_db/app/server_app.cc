@@ -308,7 +308,7 @@ bool ServerApp::Query(GraphDBSession& graph, Decoder& input, Encoder& output) {
 }
 
 AppWrapper ServerAppFactory::CreateApp(const GraphDB& graph) {
-  AppBase* app = new ServerApp(graph);
+  AppBase* app = new ServerApp();
   return AppWrapper(app, NULL);
 }
 

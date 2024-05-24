@@ -26,7 +26,7 @@ namespace gs {
  */
 class AbstractHQPSAdhocApp : public AppBase {
  public:
-  AbstractHQPSAdhocApp(const GraphDB& graph);
+  AbstractHQPSAdhocApp(const GraphDB& graph) : graph_(graph) {}
 
   AppType type() const override { return AppType::kCypherAdhoc; }
 
@@ -56,14 +56,11 @@ class HqpsWriteAdhocApp : public AbstractHQPSAdhocApp {
  */
 class AbstractHQPSProcedureApp : public AppBase {
  public:
-  AbstractHQPSProcedureApp(const GraphDB& graph);
+  AbstractHQPSProcedureApp(const GraphDB& graph) {}
 
   AppType type() const override { return AppType::kCypherProcedure; }
 
   bool run(GraphDBSession& graph, Decoder& input, Encoder& output) override;
-
- private:
-  const GraphDB& graph_;
 };
 
 class HqpsReadProcedureApp : public AbstractHQPSProcedureApp {

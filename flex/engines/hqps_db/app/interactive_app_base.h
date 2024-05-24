@@ -68,7 +68,7 @@ std::tuple<ARGS...> deserialize(std::string_view sv) {
 
 // for cypher procedure
 template <typename... ARGS>
-class CypherReadAppBase : public AppBase {
+class CypherReadAppBase : public ReadAppBase {
  public:
   AppType type() const override { return AppType::kCypherProcedure; }
 
@@ -105,7 +105,7 @@ class CypherReadAppBase : public AppBase {
 };
 
 template <typename... ARGS>
-class CypherWriteAppBase : public AppBase {
+class CypherWriteAppBase : public WriteAppBase {
  public:
   AppType type() const override { return AppType::kCypherProcedure; }
 

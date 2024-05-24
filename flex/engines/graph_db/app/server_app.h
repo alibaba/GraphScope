@@ -24,7 +24,7 @@ namespace gs {
 
 class ServerApp : public WriteAppBase {
  public:
-  ServerApp(const GraphDB& graph) : graph_(graph) {}
+  ServerApp() {}
   AppBase::AppType type() const override;
   bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 
@@ -39,8 +39,6 @@ class ServerApp : public WriteAppBase {
     uint32_t from;
     uint32_t to;
   };
-
-  const GraphDB& graph_;
 };
 
 class ServerAppFactory : public AppFactoryBase {
