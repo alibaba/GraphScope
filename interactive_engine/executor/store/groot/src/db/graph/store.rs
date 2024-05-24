@@ -271,6 +271,31 @@ impl MultiVersionGraph for GraphStore {
         Ok(true)
     }
 
+    fn add_vertex_type_properties(
+        &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
+    ) -> GraphResult<bool> {
+        debug!("add_vertex_type_properties");
+        let _guard = res_unwrap!(self.lock.lock(), add_vertex_type_properties)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        if !self.vertex_manager.contains_type(si, label_id) {
+            let msg = format!("vertex#{} does not exist", label_id);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, add_vertex_type_properties);
+            return Err(err);
+        }
+        self.meta
+            .add_vertex_type_properties(si, schema_version, label_id, type_def, table_id)
+            .and_then(|table| {
+                let codec = Codec::from(type_def);
+                self.vertex_manager
+                    .update_type(si, label_id, codec, table)
+            })
+            .map(|_| self.update_si_guard(si))?;
+        Ok(true)
+    }
+
     fn create_edge_type(
         &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
     ) -> GraphResult<bool> {
@@ -290,6 +315,30 @@ impl MultiVersionGraph for GraphStore {
             .and_then(|_| {
                 self.edge_manager
                     .create_edge_type(si, label_id, type_def)
+            })
+            .map(|_| self.update_si_guard(si))?;
+        Ok(true)
+    }
+
+    fn add_edge_type_properties(
+        &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
+    ) -> GraphResult<bool> {
+        debug!("add_edge_type_properties");
+        let _guard = res_unwrap!(self.lock.lock(), create_edge_type)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        if !self.edge_manager.contains_edge(label_id) {
+            let msg = format!("edge#{} does not exist", label_id);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_edge);
+            return Err(err);
+        }
+        self.meta
+            .add_edge_type_properties(si, schema_version, label_id, type_def)
+            .and_then(|_| {
+                self.edge_manager
+                    .update_edge_type(si, label_id, type_def)
             })
             .map(|_| self.update_si_guard(si))?;
         Ok(true)

@@ -131,6 +131,34 @@ impl VertexTypeManager {
         Ok(())
     }
 
+    pub fn update_type(
+        &self, si: SnapshotId, label: LabelId, codec: Codec, table0: Table,
+    ) -> GraphResult<()> {
+        assert_eq!(si, table0.start_si, "type start si must be equal to table0.start_si");
+
+        let guard = &epoch::pin();
+        let map = self.get_map(guard);
+        let mut map_clone = unsafe { map.as_ref() }
+            .ok_or_else(|| {
+                let msg = "get map reference return `None`".to_string();
+                gen_graph_err!(GraphErrorCode::InvalidData, msg, get_map, si, label)
+            })?
+            .clone();
+        if !map_clone.contains_key(&label) {
+            let msg = format!("vertex#{} not found.", label);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_type);
+            return Err(err);
+        }
+        let info = VertexTypeInfo::new(si, label);
+        res_unwrap!(info.update_codec(si, codec), create_type)?;
+        res_unwrap!(info.online_table(table0), create_type)?;
+        map_clone.insert(label, Arc::new(info));
+        self.map
+            .store(Owned::new(map_clone).into_shared(guard), Ordering::Release);
+        unsafe { guard.defer_destroy(map) };
+        Ok(())
+    }
+
     pub fn get_type(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<VertexTypeInfo>> {
         let guard = epoch::pin();
         let map = self.get_map(&guard);

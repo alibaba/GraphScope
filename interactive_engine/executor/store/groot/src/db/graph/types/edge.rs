@@ -271,6 +271,12 @@ impl EdgeTypeManager {
         })
     }
 
+    pub fn update_edge_type(&self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
+        self.modify(|inner| {
+            res_unwrap!(inner.update_edge_type(si, label, type_def), update_edge, si, label, type_def)
+        })
+    }
+
     pub fn drop_edge_type(&self, si: SnapshotId, label: LabelId) -> GraphResult<()> {
         self.modify(|inner| res_unwrap!(inner.drop_edge_type(si, label), drop_edge, si, label))
     }
@@ -428,6 +434,27 @@ impl EdgeManagerInner {
         let codec = Codec::from(type_def);
         let res = info.add_codec(si, codec);
         res_unwrap!(res, create_edge, si, label, type_def)?;
+        self.info_map.insert(label, Arc::new(info));
+        Ok(())
+    }
+
+    fn update_edge_type(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
+        if !self.info_map.contains_key(&label) {
+            let msg = format!("edge#{} not found.", label);
+            let err = gen_graph_err!(
+                GraphErrorCode::InvalidOperation,
+                msg,
+                update_edge_type,
+                si,
+                label,
+                type_def
+            );
+            return Err(err);
+        }
+        let info = EdgeInfo::new(si, label);
+        let codec = Codec::from(type_def);
+        let res = info.add_codec(si, codec);
+        res_unwrap!(res, update_edge, si, label, type_def)?;
         self.info_map.insert(label, Arc::new(info));
         Ok(())
     }

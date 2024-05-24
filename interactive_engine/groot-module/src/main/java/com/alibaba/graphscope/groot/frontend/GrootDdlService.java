@@ -68,12 +68,26 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
                                         .CreateVertexTypeRequest(
                                         parseTypeDefPb(cvtReq.getTypeDef())));
                         break;
+                    case ADD_VERTEX_TYPE_PROPERTIES_REQUEST:
+                        AddVertexTypePropertiesRequest avtpReq = ddlRequest.getAddVertexTypePropertiesRequest();
+                        builder.addDdlRequest(
+                                new com.alibaba.graphscope.groot.schema.request
+                                        .AddVertexTypePropertiesRequest(
+                                                parseTypeDefPb(avtpReq.getTypeDef())));
+                        break;
                     case CREATE_EDGE_TYPE_REQUEST:
                         CreateEdgeTypeRequest cetReq = ddlRequest.getCreateEdgeTypeRequest();
                         builder.addDdlRequest(
                                 new com.alibaba.graphscope.groot.schema.request
                                         .CreateEdgeTypeRequest(
                                         parseTypeDefPb(cetReq.getTypeDef())));
+                        break;
+                    case ADD_EDGE_TYPE_PROPERTIES_REQUEST:
+                        AddEdgeTypePropertiesRequest aetpReq = ddlRequest.getAddEdgeTypePropertiesRequest();
+                        builder.addDdlRequest(
+                                new com.alibaba.graphscope.groot.schema.request
+                                        .AddEdgeTypePropertiesRequest(
+                                                parseTypeDefPb(aetpReq.getTypeDef())));
                         break;
                     case ADD_EDGE_KIND_REQUEST:
                         AddEdgeKindRequest addEdgeKindRequest = ddlRequest.getAddEdgeKindRequest();

@@ -60,6 +60,26 @@ impl GraphDef {
         Ok(())
     }
 
+    pub fn update_type(&mut self, label: LabelId, type_def: TypeDef) -> GraphResult<()> {
+        if !self.label_to_types.contains_key(&label) {
+            let msg = format!("labelId {}", label);
+            return Err(GraphError::new(GraphErrorCode::TypeNotFound, msg));
+        }
+        for property in type_def.get_prop_defs() {
+            if property.id > self.property_idx {
+                self.property_idx = property.id
+            }
+            self.property_name_to_id
+                .insert(property.name.clone(), property.id);
+        }
+        self.label_to_types.insert(label, type_def);
+        Ok(())
+    }
+
+    pub fn get_type(&self, label_id: &LabelId) -> Option<&TypeDef> {
+        self.label_to_types.get(label_id)
+    }
+
     pub fn put_vertex_table_id(&mut self, label: LabelId, table_id: i64) {
         self.vertex_table_ids.insert(label, table_id);
     }
@@ -178,6 +198,10 @@ impl TypeDef {
 
     pub fn get_label_id(&self) -> LabelId {
         return self.label_id;
+    }
+
+    pub fn add_property(&mut self, prop: PropDef) {
+        self.properties.insert(prop.id, prop);
     }
 
     pub fn from_proto(proto: &TypeDefPb) -> GraphResult<Self> {

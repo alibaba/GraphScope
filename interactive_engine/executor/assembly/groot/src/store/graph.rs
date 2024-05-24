@@ -12,7 +12,7 @@ use groot_store::db::api::{
 use groot_store::db::common::bytes::util::parse_pb;
 use groot_store::db::graph::store::GraphStore;
 use groot_store::db::proto::model::{
-    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeLocationPb,
+    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, AddVertexTypePropertiesPb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeLocationPb,
     OpTypePb, OperationBatchPb, OperationPb, VertexIdPb,
 };
 use groot_store::db::proto::model::{CommitDataLoadPb, PrepareDataLoadPb};
@@ -155,8 +155,18 @@ fn do_write_batch<G: MultiVersionGraph>(
                     has_ddl = true;
                 }
             }
+            OpTypePb::ADD_VERTEX_TYPE_PROPERTIES => {
+                if add_vertex_type_properties(graph, snapshot_id, op)? {
+                    has_ddl = true;
+                }
+            }
             OpTypePb::CREATE_EDGE_TYPE => {
                 if create_edge_type(graph, snapshot_id, op)? {
+                    has_ddl = true;
+                }
+            }
+            OpTypePb::ADD_EDGE_TYPE_PROPERTIES => {
+                if add_edge_type_properties(graph, snapshot_id, op)? {
                     has_ddl = true;
                 }
             }
@@ -237,6 +247,20 @@ fn create_vertex_type<G: MultiVersionGraph>(
     graph.create_vertex_type(snapshot_id, schema_version, label_id, &typedef, table_id)
 }
 
+fn add_vertex_type_properties<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
+    trace!("add_vertex_type_properties");
+    let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
+    let schema_version = ddl_operation_pb.get_schemaVersion();
+    let add_vertex_type_properties_pb = parse_pb::<AddVertexTypePropertiesPb>(ddl_operation_pb.get_ddlBlob())?;
+    let table_id = add_vertex_type_properties_pb.get_tableIdx();
+    let typedef_pb = add_vertex_type_properties_pb.get_typeDef();
+    let label_id = typedef_pb.get_label_id().get_id();
+    let typedef = TypeDef::from_proto(&typedef_pb)?;
+    graph.add_vertex_type_properties(snapshot_id, schema_version, label_id, &typedef, table_id)
+}
+
 fn drop_vertex_type<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
@@ -258,6 +282,18 @@ fn create_edge_type<G: MultiVersionGraph>(
     let label_id = typedef_pb.get_label_id().get_id();
     let typedef = TypeDef::from_proto(&typedef_pb)?;
     graph.create_edge_type(snapshot_id, schema_version, label_id, &typedef)
+}
+
+fn add_edge_type_properties<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
+    trace!("add_edge_type_properties");
+    let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
+    let schema_version = ddl_operation_pb.get_schemaVersion();
+    let typedef_pb = parse_pb::<TypeDefPb>(ddl_operation_pb.get_ddlBlob())?;
+    let label_id = typedef_pb.get_label_id().get_id();
+    let typedef = TypeDef::from_proto(&typedef_pb)?;
+    graph.add_edge_type_properties(snapshot_id, schema_version, label_id, &typedef)
 }
 
 fn drop_edge_type<G: MultiVersionGraph>(

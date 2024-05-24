@@ -281,6 +281,41 @@ impl Meta {
         Ok(Table::new(si, table_id))
     }
 
+    pub fn add_vertex_type_properties(
+        &self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
+    ) -> GraphResult<Table> {
+        self.check_version(schema_version)?;
+        // 2. Fetch existing `TypeDef` for the label_id.
+        let mut graph_def = self.graph_def_lock.lock()?;
+        if let Some(mut cloned_existing_typedef) = graph_def.get_type(&label_id).cloned() {
+            for new_property in type_def.get_prop_defs() {
+                let new_property_name = &new_property.name;
+                if cloned_existing_typedef.get_prop_defs().any(|p| &p.id == &new_property.id || p.name == *new_property_name) {
+                    let msg = format!("Property with name '{}' already exists in type for label_id {}", new_property_name, label_id);
+                    return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                }
+                cloned_existing_typedef.add_property(new_property.clone());
+            }
+            let item = CreateVertexTypeItem::new(si, schema_version, label_id, table_id, cloned_existing_typedef.clone());
+            self.write_item(item)?;
+            {
+                let current_label_idx = graph_def.get_label_idx();
+                if current_label_idx < label_id {
+                    let msg = format!("current label id {} not found.", label_id);
+                    return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                }
+                graph_def.update_type(label_id, cloned_existing_typedef.clone())?;
+                graph_def.put_vertex_table_id(label_id, table_id);
+                graph_def.set_table_idx(table_id);
+                graph_def.increase_version();
+            }
+            Ok(Table::new(si, table_id))
+        } else {
+            let msg = format!("current label id {} not exist.", label_id);
+            return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+        }
+    }
+
     pub fn drop_vertex_type(
         &self, si: SnapshotId, schema_version: i64, label_id: LabelId,
     ) -> GraphResult<()> {
@@ -313,6 +348,38 @@ impl Meta {
             graph_def.increase_version();
         }
         Ok(())
+    }
+
+    pub fn add_edge_type_properties(
+        &self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
+    ) -> GraphResult<()> {
+        self.check_version(schema_version)?;
+        let mut graph_def = self.graph_def_lock.lock()?;
+        if let Some(mut cloned_existing_typedef) = graph_def.get_type(&label_id).cloned() {
+            for new_property in type_def.get_prop_defs() {
+                let new_property_name = &new_property.name;
+                if cloned_existing_typedef.get_prop_defs().any(|p| &p.id == &new_property.id || p.name == *new_property_name) {
+                    let msg = format!("Property with name '{}' already exists in type for label_id {}", new_property_name, label_id);
+                    return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                }
+                cloned_existing_typedef.add_property(new_property.clone());
+            }
+            let item = CreateEdgeTypeItem::new(si, schema_version, label_id, cloned_existing_typedef.clone());
+            self.write_item(item)?;
+            {
+                let current_label_idx = graph_def.get_label_idx();
+                if current_label_idx < label_id {
+                    let msg = format!("current label id {} not found.", label_id);
+                    return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+                }
+                graph_def.update_type(label_id, cloned_existing_typedef.clone())?;
+                graph_def.increase_version();
+            }
+            Ok(())
+        } else {
+            let msg = format!("current label id {} not exist.", label_id);
+            return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
+        }
     }
 
     pub fn add_edge_kind(
