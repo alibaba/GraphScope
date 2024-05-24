@@ -17,8 +17,6 @@ public class PlannerConfig {
             Config.stringConfig("graph.planner.rules", "");
     public static final Config<Integer> GRAPH_PLANNER_CBO_GLOGUE_SIZE =
             Config.intConfig("graph.planner.cbo.glogue.size", 3);
-    public static final Config<String> GRAPH_PLANNER_CBO_GLOGUE_SCHEMA =
-            Config.stringConfig("graph.planner.cbo.glogue.schema", ".");
     public static final Config<Integer> JOIN_MIN_PATTERN_SIZE =
             Config.intConfig("graph.planner.join.min.pattern.size", 5);
     public static final Config<Integer> JOIN_COST_FACTOR_1 =
@@ -28,19 +26,10 @@ public class PlannerConfig {
 
     private final Configs configs;
     private final List<String> rules;
-    private final @Nullable GlogueSchema glogueSchema;
 
     public PlannerConfig(Configs configs) {
         this.configs = configs;
         this.rules = Utils.convertDotString(GRAPH_PLANNER_RULES.get(configs));
-        try {
-            this.glogueSchema =
-                    (isOn() && getOpt() == Opt.CBO)
-                            ? GlogueSchema.fromFile(GRAPH_PLANNER_CBO_GLOGUE_SCHEMA.get(configs))
-                            : null;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public enum Opt {
@@ -62,10 +51,6 @@ public class PlannerConfig {
 
     public int getGlogueSize() {
         return GRAPH_PLANNER_CBO_GLOGUE_SIZE.get(configs);
-    }
-
-    public @Nullable GlogueSchema getGlogueSchema() {
-        return glogueSchema;
     }
 
     public int getJoinMinPatternSize() {

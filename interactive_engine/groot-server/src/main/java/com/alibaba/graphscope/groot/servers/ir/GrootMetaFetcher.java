@@ -43,6 +43,7 @@ public class GrootMetaFetcher implements IrMetaFetcher {
             GraphSchema schema = entry.getValue();
 
             try {
+                // TODO: add statistics, otherwise, the CBO will not work
                 return Optional.of(
                         new IrMeta(
                                 new SnapshotId(true, snapshotId), new IrGraphSchema(schema, true)));
