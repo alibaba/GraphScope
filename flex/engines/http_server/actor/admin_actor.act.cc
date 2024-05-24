@@ -1012,6 +1012,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
                                                   "Fail to start compiler")));
     }
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
+    hqps_service.reset_start_time();
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>("Successfully start service"));
   });
@@ -1083,6 +1084,7 @@ seastar::future<admin_query_result> admin_actor::service_status(
     } else {
       res["graph"] = {};
     }
+    res["start_time"] = hqps_service.get_start_time();
   } else {
     LOG(INFO) << "Query service has not been inited!";
     res["status"] = "Query service has not been inited!";
