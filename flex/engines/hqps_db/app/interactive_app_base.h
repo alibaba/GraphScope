@@ -47,11 +47,9 @@ bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
 
   if (json[I].contains("value")) {
     if constexpr (std::is_same<T, gs::Date>::value) {
-      std::get<I>(tuple).milli_second =
-          gs::Date{arguments_list[I]["value"].get<int64_t>()};
+      std::get<I>(tuple).milli_second = json[I]["value"].get<int64_t>();
     } else if constexpr (std::is_same<T, gs::Day>::value) {
-      std::get<I>(tuple).day =
-          gs::Day{arguments_list[I]["value"].get<uint32_t>()};
+      std::get<I>(tuple).day = json[I]["value"].get<uint32_t>();
     } else {
       std::get<I>(tuple) = json[I]["value"].get<T>();
     }

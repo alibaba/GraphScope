@@ -519,8 +519,8 @@ class DefaultSession(Session):
             response = self._query_api.proc_call_with_http_info(
                 graph_id, params_str
             )
+            result = CollectiveResults()
             if response.status_code == 200:
-                result = CollectiveResults()
                 byte_data = response.data.encode('utf-8')
                 result.ParseFromString(byte_data)
                 return Result.from_response(response)

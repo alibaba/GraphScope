@@ -1,15 +1,18 @@
+#include "flex/engines/hqps_db/app/interactive_app_base.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/utils/app_utils.h"
 
 namespace gs {
-class ExampleQuery : public CypherReadAppBase<> {
+class ExampleQuery : public CypherReadAppBase<int32_t> {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
   ExampleQuery() {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::GraphDBSession& sess) override {
+  results::CollectiveResults Query(const gs::GraphDBSession& sess,
+                                   int32_t param1) override {
+    LOG(INFO) << "param1: " << param1;
     gs::MutableCSRInterface graph(sess);
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, 0, Filter<TruePredicate>());
