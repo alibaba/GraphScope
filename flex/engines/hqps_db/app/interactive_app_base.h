@@ -133,7 +133,8 @@ class CypherWriteAppBase : public WriteAppBase {
 
   results::CollectiveResults unpackedAndInvoke(GraphDBSession& db,
                                                std::tuple<ARGS...>& tuple) {
-    std::apply([this, &db](ARGS... args) { this->Query(db, args...); }, tuple);
+    return std::apply([this, &db](ARGS... args) { this->Query(db, args...); },
+                      tuple);
   }
 };
 }  // namespace gs

@@ -38,18 +38,38 @@ import os
 import sys
 import subprocess
 import glob
-from setuptools.command.build_py import build_py as _build_py
+from distutils.cmd import Command
 
-class BuildProto(_build_py):
+class BuildProto(Command):
+    description = "build protobuf file"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
     def run(self):
         proto_path = "../../../../interactive_engine/executor/ir/proto/"
         proto_files = glob.glob(os.path.join(proto_path, '*.proto'))
         output_dir = "./interactive_sdk/client/generated/"
         os.makedirs(output_dir, exist_ok=True)
         for proto_file in proto_files:
-            if proto_file.endswith(".proto"):
-                subprocess.run(["protoc", f"--python_out={output_dir}", f"--proto_path={proto_path}", f"{proto_file}"], check=True)
-        super().run()
+            cmd = [
+                sys.executable,
+                "-m",
+                "grpc_tools.protoc",
+                "-I",
+                proto_path,
+                f"--python_out={output_dir}",
+                f"--mypy_out={output_dir}",
+                proto_file,
+            ]
+            subprocess.check_call(
+                cmd,
+                stderr=subprocess.STDOUT,
+            )
 
 setup(
     name=NAME,
@@ -68,5 +88,5 @@ setup(
     This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query. 
     """,  # noqa: E501
     package_data={"interactive_sdk": ["py.typed"]},
-    cmdclass={"build_py": BuildProto}, 
+    cmdclass={"build_proto": BuildProto}, 
 )

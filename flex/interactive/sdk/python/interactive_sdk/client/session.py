@@ -299,7 +299,19 @@ class DefaultSession(Session):
         self._service_api = AdminServiceServiceManagementApi(self._client)
         self._edge_api = GraphServiceEdgeManagementApi(self._client)
         self._vertex_api = GraphServiceVertexManagementApi(self._client)
-        self._query_api = QueryServiceApi(self._client)
+        # TODO(zhanglei): Get endpoint from service, current implementation is adhoc.
+        # get service port
+        service_status = self.get_service_status()
+        if not service_status.is_ok():
+            raise Exception("Failed to get service status")
+        service_port = service_status.get_value().hqps_port
+        # replace the port in uri
+        uri = uri.split(":")
+        uri[-1] = str(service_port)
+        uri = ":".join(uri)
+        self._query_client = ApiClient(Configuration(host=uri))
+
+        self._query_api = QueryServiceApi(self._query_client)
 
     def __enter__(self):
         self._client.__enter__()
@@ -504,12 +516,16 @@ class DefaultSession(Session):
     ) -> Result[CollectiveResults]:
         try:
             params_str = params.to_json() + chr(1)
-            response = self._procedure_api.call_procedure_with_http_info(
+            response = self._query_api.proc_call_with_http_info(
                 graph_id, params_str
             )
-            result = CollectiveResults()
-            result.ParseFromString(response)
-            return Result.from_response(result)
+            if response.status_code == 200:
+                result = CollectiveResults()
+                byte_data = response.data.encode('utf-8')
+                result.ParseFromString(byte_data)
+                return Result.from_response(response)
+            else:
+                return Result.from_response(result)
         except Exception as e:
             return Result.from_exception(e)
 
