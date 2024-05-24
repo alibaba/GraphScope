@@ -26,6 +26,7 @@ import com.alibaba.graphscope.interactive.openapi.model.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.Closeable;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /***
@@ -44,7 +45,7 @@ public class DefaultSession implements Session {
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_WRITE_TIMEOUT = 30000;
 
-    private final ApiClient client;
+    private final ApiClient client,queryClient;
 
     public static DefaultSession newInstance(String uri) {
         return new DefaultSession(uri);
@@ -71,7 +72,22 @@ public class DefaultSession implements Session {
         serviceApi = new AdminServiceServiceManagementApi(client);
         vertexApi = new GraphServiceVertexManagementApi(client);
         edgeApi = new GraphServiceEdgeManagementApi(client);
-        queryApi = new QueryServiceApi(client);
+
+        Result<ServiceStatus> status = getServiceStatus();
+        if (!status.isOk()) {
+            throw new RuntimeException("Failed to connect to the server: " + status.getStatusMessage());
+        }
+        //TODO: should construct queryService from a endpoint, not a port
+        Integer queryPort = status.getValue().getHqpsPort();
+
+        // Replace the port with the query port, http:://host:port -> http:://host:queryPort
+        String queryUri = uri.replaceFirst(":[0-9]+", ":" + queryPort);
+        System.out.println("Query URI: " + queryUri);
+        queryClient = new ApiClient();
+        queryClient.setBasePath(queryUri);
+        queryClient.setReadTimeout(DEFAULT_READ_TIMEOUT);
+        queryClient.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
+        queryApi = new QueryServiceApi(queryClient);
     }
 
     @Override
@@ -300,19 +316,29 @@ public class DefaultSession implements Session {
         }
     }
 
+    private String encodeString(String jsonStr, int lastByte) {
+        byte[] bytes = new byte[jsonStr.length() + 1];
+        //copy string to byte array
+        for (int i = 0; i < jsonStr.length(); i++) {
+            bytes[i] = (byte) jsonStr.charAt(i);
+        }
+        bytes[jsonStr.length()] = (byte) lastByte;
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(
             String graphName, QueryRequest request) {
         try {
-            StringBuilder sb = new StringBuilder(request.toJson());
-            sb.append((char) 1);
-            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, sb.toString());
+            String encodedStr = encodeString(request.toJson(), 1);
+            System.out.println("encodedStr: " + encodedStr);
+            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), response.getData()));
             }
             IrResult.CollectiveResults results =
-                    IrResult.CollectiveResults.parseFrom(response.getData().getBytes());
+                    IrResult.CollectiveResults.parseFrom(response.getData().getBytes(StandardCharsets.UTF_8));
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();

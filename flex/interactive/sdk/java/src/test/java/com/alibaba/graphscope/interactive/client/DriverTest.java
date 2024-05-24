@@ -28,6 +28,10 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -254,21 +258,40 @@ public class DriverTest {
 
     @Test
     @Order(8)
-    public void test6CreateCppProcedure() {
+    public void test7CreateCppProcedure() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
-        procedure.setName("cypherProcedure");
+        procedure.setName("cppProcedure");
         procedure.setDescription("a simple test procedure");
-        procedure.setQuery("MATCH(p:person) RETURN COUNT(p);");
-        procedure.setType(CreateProcedureRequest.TypeEnum.CYPHER);
+        //sampleAppFilePath is under the resources folder,with name sample_app.cc
+        String sampleAppFilePath = "sample_app.cc";
+        String sampleAppContent = "";
+        try {
+            sampleAppContent =
+                    new String(
+                            Files.readAllBytes(
+                                    Paths.get(
+                                            Thread.currentThread()
+                                                    .getContextClassLoader()
+                                                    .getResource(sampleAppFilePath)
+                                                    .toURI())));
+        } catch (IOException | URISyntaxException e) {
+            e.printStackTrace();
+        }
+        if (sampleAppContent.isEmpty()) {
+            throw new RuntimeException("sample app content is empty");
+        }
+        logger.info("sample app content: " + sampleAppContent);
+        procedure.setQuery(sampleAppContent);
+        procedure.setType(CreateProcedureRequest.TypeEnum.CPP);
         Result<CreateProcedureResponse> resp = session.createProcedure(graphId, procedure);
         assertOk(resp);
-        cppProcedureId = "cypherProcedure";
+        cppProcedureId = "cppProcedure";
     }
 
     @Test
-    @Order(8)
-    public void test7Restart() {
-        Result<String> resp = session.restartService();
+    @Order(9)
+    public void test8Restart() {
+        Result<String> resp = session.startService(new StartServiceRequest().graphId(graphId));
         assertOk(resp);
         // Sleep 10 seconds to wait for the service to restart
         try {
@@ -280,38 +303,31 @@ public class DriverTest {
     }
 
     @Test
-    @Order(8)
-    public void test8CallProcedure() {
+    @Order(10)
+    public void test9CallCppProcedure() {
         QueryRequest request = new QueryRequest();
-        request.setQueryName("testProcedure");
+        request.setQueryName(cppProcedureId);
         Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
         assertOk(resp);
     }
 
     @Test
-    @Order(10)
-    public void test9CallProcedureViaNeo4j() {
-        org.neo4j.driver.Result result = neo4jSession.run("CALL testProcedure() YIELD *;");
+    @Order(11)
+    public void test10CallCypherProcedureViaNeo4j() {
+        String query = "CALL " + cypherProcedureId + "() YIELD *;";
+        org.neo4j.driver.Result result = neo4jSession.run(query);
         logger.info("result: " + result.toString());
     }
 
-    @Test
-    @Order(11)
-    public void test10RestartOnInitGraph(){
-        Result<String> resp = session.restartService(new StartServiceRequest().graphId(1));
-        assertOk(resp);
-        // Sleep 5 seconds to wait for the service to restart
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        logger.info("service restarted: " + resp.getValue());
-    }
 
     @AfterAll
     public static void afterClass() {
         logger.info("clean up");
+        {
+            Result<String> resp = session.startService(new StartServiceRequest().graphId("1"));
+            assertOk(resp);
+            logger.info("service restarted on initial graph");
+        }
         if (graphId != null) {
             if (cypherProcedureId != null) {
                 Result<String> resp = session.deleteProcedure(graphId, cypherProcedureId);
