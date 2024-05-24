@@ -1,10 +1,5 @@
 package com.alibaba.graphscope.common.config;
 
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 

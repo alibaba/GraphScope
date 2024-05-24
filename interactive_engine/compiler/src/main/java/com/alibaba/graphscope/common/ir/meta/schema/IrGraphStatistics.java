@@ -23,7 +23,7 @@ import com.alibaba.graphscope.groot.common.schema.api.*;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Maintain Graph statistics meta for IR 
+ * Maintain Graph statistics meta for IR
  */
 public class IrGraphStatistics implements GraphStatistics {
     private final GraphStatistics graphStatistics;
