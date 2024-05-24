@@ -23,11 +23,14 @@ use std::io::{BufReader, BufWriter, Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use dyn_type::object::RawType;
 use dyn_type::CastError;
+use huge_container::HugeVec;
 use serde::{Deserialize, Serialize};
 
 use crate::date::Date;
 use crate::date_time::DateTime;
 use crate::types::DefaultId;
+
+type ColumnContainer<T> = HugeVec<T>;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 pub enum DataType {
@@ -381,12 +384,12 @@ pub trait Column: Debug {
 }
 
 pub struct Int32Column {
-    pub data: Vec<i32>,
+    pub data: ColumnContainer<i32>,
 }
 
 impl Int32Column {
     pub fn new() -> Self {
-        Self { data: Vec::new() }
+        Self { data: ColumnContainer::new() }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
@@ -450,7 +453,7 @@ impl Column for Int32Column {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<i32>::with_capacity(row_num);
+        let mut data = ColumnContainer::<i32>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(reader.read_i32::<LittleEndian>()?);
         }
@@ -488,12 +491,12 @@ impl Column for Int32Column {
 }
 
 pub struct UInt32Column {
-    pub data: Vec<u32>,
+    pub data: ColumnContainer<u32>,
 }
 
 impl UInt32Column {
     pub fn new() -> Self {
-        Self { data: Vec::new() }
+        Self { data: ColumnContainer::new() }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
@@ -557,7 +560,7 @@ impl Column for UInt32Column {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<u32>::with_capacity(row_num);
+        let mut data = ColumnContainer::<u32>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(reader.read_u32::<LittleEndian>()?);
         }
@@ -595,12 +598,12 @@ impl Column for UInt32Column {
 }
 
 pub struct Int64Column {
-    pub data: Vec<i64>,
+    pub data: ColumnContainer<i64>,
 }
 
 impl Int64Column {
     pub fn new() -> Self {
-        Self { data: Vec::new() }
+        Self { data: ColumnContainer::new() }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
@@ -664,7 +667,7 @@ impl Column for Int64Column {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<i64>::with_capacity(row_num);
+        let mut data = ColumnContainer::<i64>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(reader.read_i64::<LittleEndian>()?);
         }
@@ -702,12 +705,12 @@ impl Column for Int64Column {
 }
 
 pub struct UInt64Column {
-    pub data: Vec<u64>,
+    pub data: ColumnContainer<u64>,
 }
 
 impl UInt64Column {
     pub fn new() -> Self {
-        Self { data: Vec::new() }
+        Self { data: ColumnContainer::new() }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
@@ -771,7 +774,7 @@ impl Column for UInt64Column {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<u64>::with_capacity(row_num);
+        let mut data = ColumnContainer::<u64>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(reader.read_u64::<LittleEndian>()?);
         }
@@ -809,12 +812,12 @@ impl Column for UInt64Column {
 }
 
 pub struct IDColumn {
-    pub data: Vec<DefaultId>,
+    pub data: ColumnContainer<DefaultId>,
 }
 
 impl IDColumn {
     pub fn new() -> Self {
-        Self { data: Vec::new() }
+        Self { data: ColumnContainer::new() }
     }
 }
 
@@ -865,7 +868,7 @@ impl Column for IDColumn {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<DefaultId>::with_capacity(row_num);
+        let mut data = ColumnContainer::<DefaultId>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(reader.read_u64::<LittleEndian>()? as DefaultId);
         }
@@ -903,12 +906,12 @@ impl Column for IDColumn {
 }
 
 pub struct DoubleColumn {
-    pub data: Vec<f64>,
+    pub data: ColumnContainer<f64>,
 }
 
 impl DoubleColumn {
     pub fn new() -> Self {
-        Self { data: Vec::new() }
+        Self { data: ColumnContainer::new() }
     }
 }
 
@@ -959,7 +962,7 @@ impl Column for DoubleColumn {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<f64>::with_capacity(row_num);
+        let mut data = ColumnContainer::<f64>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(reader.read_f64::<LittleEndian>()?);
         }
@@ -1096,14 +1099,14 @@ impl Column for StringColumn {
 }
 
 pub struct LCStringColumn {
-    pub data: Vec<u16>,
+    pub data: ColumnContainer<u16>,
     pub table: HashMap<String, u16>,
     pub list: Vec<String>,
 }
 
 impl LCStringColumn {
     pub fn new() -> Self {
-        Self { data: Vec::new(), table: HashMap::new(), list: Vec::new() }
+        Self { data: ColumnContainer::new(), table: HashMap::new(), list: Vec::new() }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
@@ -1182,7 +1185,7 @@ impl Column for LCStringColumn {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<u16>::with_capacity(row_num);
+        let mut data = ColumnContainer::<u16>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(reader.read_u16::<LittleEndian>()?);
         }
@@ -1259,12 +1262,12 @@ impl Column for LCStringColumn {
 }
 
 pub struct DateColumn {
-    pub data: Vec<Date>,
+    pub data: ColumnContainer<Date>,
 }
 
 impl DateColumn {
     pub fn new() -> Self {
-        Self { data: Vec::new() }
+        Self { data: ColumnContainer::new() }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
@@ -1328,7 +1331,7 @@ impl Column for DateColumn {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<Date>::with_capacity(row_num);
+        let mut data = ColumnContainer::<Date>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(Date::from_i32(reader.read_i32::<LittleEndian>()?));
         }
@@ -1366,12 +1369,12 @@ impl Column for DateColumn {
 }
 
 pub struct DateTimeColumn {
-    pub data: Vec<DateTime>,
+    pub data: ColumnContainer<DateTime>,
 }
 
 impl DateTimeColumn {
     pub fn new() -> Self {
-        Self { data: Vec::new() }
+        Self { data: ColumnContainer::new() }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
@@ -1437,7 +1440,7 @@ impl Column for DateTimeColumn {
 
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()> {
         let row_num = reader.read_u64::<LittleEndian>()? as usize;
-        let mut data = Vec::<DateTime>::with_capacity(row_num);
+        let mut data = ColumnContainer::<DateTime>::with_capacity(row_num);
         for _ in 0..row_num {
             data.push(DateTime::new(reader.read_i64::<LittleEndian>()?));
         }

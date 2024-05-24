@@ -8,19 +8,21 @@ use crate::col_table::ColTable;
 use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrIterBeta, NbrOffsetIter, SafeMutPtr, SafePtr};
 use crate::graph::IndexType;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use huge_container::HugeVec;
 
+type ArrayType<T> = HugeVec<T>;
 pub struct BatchMutableCsr<I> {
-    pub neighbors: Vec<I>,
-    pub offsets: Vec<usize>,
-    pub degree: Vec<i32>,
+    pub neighbors: ArrayType<I>,
+    pub offsets: ArrayType<usize>,
+    pub degree: ArrayType<i32>,
 
     edge_num: usize,
 }
 
 pub struct BatchMutableCsrBuilder<I> {
-    neighbors: Vec<I>,
-    offsets: Vec<usize>,
-    insert_offsets: Vec<i32>,
+    neighbors: ArrayType<I>,
+    offsets: ArrayType<usize>,
+    insert_offsets: ArrayType<i32>,
 
     edge_num: usize,
 }
@@ -28,9 +30,9 @@ pub struct BatchMutableCsrBuilder<I> {
 impl<I: IndexType> BatchMutableCsrBuilder<I> {
     pub fn new() -> Self {
         BatchMutableCsrBuilder {
-            neighbors: Vec::new(),
-            offsets: Vec::new(),
-            insert_offsets: Vec::new(),
+            neighbors: ArrayType::new(),
+            offsets: ArrayType::new(),
+            insert_offsets: ArrayType::new(),
             edge_num: 0,
         }
     }
@@ -75,7 +77,12 @@ impl<I: IndexType> BatchMutableCsrBuilder<I> {
 
 impl<I: IndexType> BatchMutableCsr<I> {
     pub fn new() -> Self {
-        BatchMutableCsr { neighbors: Vec::new(), offsets: Vec::new(), degree: Vec::new(), edge_num: 0 }
+        BatchMutableCsr {
+            neighbors: ArrayType::new(),
+            offsets: ArrayType::new(),
+            degree: ArrayType::new(),
+            edge_num: 0,
+        }
     }
 }
 
@@ -149,7 +156,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
 
         let neighbor_size = reader.read_u64::<LittleEndian>().unwrap() as usize;
         info!("neighbor_size = {}", neighbor_size);
-        self.neighbors = Vec::with_capacity(neighbor_size);
+        self.neighbors = ArrayType::with_capacity(neighbor_size);
         for _ in 0..neighbor_size {
             self.neighbors
                 .push(I::read(&mut reader).unwrap());
@@ -157,7 +164,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
 
         let offset_size = reader.read_u64::<LittleEndian>().unwrap() as usize;
         info!("offset_size = {}", offset_size);
-        self.offsets = Vec::with_capacity(offset_size);
+        self.offsets = ArrayType::with_capacity(offset_size);
         for _ in 0..offset_size {
             self.offsets
                 .push(reader.read_u64::<LittleEndian>().unwrap() as usize);
@@ -166,7 +173,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
         let degree_size = reader.read_u64::<LittleEndian>().unwrap() as usize;
         info!("degree_size = {}", degree_size);
         let degree_capacity = degree_size + degree_size / 2;
-        self.degree = Vec::with_capacity(degree_capacity);
+        self.degree = ArrayType::with_capacity(degree_capacity);
         for _ in 0..degree_size {
             self.degree
                 .push(reader.read_i32::<LittleEndian>().unwrap());
@@ -437,7 +444,8 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
 
         let mut chunk_offset = vec![0_usize; chunk_num];
         let safe_chunk_offset_ptr = SafeMutPtr::new(&mut chunk_offset);
-        let mut new_offsets = vec![0_usize; vertex_num + 1];
+        let mut new_offsets = ArrayType::with_capacity(vertex_num + 1);
+        new_offsets.resize(vertex_num + 1, 0);
         let safe_new_offsets_ptr = SafeMutPtr::new(&mut new_offsets);
         let safe_new_degree_ptr = SafeMutPtr::new(&mut new_degree);
         let safe_degree_ptr = SafePtr::new(&self.degree);
@@ -496,7 +504,8 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
             cur_offset = tmp;
         }
 
-        let mut new_neighbors = vec![I::new(0); cur_offset];
+        let mut new_neighbors = ArrayType::with_capacity(cur_offset);
+        new_neighbors.resize(cur_offset, I::new(0));
 
         let safe_new_neighbors_ptr = SafeMutPtr::new(&mut new_neighbors);
         let safe_neighbors_ptr = SafePtr::new(&self.neighbors);
@@ -604,7 +613,8 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
 
         let mut chunk_offset = vec![0_usize; chunk_num];
         let safe_chunk_offset_ptr = SafeMutPtr::new(&mut chunk_offset);
-        let mut new_offsets = vec![0_usize; vertex_num + 1];
+        let mut new_offsets = ArrayType::with_capacity(vertex_num + 1);
+        new_offsets.resize(vertex_num + 1, 0);
         let safe_new_offsets_ptr = SafeMutPtr::new(&mut new_offsets);
         let safe_new_degree_ptr = SafeMutPtr::new(&mut new_degree);
         let safe_degree_ptr = SafePtr::new(&self.degree);
@@ -663,7 +673,8 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
             cur_offset = tmp;
         }
 
-        let mut new_neighbors = vec![I::new(0); cur_offset];
+        let mut new_neighbors = ArrayType::with_capacity(cur_offset);
+        new_neighbors.resize(cur_offset, I::new(0));
 
         let safe_new_neighbors_ptr = SafeMutPtr::new(&mut new_neighbors);
         let safe_neighbors_ptr = SafePtr::new(&self.neighbors);

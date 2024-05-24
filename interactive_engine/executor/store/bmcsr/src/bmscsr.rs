@@ -3,15 +3,16 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 
-use rayon::prelude::*;
-
 use crate::col_table::ColTable;
 use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrIterBeta, NbrOffsetIter, SafeMutPtr, SafePtr};
 use crate::graph::IndexType;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use huge_container::HugeVec;
+
+type ArrayType<T> = HugeVec<T>;
 
 pub struct BatchMutableSingleCsr<I> {
-    nbr_list: Vec<I>,
+    nbr_list: ArrayType<I>,
 
     vertex_num: usize,
     edge_num: usize,
@@ -20,7 +21,7 @@ pub struct BatchMutableSingleCsr<I> {
 }
 
 pub struct BatchMutableSingleCsrBuilder<I> {
-    nbr_list: Vec<I>,
+    nbr_list: ArrayType<I>,
 
     vertex_num: usize,
     edge_num: usize,
@@ -31,7 +32,7 @@ pub struct BatchMutableSingleCsrBuilder<I> {
 impl<I: IndexType> BatchMutableSingleCsrBuilder<I> {
     pub fn new() -> Self {
         BatchMutableSingleCsrBuilder {
-            nbr_list: Vec::new(),
+            nbr_list: ArrayType::new(),
             vertex_num: 0,
             edge_num: 0,
             vertex_capacity: 0,
@@ -71,7 +72,7 @@ impl<I: IndexType> BatchMutableSingleCsrBuilder<I> {
 
 impl<I: IndexType> BatchMutableSingleCsr<I> {
     pub fn new() -> Self {
-        BatchMutableSingleCsr { nbr_list: Vec::new(), vertex_num: 0, edge_num: 0, vertex_capacity: 0 }
+        BatchMutableSingleCsr { nbr_list: ArrayType::new(), vertex_num: 0, edge_num: 0, vertex_capacity: 0 }
     }
 
     pub fn resize_vertex(&mut self, vertex_num: usize) {
@@ -177,7 +178,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableSingleCsr<I> {
         self.edge_num = reader.read_u64::<LittleEndian>().unwrap() as usize;
         self.vertex_capacity = reader.read_u64::<LittleEndian>().unwrap() as usize;
         let len = reader.read_u64::<LittleEndian>().unwrap() as usize;
-        self.nbr_list = Vec::with_capacity(len);
+        self.nbr_list = ArrayType::with_capacity(len);
         for _ in 0..len {
             self.nbr_list
                 .push(I::read(&mut reader).unwrap());

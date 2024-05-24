@@ -13,8 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::{Ord, Ordering, PartialOrd};
 use std::fmt::{Debug, Display, Formatter};
-use std::cmp::{Ordering, PartialOrd, Ord};
 
 use chrono::{DateTime as CDateTime, TimeZone};
 use chrono::{Datelike, Duration, Timelike, Utc};
@@ -43,7 +43,7 @@ impl DateTime {
                 .unwrap(),
             Utc,
         )
-            .timestamp_millis();
+        .timestamp_millis();
         Self { inner: date_dt }
     }
 
@@ -95,7 +95,11 @@ impl DateTime {
     }
 
     pub fn to_days_i64(&self) -> i64 {
-        Utc.timestamp_millis_opt(self.inner).unwrap().date().and_hms(0, 0, 0).timestamp_millis()
+        Utc.timestamp_millis_opt(self.inner)
+            .unwrap()
+            .date()
+            .and_hms(0, 0, 0)
+            .timestamp_millis()
     }
 
     pub fn to_chrono_date_utc(&self) -> CDateTime<Utc> {

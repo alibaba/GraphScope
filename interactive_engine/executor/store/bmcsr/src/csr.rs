@@ -2,15 +2,18 @@ use std::any::Any;
 use std::collections::HashSet;
 use std::marker::PhantomData;
 
+use huge_container::HugeVec;
+
 use crate::col_table::ColTable;
 use crate::graph::IndexType;
 
+type ArrayType<T> = HugeVec<T>;
 pub struct NbrIter<'a, I> {
     inner: std::slice::Iter<'a, I>,
 }
 
 impl<'a, I> NbrIter<'a, I> {
-    pub fn new(vec: &'a Vec<I>, start: usize, end: usize) -> Self {
+    pub fn new(vec: &'a ArrayType<I>, start: usize, end: usize) -> Self {
         NbrIter { inner: vec[start..end].iter() }
     }
 }
@@ -56,7 +59,7 @@ pub struct NbrOffsetIter<'a, I> {
 }
 
 impl<'a, I> NbrOffsetIter<'a, I> {
-    pub fn new(vec: &'a Vec<I>, start: usize, end: usize) -> Self {
+    pub fn new(vec: &'a ArrayType<I>, start: usize, end: usize) -> Self {
         NbrOffsetIter { inner: vec[start..end].iter(), offset: start }
     }
 }

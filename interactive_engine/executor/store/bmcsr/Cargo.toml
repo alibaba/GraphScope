@@ -10,6 +10,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 serde_json = "1.0"
 dyn_type = { path = "../../common/dyn_type" }
+huge_container = { path = "../../common/huge_container" }
 log = "0.4"
 bincode = "1.0.1"
 itertools = "0.9"
