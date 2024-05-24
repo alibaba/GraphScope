@@ -34,7 +34,7 @@ public class CBOTest {
         irMeta =
                 Utils.mockIrMeta(
                         "schema/ldbc_schema_exp_hierarchy.json",
-                        "statistics/dbc30_hierarchy_statistics.json");
+                        "statistics/ldbc30_hierarchy_statistics.json");
     }
 
     @Test
