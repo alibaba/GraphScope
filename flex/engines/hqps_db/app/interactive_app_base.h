@@ -16,6 +16,8 @@
 #ifndef ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 #define ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
 
+#ifdef BUILD_HQPS
+
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/proto_generated_gie/results.pb.h"
 #include "flex/utils/property/types.h"
@@ -37,62 +39,22 @@ bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
                << ", reach end of json: " << json;
     return false;
   }
-  if constexpr (std::is_same<T, std::string>::value ||
-                std::is_same<T, std::string_view>::value) {
-    if (type != PropertyType::kString && !type.IsVarchar()) {
-      LOG(ERROR) << "Argument type mismatch, expected string, but got: "
-                 << type;
-      return false;
-    }
-  } else if constexpr (std::is_same<T, int32_t>::value) {
-    if (type != PropertyType::kInt32) {
-      LOG(ERROR) << "Argument type mismatch, expected int32, but got: " << type;
-      return false;
-    }
-  } else if constexpr (std::is_same<T, int64_t>::value) {
-    if (type != PropertyType::kInt64) {
-      LOG(ERROR) << "Argument type mismatch, expected int64, but got: " << type;
-      return false;
-    }
-  } else if constexpr (std::is_same<T, uint32_t>::value) {
-    if (type != PropertyType::kUInt32) {
-      LOG(ERROR) << "Argument type mismatch, expected uint32, but got: "
-                 << type;
-      return false;
-    }
-  } else if constexpr (std::is_same<T, uint64_t>::value) {
-    if (type != PropertyType::kUInt64) {
-      LOG(ERROR) << "Argument type mismatch, expected uint64, but got: "
-                 << type;
-      return false;
-    }
-  } else if constexpr (std::is_same<T, double>::value) {
-    if (type != PropertyType::kDouble) {
-      LOG(ERROR) << "Argument type mismatch, expected double, but got: "
-                 << type;
-      return false;
-    }
-  } else if constexpr (std::is_same<T, float>::value) {
-    if (type != PropertyType::kFloat) {
-      LOG(ERROR) << "Argument type mismatch, expected float, but got: " << type;
-      return false;
-    }
-  } else if constexpr (std::is_same<T, Date>::value) {
-    if (type != PropertyType::kDate) {
-      LOG(ERROR) << "Argument type mismatch, expected date, but got: " << type;
-      return false;
-    }
-  } else if constexpr (std::is_same<T, Day>::value) {
-    if (type != PropertyType::kDay) {
-      LOG(ERROR) << "Argument type mismatch, expected day, but got: " << type;
-      return false;
-    }
-  } else {
-    LOG(ERROR) << "Unsupported argument type";
+  auto expected_type = AnyConverter<T>::type();
+  if (type != expected_type) {
+    LOG(ERROR) << "Type mismatch: " << type << " vs " << expected_type;
     return false;
   }
+
   if (json[I].contains("value")) {
-    std::get<I>(tuple) = json[I]["value"].get<T>();
+    if constexpr (std::is_same<T, gs::Date>::value) {
+      std::get<I>(tuple).milli_second =
+          gs::Date{arguments_list[I]["value"].get<int64_t>()};
+    } else if constexpr (std::is_same<T, gs::Day>::value) {
+      std::get<I>(tuple).day =
+          gs::Day{arguments_list[I]["value"].get<uint32_t>()};
+    } else {
+      std::get<I>(tuple) = json[I]["value"].get<T>();
+    }
   } else {
     LOG(ERROR) << "No value found in input";
     return false;
@@ -196,5 +158,7 @@ class CypherWriteAppBase : public WriteAppBase {
   }
 };
 }  // namespace gs
+
+#endif  // BUILD_HQPS
 
 #endif  // ENGINES_HQPS_DB_APP_INTERACTIVE_APP_BASE_H_
