@@ -428,8 +428,26 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
   auto meta_res = metadata_store_->GetGraphMeta(query_param.content);
 
   if (meta_res.ok()) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(std::move(meta_res.value().ToJson())));
+    auto get_all_procedure_res =
+        metadata_store_->GetAllPluginMeta(query_param.content);
+    if (get_all_procedure_res.ok()) {
+      VLOG(10) << "Successfully get all procedures: "
+               << get_all_procedure_res.value().size();
+      auto& all_plugin_metas = get_all_procedure_res.value();
+      for (auto& plugin_meta : all_plugin_metas) {
+        add_runnable_info(plugin_meta);
+      }
+      auto& graph_meta = meta_res.value();
+      graph_meta.plugin_metas = all_plugin_metas;
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(std::move(graph_meta.ToJson())));
+    } else {
+      LOG(ERROR) << "Fail to get all procedures: "
+                 << get_all_procedure_res.status().error_message() << " for "
+                 << query_param.content;
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(get_all_procedure_res.status()));
+    }
   } else {
     LOG(ERROR) << "Fail to get graph schema: "
                << meta_res.status().error_message();
@@ -917,8 +935,8 @@ seastar::future<admin_query_result> admin_actor::start_service(
   if (!data_dir.ok()) {
     LOG(ERROR) << "Fail to get data directory: "
                << data_dir.status().error_message();
-    if (!prev_lock) {  // If the graph is not locked before, and we fail at some
-                       // steps after locking, we should unlock it.
+    if (!prev_lock) {  // If the graph is not locked before, and we fail at
+                       // some steps after locking, we should unlock it.
       metadata_store_->UnlockGraphIndices(graph_name);
     }
     return seastar::make_ready_future<admin_query_result>(
@@ -946,9 +964,9 @@ seastar::future<admin_query_result> admin_actor::start_service(
       if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
         LOG(ERROR) << "Fail to load graph from data directory: "
                    << data_dir_value;
-        if (!prev_lock) {  // If the graph is not locked before, and we fail at
-                           // some
-                           // steps after locking, we should unlock it.
+        if (!prev_lock) {  // If the graph is not locked before, and we
+                           // fail at some steps after locking, we should
+                           // unlock it.
           metadata_store_->UnlockGraphIndices(graph_name);
         }
         return seastar::make_ready_future<admin_query_result>(
@@ -994,6 +1012,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
                                                   "Fail to start compiler")));
     }
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
+    hqps_service.reset_start_time();
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>("Successfully start service"));
   });
@@ -1065,6 +1084,7 @@ seastar::future<admin_query_result> admin_actor::service_status(
     } else {
       res["graph"] = {};
     }
+    res["start_time"] = hqps_service.get_start_time();
   } else {
     LOG(INFO) << "Query service has not been inited!";
     res["status"] = "Query service has not been inited!";

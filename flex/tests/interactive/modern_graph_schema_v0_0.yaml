@@ -5,6 +5,7 @@ stored_procedures:
   enable_lists:
     - libget_person_name.so
     - libcount_vertex_num.so
+    - libsample_app.so
 schema:
   vertex_types:
     - type_id: 0
