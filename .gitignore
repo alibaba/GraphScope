@@ -134,6 +134,7 @@ flex/interactive/sdk/python/.travis.yml
 flex/interactive/sdk/python/tox.ini
 flex/interactive/sdk/python/pyproject.toml
 flex/interactive/sdk/python/interactive_sdk/openapi/
+flex/interactive/sdk/python/interactive_sdk/client/generated/__init__.py
 
 
 **/.cache/

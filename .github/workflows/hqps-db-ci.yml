@@ -147,8 +147,10 @@ jobs:
         cd java
         mvn clean install -DskipTests
         cd ../python
+        pip3 install -r requirements.txt
         pip3 install -r test-requirements.txt
-        pip3 install .
+        export PATH=${HOME}/.local/bin:$PATH
+        python3 setup.py build_proto
 
         rm -rf ${TMP_INTERACTIVE_WORKSPACE}     
         cd ${GITHUB_WORKSPACE}/flex/build/

@@ -65,7 +65,7 @@ bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
   auto j = nlohmann::json::parse(sv);
   if (!j.contains("arguments")) {
     LOG(ERROR) << "No arguments found in input";
-    return false;
+    return sizeof...(ARGS) == 0;
   }
   auto arguments_list = j["arguments"];
   if (arguments_list.is_array()) {
