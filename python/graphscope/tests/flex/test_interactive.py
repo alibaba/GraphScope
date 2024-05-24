@@ -29,23 +29,23 @@ from click.testing import CliRunner
 from graphscope.gsctl.impl import bind_datasource_in_batch
 from graphscope.gsctl.impl import connect_coordinator
 from graphscope.gsctl.impl import create_graph
-from graphscope.gsctl.impl import create_procedure
+from graphscope.gsctl.impl import create_stored_procedure
 from graphscope.gsctl.impl import delete_graph_by_id
-from graphscope.gsctl.impl import delete_procedure_by_id
+from graphscope.gsctl.impl import delete_stored_procedure_by_id
 from graphscope.gsctl.impl import disconnect_coordinator
 from graphscope.gsctl.impl import get_datasource_by_id
 from graphscope.gsctl.impl import get_job_by_id
-from graphscope.gsctl.impl import get_procedure_by_id
-from graphscope.gsctl.impl import get_service_status
+from graphscope.gsctl.impl import get_stored_procedure_by_id
 from graphscope.gsctl.impl import list_graphs
-from graphscope.gsctl.impl import list_procedures
+from graphscope.gsctl.impl import list_service_status
+from graphscope.gsctl.impl import list_stored_procedures
 from graphscope.gsctl.impl import restart_service
 from graphscope.gsctl.impl import start_service
 from graphscope.gsctl.impl import stop_service
 from graphscope.gsctl.impl import submit_dataloading_job
 from graphscope.gsctl.impl import unbind_edge_datasource
 from graphscope.gsctl.impl import unbind_vertex_datasource
-from graphscope.gsctl.impl import update_procedure_by_id
+from graphscope.gsctl.impl import update_stored_procedure_by_id
 from graphscope.gsctl.impl import upload_file
 
 COORDINATOR_ENDPOINT = "http://127.0.0.1:8080"
@@ -145,7 +145,9 @@ class TestE2EInteractive(object):
     def test_deployment_info(self):
         assert self.deployment_info.instance_name == "demo"
         assert self.deployment_info.cluster_type == "HOSTS"
-        assert self.deployment_info.solution == "INTERACTIVE"
+        assert self.deployment_info.engine == "Hiactor"
+        assert self.deployment_info.storage == "MutableCSR"
+        assert self.deployment_info.frontend == "Cypher/Gremlin"
         assert self.deployment_info.version is not None
         assert self.deployment_info.creation_time is not None
 
@@ -260,7 +262,7 @@ class TestE2EInteractive(object):
         delete_graph_by_id(graph_id)
 
     def test_procedure(self):
-        procedure_dict = {
+        stored_procedure_dict = {
             "name": "procedure_name",
             "description": "This is a test procedure",
             "query": "MATCH (n) RETURN COUNT(n);",
@@ -268,60 +270,75 @@ class TestE2EInteractive(object):
         }
         # test create a new procedure
         graph_id = create_graph(modern_graph)
-        procedure_id = create_procedure(graph_id, procedure_dict)
-        assert procedure_id is not None
+        stored_procedure_id = create_stored_procedure(graph_id, stored_procedure_dict)
+        assert stored_procedure_id is not None
         new_procedure_exist = False
-        procedures = list_procedures(graph_id)
+        procedures = list_stored_procedures(graph_id)
         for p in procedures:
-            if p.id == procedure_id and p.name == "procedure_name":
+            if p.id == stored_procedure_id and p.name == "procedure_name":
                 new_procedure_exist = True
         assert new_procedure_exist
         # test update a procedure
         description = "This is an updated description"
-        update_procedure_by_id(graph_id, procedure_id, {"description": description})
-        procedure = get_procedure_by_id(graph_id, procedure_id)
+        update_stored_procedure_by_id(
+            graph_id, stored_procedure_id, {"description": description}
+        )
+        procedure = get_stored_procedure_by_id(graph_id, stored_procedure_id)
         assert procedure.description == description
         # test delete a procedure
-        delete_procedure_by_id(graph_id, procedure_id)
+        delete_stored_procedure_by_id(graph_id, stored_procedure_id)
         new_procedure_exist = False
-        procedures = list_procedures(graph_id)
+        procedures = list_stored_procedures(graph_id)
         for p in procedures:
-            if p.id == procedure_id and p.name == "procedure_name":
+            if p.id == stored_procedure_id and p.name == "procedure_name":
                 new_procedure_exist = True
         assert not new_procedure_exist
         delete_graph_by_id(graph_id)
 
     def test_service(self):
-        status = get_service_status()
-        original_graph_id = status.graph.id
-        assert status.status == "Running"
+        original_graph_id = None
+        status = list_service_status()
+        for s in status:
+            if s.status == "Running":
+                original_graph_id = s.graph_id
+        assert original_graph_id is not None
         # start service on a new graph
         new_graph_id = create_graph(modern_graph)
         start_service(new_graph_id)
-        status = get_service_status()
-        assert status.status == "Running"
-        assert status.graph.id == new_graph_id
+        status = list_service_status()
+        for s in status:
+            if s.graph_id == new_graph_id:
+                assert s.status == "Running"
+            else:
+                assert s.status == "Stopped"
         # restart the service
         restart_service()
-        status = get_service_status()
-        assert status.status == "Running"
-        assert status.graph.id == new_graph_id
+        status = list_service_status()
+        for s in status:
+            if s.graph_id == new_graph_id:
+                assert s.status == "Running"
+            else:
+                assert s.status == "Stopped"
         # stop the service
         stop_service()
-        status = get_service_status()
-        assert status.status == "Stopped"
+        status = list_service_status()
+        for s in status:
+            assert s.status == "Stopped"
         # delete graph and switch to original graph
         delete_graph_by_id(new_graph_id)
         start_service(original_graph_id)
-        status = get_service_status()
-        assert status.status == "Running"
-        assert status.graph.id == original_graph_id
+        status = list_service_status()
+        for s in status:
+            if s.graph_id == original_graph_id:
+                assert s.status == "Running"
+            else:
+                assert s.status == "Stopped"
 
     def test_suit_case(self):
         # case 1:
         # during deleting a graph, make sure the stored procedures
         # on that graph are deleted at the same time
-        procedure_dict = {
+        stored_procedure_dict = {
             "name": "procedure_name",
             "description": "This is a test procedure",
             "query": "MATCH (n) RETURN COUNT(n);",
@@ -330,12 +347,12 @@ class TestE2EInteractive(object):
         graph_id = create_graph(modern_graph)
         graph_id_2 = create_graph(modern_graph)
         # create a procedure on graph 1
-        procedure_id = create_procedure(graph_id, procedure_dict)
-        assert procedure_id == "procedure_name"
+        stored_procedure_id = create_stored_procedure(graph_id, stored_procedure_dict)
+        assert stored_procedure_id == "procedure_name"
         # delete the graph 1, then create a new procedure on graph 2
         delete_graph_by_id(graph_id)
-        procedure_id = create_procedure(graph_id_2, procedure_dict)
-        assert procedure_id == "procedure_name"
+        stored_procedure_id = create_stored_procedure(graph_id_2, stored_procedure_dict)
+        assert stored_procedure_id == "procedure_name"
         delete_graph_by_id(graph_id_2)
 
     def teardown_class(self):

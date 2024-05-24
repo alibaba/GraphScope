@@ -68,8 +68,10 @@ components:
         - instance_name
         - cluster_type
         - version
-        - solution
         - creation_time
+        - frontend
+        - engine
+        - storage
       properties:
         instance_name:
           type: string
@@ -80,13 +82,57 @@ components:
             - KUBERNETES
         version:
           type: string
-        solution:
-          type: string
-          enum:
-            - INTERACTIVE
-            - GRAPHSCOPE_INSIGHT
         creation_time:
           type: string
+        frontend:
+          type: string
+          enum:
+            - Cypher/Gremlin
+            - AnalyticalApps
+        engine:
+          type: string
+          enum:
+            - Hiactor
+            - Gaia
+        storage:
+          type: string
+          enum:
+            - MutableCSR
+
+    NodeStatus:
+      required:
+        - name
+        - cpu_usage
+        - memory_usage
+        - disk_usage
+      properties:
+        name:
+          type: string
+        cpu_usage:
+          type: number
+          format: double
+        memory_usage:
+          type: number
+          format: double
+        disk_usage:
+          type: number
+          format: double
+
+    RunningDeploymentStatus:
+      required:
+        - cluster_type
+        - nodes
+      properties:
+        cluster_type:
+          type: string
+          enum:
+            - HOSTS
+            - KUBERNETES
+        nodes:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/NodeStatus'
 
     StartServiceRequest:
       x-body-name: start_service_request
@@ -96,15 +142,17 @@ components:
 
     ServiceStatus:
       required:
+        - graph_id
         - status
+        - creation_time
       properties:
+        graph_id:
+          type: string
         status:
           type: string
           enum:
             - Running
             - Stopped
-        graph:
-          $ref: '#/components/schemas/GetGraphResponse'
         sdk_endpoints:
           properties:
             cypher:
@@ -115,6 +163,8 @@ components:
               type: string
             grpc:
               type: string
+        start_time:
+          type: string
 
     UploadFileResponse:
       required:
@@ -287,8 +337,8 @@ components:
             description:
               type: string
 
-    CreateProcedureRequest:
-      x-body-name: create_procedure_request
+    CreateStoredProcRequest:
+      x-body-name: create_stored_proc_request
       required:
         - name
         - type
@@ -306,11 +356,11 @@ components:
         query:
           type: string
 
-    CreateProcedureResponse:
+    CreateStoredProcResponse:
       required:
-        - procedure_id
+        - stored_procedure_id
       properties:
-        procedure_id:
+        stored_procedure_id:
           type: string
 
     CreateGraphSchemaRequest:
@@ -330,9 +380,6 @@ components:
 
     CreateGraphRequest:
       x-body-name: create_graph_request
-      required:
-        - name
-        - schema
       properties:
         name:
           type: string
@@ -341,7 +388,7 @@ components:
         stored_procedures:
           type: array
           items:
-            $ref: '#/components/schemas/CreateProcedureRequest'
+            $ref: '#/components/schemas/CreateStoredProcRequest'
         schema:
           $ref: '#/components/schemas/CreateGraphSchemaRequest'
 
@@ -354,7 +401,7 @@ components:
 
     StoredProcedureMeta:
       allOf:
-        - $ref: '#/components/schemas/CreateProcedureRequest'
+        - $ref: '#/components/schemas/CreateStoredProcRequest'
         - type: object
           required:
             - id
@@ -375,7 +422,7 @@ components:
               items:
                $ref: '#/components/schemas/Parameter'
 
-    GetProcedureResponse:
+    GetStoredProcResponse:
       allOf:
         - $ref: '#/components/schemas/StoredProcedureMeta'
         - type: object
@@ -388,8 +435,8 @@ components:
             runnable:
               type: boolean
 
-    UpdateProcedureRequest:
-      x-body-name: update_procedure_request
+    UpdateStoredProcRequest:
+      x-body-name: update_stored_proc_request
       required:
         - description
       properties:
@@ -474,7 +521,7 @@ components:
         stored_procedures:
           type: array
           items:
-            $ref: '#/components/schemas/GetProcedureResponse'
+            $ref: '#/components/schemas/GetStoredProcResponse'
         schema:
           $ref: '#/components/schemas/GetGraphSchemaResponse'
 
@@ -795,13 +842,13 @@ tags:
   - name: Graph
   - name: DataSource
   - name: Job
-  - name: Procedure
+  - name: Stored Procedure
   - name: Service
   - name: Alert
   - name: Utils
 
 paths:
-  /api/v1/deployment/info:
+  /api/v1/deployment:
     get:
       description: Deployment information
       tags: [Deployment]
@@ -817,8 +864,32 @@ paths:
                 cluster_type: HOSTS
                 creation_time: 2024-01-01 00:00:00
                 instance_name: demo
-                solution: INTERACTIVE
+                frontend: Cypher/Gremlin
+                engine: Hiactor
+                storage: MutableCSR
                 version: 0.27.0
+        500:
+          $ref: "#/components/responses/500"
+
+  /api/v1/deployment/status:
+    get:
+      description: Deployment status
+      tags: [Deployment]
+      operationId: getDeploymentStatus
+      responses:
+        200:
+          description: Successfully returned the deployment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunningDeploymentStatus'
+              example:
+                cluster_type: HOSTS
+                nodes:
+                  - name: HOSTNAME-1
+                    cpu_usage: 83.0
+                    memory_usage: 37.5
+                    disk_usage: 97
         500:
           $ref: "#/components/responses/500"
 
@@ -864,8 +935,8 @@ paths:
                   schema_update_time: "2024-01-02 00:00:00"
                   data_update_time: "2024-01-03 00:00:00"
                   stored_procedures:
-                    - id: PROCEDUREID
-                      name: procedure_name
+                    - id: STORED-PROCEDURE-ID
+                      name: stored_procedure_name
                       type: cypher
                       query: "MATCH(a) return COUNT(a);"
                       library: /path/to/library
@@ -967,8 +1038,8 @@ paths:
                 schema_update_time: "2024-01-02 00:00:00"
                 data_update_time: "2024-01-03 00:00:00"
                 stored_procedures:
-                  - id: PROCEDUREID
-                    name: procedure_name
+                  - id: STORED-PROCEDURE-ID
+                    name: stored_procedure_name
                     type: cypher
                     query: "MATCH(a) return COUNT(a);"
                     library: /path/to/library
@@ -1614,11 +1685,11 @@ paths:
         500:
           $ref: "#/components/responses/500"
 
-  /api/v1/graph/{graph_id}/procedure:
+  /api/v1/graph/{graph_id}/storedproc:
     post:
-      tags: [Procedure]
+      tags: [Stored Procedure]
       description: Create a new stored procedure on a certain graph
-      operationId: createProcedure
+      operationId: createStoredProcedure
       parameters:
         - name: graph_id
           in: path
@@ -1629,24 +1700,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProcedureRequest'
+              $ref: '#/components/schemas/CreateStoredProcRequest'
         required: true
       responses:
         200:
-          description: Successfully created a procedure
+          description: Successfully created a stored procedure
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateProcedureResponse'
+                $ref: '#/components/schemas/CreateStoredProcResponse'
         400:
           $ref: "#/components/responses/400"
         500:
           $ref: "#/components/responses/500"
 
     get:
-      tags: [Procedure]
+      tags: [Stored Procedure]
       description: List all stored procedures on a certain graph
-      operationId: listProcedures
+      operationId: listStoredProcedures
       parameters:
         - name: graph_id
           in: path
@@ -1661,10 +1732,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetProcedureResponse'
+                  $ref: '#/components/schemas/GetStoredProcResponse'
               example:
-                - id: PROCEDUREID-1
-                  name: procedure_name_1
+                - id: STORED-PROCEDUREID-1
+                  name: stored_procedure_name_1
                   type: cypher
                   query: "MATCH(a) return COUNT(a);"
                   library: /path/to/library
@@ -1679,8 +1750,8 @@ paths:
                         PrimitiveType: DT_SIGNED_INT64
                   bound_graph: demo
                   runnable: true
-                - id: PROCEDUREID-2
-                  name: procedure_name_2
+                - id: STORED-PROCEDUREID-2
+                  name: stored_procedure_name_2
                   type: cypher
                   query: "MATCH(a) return COUNT(a);"
                   library: /path/to/library
@@ -1700,32 +1771,32 @@ paths:
         500:
           $ref: "#/components/responses/500"
 
-  /api/v1/graph/{graph_id}/procedure/{procedure_id}:
+  /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}:
     get:
-      tags: [Procedure]
+      tags: [Stored Procedure]
       description: Get a stored procedure by ID
-      operationId: getProcedureById
+      operationId: getStoredProcedureById
       parameters:
         - name: graph_id
           in : path
           required: true
           schema:
             type: string
-        - name: procedure_id
+        - name: stored_procedure_id
           in : path
           required: true
           schema:
             type: string
       responses:
         200:
-          description: Successfully returned the procedure
+          description: Successfully returned the stored procedure
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetProcedureResponse'
+                $ref: '#/components/schemas/GetStoredProcResponse'
               example:
-                id: PROCEDUREID
-                name: procedure_name
+                id: STORED-PROCEDURE-ID
+                name: stored_procedure_name
                 type: cypher
                 query: "MATCH(a) return COUNT(a);"
                 library: /path/to/library
@@ -1744,16 +1815,16 @@ paths:
           $ref: "#/components/responses/500"
 
     put:
-      tags: [Procedure]
+      tags: [Stored Procedure]
       description:  Update a stored procedure by ID
-      operationId: updateProcedureById
+      operationId: updateStoredProcedureById
       parameters:
         - name: graph_id
           in: path
           required: true
           schema:
             type: string
-        - name: procedure_id
+        - name: stored_procedure_id
           in : path
           required: true
           schema:
@@ -1762,7 +1833,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateProcedureRequest'
+              $ref: '#/components/schemas/UpdateStoredProcRequest'
       responses:
         200:
           description: Successfully updated the stored procedure
@@ -1774,16 +1845,16 @@ paths:
           $ref: "#/components/responses/500"
 
     delete:
-      tags: [Procedure]
+      tags: [Stored Procedure]
       description: Delete a stored procedure by ID
-      operationId: deleteProcedureById
+      operationId: deleteStoredProcedureById
       parameters:
         - name: graph_id
           in: path
           required: true
           schema:
             type: string
-        - name: procedure_id
+        - name: stored_procedure_id
           in : path
           required: true
           schema:
@@ -1850,107 +1921,57 @@ paths:
         500:
           $ref: "#/components/responses/500"
 
-  /api/v1/service/status:
+  /api/v1/service:
     get:
       tags: [Service]
-      description: Get service status
-      operationId: getServiceStatus
+      description: List all service status
+      operationId: listServiceStatus
       responses:
         200:
-          description: Successfully returned current service status
+          description: Successfully returned all service status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceStatus'
+              example:
+                - graph_id: GRAPHID
+                  status: Running
+                  sdk_endpoints:
+                    cypher: neo4j://mock.api.cypher:7676
+                    gremin: ws://mock.api.gremlin/gremlin
+                    hqps: http://mock.api.hqps:10000
+                  start_time: "2024-01-01 00:00:00"
+        500:
+          $ref: "#/components/responses/500"
+
+  /api/v1/graph/{graph_id}/service:
+    get:
+      tags: [Service]
+      description: Get service status by graph ID
+      operationId: getServiceStatusById
+      parameters:
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully returned the service status
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceStatus'
               example:
+                graph_id: GRAPHID
                 status: Running
-                graph:
-                  id: GRAPHID
-                  name: demo
-                  creation_time: "2024-01-01 00:00:00"
-                  schema_update_time: "2024-01-02 00:00:00"
-                  data_update_time: "2024-01-03 00:00:00"
-                  stored_procedures:
-                    - id: PROCEDUREID
-                      name: procedure_name
-                      type: cypher
-                      query: "MATCH(a) return COUNT(a);"
-                      library: /path/to/library
-                      params:
-                        - name: param1
-                          type:
-                            string:
-                              long_text: null
-                      returns:
-                        - name: return1
-                          type:
-                            PrimitiveType: DT_SIGNED_INT64
-                      bound_graph: demo
-                      runnable: true
-                  schema:
-                    vertex_types:
-                      - type_id: 0
-                        type_name: person
-                        properties:
-                          - property_id: 0
-                            property_name: id
-                            property_type:
-                              string:
-                                long_text: null
-                          - property_id: 1
-                            property_name: name
-                            property_type:
-                            string:
-                              long_text: null
-                        primary_keys:
-                          - id
-                      - type_id: 1
-                        type_name: software
-                        properties:
-                          - property_id: 0
-                            property_name: id
-                            property_type:
-                              string:
-                                long_text: null
-                          - property_id: 1
-                            property_name: name
-                            property_type:
-                              string:
-                                long_text: null
-                        primary_keys:
-                          - id
-                    edge_types:
-                      - type_id: 0
-                        type_name: knows
-                        vertex_type_pair_relations:
-                          - source_vertex: person
-                            destination_vertex: person
-                            relation: MANY_TO_MANY
-                            x_csr_params:
-                              edge_storage_strategy: ONLY_IN
-                        properties:
-                          - property_id: 0
-                            property_name: weight
-                            property_type:
-                              primitive_type: DT_DOUBLE
-                      - type_id: 1
-                        type_name: created
-                        vertex_type_pair_relations:
-                          - source_vertex: person
-                            destination_vertex: software
-                            relation: MANY_TO_MANY
-                            x_csr_params:
-                              edge_storage_strategy: ONLY_IN
-                        properties:
-                          - property_id: 0
-                            property_name: weight
-                            property_type:
-                              primitive_type: DT_DOUBLE
                 sdk_endpoints:
                   cypher: neo4j://mock.api.cypher:7676
-                  gremlin: ws://mock.api.gremlin/gremlin
+                  gremin: ws://mock.api.gremlin/gremlin
                   hqps: http://mock.api.hqps:10000
-                  grpc: http://mock.api.grpc:10000
+                start_time: "2024-01-01 00:00:00"
         500:
           $ref: "#/components/responses/500"
 

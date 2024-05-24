@@ -23,9 +23,9 @@ from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
 
-class CreateProcedureRequest(BaseModel):
+class CreateStoredProcRequest(BaseModel):
     """
-    CreateProcedureRequest
+    CreateStoredProcRequest
     """ # noqa: E501
     name: StrictStr
     description: Optional[StrictStr] = None
@@ -58,7 +58,7 @@ class CreateProcedureRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of CreateProcedureRequest from a JSON string"""
+        """Create an instance of CreateStoredProcRequest from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -83,7 +83,7 @@ class CreateProcedureRequest(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of CreateProcedureRequest from a dict"""
+        """Create an instance of CreateStoredProcRequest from a dict"""
         if obj is None:
             return None
 

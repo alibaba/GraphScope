@@ -31,8 +31,13 @@ def connect_coordinator(coordinator_endpoint: str) -> RunningDeploymentInfo:
         api_instance = graphscope.flex.rest.DeploymentApi(api_client)
         deployment_info = api_instance.get_deployment_info()
         # coordinator connected, set the context
+        flex = {
+            "engine": deployment_info.engine,
+            "storage": deployment_info.storage,
+            "frontend": deployment_info.frontend,
+        }
         context = Context(
-            flex=deployment_info.solution,
+            flex=flex,
             coordinator_endpoint=coordinator_endpoint,
         )
         config = load_gs_config()

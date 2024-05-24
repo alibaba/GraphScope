@@ -23,12 +23,12 @@ from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
 
-class CreateProcedureResponse(BaseModel):
+class CreateStoredProcResponse(BaseModel):
     """
-    CreateProcedureResponse
+    CreateStoredProcResponse
     """ # noqa: E501
-    procedure_id: StrictStr
-    __properties: ClassVar[List[str]] = ["procedure_id"]
+    stored_procedure_id: StrictStr
+    __properties: ClassVar[List[str]] = ["stored_procedure_id"]
 
     model_config = {
         "populate_by_name": True,
@@ -48,7 +48,7 @@ class CreateProcedureResponse(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of CreateProcedureResponse from a JSON string"""
+        """Create an instance of CreateStoredProcResponse from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,7 +73,7 @@ class CreateProcedureResponse(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of CreateProcedureResponse from a dict"""
+        """Create an instance of CreateStoredProcResponse from a dict"""
         if obj is None:
             return None
 
@@ -81,7 +81,7 @@ class CreateProcedureResponse(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "procedure_id": obj.get("procedure_id")
+            "stored_procedure_id": obj.get("stored_procedure_id")
         })
         return _obj
 

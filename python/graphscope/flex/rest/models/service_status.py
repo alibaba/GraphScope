@@ -20,7 +20,6 @@ import json
 
 from pydantic import BaseModel, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from graphscope.flex.rest.models.get_graph_response import GetGraphResponse
 from graphscope.flex.rest.models.service_status_sdk_endpoints import ServiceStatusSdkEndpoints
 from typing import Optional, Set
 from typing_extensions import Self
@@ -29,10 +28,11 @@ class ServiceStatus(BaseModel):
     """
     ServiceStatus
     """ # noqa: E501
+    graph_id: StrictStr
     status: StrictStr
-    graph: Optional[GetGraphResponse] = None
     sdk_endpoints: Optional[ServiceStatusSdkEndpoints] = None
-    __properties: ClassVar[List[str]] = ["status", "graph", "sdk_endpoints"]
+    start_time: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["graph_id", "status", "sdk_endpoints", "start_time"]
 
     @field_validator('status')
     def status_validate_enum(cls, value):
@@ -80,9 +80,6 @@ class ServiceStatus(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of graph
-        if self.graph:
-            _dict['graph'] = self.graph.to_dict()
         # override the default output from pydantic by calling `to_dict()` of sdk_endpoints
         if self.sdk_endpoints:
             _dict['sdk_endpoints'] = self.sdk_endpoints.to_dict()
@@ -98,9 +95,10 @@ class ServiceStatus(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "graph_id": obj.get("graph_id"),
             "status": obj.get("status"),
-            "graph": GetGraphResponse.from_dict(obj["graph"]) if obj.get("graph") is not None else None,
-            "sdk_endpoints": ServiceStatusSdkEndpoints.from_dict(obj["sdk_endpoints"]) if obj.get("sdk_endpoints") is not None else None
+            "sdk_endpoints": ServiceStatusSdkEndpoints.from_dict(obj["sdk_endpoints"]) if obj.get("sdk_endpoints") is not None else None,
+            "start_time": obj.get("start_time")
         })
         return _obj
 

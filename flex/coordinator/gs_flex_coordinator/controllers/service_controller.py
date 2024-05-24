@@ -12,16 +12,28 @@ from gs_flex_coordinator.core import client_wrapper
 from gs_flex_coordinator.core import handle_api_exception
 
 
-@handle_api_exception()
-def get_service_status():  # noqa: E501
-    """get_service_status
+def get_service_status_by_id(graph_id):  # noqa: E501
+    """get_service_status_by_id
 
-    Get service status # noqa: E501
+    Get service status by graph ID # noqa: E501
 
+    :param graph_id:
+    :type graph_id: str
 
     :rtype: Union[ServiceStatus, Tuple[ServiceStatus, int], Tuple[ServiceStatus, int, Dict[str, str]]
     """
-    return client_wrapper.get_service_status()
+    return client_wrapper.get_service_status_by_id(graph_id)
+
+
+def list_service_status():  # noqa: E501
+    """list_service_status
+
+    List all service status # noqa: E501
+
+
+    :rtype: Union[List[ServiceStatus], Tuple[List[ServiceStatus], int], Tuple[List[ServiceStatus], int, Dict[str, str]]
+    """
+    return client_wrapper.list_service_status()
 
 
 @handle_api_exception()

@@ -34,6 +34,22 @@ from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
 
 
+def is_interactive_mode(flex):
+    return (
+        flex["engine"] == "Hiactor"
+        and flex["storage"] == "MutableCSR"
+        and flex["frontend"] == "Cypher/Gremlin"
+    )
+
+
+def is_insight_mode(flex):
+    return (
+        flex["engine"] == "Gaia"
+        and flex["storage"] == "MutableCSR"
+        and flex["frontend"] == "Cypher/Gremlin"
+    )
+
+
 def get_command_collection(context: Context):
     # default commands
     commands = click.CommandCollection(sources=[common, dev])
@@ -57,7 +73,11 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
         try:
             # connect to coordinator and reset the timestamp
             response = connect_coordinator(context.coordinator_endpoint)
-            solution = response.solution
+            flex = {
+                "engine": response.engine,
+                "storage": response.storage,
+                "frontend": response.frontend,
+            }
         except Exception as e:
             err(
                 "Failed to connect to coordinator at {0}: {1}".format(
@@ -70,15 +90,15 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
             return commands
         else:
             # check consistency
-            if solution != context.flex:
+            if flex != context.flex:
                 raise RuntimeError(
-                    f"Instance changed: {context.flex} -> {solution}, please close and reconnect to the coordinator"
+                    f"Instance changed: {context.flex} -> {flex}, please close and reconnect to the coordinator"
                 )
             context.reset_timestamp()
             config = load_gs_config()
             config.update_and_write(context)
 
-    if context.flex == "INTERACTIVE":
+    if is_interactive_mode(context.flex):
         if context.context == "global":
             if len(sys.argv) < 2 or sys.argv[1] != "use":
                 info("Using GLOBAL.", fg="green", bold=True)
@@ -91,7 +111,7 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
                 info(f"Using GRAPH {context.context}.", fg="green", bold=True)
                 info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
             commands = click.CommandCollection(sources=[common, interactive_graph])
-    elif context.flex == "GRAPHSCOPE_INSIGHT":
+    elif is_insight_mode(context.flex):
         commands = click.CommandCollection(sources=[common])
         # commands = click.CommandCollection(sources=[common, insight_graph])
 

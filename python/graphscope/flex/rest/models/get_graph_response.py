@@ -21,7 +21,7 @@ import json
 from pydantic import BaseModel, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.get_graph_schema_response import GetGraphSchemaResponse
-from graphscope.flex.rest.models.get_procedure_response import GetProcedureResponse
+from graphscope.flex.rest.models.get_stored_proc_response import GetStoredProcResponse
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -36,7 +36,7 @@ class GetGraphResponse(BaseModel):
     creation_time: StrictStr
     data_update_time: StrictStr
     schema_update_time: StrictStr
-    stored_procedures: Optional[List[GetProcedureResponse]] = None
+    stored_procedures: Optional[List[GetStoredProcResponse]] = None
     var_schema: GetGraphSchemaResponse = Field(alias="schema")
     __properties: ClassVar[List[str]] = ["id", "name", "description", "store_type", "creation_time", "data_update_time", "schema_update_time", "stored_procedures", "schema"]
 
@@ -118,7 +118,7 @@ class GetGraphResponse(BaseModel):
             "creation_time": obj.get("creation_time"),
             "data_update_time": obj.get("data_update_time"),
             "schema_update_time": obj.get("schema_update_time"),
-            "stored_procedures": [GetProcedureResponse.from_dict(_item) for _item in obj["stored_procedures"]] if obj.get("stored_procedures") is not None else None,
+            "stored_procedures": [GetStoredProcResponse.from_dict(_item) for _item in obj["stored_procedures"]] if obj.get("stored_procedures") is not None else None,
             "schema": GetGraphSchemaResponse.from_dict(obj["schema"]) if obj.get("schema") is not None else None
         })
         return _obj

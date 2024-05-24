@@ -3,11 +3,9 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from gs_flex_coordinator.models.base_model import Model
-from gs_flex_coordinator.models.get_graph_response import GetGraphResponse
 from gs_flex_coordinator.models.service_status_sdk_endpoints import ServiceStatusSdkEndpoints
 from gs_flex_coordinator import util
 
-from gs_flex_coordinator.models.get_graph_response import GetGraphResponse  # noqa: E501
 from gs_flex_coordinator.models.service_status_sdk_endpoints import ServiceStatusSdkEndpoints  # noqa: E501
 
 class ServiceStatus(Model):
@@ -16,31 +14,36 @@ class ServiceStatus(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, status=None, graph=None, sdk_endpoints=None):  # noqa: E501
+    def __init__(self, graph_id=None, status=None, sdk_endpoints=None, start_time=None):  # noqa: E501
         """ServiceStatus - a model defined in OpenAPI
 
+        :param graph_id: The graph_id of this ServiceStatus.  # noqa: E501
+        :type graph_id: str
         :param status: The status of this ServiceStatus.  # noqa: E501
         :type status: str
-        :param graph: The graph of this ServiceStatus.  # noqa: E501
-        :type graph: GetGraphResponse
         :param sdk_endpoints: The sdk_endpoints of this ServiceStatus.  # noqa: E501
         :type sdk_endpoints: ServiceStatusSdkEndpoints
+        :param start_time: The start_time of this ServiceStatus.  # noqa: E501
+        :type start_time: str
         """
         self.openapi_types = {
+            'graph_id': str,
             'status': str,
-            'graph': GetGraphResponse,
-            'sdk_endpoints': ServiceStatusSdkEndpoints
+            'sdk_endpoints': ServiceStatusSdkEndpoints,
+            'start_time': str
         }
 
         self.attribute_map = {
+            'graph_id': 'graph_id',
             'status': 'status',
-            'graph': 'graph',
-            'sdk_endpoints': 'sdk_endpoints'
+            'sdk_endpoints': 'sdk_endpoints',
+            'start_time': 'start_time'
         }
 
+        self._graph_id = graph_id
         self._status = status
-        self._graph = graph
         self._sdk_endpoints = sdk_endpoints
+        self._start_time = start_time
 
     @classmethod
     def from_dict(cls, dikt) -> 'ServiceStatus':
@@ -52,6 +55,29 @@ class ServiceStatus(Model):
         :rtype: ServiceStatus
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def graph_id(self) -> str:
+        """Gets the graph_id of this ServiceStatus.
+
+
+        :return: The graph_id of this ServiceStatus.
+        :rtype: str
+        """
+        return self._graph_id
+
+    @graph_id.setter
+    def graph_id(self, graph_id: str):
+        """Sets the graph_id of this ServiceStatus.
+
+
+        :param graph_id: The graph_id of this ServiceStatus.
+        :type graph_id: str
+        """
+        if graph_id is None:
+            raise ValueError("Invalid value for `graph_id`, must not be `None`")  # noqa: E501
+
+        self._graph_id = graph_id
 
     @property
     def status(self) -> str:
@@ -81,27 +107,6 @@ class ServiceStatus(Model):
         self._status = status
 
     @property
-    def graph(self) -> GetGraphResponse:
-        """Gets the graph of this ServiceStatus.
-
-
-        :return: The graph of this ServiceStatus.
-        :rtype: GetGraphResponse
-        """
-        return self._graph
-
-    @graph.setter
-    def graph(self, graph: GetGraphResponse):
-        """Sets the graph of this ServiceStatus.
-
-
-        :param graph: The graph of this ServiceStatus.
-        :type graph: GetGraphResponse
-        """
-
-        self._graph = graph
-
-    @property
     def sdk_endpoints(self) -> ServiceStatusSdkEndpoints:
         """Gets the sdk_endpoints of this ServiceStatus.
 
@@ -121,3 +126,24 @@ class ServiceStatus(Model):
         """
 
         self._sdk_endpoints = sdk_endpoints
+
+    @property
+    def start_time(self) -> str:
+        """Gets the start_time of this ServiceStatus.
+
+
+        :return: The start_time of this ServiceStatus.
+        :rtype: str
+        """
+        return self._start_time
+
+    @start_time.setter
+    def start_time(self, start_time: str):
+        """Sets the start_time of this ServiceStatus.
+
+
+        :param start_time: The start_time of this ServiceStatus.
+        :type start_time: str
+        """
+
+        self._start_time = start_time

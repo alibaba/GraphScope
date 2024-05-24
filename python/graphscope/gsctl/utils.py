@@ -250,18 +250,20 @@ class TreeDisplay(object):
                                 parent=edge_identifier,
                             )
 
-    def create_procedure_node(self, graph, procedures):
-        procedure_identifier = f"{graph.id}_procedure"
+    def create_stored_procedure_node(self, graph, stored_procedures):
+        stored_procedure_identifier = f"{graph.id}_stored_procedure"
         self.tree.create_node(
-            tag="stored procedure", identifier=procedure_identifier, parent=graph.id
+            tag="stored procedure",
+            identifier=stored_procedure_identifier,
+            parent=graph.id,
         )
-        for p in procedures:
+        for p in stored_procedures:
             self.tree.create_node(
-                tag="Procedure(identifier: {0}, type: {1}, runnable: {2}, query: {3}, description: {4})".format(
+                tag="StoredProc(identifier: {0}, type: {1}, runnable: {2}, query: {3}, description: {4})".format(
                     p.id, p.type, p.runnable, p.query, p.description
                 ),
-                identifier=f"{procedure_identifier}_{p.id}",
-                parent=procedure_identifier,
+                identifier=f"{stored_procedure_identifier}_{p.id}",
+                parent=stored_procedure_identifier,
             )
 
     def create_job_node(self, graph, jobs):
@@ -477,8 +479,10 @@ class TreeDisplay(object):
             click.secho(schema_tree.show(stdout=False, sorting=False))
             datasource_tree = self.tree.subtree(f"{graph_identifier}_datasource")
             click.secho(datasource_tree.show(stdout=False, sorting=False))
-            procedure_tree = self.tree.subtree(f"{graph_identifier}_procedure")
-            click.secho(procedure_tree.show(stdout=False, sorting=False))
+            stored_procedure_tree = self.tree.subtree(
+                f"{graph_identifier}_stored_procedure"
+            )
+            click.secho(stored_procedure_tree.show(stdout=False, sorting=False))
             job_tree = self.tree.subtree(f"{graph_identifier}_job")
             click.secho(job_tree.show(stdout=False, sorting=False))
         else:

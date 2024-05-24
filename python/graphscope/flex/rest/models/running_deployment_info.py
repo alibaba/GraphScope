@@ -30,9 +30,11 @@ class RunningDeploymentInfo(BaseModel):
     instance_name: StrictStr
     cluster_type: StrictStr
     version: StrictStr
-    solution: StrictStr
     creation_time: StrictStr
-    __properties: ClassVar[List[str]] = ["instance_name", "cluster_type", "version", "solution", "creation_time"]
+    frontend: StrictStr
+    engine: StrictStr
+    storage: StrictStr
+    __properties: ClassVar[List[str]] = ["instance_name", "cluster_type", "version", "creation_time", "frontend", "engine", "storage"]
 
     @field_validator('cluster_type')
     def cluster_type_validate_enum(cls, value):
@@ -41,11 +43,25 @@ class RunningDeploymentInfo(BaseModel):
             raise ValueError("must be one of enum values ('HOSTS', 'KUBERNETES')")
         return value
 
-    @field_validator('solution')
-    def solution_validate_enum(cls, value):
+    @field_validator('frontend')
+    def frontend_validate_enum(cls, value):
         """Validates the enum"""
-        if value not in set(['INTERACTIVE', 'GRAPHSCOPE_INSIGHT']):
-            raise ValueError("must be one of enum values ('INTERACTIVE', 'GRAPHSCOPE_INSIGHT')")
+        if value not in set(['Cypher/Gremlin', 'AnalyticalApps']):
+            raise ValueError("must be one of enum values ('Cypher/Gremlin', 'AnalyticalApps')")
+        return value
+
+    @field_validator('engine')
+    def engine_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['Hiactor', 'Gaia']):
+            raise ValueError("must be one of enum values ('Hiactor', 'Gaia')")
+        return value
+
+    @field_validator('storage')
+    def storage_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['MutableCSR']):
+            raise ValueError("must be one of enum values ('MutableCSR')")
         return value
 
     model_config = {
@@ -102,8 +118,10 @@ class RunningDeploymentInfo(BaseModel):
             "instance_name": obj.get("instance_name"),
             "cluster_type": obj.get("cluster_type"),
             "version": obj.get("version"),
-            "solution": obj.get("solution"),
-            "creation_time": obj.get("creation_time")
+            "creation_time": obj.get("creation_time"),
+            "frontend": obj.get("frontend"),
+            "engine": obj.get("engine"),
+            "storage": obj.get("storage")
         })
         return _obj
 

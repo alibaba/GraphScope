@@ -19,65 +19,69 @@
 from typing import List
 
 import graphscope.flex.rest
-from graphscope.flex.rest import CreateProcedureRequest
-from graphscope.flex.rest import GetProcedureResponse
-from graphscope.flex.rest import UpdateProcedureRequest
+from graphscope.flex.rest import CreateStoredProcRequest
+from graphscope.flex.rest import GetStoredProcResponse
+from graphscope.flex.rest import UpdateStoredProcRequest
 from graphscope.gsctl.config import get_current_context
 
 
-def create_procedure(graph_identifier: str, procedure: dict) -> str:
+def create_stored_procedure(graph_identifier: str, stored_procedure: dict) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
-        response = api_instance.create_procedure(
-            graph_identifier, CreateProcedureRequest.from_dict(procedure)
+        api_instance = graphscope.flex.rest.StoredProcedureApi(api_client)
+        response = api_instance.create_stored_procedure(
+            graph_identifier, CreateStoredProcRequest.from_dict(stored_procedure)
         )
-        return response.procedure_id
+        return response.stored_procedure_id
 
 
-def list_procedures(graph_identifier: str) -> List[GetProcedureResponse]:
+def list_stored_procedures(graph_identifier: str) -> List[GetStoredProcResponse]:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
-        return api_instance.list_procedures(graph_identifier)
+        api_instance = graphscope.flex.rest.StoredProcedureApi(api_client)
+        return api_instance.list_stored_procedures(graph_identifier)
 
 
-def delete_procedure_by_id(graph_identifier: str, procedure_identifier: str) -> str:
-    context = get_current_context()
-    with graphscope.flex.rest.ApiClient(
-        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
-    ) as api_client:
-        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
-        return api_instance.delete_procedure_by_id(
-            graph_identifier, procedure_identifier
-        )
-
-
-def get_procedure_by_id(
-    graph_identifier: str, procedure_identifier: str
-) -> GetProcedureResponse:
-    context = get_current_context()
-    with graphscope.flex.rest.ApiClient(
-        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
-    ) as api_client:
-        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
-        return api_instance.get_procedure_by_id(graph_identifier, procedure_identifier)
-
-
-def update_procedure_by_id(
-    graph_identifier: str, procedure_identifier: str, procedure: dict
+def delete_stored_procedure_by_id(
+    graph_identifier: str, stored_procedure_identifier: str
 ) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
-        return api_instance.update_procedure_by_id(
+        api_instance = graphscope.flex.rest.StoredProcedureApi(api_client)
+        return api_instance.delete_stored_procedure_by_id(
+            graph_identifier, stored_procedure_identifier
+        )
+
+
+def get_stored_procedure_by_id(
+    graph_identifier: str, stored_procedure_identifier: str
+) -> GetStoredProcResponse:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.StoredProcedureApi(api_client)
+        return api_instance.get_stored_procedure_by_id(
+            graph_identifier, stored_procedure_identifier
+        )
+
+
+def update_stored_procedure_by_id(
+    graph_identifier: str, stored_procedure_identifier: str, stored_procedure: dict
+) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.StoredProcedureApi(api_client)
+        return api_instance.update_stored_procedure_by_id(
             graph_identifier,
-            procedure_identifier,
-            UpdateProcedureRequest.from_dict(procedure),
+            stored_procedure_identifier,
+            UpdateStoredProcRequest.from_dict(stored_procedure),
         )

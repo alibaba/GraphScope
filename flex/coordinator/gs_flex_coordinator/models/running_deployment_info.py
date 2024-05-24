@@ -12,7 +12,7 @@ class RunningDeploymentInfo(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, instance_name=None, cluster_type=None, version=None, solution=None, creation_time=None):  # noqa: E501
+    def __init__(self, instance_name=None, cluster_type=None, version=None, creation_time=None, frontend=None, engine=None, storage=None):  # noqa: E501
         """RunningDeploymentInfo - a model defined in OpenAPI
 
         :param instance_name: The instance_name of this RunningDeploymentInfo.  # noqa: E501
@@ -21,32 +21,42 @@ class RunningDeploymentInfo(Model):
         :type cluster_type: str
         :param version: The version of this RunningDeploymentInfo.  # noqa: E501
         :type version: str
-        :param solution: The solution of this RunningDeploymentInfo.  # noqa: E501
-        :type solution: str
         :param creation_time: The creation_time of this RunningDeploymentInfo.  # noqa: E501
         :type creation_time: str
+        :param frontend: The frontend of this RunningDeploymentInfo.  # noqa: E501
+        :type frontend: str
+        :param engine: The engine of this RunningDeploymentInfo.  # noqa: E501
+        :type engine: str
+        :param storage: The storage of this RunningDeploymentInfo.  # noqa: E501
+        :type storage: str
         """
         self.openapi_types = {
             'instance_name': str,
             'cluster_type': str,
             'version': str,
-            'solution': str,
-            'creation_time': str
+            'creation_time': str,
+            'frontend': str,
+            'engine': str,
+            'storage': str
         }
 
         self.attribute_map = {
             'instance_name': 'instance_name',
             'cluster_type': 'cluster_type',
             'version': 'version',
-            'solution': 'solution',
-            'creation_time': 'creation_time'
+            'creation_time': 'creation_time',
+            'frontend': 'frontend',
+            'engine': 'engine',
+            'storage': 'storage'
         }
 
         self._instance_name = instance_name
         self._cluster_type = cluster_type
         self._version = version
-        self._solution = solution
         self._creation_time = creation_time
+        self._frontend = frontend
+        self._engine = engine
+        self._storage = storage
 
     @classmethod
     def from_dict(cls, dikt) -> 'RunningDeploymentInfo':
@@ -133,33 +143,6 @@ class RunningDeploymentInfo(Model):
         self._version = version
 
     @property
-    def solution(self) -> str:
-        """Gets the solution of this RunningDeploymentInfo.
-
-
-        :return: The solution of this RunningDeploymentInfo.
-        :rtype: str
-        """
-        return self._solution
-
-    @solution.setter
-    def solution(self, solution: str):
-        """Sets the solution of this RunningDeploymentInfo.
-
-
-        :param solution: The solution of this RunningDeploymentInfo.
-        :type solution: str
-        """
-        allowed_values = ["INTERACTIVE", "GRAPHSCOPE_INSIGHT"]  # noqa: E501
-        if solution not in allowed_values:
-            raise ValueError(
-                "Invalid value for `solution` ({0}), must be one of {1}"
-                .format(solution, allowed_values)
-            )
-
-        self._solution = solution
-
-    @property
     def creation_time(self) -> str:
         """Gets the creation_time of this RunningDeploymentInfo.
 
@@ -181,3 +164,84 @@ class RunningDeploymentInfo(Model):
             raise ValueError("Invalid value for `creation_time`, must not be `None`")  # noqa: E501
 
         self._creation_time = creation_time
+
+    @property
+    def frontend(self) -> str:
+        """Gets the frontend of this RunningDeploymentInfo.
+
+
+        :return: The frontend of this RunningDeploymentInfo.
+        :rtype: str
+        """
+        return self._frontend
+
+    @frontend.setter
+    def frontend(self, frontend: str):
+        """Sets the frontend of this RunningDeploymentInfo.
+
+
+        :param frontend: The frontend of this RunningDeploymentInfo.
+        :type frontend: str
+        """
+        allowed_values = ["Cypher/Gremlin", "AnalyticalApps"]  # noqa: E501
+        if frontend not in allowed_values:
+            raise ValueError(
+                "Invalid value for `frontend` ({0}), must be one of {1}"
+                .format(frontend, allowed_values)
+            )
+
+        self._frontend = frontend
+
+    @property
+    def engine(self) -> str:
+        """Gets the engine of this RunningDeploymentInfo.
+
+
+        :return: The engine of this RunningDeploymentInfo.
+        :rtype: str
+        """
+        return self._engine
+
+    @engine.setter
+    def engine(self, engine: str):
+        """Sets the engine of this RunningDeploymentInfo.
+
+
+        :param engine: The engine of this RunningDeploymentInfo.
+        :type engine: str
+        """
+        allowed_values = ["Hiactor", "Gaia"]  # noqa: E501
+        if engine not in allowed_values:
+            raise ValueError(
+                "Invalid value for `engine` ({0}), must be one of {1}"
+                .format(engine, allowed_values)
+            )
+
+        self._engine = engine
+
+    @property
+    def storage(self) -> str:
+        """Gets the storage of this RunningDeploymentInfo.
+
+
+        :return: The storage of this RunningDeploymentInfo.
+        :rtype: str
+        """
+        return self._storage
+
+    @storage.setter
+    def storage(self, storage: str):
+        """Sets the storage of this RunningDeploymentInfo.
+
+
+        :param storage: The storage of this RunningDeploymentInfo.
+        :type storage: str
+        """
+        allowed_values = ["MutableCSR"]  # noqa: E501
+        if storage not in allowed_values:
+            raise ValueError(
+                "Invalid value for `storage` ({0}), must be one of {1}"
+                .format(storage, allowed_values)
+            )
+
+        self._storage = storage

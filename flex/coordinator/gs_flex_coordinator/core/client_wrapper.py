@@ -18,14 +18,20 @@
 
 import itertools
 import os
+import socket
 import threading
 from typing import List
+
+import psutil
 
 from gs_flex_coordinator.core.config import CLUSTER_TYPE
 from gs_flex_coordinator.core.config import CREATION_TIME
 from gs_flex_coordinator.core.config import DATASET_WORKSPACE
+from gs_flex_coordinator.core.config import ENGINE_TYPE
+from gs_flex_coordinator.core.config import FRONTEND_TYPE
 from gs_flex_coordinator.core.config import INSTANCE_NAME
 from gs_flex_coordinator.core.config import SOLUTION
+from gs_flex_coordinator.core.config import STORAGE_TYPE
 from gs_flex_coordinator.core.datasource import DataSourceManager
 from gs_flex_coordinator.core.insight import init_groot_client
 from gs_flex_coordinator.core.interactive import init_hqps_client
@@ -34,19 +40,20 @@ from gs_flex_coordinator.models import CreateDataloadingJobResponse
 from gs_flex_coordinator.models import CreateEdgeType
 from gs_flex_coordinator.models import CreateGraphRequest
 from gs_flex_coordinator.models import CreateGraphResponse
-from gs_flex_coordinator.models import CreateProcedureRequest
-from gs_flex_coordinator.models import CreateProcedureResponse
+from gs_flex_coordinator.models import CreateStoredProcRequest
+from gs_flex_coordinator.models import CreateStoredProcResponse
 from gs_flex_coordinator.models import CreateVertexType
 from gs_flex_coordinator.models import DataloadingJobConfig
 from gs_flex_coordinator.models import GetGraphResponse
 from gs_flex_coordinator.models import GetGraphSchemaResponse
-from gs_flex_coordinator.models import GetProcedureResponse
+from gs_flex_coordinator.models import GetStoredProcResponse
 from gs_flex_coordinator.models import JobStatus
 from gs_flex_coordinator.models import RunningDeploymentInfo
+from gs_flex_coordinator.models import RunningDeploymentStatus
 from gs_flex_coordinator.models import SchemaMapping
 from gs_flex_coordinator.models import ServiceStatus
 from gs_flex_coordinator.models import StartServiceRequest
-from gs_flex_coordinator.models import UpdateProcedureRequest
+from gs_flex_coordinator.models import UpdateStoredProcRequest
 from gs_flex_coordinator.models import UploadFileResponse
 from gs_flex_coordinator.version import __version__
 
@@ -166,38 +173,40 @@ class ClientWrapper(object):
                     p["property_type"]["string"]["long_text"] = ""
         return GetGraphResponse.from_dict(g)
 
-    def create_procedure(
-        self, graph_id: str, procedure: CreateProcedureRequest
-    ) -> CreateProcedureResponse:
-        procedure_dict = procedure.to_dict()
-        response = self._client.create_procedure(graph_id, procedure_dict)
-        return CreateProcedureResponse.from_dict(response)
+    def create_stored_procedure(
+        self, graph_id: str, stored_procedure: CreateStoredProcRequest
+    ) -> CreateStoredProcResponse:
+        stored_procedure_dict = stored_procedure.to_dict()
+        response = self._client.create_stored_procedure(graph_id, stored_procedure_dict)
+        return CreateStoredProcResponse.from_dict(response)
 
-    def list_procedures(self, graph_id: str) -> List[GetProcedureResponse]:
-        procedures = self._client.list_procedures(graph_id)
+    def list_stored_procedures(self, graph_id: str) -> List[GetStoredProcResponse]:
+        stored_procedures = self._client.list_stored_procedures(graph_id)
         # transfer
-        rlt = [GetProcedureResponse.from_dict(p) for p in procedures]
+        rlt = [GetStoredProcResponse.from_dict(p) for p in stored_procedures]
         return rlt
 
-    def update_procedure_by_id(
+    def update_stored_procedure_by_id(
         self,
         graph_id: str,
-        procedure_id: str,
-        procedure: UpdateProcedureRequest,
+        stored_procedure_id: str,
+        stored_procedure: UpdateStoredProcRequest,
     ) -> str:
-        procedure_dict = procedure.to_dict()
-        return self._client.update_procedure_by_id(
-            graph_id, procedure_id, procedure_dict
+        stored_procedure_dict = stored_procedure.to_dict()
+        return self._client.update_stored_procedure_by_id(
+            graph_id, stored_procedure_id, stored_procedure_dict
         )
 
-    def delete_procedure_by_id(self, graph_id: str, procedure_id: str) -> str:
-        return self._client.delete_procedure_by_id(graph_id, procedure_id)
+    def delete_stored_procedure_by_id(
+        self, graph_id: str, stored_procedure_id: str
+    ) -> str:
+        return self._client.delete_stored_procedure_by_id(graph_id, stored_procedure_id)
 
-    def get_procedure_by_id(
-        self, graph_id: str, procedure_id: str
-    ) -> GetProcedureResponse:
-        return GetProcedureResponse.from_dict(
-            self._client.get_procedure_by_id(graph_id, procedure_id)
+    def get_stored_procedure_by_id(
+        self, graph_id: str, stored_procedure_id: str
+    ) -> GetStoredProcResponse:
+        return GetStoredProcResponse.from_dict(
+            self._client.get_stored_procedure_by_id(graph_id, stored_procedure_id)
         )
 
     def get_deployment_info(self) -> RunningDeploymentInfo:
@@ -205,24 +214,39 @@ class ClientWrapper(object):
             "instance_name": INSTANCE_NAME,
             "cluster_type": CLUSTER_TYPE,
             "version": __version__,
-            "solution": SOLUTION,
+            "frontend": FRONTEND_TYPE,
+            "engine": ENGINE_TYPE,
+            "storage": STORAGE_TYPE,
             "creation_time": encode_datetime(CREATION_TIME),
         }
         return RunningDeploymentInfo.from_dict(info)
 
-    def get_service_status(self) -> ServiceStatus:
-        status = self._client.get_service_status()
-        if "graph" in status:
-            # fix ValueError: Invalid value for `long_text`, must not be `None`
-            schema = status["graph"]["schema"]
-            for item in itertools.chain(schema["vertex_types"], schema["edge_types"]):
-                for p in item["properties"]:
-                    if (
-                        "string" in p["property_type"]
-                        and "long_text" in p["property_type"]["string"]
-                    ):
-                        p["property_type"]["string"]["long_text"] = ""
-        return ServiceStatus.from_dict(status)
+    def get_deployment_status(self) -> RunningDeploymentStatus:
+        status = {"cluster_type": CLUSTER_TYPE, "nodes": []}
+        if CLUSTER_TYPE == "HOSTS":
+            disk_info = psutil.disk_usage("/")
+            status["nodes"].append(
+                {
+                    "name": socket.gethostname(),
+                    "cpu_usage": psutil.cpu_percent(),
+                    "memory_usage": psutil.virtual_memory().percent,
+                    "disk_usage": float(
+                        f"{disk_info.used / disk_info.total * 100:.2f}"
+                    ),
+                }
+            )
+        return RunningDeploymentStatus.from_dict(status)
+
+    def get_service_status_by_id(self, graph_id: str) -> ServiceStatus:
+        status = self._client.list_service_status()
+        for s in status:
+            if graph_id == s["graph_id"]:
+                return ServiceStatus.from_dict(s)
+        raise RuntimeError(f"Failed to get service: graph {graph_id} not exists.")
+
+    def list_service_status(self) -> List[ServiceStatus]:
+        status = self._client.list_service_status()
+        return [ServiceStatus.from_dict(s) for s in status]
 
     def stop_service(self) -> str:
         return self._client.stop_service()

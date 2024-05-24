@@ -25,7 +25,7 @@ tags:
 - name: Graph
 - name: DataSource
 - name: Job
-- name: Procedure
+- name: Stored Procedure
 - name: Service
 - name: Alert
 - name: Utils
@@ -405,7 +405,7 @@ paths:
       tags:
       - Alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
-  /api/v1/deployment/info:
+  /api/v1/deployment:
     get:
       description: Deployment information
       operationId: get_deployment_info
@@ -417,11 +417,40 @@ paths:
                 cluster_type: HOSTS
                 creation_time: 2024-01-01 00:00:00
                 instance_name: demo
-                solution: INTERACTIVE
+                frontend: Cypher/Gremlin
+                engine: Hiactor
+                storage: MutableCSR
                 version: 0.27.0
               schema:
                 $ref: '#/components/schemas/RunningDeploymentInfo'
           description: Successfully returned the deployment information
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Deployment
+      x-openapi-router-controller: gs_flex_coordinator.controllers.deployment_controller
+  /api/v1/deployment/status:
+    get:
+      description: Deployment status
+      operationId: get_deployment_status
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                cluster_type: HOSTS
+                nodes:
+                - name: HOSTNAME-1
+                  cpu_usage: 83.0
+                  memory_usage: 37.5
+                  disk_usage: 97
+              schema:
+                $ref: '#/components/schemas/RunningDeploymentStatus'
+          description: Successfully returned the deployment status
         "500":
           content:
             application/json:
@@ -471,8 +500,8 @@ paths:
                 schema_update_time: 2024-01-02 00:00:00
                 data_update_time: 2024-01-03 00:00:00
                 stored_procedures:
-                - id: PROCEDUREID
-                  name: procedure_name
+                - id: STORED-PROCEDURE-ID
+                  name: stored_procedure_name
                   type: cypher
                   query: MATCH(a) return COUNT(a);
                   library: /path/to/library
@@ -641,8 +670,8 @@ paths:
                 schema_update_time: 2024-01-02 00:00:00
                 data_update_time: 2024-01-03 00:00:00
                 stored_procedures:
-                - id: PROCEDUREID
-                  name: procedure_name
+                - id: STORED-PROCEDURE-ID
+                  name: stored_procedure_name
                   type: cypher
                   query: MATCH(a) return COUNT(a);
                   library: /path/to/library
@@ -1016,239 +1045,6 @@ paths:
       tags:
       - DataSource
       x-openapi-router-controller: gs_flex_coordinator.controllers.data_source_controller
-  /api/v1/graph/{graph_id}/procedure:
-    get:
-      description: List all stored procedures on a certain graph
-      operationId: list_procedures
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-              - id: PROCEDUREID-1
-                name: procedure_name_1
-                type: cypher
-                query: MATCH(a) return COUNT(a);
-                library: /path/to/library
-                params:
-                - name: param1
-                  type:
-                    string:
-                      long_text: null
-                returns:
-                - name: return1
-                  type:
-                    PrimitiveType: DT_SIGNED_INT64
-                bound_graph: demo
-                runnable: true
-              - id: PROCEDUREID-2
-                name: procedure_name_2
-                type: cypher
-                query: MATCH(a) return COUNT(a);
-                library: /path/to/library
-                params:
-                - name: param1
-                  type:
-                    string:
-                      long_text: null
-                returns:
-                - name: return1
-                  type:
-                    PrimitiveType: DT_SIGNED_INT64
-                bound_graph: demo
-                runnable: false
-              schema:
-                items:
-                  $ref: '#/components/schemas/GetProcedureResponse'
-                type: array
-          description: Successful operation
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Bad request
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    post:
-      description: Create a new stored procedure on a certain graph
-      operationId: create_procedure
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProcedureRequest'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateProcedureResponse'
-          description: Successfully created a procedure
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Bad request
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-  /api/v1/graph/{graph_id}/procedure/{procedure_id}:
-    delete:
-      description: Delete a stored procedure by ID
-      operationId: delete_procedure_by_id
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-          description: Successfully deleted the stored procedure
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    get:
-      description: Get a stored procedure by ID
-      operationId: get_procedure_by_id
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                id: PROCEDUREID
-                name: procedure_name
-                type: cypher
-                query: MATCH(a) return COUNT(a);
-                library: /path/to/library
-                params:
-                - name: param1
-                  type:
-                    string:
-                      long_text: null
-                returns:
-                - name: return1
-                  type:
-                    PrimitiveType: DT_SIGNED_INT64
-                bound_graph: demo
-                runnable: true
-              schema:
-                $ref: '#/components/schemas/GetProcedureResponse'
-          description: Successfully returned the procedure
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
-    put:
-      description: Update a stored procedure by ID
-      operationId: update_procedure_by_id
-      parameters:
-      - explode: false
-        in: path
-        name: graph_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: procedure_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProcedureRequest'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-          description: Successfully updated the stored procedure
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Procedure
-      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
   /api/v1/graph/{graph_id}/schema:
     get:
       description: Get graph schema by ID
@@ -1538,6 +1334,275 @@ paths:
       tags:
       - Graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
+  /api/v1/graph/{graph_id}/service:
+    get:
+      description: Get service status by graph ID
+      operationId: get_service_status_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                graph_id: GRAPHID
+                status: Running
+                sdk_endpoints:
+                  cypher: neo4j://mock.api.cypher:7676
+                  gremin: ws://mock.api.gremlin/gremlin
+                  hqps: http://mock.api.hqps:10000
+                start_time: 2024-01-01 00:00:00
+              schema:
+                $ref: '#/components/schemas/ServiceStatus'
+          description: Successfully returned the service status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Service
+      x-openapi-router-controller: gs_flex_coordinator.controllers.service_controller
+  /api/v1/graph/{graph_id}/storedproc:
+    get:
+      description: List all stored procedures on a certain graph
+      operationId: list_stored_procedures
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: STORED-PROCEDUREID-1
+                name: stored_procedure_name_1
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: true
+              - id: STORED-PROCEDUREID-2
+                name: stored_procedure_name_2
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: false
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetStoredProcResponse'
+                type: array
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.stored_procedure_controller
+    post:
+      description: Create a new stored procedure on a certain graph
+      operationId: create_stored_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStoredProcRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateStoredProcResponse'
+          description: Successfully created a stored procedure
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.stored_procedure_controller
+  /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}:
+    delete:
+      description: Delete a stored procedure by ID
+      operationId: delete_stored_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: stored_procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.stored_procedure_controller
+    get:
+      description: Get a stored procedure by ID
+      operationId: get_stored_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: stored_procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: STORED-PROCEDURE-ID
+                name: stored_procedure_name
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: true
+              schema:
+                $ref: '#/components/schemas/GetStoredProcResponse'
+          description: Successfully returned the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.stored_procedure_controller
+    put:
+      description: Update a stored procedure by ID
+      operationId: update_stored_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: stored_procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStoredProcRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully updated the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.stored_procedure_controller
   /api/v1/job:
     get:
       description: List all jobs
@@ -1650,6 +1715,36 @@ paths:
       tags:
       - Job
       x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+  /api/v1/service:
+    get:
+      description: List all service status
+      operationId: list_service_status
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - graph_id: GRAPHID
+                status: Running
+                sdk_endpoints:
+                  cypher: neo4j://mock.api.cypher:7676
+                  gremin: ws://mock.api.gremlin/gremlin
+                  hqps: http://mock.api.hqps:10000
+                start_time: 2024-01-01 00:00:00
+              schema:
+                items:
+                  $ref: '#/components/schemas/ServiceStatus'
+                type: array
+          description: Successfully returned all service status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Service
+      x-openapi-router-controller: gs_flex_coordinator.controllers.service_controller
   /api/v1/service/restart:
     post:
       description: Restart current service
@@ -1692,115 +1787,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: Bad request
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Server error
-      tags:
-      - Service
-      x-openapi-router-controller: gs_flex_coordinator.controllers.service_controller
-  /api/v1/service/status:
-    get:
-      description: Get service status
-      operationId: get_service_status
-      responses:
-        "200":
-          content:
-            application/json:
-              example:
-                status: Running
-                graph:
-                  id: GRAPHID
-                  name: demo
-                  creation_time: 2024-01-01 00:00:00
-                  schema_update_time: 2024-01-02 00:00:00
-                  data_update_time: 2024-01-03 00:00:00
-                  stored_procedures:
-                  - id: PROCEDUREID
-                    name: procedure_name
-                    type: cypher
-                    query: MATCH(a) return COUNT(a);
-                    library: /path/to/library
-                    params:
-                    - name: param1
-                      type:
-                        string:
-                          long_text: null
-                    returns:
-                    - name: return1
-                      type:
-                        PrimitiveType: DT_SIGNED_INT64
-                    bound_graph: demo
-                    runnable: true
-                  schema:
-                    vertex_types:
-                    - type_id: 0
-                      type_name: person
-                      properties:
-                      - property_id: 0
-                        property_name: id
-                        property_type:
-                          string:
-                            long_text: null
-                      - property_id: 1
-                        property_name: name
-                        property_type: null
-                        string:
-                          long_text: null
-                      primary_keys:
-                      - id
-                    - type_id: 1
-                      type_name: software
-                      properties:
-                      - property_id: 0
-                        property_name: id
-                        property_type:
-                          string:
-                            long_text: null
-                      - property_id: 1
-                        property_name: name
-                        property_type:
-                          string:
-                            long_text: null
-                      primary_keys:
-                      - id
-                    edge_types:
-                    - type_id: 0
-                      type_name: knows
-                      vertex_type_pair_relations:
-                      - source_vertex: person
-                        destination_vertex: person
-                        relation: MANY_TO_MANY
-                        x_csr_params:
-                          edge_storage_strategy: ONLY_IN
-                      properties:
-                      - property_id: 0
-                        property_name: weight
-                        property_type:
-                          primitive_type: DT_DOUBLE
-                    - type_id: 1
-                      type_name: created
-                      vertex_type_pair_relations:
-                      - source_vertex: person
-                        destination_vertex: software
-                        relation: MANY_TO_MANY
-                        x_csr_params:
-                          edge_storage_strategy: ONLY_IN
-                      properties:
-                      - property_id: 0
-                        property_name: weight
-                        property_type:
-                          primitive_type: DT_DOUBLE
-                sdk_endpoints:
-                  cypher: neo4j://mock.api.cypher:7676
-                  gremlin: ws://mock.api.gremlin/gremlin
-                  hqps: http://mock.api.hqps:10000
-                  grpc: http://mock.api.grpc:10000
-              schema:
-                $ref: '#/components/schemas/ServiceStatus'
-          description: Successfully returned current service status
         "500":
           content:
             application/json:
@@ -1877,9 +1863,11 @@ components:
       example:
         creation_time: creation_time
         instance_name: instance_name
-        solution: INTERACTIVE
+        engine: Hiactor
         cluster_type: HOSTS
+        storage: MutableCSR
         version: version
+        frontend: Cypher/Gremlin
       properties:
         instance_name:
           title: instance_name
@@ -1893,22 +1881,91 @@ components:
         version:
           title: version
           type: string
-        solution:
-          enum:
-          - INTERACTIVE
-          - GRAPHSCOPE_INSIGHT
-          title: solution
-          type: string
         creation_time:
           title: creation_time
+          type: string
+        frontend:
+          enum:
+          - Cypher/Gremlin
+          - AnalyticalApps
+          title: frontend
+          type: string
+        engine:
+          enum:
+          - Hiactor
+          - Gaia
+          title: engine
+          type: string
+        storage:
+          enum:
+          - MutableCSR
+          title: storage
           type: string
       required:
       - cluster_type
       - creation_time
+      - engine
+      - frontend
       - instance_name
-      - solution
+      - storage
       - version
       title: RunningDeploymentInfo
+    NodeStatus:
+      example:
+        name: name
+        memory_usage: 6.027456183070403
+        disk_usage: 1.4658129805029452
+        cpu_usage: 0.8008281904610115
+      properties:
+        name:
+          title: name
+          type: string
+        cpu_usage:
+          format: double
+          title: cpu_usage
+          type: number
+        memory_usage:
+          format: double
+          title: memory_usage
+          type: number
+        disk_usage:
+          format: double
+          title: disk_usage
+          type: number
+      required:
+      - cpu_usage
+      - disk_usage
+      - memory_usage
+      - name
+      title: NodeStatus
+    RunningDeploymentStatus:
+      example:
+        nodes:
+        - name: name
+          memory_usage: 6.027456183070403
+          disk_usage: 1.4658129805029452
+          cpu_usage: 0.8008281904610115
+        - name: name
+          memory_usage: 6.027456183070403
+          disk_usage: 1.4658129805029452
+          cpu_usage: 0.8008281904610115
+        cluster_type: HOSTS
+      properties:
+        cluster_type:
+          enum:
+          - HOSTS
+          - KUBERNETES
+          title: cluster_type
+          type: string
+        nodes:
+          items:
+            $ref: '#/components/schemas/RunningDeploymentStatus_nodes_inner'
+          title: nodes
+          type: array
+      required:
+      - cluster_type
+      - nodes
+      title: RunningDeploymentStatus
     StartServiceRequest:
       example:
         graph_id: graph_id
@@ -1920,152 +1977,32 @@ components:
       x-body-name: start_service_request
     ServiceStatus:
       example:
+        start_time: start_time
+        graph_id: graph_id
         sdk_endpoints:
           gremlin: gremlin
           cypher: cypher
           hqps: hqps
           grpc: grpc
-        graph:
-          creation_time: creation_time
-          schema:
-            vertex_types:
-            - type_name: type_name
-              primary_keys:
-              - primary_keys
-              - primary_keys
-              x_csr_params:
-                max_vertex_num: 0
-              type_id: 6
-              description: description
-              properties:
-              - nullable: true
-                property_type:
-                  primitive_type: DT_SIGNED_INT32
-                description: description
-                default_value: ""
-                property_id: 1
-                property_name: property_name
-              - nullable: true
-                property_type:
-                  primitive_type: DT_SIGNED_INT32
-                description: description
-                default_value: ""
-                property_id: 1
-                property_name: property_name
-            - type_name: type_name
-              primary_keys:
-              - primary_keys
-              - primary_keys
-              x_csr_params:
-                max_vertex_num: 0
-              type_id: 6
-              description: description
-              properties:
-              - nullable: true
-                property_type:
-                  primitive_type: DT_SIGNED_INT32
-                description: description
-                default_value: ""
-                property_id: 1
-                property_name: property_name
-              - nullable: true
-                property_type:
-                  primitive_type: DT_SIGNED_INT32
-                description: description
-                default_value: ""
-                property_id: 1
-                property_name: property_name
-            edge_types:
-            - type_name: type_name
-              directed: true
-              primary_keys:
-              - primary_keys
-              - primary_keys
-              vertex_type_pair_relations:
-              - source_vertex: source_vertex
-                destination_vertex: destination_vertex
-                x_csr_params:
-                  edge_storage_strategy: ONLY_IN
-                relation: MANY_TO_MANY
-              - source_vertex: source_vertex
-                destination_vertex: destination_vertex
-                x_csr_params:
-                  edge_storage_strategy: ONLY_IN
-                relation: MANY_TO_MANY
-              type_id: 5
-              description: description
-              properties:
-              - nullable: true
-                property_type:
-                  primitive_type: DT_SIGNED_INT32
-                description: description
-                default_value: ""
-                property_id: 1
-                property_name: property_name
-              - nullable: true
-                property_type:
-                  primitive_type: DT_SIGNED_INT32
-                description: description
-                default_value: ""
-                property_id: 1
-                property_name: property_name
-            - type_name: type_name
-              directed: true
-              primary_keys:
-              - primary_keys
-              - primary_keys
-              vertex_type_pair_relations:
-              - source_vertex: source_vertex
-                destination_vertex: destination_vertex
-                x_csr_params:
-                  edge_storage_strategy: ONLY_IN
-                relation: MANY_TO_MANY
-              - source_vertex: source_vertex
-                destination_vertex: destination_vertex
-                x_csr_params:
-                  edge_storage_strategy: ONLY_IN
-                relation: MANY_TO_MANY
-              type_id: 5
-              description: description
-              properties:
-              - nullable: true
-                property_type:
-                  primitive_type: DT_SIGNED_INT32
-                description: description
-                default_value: ""
-                property_id: 1
-                property_name: property_name
-              - nullable: true
-                property_type:
-                  primitive_type: DT_SIGNED_INT32
-                description: description
-                default_value: ""
-                property_id: 1
-                property_name: property_name
-          stored_procedures:
-          - runnable: true
-            bound_graph: bound_graph
-          - runnable: true
-            bound_graph: bound_graph
-          name: name
-          description: description
-          schema_update_time: schema_update_time
-          id: id
-          store_type: mutable_csr
-          data_update_time: data_update_time
         status: Running
       properties:
+        graph_id:
+          title: graph_id
+          type: string
         status:
           enum:
           - Running
           - Stopped
           title: status
           type: string
-        graph:
-          $ref: '#/components/schemas/GetGraphResponse'
         sdk_endpoints:
           $ref: '#/components/schemas/ServiceStatus_sdk_endpoints'
+        start_time:
+          title: start_time
+          type: string
       required:
+      - creation_time
+      - graph_id
       - status
       title: ServiceStatus
     UploadFileResponse:
@@ -2299,7 +2236,7 @@ components:
           property_name: property_name
       title: CreateEdgeType
       x-body-name: create_edge_type
-    CreateProcedureRequest:
+    CreateStoredProcRequest:
       example:
         query: query
         name: name
@@ -2325,18 +2262,18 @@ components:
       - name
       - query
       - type
-      title: CreateProcedureRequest
-      x-body-name: create_procedure_request
-    CreateProcedureResponse:
+      title: CreateStoredProcRequest
+      x-body-name: create_stored_proc_request
+    CreateStoredProcResponse:
       example:
-        procedure_id: procedure_id
+        stored_procedure_id: stored_procedure_id
       properties:
-        procedure_id:
-          title: procedure_id
+        stored_procedure_id:
+          title: stored_procedure_id
           type: string
       required:
-      - procedure_id
-      title: CreateProcedureResponse
+      - stored_procedure_id
+      title: CreateStoredProcResponse
     CreateGraphSchemaRequest:
       example:
         vertex_types:
@@ -2582,14 +2519,11 @@ components:
           type: string
         stored_procedures:
           items:
-            $ref: '#/components/schemas/CreateProcedureRequest'
+            $ref: '#/components/schemas/CreateStoredProcRequest'
           title: stored_procedures
           type: array
         schema:
           $ref: '#/components/schemas/CreateGraphSchemaRequest'
-      required:
-      - name
-      - schema
       title: CreateGraphRequest
       x-body-name: create_graph_request
     CreateGraphResponse:
@@ -2604,7 +2538,7 @@ components:
       title: CreateGraphResponse
     StoredProcedureMeta:
       allOf:
-      - $ref: '#/components/schemas/CreateProcedureRequest'
+      - $ref: '#/components/schemas/CreateStoredProcRequest'
       - properties:
           id:
             type: string
@@ -2625,7 +2559,7 @@ components:
         - returns
         type: object
       title: StoredProcedureMeta
-    GetProcedureResponse:
+    GetStoredProcResponse:
       allOf:
       - $ref: '#/components/schemas/StoredProcedureMeta'
       - properties:
@@ -2640,8 +2574,8 @@ components:
       example:
         runnable: true
         bound_graph: bound_graph
-      title: GetProcedureResponse
-    UpdateProcedureRequest:
+      title: GetStoredProcResponse
+    UpdateStoredProcRequest:
       example:
         description: description
       properties:
@@ -2650,8 +2584,8 @@ components:
           type: string
       required:
       - description
-      title: UpdateProcedureRequest
-      x-body-name: update_procedure_request
+      title: UpdateStoredProcRequest
+      x-body-name: update_stored_proc_request
     GetVertexType:
       allOf:
       - $ref: '#/components/schemas/BaseVertexType'
@@ -3032,7 +2966,7 @@ components:
           type: string
         stored_procedures:
           items:
-            $ref: '#/components/schemas/GetProcedureResponse'
+            $ref: '#/components/schemas/GetStoredProcResponse'
           title: stored_procedures
           type: array
         schema:
@@ -3597,6 +3531,10 @@ components:
           format: binary
           type: string
       type: object
+    RunningDeploymentStatus_nodes_inner:
+      oneOf:
+      - $ref: '#/components/schemas/NodeStatus'
+      title: RunningDeploymentStatus_nodes_inner
     ServiceStatus_sdk_endpoints:
       example:
         gremlin: gremlin

@@ -18,22 +18,34 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictStr
+from pydantic import BaseModel, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from graphscope.flex.rest.models.create_graph_schema_request import CreateGraphSchemaRequest
-from graphscope.flex.rest.models.create_stored_proc_request import CreateStoredProcRequest
+from graphscope.flex.rest.models.parameter import Parameter
 from typing import Optional, Set
 from typing_extensions import Self
 
-class CreateGraphRequest(BaseModel):
+class GetStoredProcResponse(BaseModel):
     """
-    CreateGraphRequest
+    GetStoredProcResponse
     """ # noqa: E501
-    name: Optional[StrictStr] = None
+    name: StrictStr
     description: Optional[StrictStr] = None
-    stored_procedures: Optional[List[CreateStoredProcRequest]] = None
-    var_schema: Optional[CreateGraphSchemaRequest] = Field(default=None, alias="schema")
-    __properties: ClassVar[List[str]] = ["name", "description", "stored_procedures", "schema"]
+    type: StrictStr
+    query: StrictStr
+    id: StrictStr
+    library: StrictStr
+    params: List[Parameter]
+    returns: List[Parameter]
+    bound_graph: StrictStr
+    runnable: StrictBool
+    __properties: ClassVar[List[str]] = ["name", "description", "type", "query", "id", "library", "params", "returns", "bound_graph", "runnable"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['cpp', 'cypher']):
+            raise ValueError("must be one of enum values ('cpp', 'cypher')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -53,7 +65,7 @@ class CreateGraphRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of CreateGraphRequest from a JSON string"""
+        """Create an instance of GetStoredProcResponse from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -74,21 +86,25 @@ class CreateGraphRequest(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in stored_procedures (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in params (list)
         _items = []
-        if self.stored_procedures:
-            for _item in self.stored_procedures:
+        if self.params:
+            for _item in self.params:
                 if _item:
                     _items.append(_item.to_dict())
-            _dict['stored_procedures'] = _items
-        # override the default output from pydantic by calling `to_dict()` of var_schema
-        if self.var_schema:
-            _dict['schema'] = self.var_schema.to_dict()
+            _dict['params'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in returns (list)
+        _items = []
+        if self.returns:
+            for _item in self.returns:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['returns'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of CreateGraphRequest from a dict"""
+        """Create an instance of GetStoredProcResponse from a dict"""
         if obj is None:
             return None
 
@@ -98,8 +114,14 @@ class CreateGraphRequest(BaseModel):
         _obj = cls.model_validate({
             "name": obj.get("name"),
             "description": obj.get("description"),
-            "stored_procedures": [CreateStoredProcRequest.from_dict(_item) for _item in obj["stored_procedures"]] if obj.get("stored_procedures") is not None else None,
-            "schema": CreateGraphSchemaRequest.from_dict(obj["schema"]) if obj.get("schema") is not None else None
+            "type": obj.get("type"),
+            "query": obj.get("query"),
+            "id": obj.get("id"),
+            "library": obj.get("library"),
+            "params": [Parameter.from_dict(_item) for _item in obj["params"]] if obj.get("params") is not None else None,
+            "returns": [Parameter.from_dict(_item) for _item in obj["returns"]] if obj.get("returns") is not None else None,
+            "bound_graph": obj.get("bound_graph"),
+            "runnable": obj.get("runnable")
         })
         return _obj
 

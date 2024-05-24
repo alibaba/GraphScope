@@ -21,15 +21,15 @@ import yaml
 
 from graphscope.gsctl.config import get_current_context
 from graphscope.gsctl.impl import bind_datasource_in_batch
-from graphscope.gsctl.impl import create_procedure
+from graphscope.gsctl.impl import create_stored_procedure
 from graphscope.gsctl.impl import delete_job_by_id
-from graphscope.gsctl.impl import delete_procedure_by_id
+from graphscope.gsctl.impl import delete_stored_procedure_by_id
 from graphscope.gsctl.impl import get_datasource_by_id
 from graphscope.gsctl.impl import get_graph_id_by_name
 from graphscope.gsctl.impl import get_job_by_id
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_jobs
-from graphscope.gsctl.impl import list_procedures
+from graphscope.gsctl.impl import list_stored_procedures
 from graphscope.gsctl.impl import submit_dataloading_job
 from graphscope.gsctl.impl import switch_context
 from graphscope.gsctl.impl import unbind_edge_datasource
@@ -90,8 +90,8 @@ def ls():  # noqa: F811
         datasource_mapping = get_datasource_by_id(using_graph.id)
         tree.create_datasource_mapping_node(using_graph, datasource_mapping)
         # stored procedure
-        procedures = list_procedures(using_graph.id)
-        tree.create_procedure_node(using_graph, procedures)
+        stored_procedures = list_stored_procedures(using_graph.id)
+        tree.create_stored_procedure_node(using_graph, stored_procedures)
         # job
         jobs = list_jobs()
         tree.create_job_node(using_graph, jobs)
@@ -108,7 +108,7 @@ def ls():  # noqa: F811
     required=True,
     help="Path of yaml file",
 )
-def procedure(filename):
+def storedproc(filename):
     """Create a stored procedure from file"""
     if not is_valid_file_path(filename):
         err(f"Invalid file: {filename}")
@@ -116,22 +116,22 @@ def procedure(filename):
     current_context = get_current_context()
     graph_identifier = current_context.context
     try:
-        procedure = read_yaml_file(filename)
-        create_procedure(graph_identifier, procedure)
+        stored_procedure = read_yaml_file(filename)
+        create_stored_procedure(graph_identifier, stored_procedure)
     except Exception as e:
         err(f"Failed to create stored procedure: {str(e)}")
     else:
-        succ(f"Create stored procedure {procedure['name']} successfully.")
+        succ(f"Create stored procedure {stored_procedure['name']} successfully.")
 
 
 @delete.command()
 @click.argument("identifier", required=True)
-def procedure(identifier):  # noqa: F811
+def storedproc(identifier):  # noqa: F811
     """Delete a stored procedure, see identifier with `ls` command"""
     current_context = get_current_context()
     graph_identifier = current_context.context
     try:
-        delete_procedure_by_id(graph_identifier, identifier)
+        delete_stored_procedure_by_id(graph_identifier, identifier)
     except Exception as e:
         err(f"Failed to delete stored procedure: {str(e)}")
     else:
@@ -246,26 +246,26 @@ def job(identifier):  # noqa: F811
 
 @desc.command()
 @click.argument("identifier", required=True)
-def procedure(identifier):  # noqa: F811
+def storedproc(identifier):  # noqa: F811
     """Show details of stored procedure, see identifier with `ls` command"""
     current_context = get_current_context()
     graph_id = current_context.context
     try:
-        procedures = list_procedures(graph_id)
+        stored_procedures = list_stored_procedures(graph_id)
     except Exception as e:
-        err(f"Failed to list procedures: {str(e)}")
+        err(f"Failed to list stored procedures: {str(e)}")
     else:
-        if not procedures:
+        if not stored_procedures:
             info(f"No stored procedures found on {graph_id}.")
             return
-        specific_procedure_exist = False
-        for procedure in procedures:
-            if identifier == procedure.id:
-                info(yaml.dump(procedure.to_dict()))
-                specific_procedure_exist = True
+        specific_stored_procedure_exist = False
+        for stored_procedure in stored_procedures:
+            if identifier == stored_procedure.id:
+                info(yaml.dump(stored_procedure.to_dict()))
+                specific_stored_procedure_exist = True
                 break
-        if not specific_procedure_exist:
-            err(f"Procedure {identifier} not found on {graph_id}.")
+        if not specific_stored_procedure_exist:
+            err(f"Stored Procedure {identifier} not found on {graph_id}.")
 
 
 @use.command(name="GLOBAL")

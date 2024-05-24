@@ -18,22 +18,17 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from graphscope.flex.rest.models.create_graph_schema_request import CreateGraphSchemaRequest
-from graphscope.flex.rest.models.create_stored_proc_request import CreateStoredProcRequest
+from pydantic import BaseModel, StrictStr
+from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
 
-class CreateGraphRequest(BaseModel):
+class UpdateStoredProcRequest(BaseModel):
     """
-    CreateGraphRequest
+    UpdateStoredProcRequest
     """ # noqa: E501
-    name: Optional[StrictStr] = None
-    description: Optional[StrictStr] = None
-    stored_procedures: Optional[List[CreateStoredProcRequest]] = None
-    var_schema: Optional[CreateGraphSchemaRequest] = Field(default=None, alias="schema")
-    __properties: ClassVar[List[str]] = ["name", "description", "stored_procedures", "schema"]
+    description: StrictStr
+    __properties: ClassVar[List[str]] = ["description"]
 
     model_config = {
         "populate_by_name": True,
@@ -53,7 +48,7 @@ class CreateGraphRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of CreateGraphRequest from a JSON string"""
+        """Create an instance of UpdateStoredProcRequest from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -74,21 +69,11 @@ class CreateGraphRequest(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in stored_procedures (list)
-        _items = []
-        if self.stored_procedures:
-            for _item in self.stored_procedures:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['stored_procedures'] = _items
-        # override the default output from pydantic by calling `to_dict()` of var_schema
-        if self.var_schema:
-            _dict['schema'] = self.var_schema.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of CreateGraphRequest from a dict"""
+        """Create an instance of UpdateStoredProcRequest from a dict"""
         if obj is None:
             return None
 
@@ -96,10 +81,7 @@ class CreateGraphRequest(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "name": obj.get("name"),
-            "description": obj.get("description"),
-            "stored_procedures": [CreateStoredProcRequest.from_dict(_item) for _item in obj["stored_procedures"]] if obj.get("stored_procedures") is not None else None,
-            "schema": CreateGraphSchemaRequest.from_dict(obj["schema"]) if obj.get("schema") is not None else None
+            "description": obj.get("description")
         })
         return _obj
 

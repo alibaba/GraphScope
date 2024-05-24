@@ -55,7 +55,10 @@ os.makedirs(DATASET_WORKSPACE, exist_ok=True)
 # and business scenarios, e.g. "INTERACTIVE",
 # "GRAPHSCOPE INSIGHT".
 SOLUTION = os.environ["SOLUTION"]
-
+if SOLUTION == "INTERACTIVE":
+    FRONTEND_TYPE = "Cypher/Gremlin"
+    STORAGE_TYPE = "MutableCSR"
+    ENGINE_TYPE = "Hiactor"
 
 # cluster type, optional from "K8S", "HOSTS"
 CLUSTER_TYPE = os.environ.get("CLUSTER_TYPE", "HOSTS")

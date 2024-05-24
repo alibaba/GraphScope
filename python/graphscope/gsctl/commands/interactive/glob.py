@@ -23,10 +23,10 @@ from graphscope.gsctl.impl import create_graph
 from graphscope.gsctl.impl import delete_graph_by_id
 from graphscope.gsctl.impl import get_datasource_by_id
 from graphscope.gsctl.impl import get_graph_id_by_name
-from graphscope.gsctl.impl import get_service_status
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_jobs
-from graphscope.gsctl.impl import list_procedures
+from graphscope.gsctl.impl import list_service_status
+from graphscope.gsctl.impl import list_stored_procedures
 from graphscope.gsctl.impl import restart_service
 from graphscope.gsctl.impl import start_service
 from graphscope.gsctl.impl import stop_service
@@ -93,8 +93,8 @@ def ls(l):  # noqa: F811, E741
                 datasource_mapping = get_datasource_by_id(g.id)
                 tree.create_datasource_mapping_node(g, datasource_mapping)
                 # stored procedure
-                procedures = list_procedures(g.id)
-                tree.create_procedure_node(g, procedures)
+                stored_procedures = list_stored_procedures(g.id)
+                tree.create_stored_procedure_node(g, stored_procedures)
                 # job
                 jobs = list_jobs()
                 tree.create_job_node(g, jobs)
@@ -191,24 +191,25 @@ def ls():  # noqa: F811
             "GREMLIN_ENDPOINT",
         ]
         data = [head]
-        if status.status == "Stopped":
-            data.append([status.status, "-", "-", "-", "-"])
-        else:
-            data.append(
-                [
-                    status.status,
-                    status.graph.id,
-                    status.sdk_endpoints.cypher,
-                    status.sdk_endpoints.hqps,
-                    status.sdk_endpoints.gremlin,
-                ]
-            )
+        for s in status:
+            if s.status == "Stopped":
+                data.append([s.status, s.graph_id, "-", "-", "-"])
+            else:
+                data.append(
+                    [
+                        s.status,
+                        s.graph_id,
+                        s.sdk_endpoints.cypher,
+                        s.sdk_endpoints.hqps,
+                        s.sdk_endpoints.gremlin,
+                    ]
+                )
         terminal_display(data)
 
     try:
-        status = get_service_status()
+        status = list_service_status()
     except Exception as e:
-        err(f"Failed to get service status: {str(e)}")
+        err(f"Failed to list service status: {str(e)}")
     else:
         _construct_and_display_data(status)
 

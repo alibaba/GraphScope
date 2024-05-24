@@ -18,17 +18,20 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, StrictStr
-from typing import Any, ClassVar, Dict, List
+from pydantic import BaseModel, StrictFloat, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Union
 from typing import Optional, Set
 from typing_extensions import Self
 
-class UpdateProcedureRequest(BaseModel):
+class NodeStatus(BaseModel):
     """
-    UpdateProcedureRequest
+    NodeStatus
     """ # noqa: E501
-    description: StrictStr
-    __properties: ClassVar[List[str]] = ["description"]
+    name: StrictStr
+    cpu_usage: Union[StrictFloat, StrictInt]
+    memory_usage: Union[StrictFloat, StrictInt]
+    disk_usage: Union[StrictFloat, StrictInt]
+    __properties: ClassVar[List[str]] = ["name", "cpu_usage", "memory_usage", "disk_usage"]
 
     model_config = {
         "populate_by_name": True,
@@ -48,7 +51,7 @@ class UpdateProcedureRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of UpdateProcedureRequest from a JSON string"""
+        """Create an instance of NodeStatus from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,7 +76,7 @@ class UpdateProcedureRequest(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of UpdateProcedureRequest from a dict"""
+        """Create an instance of NodeStatus from a dict"""
         if obj is None:
             return None
 
@@ -81,7 +84,10 @@ class UpdateProcedureRequest(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "description": obj.get("description")
+            "name": obj.get("name"),
+            "cpu_usage": obj.get("cpu_usage"),
+            "memory_usage": obj.get("memory_usage"),
+            "disk_usage": obj.get("disk_usage")
         })
         return _obj
 

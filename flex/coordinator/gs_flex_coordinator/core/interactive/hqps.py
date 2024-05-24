@@ -176,7 +176,7 @@ class HQPSClient(object):
     ):
         raise RuntimeError("Create vertex type is not supported yet!")
 
-    def create_procedure(self, graph_id: str, procedure: dict) -> dict:
+    def create_stored_procedure(self, graph_id: str, stored_procedure: dict) -> dict:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
@@ -184,23 +184,27 @@ class HQPSClient(object):
                 api_client
             )
             response = api_instance.create_procedure(
-                graph_id, CreateProcedureRequest.from_dict(procedure)
-            )
-            return response.to_dict()
+                graph_id, CreateProcedureRequest.from_dict(stored_procedure)
+            ).to_dict()
+            if "procedure_id" in response:
+                response["stored_procedure_id"] = response.pop("procedure_id")
+            return response
 
-    def list_procedures(self, graph_id: str) -> List[dict]:
+    def list_stored_procedures(self, graph_id: str) -> List[dict]:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
-            procedures = []
+            stored_procedures = []
             api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(
                 api_client
             )
-            procedures = [p.to_dict() for p in api_instance.list_procedures(graph_id)]
-            return procedures
+            stored_procedures = [
+                p.to_dict() for p in api_instance.list_procedures(graph_id)
+            ]
+            return stored_procedures
 
-    def update_procedure_by_id(
-        self, graph_id: str, procedure_id: str, procedure: dict
+    def update_stored_procedure_by_id(
+        self, graph_id: str, stored_procedure_id: str, stored_procedure: dict
     ) -> str:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
@@ -210,29 +214,36 @@ class HQPSClient(object):
             )
             return api_instance.update_procedure(
                 graph_id,
-                procedure_id,
-                UpdateProcedureRequest.from_dict(procedure),
+                stored_procedure_id,
+                UpdateProcedureRequest.from_dict(stored_procedure),
             )
 
-    def delete_procedure_by_id(self, graph_id: str, procedure_id: str) -> str:
+    def delete_stored_procedure_by_id(
+        self, graph_id: str, stored_procedure_id: str
+    ) -> str:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
             api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(
                 api_client
             )
-            return api_instance.delete_procedure(graph_id, procedure_id)
+            return api_instance.delete_procedure(graph_id, stored_procedure_id)
 
-    def get_procedure_by_id(self, graph_id: str, procedure_id: str) -> dict:
+    def get_stored_procedure_by_id(
+        self, graph_id: str, stored_procedure_id: str
+    ) -> dict:
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
             api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(
                 api_client
             )
-            return api_instance.get_procedure(graph_id, procedure_id).to_dict()
+            return api_instance.get_procedure(graph_id, stored_procedure_id).to_dict()
 
-    def get_service_status(self) -> dict:
+    def list_service_status(self) -> List[dict]:
+        # get service status from serving graph
+        serving_graph_id = None
+        rlts = []
         with interactive_sdk.openapi.ApiClient(
             interactive_sdk.openapi.Configuration(self._hqps_endpoint)
         ) as api_client:
@@ -240,31 +251,34 @@ class HQPSClient(object):
                 api_client
             )
             response = api_instance.get_service_status()
-            # transfer
             if CLUSTER_TYPE == "HOSTS":
                 host = get_public_ip()
                 if host is None:
                     host = get_internal_ip()
-                status = {
-                    "status": response.status,
-                    "sdk_endpoints": {
-                        "cypher": f"neo4j://{host}:{response.bolt_port}",
-                        "hqps": f"http://{host}:{response.hqps_port}",
-                        "gremlin": f"ws://{host}:{response.gremlin_port}/gremlin",
-                    },
-                }
-                if response.graph is not None:
+                if response.status == "Running" and response.graph is not None:
                     g = response.graph.to_dict()
-                    g["creation_time"] = encode_datetime(
-                        datetime.datetime.fromtimestamp(g["creation_time"] / 1000)
-                    )
-                    g["data_update_time"] = encode_datetime(
-                        datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
-                    )
-                    # `schema_update_time` is same to `creation_time` in Interactive
-                    g["schema_update_time"] = g["creation_time"]
-                    status["graph"] = g
-                return status
+                    serving_graph_id = g["id"]
+                    status = {
+                        "status": response.status,
+                        "sdk_endpoints": {
+                            "cypher": f"neo4j://{host}:{response.bolt_port}",
+                            "hqps": f"http://{host}:{response.hqps_port}",
+                            "gremlin": f"ws://{host}:{response.gremlin_port}/gremlin",
+                        },
+                        "start_time": "2024-04-20 18:00:00",
+                        "graph_id": g["id"],
+                    }
+                    rlts.append(status)
+        # only one graph is serving at a certain time
+        graphs = self.list_graphs()
+        for g in graphs:
+            if serving_graph_id is None or serving_graph_id != g["id"]:
+                status = {
+                    "status": "Stopped",
+                    "graph_id": g["id"],
+                }
+                rlts.append(status)
+        return rlts
 
     def stop_service(self) -> str:
         with interactive_sdk.openapi.ApiClient(

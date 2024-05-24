@@ -18,33 +18,25 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, StrictBool, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional
-from graphscope.flex.rest.models.parameter import Parameter
+from pydantic import BaseModel, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List
+from graphscope.flex.rest.models.running_deployment_status_nodes_inner import RunningDeploymentStatusNodesInner
 from typing import Optional, Set
 from typing_extensions import Self
 
-class GetProcedureResponse(BaseModel):
+class RunningDeploymentStatus(BaseModel):
     """
-    GetProcedureResponse
+    RunningDeploymentStatus
     """ # noqa: E501
-    name: StrictStr
-    description: Optional[StrictStr] = None
-    type: StrictStr
-    query: StrictStr
-    id: StrictStr
-    library: StrictStr
-    params: List[Parameter]
-    returns: List[Parameter]
-    bound_graph: StrictStr
-    runnable: StrictBool
-    __properties: ClassVar[List[str]] = ["name", "description", "type", "query", "id", "library", "params", "returns", "bound_graph", "runnable"]
+    cluster_type: StrictStr
+    nodes: List[RunningDeploymentStatusNodesInner]
+    __properties: ClassVar[List[str]] = ["cluster_type", "nodes"]
 
-    @field_validator('type')
-    def type_validate_enum(cls, value):
+    @field_validator('cluster_type')
+    def cluster_type_validate_enum(cls, value):
         """Validates the enum"""
-        if value not in set(['cpp', 'cypher']):
-            raise ValueError("must be one of enum values ('cpp', 'cypher')")
+        if value not in set(['HOSTS', 'KUBERNETES']):
+            raise ValueError("must be one of enum values ('HOSTS', 'KUBERNETES')")
         return value
 
     model_config = {
@@ -65,7 +57,7 @@ class GetProcedureResponse(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of GetProcedureResponse from a JSON string"""
+        """Create an instance of RunningDeploymentStatus from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -86,25 +78,18 @@ class GetProcedureResponse(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in params (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in nodes (list)
         _items = []
-        if self.params:
-            for _item in self.params:
+        if self.nodes:
+            for _item in self.nodes:
                 if _item:
                     _items.append(_item.to_dict())
-            _dict['params'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in returns (list)
-        _items = []
-        if self.returns:
-            for _item in self.returns:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['returns'] = _items
+            _dict['nodes'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of GetProcedureResponse from a dict"""
+        """Create an instance of RunningDeploymentStatus from a dict"""
         if obj is None:
             return None
 
@@ -112,16 +97,8 @@ class GetProcedureResponse(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "name": obj.get("name"),
-            "description": obj.get("description"),
-            "type": obj.get("type"),
-            "query": obj.get("query"),
-            "id": obj.get("id"),
-            "library": obj.get("library"),
-            "params": [Parameter.from_dict(_item) for _item in obj["params"]] if obj.get("params") is not None else None,
-            "returns": [Parameter.from_dict(_item) for _item in obj["returns"]] if obj.get("returns") is not None else None,
-            "bound_graph": obj.get("bound_graph"),
-            "runnable": obj.get("runnable")
+            "cluster_type": obj.get("cluster_type"),
+            "nodes": [RunningDeploymentStatusNodesInner.from_dict(_item) for _item in obj["nodes"]] if obj.get("nodes") is not None else None
         })
         return _obj
 
