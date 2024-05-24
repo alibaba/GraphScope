@@ -1169,7 +1169,7 @@ bool Schema::EmplacePlugins(
                       "find the plugin in the directory...";
         // it seems that f is not the filename, but the plugin name, try to
         // find the plugin in the directory
-        LOG(ERROR) << "plugin - " << name_path.first << "not found...";
+        LOG(ERROR) << "plugin - " << name_path.first << " not found...";
       } else {
         plugin_name_to_path_and_id_.emplace(
             name_path.first, std::make_pair(real_file, cur_plugin_id++));

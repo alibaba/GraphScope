@@ -91,7 +91,7 @@ generate_cpp_yaml() {
   local template_str="""
   name: ${procedure_name}
   description: ${procedure_description}
-  library: ${output_so_path}
+  library: ${output_so_name}
   type: cpp
   query: "${procedure_query}"
   """

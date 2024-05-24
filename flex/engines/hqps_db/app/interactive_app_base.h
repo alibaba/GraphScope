@@ -19,6 +19,7 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/proto_generated_gie/results.pb.h"
 #include "flex/utils/property/types.h"
+#include "flex/utils/service_utils.h"
 #include "nlohmann/json.hpp"
 namespace gs {
 
@@ -32,7 +33,7 @@ template <size_t I, typename T, typename... ARGS>
 std::tuple<T, ARGS...> deserialize_impl(const nlohmann::json& arguments_list) {
   T value{};
   PropertyType type{};
-  gs::from_json(arguments_list[I]["type"], type);
+  type = arguments_list[I]["type"];
   if constexpr (std::is_same<T, std::string>::value ||
                 std::is_same<T, std::string_view>::value) {
     if (type != PropertyType::kString && !type.IsVarchar()) {
@@ -109,7 +110,8 @@ class CypherWriteAppBase : public WriteAppBase {
  public:
   AppType type() const override { return AppType::kCypherProcedure; }
 
-  virtual bool Query(GraphDBSession& db, ARGS... args) = 0;
+  virtual results::CollectiveResults Query(GraphDBSession& db,
+                                           ARGS... args) = 0;
 
   bool Query(GraphDBSession& db, Decoder& input, Encoder& output) override {
     auto sv = input.get_string();
@@ -120,11 +122,17 @@ class CypherWriteAppBase : public WriteAppBase {
     }
 
     // unpack tuple
-    unpackedAndInvoke(db, tuple);
+    auto res = unpackedAndInvoke(tuple);
+    // write output
+    std::string out;
+    res.SerializeToString(&out);
+
+    output.put_string(out);
     return true;
   }
 
-  void unpackedAndInvoke(GraphDBSession& db, std::tuple<ARGS...>& tuple) {
+  results::CollectiveResults unpackedAndInvoke(GraphDBSession& db,
+                                               std::tuple<ARGS...>& tuple) {
     std::apply([this, &db](ARGS... args) { this->Query(db, args...); }, tuple);
   }
 };

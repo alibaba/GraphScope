@@ -57,6 +57,10 @@ hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
 hqps_ic_handler::~hqps_ic_handler() = default;
 
 seastar::future<> hqps_ic_handler::cancel_current_scope() {
+  if (is_cancelled_) {
+    LOG(INFO) << "The current scope has been already cancelled!";
+    return seastar::make_ready_future<>();
+  }
   hiactor::scope_builder builder;
   builder.set_shard(hiactor::local_shard_id())
       .enter_sub_scope(hiactor::scope<executor_group>(0))
@@ -222,6 +226,10 @@ hqps_proc_handler::hqps_proc_handler(uint32_t init_group_id,
 hqps_proc_handler::~hqps_proc_handler() = default;
 
 seastar::future<> hqps_proc_handler::cancel_current_scope() {
+  if (is_cancelled_) {
+    LOG(INFO) << "The current scope has been already cancelled!";
+    return seastar::make_ready_future<>();
+  }
   hiactor::scope_builder builder;
   builder.set_shard(hiactor::local_shard_id())
       .enter_sub_scope(hiactor::scope<executor_group>(0))
@@ -274,6 +282,42 @@ hqps_proc_handler::handle(const seastar::sstring& path,
                           std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+  // Get graph_id
+  if (!req->param.exists("graph_id")) {
+    LOG(ERROR) << "No graph_id found in the request!";
+    rep->set_status(seastar::httpd::reply::status_type::bad_request);
+    rep->write_body("bin",
+                    seastar::sstring("No graph_id found in the request!"));
+    rep->done();
+    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+        std::move(rep));
+  }
+  auto graph_id = req->param["graph_id"];
+  std::string graph_id_str(graph_id.data(), graph_id.size());
+  // check whether is the running graph
+  auto running_graph_res =
+      HQPSService::get().get_metadata_store()->GetRunningGraph();
+  if (!running_graph_res.ok()) {
+    LOG(ERROR) << "Failed to get running graph: "
+               << running_graph_res.status().error_message();
+    rep->set_status(seastar::httpd::reply::status_type::internal_server_error);
+    rep->write_body("bin", seastar::sstring("Failed to get running graph!"));
+    rep->done();
+    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+        std::move(rep));
+  }
+  if (running_graph_res.value() != graph_id_str) {
+    LOG(ERROR) << "The graph with id " << graph_id << " is not running";
+    rep->set_status(seastar::httpd::reply::status_type::bad_request);
+    rep->write_body("bin", seastar::sstring(std::string("The graph with id ") +
+                                            graph_id_str + " is not running!"));
+    rep->done();
+    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+        std::move(rep));
+  }
+
+  // TODO(zhanglei): choose read or write based on the request, after the
+  // read/write info is supported in physical plan
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
   // Extract context from headers. This copy is necessary to avoid access after
@@ -295,7 +339,7 @@ hqps_proc_handler::handle(const seastar::sstring& path,
 #endif
   ](auto&& output) {
         return seastar::make_ready_future<query_param>(
-            std::move(output.content));
+            std::move(output.content.substr(4)));
       })
       .then_wrapped([rep = std::move(rep)
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -384,6 +428,10 @@ hqps_adhoc_query_handler::hqps_adhoc_query_handler(
 hqps_adhoc_query_handler::~hqps_adhoc_query_handler() = default;
 
 seastar::future<> hqps_adhoc_query_handler::cancel_current_scope() {
+  if (is_cancelled_) {
+    LOG(INFO) << "The current scope has been already cancelled!";
+    return seastar::make_ready_future<>();
+  }
   hiactor::scope_builder adhoc_builder;
   adhoc_builder.set_shard(hiactor::local_shard_id())
       .enter_sub_scope(hiactor::scope<executor_group>(0))
@@ -598,8 +646,9 @@ hqps_http_handler::hqps_http_handler(uint16_t http_port)
     : http_port_(http_port) {
   ic_handler_ = new hqps_ic_handler(ic_query_group_id, max_group_id,
                                     group_inc_step, shard_query_concurrency);
-  proc_handler_ = new hqps_proc_handler(
-      ic_query_group_id, max_group_id, group_inc_step, shard_query_concurrency);
+  proc_handler_ =
+      new hqps_proc_handler(proc_query_group_id, max_group_id, group_inc_step,
+                            shard_query_concurrency);
   adhoc_query_handler_ = new hqps_adhoc_query_handler(
       ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
       shard_adhoc_concurrency);
@@ -620,7 +669,8 @@ bool hqps_http_handler::is_running() const { return running_.load(); }
 
 bool hqps_http_handler::is_actors_running() const {
   return !ic_handler_->is_current_scope_cancelled() &&
-         !adhoc_query_handler_->is_current_scope_cancelled();
+         !adhoc_query_handler_->is_current_scope_cancelled() &&
+         !proc_handler_->is_current_scope_cancelled();
 }
 
 void hqps_http_handler::start() {
@@ -654,35 +704,25 @@ void hqps_http_handler::stop() {
 
 seastar::future<> hqps_http_handler::stop_query_actors() {
   // First cancel the scope.
-  if (ic_handler_->is_current_scope_cancelled()) {
-    LOG(INFO) << "IC scope has been cancelled!";
-    if (adhoc_query_handler_->is_current_scope_cancelled()) {
-      LOG(INFO) << "Adhoc scope has been cancelled!";
-      return seastar::make_ready_future<>();
-    } else {
-      return adhoc_query_handler_->cancel_current_scope();
-    }
-  } else {
-    return ic_handler_->cancel_current_scope()
-        .then([this] {
-          LOG(INFO) << "Cancel ic scope";
-          if (adhoc_query_handler_->is_current_scope_cancelled()) {
-            LOG(INFO) << "Adhoc scope has been cancelled!";
-            return seastar::make_ready_future<>();
-          } else {
-            return adhoc_query_handler_->cancel_current_scope();
-          }
-        })
-        .then([] {
-          LOG(INFO) << "Cancel adhoc scope";
-          return seastar::make_ready_future<>();
-        });
-  }
+  return ic_handler_->cancel_current_scope()
+      .then([this] {
+        LOG(INFO) << "Cancel ic scope";
+        return adhoc_query_handler_->cancel_current_scope();
+      })
+      .then([this] {
+        LOG(INFO) << "Cancel adhoc scope";
+        return proc_handler_->cancel_current_scope();
+      })
+      .then([] {
+        LOG(INFO) << "Cancel proc scope";
+        return seastar::make_ready_future<>();
+      });
 }
 
 void hqps_http_handler::start_query_actors() {
   ic_handler_->create_actors();
   adhoc_query_handler_->create_actors();
+  proc_handler_->create_actors();
   LOG(INFO) << "Restart all actors";
 }
 
@@ -690,9 +730,12 @@ seastar::future<> hqps_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/v1/internal/query"), ic_handler_);
-    // TODO: add a handler to handler stored procedure queries from sdk
-    r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/v1/query"), proc_handler_);  //
+    {
+      auto rule_proc = new seastar::httpd::match_rule(proc_handler_);
+      rule_proc->add_str("/v1/graph").add_param("graph_id").add_str("/query");
+      // Get All procedures
+      r.add(rule_proc, seastar::httpd::operation_type::POST);
+    }
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/adhoc_query"),
           adhoc_query_handler_);

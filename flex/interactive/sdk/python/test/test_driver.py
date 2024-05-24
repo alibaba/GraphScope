@@ -91,9 +91,9 @@ class TestDriver(unittest.TestCase):
         self.runCypherQuery()
         self.runGremlinQuery()
         self.createProcedure()
-        self.callProcedureWithHttp()
         self.restart()
         self.callProcedure()
+        self.callProcedureWithHttp()
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
@@ -217,14 +217,6 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.create_procedure(self._graph_id, create_proc_request)
         assert resp.is_ok()
         print("create procedure: ", resp.get_value())
-    
-    def callProcedureWithHttp(self):
-        req = QueryRequest(
-            query_name=self._procedure_name
-        )
-        resp = self._sess.call_procedure(self._graph_id, req)
-        assert resp.is_ok()
-        print("call procedure result: ", resp.get_value())
 
     def restart(self):
         resp = self._sess.start_service(
@@ -239,6 +231,14 @@ class TestDriver(unittest.TestCase):
         with self._driver.getNeo4jSession() as session:
             result = session.run("CALL test_procedure();")
             print("call procedure result: ", result)
+
+    def callProcedureWithHttp(self):
+        req = QueryRequest(
+            query_name=self._procedure_name
+        )
+        resp = self._sess.call_procedure(self._graph_id, req)
+        assert resp.is_ok()
+        print("call procedure result: ", resp.get_value())
 
 
 if __name__ == "__main__":
