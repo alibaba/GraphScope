@@ -1,46 +1,46 @@
 {
-    "num_vertices": 78244717,
-    "num_edges": 505722384,
+    "total_vertex_count": 78244717,
+    "total_edge_count": 505722384,
     "vertex_type_statistics": [
         {
             "type_id": 3,
             "type_name": "post",
-            "statistics": 21651343
+            "count": 21651343
         },
         {
             "type_id": 2,
             "type_name": "comment",
-            "statistics": 54737516
+            "count": 54737516
         },
         {
             "type_id": 7,
             "type_name": "tag",
-            "statistics": 16081
+            "count": 16081
         },
         {
             "type_id": 0,
             "type_name": "place",
-            "statistics": 1461
+            "count": 1461
         },
         {
             "type_id": 4,
             "type_name": "forum",
-            "statistics": 1659633
+            "count": 1659633
         },
         {
             "type_id": 6,
             "type_name": "tagclass",
-            "statistics": 72
+            "count": 72
         },
         {
             "type_id": 1,
             "type_name": "person",
-            "statistics": 170655
+            "count": 170655
         },
         {
             "type_id": 5,
             "type_name": "orgnisation",
-            "statistics": 7956
+            "count": 7956
         }
     ],
     "edge_type_statistics": [
@@ -51,7 +51,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "orgnisation",
-                    "statistics": 136615
+                    "count": 136615
                 }
             ]
         },
@@ -62,7 +62,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "orgnisation",
-                    "statistics": 371635
+                    "count": 371635
                 }
             ]
         },
@@ -73,7 +73,7 @@
                 {
                     "source_vertex": "place",
                     "destination_vertex": "place",
-                    "statistics": 1455
+                    "count": 1455
                 }
             ]
         },
@@ -84,7 +84,7 @@
                 {
                     "source_vertex": "tagclass",
                     "destination_vertex": "tagclass",
-                    "statistics": 71
+                    "count": 71
                 }
             ]
         },
@@ -95,7 +95,7 @@
                 {
                     "source_vertex": "forum",
                     "destination_vertex": "person",
-                    "statistics": 90198119
+                    "count": 90198119
                 }
             ]
         },
@@ -106,7 +106,7 @@
                 {
                     "source_vertex": "comment",
                     "destination_vertex": "comment",
-                    "statistics": 25130259
+                    "count": 25130259
                 }
             ]
         },
@@ -117,7 +117,7 @@
                 {
                     "source_vertex": "comment",
                     "destination_vertex": "post",
-                    "statistics": 29607258
+                    "count": 29607258
                 }
             ]
         },
@@ -128,7 +128,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "comment",
-                    "statistics": 48651550
+                    "count": 48651550
                 }
             ]
         },
@@ -139,7 +139,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "post",
-                    "statistics": 26908835
+                    "count": 26908835
                 }
             ]
         },
@@ -150,7 +150,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "tag",
-                    "statistics": 3978965
+                    "count": 3978965
                 }
             ]
         },
@@ -161,7 +161,7 @@
                 {
                     "source_vertex": "tag",
                     "destination_vertex": "tagclass",
-                    "statistics": 16081
+                    "count": 16081
                 }
             ]
         },
@@ -172,7 +172,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "person",
-                    "statistics": 5524303
+                    "count": 5524303
                 }
             ]
         },
@@ -183,7 +183,7 @@
                 {
                     "source_vertex": "comment",
                     "destination_vertex": "person",
-                    "statistics": 54737516
+                    "count": 54737516
                 }
             ]
         },
@@ -194,7 +194,7 @@
                 {
                     "source_vertex": "post",
                     "destination_vertex": "person",
-                    "statistics": 21651343
+                    "count": 21651343
                 }
             ]
         },
@@ -205,7 +205,7 @@
                 {
                     "source_vertex": "forum",
                     "destination_vertex": "post",
-                    "statistics": 21651343
+                    "count": 21651343
                 }
             ]
         },
@@ -216,7 +216,7 @@
                 {
                     "source_vertex": "forum",
                     "destination_vertex": "person",
-                    "statistics": 1659633
+                    "count": 1659633
                 }
             ]
         },
@@ -227,7 +227,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "place",
-                    "statistics": 170655
+                    "count": 170655
                 }
             ]
         },
@@ -238,7 +238,7 @@
                 {
                     "source_vertex": "orgnisation",
                     "destination_vertex": "place",
-                    "statistics": 7956
+                    "count": 7956
                 }
             ]
         },
@@ -249,7 +249,7 @@
                 {
                     "source_vertex": "comment",
                     "destination_vertex": "place",
-                    "statistics": 54737516
+                    "count": 54737516
                 }
             ]
         },
@@ -260,7 +260,7 @@
                 {
                     "source_vertex": "post",
                     "destination_vertex": "place",
-                    "statistics": 21651343
+                    "count": 21651343
                 }
             ]
         },
@@ -271,7 +271,7 @@
                 {
                     "source_vertex": "forum",
                     "destination_vertex": "tag",
-                    "statistics": 5467943
+                    "count": 5467943
                 }
             ]
         },
@@ -282,7 +282,7 @@
                 {
                     "source_vertex": "post",
                     "destination_vertex": "tag",
-                    "statistics": 23426339
+                    "count": 23426339
                 }
             ]
         },
@@ -293,7 +293,7 @@
                 {
                     "source_vertex": "comment",
                     "destination_vertex": "tag",
-                    "statistics": 70035651
+                    "count": 70035651
                 }
             ]
         }

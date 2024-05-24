@@ -1,21 +1,21 @@
 {
-    "num_vertices": 175,
-    "num_edges": 265,
+    "total_vertex_count": 175,
+    "total_edge_count": 265,
     "vertex_type_statistics": [
         {
             "type_id": 0,
             "type_name": "movie",
-            "statistics": 38
+            "count": 38
         },
         {
             "type_id": 1,
             "type_name": "person",
-            "statistics": 130
+            "count": 130
         },
         {
             "type_id": 2,
             "type_name": "user",
-            "statistics": 7
+            "count": 7
         }
     ],
     "edge_type_statistics": [
@@ -26,7 +26,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "movie",
-                    "statistics": 172
+                    "count": 172
                 }
             ]
         },
@@ -37,7 +37,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "movie",
-                    "statistics": 44
+                    "count": 44
                 }
             ]
         },
@@ -48,7 +48,7 @@
                 {
                     "source_vertex": "user",
                     "destination_vertex": "movie",
-                    "statistics": 16
+                    "count": 16
                 }
             ]
         },
@@ -59,7 +59,7 @@
                 {
                     "source_vertex": "user",
                     "destination_vertex": "person",
-                    "statistics": 8
+                    "count": 8
                 }
             ]
         },
@@ -70,7 +70,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "movie",
-                    "statistics": 10
+                    "count": 10
                 }
             ]
         },
@@ -81,7 +81,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "movie",
-                    "statistics": 15
+                    "count": 15
                 }
             ]
         }

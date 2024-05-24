@@ -1,16 +1,16 @@
 {
-    "num_vertices": 6,
-    "num_edges": 6,
+    "total_vertex_count": 6,
+    "total_edge_count": 6,
     "vertex_type_statistics": [
         {
             "type_id": 0,
             "type_name": "person", 
-            "statistics": 3
+            "count": 3
         },
         {
             "type_id": 1,
             "type_name": "software",
-            "statistics": 3
+            "count": 3
         }
     ],
     "edge_type_statistics": [
@@ -21,7 +21,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "person",
-                    "statistics": 2
+                    "count": 2
                 }
             ]
         },
@@ -32,7 +32,7 @@
                 {
                     "source_vertex": "person",
                     "destination_vertex": "software",
-                    "statistics": 4
+                    "count": 4
                 }
             ]
         }
