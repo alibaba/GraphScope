@@ -124,6 +124,8 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+  // TODO(zhanglei): choose read or write based on the request, after the
+  // read/write info is supported in physical plan
   if (req->param.exists("graph_id")) {
     if (!is_running_graph(req->param["graph_id"])) {
       rep->set_status(
@@ -133,10 +135,10 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     }
+  } else {
+    // For queries from compiler(without graph_id, route to the proxy app)
+    req->content.append(gs::Schema::HQPS_WRITE_PROCEDURE_PLUGIN_ID_STR, 1);
   }
-  // TODO(zhanglei): choose read or write based on the request, after the
-  // read/write info is supported in physical plan
-  req->content.append(gs::Schema::HQPS_WRITE_PROCEDURE_PLUGIN_ID_STR, 1);
   req->content.append(gs::GraphDBSession::kCypherInternal, 1);
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
@@ -476,9 +478,8 @@ hqps_http_handler::hqps_http_handler(uint16_t http_port)
     : http_port_(http_port) {
   ic_handler_ = new hqps_ic_handler(ic_query_group_id, max_group_id,
                                     group_inc_step, shard_query_concurrency);
-  // proc_handler_ = new hqps_ic_handler(proc_query_group_id, max_group_id,
-  //                                     group_inc_step,
-  //                                     shard_query_concurrency);
+  proc_handler_ = new hqps_ic_handler(proc_query_group_id, max_group_id,
+                                      group_inc_step, shard_query_concurrency);
   adhoc_query_handler_ = new hqps_adhoc_query_handler(
       ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
       shard_adhoc_concurrency);
@@ -499,7 +500,8 @@ bool hqps_http_handler::is_running() const { return running_.load(); }
 
 bool hqps_http_handler::is_actors_running() const {
   return !ic_handler_->is_current_scope_cancelled() &&
-         !adhoc_query_handler_->is_current_scope_cancelled();
+         !adhoc_query_handler_->is_current_scope_cancelled() &&
+         proc_handler_->is_current_scope_cancelled();
 }
 
 void hqps_http_handler::start() {
@@ -538,6 +540,10 @@ seastar::future<> hqps_http_handler::stop_query_actors() {
         LOG(INFO) << "Cancel ic scope";
         return adhoc_query_handler_->cancel_current_scope();
       })
+      .then([this] {
+        LOG(INFO) << "Cancel adhoc scope";
+        return proc_handler_->cancel_current_scope();
+      })
       .then([] {
         LOG(INFO) << "Cancel proc scope";
         return seastar::make_ready_future<>();
@@ -547,6 +553,7 @@ seastar::future<> hqps_http_handler::stop_query_actors() {
 void hqps_http_handler::start_query_actors() {
   ic_handler_->create_actors();
   adhoc_query_handler_->create_actors();
+  proc_handler_->create_actors();
   LOG(INFO) << "Restart all actors";
 }
 
@@ -555,7 +562,7 @@ seastar::future<> hqps_http_handler::set_routes() {
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/v1/query"), ic_handler_);
     {
-      auto rule_proc = new seastar::httpd::match_rule(ic_handler_);
+      auto rule_proc = new seastar::httpd::match_rule(proc_handler_);
       rule_proc->add_str("/v1/graph").add_param("graph_id").add_str("/query");
       // Get All procedures
       r.add(rule_proc, seastar::httpd::operation_type::POST);
