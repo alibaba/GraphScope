@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.groot.CuratorUtils;
-import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
@@ -27,6 +26,7 @@ import com.alibaba.graphscope.groot.coordinator.backup.BackupService;
 import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupClient;
 import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupTaskSender;
 import com.alibaba.graphscope.groot.discovery.*;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;

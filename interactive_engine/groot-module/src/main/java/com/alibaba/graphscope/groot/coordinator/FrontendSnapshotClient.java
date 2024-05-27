@@ -68,17 +68,20 @@ public class FrontendSnapshotClient extends RpcClient {
     }
 
     public void syncStatistics(Statistics statistics) {
-        getStub().syncStatistics(SyncStatisticsRequest.newBuilder().setStatistics(statistics).build(), new StreamObserver<SyncStatisticsResponse>() {
-            @Override
-            public void onNext(SyncStatisticsResponse value) {}
+        getStub()
+                .syncStatistics(
+                        SyncStatisticsRequest.newBuilder().setStatistics(statistics).build(),
+                        new StreamObserver<SyncStatisticsResponse>() {
+                            @Override
+                            public void onNext(SyncStatisticsResponse value) {}
 
-            @Override
-            public void onError(Throwable t) {
-                logger.error("Failed sync statistics to frontend", t);
-            }
+                            @Override
+                            public void onError(Throwable t) {
+                                logger.error("Failed sync statistics to frontend", t);
+                            }
 
-            @Override
-            public void onCompleted() {}
-        });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

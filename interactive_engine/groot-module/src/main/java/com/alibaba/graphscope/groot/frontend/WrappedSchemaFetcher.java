@@ -19,7 +19,6 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
 import com.alibaba.graphscope.groot.meta.MetaService;
 
-import com.alibaba.graphscope.proto.groot.Statistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

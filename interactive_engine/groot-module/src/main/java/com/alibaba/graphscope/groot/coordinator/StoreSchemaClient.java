@@ -22,8 +22,6 @@ import com.alibaba.graphscope.proto.groot.*;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
-import java.util.Map;
-
 public class StoreSchemaClient extends RpcClient {
     public StoreSchemaClient(RpcChannel channel) {
         super(channel);
@@ -49,20 +47,24 @@ public class StoreSchemaClient extends RpcClient {
 
     public void fetchStatistics(CompletionCallback<FetchStatisticsResponse> callback) {
         long snapshotId = Long.MAX_VALUE - 1;
-        FetchStatisticsRequest request = FetchStatisticsRequest.newBuilder().setSnapshotId(snapshotId).build();
-        getAsyncStub().fetchStatistics(request, new StreamObserver<>() {
-            @Override
-            public void onNext(FetchStatisticsResponse value) {
-                callback.onCompleted(value);
-            }
+        FetchStatisticsRequest request =
+                FetchStatisticsRequest.newBuilder().setSnapshotId(snapshotId).build();
+        getAsyncStub()
+                .fetchStatistics(
+                        request,
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(FetchStatisticsResponse value) {
+                                callback.onCompleted(value);
+                            }
 
-            @Override
-            public void onError(Throwable t) {
-                callback.onError(t);
-            }
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
 
-            @Override
-            public void onCompleted() {}
-        });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

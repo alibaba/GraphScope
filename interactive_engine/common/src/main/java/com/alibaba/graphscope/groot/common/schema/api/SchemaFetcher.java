@@ -15,7 +15,6 @@
  */
 package com.alibaba.graphscope.groot.common.schema.api;
 
-import com.alibaba.graphscope.proto.groot.Statistics;
 
 import java.util.Map;
 

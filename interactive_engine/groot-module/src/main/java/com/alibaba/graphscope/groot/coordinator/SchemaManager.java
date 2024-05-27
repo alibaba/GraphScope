@@ -25,10 +25,10 @@ import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.ddl.DdlResult;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
-
 import com.alibaba.graphscope.proto.groot.EdgeKindPb;
 import com.alibaba.graphscope.proto.groot.LabelIdPb;
 import com.alibaba.graphscope.proto.groot.Statistics;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,19 +107,20 @@ public class SchemaManager {
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "fetch-statistics", logger));
-        this.fetchStatisticsScheduler.scheduleWithFixedDelay(this::syncStatistics, 0, 2, TimeUnit.HOURS);
+        this.fetchStatisticsScheduler.scheduleWithFixedDelay(
+                this::syncStatistics, 5, 60, TimeUnit.MINUTES);
         this.sendStatisticsScheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "send-statistics", logger));
-        this.sendStatisticsScheduler.scheduleWithFixedDelay(this::sendStatisticsToFrontend, 5, 60, TimeUnit.SECONDS);
+        this.sendStatisticsScheduler.scheduleWithFixedDelay(
+                this::sendStatisticsToFrontend, 5, 60, TimeUnit.SECONDS);
     }
 
     private void syncStatistics() {
         try {
             Map<Integer, Statistics> statisticsMap = graphDefFetcher.fetchStatistics();
             Statistics statistics = aggregateStatistics(statisticsMap);
-            System.out.println(statistics.getNumEdges());
             this.graphStatistics.set(statistics);
         } catch (Exception e) {
             logger.error("Fetch statistics failed", e);
@@ -131,6 +132,7 @@ public class SchemaManager {
         for (int i = 0; i < frontendCount; ++i) {
             try {
                 frontendSnapshotClients.getClient(i).syncStatistics(statistics);
+                logger.info("Send statistics to frontend#{}", i);
             } catch (Exception e) {
                 logger.error("Failed to sync statistics to frontend", e);
             }
@@ -148,30 +150,38 @@ public class SchemaManager {
             numVertices += statistics.getNumVertices();
             numEdges += statistics.getNumEdges();
 
-            for (Statistics.VertexTypeStatistics subStatistics : statistics.getVertexTypeStatisticsList()) {
+            for (Statistics.VertexTypeStatistics subStatistics :
+                    statistics.getVertexTypeStatisticsList()) {
                 long count = subStatistics.getNumVertices();
                 int labelId = subStatistics.getLabelId().getId();
                 vertexMap.compute(labelId, (k, v) -> (v == null) ? count : v + count);
             }
 
-            for (Statistics.EdgeTypeStatistics subStatistics : statistics.getEdgeTypeStatisticsList()) {
+            for (Statistics.EdgeTypeStatistics subStatistics :
+                    statistics.getEdgeTypeStatisticsList()) {
                 long count = subStatistics.getNumEdges();
                 EdgeKindPb edgeKindPb = subStatistics.getEdgeKind();
                 edgeKindMap.compute(edgeKindPb, (k, v) -> (v == null) ? count : v + count);
             }
         }
-        builder.setSnapshotId(0);  // TODO(siyuan): set this
+        builder.setSnapshotId(0); // TODO(siyuan): set this
         builder.setNumVertices(numVertices).setNumEdges(numEdges);
         for (Map.Entry<Integer, Long> entry : vertexMap.entrySet()) {
             int labelId = entry.getKey();
             LabelIdPb labelIdPb = LabelIdPb.newBuilder().setId(labelId).build();
             Long count = entry.getValue();
-            builder.addVertexTypeStatistics(Statistics.VertexTypeStatistics.newBuilder().setLabelId(labelIdPb).setNumVertices(count));
+            builder.addVertexTypeStatistics(
+                    Statistics.VertexTypeStatistics.newBuilder()
+                            .setLabelId(labelIdPb)
+                            .setNumVertices(count));
         }
         for (Map.Entry<EdgeKindPb, Long> entry : edgeKindMap.entrySet()) {
             EdgeKindPb edgeKindPb = entry.getKey();
             Long count = entry.getValue();
-            builder.addEdgeTypeStatistics(Statistics.EdgeTypeStatistics.newBuilder().setEdgeKind(edgeKindPb).setNumEdges(count));
+            builder.addEdgeTypeStatistics(
+                    Statistics.EdgeTypeStatistics.newBuilder()
+                            .setEdgeKind(edgeKindPb)
+                            .setNumEdges(count));
         }
         return builder.build();
     }

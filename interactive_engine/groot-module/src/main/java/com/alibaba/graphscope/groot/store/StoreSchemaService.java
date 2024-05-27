@@ -47,10 +47,14 @@ public class StoreSchemaService extends StoreSchemaGrpc.StoreSchemaImplBase {
     }
 
     @Override
-    public void fetchStatistics(FetchStatisticsRequest request, StreamObserver<FetchStatisticsResponse> responseObserver) {
+    public void fetchStatistics(
+            FetchStatisticsRequest request,
+            StreamObserver<FetchStatisticsResponse> responseObserver) {
         try {
-            Map<Integer, Statistics> map = this.storeService.getGraphStatisticsBlob(request.getSnapshotId());
-            responseObserver.onNext(FetchStatisticsResponse.newBuilder().putAllStatisticsMap(map).build());
+            Map<Integer, Statistics> map =
+                    this.storeService.getGraphStatisticsBlob(request.getSnapshotId());
+            responseObserver.onNext(
+                    FetchStatisticsResponse.newBuilder().putAllStatisticsMap(map).build());
             responseObserver.onCompleted();
         } catch (IOException e) {
             logger.error("get statistics failed", e);

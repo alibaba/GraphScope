@@ -54,7 +54,9 @@ public class FrontendSnapshotService extends FrontendSnapshotGrpc.FrontendSnapsh
     }
 
     @Override
-    public void syncStatistics(SyncStatisticsRequest request, StreamObserver<SyncStatisticsResponse> responseObserver) {
+    public void syncStatistics(
+            SyncStatisticsRequest request,
+            StreamObserver<SyncStatisticsResponse> responseObserver) {
         Statistics statistics = request.getStatistics();
         GraphStatistics graphStatistics = DefaultGraphStatistics.parseProto(statistics);
         snapshotCache.setGraphStatisticsRef(graphStatistics);

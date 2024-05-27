@@ -27,12 +27,10 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeEnum;
-import com.alibaba.graphscope.groot.coordinator.DdlWriter;
-import com.alibaba.graphscope.groot.coordinator.GraphDefFetcher;
-import com.alibaba.graphscope.groot.coordinator.SchemaManager;
-import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.BatchId;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.request.CreateVertexTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
@@ -69,13 +67,16 @@ public class SchemaManagerTest {
         GraphDef initialGraphDef = GraphDef.newBuilder().build();
         when(mockGraphDefFetcher.fetchGraphDef()).thenReturn(initialGraphDef);
 
+        RoleClients<FrontendSnapshotClient> frontendSnapshotClients = mock(RoleClients.class);
         SchemaManager schemaManager =
                 new SchemaManager(
                         mockSnapshotManager,
                         ddlExecutors,
                         mockDdlWriter,
                         mockMetaService,
-                        mockGraphDefFetcher);
+                        mockGraphDefFetcher,
+                        frontendSnapshotClients,
+                        1);
         schemaManager.start();
         assertEquals(initialGraphDef, schemaManager.getGraphDef());
 

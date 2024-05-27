@@ -19,7 +19,6 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.proto.groot.Statistics;
-import com.google.common.collect.Maps;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,10 +66,12 @@ public class DefaultGraphStatistics implements GraphStatistics {
 
     @Override
     public Long getEdgeTypeCount(int edgeTypeId, int sourceTypeId, int targetTypeId) {
-        EdgeKind edgeKind = EdgeKind.newBuilder().setEdgeLabelId(new LabelId(edgeTypeId))
-                .setSrcVertexLabelId(new LabelId(sourceTypeId))
-                .setDstVertexLabelId(new LabelId(targetTypeId))
-                .build();
+        EdgeKind edgeKind =
+                EdgeKind.newBuilder()
+                        .setEdgeLabelId(new LabelId(edgeTypeId))
+                        .setSrcVertexLabelId(new LabelId(sourceTypeId))
+                        .setDstVertexLabelId(new LabelId(targetTypeId))
+                        .build();
         return edgeTypeCounts.get(edgeKind);
     }
 
@@ -79,10 +80,10 @@ public class DefaultGraphStatistics implements GraphStatistics {
         long ecount = statistics.getNumEdges();
         Map<LabelId, Long> vertexTypeCounts = new HashMap<>();
         Map<EdgeKind, Long> edgeTypeCounts = new HashMap<>();
-        for (Statistics.VertexTypeStatistics sts: statistics.getVertexTypeStatisticsList()) {
+        for (Statistics.VertexTypeStatistics sts : statistics.getVertexTypeStatisticsList()) {
             vertexTypeCounts.put(LabelId.parseProto(sts.getLabelId()), sts.getNumVertices());
         }
-        for (Statistics.EdgeTypeStatistics sts: statistics.getEdgeTypeStatisticsList()) {
+        for (Statistics.EdgeTypeStatistics sts : statistics.getEdgeTypeStatisticsList()) {
             edgeTypeCounts.put(EdgeKind.parseProto(sts.getEdgeKind()), sts.getNumEdges());
         }
         return new DefaultGraphStatistics(vertexTypeCounts, edgeTypeCounts, vcount, ecount);
@@ -90,11 +91,15 @@ public class DefaultGraphStatistics implements GraphStatistics {
 
     @Override
     public String toString() {
-        return "DefaultGraphStatistics{" +
-                "vertexTypeCounts=" + vertexTypeCounts +
-                ", edgeTypeCounts=" + edgeTypeCounts +
-                ", totalVertexCount=" + totalVertexCount +
-                ", totalEdgeCount=" + totalEdgeCount +
-                '}';
+        return "DefaultGraphStatistics{"
+                + "vertexTypeCounts="
+                + vertexTypeCounts
+                + ", edgeTypeCounts="
+                + edgeTypeCounts
+                + ", totalVertexCount="
+                + totalVertexCount
+                + ", totalEdgeCount="
+                + totalEdgeCount
+                + '}';
     }
 }

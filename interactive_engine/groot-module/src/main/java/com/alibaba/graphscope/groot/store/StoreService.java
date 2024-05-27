@@ -25,8 +25,8 @@ import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
-
 import com.alibaba.graphscope.proto.groot.Statistics;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -156,9 +156,15 @@ public class StoreService {
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-download", logger));
         this.downloadExecutor.allowCoreThreadTimeOut(true);
-        this.statisticsExecutor = new ThreadPoolExecutor(8, 16, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
-                ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
-                        "store-statistics", logger));
+        this.statisticsExecutor =
+                new ThreadPoolExecutor(
+                        8,
+                        16,
+                        60L,
+                        TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<>(),
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "store-statistics", logger));
         logger.info("StoreService started. storeId [" + this.storeId + "]");
     }
 
@@ -308,16 +314,22 @@ public class StoreService {
 
         Map<Integer, Statistics> statisticsMap = new HashMap<>();
         for (Map.Entry<Integer, GraphPartition> entry : idToPartition.entrySet()) {
-            this.statisticsExecutor.execute(() -> {
-                try {
-                    Statistics statistics = entry.getValue().getGraphStatisticsBlob(snapshotId);
-                    statisticsMap.put(entry.getKey(), statistics);
-                } catch (IOException e) {
-                    logger.error("Collect statistics failed for partition {}", entry.getKey(), e);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
+            this.statisticsExecutor.execute(
+                    () -> {
+                        try {
+                            Statistics statistics =
+                                    entry.getValue().getGraphStatisticsBlob(snapshotId);
+                            statisticsMap.put(entry.getKey(), statistics);
+                            logger.info("Collected statistics of partition#{}", entry.getKey());
+                        } catch (IOException e) {
+                            logger.error(
+                                    "Collect statistics failed for partition {}",
+                                    entry.getKey(),
+                                    e);
+                        } finally {
+                            countDownLatch.countDown();
+                        }
+                    });
         }
         try {
             countDownLatch.await();

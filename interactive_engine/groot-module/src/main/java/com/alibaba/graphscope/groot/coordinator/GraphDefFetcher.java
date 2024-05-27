@@ -18,14 +18,13 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.proto.groot.FetchStatisticsResponse;
 import com.alibaba.graphscope.proto.groot.Statistics;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class GraphDefFetcher {
     private static final Logger logger = LoggerFactory.getLogger(GraphDefFetcher.class);
@@ -47,23 +46,26 @@ public class GraphDefFetcher {
         CountDownLatch countDownLatch = new CountDownLatch(storeCount);
 
         for (int i = 0; i < storeCount; ++i) {
-            storeSchemaClients.getClient(i).fetchStatistics(new CompletionCallback<FetchStatisticsResponse>() {
-                @Override
-                public void onCompleted(FetchStatisticsResponse res) {
-                    statisticsMap.putAll(res.getStatisticsMapMap());
-                    finish(null);
-                }
+            storeSchemaClients
+                    .getClient(i)
+                    .fetchStatistics(
+                            new CompletionCallback<FetchStatisticsResponse>() {
+                                @Override
+                                public void onCompleted(FetchStatisticsResponse res) {
+                                    statisticsMap.putAll(res.getStatisticsMapMap());
+                                    finish(null);
+                                }
 
-                @Override
-                public void onError(Throwable t) {
-                    logger.error("failed to fetch statistics", t);
-                    finish(t);
-                }
+                                @Override
+                                public void onError(Throwable t) {
+                                    logger.error("failed to fetch statistics", t);
+                                    finish(t);
+                                }
 
-                private void finish(Throwable t) {
-                    countDownLatch.countDown();
-                }
-            });
+                                private void finish(Throwable t) {
+                                    countDownLatch.countDown();
+                                }
+                            });
         }
         try {
             countDownLatch.await();

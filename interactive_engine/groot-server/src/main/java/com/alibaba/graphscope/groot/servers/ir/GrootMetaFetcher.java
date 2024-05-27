@@ -23,10 +23,10 @@ import com.alibaba.graphscope.common.store.SnapshotId;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 
 public class GrootMetaFetcher implements IrMetaFetcher {

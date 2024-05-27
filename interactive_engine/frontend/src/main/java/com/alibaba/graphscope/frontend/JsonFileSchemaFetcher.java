@@ -19,7 +19,6 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
 import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphSchema;
-import com.alibaba.graphscope.proto.groot.Statistics;
 
 import java.io.IOException;
 import java.nio.file.Files;
