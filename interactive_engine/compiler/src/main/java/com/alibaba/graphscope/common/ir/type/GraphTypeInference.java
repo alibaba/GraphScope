@@ -165,17 +165,38 @@ public class GraphTypeInference {
         if (child instanceof GraphLogicalSource
                         && ((GraphLogicalSource) child).getOpt() == GraphOpt.Source.VERTEX
                 || child instanceof GraphLogicalGetV) {
+            GraphSchemaType childType = (GraphSchemaType) getType(child);
+            GraphLabelType childLabelType = childType.getLabelType();
             if (parent instanceof GraphLogicalPathExpand) {
-                parent = ((GraphLogicalPathExpand) parent).getExpand();
-                parentType = ((GraphPathType) parentType).getComponentType().getExpandType();
+                GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) parent;
+                int minHop =
+                        (pxd.getOffset() == null)
+                                ? 0
+                                : ((Number) ((RexLiteral) pxd.getOffset()).getValue()).intValue();
+                int maxHop =
+                        pxd.getFetch() == null
+                                ? Integer.MAX_VALUE
+                                : ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue()
+                                        + minHop
+                                        - 1;
+                GraphPathTypeInference pathTypeInfer =
+                        new GraphPathTypeInference(
+                                childLabelType,
+                                null,
+                                (GraphPathType) parentType,
+                                ((GraphLogicalExpand) pxd.getExpand()).getOpt(),
+                                minHop,
+                                maxHop);
+                return createSchemaType(
+                        GraphOpt.Source.VERTEX,
+                        pathTypeInfer.inferStartVType().getLabelsEntry(),
+                        childType);
             }
             if (parent instanceof GraphLogicalExpand) {
                 GraphLogicalExpand expand = (GraphLogicalExpand) parent;
-                GraphSchemaType childType = (GraphSchemaType) getType(child);
-                GraphLabelType childLabelType = childType.getLabelType();
                 GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
                 List<GraphLabelType.Entry> commonLabels =
-                        commonLabels(childLabelType, parentLabelType, expand.getOpt(), true);
+                        commonLabels(childLabelType, parentLabelType, expand.getOpt(), true, false);
                 return createSchemaType(GraphOpt.Source.VERTEX, commonLabels, childType);
             }
             throw new IllegalArgumentException(
@@ -239,7 +260,7 @@ public class GraphTypeInference {
                             ((GraphLogicalExpand) pxd.getExpand()).getOpt(),
                             minHop,
                             maxHop);
-            return pathTypeInfer.infer();
+            return pathTypeInfer.inferPathType();
         }
         throw new IllegalArgumentException(
                 "graph generic type error: unable to establish an extension relationship between"
@@ -267,7 +288,8 @@ public class GraphTypeInference {
                 GraphLabelType childLabelType = ((GraphSchemaType) getType(child)).getLabelType();
                 GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
                 List<GraphLabelType.Entry> commonLabels =
-                        commonLabels(childLabelType, parentLabelType, expand.getOpt(), false);
+                        commonLabels(
+                                childLabelType, parentLabelType, expand.getOpt(), false, false);
                 return createSchemaType(
                         GraphOpt.Source.EDGE, commonLabels, (GraphSchemaType) parentType);
             }
@@ -291,7 +313,7 @@ public class GraphTypeInference {
                                 ((GraphLogicalExpand) pxd.getExpand()).getOpt(),
                                 minHop,
                                 maxHop);
-                return pathTypeInfer.infer();
+                return pathTypeInfer.inferPathType();
             }
             throw new IllegalArgumentException(
                     "graph generic type error: unable to establish an extension relationship"
@@ -335,15 +357,30 @@ public class GraphTypeInference {
                             + " between node %s with node %s",
                     child,
                     parent);
-            GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) child;
-            RelDataType innerGetVType =
-                    ((GraphPathType) getType(pxd)).getComponentType().getGetVType();
-            GraphLabelType innerGetVLabelType = ((GraphSchemaType) innerGetVType).getLabelType();
             GraphLabelType outerGetVLabelType = ((GraphSchemaType) parentType).getLabelType();
-            List<GraphLabelType.Entry> commonLabels =
-                    commonLabels(innerGetVLabelType, outerGetVLabelType);
+            GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) child;
+            int minHop =
+                    (pxd.getOffset() == null)
+                            ? 0
+                            : ((Number) ((RexLiteral) pxd.getOffset()).getValue()).intValue();
+            int maxHop =
+                    pxd.getFetch() == null
+                            ? Integer.MAX_VALUE
+                            : ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue()
+                                    + minHop
+                                    - 1;
+            GraphPathTypeInference pathTypeInfer =
+                    new GraphPathTypeInference(
+                            null,
+                            outerGetVLabelType,
+                            (GraphPathType) getType(pxd),
+                            ((GraphLogicalExpand) pxd.getExpand()).getOpt(),
+                            minHop,
+                            maxHop);
             return createSchemaType(
-                    GraphOpt.Source.VERTEX, commonLabels, (GraphSchemaType) parentType);
+                    GraphOpt.Source.VERTEX,
+                    pathTypeInfer.inferGetVType().getLabelsEntry(),
+                    (GraphSchemaType) parentType);
         }
         throw new IllegalArgumentException(
                 "graph generic type error: unable to establish an extension relationship between"
@@ -489,7 +526,8 @@ public class GraphTypeInference {
             GraphLabelType getVType,
             GraphLabelType expandType,
             GraphOpt.Expand expandOpt,
-            boolean recordGetV) {
+            boolean recordGetV,
+            boolean containsZeroPath) {
         List<GraphLabelType.Entry> commonLabels = Lists.newArrayList();
         for (GraphLabelType.Entry entry1 : getVType.getLabelsEntry()) {
             for (GraphLabelType.Entry entry2 : expandType.getLabelsEntry()) {
@@ -501,6 +539,11 @@ public class GraphTypeInference {
                             commonLabels.add(entry2);
                         }
                     }
+                    if (containsZeroPath
+                            && recordGetV
+                            && entry1.getLabel().equals(entry2.getSrcLabel())) {
+                        commonLabels.add(entry1);
+                    }
                 }
                 if (expandOpt != GraphOpt.Expand.IN) {
                     if (entry1.getLabel().equals(entry2.getSrcLabel())) {
@@ -509,6 +552,11 @@ public class GraphTypeInference {
                         } else {
                             commonLabels.add(entry2);
                         }
+                    }
+                    if (containsZeroPath
+                            && recordGetV
+                            && entry1.getLabel().equals(entry2.getDstLabel())) {
+                        commonLabels.add(entry1);
                     }
                 }
             }
@@ -781,7 +829,7 @@ public class GraphTypeInference {
             this.allValidPathTypes = Lists.newArrayList();
         }
 
-        public GraphPathType infer() {
+        public GraphPathType inferPathType() {
             recursive(startVType, new CompositePathType(Lists.newArrayList()), 0);
             List<GraphLabelType.Entry> expandTypes = Lists.newArrayList();
             List<GraphLabelType.Entry> getVTypes = Lists.newArrayList();
@@ -824,6 +872,20 @@ public class GraphTypeInference {
                                     GraphOpt.Source.VERTEX,
                                     getVTypes.stream().distinct().collect(Collectors.toList()),
                                     getVType)));
+        }
+
+        public GraphLabelType inferStartVType() {
+            GraphLabelType expandType =
+                    ((GraphSchemaType) pxdType.getComponentType().getExpandType()).getLabelType();
+            return new GraphLabelType(
+                    commonLabels(startVType, expandType, expandOpt, true, minHop == 0));
+        }
+
+        public GraphLabelType inferGetVType() {
+            GraphLabelType innerGetVLabelType =
+                    ((GraphSchemaType) pxdType.getComponentType().getGetVType()).getLabelType();
+            List<GraphLabelType.Entry> commonLabels = commonLabels(innerGetVLabelType, endVType);
+            return new GraphLabelType(commonLabels);
         }
 
         private void recursive(
