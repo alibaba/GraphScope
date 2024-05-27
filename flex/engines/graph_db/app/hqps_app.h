@@ -22,12 +22,12 @@
 namespace gs {
 
 /**
- * @brief HqpsAdhocApp is a builtin, proxy app used to evaluate
+ * @brief HQPSAdhocApp is a builtin, proxy app used to evaluate
  * adhoc query.
  */
-class HqpsAdhocApp : public WriteAppBase {
+class HQPSAdhocApp : public WriteAppBase {
  public:
-  HqpsAdhocApp() {}
+  HQPSAdhocApp() {}
 
   AppType type() const override { return AppType::kCypherAdhoc; }
 
@@ -38,9 +38,9 @@ class HqpsAdhocApp : public WriteAppBase {
  * @brief HqpsWriteProcedureApp is a builtin, proxy app used to evaluate
  *  procedure query.
  */
-class HqpsProcedureApp : public WriteAppBase {
+class HQPSProcedureApp : public WriteAppBase {
  public:
-  HqpsProcedureApp() {}
+  HQPSProcedureApp() {}
   AppType type() const override { return AppType::kCypherProcedure; }
 
   bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;

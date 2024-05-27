@@ -98,7 +98,7 @@ AppBase* get_app(const std::string& query_name, GraphDBSession& graph) {
   return app;
 }
 
-bool HqpsAdhocApp::Query(GraphDBSession& graph, Decoder& input,
+bool HQPSAdhocApp::Query(GraphDBSession& graph, Decoder& input,
                          Encoder& output) {
   if (input.size() <= 4) {
     LOG(ERROR) << "Invalid input for AbstractHQPSAdhocApp, input size: "
@@ -120,7 +120,7 @@ bool HqpsAdhocApp::Query(GraphDBSession& graph, Decoder& input,
   return app_wrapper.app()->run(graph, input, output);
 }
 
-bool HqpsProcedureApp::Query(GraphDBSession& graph, Decoder& input,
+bool HQPSProcedureApp::Query(GraphDBSession& graph, Decoder& input,
                              Encoder& output) {
   std::string query_name;
   std::vector<char> input_buffer;
@@ -140,11 +140,11 @@ bool HqpsProcedureApp::Query(GraphDBSession& graph, Decoder& input,
 
 // GraphDB& db is not used in these functions
 AppWrapper HQPSAdhocAppFactory::CreateApp(const GraphDB& db) {
-  return AppWrapper(new HqpsAdhocApp(), NULL);
+  return AppWrapper(new HQPSAdhocApp(), NULL);
 }
 
 AppWrapper HQPSProcedureAppFactory::CreateApp(const GraphDB& db) {
-  return AppWrapper(new HqpsProcedureApp(), NULL);
+  return AppWrapper(new HQPSProcedureApp(), NULL);
 }
 
 }  // namespace gs
