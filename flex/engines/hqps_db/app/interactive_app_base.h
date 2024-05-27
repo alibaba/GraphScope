@@ -20,12 +20,19 @@
 
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/proto_generated_gie/results.pb.h"
+// #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/utils/property/types.h"
+// #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
 #include "nlohmann/json.hpp"
 namespace gs {
 
 class GraphDBSession;
+
+// void put_argument(gs::Encoder& encoder, const query::Argument& argument);
+// bool parse_input_argument(gs::Decoder& raw_input,
+//                           gs::Encoder& argument_encoder);
+
 template <size_t I, typename TUPLE_T>
 bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
   return true;
@@ -155,6 +162,29 @@ class CypherWriteAppBase : public WriteAppBase {
                       tuple);
   }
 };
+
+// For internal cypher-gen procedure, with pb input and output
+// Codegen app should inherit from this class
+// class CypherInternalPbWriteAppBase : public WriteAppBase {
+//  public:
+//   AppType type() const override { return AppType::kCypherProcedure; }
+
+//   virtual bool DoQuery(GraphDBSession& db, Decoder& input, Encoder& output) =
+//   0;
+
+//   bool Query(GraphDBSession& db, Decoder& raw_input, Encoder& output)
+//   override {
+//     std::vector<char> output_buffer;
+//     gs::Encoder argument_encoder(output_buffer);
+//     if (!parse_input_argument(raw_input, argument_encoder)) {
+//       LOG(ERROR) << "Failed to parse input argument!";
+//       return false;
+//     }
+//     gs::Decoder argument_decoder(output_buffer.data(), output_buffer.size());
+//     return DoQuery(db, argument_decoder, output);
+//   }
+// };
+
 }  // namespace gs
 
 #endif  // BUILD_HQPS

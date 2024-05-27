@@ -103,8 +103,8 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
   }
 }
 
-uint8_t GraphDBSession::parse_query_type(const std::string& input,
-                                         char input_tag) {
+Result<uint8_t> GraphDBSession::parse_query_type(const std::string& input,
+                                                 char input_tag) {
   size_t len = input.size();
   if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
     // for c++ encoder
@@ -117,14 +117,38 @@ uint8_t GraphDBSession::parse_query_type(const std::string& input,
     const auto& app_name_to_path_index = schema().GetPlugins();
     if (app_name_to_path_index.count(query_name) <= 0) {
       LOG(ERROR) << "Query name is not registered: " << query_name;
-      return 0;
+      return Result<uint8_t>(StatusCode::NotFound,
+                             "Query name is not registered: " + query_name, 0);
     }
     return app_name_to_path_index.at(query_name).second;
-  } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherInternal)) {
+  } else if (input_tag ==
+             static_cast<uint8_t>(InputFormat::kCypherInternalAdhoc)) {
     return input[len - 2];
+  } else if (input_tag ==
+             static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
+    query::Query cur_query;
+    if (!cur_query.ParseFromArray(input.data(), input.size())) {
+      LOG(ERROR) << "Fail to parse query from input content";
+      return Result<uint8_t>(StatusCode::InternalError,
+                             "Fail to parse query from input content", 0);
+    }
+    auto query_name = cur_query.query_name().name();
+    if (query_name.empty()) {
+      LOG(ERROR) << "Query name is empty";
+      return Result<uint8_t>(StatusCode::NotFound, "Query name is empty", 0);
+    }
+    const auto& app_name_to_path_index = schema().GetPlugins();
+    if (app_name_to_path_index.count(query_name) <= 0) {
+      LOG(ERROR) << "Query name is not registered: " << query_name;
+      return Result<uint8_t>(StatusCode::NotFound,
+                             "Query name is not registered: " + query_name, 0);
+    }
+    return app_name_to_path_index.at(query_name).second;
   }
+
   LOG(ERROR) << "Invalid input tag: " << input_tag;
-  return 0;
+  return Result<uint8_t>(StatusCode::InValidArgument,
+                         "Invalid input tag: " + std::to_string(input_tag), 0);
 }
 
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
@@ -147,15 +171,24 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
     // for cypher
     str_len = input.size() - 1;
-  } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherInternal)) {
+  } else if (input_tag ==
+             static_cast<uint8_t>(InputFormat::kCypherInternalAdhoc)) {
     str_len = input.size() - 2;  // the second last byte is the query id.
+  } else if (input_tag ==
+             static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
+    str_len = input.size();  // data is pb encoded.
   } else {
     return Result<std::vector<char>>(
         StatusCode::InValidArgument,
         "Invalid input tag: " + std::to_string(static_cast<int>(input_tag)),
         std::vector<char>());
   }
-  uint8_t type = parse_query_type(input, input_tag);
+  auto type_res = parse_query_type(input, input_tag);
+  if (!type_res.ok()) {
+    LOG(ERROR) << "Fail to parse query type";
+    return Result<std::vector<char>>(type_res.status(), std::vector<char>());
+  }
+  uint8_t type = type_res.value();
 
   std::vector<char> result_buffer;
 

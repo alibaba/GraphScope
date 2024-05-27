@@ -22,43 +22,45 @@
 namespace gs {
 
 /**
- * @brief HQPSAdhocApp is a builtin, proxy app used to evaluate
- * adhoc query.
+ * @brief HQPSAdhocReadApp is a builtin, proxy app used to evaluate
+ * adhoc read query.
  */
-class HQPSAdhocApp : public WriteAppBase {
+class HQPSAdhocReadApp : public ReadAppBase {
  public:
-  HQPSAdhocApp() {}
+  HQPSAdhocReadApp() {}
+
+  AppType type() const override { return AppType::kCypherAdhoc; }
+
+  bool Query(const GraphDBSession& graph, Decoder& input,
+             Encoder& output) override;
+};
+
+/**
+ * @brief HQPSAdhocWriteApp is a builtin, proxy app used to evaluate
+ * adhoc write query.
+ */
+class HQPSAdhocWriteApp : public WriteAppBase {
+ public:
+  HQPSAdhocWriteApp() {}
 
   AppType type() const override { return AppType::kCypherAdhoc; }
 
   bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 };
 
-/**
- * @brief HqpsWriteProcedureApp is a builtin, proxy app used to evaluate
- *  procedure query.
- */
-class HQPSProcedureApp : public WriteAppBase {
- public:
-  HQPSProcedureApp() {}
-  AppType type() const override { return AppType::kCypherProcedure; }
-
-  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
-};
-
 // Factory
-class HQPSAdhocAppFactory : public AppFactoryBase {
+class HQPSAdhocReadAppFactory : public AppFactoryBase {
  public:
-  HQPSAdhocAppFactory() = default;
-  ~HQPSAdhocAppFactory() = default;
+  HQPSAdhocReadAppFactory() = default;
+  ~HQPSAdhocReadAppFactory() = default;
 
   AppWrapper CreateApp(const GraphDB& db) override;
 };
 
-class HQPSProcedureAppFactory : public AppFactoryBase {
+class HQPSAdhocWriteAppFactory : public AppFactoryBase {
  public:
-  HQPSProcedureAppFactory() = default;
-  ~HQPSProcedureAppFactory() = default;
+  HQPSAdhocWriteAppFactory() = default;
+  ~HQPSAdhocWriteAppFactory() = default;
 
   AppWrapper CreateApp(const GraphDB& db) override;
 };

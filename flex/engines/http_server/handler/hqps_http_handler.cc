@@ -135,11 +135,14 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     }
+    req->content.append(gs::GraphDBSession::kCypherJson, 1);
   } else {
     // For queries from compiler(without graph_id, route to the proxy app)
-    req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
+    // req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
+    // Rewrite the payload, convert the pb encoded query into a encoder-based
+    // serialization result
+    req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
   }
-  req->content.append(gs::GraphDBSession::kCypherInternal, 1);
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
   // Extract context from headers. This copy is necessary to avoid access after
@@ -380,8 +383,8 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
 #endif  // HAVE_OPENTELEMETRY_CPP
         // TODO(zhanglei): choose read or write based on the request, after the
         //  read/write info is supported in physical plan
-        param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
-        param.content.append(gs::GraphDBSession::kCypherInternal, 1);
+        param.content.append(gs::Schema::HQPS_ADHOC_WRITE_PLUGIN_ID_STR, 1);
+        param.content.append(gs::GraphDBSession::kCypherInternalAdhoc, 1);
         return executor_refs_[dst_executor]
             .run_graph_db_query(query_param{std::move(param.content)})
             .then([

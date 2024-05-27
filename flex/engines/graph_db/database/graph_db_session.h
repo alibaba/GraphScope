@@ -38,13 +38,16 @@ class GraphDBSession {
  public:
   enum class InputFormat : uint8_t {
     kCppEncoder = 0,
-    kCypherJson = 1,      // External usage format
-    kCypherInternal = 2,  // Internal format
+    kCypherJson = 1,               // External usage format
+    kCypherInternalAdhoc = 2,      // Internal format for adhoc query
+    kCypherInternalProcedure = 3,  // Internal format for procedure
   };
 
   static constexpr int32_t MAX_RETRY = 3;
   static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
-  static constexpr const char* kCypherInternal = "\x02";
+  static constexpr const char* kCypherInternalAdhoc = "\x02";
+  static constexpr const char* kCypherJson = "\x01";
+  static constexpr const char* kCypherInternalProcedure = "\x03";
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
@@ -103,7 +106,7 @@ class GraphDBSession {
   AppBase* GetApp(int idx);
 
  private:
-  uint8_t parse_query_type(const std::string& input, char tag);
+  Result<uint8_t> parse_query_type(const std::string& input, char tag);
   GraphDB& db_;
   Allocator& alloc_;
   WalWriter& logger_;
