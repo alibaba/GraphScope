@@ -80,7 +80,9 @@ bool HQPSAdhocWriteApp::Query(GraphDBSession& graph, Decoder& input,
                << app_wrapper.app()->mode();
     return false;
   }
-  return app_wrapper.app()->run(graph, input, output);
+  std::vector<char> dummy_input;
+  gs::Decoder dummy_decoder(dummy_input.data(), dummy_input.size());
+  return app_wrapper.app()->run(graph, dummy_decoder, output);
 }
 
 // GraphDB& db is not used in these functions

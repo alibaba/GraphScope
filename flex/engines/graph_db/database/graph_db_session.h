@@ -24,7 +24,6 @@
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
-#include "flex/engines/hqps_db/app/interactive_app_base.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/column.h"
 #include "flex/utils/result.h"
@@ -45,8 +44,8 @@ class GraphDBSession {
 
   static constexpr int32_t MAX_RETRY = 3;
   static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
-  static constexpr const char* kCypherInternalAdhoc = "\x02";
   static constexpr const char* kCypherJson = "\x01";
+  static constexpr const char* kCypherInternalAdhoc = "\x02";
   static constexpr const char* kCypherInternalProcedure = "\x03";
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)

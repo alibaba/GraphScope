@@ -20,18 +20,53 @@
 
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/proto_generated_gie/results.pb.h"
-// #include "flex/proto_generated_gie/stored_procedure.pb.h"
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/utils/property/types.h"
-// #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
 #include "nlohmann/json.hpp"
 namespace gs {
 
-class GraphDBSession;
+void put_argument(gs::Encoder& encoder, const query::Argument& argument) {
+  auto& value = argument.value();
+  auto item_case = value.item_case();
+  switch (item_case) {
+  case common::Value::kI32:
+    encoder.put_int(value.i32());
+    break;
+  case common::Value::kI64:
+    encoder.put_long(value.i64());
+    break;
+  case common::Value::kF64:
+    encoder.put_double(value.f64());
+    break;
+  case common::Value::kStr:
+    encoder.put_string(value.str());
+    break;
+  default:
+    LOG(ERROR) << "Not recognizable param type" << static_cast<int>(item_case);
+  }
+}
 
-// void put_argument(gs::Encoder& encoder, const query::Argument& argument);
-// bool parse_input_argument(gs::Decoder& raw_input,
-//                           gs::Encoder& argument_encoder);
+bool parse_input_argument(gs::Decoder& raw_input,
+                          gs::Encoder& argument_encoder) {
+  if (raw_input.size() == 0) {
+    VLOG(10) << "No arguments found in input";
+    return true;
+  }
+  query::Query cur_query;
+  if (!cur_query.ParseFromArray(raw_input.data(), raw_input.size())) {
+    LOG(ERROR) << "Fail to parse query from input content";
+    return false;
+  }
+  auto& args = cur_query.arguments();
+  for (int32_t i = 0; i < args.size(); ++i) {
+    put_argument(argument_encoder, args[i]);
+  }
+  VLOG(10) << ", num args: " << args.size();
+  return true;
+}
+
+class GraphDBSession;
 
 template <size_t I, typename TUPLE_T>
 bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
@@ -165,25 +200,23 @@ class CypherWriteAppBase : public WriteAppBase {
 
 // For internal cypher-gen procedure, with pb input and output
 // Codegen app should inherit from this class
-// class CypherInternalPbWriteAppBase : public WriteAppBase {
-//  public:
-//   AppType type() const override { return AppType::kCypherProcedure; }
+class CypherInternalPbWriteAppBase : public WriteAppBase {
+ public:
+  AppType type() const override { return AppType::kCypherProcedure; }
 
-//   virtual bool DoQuery(GraphDBSession& db, Decoder& input, Encoder& output) =
-//   0;
+  virtual bool DoQuery(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
 
-//   bool Query(GraphDBSession& db, Decoder& raw_input, Encoder& output)
-//   override {
-//     std::vector<char> output_buffer;
-//     gs::Encoder argument_encoder(output_buffer);
-//     if (!parse_input_argument(raw_input, argument_encoder)) {
-//       LOG(ERROR) << "Failed to parse input argument!";
-//       return false;
-//     }
-//     gs::Decoder argument_decoder(output_buffer.data(), output_buffer.size());
-//     return DoQuery(db, argument_decoder, output);
-//   }
-// };
+  bool Query(GraphDBSession& db, Decoder& raw_input, Encoder& output) override {
+    std::vector<char> output_buffer;
+    gs::Encoder argument_encoder(output_buffer);
+    if (!parse_input_argument(raw_input, argument_encoder)) {
+      LOG(ERROR) << "Failed to parse input argument!";
+      return false;
+    }
+    gs::Decoder argument_decoder(output_buffer.data(), output_buffer.size());
+    return DoQuery(db, argument_decoder, output);
+  }
+};
 
 }  // namespace gs
 

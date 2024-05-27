@@ -44,7 +44,7 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "// DO NOT EDIT\n"
     "\n"
     "#include \"flex/engines/hqps_db/core/sync_engine.h\"\n"
-    "#include \"flex/engines/graph_db/app/app_base.h\"\n"  // app_base_header.h
+    "#include \"flex/engines/hqps_db/app/interactive_app_base.h\"\n"
     "#include \"%1%\"\n"  // graph_interface_header.h
     "\n"
     "\n"
