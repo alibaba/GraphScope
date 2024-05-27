@@ -14,6 +14,8 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.ServiceNotReadyException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
@@ -57,6 +59,7 @@ public class SchemaManager {
     private final int partitionCount;
     private volatile boolean ready = false;
 
+    private final boolean collectStatistics;
     private ExecutorService singleThreadExecutor;
     private ScheduledExecutorService syncSchemaScheduler;
 
@@ -64,23 +67,25 @@ public class SchemaManager {
     private ScheduledExecutorService sendStatisticsScheduler;
 
     public SchemaManager(
+            Configs configs,
             SnapshotManager snapshotManager,
             DdlExecutors ddlExecutors,
             DdlWriter ddlWriter,
             MetaService metaService,
             GraphDefFetcher graphDefFetcher,
-            RoleClients<FrontendSnapshotClient> frontendSnapshotClients,
-            int frontendCount) {
+            RoleClients<FrontendSnapshotClient> frontendSnapshotClients) {
         this.snapshotManager = snapshotManager;
         this.ddlExecutors = ddlExecutors;
         this.ddlWriter = ddlWriter;
         this.graphDefFetcher = graphDefFetcher;
         this.frontendSnapshotClients = frontendSnapshotClients;
-        this.frontendCount = frontendCount;
 
         this.graphDefRef = new AtomicReference<>();
         this.partitionCount = metaService.getPartitionCount();
         this.graphStatistics = new AtomicReference<>();
+
+        this.frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
+        this.collectStatistics = CommonConfig.COLLECT_STATISTICS_ENABLED.get(configs);
     }
 
     public void start() {
@@ -103,18 +108,20 @@ public class SchemaManager {
                                 "recover", logger));
         this.syncSchemaScheduler.scheduleWithFixedDelay(this::recover, 5, 2, TimeUnit.SECONDS);
 
-        this.fetchStatisticsScheduler =
-                Executors.newSingleThreadScheduledExecutor(
-                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
-                                "fetch-statistics", logger));
-        this.fetchStatisticsScheduler.scheduleWithFixedDelay(
-                this::syncStatistics, 5, 60, TimeUnit.MINUTES);
-        this.sendStatisticsScheduler =
-                Executors.newSingleThreadScheduledExecutor(
-                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
-                                "send-statistics", logger));
-        this.sendStatisticsScheduler.scheduleWithFixedDelay(
-                this::sendStatisticsToFrontend, 5, 60, TimeUnit.SECONDS);
+        if (this.collectStatistics) {
+            this.fetchStatisticsScheduler =
+                    Executors.newSingleThreadScheduledExecutor(
+                            ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                    "fetch-statistics", logger));
+            this.fetchStatisticsScheduler.scheduleWithFixedDelay(
+                    this::syncStatistics, 5, 60, TimeUnit.MINUTES);
+            this.sendStatisticsScheduler =
+                    Executors.newSingleThreadScheduledExecutor(
+                            ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                    "send-statistics", logger));
+            this.sendStatisticsScheduler.scheduleWithFixedDelay(
+                    this::sendStatisticsToFrontend, 5, 60, TimeUnit.SECONDS);
+        }
     }
 
     private void syncStatistics() {

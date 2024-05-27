@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotListener;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyDef;
@@ -68,15 +69,16 @@ public class SchemaManagerTest {
         when(mockGraphDefFetcher.fetchGraphDef()).thenReturn(initialGraphDef);
 
         RoleClients<FrontendSnapshotClient> frontendSnapshotClients = mock(RoleClients.class);
+        Configs configs = Configs.newBuilder().put("frontend.node.count", "1").build();
         SchemaManager schemaManager =
                 new SchemaManager(
+                        configs,
                         mockSnapshotManager,
                         ddlExecutors,
                         mockDdlWriter,
                         mockMetaService,
                         mockGraphDefFetcher,
-                        frontendSnapshotClients,
-                        1);
+                        frontendSnapshotClients);
         schemaManager.start();
         assertEquals(initialGraphDef, schemaManager.getGraphDef());
 

@@ -99,13 +99,13 @@ public class Coordinator extends NodeBase {
         GraphDefFetcher graphDefFetcher = new GraphDefFetcher(storeSchemaClients, storeCount);
         this.schemaManager =
                 new SchemaManager(
+                        configs,
                         this.snapshotManager,
                         ddlExecutors,
                         ddlWriter,
                         this.metaService,
                         graphDefFetcher,
-                        frontendSnapshotClients,
-                        frontendCount);
+                        frontendSnapshotClients);
         this.snapshotNotifier =
                 new SnapshotNotifier(
                         this.discovery,

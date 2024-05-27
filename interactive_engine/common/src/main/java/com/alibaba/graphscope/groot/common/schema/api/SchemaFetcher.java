@@ -15,7 +15,6 @@
  */
 package com.alibaba.graphscope.groot.common.schema.api;
 
-
 import java.util.Map;
 
 public interface SchemaFetcher {
