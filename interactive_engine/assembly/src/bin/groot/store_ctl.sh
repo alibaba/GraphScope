@@ -45,6 +45,8 @@ _setup_env() {
 
 	mkdir -p ${LOG_DIR}
 
+	export OTEL_SDK_DISABLED="${OTEL_SDK_DISABLED:-true}"
+
 	export LD_LIBRARY_PATH=${GROOT_HOME}/native:${GROOT_HOME}/native/lib:${LD_LIBRARY_PATH}:/usr/local/lib
 	libpath="$(echo "${GROOT_HOME}"/lib/*.jar | tr ' ' ':')"
 }

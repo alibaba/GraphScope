@@ -85,7 +85,7 @@ public class SchemaManager {
         this.graphStatistics = new AtomicReference<>();
 
         this.frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
-        this.collectStatistics = CommonConfig.COLLECT_STATISTICS_ENABLED.get(configs);
+        this.collectStatistics = CommonConfig.COLLECT_STATISTICS.get(configs);
     }
 
     public void start() {

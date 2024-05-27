@@ -531,3 +531,5 @@ uptrace:
 
 distributed:
   enabled: false
+
+collectStatistics: false

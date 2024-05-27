@@ -77,6 +77,6 @@ public class CommonConfig {
     public static final Config<Boolean> WRITE_HA_ENABLED =
             Config.boolConfig("write.ha.enabled", false);
 
-    public static final Config<Boolean> COLLECT_STATISTICS_ENABLED =
-            Config.boolConfig("collect.statistics.enabled", false);
+    public static final Config<Boolean> COLLECT_STATISTICS =
+            Config.boolConfig("collect.statistics", false);
 }
