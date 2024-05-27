@@ -39,65 +39,52 @@ void put_argument(gs::Encoder& encoder, const query::Argument& argument) {
   }
 }
 
-bool AbstractHQPSAdhocApp::run(GraphDBSession& graph, Decoder& input,
-                               Encoder& output) {
-  if (input.size() <= 4) {
-    LOG(ERROR) << "Invalid input for AbstractHQPSAdhocApp, input size: "
-               << input.size();
-    return false;
-  }
-  std::string_view str_view(input.data(), input.size());
-  std::string input_lib_path = std::string(str_view);
-  auto app_factory = std::make_shared<SharedLibraryAppFactory>(input_lib_path);
+AppWrapper loadAdhocQuery(const std::string& input_lib_path,
+                          std::shared_ptr<SharedLibraryAppFactory> app_factory,
+                          const GraphDB& graph) {
   AppWrapper app_wrapper;  // wrapper should be destroyed before the factory
-
   if (app_factory) {
-    app_wrapper = app_factory->CreateApp(graph_);
+    app_wrapper = app_factory->CreateApp(graph);
     if (app_wrapper.app() == NULL) {
-      LOG(ERROR) << "Fail to create app for adhoc query: " << input_lib_path;
-      return false;
+      LOG(ERROR) << "Fail to create app for adhoc query from path: "
+                 << input_lib_path;
     }
   } else {
     LOG(ERROR) << "Fail to evaluate adhoc query: " << input_lib_path;
-    return false;
   }
-
-  return app_wrapper.app()->run(graph, input, output);
+  return app_wrapper;
 }
 
-bool AbstractHQPSProcedureApp::run(GraphDBSession& graph, Decoder& input,
-                                   Encoder& output) {
-  if (input.size() <= 0) {
-    LOG(ERROR) << "Invalid input for AbstractHQPSProcedureApp, input size: "
-               << input.size();
+bool parse_input_argument(gs::Decoder& raw_input, gs::Encoder& argument_encoder,
+                          std::string& query_name) {
+  if (raw_input.size() <= 0) {
+    LOG(ERROR) << "Invalid input size: " << raw_input.size();
     return false;
   }
   query::Query cur_query;
-  if (!cur_query.ParseFromArray(input.data(), input.size())) {
+  if (!cur_query.ParseFromArray(raw_input.data(), raw_input.size())) {
     LOG(ERROR) << "Fail to parse query from input content";
     return false;
   }
-  auto query_name = cur_query.query_name().name();
-
-  std::vector<char> input_buffer;
-  gs::Encoder input_encoder(input_buffer);
-  auto& args = cur_query.arguments();
-  for (int32_t i = 0; i < args.size(); ++i) {
-    put_argument(input_encoder, args[i]);
-  }
-  VLOG(10) << "Query name: " << query_name << ", args: " << input_buffer.size()
-           << " bytes";
-  gs::Decoder input_decoder(input_buffer.data(), input_buffer.size());
-
+  query_name = cur_query.query_name().name();
   if (query_name.empty()) {
     LOG(ERROR) << "Query name is empty";
     return false;
   }
+  auto& args = cur_query.arguments();
+  for (int32_t i = 0; i < args.size(); ++i) {
+    put_argument(argument_encoder, args[i]);
+  }
+  VLOG(10) << "Query name: " << query_name << ", num args: " << args.size();
+  return true;
+}
+
+AppBase* get_app(const std::string& query_name, GraphDBSession& graph) {
   auto& app_name_to_path_index = graph.schema().GetPlugins();
   // get procedure id from name.
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
-    return false;
+    return NULL;
   }
 
   // get app
@@ -106,25 +93,58 @@ bool AbstractHQPSProcedureApp::run(GraphDBSession& graph, Decoder& input,
   if (!app) {
     LOG(ERROR) << "Fail to get app for query: " << query_name
                << ", type: " << type;
+    return NULL;
+  }
+  return app;
+}
+
+bool HqpsAdhocApp::Query(GraphDBSession& graph, Decoder& input,
+                         Encoder& output) {
+  if (input.size() <= 4) {
+    LOG(ERROR) << "Invalid input for AbstractHQPSAdhocApp, input size: "
+               << input.size();
     return false;
   }
-  return app->run(graph, input_decoder, output);
+  std::string_view str_view(input.data(), input.size());
+  std::string input_lib_path = std::string(str_view);
+  auto app_factory = std::make_shared<SharedLibraryAppFactory>(input_lib_path);
+  auto app_wrapper = loadAdhocQuery(input_lib_path, app_factory, graph.db());
+  if (app_wrapper.app() == NULL) {
+    LOG(ERROR) << "Fail to load adhoc query: " << input_lib_path;
+    return false;
+  }
+  if (app_wrapper.app()->mode() != AppMode::kWrite) {
+    LOG(ERROR) << "Invalid app mode for adhoc query: " << input_lib_path;
+    return false;
+  }
+  return app_wrapper.app()->run(graph, input, output);
 }
 
-AppWrapper HQPSReadAdhocAppFactory::CreateApp(const GraphDB& graph) {
-  return AppWrapper(new HqpsReadAdhocApp(graph), NULL);
+bool HqpsProcedureApp::Query(GraphDBSession& graph, Decoder& input,
+                             Encoder& output) {
+  std::string query_name;
+  std::vector<char> input_buffer;
+  gs::Encoder argument_encoder(input_buffer);
+  if (!parse_input_argument(input, argument_encoder, query_name)) {
+    return false;
+  }
+
+  gs::Decoder argument_decoder(input_buffer.data(), input_buffer.size());
+  auto app = get_app(query_name, graph);
+  if (!app) {
+    LOG(ERROR) << "Fail to get app for query: " << query_name;
+    return false;
+  }
+  return app->run(graph, argument_decoder, output);
 }
 
-AppWrapper HQPSWriteAdhocAppFactory::CreateApp(const GraphDB& graph) {
-  return AppWrapper(new HqpsWriteAdhocApp(graph), NULL);
+// GraphDB& db is not used in these functions
+AppWrapper HQPSAdhocAppFactory::CreateApp(const GraphDB& db) {
+  return AppWrapper(new HqpsAdhocApp(), NULL);
 }
 
-AppWrapper HQPSReadProcedureAppFactory::CreateApp(const GraphDB& graph) {
-  return AppWrapper(new HqpsReadProcedureApp(graph), NULL);
-}
-
-AppWrapper HQPSWriteProcedureAppFactory::CreateApp(const GraphDB& graph) {
-  return AppWrapper(new HqpsWriteProcedureApp(graph), NULL);
+AppWrapper HQPSProcedureAppFactory::CreateApp(const GraphDB& db) {
+  return AppWrapper(new HqpsProcedureApp(), NULL);
 }
 
 }  // namespace gs

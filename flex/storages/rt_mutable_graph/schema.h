@@ -32,15 +32,11 @@ class Schema {
   // Currently only one builtin plugin, SERVER_APP is supported.
   static constexpr uint8_t RESERVED_PLUGIN_NUM = 1;
 #ifdef BUILD_HQPS
-  static constexpr uint8_t MAX_PLUGIN_ID = 251;
-  static constexpr uint8_t HQPS_READ_ADHOC_PLUGIN_ID = 252;
-  static constexpr uint8_t HQPS_WRITE_ADHOC_PLUGIN_ID = 253;
-  static constexpr uint8_t HQPS_READ_PROCEDURE_PLUGIN_ID = 254;
-  static constexpr uint8_t HQPS_WRITE_PROCEDURE_PLUGIN_ID = 255;
-  static constexpr const char* HQPS_READ_ADHOC_PLUGIN_ID_STR = "\xFC";
-  static constexpr const char* HQPS_WRITE_ADHOC_PLUGIN_ID_STR = "\xFD";
-  static constexpr const char* HQPS_READ_PROCEDURE_PLUGIN_ID_STR = "\xFE";
-  static constexpr const char* HQPS_WRITE_PROCEDURE_PLUGIN_ID_STR = "\xFF";
+  static constexpr uint8_t MAX_PLUGIN_ID = 253;
+  static constexpr uint8_t HQPS_ADHOC_PLUGIN_ID = 254;
+  static constexpr uint8_t HQPS_PROCEDURE_PLUGIN_ID = 255;
+  static constexpr const char* HQPS_ADHOC_PLUGIN_ID_STR = "\xFE";
+  static constexpr const char* HQPS_PROCEDURE_PLUGIN_ID_STR = "\xFF";
 #else
   static constexpr uint8_t MAX_PLUGIN_ID = 255;
 #endif  // BUILD_HQPS
