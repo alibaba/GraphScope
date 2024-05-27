@@ -105,7 +105,34 @@ class GraphDBSession {
   AppBase* GetApp(int idx);
 
  private:
-  Result<uint8_t> parse_query_type(const std::string& input, char tag);
+  /**
+   * @brief Parse the input format of the query.
+   *        There are four formats:
+   *       0. CppEncoder: This format will be used by interactive-sdk to submit
+   * c++ stored prcoedure queries. The second last byte is the query id.
+   *       1. CypherJson: This format will be sended by interactive-sdk, the
+   *        input is a json string + '\x01'
+   *         {
+   *            "query_name": "example",
+   *            "arguments": {
+   *               "value": 1,
+   *               "type": {
+   *                "primitive_type": "DT_SIGNED_INT32"
+   *                }
+   *            }
+   *          }
+   *       2. CypherInternalAdhoc: This format will be used by compiler to
+   *        submit adhoc query, the input is a string + '\x02', the string is
+   *        the path to the dynamic library.
+   *       3. CypherInternalProcedure: This format will be used by compiler to
+   *        submit procedure query, the input is a proto-encoded string +
+   *        '\x03', the string is the path to the dynamic library.
+   * @param input The input query.
+   * @param str_len The length of the valid payload(other than the format and
+   * type bytes)
+   * @return The id of the query.
+   */
+  Result<uint8_t> parse_query_type(const std::string& input, size_t& str_len);
   GraphDB& db_;
   Allocator& alloc_;
   WalWriter& logger_;

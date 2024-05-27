@@ -105,13 +105,25 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
 }
 
 Result<uint8_t> GraphDBSession::parse_query_type(const std::string& input,
-                                                 char input_tag) {
+                                                 size_t& str_len) {
+  char input_tag = input.back();
   size_t len = input.size();
   if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
-    // for c++ encoder
+    // For cpp encoder, the query id is the second last byte, others are all
+    // user-defined payload,
+    str_len = len - 2;
+    return input[len - 2];
+  } else if (input_tag ==
+             static_cast<uint8_t>(InputFormat::kCypherInternalAdhoc)) {
+    // For cypher internal adhoc, the query id is the
+    // second last byte,which is fixed to 255, and other bytes are a string
+    // representing the path to generated dynamic lib.
+    str_len = len - 2;
     return input[len - 2];
   } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
-    // for cypher
+    // For cypherJson there is no query-id provided. The query name is provided
+    // in the json string.
+    str_len = len - 1;
     std::string_view str_view(input.data(), len - 1);
     nlohmann::json j = nlohmann::json::parse(str_view);
     auto query_name = j["query_name"].get<std::string>();
@@ -123,11 +135,10 @@ Result<uint8_t> GraphDBSession::parse_query_type(const std::string& input,
     }
     return app_name_to_path_index.at(query_name).second;
   } else if (input_tag ==
-             static_cast<uint8_t>(InputFormat::kCypherInternalAdhoc)) {
-    std::string_view str_view(input.data(), len - 2);
-    return input[len - 2];
-  } else if (input_tag ==
              static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
+    // For cypher internal procedure, the query_name is
+    // provided in the protobuf message.
+    str_len = len - 1;
     query::Query cur_query;
     if (!cur_query.ParseFromArray(input.data(), input.size() - 1)) {
       LOG(ERROR) << "Fail to parse query from input content";
@@ -146,11 +157,11 @@ Result<uint8_t> GraphDBSession::parse_query_type(const std::string& input,
                              "Query name is not registered: " + query_name, 0);
     }
     return app_name_to_path_index.at(query_name).second;
+  } else {
+    return Result<uint8_t>(StatusCode::InValidArgument,
+                           "Invalid input tag: " + std::to_string(input_tag),
+                           0);
   }
-
-  LOG(ERROR) << "Invalid input tag: " << input_tag;
-  return Result<uint8_t>(StatusCode::InValidArgument,
-                         "Invalid input tag: " + std::to_string(input_tag), 0);
 }
 
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
@@ -164,28 +175,8 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   }
 
   const char* str_data = input.data();
-  char input_tag = input.back();
   size_t str_len{};
-
-  if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
-    // for c++ encoder
-    str_len = input.size() - 2;
-  } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
-    // for cypher
-    str_len = input.size() - 1;
-  } else if (input_tag ==
-             static_cast<uint8_t>(InputFormat::kCypherInternalAdhoc)) {
-    str_len = input.size() - 2;  // the second last byte is the query id.
-  } else if (input_tag ==
-             static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
-    str_len = input.size() - 1;  // data is pb encoded.
-  } else {
-    return Result<std::vector<char>>(
-        StatusCode::InValidArgument,
-        "Invalid input tag: " + std::to_string(static_cast<int>(input_tag)),
-        std::vector<char>());
-  }
-  auto type_res = parse_query_type(input, input_tag);
+  auto type_res = parse_query_type(input, str_len);
   if (!type_res.ok()) {
     LOG(ERROR) << "Fail to parse query type";
     return Result<std::vector<char>>(type_res.status(), std::vector<char>());

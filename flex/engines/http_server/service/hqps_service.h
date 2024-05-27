@@ -29,7 +29,7 @@
 #include "flex/utils/service_utils.h"
 
 #include <yaml-cpp/yaml.h>
-#include <boost/process/child.hpp>
+#include <boost/process.hpp>
 
 namespace server {
 /* Stored service configuration, read from engine_config.yaml
