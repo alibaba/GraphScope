@@ -76,10 +76,12 @@ public class LocalMetaDataReader implements MetaDataReader {
 
     @Override
     public SchemaInputStream getStatistics() throws Exception {
-        String statisticsPath =
-                Objects.requireNonNull(
-                        GraphConfig.GRAPH_STATISTICS.get(configs), "statistics path not exist");
-        return new SchemaInputStream(
-                new FileInputStream(statisticsPath), FileUtils.getFormatType(statisticsPath));
+        String statisticsPath = GraphConfig.GRAPH_STATISTICS.get(configs);
+        if (StringUtils.isEmpty(statisticsPath)) {
+            return null;
+        } else {
+            return new SchemaInputStream(
+                    new FileInputStream(statisticsPath), FileUtils.getFormatType(statisticsPath));
+        }
     }
 }

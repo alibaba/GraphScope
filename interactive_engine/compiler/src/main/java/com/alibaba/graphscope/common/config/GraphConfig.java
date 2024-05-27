@@ -19,7 +19,7 @@ package com.alibaba.graphscope.common.config;
 public class GraphConfig {
     public static final Config<String> GRAPH_SCHEMA = Config.stringConfig("graph.schema", ".");
     public static final Config<String> GRAPH_STATISTICS =
-            Config.stringConfig("graph.statistics", ".");
+            Config.stringConfig("graph.statistics", "");
     public static final Config<String> GRAPH_STORE = Config.stringConfig("graph.store", "exp");
 
     @Deprecated

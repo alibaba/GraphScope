@@ -20,6 +20,8 @@ import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.reader.SchemaInputStream;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -30,11 +32,16 @@ public class IrGraphStatistics implements GraphStatistics {
 
     public IrGraphStatistics(MetaDataReader dataReader) throws Exception {
         SchemaInputStream schemaInputStream = dataReader.getStatistics();
-        String content =
-                new String(
-                        schemaInputStream.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-        schemaInputStream.getInputStream().close();
-        this.graphStatistics = Utils.buildStatisticsFromJson(content);
+        if (ObjectUtils.isEmpty(schemaInputStream)) {
+            this.graphStatistics = null;
+        } else {
+            String content =
+                    new String(
+                            schemaInputStream.getInputStream().readAllBytes(),
+                            StandardCharsets.UTF_8);
+            schemaInputStream.getInputStream().close();
+            this.graphStatistics = Utils.buildStatisticsFromJson(content);
+        }
     }
 
     public IrGraphStatistics(GraphStatistics statistics) {
