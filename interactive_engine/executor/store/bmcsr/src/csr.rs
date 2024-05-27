@@ -2,12 +2,18 @@ use std::any::Any;
 use std::collections::HashSet;
 use std::marker::PhantomData;
 
-use huge_container::HugeVec;
-
 use crate::col_table::ColTable;
 use crate::graph::IndexType;
 
+#[cfg(feature = "hugepage_csr")]
+use huge_container::HugeVec;
+
+#[cfg(feature = "hugepage_csr")]
 type ArrayType<T> = HugeVec<T>;
+
+#[cfg(not(feature = "hugepage_csr"))]
+type ArrayType<T> = Vec<T>;
+
 pub struct NbrIter<'a, I> {
     inner: std::slice::Iter<'a, I>,
 }

@@ -11,7 +11,7 @@ use crate::types::{ArrayDataRef, DataType, Item, LabelId, RefItem};
 
 pub struct VertexIndex {
     index_map: Option<Box<dyn TableIndex>>,
-    index_array: Option<Box<dyn ArrayIndex>>,
+    pub index_array: Option<Box<dyn ArrayIndex>>,
     data_type: DataType,
     is_internal_id: bool,
 }
@@ -105,7 +105,7 @@ unsafe impl Sync for VertexIndex {}
 
 pub struct EdgeIndex {
     index_map: Option<Box<dyn TableIndex>>,
-    index_array: Option<Box<dyn ArrayIndex>>,
+    pub index_array: Option<Box<dyn ArrayIndex>>,
     data_type: DataType,
     is_internal_id: bool,
 }

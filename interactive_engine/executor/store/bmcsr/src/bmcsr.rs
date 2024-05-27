@@ -8,9 +8,16 @@ use crate::col_table::ColTable;
 use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrIterBeta, NbrOffsetIter, SafeMutPtr, SafePtr};
 use crate::graph::IndexType;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+
+#[cfg(feature = "hugepage_csr")]
 use huge_container::HugeVec;
 
+#[cfg(feature = "hugepage_csr")]
 type ArrayType<T> = HugeVec<T>;
+
+#[cfg(not(feature = "hugepage_csr"))]
+type ArrayType<T> = Vec<T>;
+
 pub struct BatchMutableCsr<I> {
     pub neighbors: ArrayType<I>,
     pub offsets: ArrayType<usize>,

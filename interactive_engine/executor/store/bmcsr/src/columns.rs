@@ -23,14 +23,20 @@ use std::io::{BufReader, BufWriter, Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use dyn_type::object::RawType;
 use dyn_type::CastError;
-use huge_container::HugeVec;
 use serde::{Deserialize, Serialize};
 
 use crate::date::Date;
 use crate::date_time::DateTime;
 use crate::types::DefaultId;
 
+#[cfg(feature = "hugepage_table")]
+use huge_container::HugeVec;
+
+#[cfg(feature = "hugepage_table")]
 type ColumnContainer<T> = HugeVec<T>;
+
+#[cfg(not(feature = "hugepage_table"))]
+type ColumnContainer<T> = Vec<T>;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 pub enum DataType {

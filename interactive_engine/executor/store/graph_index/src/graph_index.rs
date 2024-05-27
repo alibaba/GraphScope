@@ -27,8 +27,8 @@ pub struct GraphIndex {
     pub index_schema: IndexSchema,
 
     pub vertex_index: HashMap<u64, VertexIndex>,
-    pub outgoing_edge_index : HashMap<u64, EdgeIndex>,
-    pub incoming_edge_index : HashMap<u64, EdgeIndex>,
+    pub outgoing_edge_index: HashMap<u64, EdgeIndex>,
+    pub incoming_edge_index: HashMap<u64, EdgeIndex>,
 }
 
 impl GraphIndex {
@@ -43,10 +43,13 @@ impl GraphIndex {
     }
 
     pub fn init_vertex_index(
-        &mut self, index_name: String, vertex_label: LabelId, data_type: DataType, use_internal: Option<usize>,
-        default: Option<Item>,
+        &mut self, index_name: String, vertex_label: LabelId, data_type: DataType,
+        use_internal: Option<usize>, default: Option<Item>,
     ) -> Option<LabelId> {
-        if let Some(index_label) = self.index_schema.add_vertex_index(index_name, vertex_label, data_type) {
+        if let Some(index_label) = self
+            .index_schema
+            .add_vertex_index(index_name, vertex_label, data_type)
+        {
             let vertex_index_id = encode_vertex_index(vertex_label, index_label);
             if let Some(index_length) = use_internal {
                 self.vertex_index.insert(
@@ -54,7 +57,8 @@ impl GraphIndex {
                     VertexIndex::new(data_type, true, Some(index_length), default),
                 );
             } else {
-                self.vertex_index.insert(vertex_index_id, VertexIndex::new(data_type, false, None, default));
+                self.vertex_index
+                    .insert(vertex_index_id, VertexIndex::new(data_type, false, None, default));
             }
             Some(index_label)
         } else {
@@ -66,14 +70,17 @@ impl GraphIndex {
         &mut self, index_name: String, src_label: LabelId, dst_label: LabelId, edge_label: LabelId,
         data_type: DataType, use_internal: Option<usize>, default: Option<Item>,
     ) -> Option<LabelId> {
-        if let Some(index_label) =
-            self.index_schema.add_edge_index(index_name, edge_label, src_label, dst_label, data_type)
+        if let Some(index_label) = self
+            .index_schema
+            .add_edge_index(index_name, edge_label, src_label, dst_label, data_type)
         {
             let edge_index_id = encode_edge_index(src_label, edge_label, dst_label, index_label);
             if let Some(index_length) = use_internal {
-                self.incoming_edge_index.insert(edge_index_id, EdgeIndex::new(data_type, Some(index_length), default));
+                self.incoming_edge_index
+                    .insert(edge_index_id, EdgeIndex::new(data_type, Some(index_length), default));
             } else {
-                self.incoming_edge_index.insert(edge_index_id, EdgeIndex::new(data_type, None, default));
+                self.incoming_edge_index
+                    .insert(edge_index_id, EdgeIndex::new(data_type, None, default));
             }
             Some(index_label)
         } else {
@@ -85,14 +92,17 @@ impl GraphIndex {
         &mut self, index_name: String, src_label: LabelId, dst_label: LabelId, edge_label: LabelId,
         data_type: DataType, use_internal: Option<usize>, default: Option<Item>,
     ) -> Option<LabelId> {
-        if let Some(index_label) =
-            self.index_schema.add_edge_index(index_name, edge_label, src_label, dst_label, data_type)
+        if let Some(index_label) = self
+            .index_schema
+            .add_edge_index(index_name, edge_label, src_label, dst_label, data_type)
         {
             let edge_index_id = encode_edge_index(src_label, edge_label, dst_label, index_label);
             if let Some(index_length) = use_internal {
-                self.outgoing_edge_index.insert(edge_index_id, EdgeIndex::new(data_type, Some(index_length), default));
+                self.outgoing_edge_index
+                    .insert(edge_index_id, EdgeIndex::new(data_type, Some(index_length), default));
             } else {
-                self.outgoing_edge_index.insert(edge_index_id, EdgeIndex::new(data_type, None, default));
+                self.outgoing_edge_index
+                    .insert(edge_index_id, EdgeIndex::new(data_type, None, default));
             }
             Some(index_label)
         } else {
@@ -123,7 +133,8 @@ impl GraphIndex {
     pub fn add_vertex_index_batch(
         &mut self, vertex_label: LabelId, index_name: &String, index: &Vec<usize>, data: ArrayDataRef,
     ) -> Result<(), GraphIndexError> {
-        let index_label =self.index_schema
+        let index_label = self
+            .index_schema
             .get_vertex_index(vertex_label, index_name)
             .expect("index name not found in edge index");
         let encode_label = encode_vertex_index(vertex_label, index_label);
@@ -139,7 +150,8 @@ impl GraphIndex {
         &mut self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
         index: &Vec<usize>, data: ArrayDataRef,
     ) -> Result<(), GraphIndexError> {
-        let index_label =self.index_schema
+        let index_label = self
+            .index_schema
             .get_edge_index(edge_label, src_label, dst_label, index_name)
             .expect("index name not found in edge index");
         let encode_label = encode_edge_index(src_label, edge_label, dst_label, index_label);
@@ -155,7 +167,8 @@ impl GraphIndex {
         &mut self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
         index: &Vec<usize>, data: ArrayDataRef,
     ) -> Result<(), GraphIndexError> {
-        let index_label =self.index_schema
+        let index_label = self
+            .index_schema
             .get_edge_index(edge_label, src_label, dst_label, index_name)
             .expect("index name not found in edge index");
         let encode_label = encode_edge_index(src_label, edge_label, dst_label, index_label);
@@ -170,13 +183,15 @@ impl GraphIndex {
     pub fn get_vertex_index_label(
         &self, vertex_label: LabelId, vertex_index_name: &String,
     ) -> Option<LabelId> {
-        self.index_schema.get_vertex_index(vertex_label, vertex_index_name)
+        self.index_schema
+            .get_vertex_index(vertex_label, vertex_index_name)
     }
 
     pub fn get_vertex_index(
         &self, vertex_label: LabelId, index_name: &String, offset: usize,
     ) -> Option<Item> {
-        let index_label =self.index_schema
+        let index_label = self
+            .index_schema
             .get_vertex_index(vertex_label, index_name)
             .expect("index name not found in vertex index");
         let encode_label = encode_vertex_index(vertex_label, index_label);
@@ -191,11 +206,23 @@ impl GraphIndex {
         }
     }
 
+    pub fn get_vertex_index_list(
+        &self, vertex_label: LabelId, index_name: &String,
+    ) -> Option<&VertexIndex> {
+        let index_label = self
+            .index_schema
+            .get_vertex_index(vertex_label, index_name)
+            .expect("index name not found in vertex index");
+        let encode_label = encode_vertex_index(vertex_label, index_label);
+        self.vertex_index.get(&encode_label)
+    }
+
     pub fn get_outgoing_edge_index(
         &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
         offset: usize,
     ) -> Option<Item> {
-        let index_label =self.index_schema
+        let index_label = self
+            .index_schema
             .get_edge_index(edge_label, src_label, dst_label, index_name)
             .expect("index name not found in edge index");
         let encode_label = encode_edge_index(src_label, edge_label, dst_label, index_label);
@@ -210,11 +237,23 @@ impl GraphIndex {
         }
     }
 
+    pub fn get_outgoing_edge_index_list(
+        &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
+    ) -> Option<&EdgeIndex> {
+        let index_label = self
+            .index_schema
+            .get_edge_index(edge_label, src_label, dst_label, index_name)
+            .expect("index name not found in edge index");
+        let encode_label = encode_edge_index(src_label, edge_label, dst_label, index_label);
+        self.outgoing_edge_index.get(&encode_label)
+    }
+
     pub fn get_incoming_edge_index(
         &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
         offset: usize,
     ) -> Option<Item> {
-        let index_label =self.index_schema
+        let index_label = self
+            .index_schema
             .get_edge_index(edge_label, src_label, dst_label, index_name)
             .expect("index name not found in edge index");
         let encode_label = encode_edge_index(src_label, edge_label, dst_label, index_label);
@@ -227,6 +266,17 @@ impl GraphIndex {
         } else {
             None
         }
+    }
+
+    pub fn get_incoming_edge_index_list(
+        &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
+    ) -> Option<&EdgeIndex> {
+        let index_label = self
+            .index_schema
+            .get_edge_index(edge_label, src_label, dst_label, index_name)
+            .expect("index name not found in edge index");
+        let encode_label = encode_edge_index(src_label, edge_label, dst_label, index_label);
+        self.incoming_edge_index.get(&encode_label)
     }
 
     // pub fn get_edge_index_batch<'a>(
