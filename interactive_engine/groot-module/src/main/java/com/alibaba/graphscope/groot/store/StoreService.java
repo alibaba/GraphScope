@@ -26,6 +26,7 @@ import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 
+import com.alibaba.graphscope.proto.groot.Statistics;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -295,6 +296,14 @@ public class StoreService {
     public GraphDefPb getGraphDefBlob() throws IOException {
         GraphPartition graphPartition = this.idToPartition.get(0);
         return graphPartition.getGraphDefBlob();
+    }
+
+    public Map<Integer, Statistics> getGraphStatisticsBlob(long snapshotId) throws IOException {
+        Map<Integer, Statistics> statisticsMap = new HashMap<>();
+        for (Map.Entry<Integer, GraphPartition> entry : idToPartition.entrySet()) {
+            statisticsMap.put(entry.getKey(), entry.getValue().getGraphStatisticsBlob(snapshotId));
+        }
+        return statisticsMap;
     }
 
     public MetaService getMetaService() {

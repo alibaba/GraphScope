@@ -38,6 +38,6 @@ message FetchStatisticsRequest {
 }
 
 message FetchStatisticsResponse {
-  Statistics statistics = 1;
+  map<int32, Statistics> statistics_map = 1;
 }
 

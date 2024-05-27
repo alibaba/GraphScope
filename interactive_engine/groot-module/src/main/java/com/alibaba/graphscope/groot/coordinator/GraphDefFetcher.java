@@ -15,16 +15,31 @@ package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.graphscope.proto.groot.Statistics;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class GraphDefFetcher {
 
-    private RoleClients<StoreSchemaClient> storeSchemaClients;
+    private final RoleClients<StoreSchemaClient> storeSchemaClients;
+    int storeCount;
 
-    public GraphDefFetcher(RoleClients<StoreSchemaClient> storeSchemaClients) {
+    public GraphDefFetcher(RoleClients<StoreSchemaClient> storeSchemaClients, int storeCount) {
         this.storeSchemaClients = storeSchemaClients;
+        this.storeCount = storeCount;
     }
 
     public GraphDef fetchGraphDef() {
         return storeSchemaClients.getClient(0).fetchSchema();
+    }
+
+    public Map<Integer, Statistics> fetchStatistics() {
+        Map<Integer, Statistics> statisticsMap = new HashMap<>();
+        for (int i = 0; i < storeCount; ++i) {
+            Map<Integer, Statistics> curMap = storeSchemaClients.getClient(i).fetchStatistics();
+            statisticsMap.putAll(curMap);
+        }
+        return statisticsMap;
     }
 }

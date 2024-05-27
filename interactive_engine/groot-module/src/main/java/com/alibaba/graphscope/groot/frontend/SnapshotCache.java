@@ -11,10 +11,14 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot;
+package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.SnapshotListener;
+import com.alibaba.graphscope.groot.SnapshotWithSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 
+import com.alibaba.graphscope.proto.groot.Statistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,11 +36,14 @@ public class SnapshotCache {
 
     private final AtomicReference<SnapshotWithSchema> snapshotWithSchemaRef;
 
+    private final AtomicReference<GraphStatistics> graphStatisticsRef;
+
     private final TreeMap<Long, List<SnapshotListener>> snapshotToListeners;
 
     public SnapshotCache() {
         SnapshotWithSchema snapshotWithSchema = SnapshotWithSchema.newBuilder().build();
         snapshotWithSchemaRef = new AtomicReference<>(snapshotWithSchema);
+        graphStatisticsRef = new AtomicReference<>();
         this.snapshotToListeners = new TreeMap<>();
     }
 
@@ -125,5 +132,13 @@ public class SnapshotCache {
      */
     public SnapshotWithSchema getSnapshotWithSchema() {
         return this.snapshotWithSchemaRef.get();
+    }
+
+    public void setGraphStatisticsRef(GraphStatistics statistics) {
+        this.graphStatisticsRef.set(statistics);
+    }
+
+    public GraphStatistics getGraphStatistics() {
+        return this.graphStatisticsRef.get();
     }
 }

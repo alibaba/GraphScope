@@ -16,11 +16,11 @@ package com.alibaba.graphscope.groot.coordinator;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.graphscope.proto.groot.FetchSchemaRequest;
-import com.alibaba.graphscope.proto.groot.FetchSchemaResponse;
-import com.alibaba.graphscope.proto.groot.StoreSchemaGrpc;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
+
+import java.util.Map;
 
 public class StoreSchemaClient extends RpcClient {
     public StoreSchemaClient(RpcChannel channel) {
@@ -39,5 +39,11 @@ public class StoreSchemaClient extends RpcClient {
         StoreSchemaGrpc.StoreSchemaBlockingStub stub = getStub();
         FetchSchemaResponse response = stub.fetchSchema(FetchSchemaRequest.newBuilder().build());
         return GraphDef.parseProto(response.getGraphDef());
+    }
+
+    public Map<Integer, Statistics> fetchStatistics() {
+        StoreSchemaGrpc.StoreSchemaBlockingStub stub = getStub();
+        FetchStatisticsResponse response = stub.fetchStatistics(FetchStatisticsRequest.newBuilder().build());
+        return response.getStatisticsMapMap();
     }
 }

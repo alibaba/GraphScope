@@ -25,11 +25,16 @@ import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.ddl.DdlResult;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 
+import com.alibaba.graphscope.proto.groot.EdgeKindPb;
+import com.alibaba.graphscope.proto.groot.LabelIdPb;
+import com.alibaba.graphscope.proto.groot.Statistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -43,11 +48,14 @@ public class SchemaManager {
     private final GraphDefFetcher graphDefFetcher;
 
     private final AtomicReference<GraphDef> graphDefRef;
+    private final AtomicReference<Statistics> graphStatistics;
     private final int partitionCount;
     private volatile boolean ready = false;
 
     private ExecutorService singleThreadExecutor;
-    private ScheduledExecutorService scheduler;
+    private ScheduledExecutorService syncSchemaScheduler;
+
+    private ScheduledExecutorService syncStatisticsScheduler;
 
     public SchemaManager(
             SnapshotManager snapshotManager,
@@ -62,6 +70,7 @@ public class SchemaManager {
 
         this.graphDefRef = new AtomicReference<>();
         this.partitionCount = metaService.getPartitionCount();
+        this.graphStatistics = new AtomicReference<>();
     }
 
     public void start() {
@@ -78,11 +87,66 @@ public class SchemaManager {
         recover();
         logger.info(graphDefRef.get().toProto().toString());
 
-        this.scheduler =
+        this.syncSchemaScheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "recover", logger));
-        this.scheduler.scheduleWithFixedDelay(this::recover, 5, 2, TimeUnit.SECONDS);
+        this.syncSchemaScheduler.scheduleWithFixedDelay(this::recover, 5, 2, TimeUnit.SECONDS);
+
+        this.syncStatisticsScheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "sync-statistics", logger));
+        this.syncStatisticsScheduler.scheduleWithFixedDelay(this::syncStatistics, 0, 2, TimeUnit.HOURS);
+    }
+
+    private void syncStatistics() {
+        try {
+            Map<Integer, Statistics> statisticsMap = graphDefFetcher.fetchStatistics();
+            Statistics statistics = aggeregateStatistics(statisticsMap);
+            this.graphStatistics.set(statistics);
+        } catch (Exception e) {
+            logger.error("Fetch statistics failed", e);
+        }
+    }
+
+    private Statistics aggeregateStatistics(Map<Integer, Statistics> statisticsMap) {
+        Statistics.Builder builder = Statistics.newBuilder();
+        long numVertices = 0;
+        long numEdges = 0;
+        Map<Integer, Long> vertexMap = new HashMap<>();
+        Map<EdgeKindPb, Long> edgeKindMap = new HashMap<>();
+
+        for (Statistics statistics : statisticsMap.values()) {
+            numVertices += statistics.getNumVertices();
+            numEdges += statistics.getNumEdges();
+
+            for (Statistics.VertexTypeStatistics subStatistics : statistics.getVertexTypeStatisticsList()) {
+                long count = subStatistics.getNumVertices();
+                int labelId = subStatistics.getLabelId().getId();
+                vertexMap.compute(labelId, (k, v) -> (v == null) ? count : v + count);
+            }
+
+            for (Statistics.EdgeTypeStatistics subStatistics : statistics.getEdgeTypeStatisticsList()) {
+                long count = subStatistics.getNumEdges();
+                EdgeKindPb edgeKindPb = subStatistics.getEdgeKind();
+                edgeKindMap.compute(edgeKindPb, (k, v) -> (v == null) ? count : v + count);
+            }
+        }
+        builder.setSnapshotId(0);  // TODO(siyuan): set this
+        builder.setNumVertices(numVertices).setNumEdges(numEdges);
+        for (Map.Entry<Integer, Long> entry : vertexMap.entrySet()) {
+            int labelId = entry.getKey();
+            LabelIdPb labelIdPb = LabelIdPb.newBuilder().setId(labelId).build();
+            Long count = entry.getValue();
+            builder.addVertexTypeStatistics(Statistics.VertexTypeStatistics.newBuilder().setLabelId(labelIdPb).setNumVertices(count));
+        }
+        for (Map.Entry<EdgeKindPb, Long> entry : edgeKindMap.entrySet()) {
+            EdgeKindPb edgeKindPb = entry.getKey();
+            Long count = entry.getValue();
+            builder.addEdgeTypeStatistics(Statistics.EdgeTypeStatistics.newBuilder().setEdgeKind(edgeKindPb).setNumEdges(count));
+        }
+        return builder.build();
     }
 
     private void recover() {

@@ -17,13 +17,13 @@ package com.alibaba.graphscope.groot.common.schema.api;
 
 public interface GraphStatistics {
 
-    Integer getVertexCount();
+    Long getVertexCount();
 
-    Integer getEdgeCount();
+    Long getEdgeCount();
 
-    Integer getVertexTypeCount(int vertexTypeId);
+    Long getVertexTypeCount(int vertexTypeId);
 
-    Integer getEdgeTypeCount(int edgeTypeId, int sourceTypeId, int targetTypeId);
+    Long getEdgeTypeCount(int edgeTypeId, int sourceTypeId, int targetTypeId);
 
     /**
      * Get the version of the statistics, which should be consist with the version of schema

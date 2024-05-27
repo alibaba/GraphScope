@@ -15,10 +15,14 @@
  */
 package com.alibaba.graphscope.groot.common.schema.api;
 
+import com.alibaba.graphscope.proto.groot.Statistics;
+
 import java.util.Map;
 
 public interface SchemaFetcher {
     Map<Long, GraphSchema> getSchemaSnapshotPair();
+
+    GraphStatistics getStatistics();
 
     int getPartitionNum();
 
