@@ -23,8 +23,10 @@ import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DefaultGraphStatistics implements GraphStatistics {
@@ -77,19 +79,19 @@ public class DefaultGraphStatistics implements GraphStatistics {
                                         (!sourceTypeId.isPresent()
                                                 || entry.getKey()
                                                         .getSrcVertexLabelId()
-                                                        .equals(sourceTypeId.get())))
+                                                        .equals(new LabelId(sourceTypeId.get()))))
                         .filter(
                                 entry ->
                                         (!edgeTypeId.isPresent()
                                                 || entry.getKey()
                                                         .getEdgeLabelId()
-                                                        .equals(edgeTypeId.get())))
+                                                        .equals(new LabelId(edgeTypeId.get()))))
                         .filter(
                                 entry ->
                                         (!targetTypeId.isPresent()
                                                 || entry.getKey()
                                                         .getDstVertexLabelId()
-                                                        .equals(targetTypeId.get())))
+                                                        .equals(new LabelId(targetTypeId.get()))))
                         .collect(Collectors.summingLong(Map.Entry::getValue));
 
         return count == null ? 0L : count;
