@@ -112,7 +112,7 @@ public class SchemaManager {
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "send-statistics", logger));
-        this.sendStatisticsScheduler.scheduleWithFixedDelay(this::sendStatisticsToFrontend, 0, 60, TimeUnit.SECONDS);
+        this.sendStatisticsScheduler.scheduleWithFixedDelay(this::sendStatisticsToFrontend, 5, 60, TimeUnit.SECONDS);
     }
 
     private void syncStatistics() {

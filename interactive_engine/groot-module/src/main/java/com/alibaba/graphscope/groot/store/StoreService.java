@@ -70,6 +70,7 @@ public class StoreService {
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
     private ExecutorService compactExecutor;
+    private ExecutorService statisticsExecutor;
 
     private ThreadPoolExecutor downloadExecutor;
     private final boolean enableGc;
@@ -108,7 +109,7 @@ public class StoreService {
                         writeThreadCount,
                         writeThreadCount,
                         0L,
-                        TimeUnit.MILLISECONDS,
+                        TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-write", logger));
@@ -117,7 +118,7 @@ public class StoreService {
                         1,
                         1,
                         0L,
-                        TimeUnit.MILLISECONDS,
+                        TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(1),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
@@ -140,7 +141,7 @@ public class StoreService {
                         1,
                         1,
                         0L,
-                        TimeUnit.MILLISECONDS,
+                        TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-garbage-collect", logger));
@@ -149,12 +150,15 @@ public class StoreService {
                 new ThreadPoolExecutor(
                         16,
                         16,
-                        1000L,
-                        TimeUnit.MILLISECONDS,
+                        1L,
+                        TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-download", logger));
         this.downloadExecutor.allowCoreThreadTimeOut(true);
+        this.statisticsExecutor = new ThreadPoolExecutor(8, 16, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
+                ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                        "store-statistics", logger));
         logger.info("StoreService started. storeId [" + this.storeId + "]");
     }
 
@@ -299,9 +303,26 @@ public class StoreService {
     }
 
     public Map<Integer, Statistics> getGraphStatisticsBlob(long snapshotId) throws IOException {
+        int partitionCount = this.idToPartition.values().size();
+        CountDownLatch countDownLatch = new CountDownLatch(partitionCount);
+
         Map<Integer, Statistics> statisticsMap = new HashMap<>();
         for (Map.Entry<Integer, GraphPartition> entry : idToPartition.entrySet()) {
-            statisticsMap.put(entry.getKey(), entry.getValue().getGraphStatisticsBlob(snapshotId));
+            this.statisticsExecutor.execute(() -> {
+                try {
+                    Statistics statistics = entry.getValue().getGraphStatisticsBlob(snapshotId);
+                    statisticsMap.put(entry.getKey(), statistics);
+                } catch (IOException e) {
+                    logger.error("Collect statistics failed for partition {}", entry.getKey(), e);
+                } finally {
+                    countDownLatch.countDown();
+                }
+            });
+        }
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            logger.error("compact DB has been InterruptedException", e);
         }
         return statisticsMap;
     }
