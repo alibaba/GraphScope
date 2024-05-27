@@ -66,7 +66,7 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "     %8%\n"
     "  }\n"
     "// Wrapper query function for query class\n"
-    "  bool Query(gs::GraphDBSession& sess, Decoder& decoder, Encoder& "
+    "  bool DoQuery(gs::GraphDBSession& sess, Decoder& decoder, Encoder& "
     "encoder) "
     "override {\n"
     "    //decoding params from decoder, and call real query func\n"
@@ -267,7 +267,7 @@ class QueryGenerator {
   // This info should be parse from physical plan.
   // Currently always return writeAppBase, since physical plan hasn't
   // provided this info.
-  std::string get_app_base_name() { return "WriteAppBase"; }
+  std::string get_app_base_name() { return "CypherInternalPbWriteAppBase"; }
 
   // copy the param vars to sort
   std::string concat_param_vars(

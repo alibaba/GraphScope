@@ -21,6 +21,7 @@
 #include <dlfcn.h>
 #include <string.h>
 
+#include <iostream>
 #include <limits>
 #include <string>
 #include <vector>
@@ -177,5 +178,14 @@ struct AppMetric {
 };
 
 }  // namespace gs
+
+namespace std {
+std::istream& operator>>(std::istream& in, gs::AppBase::AppType& type);
+std::ostream& operator<<(std::ostream& out, const gs::AppBase::AppType& type);
+
+std::istream& operator>>(std::istream& in, gs::AppBase::AppMode& mode);
+std::ostream& operator<<(std::ostream& out, const gs::AppBase::AppMode& mode);
+
+}  // namespace std
 
 #endif  // GRAPHSCOPE_APP_BASE_H_

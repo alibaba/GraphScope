@@ -76,3 +76,31 @@ AppWrapper SharedLibraryAppFactory::CreateApp(const GraphDB& db) {
 }
 
 }  // namespace gs
+
+namespace std {
+
+std::istream& operator>>(std::istream& is, gs::AppBase::AppType& type) {
+  int t;
+  is >> t;
+  type = static_cast<gs::AppBase::AppType>(t);
+  return is;
+}
+
+std::ostream& operator<<(std::ostream& os, const gs::AppBase::AppType& type) {
+  os << static_cast<int>(type);
+  return os;
+}
+
+std::istream& operator>>(std::istream& is, gs::AppBase::AppMode& mode) {
+  int m;
+  is >> m;
+  mode = static_cast<gs::AppBase::AppMode>(m);
+  return is;
+}
+
+std::ostream& operator<<(std::ostream& os, const gs::AppBase::AppMode& mode) {
+  os << static_cast<int>(mode);
+  return os;
+}
+
+}  // namespace std
