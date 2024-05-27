@@ -43,7 +43,8 @@ public class StoreSchemaClient extends RpcClient {
 
     public Map<Integer, Statistics> fetchStatistics() {
         StoreSchemaGrpc.StoreSchemaBlockingStub stub = getStub();
-        FetchStatisticsResponse response = stub.fetchStatistics(FetchStatisticsRequest.newBuilder().build());
+        long snapshotId = Long.MAX_VALUE - 1;
+        FetchStatisticsResponse response = stub.fetchStatistics(FetchStatisticsRequest.newBuilder().setSnapshotId(snapshotId).build());
         return response.getStatisticsMapMap();
     }
 }

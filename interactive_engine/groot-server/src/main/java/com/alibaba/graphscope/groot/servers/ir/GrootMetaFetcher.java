@@ -23,13 +23,15 @@ import com.alibaba.graphscope.common.store.SnapshotId;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
-import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphStatistics;
-import com.alibaba.graphscope.proto.groot.Statistics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 
 public class GrootMetaFetcher implements IrMetaFetcher {
+    private static final Logger logger = LoggerFactory.getLogger(GrootMetaFetcher.class);
+
     private final SchemaFetcher schemaFetcher;
 
     public GrootMetaFetcher(SchemaFetcher schemaFetcher) {
@@ -48,7 +50,12 @@ public class GrootMetaFetcher implements IrMetaFetcher {
             SnapshotId si = new SnapshotId(true, snapshotId);
             IrGraphSchema irSchema = new IrGraphSchema(schema, true);
             GraphStatistics statistics = this.schemaFetcher.getStatistics();
-            return Optional.of(new IrMeta(si, irSchema, statistics));
+            logger.info("Statistics: {}", statistics == null ? null : statistics.toString());
+            if (statistics == null) {
+                return Optional.of(new IrMeta(si, irSchema));
+            } else {
+                return Optional.of(new IrMeta(si, irSchema, statistics));
+            }
         } else {
             return Optional.empty();
         }

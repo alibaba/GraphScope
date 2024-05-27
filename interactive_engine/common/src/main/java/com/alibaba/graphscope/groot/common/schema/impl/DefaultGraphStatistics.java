@@ -87,4 +87,14 @@ public class DefaultGraphStatistics implements GraphStatistics {
         }
         return new DefaultGraphStatistics(vertexTypeCounts, edgeTypeCounts, vcount, ecount);
     }
+
+    @Override
+    public String toString() {
+        return "DefaultGraphStatistics{" +
+                "vertexTypeCounts=" + vertexTypeCounts +
+                ", edgeTypeCounts=" + edgeTypeCounts +
+                ", totalVertexCount=" + totalVertexCount +
+                ", totalEdgeCount=" + totalEdgeCount +
+                '}';
+    }
 }

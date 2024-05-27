@@ -21,6 +21,7 @@ import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.ddl.DdlResult;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
@@ -47,6 +48,10 @@ public class SchemaManager {
     private final DdlExecutors ddlExecutors;
     private final GraphDefFetcher graphDefFetcher;
 
+    private final RoleClients<FrontendSnapshotClient> frontendSnapshotClients;
+
+    private final int frontendCount;
+
     private final AtomicReference<GraphDef> graphDefRef;
     private final AtomicReference<Statistics> graphStatistics;
     private final int partitionCount;
@@ -55,18 +60,23 @@ public class SchemaManager {
     private ExecutorService singleThreadExecutor;
     private ScheduledExecutorService syncSchemaScheduler;
 
-    private ScheduledExecutorService syncStatisticsScheduler;
+    private ScheduledExecutorService fetchStatisticsScheduler;
+    private ScheduledExecutorService sendStatisticsScheduler;
 
     public SchemaManager(
             SnapshotManager snapshotManager,
             DdlExecutors ddlExecutors,
             DdlWriter ddlWriter,
             MetaService metaService,
-            GraphDefFetcher graphDefFetcher) {
+            GraphDefFetcher graphDefFetcher,
+            RoleClients<FrontendSnapshotClient> frontendSnapshotClients,
+            int frontendCount) {
         this.snapshotManager = snapshotManager;
         this.ddlExecutors = ddlExecutors;
         this.ddlWriter = ddlWriter;
         this.graphDefFetcher = graphDefFetcher;
+        this.frontendSnapshotClients = frontendSnapshotClients;
+        this.frontendCount = frontendCount;
 
         this.graphDefRef = new AtomicReference<>();
         this.partitionCount = metaService.getPartitionCount();
@@ -93,24 +103,41 @@ public class SchemaManager {
                                 "recover", logger));
         this.syncSchemaScheduler.scheduleWithFixedDelay(this::recover, 5, 2, TimeUnit.SECONDS);
 
-        this.syncStatisticsScheduler =
+        this.fetchStatisticsScheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
-                                "sync-statistics", logger));
-        this.syncStatisticsScheduler.scheduleWithFixedDelay(this::syncStatistics, 0, 2, TimeUnit.HOURS);
+                                "fetch-statistics", logger));
+        this.fetchStatisticsScheduler.scheduleWithFixedDelay(this::syncStatistics, 0, 2, TimeUnit.HOURS);
+        this.sendStatisticsScheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "send-statistics", logger));
+        this.sendStatisticsScheduler.scheduleWithFixedDelay(this::sendStatisticsToFrontend, 0, 60, TimeUnit.SECONDS);
     }
 
     private void syncStatistics() {
         try {
             Map<Integer, Statistics> statisticsMap = graphDefFetcher.fetchStatistics();
-            Statistics statistics = aggeregateStatistics(statisticsMap);
+            Statistics statistics = aggregateStatistics(statisticsMap);
+            System.out.println(statistics.getNumEdges());
             this.graphStatistics.set(statistics);
         } catch (Exception e) {
             logger.error("Fetch statistics failed", e);
         }
     }
 
-    private Statistics aggeregateStatistics(Map<Integer, Statistics> statisticsMap) {
+    private void sendStatisticsToFrontend() {
+        Statistics statistics = this.graphStatistics.get();
+        for (int i = 0; i < frontendCount; ++i) {
+            try {
+                frontendSnapshotClients.getClient(i).syncStatistics(statistics);
+            } catch (Exception e) {
+                logger.error("Failed to sync statistics to frontend", e);
+            }
+        }
+    }
+
+    private Statistics aggregateStatistics(Map<Integer, Statistics> statisticsMap) {
         Statistics.Builder builder = Statistics.newBuilder();
         long numVertices = 0;
         long numEdges = 0;
@@ -244,7 +271,7 @@ public class SchemaManager {
                                 e);
                         this.ready = false;
                         callback.onError(e);
-                        this.singleThreadExecutor.execute(() -> recover());
+                        this.singleThreadExecutor.execute(this::recover);
                     }
                 });
     }

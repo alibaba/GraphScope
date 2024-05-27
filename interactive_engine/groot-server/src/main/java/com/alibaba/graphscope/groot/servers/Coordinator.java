@@ -93,6 +93,7 @@ public class Coordinator extends NodeBase {
         DdlWriter ddlWriter = new DdlWriter(ingestorWriteClients);
         this.metaService = new DefaultMetaService(configs);
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
+        int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
         RoleClients<StoreSchemaClient> storeSchemaClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreSchemaClient::new);
         GraphDefFetcher graphDefFetcher = new GraphDefFetcher(storeSchemaClients, storeCount);
@@ -102,7 +103,9 @@ public class Coordinator extends NodeBase {
                         ddlExecutors,
                         ddlWriter,
                         this.metaService,
-                        graphDefFetcher);
+                        graphDefFetcher,
+                        frontendSnapshotClients,
+                        frontendCount);
         this.snapshotNotifier =
                 new SnapshotNotifier(
                         this.discovery,

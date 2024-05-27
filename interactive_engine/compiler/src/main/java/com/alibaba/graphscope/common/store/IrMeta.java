@@ -43,7 +43,7 @@ public class IrMeta {
         this(SnapshotId.createEmpty(), schema, statistics);
     }
 
-    public IrMeta(SnapshotId snapshotId, IrGraphSchema schema) throws IOException {
+    public IrMeta(SnapshotId snapshotId, IrGraphSchema schema) {
         this.snapshotId = Objects.requireNonNull(snapshotId);
         this.schema = Objects.requireNonNull(schema);
         this.statistics = null;
