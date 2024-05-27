@@ -1,17 +1,22 @@
 package com.alibaba.graphscope.groot.schema.ddl;
 
 import com.alibaba.graphscope.groot.common.schema.wrapper.*;
+import com.alibaba.graphscope.groot.common.util.JSON;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.proto.groot.TypeDefPb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecutor {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractAddTypePropertiesExecutor.class);
 
     private static final String NAME_REGEX = "^\\w{1,128}$";
 
@@ -22,15 +27,18 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         TypeDef typeDef = TypeDef.parseProto(typeDefPb);
         long version = graphDef.getSchemaVersion();
         String label = typeDef.getLabel();
-        LabelId labelId = typeDef.getTypeLabelId();
-
-        if (labelId == null) {
-            throw new DdlException("type label id is NULL");
+        
+        TypeDef originTypeDef = graphDef.getTypeDef(label);
+        if (originTypeDef == null) {
+            throw new DdlException("LabelName [" + label + "] can not found exists label in Graph Def.");
         }
-
-        if (labelId.getId() < 0) {
-            throw new DdlException("illegal label id [" + labelId.getId() + "]");
+        if (originTypeDef.getTypeEnum() != typeDef.getTypeEnum()) {
+            throw new DdlException("LabelName [" + label + "] type enum has been change. origin type ["
+                    + originTypeDef.getTypeEnum() + "].");
         }
+        
+        int labelIdInt = originTypeDef.getLabelId();
+        LabelId labelId = new LabelId(labelIdInt);
 
         if (!label.matches(NAME_REGEX)) {
             throw new DdlException("illegal label name [" + label + "]");
@@ -41,6 +49,8 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
                     "label [" + label + "] not found, schema version [" + version + "]");
         }
 
+        Map<LabelId, Long> vertexTableIdMap = graphDef.getVertexTableIds();
+        logger.info("vertexTableIdMap is " + JSON.toJson(vertexTableIdMap));
         if (typeDef.getTypeEnum() == TypeEnum.VERTEX) {
             if (this instanceof AddEdgeTypePropertiesExecutor) {
                 throw new DdlException("Expect edge type but got vertex type");
@@ -48,6 +58,14 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
             if (typeDef.getPkIdxs().size() > 0) {
                 throw new DdlException(
                         "Can not add primary key properties in exists Vertex type. label [" + label + "]");
+            }
+            if (vertexTableIdMap == null || vertexTableIdMap.isEmpty()) {
+                throw new DdlException(
+                        "vertexTableIdMap is empty.");
+            }
+            if (vertexTableIdMap.get(labelId) == null) {
+                throw new DdlException(
+                        "labelId [" + labelId +"] can not find table Id.");
             }
         } else {
             if (this instanceof AddVertexTypePropertiesExecutor) {
@@ -60,16 +78,9 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         }
 
         GraphDef.Builder graphDefBuilder = GraphDef.newBuilder(graphDef);
-        TypeDef originTypeDef = graphDef.getTypeDef(labelId);
-
-        if (originTypeDef == null) {
-            throw new DdlException("LabelName [" + label + "] can not found exists label in Graph Def.");
-        }
-        if (originTypeDef.getTypeEnum() != typeDef.getTypeEnum()) {
-            throw new DdlException("LabelName [" + label + "] type enum has been change. origin type ["
-                    + originTypeDef.getTypeEnum() + "].");
-        }
         TypeDef.Builder newTypeDefBuilder = TypeDef.newBuilder(typeDef);
+        // addLabelProperties doesnt has labelId, need set originType LabelId
+        newTypeDefBuilder.setLabelId(labelId);
 
         int propertyIdx = graphDef.getPropertyIdx();
         Map<String, Integer> propertyNameToId = graphDef.getPropertyNameToId();
@@ -121,10 +132,9 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         graphDefBuilder.addTypeDef(originNewTypeDef);
 
         if (typeDef.getTypeEnum() == TypeEnum.VERTEX) {
-            long tableIdx = graphDef.getTableIdx();
-            tableIdx++;
+            long tableIdx = vertexTableIdMap.get(labelId);
             graphDefBuilder.putVertexTableId(newTypeDef.getTypeLabelId(), tableIdx);
-            graphDefBuilder.setTableIdx(tableIdx);
+            logger.info("tableIdx is " + tableIdx + ", max is " + graphDef.getTableIdx());
         }
         GraphDef newGraphDef = graphDefBuilder.build();
 
@@ -141,7 +151,7 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         for (PropertyDef existsProperty : propertyDefs) {
             if (propertyName.equals(existsProperty.getName())
                     || (propertyId != null && propertyId == existsProperty.getId())) {
-                throw new DdlException("propertyName [" + propertyName + "], propertyId [" + propertyId + "]" +
+                throw new DdlException("propertyName [" + propertyName + "], propertyId [" + existsProperty.getId() + "]" +
                         "already exists in Label [" + label + "].");
             }
         }
