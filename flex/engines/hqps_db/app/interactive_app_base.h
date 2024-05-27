@@ -26,7 +26,7 @@
 #include "nlohmann/json.hpp"
 namespace gs {
 
-void put_argument(gs::Encoder& encoder, const query::Argument& argument) {
+void put_argument(gs::Encoder& encoder, const procedure::Argument& argument) {
   auto& value = argument.value();
   auto item_case = value.item_case();
   switch (item_case) {
@@ -53,7 +53,7 @@ bool parse_input_argument(gs::Decoder& raw_input,
     VLOG(10) << "No arguments found in input";
     return true;
   }
-  query::Query cur_query;
+  procedure::Query cur_query;
   if (!cur_query.ParseFromArray(raw_input.data(), raw_input.size())) {
     LOG(ERROR) << "Fail to parse query from input content";
     return false;

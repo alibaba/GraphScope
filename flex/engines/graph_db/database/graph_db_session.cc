@@ -18,9 +18,8 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
-#include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/utils/app_utils.h"
-#include "nlohmann/json.hpp"
+
 namespace gs {
 
 ReadTransaction GraphDBSession::GetReadTransaction() {
@@ -101,66 +100,6 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
             db_.graph().lf_indexers_[label].get_keys()));
   } else {
     return nullptr;
-  }
-}
-
-Result<uint8_t> GraphDBSession::parse_query_type(const std::string& input,
-                                                 size_t& str_len) {
-  char input_tag = input.back();
-  size_t len = input.size();
-  if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
-    // For cpp encoder, the query id is the second last byte, others are all
-    // user-defined payload,
-    str_len = len - 2;
-    return input[len - 2];
-  } else if (input_tag ==
-             static_cast<uint8_t>(InputFormat::kCypherInternalAdhoc)) {
-    // For cypher internal adhoc, the query id is the
-    // second last byte,which is fixed to 255, and other bytes are a string
-    // representing the path to generated dynamic lib.
-    str_len = len - 2;
-    return input[len - 2];
-  } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
-    // For cypherJson there is no query-id provided. The query name is provided
-    // in the json string.
-    str_len = len - 1;
-    std::string_view str_view(input.data(), len - 1);
-    nlohmann::json j = nlohmann::json::parse(str_view);
-    auto query_name = j["query_name"].get<std::string>();
-    const auto& app_name_to_path_index = schema().GetPlugins();
-    if (app_name_to_path_index.count(query_name) <= 0) {
-      LOG(ERROR) << "Query name is not registered: " << query_name;
-      return Result<uint8_t>(StatusCode::NotFound,
-                             "Query name is not registered: " + query_name, 0);
-    }
-    return app_name_to_path_index.at(query_name).second;
-  } else if (input_tag ==
-             static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
-    // For cypher internal procedure, the query_name is
-    // provided in the protobuf message.
-    str_len = len - 1;
-    query::Query cur_query;
-    if (!cur_query.ParseFromArray(input.data(), input.size() - 1)) {
-      LOG(ERROR) << "Fail to parse query from input content";
-      return Result<uint8_t>(StatusCode::InternalError,
-                             "Fail to parse query from input content", 0);
-    }
-    auto query_name = cur_query.query_name().name();
-    if (query_name.empty()) {
-      LOG(ERROR) << "Query name is empty";
-      return Result<uint8_t>(StatusCode::NotFound, "Query name is empty", 0);
-    }
-    const auto& app_name_to_path_index = schema().GetPlugins();
-    if (app_name_to_path_index.count(query_name) <= 0) {
-      LOG(ERROR) << "Query name is not registered: " << query_name;
-      return Result<uint8_t>(StatusCode::NotFound,
-                             "Query name is not registered: " + query_name, 0);
-    }
-    return app_name_to_path_index.at(query_name).second;
-  } else {
-    return Result<uint8_t>(StatusCode::InValidArgument,
-                           "Invalid input tag: " + std::to_string(input_tag),
-                           0);
   }
 }
 

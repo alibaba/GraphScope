@@ -24,9 +24,15 @@
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
+
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/column.h"
 #include "flex/utils/result.h"
+
+#ifdef BUILD_HQPS
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
+#include "nlohmann/json.hpp"
+#endif  // BUILD_HQPS
 
 namespace gs {
 
@@ -37,16 +43,20 @@ class GraphDBSession {
  public:
   enum class InputFormat : uint8_t {
     kCppEncoder = 0,
+#ifdef BUILD_HQPS
     kCypherJson = 1,               // External usage format
     kCypherInternalAdhoc = 2,      // Internal format for adhoc query
     kCypherInternalProcedure = 3,  // Internal format for procedure
+#endif                             // BUILD_HQPS
   };
 
   static constexpr int32_t MAX_RETRY = 3;
   static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
+#ifdef BUILD_HQPS
   static constexpr const char* kCypherJson = "\x01";
   static constexpr const char* kCypherInternalAdhoc = "\x02";
   static constexpr const char* kCypherInternalProcedure = "\x03";
+#endif  // BUILD_HQPS
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
@@ -132,7 +142,73 @@ class GraphDBSession {
    * type bytes)
    * @return The id of the query.
    */
-  Result<uint8_t> parse_query_type(const std::string& input, size_t& str_len);
+  inline Result<uint8_t> parse_query_type(const std::string& input,
+                                          size_t& str_len) {
+    char input_tag = input.back();
+    size_t len = input.size();
+    if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
+      // For cpp encoder, the query id is the second last byte, others are all
+      // user-defined payload,
+      str_len = len - 2;
+      return input[len - 2];
+    }
+#ifdef BUILD_HQPS
+    else if (input_tag ==
+             static_cast<uint8_t>(InputFormat::kCypherInternalAdhoc)) {
+      // For cypher internal adhoc, the query id is the
+      // second last byte,which is fixed to 255, and other bytes are a string
+      // representing the path to generated dynamic lib.
+      str_len = len - 2;
+      return input[len - 2];
+    } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
+      // For cypherJson there is no query-id provided. The query name is
+      // provided in the json string.
+      str_len = len - 1;
+      std::string_view str_view(input.data(), len - 1);
+      nlohmann::json j = nlohmann::json::parse(str_view);
+      auto query_name = j["query_name"].get<std::string>();
+      const auto& app_name_to_path_index = schema().GetPlugins();
+      if (app_name_to_path_index.count(query_name) <= 0) {
+        LOG(ERROR) << "Query name is not registered: " << query_name;
+        return Result<uint8_t>(StatusCode::NotFound,
+                               "Query name is not registered: " + query_name,
+                               0);
+      }
+      VLOG(10) << "Query name: " << query_name;
+      return app_name_to_path_index.at(query_name).second;
+      return 0;
+    } else if (input_tag ==
+               static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
+      // For cypher internal procedure, the query_name is
+      // provided in the protobuf message.
+      str_len = len - 1;
+      procedure::Query cur_query;
+      if (!cur_query.ParseFromArray(input.data(), input.size() - 1)) {
+        LOG(ERROR) << "Fail to parse query from input content";
+        return Result<uint8_t>(StatusCode::InternalError,
+                               "Fail to parse query from input content", 0);
+      }
+      auto query_name = cur_query.query_name().name();
+      if (query_name.empty()) {
+        LOG(ERROR) << "Query name is empty";
+        return Result<uint8_t>(StatusCode::NotFound, "Query name is empty", 0);
+      }
+      const auto& app_name_to_path_index = schema().GetPlugins();
+      if (app_name_to_path_index.count(query_name) <= 0) {
+        LOG(ERROR) << "Query name is not registered: " << query_name;
+        return Result<uint8_t>(StatusCode::NotFound,
+                               "Query name is not registered: " + query_name,
+                               0);
+      }
+      return app_name_to_path_index.at(query_name).second;
+    }
+#endif  // BUILD_HQPS
+    else {
+      return Result<uint8_t>(StatusCode::InValidArgument,
+                             "Invalid input tag: " + std::to_string(input_tag),
+                             0);
+    }
+  }
   GraphDB& db_;
   Allocator& alloc_;
   WalWriter& logger_;
