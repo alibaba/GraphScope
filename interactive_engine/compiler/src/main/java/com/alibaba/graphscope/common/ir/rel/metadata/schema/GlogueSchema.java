@@ -28,6 +28,7 @@ import org.jgrapht.graph.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 public class GlogueSchema {
     private Graph<Integer, EdgeTypeId> schemaGraph;
@@ -74,7 +75,10 @@ public class GlogueSchema {
                 edgeTypeCardinality.put(
                         edgeType,
                         statistics
-                                .getEdgeTypeCount(edge.getLabelId(), sourceType, targetType)
+                                .getEdgeTypeCount(
+                                        Optional.of(sourceType),
+                                        Optional.of(edge.getLabelId()),
+                                        Optional.of(targetType))
                                 .doubleValue());
             }
         }

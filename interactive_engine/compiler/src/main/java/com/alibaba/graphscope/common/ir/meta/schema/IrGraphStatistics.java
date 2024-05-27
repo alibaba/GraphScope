@@ -23,6 +23,7 @@ import com.alibaba.graphscope.groot.common.schema.api.*;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 /**
  * Maintain Graph statistics meta for IR
@@ -49,27 +50,30 @@ public class IrGraphStatistics implements GraphStatistics {
     }
 
     @Override
-    public int getVersion() {
-        return this.graphStatistics.getVersion();
-    }
-
-    @Override
-    public Integer getVertexTypeCount(int vertexTypeId) {
-        return this.graphStatistics.getVertexTypeCount(vertexTypeId);
-    }
-
-    @Override
-    public Integer getEdgeTypeCount(int edgeTypeId, int sourceTypeId, int targetTypeId) {
-        return this.graphStatistics.getEdgeTypeCount(edgeTypeId, sourceTypeId, targetTypeId);
-    }
-
-    @Override
-    public Integer getVertexCount() {
+    public Long getVertexCount() {
         return this.graphStatistics.getVertexCount();
     }
 
     @Override
-    public Integer getEdgeCount() {
+    public Long getEdgeCount() {
         return this.graphStatistics.getEdgeCount();
+    }
+
+    @Override
+    public Long getVertexTypeCount(Integer vertexTypeId) {
+        return this.graphStatistics.getVertexTypeCount(vertexTypeId);
+    }
+
+    @Override
+    public Long getEdgeTypeCount(
+            Optional<Integer> sourceTypeId,
+            Optional<Integer> edgeTypeId,
+            Optional<Integer> targetTypeId) {
+        return this.graphStatistics.getEdgeTypeCount(sourceTypeId, edgeTypeId, targetTypeId);
+    }
+
+    @Override
+    public String getVersion() {
+        return this.graphStatistics.getVersion();
     }
 }

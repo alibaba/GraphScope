@@ -24,19 +24,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class DefaultGraphStatistics implements GraphStatistics {
     private static final Logger logger = LoggerFactory.getLogger(DefaultGraphStatistics.class);
-    private Map<LabelId, Integer> vertexTypeCounts = Maps.newHashMap();
-    private Map<EdgeKind, Integer> edgeTypeCounts = Maps.newHashMap();
-    private Integer totalVertexCount;
-    private Integer totalEdgeCount;
+    private Map<LabelId, Long> vertexTypeCounts = Maps.newHashMap();
+    private Map<EdgeKind, Long> edgeTypeCounts = Maps.newHashMap();
+    private Long totalVertexCount;
+    private Long totalEdgeCount;
 
     public DefaultGraphStatistics(
-            Map<LabelId, Integer> vertexTypeCounts,
-            Map<EdgeKind, Integer> edgeTypeCounts,
-            Integer totalVertexCount,
-            Integer totalEdgeCount) {
+            Map<LabelId, Long> vertexTypeCounts,
+            Map<EdgeKind, Long> edgeTypeCounts,
+            Long totalVertexCount,
+            Long totalEdgeCount) {
         this.vertexTypeCounts = vertexTypeCounts;
         this.edgeTypeCounts = edgeTypeCounts;
         this.totalVertexCount = totalVertexCount;
@@ -44,33 +46,52 @@ public class DefaultGraphStatistics implements GraphStatistics {
     }
 
     @Override
-    public int getVersion() {
-        return 0;
+    public String getVersion() {
+        return "0";
     }
 
     @Override
-    public Integer getVertexCount() {
+    public Long getVertexCount() {
         return totalVertexCount;
     }
 
     @Override
-    public Integer getEdgeCount() {
+    public Long getEdgeCount() {
         return totalEdgeCount;
     }
 
     @Override
-    public Integer getVertexTypeCount(int vertexTypeId) {
+    public Long getVertexTypeCount(Integer vertexTypeId) {
         return vertexTypeCounts.get(new LabelId(vertexTypeId));
     }
 
     @Override
-    public Integer getEdgeTypeCount(int edgeTypeId, int sourceTypeId, int targetTypeId) {
-        EdgeKind edgeKind =
-                EdgeKind.newBuilder()
-                        .setEdgeLabelId(new LabelId(edgeTypeId))
-                        .setSrcVertexLabelId(new LabelId(sourceTypeId))
-                        .setDstVertexLabelId(new LabelId(targetTypeId))
-                        .build();
-        return edgeTypeCounts.get(edgeKind);
+    public Long getEdgeTypeCount(
+            Optional<Integer> sourceTypeId,
+            Optional<Integer> edgeTypeId,
+            Optional<Integer> targetTypeId) {
+        Long count =
+                edgeTypeCounts.entrySet().stream()
+                        .filter(
+                                entry ->
+                                        (!sourceTypeId.isPresent()
+                                                || entry.getKey()
+                                                        .getSrcVertexLabelId()
+                                                        .equals(sourceTypeId.get())))
+                        .filter(
+                                entry ->
+                                        (!edgeTypeId.isPresent()
+                                                || entry.getKey()
+                                                        .getEdgeLabelId()
+                                                        .equals(edgeTypeId.get())))
+                        .filter(
+                                entry ->
+                                        (!targetTypeId.isPresent()
+                                                || entry.getKey()
+                                                        .getDstVertexLabelId()
+                                                        .equals(targetTypeId.get())))
+                        .collect(Collectors.summingLong(Map.Entry::getValue));
+
+        return count == null ? 0L : count;
     }
 }

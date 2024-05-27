@@ -276,11 +276,11 @@ public abstract class Utils {
         ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode jsonNode = mapper.readTree(statisticsJson);
-            Map<LabelId, Integer> vertexTypeCounts = Maps.newHashMap();
-            Map<EdgeKind, Integer> edgeTypeCounts = Maps.newHashMap();
+            Map<LabelId, Long> vertexTypeCounts = Maps.newHashMap();
+            Map<EdgeKind, Long> edgeTypeCounts = Maps.newHashMap();
             Map<String, Integer> vertexTypeNameIdMap = Maps.newHashMap();
-            int num_vertices = jsonNode.get("total_vertex_count").asInt();
-            int num_edges = jsonNode.get("total_edge_count").asInt();
+            Long num_vertices = jsonNode.get("total_vertex_count").asLong();
+            Long num_edges = jsonNode.get("total_edge_count").asLong();
             JsonNode vertexTypeCountsNode = jsonNode.get("vertex_type_statistics");
             JsonNode edgeTypeCountsNode = jsonNode.get("edge_type_statistics");
             buildGraphElementStatisticsFromJson(
@@ -306,8 +306,8 @@ public abstract class Utils {
     private static final void buildGraphElementStatisticsFromJson(
             JsonNode typeCountsNode,
             String type,
-            Map<LabelId, Integer> vertexTypeCounts,
-            Map<EdgeKind, Integer> edgeTypeCounts,
+            Map<LabelId, Long> vertexTypeCounts,
+            Map<EdgeKind, Long> edgeTypeCounts,
             Map<String, Integer> vertexTypeNameIdMap) {
         Iterator var1 = typeCountsNode.iterator();
         while (var1.hasNext()) {
@@ -315,7 +315,7 @@ public abstract class Utils {
             int typeId = typeStatisticJsonNode.get("type_id").asInt();
             String typeName = typeStatisticJsonNode.get("type_name").asText();
             if (type.equals("VERTEX")) {
-                Integer typeCount = typeStatisticJsonNode.get("count").asInt();
+                Long typeCount = typeStatisticJsonNode.get("count").asLong();
                 vertexTypeCounts.put(new LabelId(typeId), typeCount);
                 vertexTypeNameIdMap.put(typeName, typeId);
             } else {
@@ -325,7 +325,7 @@ public abstract class Utils {
                     JsonNode pair = (JsonNode) var2.next();
                     String sourceLabel = pair.get("source_vertex").asText();
                     String dstLabel = pair.get("destination_vertex").asText();
-                    Integer typeCount = pair.get("count").asInt();
+                    Long typeCount = pair.get("count").asLong();
                     EdgeKind edgeKind =
                             EdgeKind.newBuilder()
                                     .setEdgeLabelId(new LabelId(typeId))
