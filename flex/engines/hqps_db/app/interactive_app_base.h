@@ -104,7 +104,14 @@ bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
 
 template <typename... ARGS>
 bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
-  auto j = nlohmann::json::parse(sv);
+  nlohmann::json j;
+  try {
+    VLOG(10) << "parsing string: " << sv << ",size" << sv.size();
+    j = nlohmann::json::parse(sv);
+  } catch (const nlohmann::json::parse_error& e) {
+    LOG(ERROR) << "Fail to parse json from input content: " << e.what();
+    return false;
+  }
   if (!j.contains("arguments")) {
     LOG(ERROR) << "No arguments found in input";
     return sizeof...(ARGS) == 0;

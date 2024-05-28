@@ -144,7 +144,9 @@ class GraphDBSession {
    */
   inline Result<uint8_t> parse_query_type(const std::string& input,
                                           size_t& str_len) {
+	  VLOG(10) << "parse query type for " << input;
     char input_tag = input.back();
+    VLOG(10) << "input tag: " << static_cast<int>(input_tag);
     size_t len = input.size();
     if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
       // For cpp encoder, the query id is the second last byte, others are all
@@ -163,9 +165,18 @@ class GraphDBSession {
     } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
       // For cypherJson there is no query-id provided. The query name is
       // provided in the json string.
-      str_len = len - 1;
-      std::string_view str_view(input.data(), len - 1);
-      nlohmann::json j = nlohmann::json::parse(str_view);
+      str_len = len - 2;
+      std::string_view str_view(input.data(), len - 2);
+      VLOG(10) << "string view: " << str_view;
+      nlohmann::json j;
+      try {
+        j = nlohmann::json::parse(str_view);
+      } catch (const nlohmann::json::parse_error& e) {
+        LOG(ERROR) << "Fail to parse json from input content: " << e.what();
+        return Result<uint8_t>(
+            StatusCode::InternalError,
+            "Fail to parse json from input content:" + std::string(e.what()), 0);
+      }
       auto query_name = j["query_name"].get<std::string>();
       const auto& app_name_to_path_index = schema().GetPlugins();
       if (app_name_to_path_index.count(query_name) <= 0) {
@@ -174,9 +185,15 @@ class GraphDBSession {
                                "Query name is not registered: " + query_name,
                                0);
       }
+      if (!j.contains("arguments")){
+         LOG(ERROR) << "expect arguments";
+	 for (auto& arg : j["arguments"]){
+	    VLOG(10) << "arg: " << arg;
+	 }
+	 return false;
+      }
       VLOG(10) << "Query name: " << query_name;
       return app_name_to_path_index.at(query_name).second;
-      return 0;
     } else if (input_tag ==
                static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
       // For cypher internal procedure, the query_name is
