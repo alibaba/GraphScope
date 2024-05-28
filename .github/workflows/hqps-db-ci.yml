@@ -161,9 +161,11 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
+        sed -i 's/interactive_workspace/temp_workspace/g' ./engine_config_test.yaml
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml java
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml python
         sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
+        sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
 
     - name: Sample Query test
       env:
