@@ -169,15 +169,15 @@ class BasicFragmentLoader {
           edata_prefix(src_label_name, dst_label_name, edge_label_name),
           tmp_dir(work_dir_), oe_degree, ie_degree);
       for (auto& edge : edges) {
-              if (std::get<1>(edge) == INVALID_VID ||
-          std::get<0>(edge) == INVALID_VID) {
-        VLOG(10) << "Skip invalid edge:" << std::get<0>(edge) << "->"
-                 << std::get<1>(edge);
-        continue;
+        if (std::get<1>(edge) == INVALID_VID ||
+            std::get<0>(edge) == INVALID_VID) {
+          VLOG(10) << "Skip invalid edge:" << std::get<0>(edge) << "->"
+                   << std::get<1>(edge);
+          continue;
+        }
         dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
                                std::get<2>(edge));
       }
-
     } else {
       bool oe_mutable = schema_.outgoing_edge_mutable(
           src_label_name, dst_label_name, edge_label_name);
@@ -199,11 +199,13 @@ class BasicFragmentLoader {
           tmp_dir(work_dir_), oe_degree, ie_degree);
       auto INVALID_VID = std::numeric_limits<vid_t>::max();
       for (auto& edge : edges) {
-        if (std::get<1>(edge) == INVALID_VID || std::get<0>(edge) == INVALID_VID){
-          continue ;
+        if (std::get<1>(edge) == INVALID_VID ||
+            std::get<0>(edge) == INVALID_VID) {
+          continue;
         }
-        oe_csr->batch_put_edge(std::get<0>(edge), std::get<1>(edge),
-                             std::get<2>(edge));
+        dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
+                               std::get<2>(edge));
+      }
     }
     append_edge_loading_progress(src_label_name, dst_label_name,
                                  edge_label_name, LoadingStatus::kLoaded);
