@@ -37,8 +37,7 @@ public class CypherBenchmark {
         Properties properties = PropertyUtil.getProperties(args[0], false);
         Configuration configuration = new Configuration(properties);
 
-        String cypherServerEndpoint =
-                configuration.getString(Configuration.CYPHER_SERVER_ENDPOINT);
+        String cypherServerEndpoint = configuration.getString(Configuration.CYPHER_SERVER_ENDPOINT);
         int threadCount = configuration.getInt(Configuration.THREAD_COUNT, 1);
         int warmUpCount = configuration.getInt(Configuration.WARMUP_EVERY_QUERY, 0);
         int operationCount = configuration.getInt(Configuration.OPERATION_COUNT_EVERY_QUERY, 10);
@@ -56,9 +55,7 @@ public class CypherBenchmark {
             private Session session;
 
             public MyRunnable(String endpoint, String username, String password) {
-                // String[] address = endpoint.split(":");
-                String uri = "bolt://localhost:7687";
-
+                String uri = "bolt://" + endpoint;
                 try {
                     Driver driver = GraphDatabase.driver(uri, AuthTokens.basic(username, password));
                     this.session = driver.session();
@@ -95,7 +92,7 @@ public class CypherBenchmark {
                         HashMap<String, String> queryParameter =
                                 commonQuery.getSingleParameter(parameterIndex);
                         commonQuery.processCypherQuery(
-                            session, queryParameter, printQueryResult, printQueryName);
+                                session, queryParameter, printQueryResult, printQueryName);
                     } else {
                         break;
                     }
