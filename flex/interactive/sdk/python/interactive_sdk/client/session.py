@@ -515,6 +515,8 @@ class DefaultSession(Session):
         self, graph_id: StrictStr, params: QueryRequest
     ) -> Result[CollectiveResults]:
         try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in json format
             params_str = params.to_json() + chr(1)
             response = self._query_api.proc_call_with_http_info(
                 graph_id, params_str
@@ -531,6 +533,8 @@ class DefaultSession(Session):
 
     def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
         try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             params = params + chr(0)
             response = self._procedure_api.call_procedure_with_http_info(
                 graph_id, params

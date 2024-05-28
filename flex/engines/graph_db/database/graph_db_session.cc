@@ -113,19 +113,20 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
         std::vector<char>());
   }
 
-  const char* str_data = input.data();
-  size_t str_len{};
-  auto type_res = parse_query_type(input, str_len);
+  auto type_res = parse_query_type(input);
   if (!type_res.ok()) {
     LOG(ERROR) << "Fail to parse query type";
     return Result<std::vector<char>>(type_res.status(), std::vector<char>());
   }
-  uint8_t type = type_res.value();
+
+  uint8_t type;
+  std::string_view sv;
+  std::tie(type, sv) = type_res.value();
 
   std::vector<char> result_buffer;
 
-  Decoder decoder(str_data, str_len);
   Encoder encoder(result_buffer);
+  Decoder decoder(sv.data(), sv.size());
 
   AppBase* app = GetApp(type);
   if (!app) {
@@ -153,7 +154,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    decoder.reset(str_data, str_len);
+    decoder.reset(sv.data(), sv.size());
     result_buffer.clear();
   }
 

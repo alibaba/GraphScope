@@ -141,8 +141,9 @@ class GraphDBSession {
    * type bytes)
    * @return The id of the query.
    */
-  inline Result<uint8_t> parse_query_type(const std::string& input,
-                                          size_t& str_len) {
+  inline Result<std::pair<uint8_t, std::string_view>> parse_query_type(
+      const std::string& input) {
+    const char* str_data = input.data();
     VLOG(10) << "parse query type for " << input;
     char input_tag = input.back();
     VLOG(10) << "input tag: " << static_cast<int>(input_tag);
@@ -150,8 +151,8 @@ class GraphDBSession {
     if (input_tag == static_cast<uint8_t>(InputFormat::kCppEncoder)) {
       // For cpp encoder, the query id is the second last byte, others are all
       // user-defined payload,
-      str_len = len - 2;
-      return input[len - 2];
+      return std::make_pair((uint8_t) input[len - 2],
+                            std::string_view(str_data, len - 2));
     }
 #ifdef BUILD_HQPS
     else if (input_tag ==
@@ -159,12 +160,11 @@ class GraphDBSession {
       // For cypher internal adhoc, the query id is the
       // second last byte,which is fixed to 255, and other bytes are a string
       // representing the path to generated dynamic lib.
-      str_len = len - 2;
-      return input[len - 2];
+      return std::make_pair((uint8_t) input[len - 2],
+                            std::string_view(str_data, len - 2));
     } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
       // For cypherJson there is no query-id provided. The query name is
       // provided in the json string.
-      str_len = len - 2;
       std::string_view str_view(input.data(), len - 2);
       VLOG(10) << "string view: " << str_view;
       nlohmann::json j;
@@ -172,18 +172,17 @@ class GraphDBSession {
         j = nlohmann::json::parse(str_view);
       } catch (const nlohmann::json::parse_error& e) {
         LOG(ERROR) << "Fail to parse json from input content: " << e.what();
-        return Result<uint8_t>(
+        return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
             StatusCode::InternalError,
-            "Fail to parse json from input content:" + std::string(e.what()),
-            0);
+            "Fail to parse json from input content:" + std::string(e.what())));
       }
       auto query_name = j["query_name"].get<std::string>();
       const auto& app_name_to_path_index = schema().GetPlugins();
       if (app_name_to_path_index.count(query_name) <= 0) {
         LOG(ERROR) << "Query name is not registered: " << query_name;
-        return Result<uint8_t>(StatusCode::NotFound,
-                               "Query name is not registered: " + query_name,
-                               0);
+        return Result<std::pair<uint8_t, std::string_view>>(
+            gs::Status(StatusCode::NotFound,
+                       "Query name is not registered: " + query_name));
       }
       if (j.contains("arguments")) {
         for (auto& arg : j["arguments"]) {
@@ -191,37 +190,40 @@ class GraphDBSession {
         }
       }
       VLOG(10) << "Query name: " << query_name;
-      return app_name_to_path_index.at(query_name).second;
+      return std::make_pair(app_name_to_path_index.at(query_name).second,
+                            std::string_view(str_data, len - 2));
     } else if (input_tag ==
                static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
       // For cypher internal procedure, the query_name is
       // provided in the protobuf message.
-      str_len = len - 1;
       procedure::Query cur_query;
       if (!cur_query.ParseFromArray(input.data(), input.size() - 1)) {
         LOG(ERROR) << "Fail to parse query from input content";
-        return Result<uint8_t>(StatusCode::InternalError,
-                               "Fail to parse query from input content", 0);
+        return Result<std::pair<uint8_t, std::string_view>>(
+            gs::Status(StatusCode::InternalError,
+                       "Fail to parse query from input content"));
       }
       auto query_name = cur_query.query_name().name();
       if (query_name.empty()) {
         LOG(ERROR) << "Query name is empty";
-        return Result<uint8_t>(StatusCode::NotFound, "Query name is empty", 0);
+        return Result<std::pair<uint8_t, std::string_view>>(
+            gs::Status(StatusCode::NotFound, "Query name is empty"));
       }
       const auto& app_name_to_path_index = schema().GetPlugins();
       if (app_name_to_path_index.count(query_name) <= 0) {
         LOG(ERROR) << "Query name is not registered: " << query_name;
-        return Result<uint8_t>(StatusCode::NotFound,
-                               "Query name is not registered: " + query_name,
-                               0);
+        return Result<std::pair<uint8_t, std::string_view>>(
+            gs::Status(StatusCode::NotFound,
+                       "Query name is not registered: " + query_name));
       }
-      return app_name_to_path_index.at(query_name).second;
+      return std::make_pair(app_name_to_path_index.at(query_name).second,
+                            std::string_view(str_data, len - 1));
     }
 #endif  // BUILD_HQPS
     else {
-      return Result<uint8_t>(StatusCode::InValidArgument,
-                             "Invalid input tag: " + std::to_string(input_tag),
-                             0);
+      return Result<std::pair<uint8_t, std::string_view>>(
+          gs::Status(StatusCode::InValidArgument,
+                     "Invalid input tag: " + std::to_string(input_tag)));
     }
   }
   GraphDB& db_;

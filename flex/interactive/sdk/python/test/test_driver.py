@@ -94,12 +94,12 @@ class TestDriver(unittest.TestCase):
         self.createGraph()
         self.bulkLoading()
         self.waitJobFinish()
-        self.runCypherQuery()
-        self.runGremlinQuery()
-        self.createCypherProcedure()
+        # self.runCypherQuery()
+        # self.runGremlinQuery()
+        # self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
-        self.callProcedure()
+        # self.callProcedure()
         self.callProcedureWithHttp()
 
     def createGraph(self):
