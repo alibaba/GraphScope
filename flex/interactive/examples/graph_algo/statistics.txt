@@ -1,0 +1,14 @@
+v,0,Paper,123
+v,1,Challenge,5
+v,2,Topic,8
+v,3,Task,25
+v,4,Solution,15
+v,5,CCFField,11
+e,0,WorkOn,Paper,Task,123
+e,1,Resolve,Paper,Challenge,168
+e,2,Target,Task,Challenge,57
+e,3,Belong,Task,Topic,25
+e,4,User,Paper,Solution,170
+e,5,ApplyON,Solution,Challenge,15
+e,6,HasField,Paper,CCFField,109
+e,7,Citation,Paper,Paper,116

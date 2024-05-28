@@ -35,6 +35,14 @@ public class YamlConfigs extends Configs {
     static {
         ImmutableMap.Builder<String, ValueGetter> mapBuilder = ImmutableMap.builder();
         mapBuilder
+                .put("physical.opt.config",
+                        (Configs configs) -> {
+                            if (configs.get("compiler.physical.opt") != null) {
+                                return configs.get("compiler.physical.opt");
+                            } else {
+                                return "ffi";
+                            }
+                        })
                 .put(
                         "graph.planner.is.on",
                         (Configs configs) -> configs.get("compiler.planner.is_on"))

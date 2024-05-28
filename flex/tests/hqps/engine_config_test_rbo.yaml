@@ -23,6 +23,9 @@ compiler:
       - FilterIntoJoinRule
       - FilterMatchRule
       - NotMatchToAntiJoinRule
+      - ExpandGetVFusionRule 
+  physical:
+    opt: ffi
   endpoint:
     default_listen_address: localhost
     bolt_connector:
