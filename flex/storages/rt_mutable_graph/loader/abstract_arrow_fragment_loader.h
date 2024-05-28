@@ -189,7 +189,11 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
       for (auto j = 0; j < casted->length(); ++j) {
         auto str = casted->GetView(j);
         std::string_view str_view(str.data(), str.size());
-        auto vid = indexer.get_index(Any::From(str_view));
+        // auto vid = indexer.get_index(Any::From(str_view));
+        vid_t vid;
+        if (!indexer.get_index(str_view, vid)) {
+          vid = invalid_vid;
+        }
         if (is_dst) {
           std::get<1>(parsed_edges[cur_ind++]) = vid;
         } else {
@@ -205,7 +209,11 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
       for (auto j = 0; j < casted->length(); ++j) {
         auto str = casted->GetView(j);
         std::string_view str_view(str.data(), str.size());
-        auto vid = indexer.get_index(Any::From(str_view));
+        // auto vid = indexer.get_index(Any::From(str_view));
+        vid_t vid;
+        if (!indexer.get_index(str_view, vid)) {
+          vid = invalid_vid;
+        }
         if (is_dst) {
           std::get<1>(parsed_edges[cur_ind++]) = vid;
         } else {
@@ -220,7 +228,11 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
     using arrow_array_type = typename gs::TypeConverter<PK_T>::ArrowArrayType;
     auto casted = std::static_pointer_cast<arrow_array_type>(col);
     for (auto j = 0; j < casted->length(); ++j) {
-      auto vid = indexer.get_index(Any::From(casted->Value(j)));
+      // auto vid = indexer.get_index(Any::From(casted->Value(j)));
+      vid_t vid;
+      if (!indexer.get_index(casted->Value(j), vid)) {
+        vid = invalid_vid;
+      }
       if (is_dst) {
         std::get<1>(parsed_edges[cur_ind++]) = vid;
       } else {
