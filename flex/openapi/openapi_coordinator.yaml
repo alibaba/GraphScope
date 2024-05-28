@@ -1563,21 +1563,21 @@ paths:
                   start_time: 2024-02-24 00:00:00
                   log: logging...
                   detail:
-                    graph_name: demo
+                    graph_id: GRAPHID
                 - id: JOB-QWERTYUIOPASDFGH-2
                   type: DATA IMPORT
                   status: CANCELLED
                   start_time: 2024-02-24 00:00:00
                   log: logging...
                   detail:
-                    graph_name: demo
+                    graph_id: GRAPHID
                 - id: JOB-QWERTYUIOPASDFGH-3
                   type: DATA IMPORT
                   status: SUCCESS
                   start_time: 2024-02-24 00:00:00
                   end_time:  2024-02-24 12:00:00
                   detail:
-                    graph_name: demo
+                    graph_id: GRAPHID
                 - id: JOB-QWERTYUIOPASDFGH-4
                   type: DATA IMPORT
                   status: FAILED
@@ -1585,12 +1585,12 @@ paths:
                   end_time: 2024-02-24 12:00:00
                   log: logging...
                   detail:
-                    graph_name: demo
+                    graph_id: GRAPHID
                 - id: JOB-QWERTYUIOPASDFGH-5
                   type: DATA IMPORT
                   status: WAITING
                   detail:
-                    graph_name: demo
+                    graph_id: GRAPHID
         500:
           $ref: "#/components/responses/500"
 

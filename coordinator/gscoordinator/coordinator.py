@@ -26,10 +26,12 @@ import signal
 import sys
 from concurrent import futures
 
+import connexion
 import grpc
 from graphscope.config import Config
 from graphscope.proto import coordinator_service_pb2_grpc
 
+from gscoordinator.flex.encoder import JSONEncoder
 from gscoordinator.monitor import Monitor
 from gscoordinator.servicer import init_graphscope_one_service_servicer
 from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
@@ -143,6 +145,16 @@ def start_server(
     logger.info("Coordinator server listen at %s", endpoint)
 
     server.start()
+
+    # OpenApi server
+    app = connexion.App(__name__, specification_dir="./flex/openapi/")
+    app.app.json_encoder = JSONEncoder
+    app.add_api(
+        "openapi.yaml",
+        arguments={"title": "GraphScope FLEX HTTP SERVICE API"},
+        pythonic_params=True,
+    )
+    app.run(port=config.coordinator.http_port)
 
     if config.coordinator.monitor:
         try:
