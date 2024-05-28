@@ -331,7 +331,8 @@ public class DefaultSession implements Session {
     public Result<IrResult.CollectiveResults> callProcedure(
             String graphName, QueryRequest request) {
         try {
-            // Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            // Interactive currently support four type of inputformat, see
+            // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
             String encodedStr = encodeString(request.toJson(), 1);
             ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
@@ -355,8 +356,10 @@ public class DefaultSession implements Session {
     @Override
     public Result<String> callProcedureRaw(String graphName, String request) {
         try {
-            // Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
-            // Here we add byte of value 0 to denote the input format is in raw encoder/decoder format.
+            // Interactive currently support four type of inputformat, see
+            // flex/engines/graph_db/graph_db_session.h
+            // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
+            // format.
             String encodedStr = encodeString(request.toJson(), 0);
             ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, sb.toString());
             if (response.getStatusCode() != 200) {
