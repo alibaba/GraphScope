@@ -360,8 +360,8 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            String encodedStr = encodeString(request.toJson(), 0);
-            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, sb.toString());
+            String encodedStr = encodeString(request, 0);
+            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), response.getData()));
