@@ -75,12 +75,19 @@ bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
 
 template <size_t I, typename TUPLE_T, typename T, typename... ARGS>
 bool deserialize_impl(TUPLE_T& tuple, const nlohmann::json& json) {
-  PropertyType type = json[I]["type"].get<PropertyType>();
   if (I == json.size()) {
     LOG(ERROR) << "Arguments size mismatch: " << I << " vs " << json.size()
                << ", reach end of json: " << json;
     return false;
   }
+  auto type_json = json[I]["type"];
+  PropertyType type;
+  from_json(type_json, type);
+  if (type == PropertyType::Empty()) {
+    LOG(ERROR) << "Fail to parse type from input content";
+    return false;
+  }
+
   auto expected_type = AnyConverter<T>::type();
   if (type != expected_type) {
     LOG(ERROR) << "Type mismatch: " << type << " vs " << expected_type;
@@ -113,7 +120,7 @@ bool deserialize(std::tuple<ARGS...>& tuple, std::string_view sv) {
     return false;
   }
   if (!j.contains("arguments")) {
-    LOG(ERROR) << "No arguments found in input";
+    LOG(INFO) << "No arguments found in input";
     return sizeof...(ARGS) == 0;
   }
   auto arguments_list = j["arguments"];
@@ -146,7 +153,7 @@ class CypherReadAppBase : public ReadAppBase {
 
   bool Query(const GraphDBSession& db, Decoder& input,
              Encoder& output) override {
-    auto sv = input.get_string();
+    std::string_view sv(input.data(), input.size());
 
     std::tuple<ARGS...> tuple;
     if (!deserialize<ARGS...>(tuple, sv)) {
@@ -180,7 +187,7 @@ class CypherWriteAppBase : public WriteAppBase {
                                            ARGS... args) = 0;
 
   bool Query(GraphDBSession& db, Decoder& input, Encoder& output) override {
-    auto sv = input.get_string();
+    std::string_view sv(input.data(), input.size());
 
     std::tuple<ARGS...> tuple;
     if (!deserialize<ARGS...>(tuple, sv)) {

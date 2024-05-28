@@ -15,7 +15,6 @@
 #include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
-
 namespace server {
 
 bool check_port_occupied(uint16_t port) {

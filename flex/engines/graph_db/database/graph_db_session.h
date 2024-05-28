@@ -24,7 +24,6 @@
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
-
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/column.h"
 #include "flex/utils/result.h"
@@ -144,7 +143,7 @@ class GraphDBSession {
    */
   inline Result<uint8_t> parse_query_type(const std::string& input,
                                           size_t& str_len) {
-	  VLOG(10) << "parse query type for " << input;
+    VLOG(10) << "parse query type for " << input;
     char input_tag = input.back();
     VLOG(10) << "input tag: " << static_cast<int>(input_tag);
     size_t len = input.size();
@@ -175,7 +174,8 @@ class GraphDBSession {
         LOG(ERROR) << "Fail to parse json from input content: " << e.what();
         return Result<uint8_t>(
             StatusCode::InternalError,
-            "Fail to parse json from input content:" + std::string(e.what()), 0);
+            "Fail to parse json from input content:" + std::string(e.what()),
+            0);
       }
       auto query_name = j["query_name"].get<std::string>();
       const auto& app_name_to_path_index = schema().GetPlugins();
@@ -185,12 +185,10 @@ class GraphDBSession {
                                "Query name is not registered: " + query_name,
                                0);
       }
-      if (!j.contains("arguments")){
-         LOG(ERROR) << "expect arguments";
-	 for (auto& arg : j["arguments"]){
-	    VLOG(10) << "arg: " << arg;
-	 }
-	 return false;
+      if (j.contains("arguments")) {
+        for (auto& arg : j["arguments"]) {
+          VLOG(10) << "arg: " << arg;
+        }
       }
       VLOG(10) << "Query name: " << query_name;
       return app_name_to_path_index.at(query_name).second;
