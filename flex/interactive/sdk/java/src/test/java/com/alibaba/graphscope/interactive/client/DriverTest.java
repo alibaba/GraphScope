@@ -307,6 +307,7 @@ public class DriverTest {
     public void test9CallCppProcedure() {
         QueryRequest request = new QueryRequest();
         request.setQueryName(cppProcedureId);
+        request.addArgumentsItem(new TypedValue().value(1).type(new GSDataType(new PrimitiveType().primitiveType(PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32))));
         Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
         assertOk(resp);
     }
