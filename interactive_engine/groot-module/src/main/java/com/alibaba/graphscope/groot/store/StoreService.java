@@ -311,8 +311,8 @@ public class StoreService {
     public Map<Integer, Statistics> getGraphStatisticsBlob(long snapshotId) throws IOException {
         int partitionCount = this.idToPartition.values().size();
         CountDownLatch countDownLatch = new CountDownLatch(partitionCount);
-
-        Map<Integer, Statistics> statisticsMap = new HashMap<>();
+        logger.info("Collect statistics of store#{} started", storeId);
+        Map<Integer, Statistics> statisticsMap = new ConcurrentHashMap<>();
         for (Map.Entry<Integer, GraphPartition> entry : idToPartition.entrySet()) {
             this.statisticsExecutor.execute(
                     () -> {
@@ -320,7 +320,7 @@ public class StoreService {
                             Statistics statistics =
                                     entry.getValue().getGraphStatisticsBlob(snapshotId);
                             statisticsMap.put(entry.getKey(), statistics);
-                            logger.info("Collected statistics of partition#{}", entry.getKey());
+                            logger.debug("Collected statistics of partition#{}", entry.getKey());
                         } catch (IOException e) {
                             logger.error(
                                     "Collect statistics failed for partition {}",
@@ -335,6 +335,13 @@ public class StoreService {
             countDownLatch.await();
         } catch (InterruptedException e) {
             logger.error("collect statistics has been interrupted", e);
+        }
+        if (statisticsMap.size() != partitionCount) {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
         }
         logger.info("Collect statistics of store#{} done, size: {}", storeId, statisticsMap.size());
         return statisticsMap;

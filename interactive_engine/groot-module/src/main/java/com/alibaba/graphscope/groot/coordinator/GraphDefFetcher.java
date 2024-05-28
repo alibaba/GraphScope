@@ -22,8 +22,8 @@ import com.alibaba.graphscope.proto.groot.Statistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 public class GraphDefFetcher {
@@ -42,7 +42,7 @@ public class GraphDefFetcher {
     }
 
     public Map<Integer, Statistics> fetchStatistics() {
-        Map<Integer, Statistics> statisticsMap = new HashMap<>();
+        Map<Integer, Statistics> statisticsMap = new ConcurrentHashMap<>();
         CountDownLatch countDownLatch = new CountDownLatch(storeCount);
 
         for (int i = 0; i < storeCount; ++i) {
@@ -71,6 +71,13 @@ public class GraphDefFetcher {
             countDownLatch.await();
         } catch (InterruptedException e) {
             logger.error("fetch statistics has been interrupted", e);
+        }
+        if (statisticsMap.size() != storeCount) {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
         }
         return statisticsMap;
     }

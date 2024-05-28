@@ -53,8 +53,9 @@ public class StoreSchemaService extends StoreSchemaGrpc.StoreSchemaImplBase {
         try {
             Map<Integer, Statistics> map =
                     this.storeService.getGraphStatisticsBlob(request.getSnapshotId());
-            logger.info("Collected statistics :{}", map.size());
-            FetchStatisticsResponse response = FetchStatisticsResponse.newBuilder().putAllStatisticsMap(map).build();
+            logger.debug("Collected statistics :{}", map.size());
+            FetchStatisticsResponse response =
+                    FetchStatisticsResponse.newBuilder().putAllStatisticsMap(map).build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (IOException e) {

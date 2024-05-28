@@ -114,13 +114,13 @@ public class SchemaManager {
                             ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                     "fetch-statistics", logger));
             this.fetchStatisticsScheduler.scheduleWithFixedDelay(
-                    this::syncStatistics, 1, 1, TimeUnit.MINUTES);
+                    this::syncStatistics, 5, 60, TimeUnit.MINUTES);
             this.sendStatisticsScheduler =
                     Executors.newSingleThreadScheduledExecutor(
                             ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                     "send-statistics", logger));
             this.sendStatisticsScheduler.scheduleWithFixedDelay(
-                    this::sendStatisticsToFrontend, 5, 60, TimeUnit.SECONDS);
+                    this::sendStatisticsToFrontend, 5, 1, TimeUnit.MINUTES);
         }
     }
 
@@ -140,7 +140,7 @@ public class SchemaManager {
             for (int i = 0; i < frontendCount; ++i) {
                 try {
                     frontendSnapshotClients.getClient(i).syncStatistics(statistics);
-                    logger.info("Send statistics to frontend#{}", i);
+                    logger.debug("Sent statistics to frontend#{}", i);
                 } catch (Exception e) {
                     logger.error("Failed to sync statistics to frontend", e);
                 }
