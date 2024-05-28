@@ -28,6 +28,7 @@ public class Configuration {
         }
     }
 
+    public static final String QUERY_SUFFIX = "query.suffix";
     public static final String GREMLIN_SERVER_ENDPOINT = "gremlin.endpoint";
     public static final String CYPHER_SERVER_ENDPOINT = "cypher.endpoint";
     public static final String AUTH_USERNAME = "username";

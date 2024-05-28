@@ -91,10 +91,9 @@ public class CommonQuery {
             boolean printQuery) {
         try {
             String cypherQuery = generateGremlinQuery(singleParameter, queryPattern);
-
             long startTime = System.currentTimeMillis();
-            org.neo4j.driver.Result result = session.run(cypherQuery);
-            // Pair<Integer, String> result = processResult(resultSet);
+            org.neo4j.driver.Result resultSet = session.run(cypherQuery);
+            Pair<Integer, String> result = processCypherResult(resultSet);
             long endTime = System.currentTimeMillis();
             long executeTime = endTime - startTime;
             if (printQuery) {
@@ -103,16 +102,10 @@ public class CommonQuery {
                                 "QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
                                 queryName,
                                 singleParameter.toString(),
-                                //   result.getLeft(),
-                                result,
+                                result.getLeft(),
                                 executeTime);
                 if (printResult) {
-                    printInfo =
-                            String.format(
-                                    "%s Result: { %s }",
-                                    printInfo,
-                                    // result.getRight()
-                                    result);
+                    printInfo = String.format("%s Result: { %s }", printInfo, result.getRight());
                 }
                 System.out.println(printInfo);
             }
@@ -144,6 +137,16 @@ public class CommonQuery {
         while (iterator.hasNext()) {
             count += 1;
             result = String.format("%s\n%s", result, iterator.next().toString());
+        }
+        return Pair.of(count, result);
+    }
+
+    Pair<Integer, String> processCypherResult(org.neo4j.driver.Result cypherResult) {
+        int count = 0;
+        String result = "";
+        while (cypherResult.hasNext()) {
+            count += 1;
+            result = String.format("%s\n%s", result, cypherResult.next().asMap().toString());
         }
         return Pair.of(count, result);
     }

@@ -25,11 +25,12 @@ public class QueryUtil {
         String queryDir = configuration.getString(Configuration.QUERY_DIR);
         String parameterDir = configuration.getString(Configuration.PARAMETER_DIR);
         List<CommonQuery> queryList = new ArrayList<>();
+        String suffix = configuration.getString(Configuration.QUERY_SUFFIX, ".gremlin");
 
         // for ldbc queries
         for (int index = 1; index <= 100; index++) {
             String enableQuery = String.format("ldbc_query_%d.enable", index);
-            String queryFileName = String.format("ldbc_query_%d.gremlin", index);
+            String queryFileName = String.format("ldbc_query_%d.%s", index, suffix);
             String parameterFileName = String.format("ldbc_query_%d.param", index);
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
@@ -60,7 +61,7 @@ public class QueryUtil {
         // for ldbc bi queries
         for (int index = 1; index <= 100; index++) {
             String enableQuery = String.format("bi_query_%d.enable", index);
-            String queryFileName = String.format("bi_query_%d.gremlin", index);
+            String queryFileName = String.format("bi_query_%d.%s", index, suffix);
             String parameterFileName = String.format("bi_query_%d.param", index);
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
@@ -87,7 +88,7 @@ public class QueryUtil {
         // for ldbc lsqb queries
         for (int index = 1; index <= 100; index++) {
             String enableQuery = String.format("lsqb_query_%d.enable", index);
-            String queryFileName = String.format("lsqb_query_%d.gremlin", index);
+            String queryFileName = String.format("lsqb_query_%d.%s", index, suffix);
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String queryName = String.format("LSQB_QUERY_%d", index);
@@ -98,7 +99,7 @@ public class QueryUtil {
         // for k hop
         for (int index = 1; index < 5; index++) {
             String enableQuery = String.format("%d_hop_query.enable", index);
-            String queryFileName = String.format("%d_hop_query.gremlin", index);
+            String queryFileName = String.format("%d_hop_query.%s", index, suffix);
             String parameterFileName = String.format("%d_hop_query.param", index);
 
             if (configuration.getBoolean(enableQuery, false)) {
@@ -112,7 +113,7 @@ public class QueryUtil {
 
         // for benchmarking early-stop queries
         String enableEsQuery = "early_stop_query.enable";
-        String esQueryFileName = "early_stop_query.gremlin";
+        String esQueryFileName = String.format("early_stop_query.%s", suffix);
         String esParameterFileName = "early_stop_query.param";
         if (configuration.getBoolean(enableEsQuery, false)) {
             String queryFilePath = String.format("%s/%s", queryDir, esQueryFileName);
@@ -123,7 +124,7 @@ public class QueryUtil {
 
         // for benchmarking subtask queries
         String enableSubtaskQuery = "subtask_query.enable";
-        String subtaskQueryFileName = "subtask_query.gremlin";
+        String subtaskQueryFileName = String.format("subtask_query.%s", suffix);
         String subtaskParameterFileName = "subtask_query.param";
         if (configuration.getBoolean(enableSubtaskQuery, false)) {
             String queryFilePath = String.format("%s/%s", queryDir, subtaskQueryFileName);
@@ -136,7 +137,7 @@ public class QueryUtil {
         // custom queries without parameter
         for (int index = 1; index < 100; index++) {
             String enableQuery = String.format("custom_constant_query_%d.enable", index);
-            String queryFileName = String.format("custom_constant_query_%d.gremlin", index);
+            String queryFileName = String.format("custom_constant_query_%d.%s", index, suffix);
 
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
@@ -149,7 +150,7 @@ public class QueryUtil {
         // custom queries
         for (int index = 1; index < 100; index++) {
             String enableQuery = String.format("custom_query_%d.enable", index);
-            String queryFileName = String.format("custom_query_%d.gremlin", index);
+            String queryFileName = String.format("custom_query_%d.%s", index, suffix);
             String parameterFileName = String.format("custom_query_%d.param", index);
 
             if (configuration.getBoolean(enableQuery, false)) {
