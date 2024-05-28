@@ -83,6 +83,10 @@ class HQPSService {
 
   uint16_t get_query_port() const;
 
+  uint64_t get_start_time() const;
+
+  void reset_start_time();
+
   std::shared_ptr<gs::IGraphMetaStore> get_metadata_store() const;
 
   gs::Result<seastar::sstring> service_status();
@@ -122,6 +126,7 @@ class HQPSService {
   std::unique_ptr<hqps_http_handler> query_hdl_;
   std::atomic<bool> running_{false};
   std::atomic<bool> initialized_{false};
+  std::atomic<uint64_t> start_time_{0};
   std::mutex mtx_;
 
   ServiceConfig service_config_;

@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 
+#include "flex/utils/property/types.h"
 #include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
 #include "nlohmann/json.hpp"
@@ -45,6 +46,11 @@ inline int64_t GetCurrentTimeStamp() {
              std::chrono::system_clock::now().time_since_epoch())
       .count();
 }
+
+// With the help of the following functions, we can serialize and deserialize
+// by json.get<PropertyType>() and operator <</operator =;
+void to_json(nlohmann::json& json, const PropertyType& type);
+void from_json(const nlohmann::json& json, PropertyType& type);
 
 inline boost::filesystem::path get_current_binary_directory() {
   return boost::filesystem::canonical("/proc/self/exe").parent_path();
