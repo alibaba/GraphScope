@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Result;
 import org.apache.tinkerpop.gremlin.driver.ResultSet;
+import org.neo4j.driver.*;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -70,6 +71,48 @@ public class CommonQuery {
                                 executeTime);
                 if (printResult) {
                     printInfo = String.format("%s Result: { %s }", printInfo, result.getRight());
+                }
+                System.out.println(printInfo);
+            }
+
+        } catch (Exception e) {
+            System.out.println(
+                    String.format(
+                            "Timeout or failed: QueryName[%s], Parameter[%s].",
+                            queryName, singleParameter.toString()));
+            e.printStackTrace();
+        }
+    }
+
+    public void processCypherQuery(
+            Session session,
+            HashMap<String, String> singleParameter,
+            boolean printResult,
+            boolean printQuery) {
+        try {
+            String cypherQuery = generateGremlinQuery(singleParameter, queryPattern);
+
+            long startTime = System.currentTimeMillis();
+            org.neo4j.driver.Result result = session.run(cypherQuery);
+            // Pair<Integer, String> result = processResult(resultSet);
+            long endTime = System.currentTimeMillis();
+            long executeTime = endTime - startTime;
+            if (printQuery) {
+                String printInfo =
+                        String.format(
+                                "QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
+                                queryName,
+                                singleParameter.toString(),
+                                //   result.getLeft(),
+                                result,
+                                executeTime);
+                if (printResult) {
+                    printInfo =
+                            String.format(
+                                    "%s Result: { %s }",
+                                    printInfo,
+                                    // result.getRight()
+                                    result);
                 }
                 System.out.println(printInfo);
             }

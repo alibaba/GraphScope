@@ -20,17 +20,14 @@ import com.alibaba.graphscope.gaia.common.Configuration;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
 
-import org.apache.tinkerpop.gremlin.driver.Client;
-import org.apache.tinkerpop.gremlin.driver.Cluster;
-import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
-import org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0;
+import org.neo4j.driver.*;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class InteractiveBenchmark {
+public class CypherBenchmark {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.out.println("Error, Usage: <interactive-benchmark.properties>");
@@ -40,8 +37,8 @@ public class InteractiveBenchmark {
         Properties properties = PropertyUtil.getProperties(args[0], false);
         Configuration configuration = new Configuration(properties);
 
-        String gremlinServerEndpoint =
-                configuration.getString(Configuration.GREMLIN_SERVER_ENDPOINT);
+        String cypherServerEndpoint =
+                configuration.getString(Configuration.CYPHER_SERVER_ENDPOINT);
         int threadCount = configuration.getInt(Configuration.THREAD_COUNT, 1);
         int warmUpCount = configuration.getInt(Configuration.WARMUP_EVERY_QUERY, 0);
         int operationCount = configuration.getInt(Configuration.OPERATION_COUNT_EVERY_QUERY, 10);
@@ -56,22 +53,15 @@ public class InteractiveBenchmark {
         AtomicInteger atomicParameterIndex = new AtomicInteger(0);
 
         class MyRunnable implements Runnable {
-            private Client client;
+            private Session session;
 
             public MyRunnable(String endpoint, String username, String password) {
-                String[] address = endpoint.split(":");
-                try {
-                    Cluster.Builder cluster =
-                            Cluster.build()
-                                    .addContactPoint(address[0])
-                                    .port(Integer.parseInt(address[1]))
-                                    .serializer(initializeSerialize());
-                    if (!(username == null || username.isEmpty())
-                            && !(password == null || password.isEmpty())) {
-                        cluster.credentials(username, password);
-                    }
-                    client = cluster.create().connect();
+                // String[] address = endpoint.split(":");
+                String uri = "bolt://localhost:7687";
 
+                try {
+                    Driver driver = GraphDatabase.driver(uri, AuthTokens.basic(username, password));
+                    this.session = driver.session();
                     System.out.println("Connect success.");
                 } catch (Exception e) {
                     System.err.println("Connect failure, caused by : " + e);
@@ -86,8 +76,8 @@ public class InteractiveBenchmark {
                     CommonQuery commonQuery = ldbcQueryList.get(index % ldbcQueryList.size());
                     HashMap<String, String> queryParameter = commonQuery.getSingleParameter(index);
 
-                    commonQuery.processGremlinQuery(
-                            client, queryParameter, printQueryResult, printQueryName);
+                    commonQuery.processCypherQuery(
+                            session, queryParameter, printQueryResult, printQueryName);
                 }
                 System.out.println("Begin standard test...");
                 while (true) {
@@ -104,13 +94,13 @@ public class InteractiveBenchmark {
                         }
                         HashMap<String, String> queryParameter =
                                 commonQuery.getSingleParameter(parameterIndex);
-                        commonQuery.processGremlinQuery(
-                                client, queryParameter, printQueryResult, printQueryName);
+                        commonQuery.processCypherQuery(
+                            session, queryParameter, printQueryResult, printQueryName);
                     } else {
                         break;
                     }
                 }
-                client.close();
+                session.close();
             }
         }
 
@@ -118,7 +108,7 @@ public class InteractiveBenchmark {
 
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < threadCount; i++) {
-            threadPool.submit(new MyRunnable(gremlinServerEndpoint, username, password));
+            threadPool.submit(new MyRunnable(cypherServerEndpoint, username, password));
         }
 
         threadPool.shutdown();
@@ -140,9 +130,5 @@ public class InteractiveBenchmark {
             }
             Thread.sleep(10);
         }
-    }
-
-    private static MessageSerializer initializeSerialize() {
-        return new GryoMessageSerializerV1d0();
     }
 }
