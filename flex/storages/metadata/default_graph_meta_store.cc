@@ -103,19 +103,17 @@ Result<bool> DefaultGraphMetaStore::UpdateGraphMeta(
 
 Result<PluginId> DefaultGraphMetaStore::CreatePluginMeta(
     const CreatePluginMetaRequest& request) {
-  PluginId plugin_id;
   if (request.id.has_value()) {
     auto real_meta_key =
         generate_real_plugin_meta_key(request.bound_graph, request.id.value());
-    ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
-        plugin_id, base_store_->CreateMeta(PLUGIN_META, real_meta_key,
-                                           request.ToString()));
+    RETURN_IF_NOT_OK(base_store_->CreateMeta(PLUGIN_META, real_meta_key,
+                                             request.ToString()));
+    return Result<PluginId>(request.id.value());
   } else {
     LOG(ERROR) << "Can not create plugin meta without id";
     return Result<PluginId>(Status(StatusCode::InValidArgument,
                                    "Can not create plugin meta without id"));
   }
-  return Result<PluginId>(plugin_id);
 }
 
 Result<PluginMeta> DefaultGraphMetaStore::GetPluginMeta(
