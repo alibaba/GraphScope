@@ -137,9 +137,8 @@ class GraphDBSession {
    *        submit procedure query, the input is a proto-encoded string +
    *        '\x03', the string is the path to the dynamic library.
    * @param input The input query.
-   * @param str_len The length of the valid payload(other than the format and
-   * type bytes)
-   * @return The id of the query.
+   * @return The id of the query and a string_view which contains the real input
+   * of the query, discard the input format and query type.
    */
   inline Result<std::pair<uint8_t, std::string_view>> parse_query_type(
       const std::string& input) {
