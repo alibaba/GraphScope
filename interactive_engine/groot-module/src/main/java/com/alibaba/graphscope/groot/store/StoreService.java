@@ -334,8 +334,9 @@ public class StoreService {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("compact DB has been InterruptedException", e);
+            logger.error("collect statistics has been interrupted", e);
         }
+        logger.info("Collect statistics of store#{} done, size: {}", storeId, statisticsMap.size());
         return statisticsMap;
     }
 

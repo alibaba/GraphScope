@@ -87,7 +87,7 @@ data:
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
     log.recycle.enable={{ .Values.logRecycleEnable }}
-    config.statistics={{ .Values.collectStatistics }}
+    collect.statistics={{ .Values.collectStatistics }}
 
     ## Extra Config
     {{- if .Values.extraConfig }}
