@@ -59,10 +59,6 @@ impl VertexTypeInfo {
     fn new(si: SnapshotId, label: LabelId) -> Self {
         VertexTypeInfo { label, lifetime: LifeTime::new(si), info: TypeCommon::new() }
     }
-
-    fn new_with_info(si: SnapshotId, label: LabelId, info: TypeCommon) -> Self {
-        VertexTypeInfo { label, lifetime: LifeTime::new(si), info: info }
-    }
 }
 
 pub fn next_vertex_type_info<'a>(

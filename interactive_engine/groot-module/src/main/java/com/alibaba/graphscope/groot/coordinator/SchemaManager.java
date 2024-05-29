@@ -95,7 +95,7 @@ public class SchemaManager {
             } catch (InterruptedException interruptedException) {
                 // Ignore
             }
-            this.singleThreadExecutor.execute(() -> recover());
+            this.singleThreadExecutor.execute(this::recover);
         }
     }
 
