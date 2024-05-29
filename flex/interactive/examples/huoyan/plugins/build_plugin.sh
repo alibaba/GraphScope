@@ -1,6 +1,6 @@
 ARCH=`uname -m`
 #FLEX_HOME = / usr / local
-FLEX_HOME=/usr/local/
+FLEX_HOME=/opt/flex/
 
 #for i in ctrl group minor 
 for i in huoyan

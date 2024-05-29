@@ -1,47 +1,14 @@
-#include "flex/engines/graph_db/app/app_base.h"
+// #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
+#include "flex/engines/hqps_db/app/interactive_app_base.h"
 #include "grape/util.h"
 
 namespace gs {
-class HuoYan : public AppBase {
+class HuoYan : public WriteAppBase {
  public:
   static constexpr double timeout_sec = 15;
   static constexpr int32_t REL_TYPE_MAX = 19;  // 0 ~ 18
-  HuoYan(GraphDBSession& graph)
-      : comp_label_id_(graph.schema().get_vertex_label_id("company")),
-        person_label_id_(graph.schema().get_vertex_label_id("person")),
-        invest_label_id_(graph.schema().get_edge_label_id("invest")),
-        person_invest_label_id_(
-            graph.schema().get_edge_label_id("personInvest")),
-        graph_(graph) {
-    size_t num = graph_.graph().vertex_num(comp_label_id_);
-
-    LOG(INFO) << "company num:" << num;
-    LOG(INFO) << "person num: " << graph_.graph().vertex_num(person_label_id_);
-    valid_comp_vids_.resize(num, false);
-
-    auto comp_name_col =
-        graph_.get_vertex_property_column(comp_label_id_, "vertex_name");
-    auto person_name_col =
-        graph_.get_vertex_property_column(person_label_id_, "vertex_name");
-    if (!comp_name_col) {
-      LOG(ERROR) << "column vertex_name not found for company";
-    }
-    if (!person_name_col) {
-      LOG(ERROR) << "column vertex_name not found for person";
-    }
-    typed_comp_named_col_ =
-        std::dynamic_pointer_cast<TypedColumn<std::string_view>>(comp_name_col);
-    typed_person_named_col_ =
-        std::dynamic_pointer_cast<TypedColumn<std::string_view>>(
-            person_name_col);
-    if (!typed_comp_named_col_) {
-      LOG(ERROR) << "column vertex_name is not string type for company";
-    }
-    if (!typed_person_named_col_) {
-      LOG(ERROR) << "column vertex_name is not string type for person";
-    }
-  }
+  HuoYan() {}
   ~HuoYan() {}
   bool is_simple(const std::vector<vid_t>& path) {
     // to check whether there are same vid in the path
@@ -153,11 +120,45 @@ class HuoYan : public AppBase {
   }
 
 #define DEBUG
-  bool Query(Decoder& input, Encoder& output) {
-    LOG(INFO) << "Entry query";
+  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) {
+    //////////Initialization////////////////////////////
+    comp_label_id_ = graph.schema().get_vertex_label_id("company");
+    person_label_id_ = graph.schema().get_vertex_label_id("person");
+    invest_label_id_ = graph.schema().get_edge_label_id("invest");
+    person_invest_label_id_ = graph.schema().get_edge_label_id("personInvest");
+    size_t num = graph.graph().vertex_num(comp_label_id_);
+
+    LOG(INFO) << "company num:" << num;
+    LOG(INFO) << "person num: " << graph.graph().vertex_num(person_label_id_);
+    valid_comp_vids_.resize(num, false);
+    auto comp_name_col =
+        graph.get_vertex_property_column(comp_label_id_, "vertex_name");
+    auto person_name_col =
+        graph.get_vertex_property_column(person_label_id_, "vertex_name");
+    if (!comp_name_col) {
+      LOG(ERROR) << "column vertex_name not found for company";
+      return false;
+    }
+    if (!person_name_col) {
+      LOG(ERROR) << "column vertex_name not found for person";
+      return false;
+    }
+    typed_comp_named_col_ =
+        std::dynamic_pointer_cast<TypedColumn<std::string_view>>(comp_name_col);
+    typed_person_named_col_ =
+        std::dynamic_pointer_cast<TypedColumn<std::string_view>>(
+            person_name_col);
+    if (!typed_comp_named_col_) {
+      LOG(ERROR) << "column vertex_name is not string type for company";
+    }
+    if (!typed_person_named_col_) {
+      LOG(ERROR) << "column vertex_name is not string type for person";
+    }
+    ////////////Initialization///////////////////////////
+
     double cur_time_left = timeout_sec;
 
-    auto txn = graph_.GetReadTransaction();
+    auto txn = graph.GetReadTransaction();
     int32_t hop_limit = input.get_int();
     int32_t result_limit = input.get_int();
     // LOG(INFO) << "result limit: " << result_limit << "\n";
@@ -342,7 +343,6 @@ class HuoYan : public AppBase {
   }
 
  private:
-  GraphDBSession& graph_;
   label_t comp_label_id_;
   label_t person_label_id_;
   label_t invest_label_id_;
@@ -362,7 +362,7 @@ class HuoYan : public AppBase {
 
 extern "C" {
 void* CreateApp(gs::GraphDBSession& db) {
-  gs::HuoYan* app = new gs::HuoYan(db);
+  gs::HuoYan* app = new gs::HuoYan();
   return static_cast<void*>(app);
 }
 

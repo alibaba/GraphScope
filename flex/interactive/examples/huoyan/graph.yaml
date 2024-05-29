@@ -1,9 +1,10 @@
 name: onecompany_group # then must have a modern dir under ${data} directory
 store_type: mutable_csr  # v6d, groot, gart
 stored_procedures:
-  directory: /workspaces/GraphScope/flex/interactive/examples/huoyan/plugins/
-  enable_lists:
-    - libhuoyan.so
+  - name: huoyan
+    description: A stored procedure that does something
+    directory: /home/graphscope/work/gs/flex/interactive/examples/huoyan/libhuoyan.so
+    type: cpp
 schema:
   vertex_types:
     - type_id: 0
