@@ -61,6 +61,8 @@ const MutablePropertyFragment& GraphDBSession::graph() const {
   return db_.graph();
 }
 
+const GraphDB& GraphDBSession::db() const { return db_; }
+
 MutablePropertyFragment& GraphDBSession::graph() { return db_.graph(); }
 
 const Schema& GraphDBSession::schema() const { return db_.schema(); }
@@ -103,14 +105,28 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
 
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   const auto start = std::chrono::high_resolution_clock::now();
-  uint8_t type = input.back();
-  const char* str_data = input.data();
-  size_t str_len = input.size() - 1;
+
+  if (input.size() < 2) {
+    return Result<std::vector<char>>(
+        StatusCode::InValidArgument,
+        "Invalid input, input size: " + std::to_string(input.size()),
+        std::vector<char>());
+  }
+
+  auto type_res = parse_query_type(input);
+  if (!type_res.ok()) {
+    LOG(ERROR) << "Fail to parse query type";
+    return Result<std::vector<char>>(type_res.status(), std::vector<char>());
+  }
+
+  uint8_t type;
+  std::string_view sv;
+  std::tie(type, sv) = type_res.value();
 
   std::vector<char> result_buffer;
 
-  Decoder decoder(str_data, str_len);
   Encoder encoder(result_buffer);
+  Decoder decoder(sv.data(), sv.size());
 
   AppBase* app = GetApp(type);
   if (!app) {
@@ -120,7 +136,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   }
 
   for (size_t i = 0; i < MAX_RETRY; ++i) {
-    if (app->Query(decoder, encoder)) {
+    if (app->run(*this, decoder, encoder)) {
       const auto end = std::chrono::high_resolution_clock::now();
       app_metrics_[type].add_record(
           std::chrono::duration_cast<std::chrono::microseconds>(end - start)
@@ -138,7 +154,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    decoder.reset(str_data, str_len);
+    decoder.reset(sv.data(), sv.size());
     result_buffer.clear();
   }
 
