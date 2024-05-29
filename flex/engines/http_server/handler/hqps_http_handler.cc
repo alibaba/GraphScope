@@ -135,7 +135,6 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     }
-    req->content.append(gs::GraphDBSession::kCypherJson, 1);
   } else {
     req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
   }
