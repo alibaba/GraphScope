@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
+import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.openapi.model.*;
 
@@ -37,5 +38,7 @@ public interface ProcedureInterface {
     Result<String> updateProcedure(
             String graphId, String procedureId, UpdateProcedureRequest procedure);
 
-    Result<CollectiveResults> callProcedure(String graphId, QueryRequest request);
+    Result<IrResult.CollectiveResults> callProcedure(String graphId, QueryRequest request);
+
+    Result<String> callProcedureRaw(String graphId, String request);
 }
