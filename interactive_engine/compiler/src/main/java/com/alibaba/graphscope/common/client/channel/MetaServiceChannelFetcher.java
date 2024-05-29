@@ -28,7 +28,7 @@ import java.util.List;
 // read meta service host from config and return it as URI format
 public class MetaServiceChannelFetcher implements ChannelFetcher<URI> {
     private static final String schema = "http";
-    private Configs graphConfig;
+    private final Configs graphConfig;
 
     public MetaServiceChannelFetcher(Configs graphConfig) {
         this.graphConfig = graphConfig;
