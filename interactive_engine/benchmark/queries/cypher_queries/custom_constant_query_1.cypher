@@ -1,0 +1,1 @@
+Match (person:person)-[:knows]->(person2:person) Return count(person);
