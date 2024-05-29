@@ -154,7 +154,12 @@ public class CommonQuery {
     private static String getGremlinQueryPattern(String gremlinQueryPath) throws Exception {
         FileInputStream fileInputStream = new FileInputStream(gremlinQueryPath);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
-        return bufferedReader.readLine();
+        String line;
+        StringBuilder stringBuilder = new StringBuilder();
+        while ((line = bufferedReader.readLine()) != null) {
+            stringBuilder.append(line).append(" ");
+        }
+        return stringBuilder.toString().trim();
     }
 
     private static ArrayList<HashMap<String, String>> getParameters(String parameterFilePath)
