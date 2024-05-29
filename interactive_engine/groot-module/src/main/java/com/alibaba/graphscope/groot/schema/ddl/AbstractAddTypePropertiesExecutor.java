@@ -27,6 +27,7 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         TypeDef typeDef = TypeDef.parseProto(typeDefPb);
         long version = graphDef.getSchemaVersion();
         String label = typeDef.getLabel();
+        logger.info("label is " + label);
         
         TypeDef originTypeDef = graphDef.getTypeDef(label);
         if (originTypeDef == null) {
@@ -39,6 +40,9 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         
         int labelIdInt = originTypeDef.getLabelId();
         LabelId labelId = new LabelId(labelIdInt);
+        int originVersionId = originTypeDef.getVersionId();
+        logger.info("labelId is " + labelId);
+        logger.info("originVersionId is " + originVersionId);
 
         if (!label.matches(NAME_REGEX)) {
             throw new DdlException("illegal label name [" + label + "]");
@@ -81,6 +85,7 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         TypeDef.Builder newTypeDefBuilder = TypeDef.newBuilder(typeDef);
         // addLabelProperties doesnt has labelId, need set originType LabelId
         newTypeDefBuilder.setLabelId(labelId);
+        newTypeDefBuilder.setVersionId(originVersionId + 1);
 
         int propertyIdx = graphDef.getPropertyIdx();
         Map<String, Integer> propertyNameToId = graphDef.getPropertyNameToId();
@@ -131,13 +136,17 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         graphDefBuilder.setVersion(version);
         graphDefBuilder.addTypeDef(originNewTypeDef);
 
+        // logger.info("graphDefBuilder is :" + JSON.toJson(graphDefBuilder));
+
         if (typeDef.getTypeEnum() == TypeEnum.VERTEX) {
             long tableIdx = vertexTableIdMap.get(labelId);
             graphDefBuilder.putVertexTableId(newTypeDef.getTypeLabelId(), tableIdx);
             logger.info("tableIdx is " + tableIdx + ", max is " + graphDef.getTableIdx());
         }
         GraphDef newGraphDef = graphDefBuilder.build();
+        // logger.info("newGraphDef is :" + JSON.toJson(newGraphDef));
 
+        logger.info("newVersionId is " + newTypeDef.getVersionId());
         List<Operation> operations = new ArrayList<>(partitionCount);
         for (int i = 0; i < partitionCount; i++) {
             Operation operation = makeOperation(i, version, newTypeDef, newGraphDef);

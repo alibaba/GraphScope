@@ -146,17 +146,24 @@ impl VertexTypeManager {
             .clone();
         if !map_clone.contains_key(&label) {
             let msg = format!("vertex#{} not found.", label);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_type);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, update_type);
             return Err(err);
         }
-        let info = VertexTypeInfo::new(si, label);
-        res_unwrap!(info.update_codec(si, codec), create_type)?;
-        res_unwrap!(info.online_table(table0), create_type)?;
-        map_clone.insert(label, Arc::new(info));
-        self.map
-            .store(Owned::new(map_clone).into_shared(guard), Ordering::Release);
-        unsafe { guard.defer_destroy(map) };
-        Ok(())
+        // let info = VertexTypeInfo::new(si, label);
+        if let Some(vertex_type_info_arc) = map_clone.get(&label) {
+            let mut vertex_type_info = (*vertex_type_info_arc).clone();
+            res_unwrap!(vertex_type_info.update_codec(si, codec), update_type)?;
+            // res_unwrap!(vertex_type_info.online_table(table0), update_type)?;
+            map_clone.insert(label, vertex_type_info);
+            self.map
+                .store(Owned::new(map_clone).into_shared(guard), Ordering::Release);
+            unsafe { guard.defer_destroy(map) };
+            Ok(())
+        } else {
+            let msg = format!("vertex#{} not found.", label);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, update_type);
+            return Err(err);
+        }
     }
 
     pub fn get_type(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<VertexTypeInfo>> {

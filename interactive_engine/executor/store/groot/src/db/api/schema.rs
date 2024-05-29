@@ -204,6 +204,10 @@ impl TypeDef {
         self.properties.insert(prop.id, prop);
     }
 
+    pub fn set_version(&mut self, new_version: i32) {
+        self.version = new_version;
+    }
+
     pub fn from_proto(proto: &TypeDefPb) -> GraphResult<Self> {
         let version_id = proto.get_version_id();
         let label = proto.get_label();

@@ -552,6 +552,7 @@ impl CodecManager {
             return Err(err);
         }
         let version = codec.get_version();
+        info!("add version is  {:?}", version);
         if version <= *max_version {
             let msg = format!("current max codec version is {}, you cannot add a older one", *max_version);
             let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, add_codec, si, codec);
@@ -567,6 +568,7 @@ impl CodecManager {
         })?;
         let mut map_clone = map_ref.clone();
         map_clone.insert(version, codec);
+        info!("save version map is  {:?}", map_clone);
         self.codec_map
             .store(Owned::new(map_clone), Ordering::Release);
         self.versions.add(si, version as i64).unwrap();
@@ -594,12 +596,15 @@ impl CodecManager {
     pub fn get_decoder(&self, si: SnapshotId, version: CodecVersion) -> GraphResult<Decoder> {
         if let Some(v) = self.versions.get(si) {
             let target_version = v.data as CodecVersion;
+            info!("version is  {:?}", version);
+            info!("target_version is  {:?}", target_version);
             let guard = epoch::pin();
             let map = self.get_map(&guard);
             let map_ref = unsafe { map.as_ref() }.ok_or_else(|| {
                 let msg = "get map reference return `None`".to_string();
                 gen_graph_err!(GraphErrorCode::InvalidData, msg, get_map, si, version)
             })?;
+            info!("get decoder map is  {:?}", map_ref);
             let src = res_unwrap!(get_codec(map_ref, version), get_decoder, si, version)?;
             let target = res_unwrap!(get_codec(map_ref, target_version), get_decoder, si, version)?;
             return Ok(Decoder::new(target, src));

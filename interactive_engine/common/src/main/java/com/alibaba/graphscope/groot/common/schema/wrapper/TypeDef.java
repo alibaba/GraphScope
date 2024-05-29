@@ -259,6 +259,11 @@ public class TypeDef implements GraphElement {
             return this;
         }
 
+        public Builder setVersionId(int versionId) {
+            this.versionId = versionId;
+            return this;
+        }
+
         public TypeDef build() {
             return new TypeDef(typeEnum, versionId, label, labelId, properties, comment);
         }

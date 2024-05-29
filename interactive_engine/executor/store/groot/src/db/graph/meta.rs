@@ -283,7 +283,7 @@ impl Meta {
 
     pub fn add_vertex_type_properties(
         &self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
-    ) -> GraphResult<Table> {
+    ) -> GraphResult<(Table, TypeDef)> {
         self.check_version(schema_version)?;
         // 2. Fetch existing `TypeDef` for the label_id.
         let mut graph_def = self.graph_def_lock.lock()?;
@@ -296,6 +296,7 @@ impl Meta {
                 }
                 cloned_existing_typedef.add_property(new_property.clone());
             }
+            cloned_existing_typedef.set_version(type_def.get_version());
             let item = CreateVertexTypeItem::new(si, schema_version, label_id, table_id, cloned_existing_typedef.clone());
             self.write_item(item)?;
             {
@@ -306,10 +307,10 @@ impl Meta {
                 }
                 graph_def.update_type(label_id, cloned_existing_typedef.clone())?;
                 graph_def.put_vertex_table_id(label_id, table_id);
-                graph_def.set_table_idx(table_id);
+                // graph_def.set_table_idx(table_id);
                 graph_def.increase_version();
             }
-            Ok(Table::new(si, table_id))
+            Ok((Table::new(si, table_id), cloned_existing_typedef))
         } else {
             let msg = format!("current label id {} not exist.", label_id);
             return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
