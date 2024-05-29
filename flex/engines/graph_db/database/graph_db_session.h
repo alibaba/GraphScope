@@ -164,7 +164,7 @@ class GraphDBSession {
     } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
       // For cypherJson there is no query-id provided. The query name is
       // provided in the json string.
-      std::string_view str_view(input.data(), len - 2);
+      std::string_view str_view(input.data(), len - 1);
       VLOG(10) << "string view: " << str_view;
       nlohmann::json j;
       try {
@@ -190,7 +190,7 @@ class GraphDBSession {
       }
       VLOG(10) << "Query name: " << query_name;
       return std::make_pair(app_name_to_path_index.at(query_name).second,
-                            std::string_view(str_data, len - 2));
+                            std::string_view(str_data, len - 1));
     } else if (input_tag ==
                static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
       // For cypher internal procedure, the query_name is
