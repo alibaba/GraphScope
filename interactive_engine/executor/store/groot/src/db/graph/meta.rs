@@ -96,6 +96,18 @@ impl Meta {
                 .into_iter()
                 .map(|i| MetaItem::CommitDataLoad(i)),
         );
+        let add_vertex_property_items = res_unwrap!(get_items::<AddVertexPropertyItem>(store_ref), recover)?;
+        all.extend(
+            add_vertex_property_items
+                .into_iter()
+                .map(|i| MetaItem::AddVertexProperty(i)),
+        );
+        let add_edge_property_items = res_unwrap!(get_items::<AddEdgePropertyItem>(store_ref), recover)?;
+        all.extend(
+            add_edge_property_items
+                .into_iter()
+                .map(|i| MetaItem::AddEdgeProperty(i)),
+        );
         all.sort_by(|a, b| {
             let s1 = a.get_schema_version();
             let s2 = b.get_schema_version();
@@ -136,6 +148,8 @@ impl Meta {
                 }
                 MetaItem::CreateEdgeType(x) => {
                     let label_id = x.type_def.get_label_id();
+                    info!("CreateEdgeType label {:?}, si {:?}, type def {:?}", label_id, x.si, x.type_def);
+
                     let mut graph_def = self.graph_def_lock.lock()?;
                     let current_label_idx = graph_def.get_label_idx();
                     if current_label_idx >= label_id {
