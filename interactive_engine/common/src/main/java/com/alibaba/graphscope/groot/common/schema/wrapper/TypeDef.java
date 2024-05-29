@@ -163,6 +163,7 @@ public class TypeDef implements GraphElement {
     public TypeDefPb toDdlProto() {
         TypeDefPb.Builder builder = TypeDefPb.newBuilder();
         builder.setLabel(label);
+        builder.setVersionId(versionId);
         for (PropertyDef property : properties) {
             builder.addProps(property.toProto());
         }

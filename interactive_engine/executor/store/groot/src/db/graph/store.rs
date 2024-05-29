@@ -339,9 +339,9 @@ impl MultiVersionGraph for GraphStore {
         }
         self.meta
             .add_edge_type_properties(si, schema_version, label_id, type_def)
-            .and_then(|_| {
+            .and_then(|cloned| {
                 self.edge_manager
-                    .update_edge_type(si, label_id, type_def)
+                    .update_edge_type(si, label_id, &cloned)
             })
             .map(|_| self.update_si_guard(si))?;
         Ok(true)

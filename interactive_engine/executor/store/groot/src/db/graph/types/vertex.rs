@@ -59,6 +59,10 @@ impl VertexTypeInfo {
     fn new(si: SnapshotId, label: LabelId) -> Self {
         VertexTypeInfo { label, lifetime: LifeTime::new(si), info: TypeCommon::new() }
     }
+
+    fn new_with_info(si: SnapshotId, label: LabelId, info: TypeCommon) -> Self {
+        VertexTypeInfo { label, lifetime: LifeTime::new(si), info: info }
+    }
 }
 
 pub fn next_vertex_type_info<'a>(
@@ -149,21 +153,13 @@ impl VertexTypeManager {
             let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, update_type);
             return Err(err);
         }
-        // let info = VertexTypeInfo::new(si, label);
-        if let Some(vertex_type_info_arc) = map_clone.get(&label) {
-            let mut vertex_type_info = (*vertex_type_info_arc).clone();
-            res_unwrap!(vertex_type_info.update_codec(si, codec), update_type)?;
-            // res_unwrap!(vertex_type_info.online_table(table0), update_type)?;
-            map_clone.insert(label, vertex_type_info);
-            self.map
-                .store(Owned::new(map_clone).into_shared(guard), Ordering::Release);
-            unsafe { guard.defer_destroy(map) };
-            Ok(())
-        } else {
-            let msg = format!("vertex#{} not found.", label);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, update_type);
-            return Err(err);
+        if let Some(info) = map_clone.get(&label) {
+            res_unwrap!(info.update_codec(si, codec), update_type)?;
         }
+        self.map
+            .store(Owned::new(map_clone).into_shared(guard), Ordering::Release);
+        unsafe { guard.defer_destroy(map) };
+        Ok(())
     }
 
     pub fn get_type(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<VertexTypeInfo>> {
@@ -269,9 +265,21 @@ impl VertexTypeManagerBuilder {
         }
         let info = VertexTypeInfo::new(si, label);
         let codec = Codec::from(type_def);
-        let res = info.update_codec(si, codec);
-        res_unwrap!(res, create, si, label, type_def)?;
+        res_unwrap!(info.update_codec(si, codec), create, si, label, type_def)?;
         self.map.insert(label, Arc::new(info));
+        Ok(())
+    }
+
+    pub fn update_type(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
+        if !self.map.contains_key(&label) {
+            let msg = format!("vertex#{} not found.", label);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_type);
+            return Err(err);
+        }
+        if let Some(info) = self.map.get(&label) {
+            let codec = Codec::from(type_def);
+            res_unwrap!(info.update_codec(si, codec), create_type)?;
+        }
         Ok(())
     }
 

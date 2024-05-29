@@ -24,26 +24,24 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
     public DdlResult execute(ByteString ddlBlob, GraphDef graphDef, int partitionCount)
             throws InvalidProtocolBufferException {
         TypeDefPb typeDefPb = TypeDefPb.parseFrom(ddlBlob);
-        TypeDef typeDef = TypeDef.parseProto(typeDefPb);
+        TypeDef incomingTypeDef = TypeDef.parseProto(typeDefPb);
         long version = graphDef.getSchemaVersion();
-        String label = typeDef.getLabel();
+        String label = incomingTypeDef.getLabel();
         logger.info("label is " + label);
         
-        TypeDef originTypeDef = graphDef.getTypeDef(label);
-        if (originTypeDef == null) {
-            throw new DdlException("LabelName [" + label + "] can not found exists label in Graph Def.");
+        TypeDef previousTypeDef = graphDef.getTypeDef(label);
+        if (previousTypeDef == null) {
+            throw new DdlException("LabelName [" + label + "] cannot found exists label in Graph Def.");
         }
-        if (originTypeDef.getTypeEnum() != typeDef.getTypeEnum()) {
+        if (previousTypeDef.getTypeEnum() != incomingTypeDef.getTypeEnum()) {
             throw new DdlException("LabelName [" + label + "] type enum has been change. origin type ["
-                    + originTypeDef.getTypeEnum() + "].");
+                    + previousTypeDef.getTypeEnum() + "].");
         }
         
-        int labelIdInt = originTypeDef.getLabelId();
-        LabelId labelId = new LabelId(labelIdInt);
-        int originVersionId = originTypeDef.getVersionId();
+        LabelId labelId = new LabelId(previousTypeDef.getLabelId());
         logger.info("labelId is " + labelId);
-        logger.info("originVersionId is " + originVersionId);
-
+        version++;
+        logger.info("new version: {}", version);
         if (!label.matches(NAME_REGEX)) {
             throw new DdlException("illegal label name [" + label + "]");
         }
@@ -53,114 +51,80 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
                     "label [" + label + "] not found, schema version [" + version + "]");
         }
 
-        Map<LabelId, Long> vertexTableIdMap = graphDef.getVertexTableIds();
-        logger.info("vertexTableIdMap is " + JSON.toJson(vertexTableIdMap));
-        if (typeDef.getTypeEnum() == TypeEnum.VERTEX) {
+        if (incomingTypeDef.getTypeEnum() == TypeEnum.VERTEX) {
             if (this instanceof AddEdgeTypePropertiesExecutor) {
                 throw new DdlException("Expect edge type but got vertex type");
             }
-            if (typeDef.getPkIdxs().size() > 0) {
+            if (incomingTypeDef.getPkIdxs().size() > 0) {
                 throw new DdlException(
                         "Can not add primary key properties in exists Vertex type. label [" + label + "]");
-            }
-            if (vertexTableIdMap == null || vertexTableIdMap.isEmpty()) {
-                throw new DdlException(
-                        "vertexTableIdMap is empty.");
-            }
-            if (vertexTableIdMap.get(labelId) == null) {
-                throw new DdlException(
-                        "labelId [" + labelId +"] can not find table Id.");
             }
         } else {
             if (this instanceof AddVertexTypePropertiesExecutor) {
                 throw new DdlException("Expect vertex type but got edge type");
             }
-            if (typeDef.getPkIdxs().size() > 0) {
+            if (incomingTypeDef.getPkIdxs().size() > 0) {
                 throw new DdlException(
                         "Can not add primary key properties in exists Edge type. label [" + label + "]");
             }
         }
 
         GraphDef.Builder graphDefBuilder = GraphDef.newBuilder(graphDef);
-        TypeDef.Builder newTypeDefBuilder = TypeDef.newBuilder(typeDef);
-        // addLabelProperties doesnt has labelId, need set originType LabelId
-        newTypeDefBuilder.setLabelId(labelId);
-        newTypeDefBuilder.setVersionId(originVersionId + 1);
+        graphDefBuilder.setVersion(version);
+        TypeDef.Builder typeDefBuilder = TypeDef.newBuilder(incomingTypeDef);
+        typeDefBuilder.setVersionId((int) version);
+        typeDefBuilder.setLabelId(labelId);
 
         int propertyIdx = graphDef.getPropertyIdx();
         Map<String, Integer> propertyNameToId = graphDef.getPropertyNameToId();
-        List<PropertyDef> inputPropertiesInfo = typeDef.getProperties();
-        List<PropertyDef> existsPropertiesInfo = originTypeDef.getProperties();
-        List<PropertyDef> originPropertyDefs = new ArrayList<>(existsPropertiesInfo.size() + inputPropertiesInfo.size());
-        List<PropertyDef> newPropertyDefs = new ArrayList<>(inputPropertiesInfo.size());
-        for (PropertyDef existsProperty : existsPropertiesInfo) {
-            originPropertyDefs.add(existsProperty);
-        }
-        for (PropertyDef property : inputPropertiesInfo) {
-            Integer propertyId = property.getId();
+        List<PropertyDef> incomingProperties = incomingTypeDef.getProperties();
+        List<PropertyDef> previousProperties = previousTypeDef.getProperties();
+        List<PropertyDef> allProperties = new ArrayList<>(previousProperties.size() + incomingProperties.size());
+        List<PropertyDef> newIncomingProperties = new ArrayList<>(incomingProperties.size());
+        allProperties.addAll(previousProperties);
+        for (PropertyDef property : incomingProperties) {
+            checkPropertiesExists(label, property, previousProperties);
             String propertyName = property.getName();
             if (!propertyName.matches(NAME_REGEX)) {
                 throw new DdlException("illegal property name [" + propertyName + "]");
             }
-            checkPropertiesExists(label, propertyId, propertyName, existsPropertiesInfo);
-            propertyId = propertyNameToId.get(propertyName);
+            Integer propertyId = propertyNameToId.get(propertyName);
             if (propertyId == null) {
                 propertyIdx++;
                 propertyId = propertyIdx;
                 graphDefBuilder.putPropertyNameToId(propertyName, propertyId);
                 graphDefBuilder.setPropertyIdx(propertyIdx);
             }
-            originPropertyDefs.add(
-                    PropertyDef.newBuilder(property)
-                            .setId(propertyId)
-                            .setInnerId(propertyId)
-                            .build());
-            newPropertyDefs.add(
-                    PropertyDef.newBuilder(property)
-                            .setId(propertyId)
-                            .setInnerId(propertyId)
-                            .build());
+            PropertyDef propertyDef = PropertyDef.newBuilder(property)
+                    .setId(propertyId)
+                    .setInnerId(propertyId)
+                    .build();
+            allProperties.add(propertyDef);
+            newIncomingProperties.add(propertyDef);
         }
-        newTypeDefBuilder.setPropertyDefs(originPropertyDefs);
-        TypeDef originNewTypeDef = newTypeDefBuilder.build();
-
-        newTypeDefBuilder.setPropertyDefs(newPropertyDefs);
-        TypeDef newTypeDef = newTypeDefBuilder.build();
-
-        if (newTypeDef.getLabelId() > graphDef.getLabelIdx()) {
-            throw new DdlException("illegal label id [" + newTypeDef.getLabelId() + "], " +
-                    "large than labelIdx [" + graphDef.getLabelIdx() + "]");
-        }
-
-        version++;
-        graphDefBuilder.setVersion(version);
-        graphDefBuilder.addTypeDef(originNewTypeDef);
-
-        // logger.info("graphDefBuilder is :" + JSON.toJson(graphDefBuilder));
-
-        if (typeDef.getTypeEnum() == TypeEnum.VERTEX) {
-            long tableIdx = vertexTableIdMap.get(labelId);
-            graphDefBuilder.putVertexTableId(newTypeDef.getTypeLabelId(), tableIdx);
-            logger.info("tableIdx is " + tableIdx + ", max is " + graphDef.getTableIdx());
-        }
+        typeDefBuilder.setPropertyDefs(allProperties);
+        graphDefBuilder.addTypeDef(typeDefBuilder.build());
         GraphDef newGraphDef = graphDefBuilder.build();
-        // logger.info("newGraphDef is :" + JSON.toJson(newGraphDef));
 
-        logger.info("newVersionId is " + newTypeDef.getVersionId());
+        typeDefBuilder.setPropertyDefs(newIncomingProperties);
+        TypeDef newIncomingTypeDef = typeDefBuilder.build();
+
         List<Operation> operations = new ArrayList<>(partitionCount);
         for (int i = 0; i < partitionCount; i++) {
-            Operation operation = makeOperation(i, version, newTypeDef, newGraphDef);
+            Operation operation = makeOperation(i, version, newIncomingTypeDef, newGraphDef);
             operations.add(operation);
         }
         return new DdlResult(newGraphDef, operations);
     }
 
-    private void checkPropertiesExists(String label, Integer propertyId, String propertyName,
-                                       List<PropertyDef> propertyDefs) {
+    private void checkPropertiesExists(String label, PropertyDef property, List<PropertyDef> propertyDefs) {
+        Integer propertyId = property.getId();
+        String propertyName = property.getName();
         for (PropertyDef existsProperty : propertyDefs) {
-            if (propertyName.equals(existsProperty.getName())
-                    || (propertyId != null && propertyId == existsProperty.getId())) {
-                throw new DdlException("propertyName [" + propertyName + "], propertyId [" + existsProperty.getId() + "]" +
+            Integer curId = existsProperty.getId();
+            String curName = existsProperty.getName();
+            if (propertyName.equals(curName) || propertyId.equals(curId)) {
+                throw new DdlException("propertyName [" + propertyName + "], propertyId [" + propertyId + "]" +
                         "already exists in Label [" + label + "].");
             }
         }
