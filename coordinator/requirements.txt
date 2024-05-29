@@ -17,6 +17,7 @@ Flask == 2.2.5
 urllib3 >= 1.25.3, < 2.1.0
 pydantic >= 2
 typing-extensions >= 4.7.1
+click
 psutil
 schedule
 interactive-sdk == 0.0.3
