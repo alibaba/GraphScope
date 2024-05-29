@@ -163,7 +163,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([this
+      .then([this, input_format
 #ifdef HAVE_OPENTELEMETRY_CPP
              ,
              outer_span = outer_span
