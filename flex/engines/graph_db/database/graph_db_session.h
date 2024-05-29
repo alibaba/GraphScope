@@ -143,7 +143,7 @@ class GraphDBSession {
   inline Result<std::pair<uint8_t, std::string_view>> parse_query_type(
       const std::string& input) {
     const char* str_data = input.data();
-    VLOG(10) << "parse query type for " << input;
+    VLOG(10) << "parse query type for " << input.size();
     char input_tag = input.back();
     VLOG(10) << "input tag: " << static_cast<int>(input_tag);
     size_t len = input.size();

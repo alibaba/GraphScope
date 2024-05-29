@@ -1,11 +1,11 @@
 directories:
-  workspace: /home/graphscope/data/workspace
+  workspace: /home/graphscope/work/huoyan-workspace
   subdirs:
     data: data
     logs: logs
     conf: conf
 log_level: INFO
-default_graph: onecompany_group
+default_graph: test 
 compute_engine:
   type: hiactor
   workers:
@@ -29,7 +29,7 @@ compiler:
       disabled: false
       port: 7687
     gremlin_connector:
-      disabled: false
+      disabled: true
       port: 8182
   query_timeout: 40000
   gremlin_script_language_name: antlr_gremlin_calcite
