@@ -33,7 +33,7 @@ sess = gs.session(
     k8s_engine_mem="8Gi",
     vineyard_shared_mem="8Gi",
     k8s_image_pull_policy="IfNotPresent",
-    k8s_image_tag="0.28.0a20240511",
+    k8s_image_tag="0.28.0a20240526",
     num_workers=params["NUM_SERVER_NODES"],
 )
 g = load_ogbn_arxiv(sess=sess, prefix="/dataset/ogbn_arxiv")
