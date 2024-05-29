@@ -18,7 +18,9 @@ schema:
         - property_id: 1
           property_name: vertex_name
           property_type:
-            primitive_type: DT_STRING(64)
+            string: 
+              var_char:
+                max_length: 64
       primary_keys:
         - vertex_id
     - type_id: 1
@@ -33,7 +35,9 @@ schema:
         - property_id: 1
           property_name: vertex_name
           property_type:
-            primitive_type: DT_STRING(16)
+            string: 
+              var_char:
+                max_length: 64
       primary_keys:
         - vertex_id
   edge_types:
