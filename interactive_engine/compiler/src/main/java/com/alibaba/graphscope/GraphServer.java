@@ -20,14 +20,18 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.MetaServiceChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.tools.*;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.alibaba.graphscope.cypher.service.CypherBootstrapper;
@@ -164,13 +168,24 @@ public class GraphServer {
             throw new IllegalArgumentException("usage: GraphServer '<path_to_config_file>'");
         }
         Configs configs = Configs.Factory.create(args[0]);
-        IrMetaQueryCallback queryCallback =
-                new IrMetaQueryCallback(
-                        new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)));
+        IrMetaQueryCallback queryCallback = new IrMetaQueryCallback(createIrMetaFetcher(configs));
         GraphServer server =
                 new GraphServer(
                         configs, getChannelFetcher(configs), queryCallback, getTestGraph(configs));
         server.start();
+    }
+
+    private static IrMetaFetcher createIrMetaFetcher(Configs configs) throws IOException {
+        String readerMode = FrontendConfig.IR_META_READER_MODE.get(configs);
+        switch (readerMode) {
+            case "local":
+                return new StaticIrMetaFetcher(new LocalIrMetaReader(configs));
+            case "http":
+                return new DynamicIrMetaFetcher(
+                        new HttpIrMetaReader(new MetaServiceChannelFetcher(configs)), configs);
+            default:
+                throw new IllegalArgumentException("unknown ir meta reader mode: " + readerMode);
+        }
     }
 
     private static GraphProperties getTestGraph(Configs configs) {

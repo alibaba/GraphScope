@@ -17,13 +17,13 @@
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.google.common.base.Preconditions;

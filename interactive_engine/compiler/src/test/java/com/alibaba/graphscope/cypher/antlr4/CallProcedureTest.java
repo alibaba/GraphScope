@@ -23,9 +23,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class CallProcedureTest {
+
     @Test
     public void procedure_1_test() {
-        LogicalPlan logicalPlan = Utils.evalLogicalPlan("Call ldbc_ic2(10l, 20120112l)");
+        LogicalPlan logicalPlan =
+                Utils.evalLogicalPlan("Call ldbc_ic2(10l, 20120112l)", "config/modern/graph.yaml");
         Assert.assertEquals("ldbc_ic2(10:BIGINT, 20120112:BIGINT)", logicalPlan.explain().trim());
         Assert.assertEquals(
                 "RecordType(CHAR(1) name)", logicalPlan.getProcedureCall().getType().toString());
@@ -35,7 +37,7 @@ public class CallProcedureTest {
     @Test
     public void procedure_2_test() {
         try {
-            Utils.evalLogicalPlan("Call ldbc_ic2(10, 20120112l)");
+            Utils.evalLogicalPlan("Call ldbc_ic2(10, 20120112l)", "config/modern/graph.yaml");
         } catch (CalciteException e) {
             Assert.assertEquals(
                     "Cannot apply ldbc_ic2 to arguments of type 'ldbc_ic2(<INTEGER>, <BIGINT>)'."

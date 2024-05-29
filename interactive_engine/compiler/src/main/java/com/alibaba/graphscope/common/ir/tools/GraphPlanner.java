@@ -18,8 +18,10 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
-import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
@@ -30,8 +32,6 @@ import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
-import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.base.Preconditions;
@@ -196,8 +196,7 @@ public class GraphPlanner {
                             + " 'optional <extra_key_value_config_pairs>'");
         }
         Configs configs = Configs.Factory.create(args[0]);
-        ExperimentalMetaFetcher metaFetcher =
-                new ExperimentalMetaFetcher(new LocalMetaDataReader(configs));
+        StaticIrMetaFetcher metaFetcher = new StaticIrMetaFetcher(new LocalIrMetaReader(configs));
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
         GraphPlanner planner =
                 new GraphPlanner(

@@ -21,11 +21,11 @@ import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
 

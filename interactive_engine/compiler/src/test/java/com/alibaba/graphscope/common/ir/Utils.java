@@ -19,7 +19,9 @@ package com.alibaba.graphscope.common.ir;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.planner.GraphHepPlanner;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
@@ -27,9 +29,6 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
-import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -41,10 +40,8 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
-import org.yaml.snakeyaml.Yaml;
 
 import java.net.URL;
-import java.util.Map;
 
 public class Utils {
     public static final Configs configs =
@@ -94,22 +91,16 @@ public class Utils {
         return new GraphHepPlanner(hepBuilder.build());
     }
 
-    public static IrMeta mockSchemaMeta(String schemaJson) {
+    public static IrMeta mockSchemaMeta(String schemaPath) {
         try {
             URL schemaResource =
-                    Thread.currentThread().getContextClassLoader().getResource(schemaJson);
-            String yamlStr = FileUtils.readJsonFromResource("config/modern/graph.yaml");
-            Yaml yaml = new Yaml();
-            Map<String, Object> yamlMap = yaml.load(yamlStr);
-            String proceduresYaml = yaml.dump(yamlMap.get("stored_procedures"));
+                    Thread.currentThread().getContextClassLoader().getResource(schemaPath);
             Configs configs =
                     new Configs(
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_SCHEMA.getKey(),
-                                    schemaResource.toURI().getPath(),
-                                    GraphConfig.GRAPH_STORED_PROCEDURES_YAML.getKey(),
-                                    proceduresYaml));
-            return new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)).fetch().get();
+                                    schemaResource.toURI().getPath()));
+            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs)).fetch().get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

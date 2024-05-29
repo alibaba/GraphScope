@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
@@ -32,7 +33,6 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.ir.tools.config.PathExpandConfig;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -14,26 +14,15 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.store;
+package com.alibaba.graphscope.common.ir.meta.reader;
 
-public class SnapshotId {
-    public static final SnapshotId createEmpty() {
-        return new SnapshotId(false, -1);
-    }
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 
-    private final boolean acquired;
-    private final long id;
+import java.io.IOException;
 
-    public SnapshotId(boolean acquired, long id) {
-        this.acquired = acquired;
-        this.id = id;
-    }
-
-    public boolean isAcquired() {
-        return acquired;
-    }
-
-    public long getId() {
-        return id;
-    }
+/**
+ * {@code IrMetaReader} is used to read Ir Meta from a data source (can be a local file or remote web service).
+ */
+public interface IrMetaReader {
+    IrMeta readMeta() throws IOException;
 }

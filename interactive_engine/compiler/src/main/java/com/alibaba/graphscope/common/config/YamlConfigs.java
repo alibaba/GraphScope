@@ -22,7 +22,6 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,26 +72,6 @@ public class YamlConfigs extends Configs {
                                 return configs.get("compute_engine.store.type");
                             } else {
                                 return "cpp-mcsr";
-                            }
-                        })
-                .put(
-                        "graph.stored.procedures.yaml",
-                        (Configs configs) -> {
-                            File schemaFile = new File(GraphConfig.GRAPH_SCHEMA.get(configs));
-                            if (!schemaFile.exists() || !schemaFile.getName().endsWith(".yaml")) {
-                                return null;
-                            }
-                            try {
-                                Yaml yaml = new Yaml();
-                                Map<String, Object> yamlAsMap =
-                                        yaml.load(new FileInputStream(schemaFile));
-                                Object value;
-                                if ((value = yamlAsMap.get("stored_procedures")) == null) {
-                                    return null;
-                                }
-                                return yaml.dump(value);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
                             }
                         })
                 .put(

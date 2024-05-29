@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.manager;
 
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 
 import java.util.Optional;
 

@@ -17,10 +17,10 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.collect.ImmutableMap;

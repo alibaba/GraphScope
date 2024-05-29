@@ -60,4 +60,13 @@ public class FrontendConfig {
 
     public static final Config<Integer> PER_QUERY_STREAM_BUFFER_MAX_CAPACITY =
             Config.intConfig("per.query.stream.buffer.max.capacity", 256);
+
+    public static final Config<Long> IR_META_FETCH_INTERVAL_MS =
+            Config.longConfig("ir.meta.fetch.interval.ms", 1000);
+
+    public static Config<String> IR_META_READER_MODE =
+            Config.stringConfig("ir.meta.reader.mode", "local");
+
+    public static Config<String> IR_META_SERVICE_HOST =
+            Config.stringConfig("ir.meta.service.host", "localhost:8080");
 }

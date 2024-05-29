@@ -16,13 +16,13 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.collect.ImmutableList;
