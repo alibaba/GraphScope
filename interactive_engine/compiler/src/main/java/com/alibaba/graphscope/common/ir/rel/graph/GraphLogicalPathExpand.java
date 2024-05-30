@@ -37,7 +37,6 @@ import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlExplainLevel;
-import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -318,27 +317,27 @@ public class GraphLogicalPathExpand extends SingleRel {
     }
 
     private GraphPathType.ElementType getElementType() {
-        switch (resultOpt) {
-            case ALL_V:
-            case END_V:
-                RelNode getV = this.fused != null ? this.fused : this.getV;
-                ObjectUtils.requireNonEmpty(
-                        getV.getRowType().getFieldList(),
-                        "data type of getV operator should have at least one column field");
-                return new GraphPathType.ElementType(
-                        getV.getRowType().getFieldList().get(0).getType());
-            case ALL_V_E:
-            default:
-                ObjectUtils.requireNonEmpty(
-                        this.expand.getRowType().getFieldList(),
-                        "data type of expand operator should have at least one column field");
-                ObjectUtils.requireNonEmpty(
-                        this.getV.getRowType().getFieldList(),
-                        "data type of getV operator should have at least one column field");
-                return new GraphPathType.ElementType(
-                        this.expand.getRowType().getFieldList().get(0).getType(),
-                        this.getV.getRowType().getFieldList().get(0).getType());
+        GraphLogicalExpand innerExpand = null;
+        GraphLogicalGetV innerGetV = null;
+        if (this.fused instanceof GraphPhysicalGetV) {
+            innerExpand = ((GraphPhysicalExpand) this.fused.getInput(0)).getFusedExpand();
+            innerGetV = ((GraphPhysicalGetV) this.fused).getFusedGetV();
+        } else if (this.fused instanceof GraphPhysicalExpand) {
+            innerExpand = ((GraphPhysicalExpand) this.fused).getFusedExpand();
+            innerGetV = ((GraphPhysicalExpand) this.fused).getFusedGetV();
+        } else if (this.expand != null && this.getV != null) {
+            innerExpand = (GraphLogicalExpand) this.expand;
+            innerGetV = (GraphLogicalGetV) this.getV;
         }
+        Preconditions.checkArgument(
+                innerExpand != null && !innerExpand.getRowType().getFieldList().isEmpty(),
+                "data type of expand operator should have at least one column field");
+        Preconditions.checkArgument(
+                innerGetV != null && !innerGetV.getRowType().getFieldList().isEmpty(),
+                "data type of getV operator should have at least one column field");
+        return new GraphPathType.ElementType(
+                innerExpand.getRowType().getFieldList().get(0).getType(),
+                innerGetV.getRowType().getFieldList().get(0).getType());
     }
 
     @Override
