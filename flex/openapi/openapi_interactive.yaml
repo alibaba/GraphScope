@@ -941,7 +941,8 @@ components:
         primitive_type:
           type: string
           enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
-                 DT_BOOL, DT_FLOAT, DT_DOUBLE]
+                 DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
+                 # The DT_STRING is added for backward compatibility, it should be replaced by StringType
           example: DT_SIGNED_INT32
     LongText:
       x-body-name: long_text
