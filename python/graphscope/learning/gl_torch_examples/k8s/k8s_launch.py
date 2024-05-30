@@ -27,6 +27,7 @@ params = {
 # load the ogbn_arxiv graph as an example.
 sess = gs.session(
     with_dataset=True,
+    enabled_engines="gae,glt",
     k8s_service_type="LoadBalancer",
     k8s_namespace="default",  # to guarantee auth to launch the pytorchjobs
     k8s_vineyard_mem="8Gi",
