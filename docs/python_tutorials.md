@@ -5,7 +5,7 @@ how to launch a session, to load graphs, and to run analytical analysis, interac
 network trainings using GAE, GIE and GLE in GraphScope.
 
 The tutorials are organized as jupyter notebooks. Users can try them in any jupyter notebook servers. You could play
-with those tutorials using our well-prepared jupyterlab environment in [GraphScope Playground](https://try.graphscope.app).
+with those tutorials using our well-prepared jupyterlab environment in [GraphScope Playground](https://try.graphscope.io).
 
 All tutorials are listed as follows:
 

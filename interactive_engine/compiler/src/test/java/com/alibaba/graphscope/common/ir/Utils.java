@@ -71,7 +71,7 @@ public class Utils {
     public static final GraphBuilder mockGraphBuilder(GraphRelOptimizer optimizer, IrMeta irMeta) {
         RelOptCluster optCluster =
                 GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
-        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
+        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery(irMeta));
         return (GraphBuilder)
                 relBuilderFactory.create(
                         optCluster, new GraphOptSchema(optCluster, irMeta.getSchema()));
@@ -98,6 +98,10 @@ public class Utils {
         try {
             URL schemaResource =
                     Thread.currentThread().getContextClassLoader().getResource(schemaJson);
+            URL statisticsResource =
+                    Thread.currentThread()
+                            .getContextClassLoader()
+                            .getResource("statistics/modern_statistics.json");
             String yamlStr = FileUtils.readJsonFromResource("config/modern/graph.yaml");
             Yaml yaml = new Yaml();
             Map<String, Object> yamlMap = yaml.load(yamlStr);
@@ -107,6 +111,33 @@ public class Utils {
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_SCHEMA.getKey(),
                                     schemaResource.toURI().getPath(),
+                                    GraphConfig.GRAPH_STATISTICS.getKey(),
+                                    statisticsResource.toURI().getPath(),
+                                    GraphConfig.GRAPH_STORED_PROCEDURES_YAML.getKey(),
+                                    proceduresYaml));
+            return new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)).fetch().get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static IrMeta mockIrMeta(String schemaJson, String statisticsJson) {
+        try {
+            URL schemaResource =
+                    Thread.currentThread().getContextClassLoader().getResource(schemaJson);
+            URL statisticsResource =
+                    Thread.currentThread().getContextClassLoader().getResource(statisticsJson);
+            String yamlStr = FileUtils.readJsonFromResource("config/modern/graph.yaml");
+            Yaml yaml = new Yaml();
+            Map<String, Object> yamlMap = yaml.load(yamlStr);
+            String proceduresYaml = yaml.dump(yamlMap.get("stored_procedures"));
+            Configs configs =
+                    new Configs(
+                            ImmutableMap.of(
+                                    GraphConfig.GRAPH_SCHEMA.getKey(),
+                                    schemaResource.toURI().getPath(),
+                                    GraphConfig.GRAPH_STATISTICS.getKey(),
+                                    statisticsResource.toURI().getPath(),
                                     GraphConfig.GRAPH_STORED_PROCEDURES_YAML.getKey(),
                                     proceduresYaml));
             return new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)).fetch().get();

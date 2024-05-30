@@ -16,14 +16,20 @@
 
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
+import com.google.common.collect.ImmutableList;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class ElementDetails implements Comparable<ElementDetails> {
     private final double selectivity;
     // the range is not null if and only if the element denotes a path expand operator
     private final @Nullable PathExpandRange range;
+    // record inner getV types of path expand
+    private final List<Integer> pxdInnerGetVTypes;
     private boolean optional;
 
     public ElementDetails() {
@@ -31,20 +37,26 @@ public class ElementDetails implements Comparable<ElementDetails> {
     }
 
     public ElementDetails(double selectivity) {
-        this(selectivity, null);
+        this(selectivity, null, ImmutableList.of());
     }
 
-    public ElementDetails(double selectivity, @Nullable PathExpandRange range) {
-        this(selectivity, range, false);
+    public ElementDetails(
+            double selectivity, @Nullable PathExpandRange range, List<Integer> pxdInnerGetVTypes) {
+        this(selectivity, range, pxdInnerGetVTypes, false);
     }
 
     public ElementDetails(double selectivity, boolean optional) {
-        this(selectivity, null, optional);
+        this(selectivity, null, ImmutableList.of(), optional);
     }
 
-    public ElementDetails(double selectivity, @Nullable PathExpandRange range, boolean optional) {
+    public ElementDetails(
+            double selectivity,
+            @Nullable PathExpandRange range,
+            List<Integer> pxdInnerVertexTypes,
+            boolean optional) {
         this.selectivity = selectivity;
         this.range = range;
+        this.pxdInnerGetVTypes = pxdInnerVertexTypes;
         this.optional = optional;
     }
 
@@ -55,6 +67,7 @@ public class ElementDetails implements Comparable<ElementDetails> {
         ElementDetails details = (ElementDetails) o;
         return Double.compare(details.selectivity, selectivity) == 0
                 && Objects.equals(range, details.range)
+                && Objects.equals(pxdInnerGetVTypes, details.pxdInnerGetVTypes)
                 && optional == details.optional;
     }
 
@@ -79,6 +92,10 @@ public class ElementDetails implements Comparable<ElementDetails> {
         this.optional = optional;
     }
 
+    public List<Integer> getPxdInnerGetVTypes() {
+        return Collections.unmodifiableList(this.pxdInnerGetVTypes);
+    }
+
     @Override
     public int compareTo(ElementDetails o) {
         int compare = Double.compare(this.selectivity, o.selectivity);
@@ -88,6 +105,9 @@ public class ElementDetails implements Comparable<ElementDetails> {
         compare = Boolean.compare(this.optional, o.optional);
         if (compare != 0) {
             return compare;
+        }
+        if (!this.pxdInnerGetVTypes.equals(o.pxdInnerGetVTypes)) {
+            return -1;
         }
         if (this.range != null && o.range != null) {
             return this.range.compareTo(o.range);

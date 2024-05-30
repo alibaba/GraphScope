@@ -62,7 +62,7 @@ run:
 	  -Dphysical.opt.config=${physical.opt.config} \
 	  -Dgraph.planner.rules=${graph.planner.rules} \
 	  -Dgraph.planner.opt=${graph.planner.opt} \
-	  -Dgraph.planner.cbo.glogue.schema=${graph.planner.cbo.glogue.schema} \
+	  -Dgraph.statistics=${graph.statistics} \
 	  com.alibaba.graphscope.GraphServer ${config.path}
 
 # make physical_plan config.path='<path to the config file>'

@@ -37,6 +37,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
@@ -296,7 +297,15 @@ public class GraphIOProcessor {
                                     dst = left;
                             }
                             PatternEdge edge = visitEdge(expand, src, dst);
-                            inputPattern.addEdge(src, dst, edge);
+                            boolean added = inputPattern.addEdge(src, dst, edge);
+                            if (!added) {
+                                throw new UnsupportedOperationException(
+                                        "edge "
+                                                + edge
+                                                + " already exists in the pattern, and pattern with"
+                                                + " multi-edges are not supported yet");
+                            }
+
                             vertexOrEdgeDetails.put(
                                     edge, new DataValue(expand.getAliasName(), getFilters(expand)));
                             return edge;
@@ -332,10 +341,21 @@ public class GraphIOProcessor {
                                             : ((RexLiteral) pxd.getFetch())
                                                     .getValueAs(Number.class)
                                                     .intValue();
+                            GraphPathType pathType =
+                                    (GraphPathType)
+                                            pxd.getRowType().getFieldList().get(0).getType();
+                            GraphLabelType labelType =
+                                    ((GraphSchemaType) pathType.getComponentType().getGetVType())
+                                            .getLabelType();
+                            List<Integer> innerGetVTypes =
+                                    labelType.getLabelsEntry().stream()
+                                            .map(k -> k.getLabelId())
+                                            .collect(Collectors.toList());
                             ElementDetails newDetails =
                                     new ElementDetails(
                                             expandEdge.getElementDetails().getSelectivity(),
-                                            new PathExpandRange(offset, fetch));
+                                            new PathExpandRange(offset, fetch),
+                                            innerGetVTypes);
                             expandEdge =
                                     (expandEdge instanceof SinglePatternEdge)
                                             ? new SinglePatternEdge(
@@ -352,7 +372,14 @@ public class GraphIOProcessor {
                                                     expandEdge.getId(),
                                                     expandEdge.isBoth(),
                                                     newDetails);
-                            inputPattern.addEdge(src, dst, expandEdge);
+                            boolean added = inputPattern.addEdge(src, dst, expandEdge);
+                            if (!added) {
+                                throw new UnsupportedOperationException(
+                                        "edge "
+                                                + expandEdge
+                                                + " already exists in the pattern, and pattern with"
+                                                + " multi-edges are not supported yet");
+                            }
                             vertexOrEdgeDetails.put(
                                     expandEdge,
                                     new DataValue(pxd.getAliasName(), getFilters(expand)));
@@ -427,16 +454,18 @@ public class GraphIOProcessor {
                                         expectedDstIds.add(k.getSrcLabelId());
                                     }
                                 });
-                Preconditions.checkArgument(
-                        Sets.newHashSet(src.getVertexTypeIds()).equals(expectedSrcIds),
-                        "src vertex types %s not consistent with edge types %s",
-                        src.getVertexTypeIds(),
-                        edge.getEdgeTypeIds());
-                Preconditions.checkArgument(
-                        Sets.newHashSet(dst.getVertexTypeIds()).equals(expectedDstIds),
-                        "dst vertex types %s not consistent with edge types %s",
-                        dst.getVertexTypeIds(),
-                        edge.getEdgeTypeIds());
+                if (edge.getElementDetails().getRange() == null) {
+                    Preconditions.checkArgument(
+                            Sets.newHashSet(src.getVertexTypeIds()).equals(expectedSrcIds),
+                            "src vertex types %s not consistent with edge types %s",
+                            src.getVertexTypeIds(),
+                            edge.getEdgeTypeIds());
+                    Preconditions.checkArgument(
+                            Sets.newHashSet(dst.getVertexTypeIds()).equals(expectedDstIds),
+                            "dst vertex types %s not consistent with edge types %s",
+                            dst.getVertexTypeIds(),
+                            edge.getEdgeTypeIds());
+                }
             }
         }
     }
@@ -761,8 +790,13 @@ public class GraphIOProcessor {
                 if (edgeValue.getFilter() != null) {
                     pxdBuilder.filter(edgeValue.getFilter());
                 }
+                GetVConfig innerGetVConfig =
+                        new GetVConfig(
+                                getVConfig.getOpt(),
+                                createLabels(edge.getElementDetails().getPxdInnerGetVTypes(), true),
+                                getVConfig.getAlias());
                 pxdBuilder
-                        .getV(getVConfig)
+                        .getV(innerGetVConfig)
                         .resultOpt(GraphOpt.PathExpandResult.END_V)
                         .pathOpt(GraphOpt.PathExpandPath.ARBITRARY)
                         .alias(edgeValue.getAlias())

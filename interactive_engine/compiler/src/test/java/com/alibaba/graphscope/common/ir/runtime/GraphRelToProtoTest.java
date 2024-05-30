@@ -1203,9 +1203,7 @@ public class GraphRelToProtoTest {
                         "CBO",
                         "graph.planner.rules",
                         "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
-                                + " ExpandGetVFusionRule",
-                        "graph.planner.cbo.glogue.schema",
-                        "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt"));
+                                + " ExpandGetVFusionRule"));
     }
 
     private Configs getMockPartitionedCBOConfig() {
@@ -1218,8 +1216,6 @@ public class GraphRelToProtoTest {
                         "graph.planner.rules",
                         "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
                                 + " ExpandGetVFusionRule",
-                        "graph.planner.cbo.glogue.schema",
-                        "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt",
                         "pegasus.hosts",
                         "host1,host2"));
     }
@@ -1229,7 +1225,9 @@ public class GraphRelToProtoTest {
     }
 
     private IrMeta getMockCBOMeta() {
-        return Utils.mockSchemaMeta("schema/ldbc_schema_exp_hierarchy.json");
+        return Utils.mockIrMeta(
+                "schema/ldbc_schema_exp_hierarchy.json",
+                "statistics/ldbc30_hierarchy_statistics.json");
     }
 
     private Configs getMockGraphConfig() {
