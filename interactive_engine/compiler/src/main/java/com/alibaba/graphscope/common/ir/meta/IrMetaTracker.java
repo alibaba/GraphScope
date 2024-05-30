@@ -18,7 +18,7 @@
 
 package com.alibaba.graphscope.common.ir.meta;
 
-// This interface triggers the update of Meta Data
+// This interface defines the callback to be invoked when IrMeta changes.
 public interface IrMetaTracker {
     void onChanged(IrMeta meta);
 }

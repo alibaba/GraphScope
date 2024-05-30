@@ -24,6 +24,9 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * This class describes all metadata information required by IR, including Schema, Procedures and Statistics.
+ */
 public class IrMetaStats extends IrMeta {
     private final @Nullable GraphStatistics statistics;
 

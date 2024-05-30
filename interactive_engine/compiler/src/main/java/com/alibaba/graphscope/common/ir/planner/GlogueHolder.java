@@ -31,6 +31,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+// When IrMeta is updated, Glogue will also be triggered to update. This class defines the specific
+// operations for updating Glogue.
 public class GlogueHolder implements IrMetaTracker {
     private final PlannerConfig config;
     private final AtomicReference<GlogueQuery> glogueRef;

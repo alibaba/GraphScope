@@ -26,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Objects;
 
 /**
- * This class describes all the metadata information required by IR, including Schema, Procedures, and Statistics.
+ * This class describes basic metadata information required by IR, including Schema, Procedures.
  * They are versioned using the same snapshot id.
  */
 public class IrMeta {
