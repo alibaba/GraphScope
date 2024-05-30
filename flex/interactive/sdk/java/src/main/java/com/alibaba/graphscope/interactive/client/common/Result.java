@@ -30,6 +30,11 @@ public class Result<T> {
         this.value = value;
     }
 
+    public Result(T value) {
+        this.status = Status.Ok();
+        this.value = value;
+    }
+
     public Status getStatus() {
         return status;
     }

@@ -144,7 +144,7 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
 
     private GraphDefPb toGraphDefPb(GraphDef graphDef) {
         GraphDefPb.Builder builder = GraphDefPb.newBuilder();
-        builder.setVersion(graphDef.getVersion());
+        builder.setVersion(Integer.parseInt(graphDef.getVersion()));
         builder.setKey("");
         builder.setGraphType(GraphTypePb.PERSISTENT_STORE);
         builder.setDirected(true);

@@ -19,19 +19,22 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.proto.groot.Statistics;
+import com.google.common.collect.Maps;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class DefaultGraphStatistics implements GraphStatistics {
     private static final Logger logger = LoggerFactory.getLogger(DefaultGraphStatistics.class);
-    private final Map<LabelId, Long> vertexTypeCounts;
-    private final Map<EdgeKind, Long> edgeTypeCounts;
-    private final Long totalVertexCount;
-    private final Long totalEdgeCount;
+    private Map<LabelId, Long> vertexTypeCounts = Maps.newHashMap();
+    private Map<EdgeKind, Long> edgeTypeCounts = Maps.newHashMap();
+    private Long totalVertexCount;
+    private Long totalEdgeCount;
 
     public DefaultGraphStatistics(
             Map<LabelId, Long> vertexTypeCounts,
@@ -45,8 +48,8 @@ public class DefaultGraphStatistics implements GraphStatistics {
     }
 
     @Override
-    public int getVersion() {
-        return 0;
+    public String getVersion() {
+        return "0";
     }
 
     @Override
@@ -60,19 +63,38 @@ public class DefaultGraphStatistics implements GraphStatistics {
     }
 
     @Override
-    public Long getVertexTypeCount(int vertexTypeId) {
+    public Long getVertexTypeCount(Integer vertexTypeId) {
         return vertexTypeCounts.get(new LabelId(vertexTypeId));
     }
 
     @Override
-    public Long getEdgeTypeCount(int edgeTypeId, int sourceTypeId, int targetTypeId) {
-        EdgeKind edgeKind =
-                EdgeKind.newBuilder()
-                        .setEdgeLabelId(new LabelId(edgeTypeId))
-                        .setSrcVertexLabelId(new LabelId(sourceTypeId))
-                        .setDstVertexLabelId(new LabelId(targetTypeId))
-                        .build();
-        return edgeTypeCounts.get(edgeKind);
+    public Long getEdgeTypeCount(
+            Optional<Integer> sourceTypeId,
+            Optional<Integer> edgeTypeId,
+            Optional<Integer> targetTypeId) {
+        Long count =
+                edgeTypeCounts.entrySet().stream()
+                        .filter(
+                                entry ->
+                                        (!sourceTypeId.isPresent()
+                                                || entry.getKey()
+                                                        .getSrcVertexLabelId()
+                                                        .equals(new LabelId(sourceTypeId.get()))))
+                        .filter(
+                                entry ->
+                                        (!edgeTypeId.isPresent()
+                                                || entry.getKey()
+                                                        .getEdgeLabelId()
+                                                        .equals(new LabelId(edgeTypeId.get()))))
+                        .filter(
+                                entry ->
+                                        (!targetTypeId.isPresent()
+                                                || entry.getKey()
+                                                        .getDstVertexLabelId()
+                                                        .equals(new LabelId(targetTypeId.get()))))
+                        .collect(Collectors.summingLong(Map.Entry::getValue));
+
+        return count == null ? 0L : count;
     }
 
     public static DefaultGraphStatistics parseProto(Statistics statistics) {

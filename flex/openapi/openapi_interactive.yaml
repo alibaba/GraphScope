@@ -906,39 +906,16 @@ paths:
             type: string
       requestBody:
         content:
-          application/json:
+          text/plain:
             schema:
-              $ref: '#/components/schemas/QueryRequest'
-          # application/json:
-          #   schema:
-          #     type: string
-          #   examples:
-          #     example1:
-          #       value:
-          #         type: "native/proc_call/adhoc"
-          #         payload: |
-          #           binary bytes
-          #     example2:
-          #       value:
-          #         type: "native"
-          #         payload: "0,123,david(encoded in binary)"
-          #     example3:
-          #       value:
-          #         type: "adhoc"
-          #         payload:
-          #           "json[scan{}, edge_expand{}]"
-          #     example4:
-          #       value:
-          #         type: "proc_call"
-          #         payload:
-          #           "json{proc_name: procA, params: []}"
+              type: string
       responses:
         '200':
           description: Successfully runned. Empty if failed?
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CollectiveResults'
+                type: string
         '500':
           description: Server internal error
 components:
@@ -955,46 +932,6 @@ components:
           $ref: '#/components/schemas/GSDataType'
         value:
           $ref: '#/components/schemas/AnyValue'
-        # for query output
-    Element:
-      oneOf:
-        - $ref: '#/components/schemas/TypedValue'
-    Collection:
-      type: object
-      properties:
-        values:
-          type: array
-          items:
-            $ref: '#/components/schemas/Element'
-    KeyValue:
-      type: object
-      required:
-        - key
-        - value
-      properties:
-        key:
-          $ref: '#/components/schemas/TypedValue'
-        value:
-          $ref: '#/components/schemas/Element'
-    Column:
-      oneOf:
-        - $ref: '#/components/schemas/Element'
-        - $ref: '#/components/schemas/Collection'
-        - $ref: '#/components/schemas/KeyValue'
-    Record:
-      type: object
-      properties:
-        columns:
-          type: array
-          items:
-            $ref: '#/components/schemas/Column'
-    CollectiveResults:
-      type: object
-      properties:
-        records:
-          type: array
-          items:
-            $ref: '#/components/schemas/Record'
     PrimitiveType:
       x-body-name: primitive_type
       type: object
@@ -1605,6 +1542,9 @@ components:
           type: integer
           format: int32
         gremlin_port:
+          type: integer
+          format: int32
+        start_time:
           type: integer
           format: int32
     JobResponse:

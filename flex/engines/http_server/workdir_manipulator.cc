@@ -846,8 +846,6 @@ gs::Result<seastar::sstring> WorkDirManipulator::create_procedure_sanity_check(
     LOG(INFO) << "Cypher procedure, name: " << json["name"].get<std::string>()
               << ", enable: " << json["enable"].get<bool>();
   } else if (type == "CPP" || type == "cpp") {
-    CHECK_JSON_FIELD(json, "params");
-    CHECK_JSON_FIELD(json, "returns");
     LOG(INFO) << "Native procedure, name: " << json["name"].get<std::string>()
               << ", enable: " << json["enable"].get<bool>();
   } else {
@@ -885,7 +883,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
   if (type == "cypher" || type == "CYPHER") {
     query_file = temp_codegen_directory + "/" + plugin_id + ".cypher";
   } else if (type == "CPP" || type == "cpp") {
-    query_file = temp_codegen_directory + "/" + plugin_id + ".cpp";
+    query_file = temp_codegen_directory + "/" + plugin_id + ".cc";
   } else {
     return seastar::make_exception_future<seastar::sstring>(
         "Procedure type is not supported: " + type);

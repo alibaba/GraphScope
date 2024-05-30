@@ -39,6 +39,11 @@ public class IrMeta {
         this(SnapshotId.createEmpty(), schema, storedProcedures);
     }
 
+    public IrMeta(
+            IrGraphSchema schema, GraphStatistics statistics, StoredProcedures storedProcedures) {
+        this(SnapshotId.createEmpty(), schema, statistics, storedProcedures);
+    }
+
     public IrMeta(IrGraphSchema schema, GraphStatistics statistics) {
         this(SnapshotId.createEmpty(), schema, statistics);
     }
@@ -62,6 +67,17 @@ public class IrMeta {
         this.schema = Objects.requireNonNull(schema);
         this.statistics = Objects.requireNonNull(statistics);
         this.storedProcedures = null;
+    }
+
+    public IrMeta(
+            SnapshotId snapshotId,
+            IrGraphSchema schema,
+            GraphStatistics statistics,
+            StoredProcedures storedProcedures) {
+        this.snapshotId = Objects.requireNonNull(snapshotId);
+        this.schema = Objects.requireNonNull(schema);
+        this.statistics = Objects.requireNonNull(statistics);
+        this.storedProcedures = Objects.requireNonNull(storedProcedures);
     }
 
     public IrGraphSchema getSchema() {

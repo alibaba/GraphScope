@@ -103,21 +103,23 @@ Result<bool> DefaultGraphMetaStore::UpdateGraphMeta(
 
 Result<PluginId> DefaultGraphMetaStore::CreatePluginMeta(
     const CreatePluginMetaRequest& request) {
-  PluginId plugin_id;
   if (request.id.has_value()) {
-    ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
-        plugin_id, base_store_->CreateMeta(PLUGIN_META, request.id.value(),
-                                           request.ToString()));
+    auto real_meta_key =
+        generate_real_plugin_meta_key(request.bound_graph, request.id.value());
+    RETURN_IF_NOT_OK(base_store_->CreateMeta(PLUGIN_META, real_meta_key,
+                                             request.ToString()));
+    return Result<PluginId>(request.id.value());
   } else {
-    ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(
-        plugin_id, base_store_->CreateMeta(PLUGIN_META, request.ToString()));
+    LOG(ERROR) << "Can not create plugin meta without id";
+    return Result<PluginId>(Status(StatusCode::InValidArgument,
+                                   "Can not create plugin meta without id"));
   }
-  return Result<PluginId>(plugin_id);
 }
 
 Result<PluginMeta> DefaultGraphMetaStore::GetPluginMeta(
     const GraphId& graph_id, const PluginId& plugin_id) {
-  auto res = base_store_->GetMeta(PLUGIN_META, plugin_id);
+  auto real_meta_key = generate_real_plugin_meta_key(graph_id, plugin_id);
+  auto res = base_store_->GetMeta(PLUGIN_META, real_meta_key);
   if (!res.ok()) {
     return Result<PluginMeta>(res.status());
   }
@@ -154,7 +156,8 @@ Result<std::vector<PluginMeta>> DefaultGraphMetaStore::GetAllPluginMeta(
 
 Result<bool> DefaultGraphMetaStore::DeletePluginMeta(
     const GraphId& graph_id, const PluginId& plugin_id) {
-  return base_store_->DeleteMeta(PLUGIN_META, plugin_id);
+  auto real_meta_key = generate_real_plugin_meta_key(graph_id, plugin_id);
+  return base_store_->DeleteMeta(PLUGIN_META, real_meta_key);
 }
 
 Result<bool> DefaultGraphMetaStore::DeletePluginMetaByGraphId(
@@ -181,8 +184,9 @@ Result<bool> DefaultGraphMetaStore::DeletePluginMetaByGraphId(
 Result<bool> DefaultGraphMetaStore::UpdatePluginMeta(
     const GraphId& graph_id, const PluginId& plugin_id,
     const UpdatePluginMetaRequest& update_request) {
+  auto real_meta_key = generate_real_plugin_meta_key(graph_id, plugin_id);
   return base_store_->UpdateMeta(
-      PLUGIN_META, plugin_id,
+      PLUGIN_META, real_meta_key,
       [graph_id, plugin_id, &update_request](const std::string& old_meta) {
         nlohmann::json json;
         try {
@@ -448,6 +452,11 @@ Result<bool> DefaultGraphMetaStore::clear_locks() {
   RETURN_IF_NOT_OK(base_store_->DeleteAllMeta(INDICES_LOCK));
   RETURN_IF_NOT_OK(base_store_->DeleteAllMeta(PLUGINS_LOCK));
   return Result<bool>(true);
+}
+
+std::string DefaultGraphMetaStore::generate_real_plugin_meta_key(
+    const GraphId& graph_id, const PluginId& plugin_id) {
+  return graph_id + "_" + plugin_id;
 }
 
 }  // namespace gs

@@ -32,6 +32,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -87,9 +88,9 @@ public class GraphRelOptimizer {
         return relPlanner;
     }
 
-    public @Nullable RelMetadataQuery createMetaDataQuery() {
+    public @Nullable RelMetadataQuery createMetaDataQuery(IrMeta irMeta) {
         if (config.isOn() && config.getOpt() == PlannerConfig.Opt.CBO) {
-            GlogueSchema g = config.getGlogueSchema();
+            GlogueSchema g = GlogueSchema.fromMeta(irMeta);
             Glogue gl = new Glogue(g, config.getGlogueSize());
             GlogueQuery gq = new GlogueQuery(gl);
             return new GraphRelMetadataQuery(

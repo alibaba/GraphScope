@@ -160,10 +160,10 @@ public class Graph implements GraphSchema {
 
     @Override
     @JsonIgnore
-    public int getVersion() {
+    public String getVersion() {
         if (version == null) {
-            return 0;
+            return "0";
         }
-        return Integer.parseInt(version);
+        return version;
     }
 }

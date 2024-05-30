@@ -65,7 +65,9 @@ from interactive_sdk.openapi.models.start_service_request import StartServiceReq
 from interactive_sdk.openapi.models.update_procedure_request import (
     UpdateProcedureRequest,
 )
+from interactive_sdk.openapi.models.query_request import QueryRequest
 from interactive_sdk.openapi.models.vertex_request import VertexRequest
+from interactive_sdk.client.generated.results_pb2 import CollectiveResults
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -229,8 +231,12 @@ class ProcedureInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def call_procedure(
-        self, graph_id: StrictStr, procedure_id: StrictStr, params: Dict[str, Any]
-    ) -> Result[str]:
+        self, graph_id: StrictStr, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
         raise NotImplementedError
 
 
@@ -293,7 +299,19 @@ class DefaultSession(Session):
         self._service_api = AdminServiceServiceManagementApi(self._client)
         self._edge_api = GraphServiceEdgeManagementApi(self._client)
         self._vertex_api = GraphServiceVertexManagementApi(self._client)
-        self._query_api = QueryServiceApi(self._client)
+        # TODO(zhanglei): Get endpoint from service, current implementation is adhoc.
+        # get service port
+        service_status = self.get_service_status()
+        if not service_status.is_ok():
+            raise Exception("Failed to get service status")
+        service_port = service_status.get_value().hqps_port
+        # replace the port in uri
+        uri = uri.split(":")
+        uri[-1] = str(service_port)
+        uri = ":".join(uri)
+        self._query_client = ApiClient(Configuration(host=uri))
+
+        self._query_api = QueryServiceApi(self._query_client)
 
     def __enter__(self):
         self._client.__enter__()
@@ -494,9 +512,36 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def call_procedure(
-        self, graph_id: StrictStr, procedure_id: StrictStr, params: Dict[str, Any]
-    ) -> Result[str]:
-        raise NotImplementedError
+        self, graph_id: StrictStr, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in json format
+            params_str = params.to_json() + chr(1)
+            response = self._query_api.proc_call_with_http_info(
+                graph_id, params_str
+            )
+            result = CollectiveResults()
+            if response.status_code == 200:
+                byte_data = response.data.encode('utf-8')
+                result.ParseFromString(byte_data)
+                return Result.from_response(response)
+            else:
+                return Result.from_response(result)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in encoder/decoder format
+            params = params + chr(0)
+            response = self._procedure_api.call_procedure_with_http_info(
+                graph_id, params
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     ################ QueryService Interfaces ##########
     def get_service_status(self) -> Result[ServiceStatus]:
