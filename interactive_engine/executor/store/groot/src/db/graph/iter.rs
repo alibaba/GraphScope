@@ -46,16 +46,11 @@ impl IntoIterator for VertexTypeScan {
     fn into_iter(self) -> Self::IntoIter {
         let si = self.si as i64;
         if let Some(table) = self.vertex_type_info.get_table(si) {
-            info!("si is  {:?}", si);
             let label = self.vertex_type_info.get_label();
-            info!("label is  {:?}", label);
             let prefix = vertex_table_prefix_key(table.id);
-            info!("tableid is  {:?}", table.id);
-            info!("prefix is  {:?}", prefix);
             let data_ts = si - table.start_si;
             let mut previous_vertex = None;
             let iter = self.storage.new_scan(&prefix).unwrap();
-            info!("itera size is  is  {:?}", iter.size_hint());
             let iter = iter.filter_map(move |(raw_key, raw_val)| {
                 let key = raw_key.to_slice();
                 info!("key is  {:?}", key);
@@ -63,22 +58,18 @@ impl IntoIterator for VertexTypeScan {
                 match parse_vertex_key(key) {
                     Ok((vertex_id, ts)) => {
                         if !check_v(vertex_id, ts, previous_vertex, data_ts) {
-                            info!("check_v in");
                             return None;
                         }
                         previous_vertex = Some(vertex_id);
                         if val.len() < 4 {
-                            info!("val in");
                             return None;
                         }
                         if self.with_prop {
-                            info!("with_prop in");
                             match self
                                 .vertex_type_info
                                 .get_decoder(si, get_codec_version(val))
                             {
                                 Ok(decoder) => {
-                                    info!("decoder is  {:?}", decoder);
                                     Some(Ok(RocksVertexImpl::new(vertex_id, label, Some(decoder), raw_val)))
                                 }
                                 Err(e) => Some(Err(e.into())),
@@ -120,18 +111,15 @@ impl IntoIterator for EdgeTypeScan {
 
     fn into_iter(self) -> Self::IntoIter {
         let edge_kinds = self.edge_info.lock();
-        info!("edge_kinds size is  {:?}", edge_kinds.iter_kinds().size_hint());
         let mut edge_kind_iter = edge_kinds.iter_kinds().filter_map(|edge_kind| {
             if edge_kind.is_alive_at(self.si) {
                 Some(edge_kind.clone())
             } else {
-                info!("edge_kind is  {:?}", edge_kind.get_type().get_edge_label_id());
                 None
             }
         });
         let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
         while let Some(edge_kind) = edge_kind_iter.next() {
-            info!("has edge_kind {:?}", edge_kind.get_type().get_edge_label_id());
             let iter = EdgeKindScan::new(
                 self.storage.clone(),
                 self.si,
@@ -172,7 +160,6 @@ impl IntoIterator for EdgeKindScan {
     fn into_iter(self) -> Self::IntoIter {
         let si = self.si as i64;
         if let Some(table) = self.edge_kind_info.get_table(si) {
-            info!("tableid is  {:?}", table.id);
             let data_ts = si - table.start_si;
             let scan_iter = match self.direction {
                 EdgeDirection::In | EdgeDirection::Out => {
@@ -189,16 +176,13 @@ impl IntoIterator for EdgeKindScan {
                 .unwrap()
                 .filter_map(move |(raw_key, raw_val)| {
                     let key = raw_key.to_slice();
-                    info!("key is  {:?}", key);
                     let val = raw_val.to_slice();
                     let (edge_id, ts) = parse_edge_key(key);
                     if !check_e(edge_id, ts, prev_id, data_ts) {
-                        info!("check_e in");
                         return None;
                     }
                     prev_id = Some(edge_id);
                     if val.len() < 4 {
-                        info!("val.len in");
                         return None;
                     }
                     if self.with_prop {

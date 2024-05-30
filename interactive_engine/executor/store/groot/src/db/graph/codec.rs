@@ -596,15 +596,14 @@ impl CodecManager {
     pub fn get_decoder(&self, si: SnapshotId, version: CodecVersion) -> GraphResult<Decoder> {
         if let Some(v) = self.versions.get(si) {
             let target_version = v.data as CodecVersion;
-            info!("version is  {:?}", version);
-            info!("target_version is  {:?}", target_version);
+            info!("src version is  {:?}, target_version is  {:?}", version, target_version);
             let guard = epoch::pin();
             let map = self.get_map(&guard);
             let map_ref = unsafe { map.as_ref() }.ok_or_else(|| {
                 let msg = "get map reference return `None`".to_string();
                 gen_graph_err!(GraphErrorCode::InvalidData, msg, get_map, si, version)
             })?;
-            info!("get decoder map is  {:?}", map_ref);
+            info!("get decoder map is  {:?}", map_ref.keys());
             let src = res_unwrap!(get_codec(map_ref, version), get_decoder, si, version)?;
             let target = res_unwrap!(get_codec(map_ref, target_version), get_decoder, si, version)?;
             return Ok(Decoder::new(target, src));

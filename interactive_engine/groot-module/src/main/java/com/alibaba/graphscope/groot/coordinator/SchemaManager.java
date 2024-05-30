@@ -107,7 +107,7 @@ public class SchemaManager {
         GraphDef graphDef = this.graphDefFetcher.fetchGraphDef();
         this.graphDefRef.set(graphDef);
         this.ready = true;
-        // logger.info("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
+        logger.debug("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
     }
 
     public void stop() {
