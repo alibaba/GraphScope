@@ -46,7 +46,7 @@ std::string get_file_name_from_path(const std::string& file_path) {
 
 std::string generate_call_procedure_payload(const std::string& graph_id,
                                             const std::string& procedure_id) {
-  query::Query query;
+  procedure::Query query;
   query.mutable_query_name()->set_name(procedure_id);
   return query.SerializeAsString();
 }
@@ -130,7 +130,7 @@ void run_builtin_graph_test(
   //-------2. now call procedure should fail
   {
     for (auto& proc_id : plugin_ids) {
-      query::Query query;
+      procedure::Query query;
       query.mutable_query_name()->set_name(proc_id);
       auto res = query_client.Post("/v1/query", query.SerializeAsString(),
                                    "text/plain");
@@ -158,7 +158,7 @@ void run_builtin_graph_test(
   //------4. now do the query
   {
     for (auto& plugin_id : plugin_ids) {
-      query::Query query;
+      procedure::Query query;
       query.mutable_query_name()->set_name(plugin_id);
       auto res = query_client.Post("/v1/query", query.SerializeAsString(),
                                    "text/plain");
@@ -296,7 +296,7 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
     for (auto& pair : builtin_graph_queries) {
       auto query_name = pair.first;
       auto query_str = pair.second;
-      query::Query query;
+      procedure::Query query;
       query.mutable_query_name()->set_name(query_name);
       auto res = query_client.Post("/v1/query", query.SerializeAsString(),
                                    "text/plain");

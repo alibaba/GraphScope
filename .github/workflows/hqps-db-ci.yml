@@ -147,8 +147,10 @@ jobs:
         cd java
         mvn clean install -DskipTests
         cd ../python
+        pip3 install -r requirements.txt
         pip3 install -r test-requirements.txt
-        pip3 install .
+        export PATH=${HOME}/.local/bin:$PATH
+        python3 setup.py build_proto
 
         rm -rf ${TMP_INTERACTIVE_WORKSPACE}     
         cd ${GITHUB_WORKSPACE}/flex/build/
@@ -159,9 +161,11 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
+        sed -i 's/interactive_workspace/temp_workspace/g' ./engine_config_test.yaml
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml java
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml python
         sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
+        sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
 
     - name: Sample Query test
       env:
@@ -229,7 +233,7 @@ jobs:
           --procedure_name=get_person_name \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
-        ./load_plan_and_gen.sh -e=hqps -i=../tests/interactive/sample_app.cc -w=/tmp/codegen \
+        ./load_plan_and_gen.sh -e=hqps -i=../interactive/sdk/java/src/test/resources/sample_app.cc -w=/tmp/codegen \
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
           --procedure_name=sample_app \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
