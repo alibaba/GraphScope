@@ -1,10 +1,10 @@
 name: modern_graph # then must have a modern dir under ${data} directory
 store_type: mutable_csr  # v6d, groot, gart
 stored_procedures:
-  directory: /tmp/interactive_workspace/data/modern_graph/plugins/
+  directory: /tmp/temp_workspace/data/modern_graph/plugins/
   enable_lists:
-    - libget_person_name.so
     - libcount_vertex_num.so
+    - libplus_one.so
     - libsample_app.so
 schema:
   vertex_types:
