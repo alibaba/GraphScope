@@ -34,7 +34,7 @@ class GetEdgeType(BaseModel):
     directed: Optional[StrictBool] = None
     primary_keys: Optional[List[StrictStr]] = None
     type_id: StrictInt
-    properties: List[GetPropertyMeta]
+    properties: Optional[List[GetPropertyMeta]] = None
     description: Optional[StrictStr] = None
     __properties: ClassVar[List[str]] = ["type_name", "vertex_type_pair_relations", "directed", "primary_keys", "type_id", "properties", "description"]
 

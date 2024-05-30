@@ -17,6 +17,7 @@
 #
 
 import itertools
+import logging
 import os
 import socket
 import threading
@@ -76,7 +77,8 @@ class ClientWrapper(object):
         }
         initializer = service_initializer.get(SOLUTION)
         if initializer is None:
-            raise RuntimeError(f"Client initializer of {SOLUTION} not found.")
+            logging.warn(f"Client initializer of {SOLUTION} not found.")
+            return None
         return initializer()
 
     def list_graphs(self) -> List[GetGraphResponse]:
@@ -86,12 +88,13 @@ class ClientWrapper(object):
             for item in itertools.chain(
                 g["schema"]["vertex_types"], g["schema"]["edge_types"]
             ):
-                for p in item["properties"]:
-                    if (
-                        "string" in p["property_type"]
-                        and "long_text" in p["property_type"]["string"]
-                    ):
-                        p["property_type"]["string"]["long_text"] = ""
+                if "properties" in item:
+                    for p in item["properties"]:
+                        if (
+                            "string" in p["property_type"]
+                            and "long_text" in p["property_type"]["string"]
+                        ):
+                            p["property_type"]["string"]["long_text"] = ""
         # transfer
         rlts = [GetGraphResponse.from_dict(g) for g in graphs]
         return rlts
@@ -100,12 +103,13 @@ class ClientWrapper(object):
         schema = self._client.get_schema_by_id(graph_id)
         # fix ValueError: Invalid value for `long_text`, must not be `None`
         for item in itertools.chain(schema["vertex_types"], schema["edge_types"]):
-            for p in item["properties"]:
-                if (
-                    "string" in p["property_type"]
-                    and "long_text" in p["property_type"]["string"]
-                ):
-                    p["property_type"]["string"]["long_text"] = ""
+            if "properties" in item:
+                for p in item["properties"]:
+                    if (
+                        "string" in p["property_type"]
+                        and "long_text" in p["property_type"]["string"]
+                    ):
+                        p["property_type"]["string"]["long_text"] = ""
         return GetGraphSchemaResponse.from_dict(schema)
 
     def create_graph(self, graph: CreateGraphRequest) -> CreateGraphResponse:
@@ -165,12 +169,13 @@ class ClientWrapper(object):
         for item in itertools.chain(
             g["schema"]["vertex_types"], g["schema"]["edge_types"]
         ):
-            for p in item["properties"]:
-                if (
-                    "string" in p["property_type"]
-                    and "long_text" in p["property_type"]["string"]
-                ):
-                    p["property_type"]["string"]["long_text"] = ""
+            if "properties" in item:
+                for p in item["properties"]:
+                    if (
+                        "string" in p["property_type"]
+                        and "long_text" in p["property_type"]["string"]
+                    ):
+                        p["property_type"]["string"]["long_text"] = ""
         return GetGraphResponse.from_dict(g)
 
     def create_stored_procedure(

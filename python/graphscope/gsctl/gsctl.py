@@ -21,22 +21,15 @@ import sys
 
 import click
 
-try:
-    import graphscope
-except ModuleNotFoundError:
-    # if graphscope is not installed, only basic functions or utilities
-    # can be used, e.g. install dependencies
-    graphscope = None
+if "site-packages" not in os.path.dirname(os.path.realpath(__file__)):
+    sys.path.insert(
+        0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..")
+    )
+
+import graphscope
 
 
 def cli():
-    if graphscope is None:
-        sys.path.insert(
-            0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "commands")
-        )
-        from dev import cli as dev_cli
-
-        dev_cli()
     from graphscope.gsctl.commands import get_command_collection
     from graphscope.gsctl.config import get_current_context
 

@@ -2642,7 +2642,6 @@ components:
           description:
             type: string
         required:
-        - properties
         - type_id
         type: object
       example:

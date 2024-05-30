@@ -47,54 +47,60 @@ def test_graph_schema(arrow_property_graph):
 
 def test_graph_schema_todict(p2p_property_graph):
     rlt = {
-        "vertices": [
+        "vertex_types": [
             {
-                "label": "person",
+                "type_name": "person",
                 "properties": [
                     {
-                        "name": "weight",
-                        "id": 0,
-                        "type": "LONG",
+                        "property_name": "weight",
+                        "property_id": 0,
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
                         "is_primary_key": False,
-                        "comment": "",
+                        "description": "",
                     },
                     {
-                        "name": "id",
-                        "id": 1,
-                        "type": "LONG",
+                        "property_name": "id",
+                        "property_id": 1,
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
                         "is_primary_key": False,
-                        "comment": "",
+                        "description": "",
                     },
                 ],
+                "primary_keys": [],
+                "description": "",
             }
         ],
-        "edges": [
+        "edge_types": [
             {
-                "label": "knows",
+                "type_name": "knows",
                 "properties": [
                     {
-                        "name": "src_label_id",
-                        "id": 0,
-                        "type": "LONG",
+                        "property_name": "src_label_id",
+                        "property_id": 0,
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
                         "is_primary_key": False,
-                        "comment": "",
+                        "description": "",
                     },
                     {
-                        "name": "dst_label_id",
-                        "id": 1,
-                        "type": "LONG",
+                        "property_name": "dst_label_id",
+                        "property_id": 1,
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
                         "is_primary_key": False,
-                        "comment": "",
+                        "description": "",
                     },
                     {
-                        "name": "dist",
-                        "id": 2,
-                        "type": "LONG",
+                        "property_name": "dist",
+                        "property_id": 2,
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
                         "is_primary_key": False,
-                        "comment": "",
+                        "description": "",
                     },
                 ],
-                "relations": [{"src_label": "person", "dst_label": "person"}],
+                "primary_keys": [],
+                "description": "",
+                "vertex_type_pair_relations": [
+                    {"source_vertex": "person", "destination_vertex": "person"}
+                ],
             }
         ],
     }

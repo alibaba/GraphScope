@@ -202,8 +202,6 @@ class GetEdgeType(Model):
         :param properties: The properties of this GetEdgeType.
         :type properties: List[GetPropertyMeta]
         """
-        if properties is None:
-            raise ValueError("Invalid value for `properties`, must not be `None`")  # noqa: E501
 
         self._properties = properties
 

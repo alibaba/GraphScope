@@ -25,6 +25,7 @@ def get_service_status_by_id(graph_id):  # noqa: E501
     return client_wrapper.get_service_status_by_id(graph_id)
 
 
+@handle_api_exception()
 def list_service_status():  # noqa: E501
     """list_service_status
 

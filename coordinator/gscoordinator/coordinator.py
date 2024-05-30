@@ -24,6 +24,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 from concurrent import futures
 
 import connexion
@@ -123,6 +124,17 @@ def get_servicer(config: Config):
     return initializer(config)
 
 
+def start_http_service(config):
+    app = connexion.App(__name__, specification_dir="./flex/openapi/")
+    app.app.json_encoder = JSONEncoder
+    app.add_api(
+        "openapi.yaml",
+        arguments={"title": "GraphScope FLEX HTTP SERVICE API"},
+        pythonic_params=True,
+    )
+    app.run(port=config.coordinator.http_port)
+
+
 def start_server(
     coordinator_service_servicer: coordinator_service_pb2_grpc.CoordinatorServiceServicer,
     config: Config,
@@ -147,14 +159,9 @@ def start_server(
     server.start()
 
     # OpenApi server
-    app = connexion.App(__name__, specification_dir="./flex/openapi/")
-    app.app.json_encoder = JSONEncoder
-    app.add_api(
-        "openapi.yaml",
-        arguments={"title": "GraphScope FLEX HTTP SERVICE API"},
-        pythonic_params=True,
-    )
-    app.run(port=config.coordinator.http_port)
+    httpservice_t = threading.Thread(target=start_http_service, args=(config,))
+    httpservice_t.daemon = True
+    httpservice_t.start()
 
     if config.coordinator.monitor:
         try:

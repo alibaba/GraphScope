@@ -467,7 +467,6 @@ components:
         - type: object
           required:
             - type_id
-            - properties
           properties:
             type_id:
               type: integer

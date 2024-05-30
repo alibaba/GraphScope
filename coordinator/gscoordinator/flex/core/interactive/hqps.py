@@ -78,11 +78,11 @@ class HQPSClient(object):
             logging.info("Connecting to HQPS service ...")
             while True:
                 try:
-                    requests.get(f"http://192.168.0.9:{HQPS_ADMIN_SERVICE_PORT}")
+                    requests.get(f"http://127.0.0.1:{HQPS_ADMIN_SERVICE_PORT}")
                 except requests.ConnectionError:
                     time.sleep(3)
                 else:
-                    return f"http://192.168.0.9:{HQPS_ADMIN_SERVICE_PORT}"
+                    return f"http://127.0.0.1:{HQPS_ADMIN_SERVICE_PORT}"
 
     def list_graphs(self) -> List[dict]:
         with interactive_sdk.openapi.ApiClient(
@@ -96,11 +96,18 @@ class HQPSClient(object):
                 g["creation_time"] = encode_datetime(
                     datetime.datetime.fromtimestamp(g["creation_time"] / 1000)
                 )
-                g["data_update_time"] = encode_datetime(
-                    datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
-                )
+                if g["data_update_time"] == 0:
+                     g["data_update_time"] = "null"
+                else:
+                    g["data_update_time"] = encode_datetime(
+                        datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
+                    )
                 # `schema_update_time` is same to `creation_time` in Interactive
                 g["schema_update_time"] = g["creation_time"]
+                if "edge_types" not in g["schema"]:
+                    g["schema"]["edge_types"] = []
+                if "vertex_types" not in g["schema"]:
+                    g["schema"]["vertex_types"] = []
                 # we do not have edge's primary key in Interactive
                 for edge in g["schema"]["edge_types"]:
                     if "primary_keys" not in edge:
@@ -114,7 +121,12 @@ class HQPSClient(object):
             api_instance = interactive_sdk.openapi.AdminServiceGraphManagementApi(
                 api_client
             )
-            return api_instance.get_schema(graph_id).to_dict()
+            schema = api_instance.get_schema(graph_id).to_dict()
+            if "vertex_types" not in schema:
+                schema["vertex_types"] = []
+            if "edge_types" not in schema:
+                schema["edge_types"] = []
+            return schema
 
     def create_graph(self, graph: dict) -> dict:
         with interactive_sdk.openapi.ApiClient(
@@ -147,11 +159,18 @@ class HQPSClient(object):
             g["creation_time"] = encode_datetime(
                 datetime.datetime.fromtimestamp(g["creation_time"] / 1000)
             )
-            g["data_update_time"] = encode_datetime(
-                datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
-            )
+            if g["data_update_time"] == 0:
+                 g["data_update_time"] = "null"
+            else:
+                g["data_update_time"] = encode_datetime(
+                    datetime.datetime.fromtimestamp(g["data_update_time"] / 1000)
+                )
             # `schema_update_time` is same to `creation_time` in Interactive
             g["schema_update_time"] = g["creation_time"]
+            if "edge_types" not in g["schema"]:
+                g["schema"]["edge_types"] = []
+            if "vertex_types" not in g["schema"]:
+                g["schema"]["vertex_types"] = []
             # we do not have edge's primary key in Interactive
             for edge in g["schema"]["edge_types"]:
                 if "primary_keys" not in edge:
@@ -258,6 +277,9 @@ class HQPSClient(object):
                 if response.status == "Running" and response.graph is not None:
                     g = response.graph.to_dict()
                     serving_graph_id = g["id"]
+                    service_start_time = encode_datetime(
+                        datetime.datetime.fromtimestamp(response.start_time / 1000)
+                    )
                     status = {
                         "status": response.status,
                         "sdk_endpoints": {
@@ -265,7 +287,7 @@ class HQPSClient(object):
                             "hqps": f"http://{host}:{response.hqps_port}",
                             "gremlin": f"ws://{host}:{response.gremlin_port}/gremlin",
                         },
-                        "start_time": "2024-04-20 18:00:00",
+                        "start_time": service_start_time,
                         "graph_id": g["id"],
                     }
                     rlts.append(status)
@@ -276,6 +298,7 @@ class HQPSClient(object):
                 status = {
                     "status": "Stopped",
                     "graph_id": g["id"],
+                    "start_time": "null",
                 }
                 rlts.append(status)
         return rlts

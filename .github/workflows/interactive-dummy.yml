@@ -1,4 +1,4 @@
-name: GraphScope Flex CI (Dummy)
+name: Flex Interactive CI (Dummy)
 
 on:
   pull_request:
@@ -7,14 +7,14 @@ on:
     paths:
       - '**'
       - '!flex/**'
-      - '!.github/workflows/flex.yml'
+      - '!.github/workflows/interactive.yml'
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  build-gae:
+  build:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
