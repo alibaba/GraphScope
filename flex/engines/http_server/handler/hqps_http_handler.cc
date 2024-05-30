@@ -166,7 +166,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
       .then([input_format
 #ifdef HAVE_OPENTELEMETRY_CPP
              ,
-             outer_span = outer_span
+             this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& output) {
         if (output.content.size() < 4) {
@@ -417,8 +417,7 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
       })
       .then([
 #ifdef HAVE_OPENTELEMETRY_CPP
-
-                outer_span = outer_span
+                this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& output) {
         if (output.content.size() < 4) {
