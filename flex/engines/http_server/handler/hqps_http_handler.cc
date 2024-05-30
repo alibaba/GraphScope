@@ -147,6 +147,16 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     }
   } else {
     req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
+    // This handler with accept two kinds of queries, /v1/graph/{graph_id}/query
+    // and /v1/query/ The former one will have a graph_id in the request, and
+    // the latter one will not. For the first one, the input format is the last
+    // byte of the request content, and is added at client side; For the second
+    // one, the request is send from compiler, and currently compiler will not
+    // add extra bytes to the request content. So we need to add the input
+    // format here. Finally, we should REMOVE this adhoc appended byte, i.e. the
+    // input format byte should be added at compiler side
+    // TODO(zhanglei): remove this adhoc appended byte, add the byte at compiler
+    // side. Or maybe we should refine the protocol.
   }
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
