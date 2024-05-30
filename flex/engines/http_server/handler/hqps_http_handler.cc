@@ -173,10 +173,10 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([input_format
+      .then([this, input_format
 #ifdef HAVE_OPENTELEMETRY_CPP
              ,
-             this, outer_span = outer_span
+             outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& output) {
         if (output.content.size() < 4) {
@@ -425,9 +425,10 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
                   std::move(output.content));
             });
       })
-      .then([
+      .then([this
 #ifdef HAVE_OPENTELEMETRY_CPP
-                this, outer_span = outer_span
+             ,
+             outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& output) {
         if (output.content.size() < 4) {
