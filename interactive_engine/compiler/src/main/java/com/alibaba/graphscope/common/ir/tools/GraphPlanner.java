@@ -67,17 +67,20 @@ public class GraphPlanner {
     public static final Function<Configs, RexBuilder> rexBuilderFactory =
             (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
 
-    public GraphPlanner(Configs graphConfig, LogicalPlanFactory logicalPlanFactory) {
+    public GraphPlanner(
+            Configs graphConfig,
+            LogicalPlanFactory logicalPlanFactory,
+            GraphRelOptimizer optimizer) {
         this.graphConfig = graphConfig;
-        this.optimizer = new GraphRelOptimizer(this.graphConfig);
-        this.rexBuilder = rexBuilderFactory.apply(graphConfig);
+        this.optimizer = optimizer;
         this.logicalPlanFactory = logicalPlanFactory;
+        this.rexBuilder = rexBuilderFactory.apply(graphConfig);
     }
 
     public PlannerInstance instance(String query, IrMeta irMeta) {
         GraphOptCluster optCluster =
                 GraphOptCluster.create(this.optimizer.getMatchPlanner(), this.rexBuilder);
-        RelMetadataQuery mq = optimizer.createMetaDataQuery();
+        RelMetadataQuery mq = optimizer.createMetaDataQuery(irMeta);
         if (mq != null) {
             optCluster.setMetadataQuerySupplier(() -> mq);
         }
@@ -196,14 +199,18 @@ public class GraphPlanner {
                             + " 'optional <extra_key_value_config_pairs>'");
         }
         Configs configs = Configs.Factory.create(args[0]);
-        StaticIrMetaFetcher metaFetcher = new StaticIrMetaFetcher(new LocalIrMetaReader(configs));
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        StaticIrMetaFetcher metaFetcher =
+                new StaticIrMetaFetcher(
+                        new LocalIrMetaReader(configs), optimizer.getGlogueHolder());
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
         GraphPlanner planner =
                 new GraphPlanner(
                         configs,
                         (GraphBuilder builder, IrMeta irMeta, String q) ->
                                 new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)));
+                                        .visit(new CypherAntlr4Parser().parse(q)),
+                        optimizer);
         PlannerInstance instance = planner.instance(query, metaFetcher.fetch().get());
         Summary summary = instance.plan();
         // write physical plan to file

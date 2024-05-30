@@ -105,6 +105,9 @@ class DefaultGraphMetaStore : public IGraphMetaStore {
 
  private:
   Result<bool> clear_locks();
+  // We assume the graph_id
+  std::string generate_real_plugin_meta_key(const GraphId& graph_id,
+                                            const PluginId& plugin_id);
 
   std::unique_ptr<IMetaStore> base_store_;
 };

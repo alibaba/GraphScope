@@ -1082,7 +1082,7 @@ public class GraphRelToProtoTest {
     @Test
     public void intersect_test() throws Exception {
         GraphRelOptimizer optimizer = getMockCBO();
-        IrMeta irMeta = getMockCBOMeta();
+        IrMeta irMeta = getMockCBOMeta(optimizer);
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
@@ -1117,7 +1117,7 @@ public class GraphRelToProtoTest {
 
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+                        getMockCBOConfig(), getMockCBOMeta(optimizer), new LogicalPlan(after))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/intersect_test.json"),
@@ -1126,7 +1126,9 @@ public class GraphRelToProtoTest {
 
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+                        getMockPartitionedCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_intersect_test.json"),
@@ -1137,7 +1139,7 @@ public class GraphRelToProtoTest {
     @Test
     public void intersect_test_02() throws Exception {
         GraphRelOptimizer optimizer = getMockCBO();
-        IrMeta irMeta = getMockCBOMeta();
+        IrMeta irMeta = getMockCBOMeta(optimizer);
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
@@ -1178,7 +1180,7 @@ public class GraphRelToProtoTest {
 
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+                        getMockCBOConfig(), getMockCBOMeta(optimizer), new LogicalPlan(after))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/intersect_test_2.json"),
@@ -1186,7 +1188,9 @@ public class GraphRelToProtoTest {
         }
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+                        getMockPartitionedCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_intersect_test_2.json"),
@@ -1203,9 +1207,7 @@ public class GraphRelToProtoTest {
                         "CBO",
                         "graph.planner.rules",
                         "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
-                                + " ExpandGetVFusionRule",
-                        "graph.planner.cbo.glogue.schema",
-                        "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt"));
+                                + " ExpandGetVFusionRule"));
     }
 
     private Configs getMockPartitionedCBOConfig() {
@@ -1218,8 +1220,6 @@ public class GraphRelToProtoTest {
                         "graph.planner.rules",
                         "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
                                 + " ExpandGetVFusionRule",
-                        "graph.planner.cbo.glogue.schema",
-                        "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt",
                         "pegasus.hosts",
                         "host1,host2"));
     }
@@ -1228,8 +1228,11 @@ public class GraphRelToProtoTest {
         return new GraphRelOptimizer(getMockCBOConfig());
     }
 
-    private IrMeta getMockCBOMeta() {
-        return Utils.mockSchemaMeta("schema/ldbc_schema_exp_hierarchy.json");
+    private IrMeta getMockCBOMeta(GraphRelOptimizer optimizer) {
+        return Utils.mockIrMeta(
+                "schema/ldbc_schema_exp_hierarchy.json",
+                "statistics/ldbc30_hierarchy_statistics.json",
+                optimizer.getGlogueHolder());
     }
 
     private Configs getMockGraphConfig() {

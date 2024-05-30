@@ -17,11 +17,13 @@
 package com.alibaba.graphscope.common.ir.meta.procedure;
 
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
-import com.alibaba.graphscope.common.ir.meta.IrMetaUpdater;
+import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayInputStream;
@@ -32,10 +34,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GraphStoredProcedures {
+    private static final Logger logger = LoggerFactory.getLogger(GraphStoredProcedures.class);
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
-    private IrMetaUpdater metaUpdater;
+    private final IrMetaReader metaReader;
 
-    public GraphStoredProcedures(InputStream metaStream) {
+    public GraphStoredProcedures(InputStream metaStream, IrMetaReader metaReader) {
         Yaml yaml = new Yaml();
         Map<String, Object> yamlAsMap = yaml.load(metaStream);
         List<Object> procedureList = (List<Object>) yamlAsMap.get("stored_procedures");
@@ -57,6 +60,7 @@ public class GraphStoredProcedures {
                                     })
                             .collect(Collectors.toMap(StoredProcedureMeta::getName, k -> k));
         }
+        this.metaReader = metaReader;
     }
 
     public @Nullable StoredProcedureMeta getStoredProcedure(String procedureName) {
@@ -71,23 +75,16 @@ public class GraphStoredProcedures {
      */
     private @Nullable StoredProcedureMeta getStoredProcedure(String procedureName, boolean update) {
         StoredProcedureMeta cachedProcedure = this.storedProcedureMetaMap.get(procedureName);
-        if (cachedProcedure == null) {
-            if (update && this.metaUpdater != null) {
-                IrMeta meta = this.metaUpdater.onUpdate();
+        if (cachedProcedure == null && update) {
+            try {
+                IrMeta meta = this.metaReader.readMeta();
                 if (meta != null && meta.getStoredProcedures() != null) {
                     return meta.getStoredProcedures().getStoredProcedure(procedureName, false);
                 }
+            } catch (Exception e) {
+                logger.warn("failed to read meta data, error is {}", e);
             }
         }
         return cachedProcedure;
-    }
-
-    public void registerIrMetaUpdater(IrMetaUpdater updater) {
-        this.metaUpdater = updater;
-    }
-
-    @Override
-    public String toString() {
-        return storedProcedureMetaMap.keySet().toString();
     }
 }

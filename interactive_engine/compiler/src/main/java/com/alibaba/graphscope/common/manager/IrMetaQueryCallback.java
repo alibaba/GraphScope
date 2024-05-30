@@ -37,6 +37,10 @@ public class IrMetaQueryCallback {
         return metaOpt.get();
     }
 
+    public IrMetaFetcher getMetaFetcher() {
+        return fetcher;
+    }
+
     // do sth after the query is done
     public void afterExec(IrMeta meta) {}
 }

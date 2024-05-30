@@ -21,7 +21,11 @@ import com.alibaba.graphscope.common.ir.meta.SnapshotId;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
+import com.google.common.base.Preconditions;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,12 +40,16 @@ public class GrootIrMetaReader implements IrMetaReader {
     @Override
     public IrMeta readMeta() throws IOException {
         Map<Long, GraphSchema> pair = this.schemaFetcher.getSchemaSnapshotPair();
-        if (pair.isEmpty()) {
-            return null;
-        }
+        Preconditions.checkArgument(!pair.isEmpty(), "fetch schema snapshot pair failed in groot");
         Map.Entry<Long, GraphSchema> entry = pair.entrySet().iterator().next();
         Long snapshotId = entry.getKey();
         GraphSchema schema = entry.getValue();
         return new IrMeta(new SnapshotId(true, snapshotId), new IrGraphSchema(schema, true));
+    }
+
+    @Override
+    public GraphStatistics readStats() throws IOException {
+        // TODO: add statistics, otherwise, the CBO will not work
+        throw new NotImplementedException("reading graph statistics in groot is unimplemented yet");
     }
 }

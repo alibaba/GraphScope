@@ -136,8 +136,8 @@ public class DefaultGraphSchema implements GraphSchema {
     }
 
     @Override
-    public int getVersion() {
-        return 0;
+    public String getVersion() {
+        return "0";
     }
 
     public static GraphSchema buildSchemaFromJson(String schemaJson) {

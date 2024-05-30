@@ -23,7 +23,6 @@ import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -31,11 +30,11 @@ import java.util.Objects;
  * They are versioned using the same snapshot id.
  */
 public class IrMeta {
-    private final SnapshotId snapshotId;
-    private final IrGraphSchema schema;
-    private final @Nullable GraphStoredProcedures storedProcedures;
+    protected final SnapshotId snapshotId;
+    protected final IrGraphSchema schema;
+    protected final @Nullable GraphStoredProcedures storedProcedures;
 
-    public IrMeta(IrGraphSchema schema) throws IOException {
+    public IrMeta(IrGraphSchema schema) {
         this(SnapshotId.createEmpty(), schema);
     }
 
@@ -43,17 +42,15 @@ public class IrMeta {
         this(SnapshotId.createEmpty(), schema, storedProcedures);
     }
 
-    public IrMeta(SnapshotId snapshotId, IrGraphSchema schema) throws IOException {
-        this.snapshotId = Objects.requireNonNull(snapshotId);
-        this.schema = Objects.requireNonNull(schema);
-        this.storedProcedures = null;
+    public IrMeta(SnapshotId snapshotId, IrGraphSchema schema) {
+        this(snapshotId, schema, null);
     }
 
     public IrMeta(
             SnapshotId snapshotId, IrGraphSchema schema, GraphStoredProcedures storedProcedures) {
         this.snapshotId = Objects.requireNonNull(snapshotId);
         this.schema = Objects.requireNonNull(schema);
-        this.storedProcedures = Objects.requireNonNull(storedProcedures);
+        this.storedProcedures = storedProcedures;
     }
 
     public IrGraphSchema getSchema() {

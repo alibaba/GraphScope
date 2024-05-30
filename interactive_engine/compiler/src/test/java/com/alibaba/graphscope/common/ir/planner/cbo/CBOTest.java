@@ -29,11 +29,13 @@ public class CBOTest {
                                 "CBO",
                                 "graph.planner.rules",
                                 "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
-                                        + " ExpandGetVFusionRule",
-                                "graph.planner.cbo.glogue.schema",
-                                "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt"));
+                                        + " ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockSchemaMeta("schema/ldbc_schema_exp_hierarchy.json");
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc_schema_exp_hierarchy.json",
+                        "statistics/ldbc30_hierarchy_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     @Test

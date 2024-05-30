@@ -19,21 +19,45 @@
 package com.alibaba.graphscope.common.ir.meta.fetcher;
 
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Optional;
 
 public class StaticIrMetaFetcher extends IrMetaFetcher {
-    private final IrMeta meta;
+    private static final Logger logger = LoggerFactory.getLogger(StaticIrMetaFetcher.class);
+    private final IrMetaStats metaStats;
 
-    public StaticIrMetaFetcher(IrMetaReader dataReader) throws IOException {
-        super(dataReader);
-        this.meta = this.reader.readMeta();
+    public StaticIrMetaFetcher(IrMetaReader dataReader, IrMetaTracker tracker) throws IOException {
+        super(dataReader, tracker);
+        IrMeta meta = this.reader.readMeta();
+        GraphStatistics stats = fetchStats();
+        this.metaStats =
+                new IrMetaStats(
+                        meta.getSnapshotId(), meta.getSchema(), meta.getStoredProcedures(), stats);
+        if (tracker != null && stats != null) {
+            tracker.onChanged(this.metaStats);
+        }
+    }
+
+    private @Nullable GraphStatistics fetchStats() {
+        try {
+            return this.reader.readStats();
+        } catch (Exception e) {
+            logger.warn("failed to read graph statistics, error is {}", e);
+            return null;
+        }
     }
 
     @Override
     public Optional<IrMeta> fetch() {
-        return Optional.of(this.meta);
+        return Optional.of(this.metaStats);
     }
 }

@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
 import org.slf4j.Logger;
@@ -53,8 +54,14 @@ public class LocalIrMetaReader implements IrMetaReader {
                 (formatType == FileFormatType.YAML)
                         ? new IrMeta(
                                 graphSchema,
-                                new GraphStoredProcedures(new FileInputStream(metaPath)))
+                                new GraphStoredProcedures(new FileInputStream(metaPath), this))
                         : new IrMeta(graphSchema);
         return irMeta;
+    }
+
+    @Override
+    public IrGraphStatistics readStats() throws IOException {
+        String statsPath = GraphConfig.GRAPH_STATISTICS.get(configs);
+        return statsPath.isEmpty() ? null : new IrGraphStatistics(new FileInputStream(statsPath));
     }
 }

@@ -22,9 +22,11 @@ import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphSchema;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,5 +46,12 @@ public class VineyardIrMetaReader implements IrMetaReader {
                         new File(GraphConfig.GRAPH_SCHEMA.get(configs)), StandardCharsets.UTF_8);
         GraphSchema graphSchema = DefaultGraphSchema.buildSchemaFromJson(schemaString);
         return new IrMeta(new IrGraphSchema(graphSchema, true));
+    }
+
+    @Override
+    public GraphStatistics readStats() throws IOException {
+        // TODO: support statistics, otherwise, the CBO will not work
+        throw new NotImplementedException(
+                "reading graph statistics in vineyard is unimplemented yet");
     }
 }

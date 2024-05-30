@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -53,22 +54,11 @@ public class HttpIrMetaReader implements IrMetaReader {
     @Override
     public IrMeta readMeta() throws IOException {
         try {
-            List<URI> metaServiceHost = fetcher.fetch();
-            Preconditions.checkArgument(
-                    !metaServiceHost.isEmpty(), "can not get meta service host");
-            URI getMetaUri = metaServiceHost.get(0).resolve("/v1/service/status");
-            HttpRequest request =
-                    HttpRequest.newBuilder()
-                            .uri(getMetaUri)
-                            .headers(CONTENT_TYPE, APPLICATION_JSON)
-                            .GET()
-                            .build();
-            HttpResponse<String> response =
-                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = sendRequest("/v1/service/status");
             String res = response.body();
             Preconditions.checkArgument(
                     response.statusCode() == 200,
-                    "get meta data fail, status code: %s, error message: %s",
+                    "read meta data fail, status code: %s, error message: %s",
                     response.statusCode(),
                     res);
             String metaInYaml = convertMetaFromJsonToYaml(res);
@@ -79,10 +69,42 @@ public class HttpIrMetaReader implements IrMetaReader {
                                             metaInYaml.getBytes(StandardCharsets.UTF_8)),
                                     FileFormatType.YAML)),
                     new GraphStoredProcedures(
-                            new ByteArrayInputStream(metaInYaml.getBytes(StandardCharsets.UTF_8))));
+                            new ByteArrayInputStream(metaInYaml.getBytes(StandardCharsets.UTF_8)),
+                            this));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public IrGraphStatistics readStats() throws IOException {
+        try {
+            HttpResponse<String> response = sendRequest("/v1/graph/current/statistics");
+            String res = response.body();
+            Preconditions.checkArgument(
+                    response.statusCode() == 200,
+                    "read graph statistics fail, status code: %s, error message: %s",
+                    response.statusCode(),
+                    res);
+            return new IrGraphStatistics(
+                    new ByteArrayInputStream(res.getBytes(StandardCharsets.UTF_8)));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private HttpResponse<String> sendRequest(String requestUri)
+            throws IOException, InterruptedException {
+        List<URI> metaServiceHost = fetcher.fetch();
+        Preconditions.checkArgument(!metaServiceHost.isEmpty(), "can not get meta service host");
+        URI getMetaUri = metaServiceHost.get(0).resolve(requestUri);
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(getMetaUri)
+                        .headers(CONTENT_TYPE, APPLICATION_JSON)
+                        .GET()
+                        .build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
     private String convertMetaFromJsonToYaml(String metaInJson) throws IOException {

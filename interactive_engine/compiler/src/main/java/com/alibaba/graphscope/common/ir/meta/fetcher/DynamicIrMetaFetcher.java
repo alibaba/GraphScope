@@ -21,14 +21,14 @@ package com.alibaba.graphscope.common.ir.meta.fetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
-import com.alibaba.graphscope.common.ir.meta.IrMetaUpdater;
-import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
+import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -38,18 +38,23 @@ import java.util.concurrent.TimeUnit;
  * Periodically update IrMeta, with the update frequency controlled by configuration.
  * Specifically, for procedures, a remote update will be actively triggered when they are not found locally.
  */
-public class DynamicIrMetaFetcher extends IrMetaFetcher implements IrMetaUpdater {
+public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(DynamicIrMetaFetcher.class);
     private final ScheduledExecutorService scheduler;
-    private volatile IrMeta currentState;
+    private volatile IrMetaStats currentState;
 
-    public DynamicIrMetaFetcher(IrMetaReader dataReader, Configs configs) {
-        super(dataReader);
-        this.scheduler = new ScheduledThreadPoolExecutor(1);
+    public DynamicIrMetaFetcher(Configs configs, IrMetaReader dataReader, IrMetaTracker tracker) {
+        super(dataReader, tracker);
+        this.scheduler = new ScheduledThreadPoolExecutor(2);
         this.scheduler.scheduleAtFixedRate(
-                () -> onUpdate(),
+                () -> syncMeta(),
                 0,
                 FrontendConfig.IR_META_FETCH_INTERVAL_MS.get(configs),
+                TimeUnit.MILLISECONDS);
+        this.scheduler.scheduleAtFixedRate(
+                () -> syncStats(),
+                0,
+                FrontendConfig.IR_STATISTICS_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
     }
 
@@ -58,19 +63,46 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements IrMetaUpdater
         return currentState == null ? Optional.empty() : Optional.of(currentState);
     }
 
-    @Override
-    public synchronized IrMeta onUpdate() {
+    private synchronized void syncMeta() {
         try {
-            this.currentState = this.reader.readMeta();
+            IrMeta meta = this.reader.readMeta();
+            this.currentState =
+                    new IrMetaStats(
+                            meta.getSnapshotId(),
+                            meta.getSchema(),
+                            meta.getStoredProcedures(),
+                            this.currentState == null ? null : this.currentState.getStatistics());
+            if (this.currentState.getStatistics() == null) {
+                syncStats();
+            }
+        } catch (Exception e) {
+            logger.warn("failed to read meta data, error is {}", e);
+        }
+    }
+
+    private synchronized void syncStats() {
+        try {
             if (this.currentState != null) {
-                GraphStoredProcedures procedures = this.currentState.getStoredProcedures();
-                if (procedures != null) {
-                    procedures.registerIrMetaUpdater(this);
+                GraphStatistics stats = this.reader.readStats();
+                if (stats != null) {
+                    this.currentState =
+                            new IrMetaStats(
+                                    this.currentState.getSnapshotId(),
+                                    this.currentState.getSchema(),
+                                    this.currentState.getStoredProcedures(),
+                                    stats);
+                    if (tracker != null) {
+                        tracker.onChanged(this.currentState);
+                    }
                 }
             }
-        } catch (IOException e) {
-            logger.warn("failed to update meta data, error is {}", e);
+        } catch (Exception e) {
+            logger.warn("failed to read graph statistics, error is {}", e);
         }
-        return this.currentState;
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.scheduler.shutdown();
     }
 }

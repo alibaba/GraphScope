@@ -19,6 +19,7 @@
 package com.alibaba.graphscope.common.ir.meta.fetcher;
 
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 
 import java.util.Optional;
@@ -29,10 +30,12 @@ import java.util.Optional;
  * while the dynamic strategy {@link DynamicIrMetaFetcher} assumes that IrMeta can change.
  */
 public abstract class IrMetaFetcher {
-    protected IrMetaReader reader;
+    protected final IrMetaReader reader;
+    protected final IrMetaTracker tracker;
 
-    protected IrMetaFetcher(IrMetaReader reader) {
+    protected IrMetaFetcher(IrMetaReader reader, IrMetaTracker tracker) {
         this.reader = reader;
+        this.tracker = tracker;
     }
 
     public abstract Optional<IrMeta> fetch();

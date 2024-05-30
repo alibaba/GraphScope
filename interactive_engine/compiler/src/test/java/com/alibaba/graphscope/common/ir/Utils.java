@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
@@ -68,7 +69,7 @@ public class Utils {
     public static final GraphBuilder mockGraphBuilder(GraphRelOptimizer optimizer, IrMeta irMeta) {
         RelOptCluster optCluster =
                 GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
-        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
+        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery(irMeta));
         return (GraphBuilder)
                 relBuilderFactory.create(
                         optCluster, new GraphOptSchema(optCluster, irMeta.getSchema()));
@@ -100,7 +101,27 @@ public class Utils {
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_SCHEMA.getKey(),
                                     schemaResource.toURI().getPath()));
-            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs)).fetch().get();
+            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), null).fetch().get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static IrMeta mockIrMeta(
+            String schemaJson, String statisticsJson, IrMetaTracker tracker) {
+        try {
+            URL schemaResource =
+                    Thread.currentThread().getContextClassLoader().getResource(schemaJson);
+            URL statisticsResource =
+                    Thread.currentThread().getContextClassLoader().getResource(statisticsJson);
+            Configs configs =
+                    new Configs(
+                            ImmutableMap.of(
+                                    GraphConfig.GRAPH_SCHEMA.getKey(),
+                                    schemaResource.toURI().getPath(),
+                                    GraphConfig.GRAPH_STATISTICS.getKey(),
+                                    statisticsResource.toURI().getPath()));
+            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker).fetch().get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

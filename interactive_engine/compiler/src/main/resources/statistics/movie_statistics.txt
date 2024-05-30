@@ -1,9 +1,0 @@
-v,0,movie,38
-v,1,person,130
-v,2,user,7
-e,0,acted_in,person,movie,172
-e,1,directed,person,movie,44
-e,2,review,user,movie,16
-e,3,follows,user,person,8
-e,4,wrote,person,movie,10
-e,5,produced,person,movie,15

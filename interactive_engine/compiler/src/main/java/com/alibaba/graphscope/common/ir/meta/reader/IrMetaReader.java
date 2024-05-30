@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.meta.reader;
 
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 
 import java.io.IOException;
 
@@ -25,4 +26,6 @@ import java.io.IOException;
  */
 public interface IrMetaReader {
     IrMeta readMeta() throws IOException;
+
+    GraphStatistics readStats() throws IOException;
 }

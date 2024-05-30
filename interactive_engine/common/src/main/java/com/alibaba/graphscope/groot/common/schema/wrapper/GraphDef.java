@@ -315,8 +315,8 @@ public class GraphDef implements GraphSchema {
     }
 
     @Override
-    public int getVersion() {
-        return (int) version;
+    public String getVersion() {
+        return String.valueOf(version);
     }
 
     public long getSchemaVersion() {

@@ -25,11 +25,13 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.*;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
@@ -61,6 +63,7 @@ public class GraphServer {
     private final ChannelFetcher channelFetcher;
     private final IrMetaQueryCallback metaQueryCallback;
     private final GraphProperties testGraph;
+    private final GraphRelOptimizer optimizer;
 
     private IrGremlinServer gremlinServer;
     private CypherBootstrapper cypherBootstrapper;
@@ -69,11 +72,13 @@ public class GraphServer {
             Configs configs,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
-            GraphProperties testGraph) {
+            GraphProperties testGraph,
+            GraphRelOptimizer optimizer) {
         this.configs = configs;
         this.channelFetcher = channelFetcher;
         this.metaQueryCallback = metaQueryCallback;
         this.testGraph = testGraph;
+        this.optimizer = optimizer;
     }
 
     public void start() throws Exception {
@@ -87,7 +92,8 @@ public class GraphServer {
                                     new LogicalPlan(
                                             new GraphBuilderVisitor(builder)
                                                     .visit(new GremlinAntlr4Parser().parse(query))
-                                                    .build()));
+                                                    .build()),
+                            optimizer);
             QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.gremlinServer =
                     new IrGremlinServer(
@@ -106,7 +112,8 @@ public class GraphServer {
                             configs,
                             (GraphBuilder builder, IrMeta irMeta, String query) ->
                                     new LogicalPlanVisitor(builder, irMeta)
-                                            .visit(new CypherAntlr4Parser().parse(query)));
+                                            .visit(new CypherAntlr4Parser().parse(query)),
+                            optimizer);
             QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.cypherBootstrapper =
                     new CypherBootstrapper(
@@ -168,21 +175,30 @@ public class GraphServer {
             throw new IllegalArgumentException("usage: GraphServer '<path_to_config_file>'");
         }
         Configs configs = Configs.Factory.create(args[0]);
-        IrMetaQueryCallback queryCallback = new IrMetaQueryCallback(createIrMetaFetcher(configs));
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        IrMetaQueryCallback queryCallback =
+                new IrMetaQueryCallback(createIrMetaFetcher(configs, optimizer.getGlogueHolder()));
         GraphServer server =
                 new GraphServer(
-                        configs, getChannelFetcher(configs), queryCallback, getTestGraph(configs));
+                        configs,
+                        getChannelFetcher(configs),
+                        queryCallback,
+                        getTestGraph(configs),
+                        optimizer);
         server.start();
     }
 
-    private static IrMetaFetcher createIrMetaFetcher(Configs configs) throws IOException {
+    private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
+            throws IOException {
         String readerMode = FrontendConfig.IR_META_READER_MODE.get(configs);
         switch (readerMode) {
             case "local":
-                return new StaticIrMetaFetcher(new LocalIrMetaReader(configs));
+                return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
             case "http":
                 return new DynamicIrMetaFetcher(
-                        new HttpIrMetaReader(new MetaServiceChannelFetcher(configs)), configs);
+                        configs,
+                        new HttpIrMetaReader(new MetaServiceChannelFetcher(configs)),
+                        tracker);
             default:
                 throw new IllegalArgumentException("unknown ir meta reader mode: " + readerMode);
         }

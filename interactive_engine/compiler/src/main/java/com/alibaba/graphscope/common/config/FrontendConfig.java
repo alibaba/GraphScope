@@ -64,6 +64,9 @@ public class FrontendConfig {
     public static final Config<Long> IR_META_FETCH_INTERVAL_MS =
             Config.longConfig("ir.meta.fetch.interval.ms", 1000);
 
+    public static final Config<Long> IR_STATISTICS_FETCH_INTERVAL_MS =
+            Config.longConfig("ir.statistics.fetch.interval.ms", 24 * 3600 * 1000l);
+
     public static Config<String> IR_META_READER_MODE =
             Config.stringConfig("ir.meta.reader.mode", "local");
 
