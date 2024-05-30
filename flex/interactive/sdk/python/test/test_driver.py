@@ -94,12 +94,13 @@ class TestDriver(unittest.TestCase):
         self.createGraph()
         self.bulkLoading()
         self.waitJobFinish()
-        # self.runCypherQuery()
-        # self.runGremlinQuery()
-        # self.createCypherProcedure()
+        self.test_list_graph()
+        self.runCypherQuery()
+        self.runGremlinQuery()
+        self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
-        # self.callProcedure()
+        self.callProcedure()
         self.callProcedureWithHttp()
 
     def createGraph(self):
@@ -195,6 +196,11 @@ class TestDriver(unittest.TestCase):
             else:
                 time.sleep(1)
         print("job finished")
+
+    def test_list_graph(self):
+        resp = self._sess.list_graphs()
+        assert resp.is_ok()
+        print("list graph: ", resp.get_value())
 
     def runCypherQuery(self):
         query = "MATCH (n) RETURN COUNT(n);"
