@@ -141,7 +141,16 @@ public class GraphDef implements GraphSchema {
         }
         Map<LabelId, Set<EdgeKind>> idToKinds = new HashMap<>();
         for (EdgeKindPb edgeKindPb : proto.getEdgeKindsList()) {
-            EdgeKind edgeKind = EdgeKind.parseProto(edgeKindPb);
+            LabelId edgeLabelId = LabelId.parseProto(edgeKindPb.getEdgeLabelId());
+            LabelId srcLabelId = LabelId.parseProto(edgeKindPb.getSrcVertexLabelId());
+            LabelId dstLabelId = LabelId.parseProto(edgeKindPb.getDstVertexLabelId());
+            EdgeKind edgeKind = EdgeKind.newBuilder().setEdgeLabelId(edgeLabelId)
+                    .setSrcVertexLabelId(srcLabelId)
+                    .setDstVertexLabelId(dstLabelId)
+                    .setEdgeLabel(idToType.get(edgeLabelId).getLabel())
+                    .setSrcVertexLabel(idToType.get(srcLabelId).getLabel())
+                    .setDstVertexLabel(idToType.get(dstLabelId).getLabel()).build();
+
             Set<EdgeKind> edgeKindSet =
                     idToKinds.computeIfAbsent(edgeKind.getEdgeLabelId(), k -> new HashSet<>());
             edgeKindSet.add(edgeKind);

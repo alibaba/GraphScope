@@ -170,7 +170,9 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
             for (EdgeKind edgeKind : edgeKinds) {
                 EdgeKindPb edgeKindPb =
                         EdgeKindPb.newBuilder()
-                                .setEdgeLabel(edgeKind.getEdgeLabel())
+                                .setEdgeLabel(
+                                        graphDef.getTypeDef(edgeKind.getEdgeLabelId()).getLabel()
+                                        )
                                 .setEdgeLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getEdgeLabelId().getId()))
