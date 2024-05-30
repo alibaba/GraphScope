@@ -40,150 +40,149 @@ import java.util.logging.Logger;
 public class DriverTest {
 
     public static class Encoder {
-    public Encoder(byte[] bs) {
-        this.bs = bs;
-        this.loc = 0;
+        public Encoder(byte[] bs) {
+            this.bs = bs;
+            this.loc = 0;
+        }
+
+        public static int serialize_long(byte[] bytes, int offset, long value) {
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            return offset;
+        }
+
+        public static int serialize_double(byte[] bytes, int offset, double value) {
+            long long_value = Double.doubleToRawLongBits(value);
+            return serialize_long(bytes, offset, long_value);
+        }
+
+        public static int serialize_int(byte[] bytes, int offset, int value) {
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            value >>= 8;
+            bytes[offset++] = (byte) (value & 0xFF);
+            return offset;
+        }
+
+        public static int serialize_byte(byte[] bytes, int offset, byte value) {
+            bytes[offset++] = value;
+            return offset;
+        }
+
+        public static int serialize_bytes(byte[] bytes, int offset, byte[] value) {
+            offset = serialize_int(bytes, offset, value.length);
+            System.arraycopy(value, 0, bytes, offset, value.length);
+            return offset + value.length;
+        }
+
+        public void put_int(int value) {
+            this.loc = serialize_int(this.bs, this.loc, value);
+        }
+
+        public void put_byte(byte value) {
+            this.loc = serialize_byte(this.bs, this.loc, value);
+        }
+
+        public void put_long(long value) {
+            this.loc = serialize_long(this.bs, this.loc, value);
+        }
+
+        public void put_double(double value) {
+            this.loc = serialize_double(this.bs, this.loc, value);
+        }
+
+        public void put_bytes(byte[] bytes) {
+            this.loc = serialize_bytes(this.bs, this.loc, bytes);
+        }
+
+        byte[] bs;
+        int loc;
     }
 
-    public static int serialize_long(byte[] bytes, int offset, long value) {
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        return offset;
+    static final class Decoder {
+        public Decoder(byte[] bs) {
+            this.bs = bs;
+            this.loc = 0;
+            this.len = this.bs.length;
+        }
+
+        public static int get_int(byte[] bs, int loc) {
+            int ret = (bs[loc + 3] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc + 2] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc + 1] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc] & 0xff);
+            return ret;
+        }
+
+        public static long get_long(byte[] bs, int loc) {
+            long ret = (bs[loc + 7] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc + 6] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc + 5] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc + 4] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc + 3] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc + 2] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc + 1] & 0xff);
+            ret <<= 8;
+            ret |= (bs[loc] & 0xff);
+            return ret;
+        }
+
+        public long get_long() {
+            long ret = get_long(this.bs, this.loc);
+            this.loc += 8;
+            return ret;
+        }
+
+        public int get_int() {
+            int ret = get_int(this.bs, this.loc);
+            this.loc += 4;
+            return ret;
+        }
+
+        public byte get_byte() {
+            return (byte) (bs[loc++] & 0xFF);
+        }
+
+        public String get_string() {
+            int strlen = this.get_int();
+            String ret = new String(this.bs, this.loc, strlen);
+            this.loc += strlen;
+            return ret;
+        }
+
+        public boolean empty() {
+            return loc == len;
+        }
+
+        byte[] bs;
+        int loc;
+        int len;
     }
-
-    public static int serialize_double(byte[] bytes, int offset, double value) {
-        long long_value = Double.doubleToRawLongBits(value);
-        return serialize_long(bytes, offset, long_value);
-    }
-
-    public static int serialize_int(byte[] bytes, int offset, int value) {
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        value >>= 8;
-        bytes[offset++] = (byte) (value & 0xFF);
-        return offset;
-    }
-
-    public static int serialize_byte(byte[] bytes, int offset, byte value) {
-        bytes[offset++] = value;
-        return offset;
-    }
-
-    public static int serialize_bytes(byte[] bytes, int offset, byte[] value) {
-        offset = serialize_int(bytes, offset, value.length);
-        System.arraycopy(value, 0, bytes, offset, value.length);
-        return offset + value.length;
-    }
-
-    public void put_int(int value) {
-        this.loc = serialize_int(this.bs, this.loc, value);
-    }
-
-    public void put_byte(byte value) {
-        this.loc = serialize_byte(this.bs, this.loc, value);
-    }
-
-    public void put_long(long value) {
-        this.loc = serialize_long(this.bs, this.loc, value);
-    }
-
-    public void put_double(double value) {
-        this.loc = serialize_double(this.bs, this.loc, value);
-    }
-
-    public void put_bytes(byte[] bytes) {
-        this.loc = serialize_bytes(this.bs, this.loc, bytes);
-    }
-
-    byte[] bs;
-    int loc;
-    }
-
-final static class Decoder {
-    public Decoder(byte[] bs) {
-        this.bs = bs;
-        this.loc = 0;
-        this.len = this.bs.length;
-    }
-
-    public static int get_int(byte[] bs, int loc) {
-        int ret = (bs[loc + 3] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc + 2] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc + 1] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc] & 0xff);
-        return ret;
-    }
-
-    public static long get_long(byte[] bs, int loc) {
-        long ret = (bs[loc + 7] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc + 6] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc + 5] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc + 4] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc + 3] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc + 2] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc + 1] & 0xff);
-        ret <<= 8;
-        ret |= (bs[loc] & 0xff);
-        return ret;
-    }
-
-    public long get_long() {
-        long ret = get_long(this.bs, this.loc);
-        this.loc += 8;
-        return ret;
-    }
-
-    public int get_int() {
-        int ret = get_int(this.bs, this.loc);
-        this.loc += 4;
-        return ret;
-    }
-
-    public byte get_byte() {
-        return (byte) (bs[loc++] & 0xFF);
-    }
-
-    public String get_string() {
-        int strlen = this.get_int();
-        String ret = new String(this.bs, this.loc, strlen);
-        this.loc += strlen;
-        return ret;
-    }
-
-    public boolean empty() {
-        return loc == len;
-    }
-
-    byte[] bs;
-    int loc;
-    int len;
-}
-
 
     private static final Logger logger = Logger.getLogger(DriverTest.class.getName());
 
