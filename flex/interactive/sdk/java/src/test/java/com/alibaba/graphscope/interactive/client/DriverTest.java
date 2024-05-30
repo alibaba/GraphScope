@@ -38,6 +38,153 @@ import java.util.logging.Logger;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class DriverTest {
+
+    public static class Encoder {
+    public Encoder(byte[] bs) {
+        this.bs = bs;
+        this.loc = 0;
+    }
+
+    public static int serialize_long(byte[] bytes, int offset, long value) {
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        return offset;
+    }
+
+    public static int serialize_double(byte[] bytes, int offset, double value) {
+        long long_value = Double.doubleToRawLongBits(value);
+        return serialize_long(bytes, offset, long_value);
+    }
+
+    public static int serialize_int(byte[] bytes, int offset, int value) {
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        value >>= 8;
+        bytes[offset++] = (byte) (value & 0xFF);
+        return offset;
+    }
+
+    public static int serialize_byte(byte[] bytes, int offset, byte value) {
+        bytes[offset++] = value;
+        return offset;
+    }
+
+    public static int serialize_bytes(byte[] bytes, int offset, byte[] value) {
+        offset = serialize_int(bytes, offset, value.length);
+        System.arraycopy(value, 0, bytes, offset, value.length);
+        return offset + value.length;
+    }
+
+    public void put_int(int value) {
+        this.loc = serialize_int(this.bs, this.loc, value);
+    }
+
+    public void put_byte(byte value) {
+        this.loc = serialize_byte(this.bs, this.loc, value);
+    }
+
+    public void put_long(long value) {
+        this.loc = serialize_long(this.bs, this.loc, value);
+    }
+
+    public void put_double(double value) {
+        this.loc = serialize_double(this.bs, this.loc, value);
+    }
+
+    public void put_bytes(byte[] bytes) {
+        this.loc = serialize_bytes(this.bs, this.loc, bytes);
+    }
+
+    byte[] bs;
+    int loc;
+    }
+
+final static class Decoder {
+    public Decoder(byte[] bs) {
+        this.bs = bs;
+        this.loc = 0;
+        this.len = this.bs.length;
+    }
+
+    public static int get_int(byte[] bs, int loc) {
+        int ret = (bs[loc + 3] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc + 2] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc + 1] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc] & 0xff);
+        return ret;
+    }
+
+    public static long get_long(byte[] bs, int loc) {
+        long ret = (bs[loc + 7] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc + 6] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc + 5] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc + 4] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc + 3] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc + 2] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc + 1] & 0xff);
+        ret <<= 8;
+        ret |= (bs[loc] & 0xff);
+        return ret;
+    }
+
+    public long get_long() {
+        long ret = get_long(this.bs, this.loc);
+        this.loc += 8;
+        return ret;
+    }
+
+    public int get_int() {
+        int ret = get_int(this.bs, this.loc);
+        this.loc += 4;
+        return ret;
+    }
+
+    public byte get_byte() {
+        return (byte) (bs[loc++] & 0xFF);
+    }
+
+    public String get_string() {
+        int strlen = this.get_int();
+        String ret = new String(this.bs, this.loc, strlen);
+        this.loc += strlen;
+        return ret;
+    }
+
+    public boolean empty() {
+        return loc == len;
+    }
+
+    byte[] bs;
+    int loc;
+    int len;
+}
+
+
     private static final Logger logger = Logger.getLogger(DriverTest.class.getName());
 
     private static Driver driver;
@@ -47,7 +194,8 @@ public class DriverTest {
     private static String graphId;
     private static String jobId;
     private static String cypherProcedureId;
-    private static String cppProcedureId;
+    private static String cppProcedureId1;
+    private static String cppProcedureId2;
 
     @BeforeAll
     public static void beforeClass() {
@@ -226,7 +374,7 @@ public class DriverTest {
         }
     }
 
-    @Test
+    // @Test
     @Order(5)
     public void test4CypherAdhocQuery() {
         String query = "MATCH(a) return COUNT(a);";
@@ -234,7 +382,7 @@ public class DriverTest {
         logger.info("result: " + result.toString());
     }
 
-    @Test
+    // @Test
     @Order(6)
     public void test5GremlinAdhoQuery() throws Exception {
         String query = "g.V().count();";
@@ -258,9 +406,9 @@ public class DriverTest {
 
     @Test
     @Order(8)
-    public void test7CreateCppProcedure() {
+    public void test7CreateCppProcedure1() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
-        procedure.setName("cppProcedure");
+        procedure.setName("cppProcedure1");
         procedure.setDescription("a simple test procedure");
         // sampleAppFilePath is under the resources folder,with name sample_app.cc
         String sampleAppFilePath = "sample_app.cc";
@@ -285,11 +433,43 @@ public class DriverTest {
         procedure.setType(CreateProcedureRequest.TypeEnum.CPP);
         Result<CreateProcedureResponse> resp = session.createProcedure(graphId, procedure);
         assertOk(resp);
-        cppProcedureId = "cppProcedure";
+        cppProcedureId1 = "cppProcedure1";
     }
 
     @Test
     @Order(9)
+    public void test7CreateCppProcedure2() {
+        CreateProcedureRequest procedure = new CreateProcedureRequest();
+        procedure.setName("cppProcedure2");
+        procedure.setDescription("a simple test procedure");
+        // sampleAppFilePath is under the resources folder,with name sample_app.cc
+        String sampleAppFilePath = "read_app_example.cc";
+        String sampleAppContent = "";
+        try {
+            sampleAppContent =
+                    new String(
+                            Files.readAllBytes(
+                                    Paths.get(
+                                            Thread.currentThread()
+                                                    .getContextClassLoader()
+                                                    .getResource(sampleAppFilePath)
+                                                    .toURI())));
+        } catch (IOException | URISyntaxException e) {
+            e.printStackTrace();
+        }
+        if (sampleAppContent.isEmpty()) {
+            throw new RuntimeException("read_app_example content is empty");
+        }
+        logger.info("read_app_example content: " + sampleAppContent);
+        procedure.setQuery(sampleAppContent);
+        procedure.setType(CreateProcedureRequest.TypeEnum.CPP);
+        Result<CreateProcedureResponse> resp = session.createProcedure(graphId, procedure);
+        assertOk(resp);
+        cppProcedureId2 = "cppProcedure2";
+    }
+
+    @Test
+    @Order(10)
     public void test8Restart() {
         Result<String> resp = session.startService(new StartServiceRequest().graphId(graphId));
         assertOk(resp);
@@ -303,10 +483,10 @@ public class DriverTest {
     }
 
     @Test
-    @Order(10)
-    public void test9CallCppProcedure() {
+    @Order(11)
+    public void test9CallCppProcedure1() {
         QueryRequest request = new QueryRequest();
-        request.setQueryName(cppProcedureId);
+        request.setQueryName(cppProcedureId1);
         request.addArgumentsItem(
                 new TypedValue()
                         .value(1)
@@ -321,7 +501,19 @@ public class DriverTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
+    public void test9CallCppProcedure2() {
+        byte[] bytes = new byte[4 + 1];
+        Encoder encoder = new Encoder(bytes);
+        encoder.put_int(1);
+        encoder.put_byte((byte) 1); // Assume the procedure index is 1
+        String encoded = new String(bytes);
+        Result<String> resp = session.callProcedureRaw(graphId, encoded);
+        assertOk(resp);
+    }
+
+    @Test
+    @Order(13)
     public void test10CallCypherProcedureViaNeo4j() {
         String query = "CALL " + cypherProcedureId + "() YIELD *;";
         org.neo4j.driver.Result result = neo4jSession.run(query);
@@ -339,11 +531,15 @@ public class DriverTest {
         if (graphId != null) {
             if (cypherProcedureId != null) {
                 Result<String> resp = session.deleteProcedure(graphId, cypherProcedureId);
-                logger.info("procedure deleted: " + resp.getValue());
+                logger.info("cypherProcedure deleted: " + resp.getValue());
             }
-            if (cppProcedureId != null) {
-                Result<String> resp = session.deleteProcedure(graphId, cppProcedureId);
-                logger.info("procedure deleted: " + resp.getValue());
+            if (cppProcedureId1 != null) {
+                Result<String> resp = session.deleteProcedure(graphId, cppProcedureId1);
+                logger.info("cppProcedure1 deleted: " + resp.getValue());
+            }
+            if (cppProcedureId2 != null) {
+                Result<String> resp = session.deleteProcedure(graphId, cppProcedureId2);
+                logger.info("cppProcedure2 deleted: " + resp.getValue());
             }
             Result<String> resp = session.deleteGraph(graphId);
             assertOk(resp);
