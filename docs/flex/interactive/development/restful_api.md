@@ -12,6 +12,7 @@ The table below provides an overview of the available APIs:
 | API name        | Method and URL                                 | Explanation                                                        |
 |-----------------|------------------------------------------------|--------------------------------------------------------------------|
 | ListGraphs      | GET /v1/graph                                  | Get all graphs in current interactive service, the schema for each graph is returned. |
+| GetGraphStatistics | GET /v1/graph/{graph}/statistics            | Get the statistics for the specified graph.|
 | GetGraphSchema  | GET /v1/graph/{graph}/schema                   | Get the schema for the specified graph.                            |
 | CreateGraph     | POST /v1/graph                                 | Create an empty graph with the specified schema.                   |
 | DeleteGraph     | DELETE /v1/graph/{graph}                       | Delete the specified graph.                                        |
@@ -178,6 +179,64 @@ curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v
 #### Status Codes
 - `200 OK`: Request successful.
 - `500 Internal Error`: Server internal Error.
+
+### GetGraphStatistics API (GraphManagement Category)
+
+#### Description
+
+This API retrieves the statistical data(enumerating the count of vertices and edges corresponding to each label) for the actively running graph.
+If at the time of the request, no graph is in service, the service will respond with a NOT FOUND status.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/graph/{graph_id}/statistics`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/statistics"
+```
+
+#### Expected Response
+- **Format**: `application/json`
+- **Body**:
+```json
+{
+    "edge_type_statistics": [
+        {
+            "type_id": 0,
+            "type_name": "knows",
+            "vertex_type_pair_statistics": [
+                {
+                    "count": 5,
+                    "destination_vertex": "person",
+                    "source_vertex": "person"
+                }
+            ]
+        }
+    ],
+    "total_edge_count": 5,
+    "total_vertex_count": 6,
+    "vertex_type_statistics": [
+        {
+            "count": 4,
+            "type_id": 0,
+            "type_name": "person"
+        },
+        {
+            "count": 2,
+            "type_id": 1,
+            "type_name": "software"
+        }
+    ]
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: No graph is serving or the queried graph is not the running graph.
+
 
 ### CreateGraph (GraphManagement Category)
 
