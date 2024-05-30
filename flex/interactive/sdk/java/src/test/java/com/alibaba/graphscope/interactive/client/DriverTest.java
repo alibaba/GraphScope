@@ -373,7 +373,7 @@ public class DriverTest {
         }
     }
 
-    // @Test
+    @Test
     @Order(5)
     public void test4CypherAdhocQuery() {
         String query = "MATCH(a) return COUNT(a);";
@@ -381,7 +381,7 @@ public class DriverTest {
         logger.info("result: " + result.toString());
     }
 
-    // @Test
+    @Test
     @Order(6)
     public void test5GremlinAdhoQuery() throws Exception {
         String query = "g.V().count();";
