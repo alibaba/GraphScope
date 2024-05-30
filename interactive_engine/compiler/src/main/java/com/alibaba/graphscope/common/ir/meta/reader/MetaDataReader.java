@@ -27,4 +27,6 @@ public interface MetaDataReader {
     List<InputStream> getStoredProcedures() throws Exception;
 
     SchemaInputStream getGraphSchema() throws Exception;
+
+    SchemaInputStream getStatistics() throws Exception;
 }

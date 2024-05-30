@@ -536,7 +536,7 @@ class DefaultSession(Session):
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             params = params + chr(0)
-            response = self._procedure_api.call_procedure_with_http_info(
+            response = self._query_api.proc_call_with_http_info(
                 graph_id, params
             )
             return Result.from_response(response)

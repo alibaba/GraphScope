@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.store;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
 
 import java.util.Optional;
 
@@ -27,7 +28,10 @@ public class ExperimentalMetaFetcher implements IrMetaFetcher {
 
     public ExperimentalMetaFetcher(MetaDataReader dataReader) throws Exception {
         this.meta =
-                new IrMeta(new IrGraphSchema(dataReader), new GraphStoredProcedures(dataReader));
+                new IrMeta(
+                        new IrGraphSchema(dataReader),
+                        new IrGraphStatistics(dataReader),
+                        new GraphStoredProcedures(dataReader));
     }
 
     @Override

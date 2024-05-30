@@ -124,6 +124,16 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+  if (req->content.size() <= 0) {
+    // At least one input format byte is needed
+    rep->set_status(seastar::httpd::reply::status_type::internal_server_error);
+    rep->write_body("bin", seastar::sstring("Empty request!"));
+    rep->done();
+    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+        std::move(rep));
+  }
+  uint8_t input_format =
+      req->content.back();  // see graph_db_session.h#parse_query_type
   // TODO(zhanglei): choose read or write based on the request, after the
   // read/write info is supported in physical plan
   if (req->param.exists("graph_id")) {
@@ -135,9 +145,18 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     }
-    req->content.append(gs::GraphDBSession::kCypherJson, 1);
   } else {
     req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
+    // This handler with accept two kinds of queries, /v1/graph/{graph_id}/query
+    // and /v1/query/ The former one will have a graph_id in the request, and
+    // the latter one will not. For the first one, the input format is the last
+    // byte of the request content, and is added at client side; For the second
+    // one, the request is send from compiler, and currently compiler will not
+    // add extra bytes to the request content. So we need to add the input
+    // format here. Finally, we should REMOVE this adhoc appended byte, i.e. the
+    // input format byte should be added at compiler side
+    // TODO(zhanglei): remove this adhoc appended byte, add the byte at compiler
+    // side. Or maybe we should refine the protocol.
   }
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
@@ -154,7 +173,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([this
+      .then([this, input_format
 #ifdef HAVE_OPENTELEMETRY_CPP
              ,
              outer_span = outer_span
@@ -171,8 +190,17 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 #endif  // HAVE_OPENTELEMETRY_CPP
           return seastar::make_ready_future<query_param>(std::move(output));
         }
-        return seastar::make_ready_future<query_param>(
-            std::move(output.content.substr(4)));
+        if (input_format == static_cast<uint8_t>(
+                                gs::GraphDBSession::InputFormat::kCppEncoder)) {
+          return seastar::make_ready_future<query_param>(
+              std::move(output.content));
+        } else {
+          // For cypher input format, the results are written with
+          // output.put_string(), which will add extra 4 bytes. So we need to
+          // remove the first 4 bytes here.
+          return seastar::make_ready_future<query_param>(
+              std::move(output.content.substr(4)));
+        }
       })
       .then_wrapped([rep = std::move(rep)
 #ifdef HAVE_OPENTELEMETRY_CPP
