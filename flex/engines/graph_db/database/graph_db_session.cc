@@ -22,7 +22,7 @@
 
 namespace gs {
 
-ReadTransaction GraphDBSession::GetReadTransaction() {
+ReadTransaction GraphDBSession::GetReadTransaction() const {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
   return ReadTransaction(db_.graph_, db_.version_manager_, ts);
 }
