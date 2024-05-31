@@ -33,6 +33,7 @@ public class VineyardMetaFetcher implements IrMetaFetcher {
         JsonFileSchemaFetcher fetcher = new JsonFileSchemaFetcher(schemaPath);
         GraphSchema graphSchema = fetcher.getSchemaSnapshotPair().values().iterator().next();
         try {
+            // TODO: support statistics, otherwise, the CBO will not work
             this.irMeta = new IrMeta(new IrGraphSchema(graphSchema, true));
         } catch (IOException e) {
             throw new RuntimeException(e);

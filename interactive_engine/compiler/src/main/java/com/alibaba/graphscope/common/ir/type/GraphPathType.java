@@ -22,8 +22,6 @@ import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Objects;
-
 public class GraphPathType extends ArraySqlType {
     public GraphPathType(ElementType elementType) {
         this(elementType, false);
@@ -52,7 +50,7 @@ public class GraphPathType extends ArraySqlType {
         public ElementType(RelDataType expandType, RelDataType getVType) {
             super(SqlTypeName.OTHER, false, null);
             this.expandType = expandType;
-            this.getVType = Objects.requireNonNull(getVType);
+            this.getVType = getVType;
             computeDigest();
         }
 

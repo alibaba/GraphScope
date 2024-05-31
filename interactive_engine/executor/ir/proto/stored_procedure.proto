@@ -15,7 +15,7 @@
  */
 
 syntax = "proto3";
-package query;
+package procedure;
 option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "StoredProcedure";
 
