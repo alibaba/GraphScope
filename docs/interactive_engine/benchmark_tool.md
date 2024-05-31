@@ -1,9 +1,13 @@
+# A Generic Benchmark Tool for GIE
+
+We provide a tool to benchmark GraphScope GIE. It serves as multiple clients to send 
+queries to gremlin (or cypher) server through the gremlin (or cypher) endpoint exposed by the engine, and report the performance numbers 
+(e.g., latency, throughput, query results).
+
 ## Benchmark Tool Usage
 
-In this directory is a tool that can be used to benchmark GraphScope GIE. It serves as multiple clients to send 
-queries to gremlin server through the gremlin endpoint exposed by the engine, and report the performance numbers 
-(e.g., latency, throughput, query results).
-The benchmark program sends mixed queries to the server by reading query templates from [queries](queries) with filling the parameters in the query templates using [substitution_parameters](data/substitution_parameters). 
+The benchark tool is provided in [here](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark).
+The benchmark program sends mixed queries to the server by reading query templates from [queries](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark/queries) with filling the parameters in the query templates using [substitution_parameters](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark/data/substitution_parameters). 
 The program uses a round-robin strategy to iterate all the **enabled** queries with corresponding parameters.
 
 ### Repository contents
@@ -40,7 +44,7 @@ and you can use deploy the package to anywhere could connect to the gremlin endp
 cd target
 tar -xvf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
 cd gaia-benchmark-0.0.1-SNAPSHOT
-vim config/interactive-benchmark.properties # specify the gremlin endpoint of your server and modify running configurations
+vim config/interactive-benchmark.properties # specify the endpoint of your server and modify running configurations
 chmod +x ./scripts/gremlin_benchmark.sh 
 chmod +x ./scripts/cypher_benchmark.sh
 ./scripts/gremlin_benchmark.sh                      # run the gremlin benchmark program
@@ -64,5 +68,5 @@ query count: 10; execute time(ms): ...; qps: ...
 ```
 
 ### User-defined Benchmarking Queries
-Users can add their own benchmarking queries to [queries](queries) as well as adding substitution parameters of queries to [substitution_parameters](data/substitution_parameters). 
+Users can add their own benchmarking queries to [queries](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark/queries) as well as adding substitution parameters of queries to [substitution_parameters](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark/data/substitution_parameters).
 Note that the file name of user-defined query templates should follow the prefix _custom_query_ or _custom_constant_query_. The difference between custom_query and custom_constant_query is that the latter has no corresponding parameters.
