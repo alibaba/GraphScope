@@ -178,7 +178,7 @@ Result<bool> DefaultGraphMetaStore::DeletePluginMetaByGraphId(
   }
   VLOG(10) << "Found plugin_ids: " << plugin_ids.size();
   for (auto& plugin_id : plugin_ids) {
-    RETURN_IF_NOT_OK(base_store_->DeleteMeta(PLUGIN_META, plugin_id));
+    RETURN_IF_NOT_OK(DeletePluginMeta(graph_id, plugin_id));
   }
   return Result<bool>(true);
 }
