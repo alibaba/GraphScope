@@ -100,6 +100,7 @@ void HQPSService::init(const ServiceConfig& config) {
   if (config.start_compiler) {
     start_compiler_subprocess();
   }
+  start_time_.store(gs::GetCurrentTimeStamp());
 }
 
 HQPSService::~HQPSService() {
@@ -129,6 +130,14 @@ uint16_t HQPSService::get_query_port() const {
     return query_hdl_->get_port();
   }
   return 0;
+}
+
+uint64_t HQPSService::get_start_time() const {
+  return start_time_.load(std::memory_order_relaxed);
+}
+
+void HQPSService::reset_start_time() {
+  start_time_.store(gs::GetCurrentTimeStamp());
 }
 
 std::shared_ptr<gs::IGraphMetaStore> HQPSService::get_metadata_store() const {

@@ -1,4 +1,0 @@
-v,0,person,3
-v,1,software,4
-e,0,knows,person,person,5
-e,1,created,person,software,6

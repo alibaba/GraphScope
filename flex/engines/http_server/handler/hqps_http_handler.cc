@@ -18,9 +18,9 @@
 #include "opentelemetry/context/context.h"
 #include "opentelemetry/trace/span_metadata.h"
 #include "opentelemetry/trace/span_startoptions.h"
-
 #endif  // HAVE_OPENTELEMETRY_CPP
 
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/service/hqps_service.h"
@@ -56,6 +56,10 @@ hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
 hqps_ic_handler::~hqps_ic_handler() = default;
 
 seastar::future<> hqps_ic_handler::cancel_current_scope() {
+  if (is_cancelled_) {
+    LOG(INFO) << "The current scope has been already cancelled!";
+    return seastar::make_ready_future<>();
+  }
   hiactor::scope_builder builder;
   builder.set_shard(hiactor::local_shard_id())
       .enter_sub_scope(hiactor::scope<executor_group>(0))
@@ -102,12 +106,58 @@ bool hqps_ic_handler::create_actors() {
   return true;
 }
 
+bool hqps_ic_handler::is_running_graph(const seastar::sstring& graph_id) const {
+  std::string graph_id_str(graph_id.data(), graph_id.size());
+  auto running_graph_res =
+      HQPSService::get().get_metadata_store()->GetRunningGraph();
+  if (!running_graph_res.ok()) {
+    LOG(ERROR) << "Failed to get running graph: "
+               << running_graph_res.status().error_message();
+    return false;
+  }
+  return running_graph_res.value() == graph_id_str;
+}
+
+// Handles both /v1/graph/{graph_id}/query and /v1/query/
 seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     const seastar::sstring& path, std::unique_ptr<seastar::httpd::request> req,
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-  req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
+  if (req->content.size() <= 0) {
+    // At least one input format byte is needed
+    rep->set_status(seastar::httpd::reply::status_type::internal_server_error);
+    rep->write_body("bin", seastar::sstring("Empty request!"));
+    rep->done();
+    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+        std::move(rep));
+  }
+  uint8_t input_format =
+      req->content.back();  // see graph_db_session.h#parse_query_type
+  // TODO(zhanglei): choose read or write based on the request, after the
+  // read/write info is supported in physical plan
+  if (req->param.exists("graph_id")) {
+    if (!is_running_graph(req->param["graph_id"])) {
+      rep->set_status(
+          seastar::httpd::reply::status_type::internal_server_error);
+      rep->write_body("bin", seastar::sstring("Failed to get running graph!"));
+      rep->done();
+      return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+          std::move(rep));
+    }
+  } else {
+    req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
+    // This handler with accept two kinds of queries, /v1/graph/{graph_id}/query
+    // and /v1/query/ The former one will have a graph_id in the request, and
+    // the latter one will not. For the first one, the input format is the last
+    // byte of the request content, and is added at client side; For the second
+    // one, the request is send from compiler, and currently compiler will not
+    // add extra bytes to the request content. So we need to add the input
+    // format here. Finally, we should REMOVE this adhoc appended byte, i.e. the
+    // input format byte should be added at compiler side
+    // TODO(zhanglei): remove this adhoc appended byte, add the byte at compiler
+    // side. Or maybe we should refine the protocol.
+  }
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
   // Extract context from headers. This copy is necessary to avoid access after
@@ -123,7 +173,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([this
+      .then([this, input_format
 #ifdef HAVE_OPENTELEMETRY_CPP
              ,
              outer_span = outer_span
@@ -140,8 +190,17 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 #endif  // HAVE_OPENTELEMETRY_CPP
           return seastar::make_ready_future<query_param>(std::move(output));
         }
-        return seastar::make_ready_future<query_param>(
-            std::move(output.content.substr(4)));
+        if (input_format == static_cast<uint8_t>(
+                                gs::GraphDBSession::InputFormat::kCppEncoder)) {
+          return seastar::make_ready_future<query_param>(
+              std::move(output.content));
+        } else {
+          // For cypher input format, the results are written with
+          // output.put_string(), which will add extra 4 bytes. So we need to
+          // remove the first 4 bytes here.
+          return seastar::make_ready_future<query_param>(
+              std::move(output.content.substr(4)));
+        }
       })
       .then_wrapped([rep = std::move(rep)
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -228,6 +287,10 @@ hqps_adhoc_query_handler::hqps_adhoc_query_handler(
 hqps_adhoc_query_handler::~hqps_adhoc_query_handler() = default;
 
 seastar::future<> hqps_adhoc_query_handler::cancel_current_scope() {
+  if (is_cancelled_) {
+    LOG(INFO) << "The current scope has been already cancelled!";
+    return seastar::make_ready_future<>();
+  }
   hiactor::scope_builder adhoc_builder;
   adhoc_builder.set_shard(hiactor::local_shard_id())
       .enter_sub_scope(hiactor::scope<executor_group>(0))
@@ -311,8 +374,8 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
 
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_adhoc_query_handler");
-  // Extract context from headers. This copy is necessary to avoid access after
-  // header content been freed
+  // Extract context from headers. This copy is necessary to avoid access
+  // after header content been freed
   std::map<std::string, std::string> headers(req->_headers.begin(),
                                              req->_headers.end());
   auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
@@ -342,7 +405,11 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         auto query_span = tracer->StartSpan("adhoc_query_execution", options);
         auto query_scope = tracer->WithActiveSpan(query_span);
 #endif  // HAVE_OPENTELEMETRY_CPP
-        param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
+        // TODO(zhanglei): choose read or write based on the request, after the
+        //  read/write info is supported in physical plan
+        // The content contains the path to dynamic library
+        param.content.append(gs::Schema::HQPS_ADHOC_WRITE_PLUGIN_ID_STR, 1);
+        param.content.append(gs::GraphDBSession::kCypherInternalAdhoc, 1);
         return executor_refs_[dst_executor]
             .run_graph_db_query(query_param{std::move(param.content)})
             .then([
@@ -439,6 +506,8 @@ hqps_http_handler::hqps_http_handler(uint16_t http_port)
     : http_port_(http_port) {
   ic_handler_ = new hqps_ic_handler(ic_query_group_id, max_group_id,
                                     group_inc_step, shard_query_concurrency);
+  proc_handler_ = new hqps_ic_handler(proc_query_group_id, max_group_id,
+                                      group_inc_step, shard_query_concurrency);
   adhoc_query_handler_ = new hqps_adhoc_query_handler(
       ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
       shard_adhoc_concurrency);
@@ -459,7 +528,8 @@ bool hqps_http_handler::is_running() const { return running_.load(); }
 
 bool hqps_http_handler::is_actors_running() const {
   return !ic_handler_->is_current_scope_cancelled() &&
-         !adhoc_query_handler_->is_current_scope_cancelled();
+         !adhoc_query_handler_->is_current_scope_cancelled() &&
+         proc_handler_->is_current_scope_cancelled();
 }
 
 void hqps_http_handler::start() {
@@ -493,35 +563,25 @@ void hqps_http_handler::stop() {
 
 seastar::future<> hqps_http_handler::stop_query_actors() {
   // First cancel the scope.
-  if (ic_handler_->is_current_scope_cancelled()) {
-    LOG(INFO) << "IC scope has been cancelled!";
-    if (adhoc_query_handler_->is_current_scope_cancelled()) {
-      LOG(INFO) << "Adhoc scope has been cancelled!";
-      return seastar::make_ready_future<>();
-    } else {
-      return adhoc_query_handler_->cancel_current_scope();
-    }
-  } else {
-    return ic_handler_->cancel_current_scope()
-        .then([this] {
-          LOG(INFO) << "Cancel ic scope";
-          if (adhoc_query_handler_->is_current_scope_cancelled()) {
-            LOG(INFO) << "Adhoc scope has been cancelled!";
-            return seastar::make_ready_future<>();
-          } else {
-            return adhoc_query_handler_->cancel_current_scope();
-          }
-        })
-        .then([] {
-          LOG(INFO) << "Cancel adhoc scope";
-          return seastar::make_ready_future<>();
-        });
-  }
+  return ic_handler_->cancel_current_scope()
+      .then([this] {
+        LOG(INFO) << "Cancel ic scope";
+        return adhoc_query_handler_->cancel_current_scope();
+      })
+      .then([this] {
+        LOG(INFO) << "Cancel adhoc scope";
+        return proc_handler_->cancel_current_scope();
+      })
+      .then([] {
+        LOG(INFO) << "Cancel proc scope";
+        return seastar::make_ready_future<>();
+      });
 }
 
 void hqps_http_handler::start_query_actors() {
   ic_handler_->create_actors();
   adhoc_query_handler_->create_actors();
+  proc_handler_->create_actors();
   LOG(INFO) << "Restart all actors";
 }
 
@@ -529,6 +589,12 @@ seastar::future<> hqps_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/v1/query"), ic_handler_);
+    {
+      auto rule_proc = new seastar::httpd::match_rule(proc_handler_);
+      rule_proc->add_str("/v1/graph").add_param("graph_id").add_str("/query");
+      // Get All procedures
+      r.add(rule_proc, seastar::httpd::operation_type::POST);
+    }
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/adhoc_query"),
           adhoc_query_handler_);
