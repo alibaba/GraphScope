@@ -27,7 +27,7 @@ if (Hiactor_FOUND)
   target_compile_options (flex_server
         PUBLIC
         -Wno-attributes)
-  target_link_libraries(flex_server Hiactor::hiactor flex_graph_db)
+  target_link_libraries(flex_server PUBLIC Hiactor::hiactor flex_graph_db)
 
   # Hiactor/seastar could be compiled with a compiler support option: -Wno-maybe-uninitialized, 
   # so when we are compiling flex with a compiler that does not support this option(e.g. AOCC compiler), 
@@ -44,11 +44,11 @@ if (Hiactor_FOUND)
   
   if (BUILD_HQPS)
       target_include_directories(flex_server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../hqps/)
-      target_link_libraries(flex_server hqps_plan_proto)
+      target_link_libraries(flex_server PUBLIC hqps_plan_proto)
   endif ()
   if (OPENTELEMETRY_CPP_FOUND)
     target_link_libraries(flex_server otel)
   endif()
-  target_link_libraries(flex_server flex_metadata_store)
+  target_link_libraries(flex_server PUBLIC flex_metadata_store)
   install_without_export_flex_target(flex_server)
 endif ()
