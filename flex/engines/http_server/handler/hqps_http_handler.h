@@ -47,6 +47,8 @@ class hqps_ic_handler : public seastar::httpd::handler_base {
       std::unique_ptr<seastar::httpd::reply> rep) override;
 
  private:
+  bool is_running_graph(const seastar::sstring& graph_id) const;
+
   uint32_t cur_group_id_;
   const uint32_t max_group_id_, group_inc_step_;
   const uint32_t shard_concurrency_;
@@ -131,7 +133,7 @@ class hqps_http_handler {
   seastar::httpd::http_server_control server_;
   std::atomic<bool> running_{false};
 
-  hqps_ic_handler* ic_handler_;
+  hqps_ic_handler *ic_handler_, *proc_handler_;
   hqps_adhoc_query_handler* adhoc_query_handler_;
   hqps_exit_handler* exit_handler_;
 };

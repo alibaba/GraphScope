@@ -306,7 +306,7 @@ AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
                << " is not registered.";
     return AppWrapper(NULL, NULL);
   } else {
-    return app_factories_[app_type]->CreateApp(contexts_[thread_id].session);
+    return app_factories_[app_type]->CreateApp(*this);
   }
 }
 
@@ -401,10 +401,10 @@ void GraphDB::initApps(
   // Builtin apps
   app_factories_[0] = std::make_shared<ServerAppFactory>();
 #ifdef BUILD_HQPS
-  app_factories_[Schema::HQPS_ADHOC_PLUGIN_ID] =
-      std::make_shared<HQPSAdhocAppFactory>();
-  app_factories_[Schema::HQPS_PROCEDURE_PLUGIN_ID] =
-      std::make_shared<HQPSProcedureAppFactory>();
+  app_factories_[Schema::HQPS_ADHOC_READ_PLUGIN_ID] =
+      std::make_shared<HQPSAdhocReadAppFactory>();
+  app_factories_[Schema::HQPS_ADHOC_WRITE_PLUGIN_ID] =
+      std::make_shared<HQPSAdhocWriteAppFactory>();
 #endif  // BUILD_HQPS
 
   size_t valid_plugins = 0;

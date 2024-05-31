@@ -17,7 +17,6 @@ import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
@@ -34,11 +33,7 @@ public class WriterAgentTest {
 
     @Test
     void testWriterAgent() throws InterruptedException, ExecutionException {
-        Configs configs =
-                Configs.newBuilder()
-                        .put(CommonConfig.NODE_IDX.getKey(), "0")
-                        .put(StoreConfig.STORE_COMMIT_INTERVAL_MS.getKey(), "10")
-                        .build();
+        Configs configs = Configs.newBuilder().put(CommonConfig.NODE_IDX.getKey(), "0").build();
         StoreService mockStoreService = mock(StoreService.class);
 
         MetaService mockMetaService = mock(MetaService.class);

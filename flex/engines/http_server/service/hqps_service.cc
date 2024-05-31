@@ -100,6 +100,7 @@ void HQPSService::init(const ServiceConfig& config) {
   if (config.start_compiler) {
     start_compiler_subprocess();
   }
+  start_time_.store(gs::GetCurrentTimeStamp());
 }
 
 HQPSService::~HQPSService() {
@@ -129,6 +130,14 @@ uint16_t HQPSService::get_query_port() const {
     return query_hdl_->get_port();
   }
   return 0;
+}
+
+uint64_t HQPSService::get_start_time() const {
+  return start_time_.load(std::memory_order_relaxed);
+}
+
+void HQPSService::reset_start_time() {
+  start_time_.store(gs::GetCurrentTimeStamp());
 }
 
 std::shared_ptr<gs::IGraphMetaStore> HQPSService::get_metadata_store() const {
@@ -223,6 +232,9 @@ bool HQPSService::check_compiler_ready() const {
 
 bool HQPSService::start_compiler_subprocess(
     const std::string& graph_schema_path) {
+  if (!service_config_.start_compiler) {
+    return true;
+  }
   LOG(INFO) << "Start compiler subprocess";
   stop_compiler_subprocess();
   auto java_bin_path = boost::process::search_path("java");
@@ -349,8 +361,13 @@ gs::GraphId HQPSService::insert_default_graph_meta() {
     LOG(INFO) << "There are already " << graph_metas_res.value().size()
               << " graph metas in the metadata store.";
 
-    // return the first graph id
-    return graph_metas_res.value().begin()->id;
+    // return the graph id with the smallest value.
+    auto min_graph_id = std::min_element(
+        graph_metas_res.value().begin(), graph_metas_res.value().end(),
+        [](const gs::GraphMeta& a, const gs::GraphMeta& b) {
+          return a.id < b.id;
+        });
+    return min_graph_id->id;
   }
 
   auto default_graph_name = this->service_config_.default_graph;
