@@ -1595,4 +1595,26 @@ public class GraphBuilderTest {
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
     }
+
+    // id is the primary key of label 'person', should be fused as 'uniqueKeyFilters'
+    @Test
+    public void g_V_has_label_person_id_test() {
+        RelNode node = eval("g.V().has(\"person\", \"id\", 1)");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[_], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[_], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 1)])",
+                node.explain().trim());
+    }
+
+    // id is not the primary key of label 'software', should be fused as 'fusedFilter'
+    @Test
+    public void g_V_has_label_software_id_test() {
+        RelNode node = eval("g.V().has(\"software\", \"id\", 1)");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[_], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
+                        + " alias=[_], fusedFilter=[[=(_.id, 1)]], opt=[VERTEX])",
+                node.explain().trim());
+    }
 }
