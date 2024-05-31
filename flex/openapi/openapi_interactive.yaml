@@ -998,11 +998,22 @@ components:
       properties:
         timestamp:
           type: string
+    DateType:
+      x-body-name: date_type
+      type: object
+      required:
+       - date32
+      properties:
+        date32:
+          type: string
     TemporalType:
       x-body-name: temporal_type
       type: object
-      oneOf:
-        - $ref: '#/components/schemas/TimeStampType'
+      properties:
+        temporal:
+          oneOf:
+            - $ref: '#/components/schemas/TimeStampType'
+            - $ref: '#/components/schemas/DateType'
     GSDataType:
       x-body-name: gs_data_type
       oneOf:
@@ -1364,6 +1375,10 @@ components:
                       - BOTH_OUT_IN
                   sort_on_compaction:
                     type: boolean
+                  oe_mutability:
+                    type: string
+                  ie_mutability:
+                    type: string
     CreateEdgeType:
       x-body-name: create_edge_type
       allOf:
