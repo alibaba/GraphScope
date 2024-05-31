@@ -8,6 +8,7 @@ if (BUILD_HQPS)
                 set(T_NAME ${CMAKE_MATCH_1})
                 message(STATUS "Found graphscope test - " ${T_NAME})
                 add_executable(${T_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/${T_NAME}.cc)
-		target_link_libraries(${T_NAME} PUBLIC  hqps_plan_proto flex_rt_mutable_graph flex_graph_db  flex_utils ${GLOG_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
+		target_link_libraries(${T_NAME}  hqps_plan_proto flex_rt_mutable_graph flex_graph_db  flex_utils ${GLOG_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
         endforeach()
 endif()
+
