@@ -35,7 +35,16 @@ public class IrMetaStats extends IrMeta {
             IrGraphSchema schema,
             GraphStoredProcedures storedProcedures,
             GraphStatistics statistics) {
-        super(snapshotId, schema, storedProcedures);
+        this(GraphId.DEFAULT, snapshotId, schema, storedProcedures, statistics);
+    }
+
+    public IrMetaStats(
+            GraphId graphId,
+            SnapshotId snapshotId,
+            IrGraphSchema schema,
+            GraphStoredProcedures storedProcedures,
+            GraphStatistics statistics) {
+        super(graphId, snapshotId, schema, storedProcedures);
         this.statistics = statistics;
     }
 

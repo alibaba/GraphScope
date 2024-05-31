@@ -30,6 +30,7 @@ import java.util.Objects;
  * They are versioned using the same snapshot id.
  */
 public class IrMeta {
+    protected final GraphId graphId;
     protected final SnapshotId snapshotId;
     protected final IrGraphSchema schema;
     protected final @Nullable GraphStoredProcedures storedProcedures;
@@ -39,15 +40,19 @@ public class IrMeta {
     }
 
     public IrMeta(IrGraphSchema schema, GraphStoredProcedures storedProcedures) {
-        this(SnapshotId.createEmpty(), schema, storedProcedures);
+        this(GraphId.DEFAULT, SnapshotId.createEmpty(), schema, storedProcedures);
     }
 
     public IrMeta(SnapshotId snapshotId, IrGraphSchema schema) {
-        this(snapshotId, schema, null);
+        this(GraphId.DEFAULT, snapshotId, schema, null);
     }
 
     public IrMeta(
-            SnapshotId snapshotId, IrGraphSchema schema, GraphStoredProcedures storedProcedures) {
+            GraphId graphId,
+            SnapshotId snapshotId,
+            IrGraphSchema schema,
+            GraphStoredProcedures storedProcedures) {
+        this.graphId = graphId;
         this.snapshotId = Objects.requireNonNull(snapshotId);
         this.schema = Objects.requireNonNull(schema);
         this.storedProcedures = storedProcedures;
@@ -63,5 +68,9 @@ public class IrMeta {
 
     public @Nullable GraphStoredProcedures getStoredProcedures() {
         return storedProcedures;
+    }
+
+    public GraphId getGraphId() {
+        return graphId;
     }
 }

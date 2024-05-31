@@ -38,7 +38,7 @@ public class StaticIrMetaFetcher extends IrMetaFetcher {
     public StaticIrMetaFetcher(IrMetaReader dataReader, IrMetaTracker tracker) throws IOException {
         super(dataReader, tracker);
         IrMeta meta = this.reader.readMeta();
-        GraphStatistics stats = fetchStats();
+        GraphStatistics stats = (meta == null) ? null : fetchStats(meta);
         this.metaStats =
                 new IrMetaStats(
                         meta.getSnapshotId(), meta.getSchema(), meta.getStoredProcedures(), stats);
@@ -47,9 +47,9 @@ public class StaticIrMetaFetcher extends IrMetaFetcher {
         }
     }
 
-    private @Nullable GraphStatistics fetchStats() {
+    private @Nullable GraphStatistics fetchStats(IrMeta meta) {
         try {
-            return this.reader.readStats();
+            return this.reader.readStats(meta.getGraphId());
         } catch (Exception e) {
             logger.warn("failed to read graph statistics, error is {}", e);
             return null;

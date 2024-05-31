@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.meta.reader;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
+import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
@@ -60,7 +61,7 @@ public class LocalIrMetaReader implements IrMetaReader {
     }
 
     @Override
-    public IrGraphStatistics readStats() throws IOException {
+    public IrGraphStatistics readStats(GraphId graphId) throws IOException {
         String statsPath = GraphConfig.GRAPH_STATISTICS.get(configs);
         return statsPath.isEmpty() ? null : new IrGraphStatistics(new FileInputStream(statsPath));
     }

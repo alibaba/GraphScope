@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
+import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.SnapshotId;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
@@ -48,7 +49,7 @@ public class GrootIrMetaReader implements IrMetaReader {
     }
 
     @Override
-    public GraphStatistics readStats() throws IOException {
+    public GraphStatistics readStats(GraphId graphId) throws IOException {
         // TODO: add statistics, otherwise, the CBO will not work
         throw new NotImplementedException("reading graph statistics in groot is unimplemented yet");
     }

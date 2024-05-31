@@ -19,7 +19,9 @@
 package com.alibaba.graphscope.common.ir.meta.reader;
 
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
+import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.SnapshotId;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
@@ -27,6 +29,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 
+import org.javatuples.Pair;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayInputStream;
@@ -61,8 +64,11 @@ public class HttpIrMetaReader implements IrMetaReader {
                     "read meta data fail, status code: %s, error message: %s",
                     response.statusCode(),
                     res);
-            String metaInYaml = convertMetaFromJsonToYaml(res);
+            Pair<GraphId, String> metaPair = convertMetaFromJsonToYaml(res);
+            String metaInYaml = metaPair.getValue1();
             return new IrMeta(
+                    metaPair.getValue0(),
+                    SnapshotId.createEmpty(), // todo: return snapshot id from http service
                     new IrGraphSchema(
                             new SchemaInputStream(
                                     new ByteArrayInputStream(
@@ -77,9 +83,12 @@ public class HttpIrMetaReader implements IrMetaReader {
     }
 
     @Override
-    public IrGraphStatistics readStats() throws IOException {
+    public IrGraphStatistics readStats(GraphId graphId) throws IOException {
         try {
-            HttpResponse<String> response = sendRequest("/v1/graph/current/statistics");
+            Preconditions.checkArgument(
+                    graphId.getId() != null, "graph id should not be null in http meta reader");
+            HttpResponse<String> response =
+                    sendRequest(String.format("/v1/graph/%s/statistics", graphId.getId()));
             String res = response.body();
             Preconditions.checkArgument(
                     response.statusCode() == 200,
@@ -107,12 +116,13 @@ public class HttpIrMetaReader implements IrMetaReader {
         return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
-    private String convertMetaFromJsonToYaml(String metaInJson) throws IOException {
+    private Pair<GraphId, String> convertMetaFromJsonToYaml(String metaInJson) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.readTree(metaInJson);
         Map<String, Object> rootMap = mapper.convertValue(rootNode, Map.class);
         Map metaMap = (Map) rootMap.get("graph");
+        GraphId graphId = new GraphId(metaMap.get("id"));
         Yaml yaml = new Yaml();
-        return yaml.dump(metaMap);
+        return Pair.with(graphId, yaml.dump(metaMap));
     }
 }

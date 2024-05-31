@@ -18,6 +18,7 @@ package com.alibaba.graphscope.frontend;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
+import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
@@ -49,7 +50,7 @@ public class VineyardIrMetaReader implements IrMetaReader {
     }
 
     @Override
-    public GraphStatistics readStats() throws IOException {
+    public GraphStatistics readStats(GraphId graphId) throws IOException {
         // TODO: support statistics, otherwise, the CBO will not work
         throw new NotImplementedException(
                 "reading graph statistics in vineyard is unimplemented yet");

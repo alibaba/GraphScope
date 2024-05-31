@@ -83,7 +83,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
     private synchronized void syncStats() {
         try {
             if (this.currentState != null) {
-                GraphStatistics stats = this.reader.readStats();
+                GraphStatistics stats = this.reader.readStats(this.currentState.getGraphId());
                 if (stats != null) {
                     this.currentState =
                             new IrMetaStats(
