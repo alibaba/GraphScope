@@ -6,6 +6,8 @@ source ${script_dir}/lib/install_thirdparty_dependencies.sh
 source ${script_dir}/lib/install_vineyard.sh
 source ${script_dir}/lib/util.sh
 source ${script_dir}/initialize.sh
+source ${script_dir}/lib/install_libgrape_lite.sh
+source ${script_dir}/lib/install_hiactor.sh
 
 # parse args
 while getopts ":t:i:d:v:j:-:" opt; do
@@ -321,6 +323,16 @@ install_dependencies_analytical_universal() {
   fi
 }
 
+install_interactive_deps() {
+  # First install libgrape-lite
+  install_libgrape_lite
+  # arrow should already be installed by analytical dependencies
+  # install hiactor.
+  install_hiactor
+  sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
+  sysctl -p /etc/sysctl.conf
+}
+
 write_env_config() {
   log "Output environments config file ${OUTPUT_ENV_FILE}"
   if [ -f "${OUTPUT_ENV_FILE}" ]; then
@@ -407,6 +419,13 @@ install_deps_for_dev() {
     install_llvm_universal
     install_rust_universal
     install_cppkafka "${deps_prefix}" "${install_prefix}"
+    # install dependencies for flex interactive
+    # can not install on macos since seastar can not be built on macos
+    if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
+      warning "Skip installing dependencies for flex interactive on macOS."
+    else
+      install_interactive_deps
+    fi
   fi
 
   write_env_config
