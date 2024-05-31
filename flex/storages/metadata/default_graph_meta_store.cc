@@ -129,7 +129,11 @@ Result<PluginMeta> DefaultGraphMetaStore::GetPluginMeta(
     return Result<PluginMeta>(
         Status(StatusCode::InValidArgument, "Plugin not belongs to the graph"));
   }
-  meta.id = plugin_id;
+  if (meta.id != plugin_id) {
+    return Result<PluginMeta>(
+        Status(StatusCode::InValidArgument,
+               "Plugin id not match: " + plugin_id + " vs " + meta.id));
+  }
   return Result<PluginMeta>(meta);
 }
 
@@ -143,8 +147,6 @@ Result<std::vector<PluginMeta>> DefaultGraphMetaStore::GetAllPluginMeta(
   VLOG(10) << "Found plugin metas: " << res.move_value().size();
   for (auto& pair : res.move_value()) {
     auto plugin_meta = PluginMeta::FromJson(pair.second);
-    // the key is id.
-    plugin_meta.id = pair.first;
     if (plugin_meta.bound_graph == graph_id) {
       metas.push_back(plugin_meta);
     }
@@ -176,7 +178,7 @@ Result<bool> DefaultGraphMetaStore::DeletePluginMetaByGraphId(
   }
   VLOG(10) << "Found plugin_ids: " << plugin_ids.size();
   for (auto& plugin_id : plugin_ids) {
-    RETURN_IF_NOT_OK(base_store_->DeleteMeta(PLUGIN_META, plugin_id));
+    RETURN_IF_NOT_OK(DeletePluginMeta(graph_id, plugin_id));
   }
   return Result<bool>(true);
 }
