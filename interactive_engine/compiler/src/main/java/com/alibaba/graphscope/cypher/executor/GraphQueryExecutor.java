@@ -60,6 +60,7 @@ public class GraphQueryExecutor extends FabricExecutor {
     private final QueryIdGenerator idGenerator;
     private final FabricConfig fabricConfig;
     private final QueryCache queryCache;
+    private final GraphPlanner graphPlanner;
 
     public GraphQueryExecutor(
             FabricConfig config,
@@ -73,7 +74,8 @@ public class GraphQueryExecutor extends FabricExecutor {
             QueryIdGenerator idGenerator,
             IrMetaQueryCallback metaQueryCallback,
             ExecutionClient client,
-            QueryCache queryCache) {
+            QueryCache queryCache,
+            GraphPlanner graphPlanner) {
         super(
                 config,
                 planner,
@@ -88,6 +90,7 @@ public class GraphQueryExecutor extends FabricExecutor {
         this.metaQueryCallback = metaQueryCallback;
         this.client = client;
         this.queryCache = queryCache;
+        this.graphPlanner = graphPlanner;
     }
 
     /**
@@ -110,7 +113,8 @@ public class GraphQueryExecutor extends FabricExecutor {
                 return super.run(fabricTransaction, statement, parameters);
             }
             irMeta = metaQueryCallback.beforeExec();
-            QueryCache.Key cacheKey = queryCache.createKey(statement, irMeta);
+            QueryCache.Key cacheKey =
+                    queryCache.createKey(graphPlanner.instance(statement, irMeta));
             QueryCache.Value cacheValue = queryCache.get(cacheKey);
             Preconditions.checkArgument(
                     cacheValue != null,

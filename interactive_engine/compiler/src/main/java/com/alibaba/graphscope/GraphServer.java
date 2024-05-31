@@ -75,6 +75,7 @@ public class GraphServer {
     public void start() throws Exception {
         ExecutionClient executionClient = ExecutionClient.Factory.create(configs, channelFetcher);
         QueryIdGenerator idGenerator = new QueryIdGenerator(configs);
+        QueryCache queryCache = new QueryCache(configs);
         if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
             GraphPlanner graphPlanner =
                     new GraphPlanner(
@@ -84,12 +85,12 @@ public class GraphServer {
                                             new GraphBuilderVisitor(builder)
                                                     .visit(new GremlinAntlr4Parser().parse(query))
                                                     .build()));
-            QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.gremlinServer =
                     new IrGremlinServer(
                             configs,
                             idGenerator,
                             queryCache,
+                            graphPlanner,
                             executionClient,
                             channelFetcher,
                             metaQueryCallback,
@@ -103,10 +104,14 @@ public class GraphServer {
                             (GraphBuilder builder, IrMeta irMeta, String query) ->
                                     new LogicalPlanVisitor(builder, irMeta)
                                             .visit(new CypherAntlr4Parser().parse(query)));
-            QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.cypherBootstrapper =
                     new CypherBootstrapper(
-                            configs, idGenerator, metaQueryCallback, executionClient, queryCache);
+                            configs,
+                            idGenerator,
+                            metaQueryCallback,
+                            executionClient,
+                            queryCache,
+                            graphPlanner);
             Path neo4jHomePath = getNeo4jHomePath();
             this.cypherBootstrapper.start(
                     neo4jHomePath,

@@ -18,8 +18,6 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
-import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -32,34 +30,22 @@ import java.util.concurrent.ExecutionException;
 
 public class QueryCache {
     private final LoadingCache<Key, Value> cache;
-    private final GraphPlanner graphPlanner;
 
-    public QueryCache(Configs configs, GraphPlanner graphPlanner) {
-        this.graphPlanner = graphPlanner;
+    public QueryCache(Configs configs) {
         int cacheSize = FrontendConfig.QUERY_CACHE_SIZE.get(configs);
         this.cache =
                 CacheBuilder.newBuilder()
                         .maximumSize(cacheSize)
-                        .build(
-                                CacheLoader.from(
-                                        key -> {
-                                            PhysicalPlan physicalPlan =
-                                                    key.plannerInstance.planPhysical(
-                                                            key.logicalPlan);
-                                            GraphPlanner.Summary summary =
-                                                    new GraphPlanner.Summary(
-                                                            key.logicalPlan, physicalPlan);
-                                            return new Value(summary, null);
-                                        }));
+                        .build(CacheLoader.from(key -> new Value(key.instance.plan(), null)));
     }
 
     public class Key {
-        public final GraphPlanner.PlannerInstance plannerInstance;
+        public final GraphPlanner.PlannerInstance instance;
         public final LogicalPlan logicalPlan;
 
-        public Key(String query, IrMeta irMeta) {
-            this.plannerInstance = Objects.requireNonNull(graphPlanner.instance(query, irMeta));
-            this.logicalPlan = Objects.requireNonNull(this.plannerInstance.planLogical());
+        public Key(GraphPlanner.PlannerInstance instance) {
+            this.instance = instance;
+            this.logicalPlan = instance.getParsedPlan();
         }
 
         @Override
@@ -76,8 +62,8 @@ public class QueryCache {
         }
     }
 
-    public Key createKey(String query, IrMeta irMeta) {
-        return new Key(query, irMeta);
+    public Key createKey(GraphPlanner.PlannerInstance instance) {
+        return new Key(instance);
     }
 
     public static class Value {
