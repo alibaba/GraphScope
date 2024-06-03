@@ -68,6 +68,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
             IrMeta meta = this.reader.readMeta();
             this.currentState =
                     new IrMetaStats(
+                            meta.getGraphId(),
                             meta.getSnapshotId(),
                             meta.getSchema(),
                             meta.getStoredProcedures(),
