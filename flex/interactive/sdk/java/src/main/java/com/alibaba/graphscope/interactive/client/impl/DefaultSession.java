@@ -317,14 +317,14 @@ public class DefaultSession implements Session {
         }
     }
 
-    private String encodeString(String jsonStr, int lastByte) {
+    private byte[] encodeString(String jsonStr, int lastByte) {
         byte[] bytes = new byte[jsonStr.length() + 1];
         // copy string to byte array
         for (int i = 0; i < jsonStr.length(); i++) {
             bytes[i] = (byte) jsonStr.charAt(i);
         }
         bytes[jsonStr.length()] = (byte) lastByte;
-        return new String(bytes, StandardCharsets.UTF_8);
+        return bytes;
     }
 
     @Override
@@ -334,7 +334,7 @@ public class DefaultSession implements Session {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
-            String encodedStr = encodeString(request.toJson(), 1);
+            byte[] encodedStr = encodeString(request.toJson(), 1);
             ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
@@ -354,13 +354,15 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> callProcedureRaw(String graphName, String request) {
+    public Result<String> callProcedureRaw(String graphName, byte[] request) {
         try {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            String encodedStr = encodeString(request, 0);
+            byte[] encodedStr = new byte[request.length + 1];
+            System.arraycopy(request, 0, encodedStr, 0, request.length);
+            encodedStr[request.length] = 0;
             ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(

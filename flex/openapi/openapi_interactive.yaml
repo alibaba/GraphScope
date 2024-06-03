@@ -909,6 +909,7 @@ paths:
           text/plain:
             schema:
               type: string
+              format: byte
       responses:
         '200':
           description: Successfully runned. Empty if failed?
