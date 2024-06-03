@@ -335,14 +335,14 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
             byte[] encodedStr = encodeString(request.toJson(), 1);
-            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
+            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
-                        new ApiException(response.getStatusCode(), response.getData()));
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
             }
             IrResult.CollectiveResults results =
                     IrResult.CollectiveResults.parseFrom(
-                            response.getData().getBytes(StandardCharsets.UTF_8));
+                            response.getData());
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -354,7 +354,7 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> callProcedureRaw(String graphName, byte[] request) {
+    public Result<byte[]> callProcedureRaw(String graphName, byte[] request) {
         try {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
@@ -363,12 +363,12 @@ public class DefaultSession implements Session {
             byte[] encodedStr = new byte[request.length + 1];
             System.arraycopy(request, 0, encodedStr, 0, request.length);
             encodedStr[request.length] = 0;
-            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
+            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
-                        new ApiException(response.getStatusCode(), response.getData()));
+                        new ApiException(response.getStatusCode(),"Failed to call procedure"));
             }
-            return new Result<String>(response.getData());
+            return new Result<byte[]>(response.getData());
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);

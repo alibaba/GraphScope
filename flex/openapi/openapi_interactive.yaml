@@ -914,9 +914,10 @@ paths:
         '200':
           description: Successfully runned. Empty if failed?
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
+                format: byte
         '500':
           description: Server internal error
 components:
