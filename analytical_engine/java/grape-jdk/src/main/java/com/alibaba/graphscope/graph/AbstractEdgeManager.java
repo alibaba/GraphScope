@@ -30,6 +30,7 @@ import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.LongPointerAccessor;
 import com.alibaba.graphscope.utils.array.PrimitiveArray;
 import com.google.common.collect.Lists;
+import com.alibaba.graphscope.ds.StringView;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -215,6 +216,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             // totalNumOfEdges);
             //            dstLids = (VID_T[]) Array.newInstance(vidClass, (int) totalNumOfEdges);
             //            dstLids = (VID_T[]) new Object[(int) totalNumOfEdges];
+            logger.info("edatas class: {}", bizEdataClass.getClass().getName());
             edatas = PrimitiveArray.create(bizEdataClass, (int) totalNumOfEdges);
             dstOids = PrimitiveArray.create(bizOidClass, (int) totalNumOfEdges);
             dstLids = PrimitiveArray.create(vidClass, (int) totalNumOfEdges);
@@ -367,6 +369,10 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             logger.info("edata: String");
             return 4;
         }
+        else if (edataClass.equals(StringView.class)) {
+            logger.info("edata: StringView");
+            return 5;
+        }
         throw new IllegalStateException("Cannot recognize edata type " + edataClass);
     }
 
@@ -430,6 +436,17 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
                         long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
                         GRAPE_ED_T edata = edataArray.get(eid);
                         String longValue = (String) edata;
+                        outputStream.writeBytes(longValue);
+                        curAddr += nbrUnitEleSize;
+                    }
+                }
+            case 5:
+                for (int lid = 0; lid < innerVerticesNum; ++lid) {
+                    long curAddr = nbrUnitAddrs[lid];
+                    for (int j = 0; j < numOfEdges[lid]; ++j) {
+                        long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
+                        GRAPE_ED_T edata = edataArray.get(eid);
+                        StringView longValue = (StringView) edata;
                         outputStream.writeBytes(longValue);
                         curAddr += nbrUnitEleSize;
                     }

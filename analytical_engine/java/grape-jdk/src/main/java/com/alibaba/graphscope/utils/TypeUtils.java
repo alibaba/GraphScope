@@ -1,5 +1,7 @@
 package com.alibaba.graphscope.utils;
 
+import com.alibaba.graphscope.ds.StringView;
+
 public class TypeUtils {
 
     public static boolean isPrimitive(Class<?> javaClass) {
@@ -29,7 +31,10 @@ public class TypeUtils {
             return "double";
         } else if (javaClass.equals(Float.class) || javaClass.equals(float.class)) {
             return "float";
-        } else {
+        } else if (javaClass.equals(StringView.class)){
+            return "std::string";
+        }
+        else {
             throw new IllegalStateException("Not recognized class " + javaClass.getName());
         }
     }

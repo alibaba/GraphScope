@@ -20,6 +20,7 @@ import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.graph.VertexDataManager;
 import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
+import com.alibaba.graphscope.ds.StringView;
 
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.hadoop.io.Writable;
@@ -143,8 +144,14 @@ public class VertexDataManagerImpl<
                     String value = (String) fragment.getData(vertex);
                     outputStream.writeBytes(value);
                 }
-            } else {
-                logger.error("Unsupported oid class: " + conf.getGrapeOidClass().getName());
+            } else if (conf.getGrapeVdataClass().equals(StringView.class)){
+                for (Vertex<GRAPE_VID_T> vertex : iterable) {
+                    StringView value = (StringView) fragment.getData(vertex);
+                    outputStream.writeBytes(value);
+                }
+            }
+            else {
+                logger.error("Unsupported vdata class: " + conf.getGrapeVdataClass().getName());
             }
             // else if (conf.getGrapeVdataClass().equals the userDefined class...
             outputStream.finishSetting();

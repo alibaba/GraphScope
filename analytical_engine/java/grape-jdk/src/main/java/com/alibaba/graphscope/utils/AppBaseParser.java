@@ -184,7 +184,7 @@ public class AppBaseParser {
         } else if (typeName.contains("LongWritable")) {
             return "java.lang.Long";
         } else {
-            return "org.apache.hadoop.io.Writable";
+            return "com.alibaba.graphscope.ds.StringView";
         }
         // throw new IllegalStateException("Not recognized writable " + typeName);
     }
