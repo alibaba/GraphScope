@@ -47,6 +47,7 @@ import com.alibaba.fastffi.FFIGenBatch;
  */
 @FFIGenBatch(
         value = {
+            @FFIGen(type = "com.alibaba.graphscope.stdcxx.StdString"),
             @FFIGen(type = "com.alibaba.graphscope.ds.FidPointer"),
             @FFIGen(type = "com.alibaba.graphscope.ds.DestList"),
             @FFIGen(type = "com.alibaba.graphscope.stdcxx.CCharPointer"),

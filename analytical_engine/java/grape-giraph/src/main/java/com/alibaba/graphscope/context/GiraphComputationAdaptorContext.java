@@ -39,8 +39,10 @@ import com.alibaba.graphscope.parallel.utils.NetworkMap;
 import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
+import com.alibaba.graphscope.stdcxx.StdString;
 import com.alibaba.graphscope.utils.ConfigurationUtils;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+import com.alibaba.graphscope.ds.StringView;
 
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
@@ -248,7 +250,24 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                     // This string is not readable.
                     vertexArray.setValue(grapeVertex, new String(bytes));
                 }
-            } else {
+            } else if (conf.getGrapeVdataClass().equals(StringView.class)) {
+                byte[] bytes = new byte[(int) maxOffset];
+                for (long lid = 0; lid < innerVerticesNum; ++lid) {
+                    grapeVertex.setValue((VID_T) (Long) lid);
+                    if (inputStream.longAvailable() <= 0) {
+                        throw new IllegalStateException(
+                                "Input stream too short for " + innerVerticesNum + " vertices");
+                    }
+                    if (inputStream.read(bytes, 0, (int) offsets[(int) lid]) == -1) {
+                        throw new IllegalStateException("read input stream failed");
+                    }
+                    // This string is not readable.
+                    StdString value = (StdString) vertexArray.get(grapeVertex);
+                    //TODO: can be optimized without creating a java string
+                    value.fromJavaString(new String(bytes));
+                }
+            }
+            else {
                 throw new IllegalStateException(
                         "Unrecognized vdata class:" + conf.getGrapeVdataClass().getName());
             }
@@ -548,11 +567,11 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
      */
     private boolean checkConsistency(ImmutableClassesGiraphConfiguration configuration) {
         return ConfigurationUtils.checkTypeConsistency(
-                        configuration.getGrapeOidClass(), configuration.getVertexIdClass())
+                configuration.getGrapeOidClass(), configuration.getVertexIdClass())
                 && ConfigurationUtils.checkTypeConsistency(
-                        configuration.getGrapeEdataClass(), configuration.getEdgeValueClass())
+                configuration.getGrapeEdataClass(), configuration.getEdgeValueClass())
                 && ConfigurationUtils.checkTypeConsistency(
-                        configuration.getGrapeVdataClass(), configuration.getVertexValueClass());
+                configuration.getGrapeVdataClass(), configuration.getVertexValueClass());
     }
 
     private static String urlsToString(URL[] urls) {

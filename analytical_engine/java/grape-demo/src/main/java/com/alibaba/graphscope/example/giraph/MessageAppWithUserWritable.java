@@ -34,12 +34,12 @@ public class MessageAppWithUserWritable
         extends BasicComputation<LongWritable, MultipleLongWritable, MultipleLongWritable, MultipleLongWritable> {
 
     public static LongConfOption MAX_SUPER_STEP;
-    private static Logger logger = LoggerFactory.getLogger(MessageApp.class);
+    private static Logger logger = LoggerFactory.getLogger(MessageAppWithUserWritable.class);
 
     static {
         String maxSuperStep = System.getenv("MAX_SUPER_STEP");
         if (Objects.isNull(maxSuperStep) || maxSuperStep.isEmpty()) {
-            MAX_SUPER_STEP = new LongConfOption("maxSuperStep", 1, "max super step");
+            MAX_SUPER_STEP = new LongConfOption("maxSuperStep", 3, "max super step");
         } else {
             MAX_SUPER_STEP =
                     new LongConfOption(
@@ -60,7 +60,7 @@ public class MessageAppWithUserWritable
             Iterable<MultipleLongWritable> messages)
             throws IOException {
         if (getSuperstep() == 0) {
-            logger.info("There should be no messages in step0, " + vertex.getId());
+            // logger.info("There should be no messages in step0, " + vertex.getId());
             boolean flag = false;
             for (MultipleLongWritable message : messages) {
                 flag = true;
@@ -72,7 +72,9 @@ public class MessageAppWithUserWritable
             MultipleLongWritable msg = new MultipleLongWritable(vertex.getId().get());
             sendMessageToAllEdges(vertex, msg);
         } else if (getSuperstep() < MAX_SUPER_STEP.get(getConf())) {
-            logger.info("step [{}] Checking received msg", getSuperstep());
+            if (vertex.getId().get() < 20){
+                logger.info("step [{}] Checking received msg", getSuperstep());
+            }
             int msgCnt = 0;
             for (MultipleLongWritable message : messages) {
                 msgCnt += 1;

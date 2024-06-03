@@ -459,16 +459,15 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
                     }
                 }
             case 5:
-                PrimitiveTypedArray<GRAPE_ED_T> stringViewTypedArray =
-                        FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+                StringTypedArray stringViewTypedArray =
+                        FFITypeFactoryhelper.newStringTypedArray();
                 stringViewTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
                         long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
-                        GRAPE_ED_T edata = stringViewTypedArray.get(eid);
-                        StringView longValue = (StringView) edata;
-                        outputStream.writeBytes(longValue);
+                        StringView edata = stringViewTypedArray.get(eid);
+                        outputStream.writeBytes(edata);
                         curAddr += nbrUnitEleSize;
                     }
                 }
