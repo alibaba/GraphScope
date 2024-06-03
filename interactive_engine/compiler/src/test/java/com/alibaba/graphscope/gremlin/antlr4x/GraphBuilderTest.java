@@ -1653,7 +1653,8 @@ public class GraphBuilderTest {
                         + " alias=[b], fusedFilter=[[AND(=(_.name, _UTF-8'male'), =(_.age, 10))]],"
                         + " opt=[VERTEX])",
                 after.explain().trim());
-      
+    }
+
     // id is the primary key of label 'person', should be fused as 'uniqueKeyFilters'
     @Test
     public void g_V_has_label_person_id_test() {
