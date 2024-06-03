@@ -26,7 +26,6 @@ import com.alibaba.graphscope.interactive.openapi.model.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.Closeable;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /***
@@ -341,8 +340,7 @@ public class DefaultSession implements Session {
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
             }
             IrResult.CollectiveResults results =
-                    IrResult.CollectiveResults.parseFrom(
-                            response.getData());
+                    IrResult.CollectiveResults.parseFrom(response.getData());
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -366,7 +364,7 @@ public class DefaultSession implements Session {
             ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
-                        new ApiException(response.getStatusCode(),"Failed to call procedure"));
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
             }
             return new Result<byte[]>(response.getData());
         } catch (ApiException e) {

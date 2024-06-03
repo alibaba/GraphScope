@@ -1011,6 +1011,8 @@ components:
     TemporalType:
       x-body-name: temporal_type
       type: object
+      required:
+        - temporal
       properties:
         temporal:
           oneOf:
