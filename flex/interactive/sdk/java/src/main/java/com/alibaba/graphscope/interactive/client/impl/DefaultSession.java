@@ -318,10 +318,7 @@ public class DefaultSession implements Session {
 
     private byte[] encodeString(String jsonStr, int lastByte) {
         byte[] bytes = new byte[jsonStr.length() + 1];
-        // copy string to byte array
-        for (int i = 0; i < jsonStr.length(); i++) {
-            bytes[i] = (byte) jsonStr.charAt(i);
-        }
+        System.arraycopy(jsonStr.getBytes(), 0, bytes, 0, jsonStr.length());
         bytes[jsonStr.length()] = (byte) lastByte;
         return bytes;
     }
