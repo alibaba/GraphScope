@@ -183,7 +183,10 @@ public class AppBaseParser {
             return "java.lang.Integer";
         } else if (typeName.contains("LongWritable")) {
             return "java.lang.Long";
-        } else throw new IllegalStateException("Not recognized writable " + typeName);
+        } else {
+            return "org.apache.hadoop.io.Writable";
+        }
+        // throw new IllegalStateException("Not recognized writable " + typeName);
     }
 
     private static Method getMethod(Class<?> clz) {

@@ -80,6 +80,8 @@ public class GrapeTypes {
             return Double.class;
         } else if (typeString.equals("float")) {
             return Float.class;
+        } else if (typeString.equals("std::string")){
+            return String.class;
         }
         throw new IllegalStateException("Not supported type string" + typeString);
     }

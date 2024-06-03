@@ -295,6 +295,9 @@ public class ConfigurationUtils {
         if (grapeTypeClass.equals(Float.class)) {
             return giraphTypeClass.equals(FloatWritable.class);
         }
+        if (grapeTypeClass.equals(String.class)) {
+            return true;
+        }
         logger.error(
                 "Unsupported grape type and giraph type: "
                         + grapeTypeClass.getName()
