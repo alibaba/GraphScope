@@ -528,7 +528,7 @@ bool hqps_http_handler::is_running() const { return running_.load(); }
 bool hqps_http_handler::is_actors_running() const {
   return !ic_handler_->is_current_scope_cancelled() &&
          !adhoc_query_handler_->is_current_scope_cancelled() &&
-         proc_handler_->is_current_scope_cancelled();
+         !proc_handler_->is_current_scope_cancelled();
 }
 
 void hqps_http_handler::start() {
