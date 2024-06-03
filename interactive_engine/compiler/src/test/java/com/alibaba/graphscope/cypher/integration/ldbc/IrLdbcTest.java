@@ -63,6 +63,14 @@ public class IrLdbcTest {
     }
 
     @Test
+    public void run_ldbc_4_test_exp() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_4_test_exp();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
     public void run_ldbc_6_test() {
         QueryContext testQuery = LdbcQueries.get_ldbc_6_test();
         Result result = session.run(testQuery.getQuery());
