@@ -92,8 +92,12 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         }
         this.vidClass = vidClass;
         edata_t = grapeEdata2Int();
-        BaseTypedArray<GRAPE_ED_T> newTypedArray =
-                FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+        BaseTypedArray<GRAPE_ED_T> newTypedArray;
+        if (edataClass.equals(StringView.class)){
+            newTypedArray = (BaseTypedArray<GRAPE_ED_T>) FFITypeFactoryhelper.newStringTypedArray();
+        } else {
+            newTypedArray = FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+        }
         newTypedArray.setAddress(this.fragment.getEdataArrayAccessor().getAddress());
         csrHolder = new CSRHolder(newTypedArray, consumer);
         edgeIterable = new TupleIterable(csrHolder);
