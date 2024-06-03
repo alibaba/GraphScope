@@ -367,16 +367,16 @@ impl PropDef {
 #[derive(Default, Clone)]
 pub struct GraphPartitionStatistics {
     version: i64,
-    vertex_count: i64,
-    edge_count: i64,
-    vertex_type_count: HashMap<LabelId, i64>,
-    edge_type_count: HashMap<EdgeKind, i64>,
+    vertex_count: u64,
+    edge_count: u64,
+    vertex_type_count: HashMap<LabelId, u64>,
+    edge_type_count: HashMap<EdgeKind, u64>,
 }
 
 impl GraphPartitionStatistics {
     pub fn new(
-        version: i64, vertex_count: i64, edge_count: i64, vertex_type_count: HashMap<LabelId, i64>,
-        edge_type_count: HashMap<EdgeKind, i64>,
+        version: i64, vertex_count: u64, edge_count: u64, vertex_type_count: HashMap<LabelId, u64>,
+        edge_type_count: HashMap<EdgeKind, u64>,
     ) -> Self {
         GraphPartitionStatistics { version, vertex_count, edge_count, vertex_type_count, edge_type_count }
     }
@@ -385,22 +385,22 @@ impl GraphPartitionStatistics {
         self.version
     }
 
-    pub fn get_vertex_count(&self) -> i64 {
+    pub fn get_vertex_count(&self) -> u64 {
         self.vertex_count
     }
 
-    pub fn get_edge_count(&self) -> i64 {
+    pub fn get_edge_count(&self) -> u64 {
         self.edge_count
     }
 
-    pub fn get_vertex_type_count(&self, v_type: LabelId) -> i64 {
+    pub fn get_vertex_type_count(&self, v_type: LabelId) -> u64 {
         self.vertex_type_count
             .get(&v_type)
             .unwrap_or(&0)
             .clone()
     }
 
-    pub fn get_edge_type_count(&self, e_type: EdgeKind) -> i64 {
+    pub fn get_edge_type_count(&self, e_type: EdgeKind) -> u64 {
         self.edge_type_count
             .get(&e_type)
             .unwrap_or(&0)
@@ -417,14 +417,14 @@ impl GraphPartitionStatistics {
             vertex_type_statistics
                 .mut_labelId()
                 .set_id(*label_id);
-            vertex_type_statistics.set_numVertices(*count as u64);
+            vertex_type_statistics.set_numVertices(*count);
             pb.mut_vertexTypeStatistics()
                 .push(vertex_type_statistics);
         }
         for (edge_kind, count) in &self.edge_type_count {
             let mut edge_type_statistics = EdgeTypeStatisticsPb::new();
             edge_type_statistics.set_edgeKind(edge_kind.to_proto());
-            edge_type_statistics.set_numEdges(*count as u64);
+            edge_type_statistics.set_numEdges(*count);
             pb.mut_edgeTypeStatistics()
                 .push(edge_type_statistics);
         }

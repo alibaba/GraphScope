@@ -1049,7 +1049,7 @@ impl GraphStore {
         ))
     }
 
-    fn get_vertex_statistics(&self, si: SnapshotId) -> GraphResult<HashMap<LabelId, i64>> {
+    fn get_vertex_statistics(&self, si: SnapshotId) -> GraphResult<HashMap<LabelId, u64>> {
         let guard = epoch::pin();
         let map = self.vertex_manager.get_map(&guard);
         let map_ref = unsafe { map.deref() };
@@ -1062,13 +1062,13 @@ impl GraphStore {
             let label_count = self
                 .scan_vertex(si, Some(label_id), None, None)?
                 .count();
-            vertex_label_counts.insert(label_id, label_count as i64);
+            vertex_label_counts.insert(label_id, label_count as u64);
         }
 
         Ok(vertex_label_counts)
     }
 
-    fn get_edge_statistics(&self, si: SnapshotId) -> GraphResult<HashMap<EdgeKind, i64>> {
+    fn get_edge_statistics(&self, si: SnapshotId) -> GraphResult<HashMap<EdgeKind, u64>> {
         let guard = epoch::pin();
         let inner = self.edge_manager.get_inner(&guard);
         let edge_mgr = unsafe { inner.deref() };
@@ -1088,7 +1088,7 @@ impl GraphStore {
             )
             .into_iter();
             let edge_count = kind_iter.count();
-            edge_kind_counts.insert(edge_kind.clone(), edge_count as i64);
+            edge_kind_counts.insert(edge_kind.clone(), edge_count as u64);
         }
         Ok(edge_kind_counts)
     }
