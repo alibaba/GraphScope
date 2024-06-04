@@ -107,7 +107,7 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
 
 class hqps_http_handler {
  public:
-  hqps_http_handler(uint16_t http_port);
+  hqps_http_handler(uint16_t http_port, int32_t shard_num);
   ~hqps_http_handler();
 
   void start();
@@ -132,6 +132,7 @@ class hqps_http_handler {
   std::atomic<bool> running_{false}, actors_running_{false};
 
   std::vector<hqps_ic_handler*> ic_handlers_;
+  std::vector<hqps_ic_handler*> proc_handlers_;
   std::vector<hqps_adhoc_query_handler*> adhoc_query_handlers_;
 };
 

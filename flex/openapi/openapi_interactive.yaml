@@ -926,7 +926,7 @@ paths:
                 format: byte
         '500':
           description: Server internal error
-  /v1/graph/current/query:
+  /v1/query:
     post:
       tags:
         - QueryService
