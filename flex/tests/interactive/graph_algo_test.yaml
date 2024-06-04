@@ -1,3 +1,4 @@
+id: graph_also
 name: graph_algo
 store_type: mutable_csr
 version: v0.1

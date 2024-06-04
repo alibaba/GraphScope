@@ -41,6 +41,22 @@ void Schema::Clear() {
   plugin_dir_.clear();
 }
 
+std::string Schema::get_id() const {
+  return id_;
+}
+
+std::string Schema::get_name() const {
+  return name_;
+}
+
+void Schema::set_id(const std::string& id) {
+  id_ = id;
+}
+
+void Schema::set_name(const std::string& name) {
+  name_ = name;
+}
+
 void Schema::add_vertex_label(
     const std::string& label, const std::vector<PropertyType>& property_types,
     const std::vector<std::string>& property_names,
@@ -343,7 +359,7 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
   vlabel_indexer_.Serialize(writer);
   elabel_indexer_.Serialize(writer);
   grape::InArchive arc;
-  arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
+  arc << id_ << name_ << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
       << ie_mutability_ << oe_mutability_ << sort_on_compactions_ << max_vnum_
       << v_descriptions_ << e_descriptions_ << description_ << version_;
@@ -356,7 +372,7 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   elabel_indexer_.Deserialize(reader);
   grape::OutArchive arc;
   CHECK(reader->ReadArchive(arc));
-  arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
+  arc >> id_ >> name_ >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
       eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
       ie_mutability_ >> oe_mutability_ >> sort_on_compactions_ >> max_vnum_ >>
       v_descriptions_ >> e_descriptions_ >> description_ >> version_;
@@ -1095,6 +1111,22 @@ static Status parse_schema_from_yaml_node(const YAML::Node& graph_node,
 
   if (graph_node["description"]) {
     schema.SetDescription(graph_node["description"].as<std::string>());
+  }
+
+  if (graph_node["name"]){
+    schema.set_name(graph_node["name"].as<std::string>());
+  }
+  else {
+    LOG(ERROR) << "name is not set properly";
+    return Status(StatusCode::InvalidSchema, "grpah name is not set properly");
+  }
+
+  if (graph_node["id"]){
+    schema.set_id(graph_node["id"].as<std::string>());
+  }
+  else {
+    LOG(WARNING) << "id is not set properly, use name as id";
+    schema.set_id(schema.get_name());
   }
 
   // check whether a version field is specified for the schema, if

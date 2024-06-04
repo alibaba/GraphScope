@@ -20,8 +20,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
-#include "flex/storages/rt_mutable_graph/schema.h"
+
 #include "flex/utils/property/types.h"
 #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"

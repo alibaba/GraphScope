@@ -228,6 +228,10 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   return Result<bool>(true);
 }
 
+GraphId GraphDB::Id() const {
+  return graph_.schema().get_id();
+}
+
 void GraphDB::Close() {
   if (monitor_thread_running_) {
     monitor_thread_running_ = false;

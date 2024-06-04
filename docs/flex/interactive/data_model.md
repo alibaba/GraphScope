@@ -2,6 +2,10 @@
 
 When working with GraphScope Interactive, the data model must be defined while [using custom graph data](./custom_graph_data). This data model consists of two primary components: graph data and entity data.
 
+## Graph Identifier
+
+Interactive internally maintains a unique id for each graph. User can use this unique id to manage/query the graph via the [Interactive Java SDK](./development/java/java_sdk) or [Interactive Python SDK](./development/python/python_sdk).
+
 ## Graph Data
 The graph data encompasses two fundamental elements:
 

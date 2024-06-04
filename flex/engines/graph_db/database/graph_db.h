@@ -30,6 +30,7 @@
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
+#include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
@@ -88,6 +89,12 @@ class GraphDB {
                     bool enable_auto_compaction = false);
 
   Result<bool> Open(const GraphDBConfig& config);
+
+  /**
+   * @brief Get the graph id.
+   * @return The graph id.
+  */
+  GraphId Id() const;
 
   /**
    * @brief Close the current opened graph.

@@ -59,6 +59,17 @@ class Schema {
 
   void Clear();
 
+  /*Graph Id is the unique id for the schema.
+  */
+  std::string get_id() const;
+
+    /* Graph Name is the name of the graph, can be duplicated.*/
+  std::string get_name() const;
+
+  void set_id(const std::string& id);
+
+    void set_name(const std::string& name);
+
   void add_vertex_label(
       const std::string& label, const std::vector<PropertyType>& property_types,
       const std::vector<std::string>& property_names,
@@ -233,6 +244,9 @@ class Schema {
   label_t edge_label_to_index(const std::string& label);
 
   uint32_t generate_edge_label(label_t src, label_t dst, label_t edge) const;
+
+  std::string id_; // a unique id for the schema
+  std::string name_; // the name of the schema
 
   IdIndexer<std::string, label_t> vlabel_indexer_;
   IdIndexer<std::string, label_t> elabel_indexer_;
