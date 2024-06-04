@@ -381,8 +381,10 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
       gs::CreateGraphMetaRequest::FromJson(real_schema_json.value()));
   // we also need to store a graph.yaml on disk, for other services to read.
   if (result.ok()) {
+    // Add the id to the schema.
+    yaml_value["id"] = result.value();
     auto dump_res =
-        WorkDirManipulator::DumpGraphSchema(result.value(), res_yaml.value());
+        WorkDirManipulator::DumpGraphSchema(result.value(), yaml_value);
     if (!dump_res.ok()) {
       LOG(ERROR) << "Fail to dump graph schema: "
                  << dump_res.status().error_message();
