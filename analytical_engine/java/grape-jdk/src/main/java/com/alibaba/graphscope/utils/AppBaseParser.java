@@ -186,7 +186,6 @@ public class AppBaseParser {
         } else {
             return "com.alibaba.graphscope.ds.StringView";
         }
-        // throw new IllegalStateException("Not recognized writable " + typeName);
     }
 
     private static Method getMethod(Class<?> clz) {

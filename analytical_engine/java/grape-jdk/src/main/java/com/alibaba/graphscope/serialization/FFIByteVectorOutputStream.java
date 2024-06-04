@@ -279,7 +279,6 @@ public class FFIByteVectorOutputStream extends OutputStream implements DataOutpu
         int len = (int) s.size();
         vector.ensure(offset, len);
         for (int i = 0; i < len; i++) {
-            //            UnsafeHolder.U.putByte(newBase + i, (byte) data.charAt(i));
             vector.setRawByte(offset + i, (byte) s.byteAt(i));
         }
         offset += len;

@@ -567,11 +567,11 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
      */
     private boolean checkConsistency(ImmutableClassesGiraphConfiguration configuration) {
         return ConfigurationUtils.checkTypeConsistency(
-                configuration.getGrapeOidClass(), configuration.getVertexIdClass())
+                        configuration.getGrapeOidClass(), configuration.getVertexIdClass())
                 && ConfigurationUtils.checkTypeConsistency(
-                configuration.getGrapeEdataClass(), configuration.getEdgeValueClass())
+                        configuration.getGrapeEdataClass(), configuration.getEdgeValueClass())
                 && ConfigurationUtils.checkTypeConsistency(
-                configuration.getGrapeVdataClass(), configuration.getVertexValueClass());
+                        configuration.getGrapeVdataClass(), configuration.getVertexValueClass());
     }
 
     private static String urlsToString(URL[] urls) {
