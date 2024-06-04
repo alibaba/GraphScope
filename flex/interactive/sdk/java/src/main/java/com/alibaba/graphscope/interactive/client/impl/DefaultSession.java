@@ -26,7 +26,6 @@ import com.alibaba.graphscope.interactive.openapi.model.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.Closeable;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /***
@@ -317,14 +316,11 @@ public class DefaultSession implements Session {
         }
     }
 
-    private String encodeString(String jsonStr, int lastByte) {
+    private byte[] encodeString(String jsonStr, int lastByte) {
         byte[] bytes = new byte[jsonStr.length() + 1];
-        // copy string to byte array
-        for (int i = 0; i < jsonStr.length(); i++) {
-            bytes[i] = (byte) jsonStr.charAt(i);
-        }
+        System.arraycopy(jsonStr.getBytes(), 0, bytes, 0, jsonStr.length());
         bytes[jsonStr.length()] = (byte) lastByte;
-        return new String(bytes, StandardCharsets.UTF_8);
+        return bytes;
     }
 
     @Override
@@ -334,15 +330,14 @@ public class DefaultSession implements Session {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
-            String encodedStr = encodeString(request.toJson(), 1);
-            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
+            byte[] encodedStr = encodeString(request.toJson(), 1);
+            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
-                        new ApiException(response.getStatusCode(), response.getData()));
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
             }
             IrResult.CollectiveResults results =
-                    IrResult.CollectiveResults.parseFrom(
-                            response.getData().getBytes(StandardCharsets.UTF_8));
+                    IrResult.CollectiveResults.parseFrom(response.getData());
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -354,19 +349,21 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> callProcedureRaw(String graphName, String request) {
+    public Result<byte[]> callProcedureRaw(String graphName, byte[] request) {
         try {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            String encodedStr = encodeString(request, 0);
-            ApiResponse<String> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
+            byte[] encodedStr = new byte[request.length + 1];
+            System.arraycopy(request, 0, encodedStr, 0, request.length);
+            encodedStr[request.length] = 0;
+            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
-                        new ApiException(response.getStatusCode(), response.getData()));
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
             }
-            return new Result<String>(response.getData());
+            return new Result<byte[]>(response.getData());
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);

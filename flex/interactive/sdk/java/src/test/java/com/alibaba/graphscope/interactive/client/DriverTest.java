@@ -506,8 +506,7 @@ public class DriverTest {
         Encoder encoder = new Encoder(bytes);
         encoder.put_int(1);
         encoder.put_byte((byte) 1); // Assume the procedure index is 1
-        String encoded = new String(bytes);
-        Result<String> resp = session.callProcedureRaw(graphId, encoded);
+        Result<byte[]> resp = session.callProcedureRaw(graphId, bytes);
         assertOk(resp);
     }
 

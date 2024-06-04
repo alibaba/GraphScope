@@ -1426,8 +1426,6 @@ mod tests {
 
     #[test]
     fn test_eval_casewhen() {
-        // TODO: the parser does not support escape characters in regex well yet.
-        // So use gen_regex_expression() to help generate expression
         // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
         // [v1: id = 2, label = 11, age = 26, name = Nancy, birthday = 19950816]
         let ctxt = prepare_context();
