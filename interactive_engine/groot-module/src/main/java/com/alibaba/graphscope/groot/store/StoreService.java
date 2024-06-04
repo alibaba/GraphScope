@@ -120,18 +120,13 @@ public class StoreService {
                         new LinkedBlockingQueue<>(1),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
-        int partitionCount = partitionIds.size();
-        int compactQueueLength =
-                partitionCount - this.compactThreadCount <= 0
-                        ? 1
-                        : partitionCount - this.compactThreadCount;
         this.compactExecutor =
                 new ThreadPoolExecutor(
                         1,
                         this.compactThreadCount,
                         60L,
                         TimeUnit.SECONDS,
-                        new LinkedBlockingQueue<>(compactQueueLength),
+                        new LinkedBlockingQueue<>(partitionIds.size()),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-compact", logger));
         this.garbageCollectExecutor =
@@ -309,7 +304,7 @@ public class StoreService {
             downloadPath = Paths.get(dataRoot, "download").toString();
         }
         String[] items = path.split("/");
-        // Get the  unique path  (uuid)
+        // Get the unique path (uuid)
         String unique_path = items[items.length - 1];
         Path uniquePath = Paths.get(downloadPath, unique_path);
         if (!Files.isDirectory(uniquePath)) {
@@ -425,13 +420,14 @@ public class StoreService {
         int partitionCount = this.idToPartition.values().size();
         CountDownLatch compactCountDownLatch = new CountDownLatch(partitionCount);
         AtomicInteger successCompactJobCount = new AtomicInteger(partitionCount);
-        logger.info("compact DB");
+        logger.info("compaction of all DB started");
         for (GraphPartition partition : this.idToPartition.values()) {
             this.compactExecutor.execute(
                     () -> {
                         try {
+                            logger.info("Compaction of {} partition started", partition.getId());
                             partition.compact();
-                            logger.info("Compaction {} partition finished", partition.getId());
+                            logger.info("Compaction of {} partition finished", partition.getId());
                             successCompactJobCount.decrementAndGet();
                         } catch (Exception e) {
                             logger.error("compact DB failed", e);
@@ -448,7 +444,9 @@ public class StoreService {
         }
 
         if (successCompactJobCount.get() > 0) {
-            callback.onError(new Exception("not all partition compact success. please check log."));
+            String msg = "not all partition compact success. please check log.";
+            logger.error(msg);
+            callback.onError(new Exception(msg));
         } else {
             callback.onCompleted(null);
         }
