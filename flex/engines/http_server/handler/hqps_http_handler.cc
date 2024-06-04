@@ -173,10 +173,10 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([this, input_format
+      .then([input_format
 #ifdef HAVE_OPENTELEMETRY_CPP
              ,
-             outer_span = outer_span
+             this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& output) {
         if (output.content.size() < 4) {
@@ -425,10 +425,9 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
                   std::move(output.content));
             });
       })
-      .then([this
+      .then([
 #ifdef HAVE_OPENTELEMETRY_CPP
-             ,
-             outer_span = outer_span
+                this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& output) {
         if (output.content.size() < 4) {
@@ -529,7 +528,7 @@ bool hqps_http_handler::is_running() const { return running_.load(); }
 bool hqps_http_handler::is_actors_running() const {
   return !ic_handler_->is_current_scope_cancelled() &&
          !adhoc_query_handler_->is_current_scope_cancelled() &&
-         proc_handler_->is_current_scope_cancelled();
+         !proc_handler_->is_current_scope_cancelled();
 }
 
 void hqps_http_handler::start() {
