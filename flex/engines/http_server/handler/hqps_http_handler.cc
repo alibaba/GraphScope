@@ -45,8 +45,7 @@ class optional_param_matcher : public matcher {
    */
   explicit optional_param_matcher(const sstring& name) : _name(name) {}
 
-  virtual size_t match(const sstring& url, size_t ind,
-                       parameters& param) override {
+  size_t match(const sstring& url, size_t ind, parameters& param) override {
     size_t last = find_end_param(url, ind);
     if (last == url.size()) {
       // Means we didn't find the parameter, but we still return true,
