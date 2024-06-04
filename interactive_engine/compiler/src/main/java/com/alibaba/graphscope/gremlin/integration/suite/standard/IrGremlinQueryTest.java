@@ -16,16 +16,9 @@
 
 package com.alibaba.graphscope.gremlin.integration.suite.standard;
 
-import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
-
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.google.common.collect.Lists;
-
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -40,6 +33,12 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
+
+import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
@@ -170,6 +169,21 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     // 10))).values('name')
     public abstract Traversal<Vertex, Object>
             get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
+
+    public abstract Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age();
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_path_expand_until_age_gt_30_values_age() {
+        // the until condition follows a sql-like expression syntax, which can only be opened when
+        // language type is antlr_gremlin_calcite
+        // assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal =
+                get_g_V_path_expand_until_age_gt_30_values_age();
+        printTraversalForm(traversal);
+        Assert.assertEquals(32, traversal.next());
+        Assert.assertFalse(traversal.hasNext());
+    }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
@@ -1211,6 +1225,18 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                                     "a.name = 'marko' and (a.age > 20 OR a.age < 10)",
                                     ExprStep.Type.FILTER))
                     .values("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age() {
+            return ((IrCustomizedTraversal)
+                            g.V().out("1..100", "knows")
+                                    .with(
+                                            "UNTIL",
+                                            com.alibaba.graphscope.gremlin.integration.suite.utils
+                                                    .__.expr("_.age > 30", ExprStep.Type.FILTER)))
+                    .endV()
+                    .values("age");
         }
 
         @Override
