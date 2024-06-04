@@ -10,7 +10,7 @@ User can use this unique id to manage/query the graph via the [Interactive Java 
 
 ## Graph Name
 
-Each graph can have a name, indicating what the graph is about. The name is not necessarily unique.
+Each graph can have a name, indicating what the graph is about. The name can be duplicated.
 
 ## Graph Data
 The graph data encompasses two fundamental elements:
