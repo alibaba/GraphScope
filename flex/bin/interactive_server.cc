@@ -85,7 +85,7 @@ void init_codegen_proxy(const bpo::variables_map& vm,
 }
 
 void openDefaultGraph(const std::string workspace, int32_t thread_num,
-                      const std::string& default_graph) {
+                      const std::string& default_graph, uint32_t memory_level) {
   if (!std::filesystem::exists(workspace)) {
     LOG(ERROR) << "Workspace directory not exists: " << workspace;
   }
@@ -126,7 +126,12 @@ void openDefaultGraph(const std::string workspace, int32_t thread_num,
                << ", for graph: " << default_graph;
   }
   db.Close();
-  if (!db.Open(schema_res.value(), data_dir, thread_num).ok()) {
+  gs::GraphDBConfig config(schema_res.value(), data_dir, thread_num);
+  config.memory_level = memory_level;
+  if (config.memory_level >= 2) {
+    config.enable_auto_compaction = true;
+  }
+  if (!db.Open(config).ok()) {
     LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
   }
   LOG(INFO) << "Successfully init graph db for default graph: "
@@ -164,7 +169,9 @@ int main(int argc, char** argv) {
       "enable-trace", bpo::value<bool>()->default_value(false),
       "whether to enable opentelemetry tracing")(
       "start-compiler", bpo::value<bool>()->default_value(false),
-      "whether or not to start compiler");
+      "whether or not to start compiler")(
+      "memory-level,m", bpo::value<unsigned>()->default_value(1),
+      "memory allocation strategy");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -195,6 +202,7 @@ int main(int argc, char** argv) {
   service_config.engine_config_path = engine_config_file;
   service_config.start_admin_service = vm["enable-admin-service"].as<bool>();
   service_config.start_compiler = vm["start-compiler"].as<bool>();
+  service_config.memory_level = vm["memory-level"].as<unsigned>();
 
   auto& db = gs::GraphDB::get();
 
@@ -218,7 +226,8 @@ int main(int argc, char** argv) {
     }
 
     gs::openDefaultGraph(workspace, service_config.shard_num,
-                         service_config.default_graph);
+                         service_config.default_graph,
+                         service_config.memory_level);
     // Suppose the default_graph is already loaded.
     LOG(INFO) << "Finish init workspace";
     auto schema_file = server::WorkDirManipulator::GetGraphSchemaPath(

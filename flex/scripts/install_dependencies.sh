@@ -42,7 +42,7 @@ popd && rm -rf /tmp/apache-arrow-apt-source-latest.deb
 
 # install opentelemetry
 cd /tmp
-git clone https://github.com/open-telemetry/opentelemetry-cpp
+git clone https://github.com/open-telemetry/opentelemetry-cpp -b v1.15.0
 cd opentelemetry-cpp
 cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
 -DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
