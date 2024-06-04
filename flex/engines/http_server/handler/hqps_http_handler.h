@@ -132,7 +132,6 @@ class hqps_http_handler {
   std::atomic<bool> running_{false}, actors_running_{false};
 
   std::vector<hqps_ic_handler*> ic_handlers_;
-  std::vector<hqps_ic_handler*> proc_handlers_;
   std::vector<hqps_adhoc_query_handler*> adhoc_query_handlers_;
 };
 

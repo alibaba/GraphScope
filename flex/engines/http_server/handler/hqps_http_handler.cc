@@ -536,7 +536,6 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
 hqps_http_handler::hqps_http_handler(uint16_t http_port, int32_t shard_num)
     : http_port_(http_port) {
   ic_handlers_.resize(shard_num);
-  proc_handlers_.resize(shard_num);
   adhoc_query_handlers_.resize(shard_num);
 }
 
@@ -595,10 +594,6 @@ seastar::future<> hqps_http_handler::stop_query_actors() {
             ->cancel_current_scope();
       })
       .then([this] {
-        return proc_handlers_[hiactor::local_shard_id()]
-            ->cancel_current_scope();
-      })
-      .then([this] {
         LOG(INFO) << "Cancelled proc scope";
         actors_running_.store(false);
         return seastar::make_ready_future<>();
@@ -608,7 +603,6 @@ seastar::future<> hqps_http_handler::stop_query_actors() {
 void hqps_http_handler::start_query_actors() {
   ic_handlers_[hiactor::local_shard_id()]->create_actors();
   adhoc_query_handlers_[hiactor::local_shard_id()]->create_actors();
-  proc_handlers_[hiactor::local_shard_id()]->create_actors();
   actors_running_.store(true);
 }
 
@@ -617,19 +611,13 @@ seastar::future<> hqps_http_handler::set_routes() {
     auto ic_handler =
         new hqps_ic_handler(ic_query_group_id, max_group_id, group_inc_step,
                             shard_query_concurrency);
-    auto proc_handler =
-        new hqps_ic_handler(ic_query_group_id, max_group_id, group_inc_step,
-                            shard_query_concurrency);
     auto adhoc_query_handler = new hqps_adhoc_query_handler(
         ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
         shard_adhoc_concurrency);
 
-    r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/v1/query"), ic_handler);
-
-    auto rule_proc = new seastar::httpd::match_rule(proc_handler);
+    auto rule_proc = new seastar::httpd::match_rule(ic_handler);
     rule_proc->add_str("/v1/graph")
-        .add_matcher(new seastar::httpd::param_matcher("graph_id"))
+        .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
         .add_str("/query");
 
     r.add(rule_proc, seastar::httpd::operation_type::POST);
@@ -638,7 +626,6 @@ seastar::future<> hqps_http_handler::set_routes() {
           seastar::httpd::url("/interactive/adhoc_query"), adhoc_query_handler);
 
     ic_handlers_[hiactor::local_shard_id()] = ic_handler;
-    proc_handlers_[hiactor::local_shard_id()] = proc_handler;
     adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler;
 
     return seastar::make_ready_future<>();
