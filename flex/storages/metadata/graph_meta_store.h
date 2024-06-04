@@ -17,11 +17,10 @@
 #define FLEX_STORAGES_METADATA_GRAPH_META_STORE_H_
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <optional>
-
 
 #include "flex/utils/property/types.h"
 #include "flex/utils/result.h"

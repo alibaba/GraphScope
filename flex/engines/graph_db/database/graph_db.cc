@@ -228,9 +228,9 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   return Result<bool>(true);
 }
 
-GraphId GraphDB::Id() const {
-  return graph_.schema().get_id();
-}
+GraphId GraphDB::Id() const { return graph_.schema().get_id(); }
+
+std::string GraphDB::name() const { return graph_.schema().get_name(); }
 
 void GraphDB::Close() {
   if (monitor_thread_running_) {

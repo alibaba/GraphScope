@@ -93,8 +93,10 @@ class GraphDB {
   /**
    * @brief Get the graph id.
    * @return The graph id.
-  */
+   */
   GraphId Id() const;
+
+  std::string name() const;
 
   /**
    * @brief Close the current opened graph.

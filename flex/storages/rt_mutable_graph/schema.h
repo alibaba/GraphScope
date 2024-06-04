@@ -17,6 +17,7 @@
 #define GRAPHSCOPE_FRAGMENT_SCHEMA_H_
 
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
+#include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
@@ -59,16 +60,15 @@ class Schema {
 
   void Clear();
 
-  /*Graph Id is the unique id for the schema.
-  */
-  std::string get_id() const;
+  /*Graph Id is the unique id for the schema.*/
+  GraphId get_id() const;
 
-    /* Graph Name is the name of the graph, can be duplicated.*/
+  /* Graph Name is the name of the graph, can be duplicated.*/
   std::string get_name() const;
 
   void set_id(const std::string& id);
 
-    void set_name(const std::string& name);
+  void set_name(const std::string& name);
 
   void add_vertex_label(
       const std::string& label, const std::vector<PropertyType>& property_types,
@@ -245,8 +245,8 @@ class Schema {
 
   uint32_t generate_edge_label(label_t src, label_t dst, label_t edge) const;
 
-  std::string id_; // a unique id for the schema
-  std::string name_; // the name of the schema
+  std::string id_;    // a unique id for the schema
+  std::string name_;  // the name of the schema
 
   IdIndexer<std::string, label_t> vlabel_indexer_;
   IdIndexer<std::string, label_t> elabel_indexer_;
