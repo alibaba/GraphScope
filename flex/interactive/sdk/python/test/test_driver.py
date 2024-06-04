@@ -280,6 +280,21 @@ class TestDriver(unittest.TestCase):
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
 
+    def callProcedureWithHttpCurrent(self):
+        req = QueryRequest(
+            query_name=self._cpp_proc_name,
+            arguments=[
+                TypedValue(
+                    type=GSDataType(
+                        PrimitiveType(primitive_type="DT_SIGNED_INT32")
+                    ),
+                    value = 1
+                )
+            ]
+        )
+        resp = self._sess.call_procedure(req)
+        assert resp.is_ok()
+        print("call procedure result: ", resp.get_value())
 
 if __name__ == "__main__":
     unittest.main()
