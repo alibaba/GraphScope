@@ -279,7 +279,6 @@ void CreateAndQuery(std::string params) {
 
   vineyard::ObjectMeta metadata;
   VINEYARD_CHECK_OK(client.GetMetaData(fragment_id, metadata));
-  LOG(INFO) << "got metadata: " << metadata.ToString();
 
   // chose different type according to the schema
   std::string vertex_data_type, edge_data_type;
