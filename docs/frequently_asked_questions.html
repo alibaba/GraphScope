@@ -11,7 +11,7 @@
 <meta name="description" content="If you don’t find an answer to your question here, feel free to file an Issues or post it to Discussions. What are the minimum resources and system requirements required to run GraphScope? To use G..." />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Install GraphScope on Local" href="deployment/install_on_local.html" /><link rel="prev" title="Glossary" href="overview/glossary.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Frequently Asked Questions - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -691,18 +691,18 @@ MathJax = {
 <li><p>What are the minimum resources and system requirements required to run GraphScope?</p>
 <blockquote>
 <div><p>To use GraphScope Python interface, <strong>Python &gt;= 3.7</strong> and <strong>pip &gt;= 19.0</strong> is required.
-GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the mininum requirement is  <strong>4 cores CPU</strong> and <strong>8G memory</strong>.</p>
+GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the minimum requirement is  <strong>4 cores CPU</strong> and <strong>8G memory</strong>.</p>
 <p>GraphScope is tested and supported on the following systems:</p>
 <ul class="simple">
 <li><p>CentOS 7+</p></li>
 <li><p>Ubuntu 18.04+</p></li>
-<li><p>MacOS 10.15+</p></li>
+<li><p>macOS 10.15+</p></li>
 </ul>
-<p>For distributed depolyment, a cluster managed by Kubernetes is required. GraphScope has been tested on
+<p>For distributed deployment, a cluster managed by Kubernetes is required. GraphScope has been tested on
 Kubernetes <strong>version &gt;= v1.12.0+</strong>.</p>
 </div></blockquote>
 </li>
-<li><p>Is Kubernetes an enssential to use GraphScope?</p>
+<li><p>Is Kubernetes an essential to use GraphScope?</p>
 <blockquote>
 <div><p>No. GraphScope supports run in standalone mode on a single machine. GraphScope pre-compiled package is distributed as a python package and can be easily installed with <cite>pip</cite>: <cite>pip3 install graphscope</cite>.</p>
 </div></blockquote>
@@ -746,7 +746,7 @@ This case is observed when using GraphScope with helm. If users did not correctl
 </li>
 <li><p>Why <cite>No such file or directory</cite> error when loading graph?</p>
 <blockquote>
-<div><p>This mostly occurs when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the <code class="docutils literal notranslate"><span class="pre">engnine</span></code> Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.</p>
+<div><p>This mostly occurs when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the <code class="docutils literal notranslate"><span class="pre">engine</span></code> Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.</p>
 <p>Specifically, if your cluster is deployed with <a class="reference external" href="https://kind.sigs.k8s.io">kind</a>, you may need to setup <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">extra-mounts</a> to mount your local directory to kind nodes.</p>
 </div></blockquote>
 </li>
@@ -763,7 +763,7 @@ This case is observed when using GraphScope with helm. If users did not correctl
 <ul>
 <li><p>Compile <code class="docutils literal notranslate"><span class="pre">grpcio</span></code> failed: You can try to use <code class="docutils literal notranslate"><span class="pre">openssl</span></code> from system by <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True</span></code>. See more details in <a class="reference external" href="https://github.com/grpc/grpc/issues/25082">grpc issue</a>.</p></li>
 <li><p>compile <code class="docutils literal notranslate"><span class="pre">scipy</span></code> failed: You can follow <a class="reference external" href="https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1">this</a> to build scipy from source or try <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--pre</span> <span class="pre">-i</span> <span class="pre">https://pypi.anaconda.org/scipy-wheels-nightly/simple</span> <span class="pre">scipy</span></code> to workaround this problem.</p>
-<p>If you encounter errors like <cite>ERROR: Dependency “OpenBLAS” not found, tried pkgconfig, framework and cmake</cite> during installing scipy on MacOS, try:</p>
+<p>If you encounter errors like <cite>ERROR: Dependency “OpenBLAS” not found, tried pkgconfig, framework and cmake</cite> during installing scipy on macOS, try:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CMAKE_PREFIX_PATH</span><span class="o">=</span><span class="nv">$CMAKE_PREFIX_PATH</span>:<span class="k">$(</span>brew<span class="w"> </span>--prefix<span class="w"> </span>openblas<span class="k">)</span>
 </pre></div>
 </div>

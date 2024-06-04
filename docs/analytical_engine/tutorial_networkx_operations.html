@@ -3,16 +3,16 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Tutorial: Graph Operations with NetowrkX APIs" />
+<meta property="og:title" content="Tutorial: Graph Operations with NetworkX APIs" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/tutorial_networkx_operations.html" />
 <meta property="og:site_name" content="GraphScope" />
 <meta property="og:description" content="NetworkX is a Python package for the manipulation and functions for graph data on a single machine. However, it lacks the capability of handling large-scale graphs on a distributed environment. For..." />
 <meta name="description" content="NetworkX is a Python package for the manipulation and functions for graph data on a single machine. However, it lacks the capability of handling large-scale graphs on a distributed environment. For..." />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Graph Algorithms with NetowrkX APIs" href="tutorial_networkx_algorithms.html" /><link rel="prev" title="Tutorial: Running Builtin Algorithms" href="tutorial_run_builtin_algo.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Graph Algorithms with NetworkX APIs" href="tutorial_networkx_algorithms.html" /><link rel="prev" title="Tutorial: Running Builtin Algorithms" href="tutorial_run_builtin_algo.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
-        <title>Tutorial: Graph Operations with NetowrkX APIs - GraphScope documentation</title>
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
+        <title>Tutorial: Graph Operations with NetworkX APIs - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -684,8 +684,8 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-graph-operations-with-netowrkx-apis">
-<h1>Tutorial: Graph Operations with NetowrkX APIs<a class="headerlink" href="#tutorial-graph-operations-with-netowrkx-apis" title="Permalink to this heading">#</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-graph-operations-with-networkx-apis">
+<h1>Tutorial: Graph Operations with NetworkX APIs<a class="headerlink" href="#tutorial-graph-operations-with-networkx-apis" title="Permalink to this heading">#</a></h1>
 <p><a class="reference external" href="https://networkx.org/">NetworkX</a> is a Python package for the manipulation and functions for graph data on a single machine. However, it lacks the capability of handling large-scale graphs on a distributed environment. Fortunately, GraphScope is compatible with NetworkX APIs, and thus a program written with NetworkX can directly run on GraphScope with only some small changes. In this tutorial, we will first introduce how to manipulate graph data with NetworkX APIs.</p>
 <section id="creating-an-empty-graph">
 <h2>Creating an Empty Graph<a class="headerlink" href="#creating-an-empty-graph" title="Permalink to this heading">#</a></h2>
@@ -915,7 +915,7 @@ MathJax = {
 </section>
 <section id="making-copies">
 <h2>Making Copies<a class="headerlink" href="#making-copies" title="Permalink to this heading">#</a></h2>
-<p>One can use <code class="docutils literal notranslate"><span class="pre">to_directed</span></code> to return a directed representaion of the graph.</p>
+<p>One can use <code class="docutils literal notranslate"><span class="pre">to_directed</span></code> to return a directed representation of the graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DG</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">to_directed</span><span class="p">()</span>  <span class="c1"># here would return a &quot;deepcopy&quot; directed representation of G.</span>
 <span class="nb">list</span><span class="p">(</span><span class="n">DG</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>
 
@@ -1025,7 +1025,7 @@ MathJax = {
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Tutorial: Graph Algorithms with NetowrkX APIs</div>
+                <div class="title">Tutorial: Graph Algorithms with NetworkX APIs</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -1073,7 +1073,7 @@ MathJax = {
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Tutorial: Graph Operations with NetowrkX APIs</a><ul>
+<li><a class="reference internal" href="#">Tutorial: Graph Operations with NetworkX APIs</a><ul>
 <li><a class="reference internal" href="#creating-an-empty-graph">Creating an Empty Graph</a></li>
 <li><a class="reference internal" href="#adding-nodes">Adding Nodes</a></li>
 <li><a class="reference internal" href="#adding-edges">Adding Edges</a></li>

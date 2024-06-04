@@ -11,7 +11,7 @@
 <meta name="description" content="This guide will walk you through the process of understanding how the code is organized, identifying key functions and important code, and building and testing the analytical engine. Setup: For sim..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Getting Started" href="../interactive_engine/getting_started.html" /><link rel="prev" title="Tutorial: Run GraphX Applications on GraphScope" href="tutorial_run_graphx_apps.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Dev and Test - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -696,9 +696,9 @@ identifying key functions and important code, and building and testing the analy
 </div>
 <p>Alternatively, you can also manually install all dependencies on your local machine.
 Please refer to <a class="reference internal" href="../development/dev_guide.html#dev-environment"><span class="std std-ref">Dev Environment</span></a> to find more options to get a dev environment.</p>
-<p>After the environment is prepared, clone the repository and enter the <code class="docutils literal notranslate"><span class="pre">analatical_engine</span></code> directory of the repository.</p>
+<p>After the environment is prepared, clone the repository and enter the <code class="docutils literal notranslate"><span class="pre">analytical_engine</span></code> directory of the repository.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/GraphScope.git
-<span class="nb">cd</span><span class="w"> </span>analatical_engine
+<span class="nb">cd</span><span class="w"> </span>analytical_engine
 </pre></div>
 </div>
 </section>
@@ -707,7 +707,7 @@ Please refer to <a class="reference internal" href="../development/dev_guide.htm
 <p>Since the analytical engine inherits from GRAPE, it requires libgrape-lite as a dependency.
 Please note that the core functionalities of libgrape-lite, such as graph structures, graph partitioners, workers,
 communication between workers, and applications, are heavily reused in the analytical engine of GraphScope.</p>
-<p>If you want to fully understand the analytcial engine, it is highly recommaned that you start from libgrape-lite.</p>
+<p>If you want to fully understand the analytical engine, it is highly recommended that you start from libgrape-lite.</p>
 <p>The code located in the <code class="docutils literal notranslate"><span class="pre">analytical_engine</span></code> directory functions like extensions to libgrape-lite, thereby making it full-fledged with the following enhancements:</p>
 <ul class="simple">
 <li><p>K8s support to enable management by the GraphScope coordinator;</p></li>

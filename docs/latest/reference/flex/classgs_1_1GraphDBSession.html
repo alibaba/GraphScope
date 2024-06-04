@@ -67,8 +67,10 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="classgs_1_1GraphDBSession-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -96,14 +98,20 @@ Collaboration diagram for gs::GraphDBSession:</div>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a60ae67bef4e68204f781709f953a5ceb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceb">InputFormat</a> : uint8_t { <a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceba7d2e268866b64e015468781407146b7c">InputFormat::kCppEncoder</a> = 0
+ }</td></tr>
+<tr class="separator:a60ae67bef4e68204f781709f953a5ceb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a74bf83ac7164cec88abd9050d283da86"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a74bf83ac7164cec88abd9050d283da86">GraphDBSession</a> (<a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;db, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc, <a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;logger, const std::string &amp;work_dir, int thread_id)</td></tr>
+<tr class="memitem:a74bf83ac7164cec88abd9050d283da86"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a74bf83ac7164cec88abd9050d283da86">GraphDBSession</a> (<a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;<a class="el" href="classgs_1_1GraphDBSession.html#a9bdf99d8a56ee3bdeb039c62bf4d0539">db</a>, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc, <a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;logger, const std::string &amp;work_dir, int thread_id)</td></tr>
 <tr class="separator:a74bf83ac7164cec88abd9050d283da86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a003a2baa943d3fbeeefdd6f588517a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a2a003a2baa943d3fbeeefdd6f588517a">~GraphDBSession</a> ()</td></tr>
 <tr class="separator:a2a003a2baa943d3fbeeefdd6f588517a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b3b39788764a25fcb090d5abad0ba46"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction.html">ReadTransaction</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a3b3b39788764a25fcb090d5abad0ba46">GetReadTransaction</a> ()</td></tr>
-<tr class="separator:a3b3b39788764a25fcb090d5abad0ba46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bc9f3a5617eab477486e4cab27514bd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction.html">ReadTransaction</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a1bc9f3a5617eab477486e4cab27514bd">GetReadTransaction</a> () const</td></tr>
+<tr class="separator:a1bc9f3a5617eab477486e4cab27514bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3bd3477a539b2ea1d3fd7d2da00a423a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1InsertTransaction.html">InsertTransaction</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a3bd3477a539b2ea1d3fd7d2da00a423a">GetInsertTransaction</a> ()</td></tr>
 <tr class="separator:a3bd3477a539b2ea1d3fd7d2da00a423a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9014862a1c4c0e7ecaffb7426fb84ef"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1SingleVertexInsertTransaction.html">SingleVertexInsertTransaction</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ad9014862a1c4c0e7ecaffb7426fb84ef">GetSingleVertexInsertTransaction</a> ()</td></tr>
@@ -120,6 +128,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a9325bd51cbd28b6604ed7ff833d867a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8659a3941812e1ea3bbaefe44e7a9ef3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a8659a3941812e1ea3bbaefe44e7a9ef3">graph</a> ()</td></tr>
 <tr class="separator:a8659a3941812e1ea3bbaefe44e7a9ef3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bdf99d8a56ee3bdeb039c62bf4d0539"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a9bdf99d8a56ee3bdeb039c62bf4d0539">db</a> () const</td></tr>
+<tr class="separator:a9bdf99d8a56ee3bdeb039c62bf4d0539"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4c0fb4f40cf126fc16f1dad82fd2d9df"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a4c0fb4f40cf126fc16f1dad82fd2d9df">schema</a> () const</td></tr>
 <tr class="separator:a4c0fb4f40cf126fc16f1dad82fd2d9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c9a4ff1b14406bde6bf9be51496bf91"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a7c9a4ff1b14406bde6bf9be51496bf91">get_vertex_property_column</a> (uint8_t label, const std::string &amp;col_name) const</td></tr>
@@ -150,6 +160,12 @@ Static Public Attributes</h2></td></tr>
 <tr class="memitem:a782c0ee0f294f7babe55d6ebf5f192c1"><td class="memItemLeft" align="right" valign="top">static constexpr int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a> = 256</td></tr>
 <tr class="separator:a782c0ee0f294f7babe55d6ebf5f192c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr class="memitem:ae8c4b0fae678940c48a34f9da0ae71a4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::pair&lt; uint8_t, std::string_view &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ae8c4b0fae678940c48a34f9da0ae71a4">parse_query_type</a> (const std::string &amp;input)</td></tr>
+<tr class="memdesc:ae8c4b0fae678940c48a34f9da0ae71a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the input format of the query. There are four formats: 0. CppEncoder: This format will be used by interactive-sdk to submit c++ stored prcoedure queries. The second last byte is the query id.  <a href="classgs_1_1GraphDBSession.html#ae8c4b0fae678940c48a34f9da0ae71a4">More...</a><br /></td></tr>
+<tr class="separator:ae8c4b0fae678940c48a34f9da0ae71a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
 <tr class="memitem:a9973c50a1d6b38f7a56ee037294a208b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a9973c50a1d6b38f7a56ee037294a208b">db_</a></td></tr>
@@ -173,6 +189,32 @@ Private Attributes</h2></td></tr>
 <tr class="memitem:a1d866056341d87e917d6ee05b8b6e501"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a1d866056341d87e917d6ee05b8b6e501">query_num_</a></td></tr>
 <tr class="separator:a1d866056341d87e917d6ee05b8b6e501"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="a60ae67bef4e68204f781709f953a5ceb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60ae67bef4e68204f781709f953a5ceb">&#9670;&nbsp;</a></span>InputFormat</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceb">gs::GraphDBSession::InputFormat</a> : uint8_t</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a60ae67bef4e68204f781709f953a5ceba7d2e268866b64e015468781407146b7c"></a>kCppEncoder&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a74bf83ac7164cec88abd9050d283da86"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a74bf83ac7164cec88abd9050d283da86">&#9670;&nbsp;</a></span>GraphDBSession()</h2>
@@ -283,6 +325,23 @@ Private Attributes</h2></td></tr>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9bdf99d8a56ee3bdeb039c62bf4d0539"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bdf99d8a56ee3bdeb039c62bf4d0539">&#9670;&nbsp;</a></span>db()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp; gs::GraphDBSession::db </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -458,8 +517,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a3b3b39788764a25fcb090d5abad0ba46"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3b3b39788764a25fcb090d5abad0ba46">&#9670;&nbsp;</a></span>GetReadTransaction()</h2>
+<a id="a1bc9f3a5617eab477486e4cab27514bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1bc9f3a5617eab477486e4cab27514bd">&#9670;&nbsp;</a></span>GetReadTransaction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -468,7 +527,7 @@ Private Attributes</h2></td></tr>
           <td class="memname"><a class="el" href="classgs_1_1ReadTransaction.html">ReadTransaction</a> gs::GraphDBSession::GetReadTransaction </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -557,6 +616,46 @@ Private Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ae8c4b0fae678940c48a34f9da0ae71a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae8c4b0fae678940c48a34f9da0ae71a4">&#9670;&nbsp;</a></span>parse_query_type()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1Result.html">Result</a>&lt;std::pair&lt;uint8_t, std::string_view&gt; &gt; gs::GraphDBSession::parse_query_type </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>input</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Parse the input format of the query. There are four formats: 0. CppEncoder: This format will be used by interactive-sdk to submit c++ stored prcoedure queries. The second last byte is the query id. </p>
+<ol type="1">
+<li>CypherJson: This format will be sended by interactive-sdk, the input is a json string + '\x01' { "query_name": "example", "arguments": { "value": 1, "type": { "primitive_type": "DT_SIGNED_INT32" } } }</li>
+<li>CypherInternalAdhoc: This format will be used by compiler to submit adhoc query, the input is a string + '\x02', the string is the path to the dynamic library.</li>
+<li>CypherInternalProcedure: This format will be used by compiler to submit procedure query, the input is a proto-encoded string + '\x03', the string is the path to the dynamic library. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input</td><td>The input query. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The id of the query and a string_view which contains the real input of the query, discard the input format and query type. </dd></dl>
+</li>
+</ol>
 
 </div>
 </div>

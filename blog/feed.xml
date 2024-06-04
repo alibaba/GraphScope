@@ -5,9 +5,142 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 31 Jan 2024 09:50:25 +0000</pubDate>
-    <lastBuildDate>Wed, 31 Jan 2024 09:50:25 +0000</lastBuildDate>
+    <pubDate>Fri, 23 Feb 2024 07:26:10 +0000</pubDate>
+    <lastBuildDate>Fri, 23 Feb 2024 07:26:10 +0000</lastBuildDate>
     <generator>Jekyll v4.3.3</generator>
+    
+      <item>
+        <title>GOpt: A Unified Graph Query Optimization Framework in GraphScope</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2024-02-22-title-picture.jpg&quot; alt=&quot;gopt&quot; /&gt;
+In this blog, we introduce &lt;a href=&quot;https://arxiv.org/pdf/2401.17786.pdf&quot;&gt;&lt;strong&gt;GOpt&lt;/strong&gt;&lt;/a&gt;, which is a unified graph query optimization framework in GraphScope.
+GOpt enables the system to support multiple graph query languages while providing consistent and efficient query optimization. We also present two practical cases to demonstrate the effectiveness of our optimizer.&lt;/p&gt;
+
+&lt;h3 id=&quot;background-and-challenges&quot;&gt;Background and Challenges&lt;/h3&gt;
+
+&lt;p&gt;In real applications, there has been a growing interest in integrating graph query semantics with relational query semantics to support more complex queries. A typical querying paradigm, termed as PatRelQuery, involves a two-stage process: first, identifying subgraphs of interest through pattern matching, and subsequently, performing relational operations, such as projection, selection and ordering, on the matched results for further analysis.
+Below, we present an example of PatRelQuery, composed using Cypher, which is one of the most widely adopted graph query languages.
+&lt;img src=&quot;/blog/assets/images/2024-02-22-example.jpg&quot; alt=&quot;example&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As depicted in Figure 1(a), we consider a graph database comprising vertex types of “Person”, “Product”, and “Place”, alongside edge types of “Purchases”, “LocatedIn”, “ProducedIn”. The PatRelQuery shown in Figure 1(b) begins by identifying a triangle pattern. This pattern imposes a type constraint on vertex $v_3$, designating it as a “Place” as specified in the MATCH clause. Subsequent relational operations are then applied to the results of this pattern match, including filtering based on a specific place name and aggregating the results to return the top 10 entries. These steps are articulated through the WHERE, COUNT, ORDERBY, and LIMIT clauses. Notice that in this query only $v_3$ is explicitly assigned a type constraint, while the other vertices and edges are not. Consequently, these untyped vertices and edges are treated as with arbitrary types. From this example, we distill two primary features for PatRelQuery:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Hybrid Semantics&lt;/strong&gt;: PatRelQuery melds graph pattern matching with relational operations, showcasing a high level of expressiveness.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Arbitrary Types&lt;/strong&gt;: PatRelQuery allows arbitrary type specification for a greater degree of flexibility in pattern descriptions.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;However, such a flexible query representation poses significant challenges for the graph optimizer:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The optimizer needs to support both graph pattern matching and relational operators within the same framework and perform unified optimization on it.&lt;/li&gt;
+  &lt;li&gt;The optimizer must identify implicit type constraints within the graph patterns. For instance, in the above example, only the type constraints shown in Figure 1(c) are valid, whereas the combination of type constraints in Figure 1(d) is actually invalid.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;To address the above challenges, we propose &lt;strong&gt;GOpt&lt;/strong&gt;, a graph-native optimization framework for PatRelQuery. We summarize the main contributions as follows:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;We have introduced GOpt, which, as far as we know, is the first graph-native optimization framework specifically designed for industrial-scale graph database systems. This framework integrates both graph and relational operations, offering a unified approach to query optimization in complex PatRelQueries across various graph query languages.&lt;/li&gt;
+  &lt;li&gt;We have designed algorithms for efficient type inference in the context of arbitrary patterns. Our approach also includes a comprehensive set of heuristic optimization rules. Moreover, we have proposed a novel cardinality estimation technique that takes into account the arbitrary types. Building upon this, a cost-based optimizer has been developed, operating within a top-down framework with branch-and-bounding strategies.&lt;/li&gt;
+  &lt;li&gt;We have implemented GOpt atop the open-source optimization framework &lt;a href=&quot;https://calcite.apache.org/&quot;&gt;Apache Calcite&lt;/a&gt;, inheriting its capabilities for optimizing relational operations. This integration has been smoothly executed to include our specialized graph-optimization techniques. The effectiveness of our proposed techniques has been validated through comprehensive experimental evaluations.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;system-overview&quot;&gt;System Overview&lt;/h3&gt;
+
+&lt;p&gt;First, we provide an overview of the system architecture of GOpt, as illustrated in Figure 2.
+&lt;img src=&quot;/blog/assets/images/2024-02-22-arch.jpg&quot; alt=&quot;arch&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The overall GOpt system is composed of four principal components:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Parser&lt;/strong&gt; plays a pivotal role in transforming user queries into a &lt;em&gt;language-independent&lt;/em&gt; query plan based on a unified intermediate representation (IR). It accommodates various clients for different graph query languages, such as Gremlin and Cypher. The parser enables the decouple of the query language and the query optimization framework, which allows the system to support multiple query languages with the extensive reuse of techniques developed within GOpt.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Type Checker&lt;/strong&gt; is responsible for inferring and validating the type constraints in the query pattern against the graph schema. We allow users to provide arbitrary type constraints for vertices and edges in their query patterns, and even allow them not to specify any type constraints at all. The type checker is responsible for inferring implicit type constraints within the user’s query based on the graph schema. At the same time, the type checker will also promptly report INVALID errors for queries that are not valid.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Optimizer&lt;/strong&gt; aims to optimize the logical plan to derive the most efficient physical plan. It employs a combination of Rule-based Optimization (RBO) and Cost-based Optimization (CBO). The RBO consists of a set of rules heuristically applied to the logical plan to produce a more efficient equivalent. The CBO consists of two phases: First, to optimize pattern matching, we devise a top-down search algorithm with branch-and-bounding strategies, to identify the optimal plan for arbitrary pattern. Secondly, to refine the relational part, we integrate the proposed graph optimizer with the optimization framework Apache Calcite, leveraging its advanced optimization capabilities for relational queries.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Metadata Provider&lt;/strong&gt; consists of two parts:  the graph schema which defines the vertex and edge types within the data graph and assists the Type Checker in deducing and affirming type constraints within the query plan, and the statistics provider known as GLogue, which precomputed the frequencies of certain small patterns in the data graph to serve as high-order statistical information and provides this high-order statistics for more accurate cost estimation in the optimization phase.&lt;/p&gt;
+
+&lt;h3 id=&quot;query-processing-and-optimization&quot;&gt;Query Processing and Optimization&lt;/h3&gt;
+
+&lt;p&gt;Next, we present the workflow of query processing and optimization within GOpt as depicted in Figure 3, and we will delve into the details in the following.
+&lt;img src=&quot;/blog/assets/images/2024-02-22-workflow.jpg&quot; alt=&quot;arch&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;query-processing&quot;&gt;Query Processing&lt;/h4&gt;
+
+&lt;p&gt;First, we proposed a unified &lt;em&gt;Intermediate Representation&lt;/em&gt; (IR) framework as a foundation to process PatRelQueries. The IR abstraction defines a data model $\mathcal{D}$ that describes the structure of the intermediate results during query execution,and a set of operators $\Omega$. The data model $\mathcal{D}$ presents a schema-like structure in which each data field possesses a name, denoted as a String type, accompanied by a designated datatype. The supported datatypes includes graph-specific datatypes such as &lt;em&gt;Vertex&lt;/em&gt;, &lt;em&gt;Edge&lt;/em&gt;, and &lt;em&gt;Path&lt;/em&gt;, and general datatypes including &lt;em&gt;Primitives&lt;/em&gt; and &lt;em&gt;Collections&lt;/em&gt;. The operators in $\Omega$ operate on data tuples extracted from $\mathcal{D}$, and produce a new set of data tuples as a result. The set $\Omega$ is composed of graph operators such as &lt;em&gt;GetV&lt;/em&gt;, &lt;em&gt;EdgeExpand&lt;/em&gt; and &lt;em&gt;PathExpand&lt;/em&gt;, and relational operators such as &lt;em&gt;Project&lt;/em&gt;, &lt;em&gt;Select&lt;/em&gt;, &lt;em&gt;Join&lt;/em&gt;, etc.&lt;/p&gt;
+
+&lt;p&gt;The IR abstraction enables the opportunity to convert various query languages into a unified form. Currently, GOpt supports two of the most widely used graph query languages, &lt;a href=&quot;https://neo4j.com/developer/cypher/&quot;&gt;Cypher&lt;/a&gt; and &lt;a href=&quot;https://tinkerpop.apache.org/&quot;&gt;Gremlin&lt;/a&gt;. We employs the parser tool provided by &lt;a href=&quot;http://www.antlr.org/&quot;&gt;Antlr&lt;/a&gt; to interpret the queries into an Abstract Syntax Tree (AST), based on which we further build a logical DAG that each node corresponds to an operator defined in IR. As shown in Figure 3, the queries written in Cypher and Gremlin respectively can be parsed in to a unified DAG shown in Figure 3(c).&lt;/p&gt;
+
+&lt;p&gt;Notice that in the Match part in Figure 3(c), the user has not provided explicit type constraints for vertices $v_1$ and $v_2$. However, based on the graph schema, given that $v_3$ is a “Place”, we can infer that $v_1$ and $v_2$ could be either “Person” Or “Product”. Similarly, considering the edge ($v_1$, $v_2$), the type of $v_1$ can be further refined as “Person”. Through type inference, we can obtain a graph pattern that only includes valid types as shown in Figure 3(d).&lt;/p&gt;
+
+&lt;p&gt;Building on the DAG with valid types, we further optimize it to obtain the optimal physical plan shown in Figure 3(e), which is then submitted to the backend for execution. Next, we will introduce the process of query optimization.&lt;/p&gt;
+
+&lt;h4 id=&quot;query-optimization&quot;&gt;Query Optimization&lt;/h4&gt;
+
+&lt;p&gt;The optimizer within GOpt comprises two parts: Rule-Based Optimization (RBO) and Cost-Based Optimization (CBO). The optimization process is illustrated in Figure 4.
+&lt;img src=&quot;/blog/assets/images/2024-02-22-optimize.jpg&quot; alt=&quot;optimize&quot; /&gt;
+To optimize PatRelQueries, we devised a comprehensive set of rules, taking into account potential optimization opportunities among graph operators, relational operators, and between the two. For example, as shown in Figure 4, since only the name attribute of $v_3$ is needed for filtering, we use the &lt;strong&gt;FieldTrimRule&lt;/strong&gt; (a relational optimization) to eliminate other unnecessary attributes, avoiding the retention of irrelevant data during computation. Besides, pattern matching often requires matching adjacent edges, and then further matching neighboring vertices through those edges. Under certain conditions, this can be optimized by the &lt;strong&gt;ExpandGetVFusionRule&lt;/strong&gt; (a graph operator optimization), which combines the two operations into a direct neighboring vertex match. In this query, we also see that after performing pattern matching, the user further selects results that meet certain conditions through a Select operation. We can apply the &lt;strong&gt;FilterIntoMatchRule&lt;/strong&gt; (a graph-relational operator optimization) to push the filter conditions directly into the graph operators, ensuring that only results that meet the filter conditions are matched during the pattern matching process.&lt;/p&gt;
+
+&lt;p&gt;Next, we will demonstrate the cost-based optimization techniques within GOpt, focusing mainly on the optimization of graph patterns, which is often the most crucial part of the optimization process. Drawing from the capabilities provided by our previous work &lt;a href=&quot;https://www.usenix.org/conference/atc23/presentation/lai&quot;&gt;GLogS&lt;/a&gt;, we have designed effective graph pattern matching optimization techniques:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Hybrid implementation strategies for pattern matching. For the physical implementation of graph pattern matching, we consider both the Worst-Case Optimal Join (WCOJ) and the traditional BinaryJoin methods, where the recent research has shown that such hybrid implementation strategies can execute pattern matching queries more efficiently.&lt;/li&gt;
+  &lt;li&gt;Cost estimation based on high-order statistics. The cost estimation in our optimization uses high-order statistics (i.e., the frequencies of occurrences of small patterns, also known as motifs, in the data graph) as a basis, providing a more accurate estimate of the cost of the queried pattern. However, it should be noticed that the precomputed statistics are only for the motifs that contains basic types (i.e., the types defined in schema).&lt;/li&gt;
+  &lt;li&gt;Support for arbitrary type constraints during the optimization process. For graph patterns provided by users, arbitrary type constraints may appear, and in such cases, we cannot directly query statistical information to estimate their costs. Therefore, we propose a new estimation method that considers only the change in the number of matches brought about by expanding one vertex at a time. Thus, we estimate the frequency of a pattern based on its subpatterns’ frequencies iteratively, until the subpattern can be queried from GLogue directly, or it is a single vertex or edge.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Based on the three key techniques, we propose a top-down, cost-based framework for optimizing arbitrary graph pattern matching, aiming to find the optimal execution plan for the arbitrary query patterns.&lt;/p&gt;
+
+&lt;h3 id=&quot;case-study&quot;&gt;Case Study&lt;/h3&gt;
+
+&lt;p&gt;We validated the effectiveness of GOpt through various experiments. Here, we demonstrate the role of GOpt in the entire query optimization process using two real-world cases.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Money Mule Detection.&lt;/strong&gt; In fraud detection, one of the most common fraud patterns is the &lt;em&gt;money mule&lt;/em&gt; pattern, where a fraudster transfers money to a money mule, who then transfers the money to another money mule, and so on, until the money is withdrawn by another fraudster. This can be formulated as a s-t path problem in PatRelQuery: Given two sets of fraudsters $S_1$ and $S_2$ and the hop number $k$, we aim to find all the money transformation paths between the fraudsters in $S_1$ and $S_2$ with the specified hop number. The query written in Cypher is as follows:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-Cypher&quot;&gt;  MATCH (p1:PERSON)-[p:*$k]-(p2:PERSON) 
+  WHERE p1.id IN $S1 and p2.id IN $S2
+  RETURN p
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Searching for such paths in a large-scale graph is challenging, as it may involve a large number of intermediate results. Two most commonly used approaches is as follows: single-direction expansion, which starts the traversal from vertices in $S_1$, expanding $k$ hops, and then applying a filter to ensure that the end vertices are contained within the set $S_2$; and bidirectional search, which begins traversal from $S_1$ and $S_2$ simultaneously, and when the sub-paths meet in the middle, join them to make result paths. In most cases, the second approach should be more efficient as it can reduce the number of intermediate results.
+However, the question is that, is the middle vertex in the path always the best choice for the join? Our case study shows that it is not always true. We have conducted experiments on a real-world graph with $3.6$ billion vertices and $21.8$ billion edges, with the hop number $k$ set to $6$. We obtain five different settings randomly for the source fraudster sets $(S_1,S_2)$ from the real application, each corresponds to different fraudster groups, and the five queries are denoted as $ST_1\ldots ST_5$. For the pattern shown in Figure 5(a), GOpt applies the cost-based optimization to derive the optimal execution plans for $ST_1\ldots ST_5$, as shown in Figure 5(b-d). We notice that for queries with different settings, GOpt may generate different optimal execution plans. This is because the cost model takes into account of the number of intermediate results, which is not only affected by the expanding hops, but also affected by the number of matched vertices in the source fraudster sets.
+&lt;img src=&quot;/blog/assets/images/2024-02-22-case-study.jpg&quot; alt=&quot;case-study&quot; /&gt;
+To verify the efficiency, we further generate three alternative plans with different search order for each query as a comparison. The execution time cost of different plans are shown in Figure 6. Here, the tuples above the bars indicate position of the join vertex, e.g., for $ST_1$, the Alt-Plan1 has join vertex in the middle. From the figure, we can see that the plan generated by GOpt outperforms all the alternative plans from $3\times$ to two orders of magnitude, where all the single-direction expansion plans fails to complete the query in 1 hour. Notice that for $ST_1$ and $ST_2$, the plan generated by GOpt outperforms the alternatives that have the join vertex in the middle. This demonstrate the effectiveness of GOpt, that it is able to find the optimal plan adaptively according to the query and the data distribution.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;LDBC Interactive Complex Queries.&lt;/strong&gt; We conducted extensive experiments on the &lt;a href=&quot;https://ldbcouncil.org/&quot;&gt;LDBC SNB Interactive Workload&lt;/a&gt; to verify the effectiveness of GOpt. Here, we use the IC3 query as an example to compare the execution efficiency of GOpt and Neo4j, with the results shown in the table below.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Execution Plan&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;Avg. Runtime(s)&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;Intermediate Result Num.&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GOpt Optimized Plan&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;6.085&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;1,784,536&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Neo4j Optimized Plan&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;156.845&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;176,547,616&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The result shows that the execution time of GOpt’s plan is approximately 26 times faster than that of Neo4j’s plan. Additionally, GOpt’s plan produces a mere $1\%$ of the intermediate results generated by Neo4j’s plan, demonstrating a significant reduction in processing overhead. It is evident that, compared to Neo4j, GOpt is able to obtain more efficient execution plans.&lt;/p&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;This article showcases the optimization framework GOpt in GraphScope, which integrates fragmented graph query optimizations into a unified framework. It offers a cohesive approach to optimizing complex PatRelQueries in real-world applications. For detailed techniques, readers can refer to our &lt;a href=&quot;https://arxiv.org/abs/2401.17786&quot;&gt;original paper&lt;/a&gt;. The unified optimization framework GOpt is also gradually being integrated into the main repository of GraphScope, and we welcome interested readers to stay tuned for updates.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 22 Feb 2024 23:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Release Notes: v0.26.0</title>
@@ -1040,245 +1173,6 @@ concurrent inference requests. Given these observations, existing approaches, e.
         <pubDate>Sun, 06 Aug 2023 11:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2023/08/06/Dynamic-Graph-Sampling-Service-for-Realtime-GNN-Inference-at-Scale.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/08/06/Dynamic-Graph-Sampling-Service-for-Realtime-GNN-Inference-at-Scale.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Developing and Running Customized Analytical Algorithms for GraphScope</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-23-title-picture.jpg&quot; alt=&quot;jupyter-notebook&quot; /&gt;
-We provide a template repository for graph analysis applications, where users can customize graph analysis algorithms by replacing several C++ functions with their own logic, and run them on GraphScope.&lt;/p&gt;
-
-&lt;p&gt;As a sophisticated model, graphs can naturally express a large number of real-life datasets, and tons of graph analytics algorithms have been proposed for different purposes. Typical graph analytics algorithms include &lt;a href=&quot;https://en.wikipedia.org/wiki/PageRank&quot;&gt;Pagerank&lt;/a&gt;、&lt;a href=&quot;https://arxiv.org/abs/cs/0310049&quot;&gt;K-core&lt;/a&gt; which have demonstrated strong capabilities in node importance analysis scenarios. The GraphScope graph analysis engine inherits the open source version of the &lt;a href=&quot;https://github.com/alibaba/libgrape-lite&quot;&gt;GRAPE&lt;/a&gt; system and includes various graph analysis algorithms, providing a one-stop graph analysis solution. However, users often need to customize algorithms based on their own bussiness. Therefore, to facilitate the development of custom graph analysis algorithms, we provide a C++ template library, and this article will introduce the usage of this template library.&lt;/p&gt;
-
-&lt;h3 id=&quot;step1-install-graphscope&quot;&gt;Step1. Install GraphScope&lt;/h3&gt;
-
-&lt;p&gt;First, we need to install GraphScope in the local environment with the following command:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pip3 &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;graphscope 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;step2-develop-algorithms-using-template-library&quot;&gt;Step2. Develop Algorithms Using Template Library&lt;/h3&gt;
-
-&lt;p&gt;Open the &lt;a href=&quot;https://github.com/GraphScope/cpp-template&quot;&gt;address of the template library&lt;/a&gt; in your browser, click on the “Use this template” button on the right side of the repository to create your own code repository, and clone the repository to your local machine using the following command:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-23-template-repository.jpg&quot; alt=&quot;Template-Repository&quot; /&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Make sure to replace the &amp;lt;username&amp;gt; and &amp;lt;repo-name&amp;gt; to the right values.&lt;/span&gt;
-git clone https://github.com/&amp;lt;username&amp;gt;/&amp;lt;repo-name&amp;gt;.git 
-&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; &amp;lt;repo-name&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Next, we will implement custom algorithm logic by modifying the files in the src directory, including:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;my_app.h: This file is used to implement the main algorithm logic, namely the PEval and IncEval functions&lt;/li&gt;
-  &lt;li&gt;my_app_context.h: This file is used to store and define the runtime results and data structures used by the algorithm&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;define-the-data-structures&quot;&gt;Define the Data Structures&lt;/h4&gt;
-
-&lt;p&gt;To simplify the algorithm logic and highlight the algorithm development process, in this case, our algorithm will be responsible for counting the degrees of neighboring nodes for each node in the graph. In this step, we need to: 1) Define the data structure for algorithm runtime in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_app_context.h&lt;/code&gt; file; 2) Initialize these data structures in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Init&lt;/code&gt; function.&lt;/p&gt;
-
-&lt;p&gt;The data structures are as follows:&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th style=&quot;text-align: center&quot;&gt;Variable&lt;/th&gt;
-      &lt;th style=&quot;text-align: center&quot;&gt;Type&lt;/th&gt;
-      &lt;th style=&quot;text-align: center&quot;&gt;Comment&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td style=&quot;text-align: center&quot;&gt;result&lt;/td&gt;
-      &lt;td style=&quot;text-align: center&quot;&gt;vertex_array_t&lt;size_t&gt;&lt;/size_t&gt;&lt;/td&gt;
-      &lt;td style=&quot;text-align: center&quot;&gt;result for each node&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;Finally, the implementation of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_app_context.h&lt;/code&gt; as follows:&lt;/p&gt;
-
-&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#ifndef MY_APP_CONTEXT_H_
-#define MY_APP_CONTEXT_H_
-&lt;/span&gt;
-&lt;span class=&quot;cp&quot;&gt;#include&lt;/span&gt; &lt;span class=&quot;cpf&quot;&gt;&quot;grape/grape.h&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;
-&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;namespace&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gs&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-&lt;span class=&quot;cm&quot;&gt;/**
- * @brief Context for &quot;MyApp&quot; Application.
- *
- * &apos;Context&apos; class used to record the intermediate data of each iteration.
- *
- * @tparam FRAG_T
- */&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MyAppContext&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexDataContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;using&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;oid_t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;oid_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;using&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vid_t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vid_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;using&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex_t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertex_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
- &lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;explicit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyAppContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexDataContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
-
-  &lt;span class=&quot;cm&quot;&gt;/**
-   * @param param1: algorithm specific parameter, such as
-   *                &quot;source vertex&quot; for SSSP (single source shortest path)
-   *                &quot;delta, max_round&quot; for Pagerank
-   */&lt;/span&gt;
-  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ParallelMessageManager&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// record current superstep&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;step&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;param1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// init results&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SetValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-  &lt;span class=&quot;c1&quot;&gt;// current superstep&lt;/span&gt;
-  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;step&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;// algorithm specific parameter&lt;/span&gt;
-  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-  &lt;span class=&quot;c1&quot;&gt;// result for each vertex, with &apos;uint64_t&apos; type&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex_array_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// namespace gs&lt;/span&gt;
-
-&lt;span class=&quot;cp&quot;&gt;#endif  // MY_APP_CONTEXT_H_
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h4 id=&quot;implement-algorithm&quot;&gt;Implement Algorithm&lt;/h4&gt;
-
-&lt;p&gt;After defining the data structure, we can implement the corresponding algorithm logic in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_app.h&lt;/code&gt;, specifically the PEval and IncEval functions. The definitions of the these functions can be found in the introduction to the &lt;a href=&quot;https://graphscope.io/docs/analytical_engine/programming_model_pie&quot;&gt;PIE programming model&lt;/a&gt;. In this example, We calculate the sum of the degrees of the neighboring nodes for each node in IncEval phase and do nothing but force continue in PEval.&lt;/p&gt;
-
-&lt;p&gt;Finally, the implementation of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_app.h&lt;/code&gt; as follows:&lt;/p&gt;
-
-&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#ifndef MY_APP_H
-#define MY_APP_H
-&lt;/span&gt;
-&lt;span class=&quot;cp&quot;&gt;#include&lt;/span&gt; &lt;span class=&quot;cpf&quot;&gt;&quot;my_app_context.h&quot;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;
-&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;namespace&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gs&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-&lt;span class=&quot;cm&quot;&gt;/**
- * @brief Compute the degree for each vertex.
- *
- * @tparam FRAG_T
- */&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MyApp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ParallelAppBase&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyAppContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-              &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ParallelEngine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-              &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Communicator&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
- &lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;INSTALL_PARALLEL_WORKER&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyApp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyAppContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FRAG_T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;constexpr&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MessageStrategy&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;message_strategy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
-      &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MessageStrategy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kSyncOnOuterVertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;constexpr&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LoadStrategy&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;load_strategy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
-      &lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LoadStrategy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kBothOutIn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;using&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex_t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertex_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-  &lt;span class=&quot;cm&quot;&gt;/**
-   * @brief Implement your partial evaluation here.
-   *
-   * @param fragment
-   * @param context
-   * @param messages
-   */&lt;/span&gt;
-  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PEval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-             &lt;span class=&quot;n&quot;&gt;message_manager_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;InitChannels&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;thread_num&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Implement your partial evaluation here.&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// We put all compute logic in IncEval phase, thus do nothing but force continue.&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ForceContinue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;IncEval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-               &lt;span class=&quot;n&quot;&gt;message_manager_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// superstep&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;step&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// Process received messages sent by other fragment here.&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ParallelProcess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fragment_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-          &lt;span class=&quot;n&quot;&gt;thread_num&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-          &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;](&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;c1&quot;&gt;// Implement your logic here.&lt;/span&gt;
-          &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// Compute the degree for each vertex, set the result in context&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inner_vertices&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;InnerVertices&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;ForEach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inner_vertices&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;begin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inner_vertices&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;](&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-              &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
-                &lt;span class=&quot;k&quot;&gt;static_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-                  &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetOutgoingAdjList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
-                  &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetIncomingAdjList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-                &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// namespace gs&lt;/span&gt;
-
-&lt;span class=&quot;cp&quot;&gt;#endif  // MY_APP_H
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;step3-build-and-test-your-algorithm-locally&quot;&gt;Step3. Build and Test Your Algorithm Locally&lt;/h3&gt;
-
-&lt;p&gt;Use the following command to compile and build the algorithm:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;make build &amp;amp; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;build
-cmake .. &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; make    &lt;span class=&quot;c&quot;&gt;# compile&lt;/span&gt;
-make package        &lt;span class=&quot;c&quot;&gt;# Package the algorithm as a resource (.gar file) that can be run on GraphScope&lt;/span&gt;
-make &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;           &lt;span class=&quot;c&quot;&gt;# unit test&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;step4-run-on-graphscope-cluster-with-python-interface&quot;&gt;Step4. Run on GraphScope Cluster with Python Interface&lt;/h3&gt;
-
-&lt;p&gt;After development is completed, we can run the algorithm’s resource (gar file) on the GraphScope cluster. The steps are as follows:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;set_option&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;show_log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# enable logging
-&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope.framework.app&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;load_app&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope.dataset&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;load_p2p_network&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# create session locally
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# you can create session on kubernetes by replacing &quot;hosts&quot; with &quot;k8s&quot;
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cluster_type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;hosts&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# load property graph and project to simple graph to run the algorithm
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simple_graph&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;load_p2p_network&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;_project_to_simple&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# load your algorithm&apos;s resource
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;my_app&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;load_app&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;lt;path_to_your_gar_resource&amp;gt;&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# run your algorithm
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;my_app&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;simple_graph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# output numpy result
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;to_numpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
-
-&lt;p&gt;This article provides a detailed guide on how to develop a graph analysis algorithm that can be run on the GraphScope cluster based on the C++ template library. We will also share more algorithm examples based on this template library in real-world scenarios in the future, stay tuned!&lt;/p&gt;
-
-&lt;h3 id=&quot;useful-links&quot;&gt;Useful links&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/GraphScope/cpp-template&quot;&gt;C++ Template Library Repository&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://graphscope.io/docs/reference/analytical_engine_index.html&quot;&gt;Analytical Engine API&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-</description>
-        <pubDate>Sun, 23 Jul 2023 11:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/07/23/Developing-and-Running-Customized-Analytical-Algorithms-for-GraphScope.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/07/23/Developing-and-Running-Customized-Analytical-Algorithms-for-GraphScope.html</guid>
         
         
         <category>Tech</category>

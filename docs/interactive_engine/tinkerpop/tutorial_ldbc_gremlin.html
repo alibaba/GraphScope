@@ -11,7 +11,7 @@
 <meta name="description" content="Prior to beginning, it is important to note that LDBC is a highly regarded organization in the realm of graph databases/systems benchmark standards and audit testing. LDBC has developed several ben..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Supported Gremlin Steps" href="supported_gremlin_steps.html" /><link rel="prev" title="Guide and Examples" href="guide_and_examples.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Tutorial: LDBC Gremlin - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -798,7 +798,7 @@ After loading the LDBC graph and initializing the engine, we can submit Gremlin 
 </pre></div>
 </div>
 <p>The output should be like:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># All person veritces</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># All person vertices</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">216172782113783808</span><span class="o">]</span>,<span class="w"> </span>......,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784710</span><span class="o">]]</span>
 </pre></div>
 </div>
@@ -832,7 +832,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>In addition, you may further require the extracted properties satisfying some conditions. For example, if you want to extract persons whose first name is ‘Joseph’, you can write the following codes:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve person vertices whose first name is &#39;Joeseph&#39;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve person vertices whose first name is &#39;Joseph&#39;</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(&quot;person&quot;).has(&quot;firstName&quot;, &quot;Joseph&quot;)&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
 </pre></div>
@@ -959,7 +959,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </ul>
 <p>Here is a local subgraph extracted from the LDBC Graph, which is formed by a center person vertex (id=216172782113784483) and all of its adjacent edges and vertices. Then we will use this subgraph to explain all of the expansion steps.</p>
 <figure class="align-default" id="id5">
-<a class="reference internal image-reference" href="../../_images/loacal_graph_example.png"><img alt="loacal_graph_example" src="../../_images/loacal_graph_example.png" style="width: 33%;" /></a>
+<a class="reference internal image-reference" href="../../_images/local_graph_example.png"><img alt="local_graph_example" src="../../_images/local_graph_example.png" style="width: 33%;" /></a>
 <figcaption>
 <p><span class="caption-text">Figure 5. A local graph around a given person vertex.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
 </figcaption>
@@ -1338,7 +1338,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <p>Until now, we can use expansion steps, filter steps and auxiliary steps like <code class="docutils literal notranslate"><span class="pre">as(TAG)</span></code> to write complicated Gremlin sentences to traverse the graph. However, there are still two shortcomings:</p>
 <ul class="simple">
 <li><p>If we want to find a vertex which is 10-hop(edges) away from the current vertex, we need to write expansion step 10 times, which is very cost-ineffective.</p></li>
-<li><p>The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it can not be solved by already introduced steps.</p></li>
+<li><p>The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it cannot be solved by already introduced steps.</p></li>
 </ul>
 <p>Therefore, we would like to introduce path expansion to solve the two problems, which extends the expansion steps <code class="docutils literal notranslate"><span class="pre">out()</span></code>, <code class="docutils literal notranslate"><span class="pre">in()</span></code> and <code class="docutils literal notranslate"><span class="pre">both()</span></code> as the <a class="reference internal" href="supported_gremlin_steps.html"><span class="std std-doc">syntactic sugar</span></a>.</p>
 <p>In the three expansion steps, you can now write as <code class="docutils literal notranslate"><span class="pre">out/in/both(lower..upper,</span> <span class="pre">label1,</span> <span class="pre">label2...)</span></code>, where <code class="docutils literal notranslate"><span class="pre">lower</span></code> is the minimum number of hops in the path, and <code class="docutils literal notranslate"><span class="pre">upper-1</span></code> is the maximum number of hops in the path. For example, <code class="docutils literal notranslate"><span class="pre">out(3..5)</span></code> means expansion through the outgoing edges 3 or 4 times. Therefore,  <code class="docutils literal notranslate"><span class="pre">lower</span> <span class="pre">&lt;=</span> <span class="pre">upper</span> <span class="pre">-</span> <span class="pre">1</span></code>, otherwise the sentence is illegal.</p>
@@ -1414,7 +1414,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <figure class="align-default" id="id20">
-<a class="reference internal image-reference" href="../../_images/estimated_japan_brower_market_share.png"><img alt="estimated_japan_brower_market_share" src="../../_images/estimated_japan_brower_market_share.png" style="width: 50%;" /></a>
+<a class="reference internal image-reference" href="../../_images/estimated_japan_browser_market_share.png"><img alt="estimated_japan_browser_market_share" src="../../_images/estimated_japan_browser_market_share.png" style="width: 50%;" /></a>
 <figcaption>
 <p><span class="caption-text">Figure 20. Estimated Japan Browser Market Share</span><a class="headerlink" href="#id20" title="Permalink to this image">#</a></p>
 </figcaption>
@@ -1764,7 +1764,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <section id="constant">
 <h4><code class="docutils literal notranslate"><span class="pre">constant()</span></code><a class="headerlink" href="#constant" title="Permalink to this heading">#</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">constant()</span></code> step is meant to map any object to a fixed object value. For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Map all the vertinces to 1</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Map all the vertices to 1</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().constant(1)&#39;</span><span class="p">)</span>
 <span class="c1"># Map all the vertices to &quot;marko&quot;</span>
 <span class="n">q2</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().constant(&quot;marko&quot;)&#39;</span><span class="p">)</span>
@@ -1788,7 +1788,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <section id="valuemap">
 <h4><code class="docutils literal notranslate"><span class="pre">valueMap()</span></code><a class="headerlink" href="#valuemap" title="Permalink to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">value(PROPERTY)</span></code> step can only map an entity(vertex or edge) to one of its property’s value. What if we want to extract many properties’s value at the same time?</p>
-<p><code class="docutils literal notranslate"><span class="pre">valueMap(PROPERTY1,</span> <span class="pre">PROPERTI2,</span> <span class="pre">...)</span></code> step provides such ability. For example, the following code extracts <code class="docutils literal notranslate"><span class="pre">person</span></code> vertices’ <code class="docutils literal notranslate"><span class="pre">firstName</span></code> and <code class="docutils literal notranslate"><span class="pre">lastName</span></code> together by <code class="docutils literal notranslate"><span class="pre">valueMap(...)</span></code> step.</p>
+<p><code class="docutils literal notranslate"><span class="pre">valueMap(PROPERTY1,</span> <span class="pre">PROPERTY2,</span> <span class="pre">...)</span></code> step provides such ability. For example, the following code extracts <code class="docutils literal notranslate"><span class="pre">person</span></code> vertices’ <code class="docutils literal notranslate"><span class="pre">firstName</span></code> and <code class="docutils literal notranslate"><span class="pre">lastName</span></code> together by <code class="docutils literal notranslate"><span class="pre">valueMap(...)</span></code> step.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract person vertices&#39; firstName and lastName</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(&quot;person&quot;).valueMap(&quot;firstName&quot;, &quot;lastName&quot;)&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
@@ -1979,7 +1979,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p>Property name or</p></li>
 <li><p>sub-traversal sentence which will generate a single value</p></li>
 </ul>
-<p>to the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step as the order key. In addition, you can determine whether the order is <code class="docutils literal notranslate"><span class="pre">acsending</span></code> or <code class="docutils literal notranslate"><span class="pre">descending</span></code> in the second parameter of the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step.</p>
+<p>to the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step as the order key. In addition, you can determine whether the order is <code class="docutils literal notranslate"><span class="pre">ascending</span></code> or <code class="docutils literal notranslate"><span class="pre">descending</span></code> in the second parameter of the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step.</p>
 <p>For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Order person vertices by their first names, ascending</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(&quot;person&quot;).order().by(&quot;firstName&quot;, asc)&#39;</span><span class="p">)</span> <span class="c1"># asc is optional</span>
@@ -2240,7 +2240,7 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 <p>Since GIE doesn’t provide global storage currently, we cannot pick out the top 100 forums of every country using Gremlin sentence directly. We can retrieve a tuple of <code class="docutils literal notranslate"><span class="pre">(country,</span> <span class="pre">forum,</span> <span class="pre">country_count)</span></code> at first.</p>
 <p>Assume <code class="docutils literal notranslate"><span class="pre">Forum's</span> <span class="pre">creationDate</span> <span class="pre">&gt;</span> <span class="pre">'2012-01-01'</span></code>, we can write in GIE as</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(&quot;place&quot;).as(&quot;country&quot;).in(&quot;isPartOf&quot;).in(&quot;isLocatedIn&quot;)</span><span class="se">\</span>
-<span class="s1">           .in(&quot;hasMember&quot;).as(&quot;forum&quot;).dedup(&quot;counry&quot;,&quot;forum&quot;)</span><span class="se">\</span>
+<span class="s1">           .in(&quot;hasMember&quot;).as(&quot;forum&quot;).dedup(&quot;country&quot;,&quot;forum&quot;)</span><span class="se">\</span>
 <span class="s1">           .select(&quot;forum&quot;).by(out(&quot;hasMember&quot;).as(&quot;person&quot;).out(&quot;isLocatedIn&quot;)</span><span class="se">\</span>
 <span class="s1">           .out(&quot;isPartOf&quot;).where(eq(&quot;country&quot;)).select(&quot;person&quot;).dedup().count())</span><span class="se">\</span>
 <span class="s1">           .as(&quot;personCount&quot;).select(&quot;country&quot;, &quot;forum&quot;, &quot;personCount&quot;)&#39;</span><span class="p">)</span>

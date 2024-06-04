@@ -11,7 +11,7 @@
 <meta name="description" content="gsctl is a command-line utility for GraphScope. It is shipped with graphscope-client and provides a set of functionalities to make it easy to use GraphScope. These functionalities include building ..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Error Codes" href="error_codes.html" /><link rel="prev" title="How to Find logs" href="how_to_find_logs.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Command-line Utility gsctl - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -690,16 +690,16 @@ MathJax = {
 <section id="install-update-gsctl">
 <h2>Install/Update <code class="docutils literal notranslate"><span class="pre">gsctl</span></code><a class="headerlink" href="#install-update-gsctl" title="Permalink to this heading">#</a></h2>
 <p>Since it is shipped with python package <code class="docutils literal notranslate"><span class="pre">graphscope-client</span></code>, the <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> command will be available in your terminal after installing GraphScope:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>graphscope-client
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>graphscope-client
 </pre></div>
 </div>
 <p>In some cases, such as development on <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, you may want to build it from source.
 To do this, navigate to the directory where the source code is located and run the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>REPO_HOME/python
-<span class="c1"># If you want to develop gsctl, </span>
-<span class="c1"># please note the entry point is located on: </span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>REPO_HOME/python
+<span class="c1"># If you want to develop gsctl,</span>
+<span class="c1"># please note the entry point is located on:</span>
 <span class="c1"># /python/graphscope/gsctl/gsctl.py</span>
-pip<span class="w"> </span>install<span class="w"> </span>--editable<span class="w"> </span>.
+$<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>--editable<span class="w"> </span>.
 </pre></div>
 </div>
 <p>This will install <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> in an editable mode, which means that any changes you make to the source code will be reflected in the installed version of <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>.</p>
@@ -707,8 +707,7 @@ pip<span class="w"> </span>install<span class="w"> </span>--editable<span class=
 <section id="commands">
 <h2>Commands<a class="headerlink" href="#commands" title="Permalink to this heading">#</a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, you can do the following things. Always remember to use <code class="docutils literal notranslate"><span class="pre">--help</span></code> on a command to get more information.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> command-line utility supports two modes of operation: utility scripts and client/server mode. You can switch between these modes using the
-<code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">connect</span></code> and <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">close</span></code> commands.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> command-line utility supports two modes of operation: utility scripts and client/server mode. You can switch between these modes using the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">connect</span></code> and <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">close</span></code> commands.</p>
 <section id="utility-scripts">
 <h3>Utility Scripts<a class="headerlink" href="#utility-scripts" title="Permalink to this heading">#</a></h3>
 <p>Default, the <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> provide helper functions and utilities that can be run using gsctl alone.
@@ -720,14 +719,31 @@ pip<span class="w"> </span>install<span class="w"> </span>--editable<span class=
 <li><p><code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">test</span></code>, trigger test suites.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">connect</span></code>, connect to the launched coordinator by ~/.gs/config.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">close</span></code>, Close the connection from the coordinator.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">flexbuild</span></code>, Build docker image for Interactive, Insight product.</p></li>
 </ul>
 </section>
 <section id="client-server-mode">
 <h3>Client/Server Mode<a class="headerlink" href="#client-server-mode" title="Permalink to this heading">#</a></h3>
-<p>To switch to the client/server mode, use the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">connect</span></code> command. This command connects gsctl to a launched coordinator using the configuration file located at ~/.gsconfig.
-Once connected, you can use <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> to communicate with the coordinator and send commands that will be executed on the coordinator side.</p>
-<p>To disconnect from the coordinator and switch back to the utility scripts mode, you can use the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">close</span></code> command. This command closes the connection from the coordinator
-and allows you to use <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> as a standalone utility again.</p>
+<p>To switch to the client/server mode, use the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">connect</span></code> command. By default, this command connects gsctl to a launched coordinator using the configuration file located at <code class="docutils literal notranslate"><span class="pre">${HOME}/.gsctl</span></code>;  If <code class="docutils literal notranslate"><span class="pre">--coordinator-endpoint</span></code> parameter is specified, it will treat it as the current context and override the configuration file.</p>
+<p>Once connected, you can use <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> to communicate with the coordinator which serves the specific Flex product behind it.</p>
+<section id="change-scope">
+<h4>Change scope<a class="headerlink" href="#change-scope" title="Permalink to this heading">#</a></h4>
+<p>In <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, you can run commands on a global scope or a local scope. When you connect to a coordinator, you are in the global scope. To change to local scope of a graph, run the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">use</span> <span class="pre">GRAPH</span> <span class="pre">&lt;graph_identifier&gt;</span></code> command. You can find the graph identifier with <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">ls</span></code> command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>gsctl<span class="w"> </span>use<span class="w"> </span>GRAPH<span class="w"> </span>modern_graph
+Using<span class="w"> </span>GRAPH<span class="w"> </span>modern_graph
+</pre></div>
+</div>
+<p>To switch back to the global scope. run <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">use</span> <span class="pre">GLOBAL</span></code> command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>gsctl<span class="w"> </span>use<span class="w"> </span>GLOBAL
+Using<span class="w"> </span>GLOBAL
+</pre></div>
+</div>
+<p>Different scopes have different commands. Always remember to use <code class="docutils literal notranslate"><span class="pre">--help</span></code> on a command to get more information.</p>
+</section>
+<section id="close-the-connection">
+<h4>Close the connection<a class="headerlink" href="#close-the-connection" title="Permalink to this heading">#</a></h4>
+<p>To disconnect from the coordinator and switch back to the utility scripts mode, you can use the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">close</span></code> command. This command closes the connection from the coordinator and allows you to use <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> as a standalone utility again.</p>
+</section>
 </section>
 </section>
 </section>
@@ -794,7 +810,11 @@ and allows you to use <code class="docutils literal notranslate"><span class="pr
 <li><a class="reference internal" href="#install-update-gsctl">Install/Update <code class="docutils literal notranslate"><span class="pre">gsctl</span></code></a></li>
 <li><a class="reference internal" href="#commands">Commands</a><ul>
 <li><a class="reference internal" href="#utility-scripts">Utility Scripts</a></li>
-<li><a class="reference internal" href="#client-server-mode">Client/Server Mode</a></li>
+<li><a class="reference internal" href="#client-server-mode">Client/Server Mode</a><ul>
+<li><a class="reference internal" href="#change-scope">Change scope</a></li>
+<li><a class="reference internal" href="#close-the-connection">Close the connection</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

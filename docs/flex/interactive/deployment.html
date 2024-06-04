@@ -7,11 +7,11 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="flex/interactive/deployment.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="QuickStart: Now you can the endpoint via Delete the deployment via Customizing Configuration: By default, all pods of GraphScope Interactive is deployed on the same k8s node. In such case, all pods..." />
-<meta name="description" content="QuickStart: Now you can the endpoint via Delete the deployment via Customizing Configuration: By default, all pods of GraphScope Interactive is deployed on the same k8s node. In such case, all pods..." />
+<meta property="og:description" content="Deploy with docker: You can deploy a single-node GraphScope Interactive instance on modern graph with docker Now, the admin service will be listening on port 7777, the Cypher Bolt server will be li..." />
+<meta name="description" content="Deploy with docker: You can deploy a single-node GraphScope Interactive instance on modern graph with docker Now, the admin service will be listening on port 7777, the Cypher Bolt server will be li..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Getting Started" href="../../analytical_engine/getting_started.html" /><link rel="prev" title="Glossary" href="glossary.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>GraphScope Interactive Deployment - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -686,8 +686,18 @@ MathJax = {
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="graphscope-interactive-deployment">
 <h1>GraphScope Interactive Deployment<a class="headerlink" href="#graphscope-interactive-deployment" title="Permalink to this heading">#</a></h1>
+<section id="deploy-with-docker">
+<h2>Deploy with docker<a class="headerlink" href="#deploy-with-docker" title="Permalink to this heading">#</a></h2>
+<p>You can deploy a single-node GraphScope Interactive instance on modern graph with docker</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-d<span class="w"> </span>-p<span class="w"> </span><span class="m">7687</span>:7687<span class="w"> </span>-p<span class="w"> </span><span class="m">10000</span>:10000<span class="w"> </span>-p<span class="w"> </span><span class="m">7777</span>:7777<span class="w"> </span>registry.cn-hongkong.aliyuncs.com/graphscope/interactive:latest
+</pre></div>
+</div>
+<p>Now, the admin service will be listening on port 7777, the Cypher Bolt server will be listening on port 7687, and the Interactive engine will be listening on port 10000.</p>
+</section>
+<section id="deploy-with-helm">
+<h2>Deploy with helm<a class="headerlink" href="#deploy-with-helm" title="Permalink to this heading">#</a></h2>
 <section id="quickstart">
-<h2>QuickStart<a class="headerlink" href="#quickstart" title="Permalink to this heading">#</a></h2>
+<h3>QuickStart<a class="headerlink" href="#quickstart" title="Permalink to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/GraphScope.git
 <span class="nb">cd</span><span class="w"> </span>GraphScope/charts/
 $<span class="w"> </span>helm<span class="w"> </span>install<span class="w"> </span><span class="o">{</span>your-release-name<span class="o">}</span><span class="w"> </span>./graphscope-interactive/
@@ -707,17 +717,17 @@ $<span class="w"> </span>helm<span class="w"> </span>install<span class="w"> </s
 </div>
 </section>
 <section id="customizing-configuration">
-<h2>Customizing Configuration<a class="headerlink" href="#customizing-configuration" title="Permalink to this heading">#</a></h2>
+<h3>Customizing Configuration<a class="headerlink" href="#customizing-configuration" title="Permalink to this heading">#</a></h3>
 <p>By default, all pods of <code class="docutils literal notranslate"><span class="pre">GraphScope</span> <span class="pre">Interactive</span></code> is deployed on the same k8s node.
 In such case, all pods can share the storage via k8s pvc of <code class="docutils literal notranslate"><span class="pre">hostPath</span></code> kind.</p>
 <p>To offer higher throughput and query performance, we also support launching pods across multiple nodes. However, in this mode, you need a storage solution like NFS to ensure that all nodes can access the same storage.</p>
 </section>
 <section id="customize-graph-data">
-<h2>Customize Graph Data.<a class="headerlink" href="#customize-graph-data" title="Permalink to this heading">#</a></h2>
+<h3>Customize Graph Data.<a class="headerlink" href="#customize-graph-data" title="Permalink to this heading">#</a></h3>
 <p>By default we provide builtin <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code> for <code class="docutils literal notranslate"><span class="pre">Interactive</span></code>. We also support customizing graph data by providing raw graph data via <code class="docutils literal notranslate"><span class="pre">csv</span></code> files.
 For detail about Graph Model and DataLoading, please check <a class="reference external" href="https://graphscope.io/docs/latest/flex/interactive/data_model">Interactive Data Model</a>;</p>
 <section id="single-node">
-<h3>Single Node<a class="headerlink" href="#single-node" title="Permalink to this heading">#</a></h3>
+<h4>Single Node<a class="headerlink" href="#single-node" title="Permalink to this heading">#</a></h4>
 <p>If you just want to deploy Interactive on a single node, then you can just put all <code class="docutils literal notranslate"><span class="pre">csv</span></code> files into a directory, i.e. <code class="docutils literal notranslate"><span class="pre">/tmp/data/</span></code>.</p>
 <p>Then you can create a PV on the node, via the following commands</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 0. Download the template pvc configuration</span>
@@ -733,9 +743,10 @@ kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> <
 </div>
 </section>
 <section id="multiple-nodes">
-<h3>Multiple nodes<a class="headerlink" href="#multiple-nodes" title="Permalink to this heading">#</a></h3>
+<h4>Multiple nodes<a class="headerlink" href="#multiple-nodes" title="Permalink to this heading">#</a></h4>
 <p>If you want to deploy Interactive on multiple nodes, then you need something like <code class="docutils literal notranslate"><span class="pre">nfs</span></code> to store you raw graph data, such that all k8s nodes can share the access to same files.</p>
 <p>TODO</p>
+</section>
 </section>
 <section id="customize-values-yaml">
 <h3>Customize <code class="docutils literal notranslate"><span class="pre">Values.yaml</span></code><a class="headerlink" href="#customize-values-yaml" title="Permalink to this heading">#</a></h3>
@@ -849,11 +860,15 @@ kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> <
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">GraphScope Interactive Deployment</a><ul>
+<li><a class="reference internal" href="#deploy-with-docker">Deploy with docker</a></li>
+<li><a class="reference internal" href="#deploy-with-helm">Deploy with helm</a><ul>
 <li><a class="reference internal" href="#quickstart">QuickStart</a></li>
 <li><a class="reference internal" href="#customizing-configuration">Customizing Configuration</a></li>
 <li><a class="reference internal" href="#customize-graph-data">Customize Graph Data.</a><ul>
 <li><a class="reference internal" href="#single-node">Single Node</a></li>
 <li><a class="reference internal" href="#multiple-nodes">Multiple nodes</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#customize-values-yaml">Customize <code class="docutils literal notranslate"><span class="pre">Values.yaml</span></code></a></li>
 </ul>
 </li>

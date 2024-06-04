@@ -11,7 +11,7 @@
 <meta name="description" content="After constructing the graph object, we can query on the graph. Graph query refers to getting meta information and data information without complex calculation and sampling logic.# 1 Meta Query Met..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Graph Query - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -689,7 +689,7 @@ MathJax = {
 <p>After constructing the graph object, we can query on the graph. Graph
 query refers to getting <strong>meta information</strong> and <strong>data information</strong>
 without complex calculation and sampling logic.</p>
-<p># 1 Meta Query Meta infomation refers to the graph structure and
+<p># 1 Meta Query Meta information refers to the graph structure and
 statistical data, including graph topology, number of vertices,
 distribution of edges and vertices, maximum in-and-out degrees and etc.</p>
 <p>## 1.1 Graph Topology</p>
@@ -710,16 +710,16 @@ the heterogeneous graph shown in the following image.</p>
 <span class="n">topo</span><span class="o">.</span><span class="n">print_all</span><span class="p">()</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">egde_type:buy, src_type:user, dst_type:item</span>
-<span class="sd">egde_type:click, src_type:user, dst_type:item</span>
-<span class="sd">egde_type:swing, src_type:item, dst_type:item</span>
+<span class="sd">edge_type:buy, src_type:user, dst_type:item</span>
+<span class="sd">edge_type:click, src_type:user, dst_type:item</span>
+<span class="sd">edge_type:swing, src_type:item, dst_type:item</span>
 <span class="sd">&quot;&quot;&quot;</span>
 </pre></div>
 </div>
 <p>## 1.2 In-and-Out Degree Distribution Coming soon…</p>
 <p>#2 Data Query</p>
 <p><strong>GL</strong> has two basic data types: <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> and <code class="docutils literal notranslate"><span class="pre">Edges</span></code>. Graph
-raversal, query, and sampling operations all return a batch of vertices
+traversal, query, and sampling operations all return a batch of vertices
 or edges. In particular, non-aligned sampling returns the sparse form of
 two basic data types, namely <code class="docutils literal notranslate"><span class="pre">SparseNodes</span></code> and <code class="docutils literal notranslate"><span class="pre">SparseEdges</span></code>. The
 interface of <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> is shown as follows.</p>
@@ -781,7 +781,7 @@ In addition to the interfaces of <code class="docutils literal notranslate"><spa
 additional interfaces as follows.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="sd">&quot;&quot;&quot; one dimentional int array: the number of neighbors of each vertex &quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; one dimensional int array: the number of neighbors of each vertex &quot;&quot;&quot;</span>
 
 <span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">dense_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -789,7 +789,7 @@ additional interfaces as follows.</p>
 
 <span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="sd">&quot;&quot;&quot; two dimentional arra: the location of each neighbor &quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; two dimensional array: the location of each neighbor &quot;&quot;&quot;</span>
 
 <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; iterator: iterate over the neighbors of each vertex &quot;&quot;&quot;</span>
@@ -801,7 +801,7 @@ addition to the interfaces of <code class="docutils literal notranslate"><span c
 interfaces as follows.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="sd">&quot;&quot;&quot; one dimential int array: the number of neighbors of each vertex &quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; one dimensional int array: the number of neighbors of each vertex &quot;&quot;&quot;</span>
 
 <span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">dense_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -809,7 +809,7 @@ interfaces as follows.</p>
 
 <span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="sd">&quot;&quot;&quot; two dimentional array: the location of each neighbor &quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; two dimensional array: the location of each neighbor &quot;&quot;&quot;</span>
 
 <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot; iterator: iterate the neighbors of each vertex &quot;&quot;&quot;</span>
@@ -858,7 +858,7 @@ attributes, weights or labels. Query vertices with specified ids:
 <span class="n">u_nodes</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10001</span><span class="p">,</span> <span class="mi">10002</span><span class="p">,</span> <span class="mi">10003</span><span class="p">]))</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>## 2.2 Edges Query We can get edges from graph travesal, sampling or
+<p>## 2.2 Edges Query We can get edges from graph traversal, sampling or
 specifying src_id and dst_id. Once we get the edges, we can query their
 attributes, weights or labels. edges query by specifying src_id, dst_id:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_edges</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">src_ids</span><span class="p">,</span> <span class="n">dst_ids</span><span class="p">)</span>
@@ -872,7 +872,7 @@ attributes, weights or labels. edges query by specifying src_id, dst_id:</p>
 <span class="sd">&#39;&#39;&#39;</span>
 </pre></div>
 </div>
-<p>We use the following example to show the inferface and usage
+<p>We use the following example to show the interface and usage
 <code class="docutils literal notranslate"><span class="pre">get_edges()</span></code></p>
 <p>Table2: swing edges</p>
 <div class="table-wrapper docutils container">

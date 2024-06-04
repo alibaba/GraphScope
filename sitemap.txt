@@ -13,6 +13,7 @@ https://slack.graphscope.io
 
 https://graphscope.io/blog/
 
+https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope
 https://graphscope.io/blog/releasenotes/2024/01/31/release-notes-0.26.0
 https://graphscope.io/blog/releasenotes/2023/11/15/release-notes-0.25.0
 https://graphscope.io/blog/tech/2023/09/14/Import-and-Export-Graph-Data-of-Neo4j-with-GraphAr

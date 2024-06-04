@@ -11,7 +11,7 @@
 <meta name="description" content="A large number of real-world datasets can be naturally represented by graphs. Typical cases are knowledge graphs, social networks, traffic networks and web graphs. Given the ever-growing amount of ..." />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>GraphScope for Data Scientists - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -688,7 +688,7 @@ MathJax = {
 <h1>GraphScope for Data Scientists<a class="headerlink" href="#graphscope-for-data-scientists" title="Permalink to this heading">#</a></h1>
 <p>A large number of real-world datasets can be naturally represented by graphs. Typical cases
 are knowledge graphs, social networks, traffic networks and web graphs. Given the ever-growing amount of graph data available, graph computation, which tries to explore underlying insights hidden in graph data, has attracted increasing attention from data scientists.</p>
-<p>However, based on our experience of developing graph algorithms and feedbacks from other data scientists, we find that there still exist many challenging issues for data scientists to handle a real-world workload involving graph compuatition.</p>
+<p>However, based on our experience of developing graph algorithms and feedbacks from other data scientists, we find that there still exist many challenging issues for data scientists to handle a real-world workload involving graph computation.</p>
 <section id="challenges-of-handling-graph-computation">
 <h2>Challenges of Handling Graph Computation<a class="headerlink" href="#challenges-of-handling-graph-computation" title="Permalink to this heading">#</a></h2>
 <p><em>It is difficult to develop graph algorithms for large graphs.</em> Typically, to work over graph data, data scientists often begin with small graphs on a single machine using easy- and ready-to-use tools (such as NetworkX in Python and TinkerPop) to develop and tune their graph algorithms. However, they may meet a lot of obstacles when they attempt to verify the effectiveness of developed algorithms on large graphs, as existing ready-to-use graph computation tools are only designed for single machine environment. Although there exist many efficient distributed parallel graph computation systems for large graphs, these systems usually have totally different APIs and programming models, and data scientist suffer from high learning curves.</p>

@@ -11,7 +11,7 @@
 <meta name="description" content="The Graph object is the data structure that organizes the raw data for further graph operations such as sampling. The Graph object can support different types of graph, such as isomorphic graphs, h..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Graph Object - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -883,15 +883,15 @@ the Graph object and the local Server.</p>
 </pre></div>
 </div>
 <p>Server Mode is suitable for the situation where the graph scale is not
-super large. For example, when combined with Tensorflow for distributed
+super large. For example, when combined with TensorFlow for distributed
 training, each GL server needs to be in the same process as the
 TensorFlow worker, which eliminates communication overhead between the
-Tensorflow worker and the GL server. Since the distributed scale is not
+TensorFlow worker and the GL server. Since the distributed scale is not
 very large (the number of workers is not very large), the
 interconnection between Servers will not cause network burden. In
 addition, the atypical worker-ps mode also needs to be deployed in
 Server Mode for scenarios where models are trained in parallel.</p>
-<p>In combination with Tensorflow, the code is as follows:</p>
+<p>In combination with TensorFlow, the code is as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">FLAGS</span><span class="o">.</span><span class="n">job_name</span> <span class="o">==</span> <span class="s2">&quot;worker&quot;</span><span class="p">:</span>
   <span class="n">g</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">task_index</span><span class="o">=</span><span class="n">FLAGS</span><span class="o">.</span><span class="n">task_index</span><span class="p">,</span> <span class="n">task_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">FLAGS</span><span class="o">.</span><span class="n">worker_hosts</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
   <span class="c1"># Your model, use g to do some operation, such as sampling</span>

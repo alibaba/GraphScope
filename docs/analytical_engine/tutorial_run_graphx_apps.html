@@ -7,11 +7,11 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/tutorial_run_graphx_apps.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="Apache Spark is a famous engine for large-scale data analytics. Spark GraphX is Spark’s graph computing module, which provides flexible and efficient graph computation framework. Graphscope is also..." />
-<meta name="description" content="Apache Spark is a famous engine for large-scale data analytics. Spark GraphX is Spark’s graph computing module, which provides flexible and efficient graph computation framework. Graphscope is also..." />
+<meta property="og:description" content="Apache Spark is a famous engine for large-scale data analytics. Spark GraphX is Spark’s graph computing module, which provides flexible and efficient graph computation framework. GraphScope is also..." />
+<meta name="description" content="Apache Spark is a famous engine for large-scale data analytics. Spark GraphX is Spark’s graph computing module, which provides flexible and efficient graph computation framework. GraphScope is also..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Dev and Test" href="dev_and_test.html" /><link rel="prev" title="Tutorial: Run Giraph Applications on GraphScope" href="tutorial_run_giraph_apps.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Tutorial: Run GraphX Applications on GraphScope - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -688,7 +688,7 @@ MathJax = {
 <h1>Tutorial: Run GraphX Applications on GraphScope<a class="headerlink" href="#tutorial-run-graphx-applications-on-graphscope" title="Permalink to this heading">#</a></h1>
 <p><a class="reference external" href="https://spark.apache.org/">Apache Spark</a> is a famous engine for large-scale data analytics. <a class="reference external" href="https://spark.apache.org/graphx/">Spark GraphX</a> is Spark’s graph
 computing module, which provides  flexible and efficient graph computation framework.</p>
-<p>Graphscope is also developed to be integrated with Spark GraphX. User can easily deploy a graphscope cluster co-located with spark cluster. And by switch <code class="docutils literal notranslate"><span class="pre">SparkSession</span></code> to <code class="docutils literal notranslate"><span class="pre">GSSparkSession</span></code>, user can experience up to 7 times performance
+<p>GraphScope is also developed to be integrated with Spark GraphX. User can easily deploy a graphscope cluster co-located with spark cluster. And by switch <code class="docutils literal notranslate"><span class="pre">SparkSession</span></code> to <code class="docutils literal notranslate"><span class="pre">GSSparkSession</span></code>, user can experience up to 7 times performance
 improvement when running GraphX algorithms.</p>
 <section id="deploy-graphscope-along-with-spark">
 <h2>Deploy GraphScope along with Spark<a class="headerlink" href="#deploy-graphscope-along-with-spark" title="Permalink to this heading">#</a></h2>
@@ -720,10 +720,10 @@ spark-submit<span class="w"> </span>--archives<span class="w"> </span>pyspark_ve
 wget<span class="w"> </span>https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.19.0-shaded.jar<span class="w"> </span>/home/graphscope/grape-demo-0.19.0-shaded.jar
 </pre></div>
 </div>
-<p>Different from Giraph-on-Graphscope, for GraphX-GraphScope integration, we need to submit jobs to spark cluster, not with GraphScope python client.</p>
+<p>Different from Giraph-on-GraphScope, for GraphX-GraphScope integration, we need to submit jobs to spark cluster, not with GraphScope python client.</p>
 <section id="submit-to-spark">
 <h3>Submit to Spark<a class="headerlink" href="#submit-to-spark" title="Permalink to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Path to Graphscope jars is need for running graphx algo on GraphScope.</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Path to GraphScope jars is need for running graphx algo on GraphScope.</span>
 <span class="c1"># FIXME(yuansi): Here we assume env var GRAPHSCOPE_HOME available in environment.</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">GS_JARS</span><span class="o">=</span><span class="sb">`</span>ls<span class="w"> </span><span class="si">${</span><span class="nv">GRAPHSCOPE_HOME</span><span class="si">}</span>/lib/grape-graphx-*.jar<span class="sb">`</span>:<span class="sb">`</span>ls<span class="w"> </span><span class="si">${</span><span class="nv">GRAPHSCOPE_HOME</span><span class="si">}</span>/lib/grape-runtime-*.jar<span class="sb">`</span><span class="w"> </span>
 
@@ -745,7 +745,7 @@ wget<span class="w"> </span>https://graphscope.oss-cn-beijing.aliyuncs.com/jar/g
 <section id="run-customized-graphx-apps">
 <h2>Run customized GraphX apps<a class="headerlink" href="#run-customized-graphx-apps" title="Permalink to this heading">#</a></h2>
 <p>To develop your GraphX algorithms which can run on GraphScope, users shall program towards the RDD interfaces provided by Spark GraphX, since all GraphX interfaces are
-supported by Graphscope.</p>
+supported by GraphScope.</p>
 <section id="include-dependency">
 <h3>Include dependency<a class="headerlink" href="#include-dependency" title="Permalink to this heading">#</a></h3>
 <p>Include <code class="docutils literal notranslate"><span class="pre">grape-graphx</span></code> dependency in your project’s <code class="docutils literal notranslate"><span class="pre">pom.xml</span></code>.</p>

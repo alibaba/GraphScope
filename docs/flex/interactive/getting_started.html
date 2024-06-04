@@ -11,7 +11,7 @@
 <meta name="description" content="Welcome to GraphScope Interactive! This guide will walk you through the process of setting up and running your first queries with our system. Preparation: Make sure GraphScope Interactive is instal..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Using Custom Graph" href="custom_graph_data.html" /><link rel="prev" title="Installation" href="installation.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Getting Started - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -691,7 +691,7 @@ MathJax = {
 <h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this heading">#</a></h2>
 <p>Make sure <code class="docutils literal notranslate"><span class="pre">GraphScope</span> <span class="pre">Interactive</span></code> is installed before proceeding on. If not, please follow <a class="reference internal" href="installation.html"><span class="doc std std-doc">installation</span></a> to install the latest release.</p>
 <ul class="simple">
-<li><p><strong>Administrative tool</strong>: GraphScope Interactive offers an administrative tool of <code class="docutils literal notranslate"><span class="pre">bin/gs</span> <span class="pre">interactive</span></code> to help manage the Interactive service. For an in-depth guide on how to use this tool, please visit the page of <a class="reference internal" href="tools/admin_tool.html"><span class="doc std std-doc">adminstrative tool</span></a>.</p></li>
+<li><p><strong>Administrative tool</strong>: GraphScope Interactive offers an administrative tool of <code class="docutils literal notranslate"><span class="pre">bin/gs</span> <span class="pre">interactive</span></code> to help manage the Interactive service. For an in-depth guide on how to use this tool, please visit the page of <a class="reference internal" href="tools/admin_tool.html"><span class="doc std std-doc">administrative tool</span></a>.</p></li>
 <li><p><strong>Graph Data</strong>: By default, GraphScope Interactive uses Tinkerpop’s <a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/getting-started/">modern graph</a> to get you started. However, if you wish to configure your own graph and load your data, you can refer to the page of <a class="reference internal" href="#./custom_graph"><span class="xref myst">using custom graph_data</span></a> for detailed steps.</p></li>
 <li><p><strong>Configurations</strong>: The service can be configured using the file located at <code class="docutils literal notranslate"><span class="pre">conf/gs_interactive_conf.yaml</span></code>. For a detailed breakdown of all configurable items, please refer to the page of <a class="reference internal" href="#./interactive_conf"><span class="xref myst">configurations</span></a>.</p></li>
 <li><p><strong>Stored Procedures</strong>: GraphScope Interactive allows users to register stored procedures from both Cypher and C++ files. For more information on this, please refer to the page for <a class="reference internal" href="stored_procedures.html"><span class="doc std std-doc">stored procedures</span></a>.</p></li>
@@ -714,7 +714,7 @@ MathJax = {
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>service<span class="w"> </span>start
 </pre></div>
 </div>
-<p>You should be able to see the port (by default: 7687) for accepting Cypher queries.</p>
+<p>You should be able to see a message telling you what the <code class="docutils literal notranslate"><span class="pre">Gremlin/Cypher</span></code> endpoint that you should connect to.</p>
 </section>
 <section id="stop-the-service">
 <h3>Stop the Service<a class="headerlink" href="#stop-the-service" title="Permalink to this heading">#</a></h3>
@@ -738,44 +738,24 @@ MathJax = {
 </div>
 <p>You should be able to see the current status of the service, the graph that is running and the port (by default: 7687) for accepting Cypher queries.</p>
 </section>
-<section id="destory-the-service">
-<h3>Destory the Service<a class="headerlink" href="#destory-the-service" title="Permalink to this heading">#</a></h3>
+<section id="destroy-the-service">
+<h3>Destroy the Service<a class="headerlink" href="#destroy-the-service" title="Permalink to this heading">#</a></h3>
 <p>Execute the command below to terminate the service. Please be aware that this action will erase all the data you’ve generated and is irreversible. Please proceed with caution.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>destroy
 </pre></div>
 </div>
 </section>
 </section>
-<section id="running-queries">
-<h2>Running Queries<a class="headerlink" href="#running-queries" title="Permalink to this heading">#</a></h2>
+<section id="running-cypher-queries">
+<h2>Running Cypher Queries<a class="headerlink" href="#running-cypher-queries" title="Permalink to this heading">#</a></h2>
 <p>GraphScope Interactive seamlessly integrates with the Neo4j ecosystem. You can establish a connection to the Interactive service using Neo4j’s Bolt connector and execute Cypher queries. Our implementation of Cypher queries aligns with the standards set by the <a class="reference external" href="http://www.opencypher.org/">openCypher</a> project. For a detailed overview of the supported Cypher queries, please visit <a class="reference external" href="https://graphscope.io/docs/latest/interactive_engine/neo4j/supported_cypher">supported_cypher</a>.</p>
-<section id="connect-to-the-service">
-<h3>Connect to the Service<a class="headerlink" href="#connect-to-the-service" title="Permalink to this heading">#</a></h3>
-<p>Connect to the GraphScope Interactive Service using the cypher-shell from Neo4j:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get Cypher-shell from: https://dist.neo4j.org/cypher-shell/cypher-shell-4.4.22.zip</span>
-wget<span class="w"> </span>-O<span class="w"> </span>cypher-shell-4.4.22.zip<span class="w"> </span>https://dist.neo4j.org/cypher-shell/cypher-shell-4.4.22.zip
-unzip<span class="w"> </span>cypher-shell-4.4.22.zip
-./cypher-shell/cypher-shell<span class="w"> </span>-a<span class="w"> </span>neo4j://localhost:7687
-</pre></div>
-</div>
-<p>User name and password are not needed for now, while such authentication will be provided in a future version.</p>
+<p>Follow the instructions in <a class="reference internal" href="../../interactive_engine/neo4j/cypher_sdk.html"><span class="doc std std-doc">Connect-to-cypher-service</span></a> to connect to the Cypher service using either the Python client or cypher-shell.</p>
+<p>Note: Cypher queries submitted to GraphScope Interactive are compiled into a dynamic library for execution. While the initial compilation might take some time, the execution for subsequent uses (of the <strong>same</strong> query) will be much faster since it is cached by Interactive.</p>
 </section>
-<section id="submit-queries">
-<h3>Submit Queries<a class="headerlink" href="#submit-queries" title="Permalink to this heading">#</a></h3>
-<p>Once connected, you can start submitting your queries:</p>
-<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span>@neo4j&gt; MATCH(v:person { name: &quot;peter&quot;}) RETURN v.age;
-</pre></div>
-</div>
-<p>Then you can get the age of <code class="docutils literal notranslate"><span class="pre">peter</span></code>.</p>
-<div class="highlight-txt notranslate"><div class="highlight"><pre><span></span>+-----+
-| age |
-+-----+
-| 35  |
-+-----+
-</pre></div>
-</div>
-<p>Note: Cypher queries submitted to GraphScope Interactive are compiled into a dynamic library for execution. While the initial compilation might take some time, a future version will provide caching the library to ensure faster execution for subsequent uses (of the <strong>same</strong> query).</p>
-</section>
+<section id="running-gremlin-queries">
+<h2>Running Gremlin Queries<a class="headerlink" href="#running-gremlin-queries" title="Permalink to this heading">#</a></h2>
+<p>GraphScope Interactive supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
+Please refer to the following link to connect to the Tinkerpop Gremlin service provided by GraphScope Interactive: <a class="reference internal" href="../../interactive_engine/tinkerpop/tinkerpop_gremlin.html"><span class="doc std std-doc">Connect-to-gremlin-service</span></a></p>
 </section>
 </section>
 
@@ -845,14 +825,11 @@ unzip<span class="w"> </span>cypher-shell-4.4.22.zip
 <li><a class="reference internal" href="#stop-the-service">Stop the Service</a></li>
 <li><a class="reference internal" href="#restart-the-service">Restart the Service</a></li>
 <li><a class="reference internal" href="#check-service-status">Check Service Status</a></li>
-<li><a class="reference internal" href="#destory-the-service">Destory the Service</a></li>
+<li><a class="reference internal" href="#destroy-the-service">Destroy the Service</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#running-queries">Running Queries</a><ul>
-<li><a class="reference internal" href="#connect-to-the-service">Connect to the Service</a></li>
-<li><a class="reference internal" href="#submit-queries">Submit Queries</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#running-cypher-queries">Running Cypher Queries</a></li>
+<li><a class="reference internal" href="#running-gremlin-queries">Running Gremlin Queries</a></li>
 </ul>
 </li>
 </ul>

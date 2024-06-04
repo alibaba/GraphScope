@@ -11,7 +11,7 @@
 <meta name="description" content="# 1. Introduction There has been a well-developed programming paradigm since Graph Neural Network (GNN) was introduced. Developing a GNN model contains two parts: graph data processing and neural n..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Graph Sampling Language（GSL) - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -689,7 +689,7 @@ MathJax = {
 <p># 1. Introduction There has been a well-developed programming paradigm
 since Graph Neural Network (GNN) was introduced. Developing a GNN model
 contains two parts: graph data processing and neural network training.
-There are matured Deep Learning framework such as Tensorflow and Pytorch
+There are matured Deep Learning framework such as TensorFlow and Pytorch
 for neural network training. Therefore, how to express and implement
 graph data processing easily and efficiently, and how to work with the
 DL frameworks are the focuses of Graphlearn. In reality, sampling is
@@ -1020,7 +1020,7 @@ in a certain isomorphic undirected graph, we would like to sample a
 vertex’s 10-hop neighbors. <code class="docutils literal notranslate"><span class="pre">repeat()</span></code> takes in a function, similar to
 the one in <code class="docutils literal notranslate"><span class="pre">each()</span></code>, which means that the operation represented by
 that function is repeated <code class="docutils literal notranslate"><span class="pre">times</span></code> times.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">parmas_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">params_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  func(function): The function body to be expanded; the first parameter is the object to be executed.</span>
@@ -1081,7 +1081,7 @@ The <strong>SOURCE</strong> or <strong>STEP</strong> of the <code class="docutil
 strategy returns <strong>SparseNodes</strong>). For instruction on how to get the
 value of <code class="docutils literal notranslate"><span class="pre">Nodes</span></code>/<code class="docutils literal notranslate"><span class="pre">Edges</span></code>/<code class="docutils literal notranslate"><span class="pre">SparseNodes</span></code>/<code class="docutils literal notranslate"><span class="pre">SparseEdges</span></code> object,
 please refer to <a class="reference external" href="graph_query_cn.md#FPU74">API</a>. Before <strong>SINK</strong>,
-Query describs multiple operations. These operations may have
+Query describes multiple operations. These operations may have
 <code class="docutils literal notranslate"><span class="pre">alias()</span></code>. -For Query without <code class="docutils literal notranslate"><span class="pre">alias()</span></code>, the results of all
 operations will be returned, arranged in a list object according to the
 order in the Query. Each element in this returned list is either
@@ -1156,7 +1156,7 @@ correctness of the code and data.</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Worth noticing that when the query only contains Soure (<code class="docutils literal notranslate"><span class="pre">g.V()</span></code> /
+<p>Worth noticing that when the query only contains Source (<code class="docutils literal notranslate"><span class="pre">g.V()</span></code> /
 <code class="docutils literal notranslate"><span class="pre">g.E()</span></code>), <code class="docutils literal notranslate"><span class="pre">emit()</span></code> directly returns the data of list[0].</p>
 <p># 3 Query execution ## 3.1 run <code class="docutils literal notranslate"><span class="pre">run()</span></code> interface is used to execute
 Query and get the final result. The result form is defined by the func

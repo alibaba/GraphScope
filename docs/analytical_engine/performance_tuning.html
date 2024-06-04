@@ -11,7 +11,7 @@
 <meta name="description" content="Memory footprint and performance on large-scale graph data are the keys to the success of graph analysis in real-world scenarios. In this section, We’ll go through the internal design of the proper..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Guide and Examples" href="guide_and_examples.html" /><link rel="prev" title="Customized Algorithms" href="customized_algorithms.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Performance Tuning - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -739,7 +739,7 @@ the type of <code class="docutils literal notranslate"><span class="pre">edge_ta
 element in the <code class="docutils literal notranslate"><span class="pre">indices</span></code> array is an <code class="docutils literal notranslate"><span class="pre">offset</span></code>, and the slice
 <code class="docutils literal notranslate"><span class="pre">ie_lists[ie_offsets[i]:ie_offsets[i+1]]</span></code> is the edges for vertex <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
 <p>By default, the type of <code class="docutils literal notranslate"><span class="pre">offset</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
-<p>The size of <code class="docutils literal notranslate"><span class="pre">indices</span></code> aray is <code class="docutils literal notranslate"><span class="pre">num_vertices</span> <span class="pre">+</span> <span class="pre">1</span></code>, which is a 0-based offset array.</p>
+<p>The size of <code class="docutils literal notranslate"><span class="pre">indices</span></code> array is <code class="docutils literal notranslate"><span class="pre">num_vertices</span> <span class="pre">+</span> <span class="pre">1</span></code>, which is a 0-based offset array.</p>
 </li>
 </ul>
 </li>
@@ -758,7 +758,7 @@ the type of <code class="docutils literal notranslate"><span class="pre">edge_ta
 element in the <code class="docutils literal notranslate"><span class="pre">indices</span></code> array is an <code class="docutils literal notranslate"><span class="pre">offset</span></code>, and the slice
 <code class="docutils literal notranslate"><span class="pre">oe_lists[oe_offsets[i]:oe_offsets[i+1]]</span></code> is the edges for vertex <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
 <p>By default, the type of <code class="docutils literal notranslate"><span class="pre">offset</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
-<p>The size of <code class="docutils literal notranslate"><span class="pre">indices</span></code> aray is <code class="docutils literal notranslate"><span class="pre">num_vertices</span> <span class="pre">+</span> <span class="pre">1</span></code>, which is a 0-based offset array.</p>
+<p>The size of <code class="docutils literal notranslate"><span class="pre">indices</span></code> array is <code class="docutils literal notranslate"><span class="pre">num_vertices</span> <span class="pre">+</span> <span class="pre">1</span></code>, which is a 0-based offset array.</p>
 </li>
 </ul>
 </li>

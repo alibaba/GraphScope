@@ -11,7 +11,7 @@
 <meta name="description" content="GraphScope Interactive is a specialized construction of GraphScope Flex, designed to handle concurrent graph queries at an impressive speed. Its primary goal is to process as many queries as possib..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Overview" href="interactive/overview.html" /><link rel="prev" title="Install GraphScope in offline environment" href="../deployment/install_in_offline_env.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>GraphScope Interactive - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -695,6 +695,7 @@ MathJax = {
 <li class="toctree-l2"><a class="reference internal" href="interactive/overview.html#key-features">Key Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive/overview.html#property-graph-model-and-graph-queries">Property Graph Model and Graph Queries</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive/overview.html#the-cypher-query-language">The Cypher Query Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive/overview.html#the-gremlin-query-language">The Gremlin Query Language</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive/overview.html#limitations">Limitations</a></li>
 </ul>
 </li>
@@ -706,7 +707,8 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="interactive/getting_started.html">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="interactive/getting_started.html#preparation">Preparation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive/getting_started.html#manage-interactive-service">Manage Interactive Service</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interactive/getting_started.html#running-queries">Running Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive/getting_started.html#running-cypher-queries">Running Cypher Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive/getting_started.html#running-gremlin-queries">Running Gremlin Queries</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="interactive/custom_graph_data.html">Using Custom Graph</a><ul>
@@ -737,7 +739,8 @@ MathJax = {
 </li>
 <li class="toctree-l1"><a class="reference internal" href="interactive/data_import.html">Data Import Configuration</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="interactive/data_import.html#supported-data-source">Supported data source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interactive/data_import.html#sample-configuration-for-the-modern-graph">Sample Configuration for the “Modern” Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive/data_import.html#sample-configuration-for-loading-modern-graph-from-csv-files">Sample Configuration for loading “Modern” Graph from csv files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive/data_import.html#sample-configuration-for-loading-modern-graph-from-odps-tables">Sample configuration for loading “Modern Graph” from odps tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive/data_import.html#configuration-breakdown">Configuration Breakdown</a></li>
 </ul>
 </li>
@@ -750,13 +753,13 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="interactive/glossary.html">Glossary</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="interactive/glossary.html#stored-procedure">Stored Procedure.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive/glossary.html#cypher">Cypher.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive/glossary.html#gremlin">Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive/glossary.html#compile">Compile.</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="interactive/deployment.html">GraphScope Interactive Deployment</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="interactive/deployment.html#quickstart">QuickStart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interactive/deployment.html#customizing-configuration">Customizing Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interactive/deployment.html#customize-graph-data">Customize Graph Data.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive/deployment.html#deploy-with-docker">Deploy with docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive/deployment.html#deploy-with-helm">Deploy with helm</a></li>
 </ul>
 </li>
 </ul>

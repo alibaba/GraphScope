@@ -11,7 +11,7 @@
 <meta name="description" content="Although the vertex-centric programming model can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms need to be modified to adhere to the “think like ..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Ingress: Incrementalize Graph Algorithms" href="ingress.html" /><link rel="prev" title="Vertex-Centric Model" href="vertex_centric_models.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Programming Model: PIE - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -768,7 +768,7 @@ MathJax = {
 </pre></div>
 </div>
 <p>In the above code, given a source vertex <code class="docutils literal notranslate"><span class="pre">source</span></code>, in the <code class="docutils literal notranslate"><span class="pre">PEval</span></code> function, we first execute the Dijkstra’s
-algorithm on the sub-graph (fragment) where the <code class="docutils literal notranslate"><span class="pre">source</span></code> resides in to obtain a partial result. After that, the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#synconoutervertex"><code class="docutils literal notranslate"><span class="pre">SyncStateOnOuterVertex</span></code> function</a> is invoked, where the partial result is sent to other fragments to trigger <code class="docutils literal notranslate"><span class="pre">IncEval</span></code> function.</p>
+algorithm on the sub-graph (fragment) where the <code class="docutils literal notranslate"><span class="pre">source</span></code> resides to obtain a partial result. After that, the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#synconoutervertex"><code class="docutils literal notranslate"><span class="pre">SyncStateOnOuterVertex</span></code> function</a> is invoked, where the partial result is sent to other fragments to trigger <code class="docutils literal notranslate"><span class="pre">IncEval</span></code> function.</p>
 <p>In the <code class="docutils literal notranslate"><span class="pre">IncEval</span></code> function, each fragment first receives messages through the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#messagemanager-and-messagestrategy">message manager</a>, then executes incremental evaluation based on received messages to update the partial result. If the partial result is updated, each fragment needs to execute the <code class="docutils literal notranslate"><span class="pre">SyncStateOnOuterVertex</span></code> function to synchronize the latest partial result of <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#outervertex">outer vertices</a> with other fragments to trigger next round of <code class="docutils literal notranslate"><span class="pre">IncEval</span></code>. Please checkout the following tutorials for more details about how to develop graph applications with the PIE model.</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></p></li>

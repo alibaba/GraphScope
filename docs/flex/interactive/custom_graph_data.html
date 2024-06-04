@@ -11,7 +11,7 @@
 <meta name="description" content="This guide walks you through the process of using custom graph data in GraphScope Interactive. The process comprises three main steps: Creating a new graph,, Importing graph data, and, Starting the..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Stored Procedures" href="stored_procedures.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Using Custom Graph - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -701,7 +701,7 @@ bin/gs_interactive<span class="w"> </span>destroy
 </pre></div>
 </div>
 <p>To create a new graph, you will need the original data of the graph. We currently support files in CSV format. Fortunately, we have prepared it for you, and you can find it in the directory <code class="docutils literal notranslate"><span class="pre">{INTERACTIVE_HOME}/examples/movies/</span></code>.</p>
-<p>To begin, ensure you’ve adjusted the settings in the <code class="docutils literal notranslate"><span class="pre">{INTERACTIVE_HOME}/conf/interactive.yaml</span></code> file. By utilizing Docker’s volume mount feature, you can map an external folder containing the the CSV files of <code class="docutils literal notranslate"><span class="pre">movies</span></code> to the internal directory at <code class="docutils literal notranslate"><span class="pre">/home/graphscope/movies</span></code>. It’s crucial that the internal data path starts with <code class="docutils literal notranslate"><span class="pre">/home/graphscope</span></code> and concludes with <code class="docutils literal notranslate"><span class="pre">movies</span></code>, reflecting the name of your graph. If you’re looking to import custom data, you can do volume mapping in a similar way.</p>
+<p>To begin, ensure you’ve adjusted the settings in the <code class="docutils literal notranslate"><span class="pre">{INTERACTIVE_HOME}/conf/interactive.yaml</span></code> file. By utilizing Docker’s volume mount feature, you can map an external folder containing the CSV files of <code class="docutils literal notranslate"><span class="pre">movies</span></code> to the internal directory at <code class="docutils literal notranslate"><span class="pre">/home/graphscope/movies</span></code>. It’s crucial that the internal data path starts with <code class="docutils literal notranslate"><span class="pre">/home/graphscope</span></code> and concludes with <code class="docutils literal notranslate"><span class="pre">movies</span></code>, reflecting the name of your graph. If you’re looking to import custom data, you can do volume mapping in a similar way.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v0.0.3</span>
 <span class="nt">volume</span><span class="p">:</span>
 <span class="w">  </span><span class="c1"># replace INTERACTIVE_HOME with actual path.</span>
@@ -815,7 +815,7 @@ bin/gs_interactive<span class="w"> </span>destroy
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">movies</span>
 <span class="nt">loading_config</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">data_source</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file</span><span class="w">  </span><span class="c1"># file, oss, s3, hdfs; only file is supported now</span>
+<span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file</span><span class="w">  </span><span class="c1"># only file and odps is supported now</span>
 <span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/graphscope/movies/</span>
 <span class="w">  </span><span class="nt">import_option</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">init</span><span class="w"> </span><span class="c1"># append, overwrite, only init is supported now</span>
 <span class="w">  </span><span class="nt">format</span><span class="p">:</span>
@@ -886,7 +886,7 @@ bin/gs_interactive<span class="w"> </span>destroy
 </section>
 <section id="try-other-graphs">
 <h2>Try other graphs<a class="headerlink" href="#try-other-graphs" title="Permalink to this heading">#</a></h2>
-<p>In addition to <code class="docutils literal notranslate"><span class="pre">movies</span></code> graph, we have also prepared the <code class="docutils literal notranslate"><span class="pre">graph_algo</span></code> graph. You can find the raw CSV files, graph.yaml, and import.yaml in the <code class="docutils literal notranslate"><span class="pre">./examples/graph_algo/</span></code> directory. You can import the <code class="docutils literal notranslate"><span class="pre">graph_algo</span></code> graph just like importing the <code class="docutils literal notranslate"><span class="pre">movies</span></code> graph.</p>
+<p>In addition to <code class="docutils literal notranslate"><span class="pre">movies</span></code> graph, we have also prepared the <code class="docutils literal notranslate"><span class="pre">graph_algo</span></code> graph. You can find the raw CSV files, graph.yaml, and import.yaml in the <code class="docutils literal notranslate"><span class="pre">./examples/graph_algo/</span></code> directory. You can import the <code class="docutils literal notranslate"><span class="pre">graph_algo</span></code> graph just like importing the <code class="docutils literal notranslate"><span class="pre">movies</span></code> graph. There are also some sample cypher queries, you can find them at <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/graph_algo">GraphScope/flex/interactive/examples/graph_algo</a>.</p>
 </section>
 </section>
 

@@ -81,10 +81,10 @@ Inheritance diagram for gs::AppFactoryBase:</div>
 <div class="center"><img src="classgs_1_1AppFactoryBase__inherit__graph.png" border="0" usemap="#gs_1_1AppFactoryBase_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1AppFactoryBase_inherit__map" id="gs_1_1AppFactoryBase_inherit__map">
 <area shape="rect" title=" " alt="" coords="5,81,155,108"/>
-<area shape="rect" href="classgs_1_1HQPSAdhocAppFactory.html" title=" " alt="" coords="215,5,409,32"/>
-<area shape="rect" href="classgs_1_1HQPSProcedureAppFactory.html" title=" " alt="" coords="203,56,421,83"/>
-<area shape="rect" href="classgs_1_1ServerAppFactory.html" title=" " alt="" coords="233,107,391,133"/>
-<area shape="rect" href="classgs_1_1SharedLibraryAppFactory.html" title=" " alt="" coords="209,157,415,184"/>
+<area shape="rect" href="classgs_1_1HQPSAdhocReadAppFactory.html" title=" " alt="" coords="204,5,431,32"/>
+<area shape="rect" href="classgs_1_1HQPSAdhocWriteAppFactory.html" title=" " alt="" coords="203,56,432,83"/>
+<area shape="rect" href="classgs_1_1ServerAppFactory.html" title=" " alt="" coords="238,107,397,133"/>
+<area shape="rect" href="classgs_1_1SharedLibraryAppFactory.html" title=" " alt="" coords="214,157,421,184"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -94,8 +94,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:acf4d6d0563bcb996dbd86d61d9ab3834"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00764955a8446b96bde07baa3c7f1d95"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AppFactoryBase.html#a00764955a8446b96bde07baa3c7f1d95">~AppFactoryBase</a> ()</td></tr>
 <tr class="separator:a00764955a8446b96bde07baa3c7f1d95"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a866804efc88a5c12371dde8f938af340"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1AppWrapper.html">AppWrapper</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AppFactoryBase.html#a866804efc88a5c12371dde8f938af340">CreateApp</a> (<a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;db)=0</td></tr>
-<tr class="separator:a866804efc88a5c12371dde8f938af340"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a104c6bd7ae4fd49e6eca99f992ee26b0"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1AppWrapper.html">AppWrapper</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AppFactoryBase.html#a104c6bd7ae4fd49e6eca99f992ee26b0">CreateApp</a> (const <a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;db)=0</td></tr>
+<tr class="separator:a104c6bd7ae4fd49e6eca99f992ee26b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="acf4d6d0563bcb996dbd86d61d9ab3834"></a>
@@ -149,8 +149,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a866804efc88a5c12371dde8f938af340"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a866804efc88a5c12371dde8f938af340">&#9670;&nbsp;</a></span>CreateApp()</h2>
+<a id="a104c6bd7ae4fd49e6eca99f992ee26b0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a104c6bd7ae4fd49e6eca99f992ee26b0">&#9670;&nbsp;</a></span>CreateApp()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -161,7 +161,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual <a class="el" href="classgs_1_1AppWrapper.html">AppWrapper</a> gs::AppFactoryBase::CreateApp </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;&#160;</td>
           <td class="paramname"><em>db</em></td><td>)</td>
           <td></td>
         </tr>
@@ -173,7 +173,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1HQPSProcedureAppFactory.html#a328cb60d2892b3f2200703065aa3d5ba">gs::HQPSProcedureAppFactory</a>, <a class="el" href="classgs_1_1HQPSAdhocAppFactory.html#a519e75fd1448bc5a9c72057e1eca4a8c">gs::HQPSAdhocAppFactory</a>, <a class="el" href="classgs_1_1ServerAppFactory.html#a615af165c58f7b3b8b5562d8487932f2">gs::ServerAppFactory</a>, and <a class="el" href="classgs_1_1SharedLibraryAppFactory.html#a41d8c1925b4e8f3ba5dc4e423f7d1a5e">gs::SharedLibraryAppFactory</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1ServerAppFactory.html#a6b4914164c7bee2bf418e3331ddd7db9">gs::ServerAppFactory</a>, <a class="el" href="classgs_1_1SharedLibraryAppFactory.html#a1cba487236fa1f38bcb54c5c64717058">gs::SharedLibraryAppFactory</a>, <a class="el" href="classgs_1_1HQPSAdhocWriteAppFactory.html#aa6df5d35bf2d68d7a02aedf6150bd7cf">gs::HQPSAdhocWriteAppFactory</a>, and <a class="el" href="classgs_1_1HQPSAdhocReadAppFactory.html#ab8c27494964a5162c9b3f0e6e793563f">gs::HQPSAdhocReadAppFactory</a>.</p>
 
 </div>
 </div>

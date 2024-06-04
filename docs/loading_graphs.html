@@ -11,7 +11,7 @@
 <meta name="description" content="GraphScope models graph data as Property Graph, in which the edges/vertices are labeled and each label may have many properties. Load Built-in Datasets: GraphScope comes with a set of popular datas..." />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Graph Analytics Workloads" href="overview/graph_analytics_workloads.html" /><link rel="prev" title="Getting Started" href="overview/getting_started.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Loading Graphs - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -707,7 +707,7 @@ Here’s an example:</p>
 </pre></div>
 </div>
 <p>Here, we first created a <cite>Session</cite> in a Kubernetes cluster, and mount the dataset bucket to <code class="file docutils literal notranslate"><span class="pre">/dataset</span></code>, this path is relative to Pods. Then we pass that session as first parameter, and <code class="file docutils literal notranslate"><span class="pre">/dataset/ogbn_mag_small</span></code> as second parameter. The <code class="file docutils literal notranslate"><span class="pre">/dataset</span></code> is the root path of datasets which we have assigned by <cite>mount_dataset</cite>, the <cite>ogbn_mag_small</cite> is the sub folder name of the dataset.</p>
-<p>You can view all avaiable datasets in <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset">here</a> , and get details description and usage in those source files.</p>
+<p>You can view all available datasets in <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset">here</a> , and get details description and usage in those source files.</p>
 </section>
 <section id="loading-your-own-datasets">
 <h2>Loading Your Own Datasets<a class="headerlink" href="#loading-your-own-datasets" title="Permalink to this heading">#</a></h2>
@@ -739,7 +739,7 @@ To load a property graph to GraphScope, we provide a method <cite>g()</cite> def
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>It will read data from the the location <code class="file docutils literal notranslate"><span class="pre">/home/ldbc_sample/person_0_0.csv</span></code>. Since we didn’t give additional arguments, these vertices will be labeled <code class="docutils literal notranslate"><span class="pre">_</span></code> by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.</p>
+<p>It will read data from the location <code class="file docutils literal notranslate"><span class="pre">/home/ldbc_sample/person_0_0.csv</span></code>. Since we didn’t give additional arguments, these vertices will be labeled <code class="docutils literal notranslate"><span class="pre">_</span></code> by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.</p>
 <p>Another commonly used parameter is label:</p>
 <p><code class="docutils literal notranslate"><span class="pre">label</span></code>: The label name of the vertex, default to <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p>
 <p>Since a property graph allows many kinds of vertices, it is suggested for users to give each kind of vertices a meaningful label name. For example:</p>

@@ -11,7 +11,7 @@
 <meta name="description" content="This document is used to explain the data format supported by GraphLearn and the API to describe and parse it. 1 Data format: Graph data can be divided into vertex data and edge data. Generally, ve..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Data Source - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -860,7 +860,7 @@ the specified <strong>WEIGHTED</strong> to inform the system, in the API descrip
 <p>The label format is used to express the situation where the vertices or
 edges are labeled. The label has only one column, which is of type int.
 When the data format has labels, it is necessary to display and specify
-<strong>LABELD</strong> to inform the system, in the API description.</p>
+<strong>LABELED</strong> to inform the system, in the API description.</p>
 <p>The schema of the vertex data label format:</p>
 <div class="table-wrapper docutils container">
 <table class="docutils align-default">
@@ -1146,7 +1146,7 @@ memory overhead.</p>
 <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">attr_type</span><span class="o">=</span><span class="p">{</span><span class="n">your_attr_types</span><span class="p">},</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="p">{</span><span class="n">you_delimiter</span><span class="p">})</span>
 
 <span class="c1"># schema = (src_id int64, dst_id int64, weight float, attributes string)</span>
-<span class="n">ag</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weightd</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attr_type</span><span class="o">=</span><span class="p">{</span><span class="n">your_attr_types</span><span class="p">},</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="p">{</span><span class="n">you_delimiter</span><span class="p">})</span>
+<span class="n">ag</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attr_type</span><span class="o">=</span><span class="p">{</span><span class="n">your_attr_types</span><span class="p">},</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="p">{</span><span class="n">you_delimiter</span><span class="p">})</span>
 
 <span class="c1"># schema = (src_id int64, dst_id int64, weight float, label int32)</span>
 <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1174,7 +1174,7 @@ memory overhead.</p>
 <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">attr_type</span><span class="o">=</span><span class="p">{</span><span class="n">your_attr_types</span><span class="p">},</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="p">{</span><span class="n">you_delimiter</span><span class="p">})</span>
 
 <span class="c1"># schema = (src_id int64, dst_id int64, weight float, attributes string)</span>
-<span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weightd</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attr_type</span><span class="o">=</span><span class="p">{</span><span class="n">your_attr_types</span><span class="p">},</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="p">{</span><span class="n">you_delimiter</span><span class="p">})</span>
+<span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attr_type</span><span class="o">=</span><span class="p">{</span><span class="n">your_attr_types</span><span class="p">},</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="p">{</span><span class="n">you_delimiter</span><span class="p">})</span>
 
 <span class="c1"># schema = (src_id int64, dst_id int64, weight float, label int32)</span>
 <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

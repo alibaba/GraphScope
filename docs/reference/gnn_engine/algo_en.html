@@ -11,7 +11,7 @@
 <meta name="description" content="In this document, we will introduce how to use the basic APIs provided by GL to cooperate with deep learning engines, such as TensorFlow, to build graph learning algorithms. We demonstrate the GCN ..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Developing Your Own Model - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -885,7 +885,7 @@ iterator and a loss function.</p>
     <span class="k">return</span> <span class="n">GCN</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;class_num&#39;</span><span class="p">],</span>
                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;features_num&#39;</span><span class="p">],</span>
-               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;batch_szie&#39;</span><span class="p">],</span>
+               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;batch_size&#39;</span><span class="p">],</span>
                <span class="o">...</span><span class="p">)</span>
   <span class="n">trainer</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">LocalTFTrainer</span><span class="p">(</span><span class="n">model_fn</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
   <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>

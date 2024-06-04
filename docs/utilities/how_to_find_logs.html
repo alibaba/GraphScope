@@ -11,7 +11,7 @@
 <meta name="description" content="By default, GraphScope is running in a silent mode following the convention of Python applications. To enable verbose logging, turn it on by this command after importing graphscope. Find logs in k8..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Command-line Utility gsctl" href="gs.html" /><link rel="prev" title="GART: Bridging the Gap between Relational OLTP and Graph Workloads" href="../storage_engine/gart.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>How to Find logs - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -764,13 +764,11 @@ $<span class="w"> </span>cat<span class="w"> </span>/home/graphscope/graphlearn.
 </section>
 <section id="find-logs-for-groot">
 <h2>Find logs for Groot<a class="headerlink" href="#find-logs-for-groot" title="Permalink to this heading">#</a></h2>
-<p>It is common to find the logs of Frontend and Store roles. When debugging, it is often necessary to find the logs of Coordinator and Ingestor as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. You can find the logs of each Pod using the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl command</a> <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">${POD_NAME}</span></code>. For example,</p>
+<p>It is common to find the logs of Frontend and Store roles. When debugging, it is often necessary to find the logs of Coordinator as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. You can find the logs of each Pod using the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl command</a> <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">${POD_NAME}</span></code>. For example,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pod
 NAME<span class="w">                                              </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">      </span>AGE
 demo-graphscope-store-coordinator-0<span class="w">               </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>33d
 demo-graphscope-store-frontend-0<span class="w">                  </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>33d
-demo-graphscope-store-ingestor-0<span class="w">                  </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>33d
-demo-graphscope-store-ingestor-1<span class="w">                  </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>33d
 demo-graphscope-store-store-0<span class="w">                     </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>33d
 demo-graphscope-store-store-1<span class="w">                     </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>33d
 
@@ -780,7 +778,7 @@ $<span class="w"> </span>kubectl<span class="w"> </span>logs<span class="w"> </s
 </div>
 <p>Additionally, if you can access into the pod, you can find all logs in <code class="docutils literal notranslate"><span class="pre">/var/log/graphscope</span></code> directory.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># frontend</span>
-$<span class="w"> </span>kubetl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>demo-graphscope-store-frontend-0<span class="w"> </span>--<span class="w"> </span>/bin/bash
+$<span class="w"> </span>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>demo-graphscope-store-frontend-0<span class="w"> </span>--<span class="w"> </span>/bin/bash
 $<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/var/log/graphscope<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>ls
 graphscope-store.2023-03-11.0.log<span class="w">  </span>graphscope-store.2023-03-19.0.log<span class="w">  </span>graphscope-store.log<span class="w"> </span>...
 </pre></div>

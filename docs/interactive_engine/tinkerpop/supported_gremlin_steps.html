@@ -11,7 +11,7 @@
 <meta name="description" content="Introduction, Standard Steps- Source, Expand, Filter, Project, Aggregate, Order, Statistics, Union, Match, Subgraph, Identity, Unfold., Syntactic Sugars- PathExpand, Expression, Aggregate(Group)., ..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="FAQs for GIE Gremlin Usage" href="faq.html" /><link rel="prev" title="Tutorial: LDBC Gremlin" href="tutorial_ldbc_gremlin.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Supported Gremlin Steps - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -1421,7 +1421,7 @@ g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1
 <span class="c1"># vertices and edges can be duplicated, and all vertices and edges along the path should be kept</span>
 g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1..10&quot;</span><span class="o">)</span>.with<span class="o">(</span><span class="s1">&#39;PATH_OPT&#39;</span>,<span class="w"> </span><span class="s1">&#39;ARBITRARY&#39;</span><span class="o">)</span>.with<span class="o">(</span><span class="s1">&#39;RESULT_OPT&#39;</span>,<span class="w"> </span><span class="s1">&#39;ALL_V_E&#39;</span><span class="o">)</span>
 <span class="c1"># expand hops within the range of [1, 10) along the outgoing edges,</span>
-<span class="c1"># vertices can not be duplicated and all vertices should be kept</span>
+<span class="c1"># vertices cannot be duplicated and all vertices should be kept</span>
 g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1..10&quot;</span><span class="o">)</span>.with<span class="o">(</span><span class="s1">&#39;PATH_OPT&#39;</span>,<span class="w"> </span><span class="s1">&#39;SIMPLE&#39;</span><span class="o">)</span>.with<span class="o">(</span><span class="s1">&#39;RESULT_OPT&#39;</span>,<span class="w"> </span><span class="s1">&#39;ALL_V&#39;</span><span class="o">)</span>
 <span class="c1"># = g.V().out(&quot;1..10&quot;).with(&#39;PATH_OPT&#39;, &#39;ARBITRARY&#39;).with(&#39;RESULT_OPT&#39;, &#39;END_V&#39;)</span>
 g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1..10&quot;</span><span class="o">)</span>
@@ -1530,95 +1530,465 @@ g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1
 </section>
 <section id="expression">
 <h3>Expression<a class="headerlink" href="#expression" title="Permalink to this heading">#</a></h3>
-<p>Expression is introduced to denote property-based calculations or filters, which consists of the following basic entries:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@<span class="w"> </span><span class="c1"># the value of the current entry</span>
-@.name<span class="w"> </span><span class="c1"># the property value of `name` of the current entry</span>
-@a<span class="w"> </span><span class="c1"># the value of the entry `a`</span>
-@a.name<span class="w"> </span><span class="c1"># the property value of `name` of the entry `a`</span>
-</pre></div>
+<p>Expressions, expressed via the <code class="docutils literal notranslate"><span class="pre">expr()</span></code> syntactic sugar, have been introduced to facilitate writing expressions directly within steps such as <code class="docutils literal notranslate"><span class="pre">select()</span></code>, <code class="docutils literal notranslate"><span class="pre">project()</span></code>, <code class="docutils literal notranslate"><span class="pre">where()</span></code>, and <code class="docutils literal notranslate"><span class="pre">group()</span></code>. This update is part of an ongoing effort to standardize Gremlin’s expression syntax, making it more aligned with <a class="reference external" href="https://www.w3schools.com/sql/sql_operators.asp">SQL expression syntax</a>. The updated syntax, effective from version 0.27.0, streamlines user operations and enhances readability. Below, we detail the updated syntax definitions and point out key distinctions from the syntax used prior to version 0.26.0.</p>
+<p>Literal:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Category</p></th>
+<th class="head"><p>Syntax</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>string</p></td>
+<td><p>“marko”</p></td>
+</tr>
+<tr class="row-odd"><td><p>boolean</p></td>
+<td><p>true, false</p></td>
+</tr>
+<tr class="row-even"><td><p>integer</p></td>
+<td><p>1, 2, 3</p></td>
+</tr>
+<tr class="row-odd"><td><p>long</p></td>
+<td><p>1l, 1L</p></td>
+</tr>
+<tr class="row-even"><td><p>float</p></td>
+<td><p>1.0f, 1.0F</p></td>
+</tr>
+<tr class="row-odd"><td><p>double</p></td>
+<td><p>1.0, 1.0d, 1.0D</p></td>
+</tr>
+<tr class="row-even"><td><p>list</p></td>
+<td><p>[“marko”, “vadas”], [true, false], [1, 2], [1L, 2L], [1.0F, 2.0F], [1.0, 2.0]</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<p>And related operations can be performed based on these entries, including:</p>
-<ul>
-<li><p>arithmetic</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@.age<span class="w"> </span>+<span class="w"> </span><span class="m">10</span>
-@.age<span class="w"> </span>*<span class="w"> </span><span class="m">10</span>
-<span class="o">(</span>@.age<span class="w"> </span>+<span class="w"> </span><span class="m">4</span><span class="o">)</span><span class="w"> </span>/<span class="w"> </span><span class="m">10</span><span class="w"> </span>+<span class="w"> </span><span class="o">(</span>@.age<span class="w"> </span>-<span class="w"> </span><span class="m">5</span><span class="o">)</span>
-</pre></div>
+<p>Variable:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Category</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Before 0.26.0</p></th>
+<th class="head"><p>Since 0.27.0</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>current</p></td>
+<td><p>the current entry</p></td>
+<td><p>&#64;</p></td>
+<td><p>_</p></td>
+</tr>
+<tr class="row-odd"><td><p>current property</p></td>
+<td><p>the property value of the current entry</p></td>
+<td><p>&#64;.name</p></td>
+<td><p>_.name</p></td>
+</tr>
+<tr class="row-even"><td><p>tag</p></td>
+<td><p>the specified tag</p></td>
+<td><p>&#64;a</p></td>
+<td><p>a</p></td>
+</tr>
+<tr class="row-odd"><td><p>tag property</p></td>
+<td><p>the property value of the specified tag</p></td>
+<td><p>&#64;a.name</p></td>
+<td><p><a class="reference external" href="http://a.name">a.name</a></p></td>
+</tr>
+</tbody>
+</table>
 </div>
-</li>
-<li><p>logic comparison</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@.name<span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;marko&quot;</span>
-@.age<span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="m">10</span>
-@.age<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>
-@.age<span class="w"> </span>&lt;<span class="w"> </span><span class="m">10</span>
-@.age<span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">10</span>
-@.weight<span class="w"> </span>&lt;<span class="o">=</span><span class="w"> </span><span class="m">10</span>.0
-</pre></div>
+<p>Operator:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Category</p></th>
+<th class="head"><p>Operation (Case-Insensitive)</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Before 0.26.0</p></th>
+<th class="head"><p>Since 0.27.0</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>logical</p></td>
+<td><p>=</p></td>
+<td><p>equal</p></td>
+<td><p>&#64;.name == “marko”</p></td>
+<td><p>_.name = “marko”</p></td>
+</tr>
+<tr class="row-odd"><td><p>logical</p></td>
+<td><p>&lt;&gt;</p></td>
+<td><p>not equal</p></td>
+<td><p>&#64;.name != “marko”</p></td>
+<td><p>_.name != “marko”</p></td>
+</tr>
+<tr class="row-even"><td><p>logical</p></td>
+<td><p>&gt;</p></td>
+<td><p>greater than</p></td>
+<td><p>&#64;.age &gt; 10</p></td>
+<td><p>_.age &gt; 10</p></td>
+</tr>
+<tr class="row-odd"><td><p>logical</p></td>
+<td><p>&lt;</p></td>
+<td><p>less than</p></td>
+<td><p>&#64;.age &lt; 10</p></td>
+<td><p>_.age &lt; 10</p></td>
+</tr>
+<tr class="row-even"><td><p>logical</p></td>
+<td><p>&gt;=</p></td>
+<td><p>greater than or equal</p></td>
+<td><p>&#64;.age &gt;= 10</p></td>
+<td><p>_.age &gt;= 10</p></td>
+</tr>
+<tr class="row-odd"><td><p>logical</p></td>
+<td><p>&lt;=</p></td>
+<td><p>less than or equal</p></td>
+<td><p>&#64;.age &lt;= 10</p></td>
+<td><p>_.age &lt;= 10</p></td>
+</tr>
+<tr class="row-even"><td><p>logical</p></td>
+<td><p>NOT</p></td>
+<td><p>negate the logical expression</p></td>
+<td><p>! (&#64;.name == “marko”)</p></td>
+<td><p>NOT _.name = “marko”</p></td>
+</tr>
+<tr class="row-odd"><td><p>logical</p></td>
+<td><p>AND</p></td>
+<td><p>connect two logical expressions with AND</p></td>
+<td><p>&#64;.name == “marko” &amp;&amp; &#64;.age &gt; 10</p></td>
+<td><p>_.name = “marko” AND _.age &gt; 10</p></td>
+</tr>
+<tr class="row-even"><td><p>logical</p></td>
+<td><p>OR</p></td>
+<td><p>connect two logical expressions with OR</p></td>
+<td><p>&#64;.name == “marko” || &#64;.age &gt; 10</p></td>
+<td><p>_.name = “marko” OR _.age &gt; 10</p></td>
+</tr>
+<tr class="row-odd"><td><p>logical</p></td>
+<td><p>IN</p></td>
+<td><p>whether the value of the current entry is in the given list</p></td>
+<td><p>&#64;.name WITHIN [“marko”, “vadas”]</p></td>
+<td><p>_.name IN [“marko”, “vadas”]</p></td>
+</tr>
+<tr class="row-even"><td><p>logical</p></td>
+<td><p>IS NULL</p></td>
+<td><p>whether the value of the current entry ISNULL</p></td>
+<td><p>&#64;.age IS NULL</p></td>
+<td><p>_.age IS NULL</p></td>
+</tr>
+<tr class="row-odd"><td><p>logical</p></td>
+<td><p>IS NOT NULL</p></td>
+<td><p>whether the value of the current entry IS NOT NULL</p></td>
+<td><p>! (&#64;.age ISNULL)</p></td>
+<td><p>_.age IS NOT NULL</p></td>
+</tr>
+<tr class="row-even"><td><p>arithmetical</p></td>
+<td><p>+</p></td>
+<td><p>addition</p></td>
+<td><p>&#64;.age + 10</p></td>
+<td><p>_.age + 10</p></td>
+</tr>
+<tr class="row-odd"><td><p>arithmetical</p></td>
+<td><p>-</p></td>
+<td><p>subtraction</p></td>
+<td><p>&#64;.age - 10</p></td>
+<td><p>_.age - 10</p></td>
+</tr>
+<tr class="row-even"><td><p>arithmetical</p></td>
+<td><p>*</p></td>
+<td><p>multiplication</p></td>
+<td><p>&#64;.age * 10</p></td>
+<td><p>_.age * 10</p></td>
+</tr>
+<tr class="row-odd"><td><p>arithmetical</p></td>
+<td><p>/</p></td>
+<td><p>division</p></td>
+<td><p>&#64;.age / 10</p></td>
+<td><p>_.age / 10</p></td>
+</tr>
+<tr class="row-even"><td><p>arithmetical</p></td>
+<td><p>%</p></td>
+<td><p>modulo</p></td>
+<td><p>&#64;.age % 10</p></td>
+<td><p>_.age % 10</p></td>
+</tr>
+<tr class="row-odd"><td><p>arithmetical</p></td>
+<td><p>POWER</p></td>
+<td><p>exponentiation</p></td>
+<td><p>&#64;.age ^^ 3</p></td>
+<td><p>POWER(_.age, 3)</p></td>
+</tr>
+<tr class="row-even"><td><p>bitwise</p></td>
+<td><p>&amp;</p></td>
+<td><p>bitwise AND</p></td>
+<td><p>&#64;.age &amp; 2</p></td>
+<td><p>_.age &amp; 2</p></td>
+</tr>
+<tr class="row-odd"><td><p>bitwise</p></td>
+<td><p>|</p></td>
+<td><p>bitwise OR</p></td>
+<td><p>&#64;.age | 2</p></td>
+<td><p>_.age | 2</p></td>
+</tr>
+<tr class="row-even"><td><p>bitwise</p></td>
+<td><p>^</p></td>
+<td><p>bitwise XOR</p></td>
+<td><p>&#64;.age ^ 2</p></td>
+<td><p>_.age ^ 2</p></td>
+</tr>
+<tr class="row-odd"><td><p>bit shift</p></td>
+<td><p>&lt;&lt;</p></td>
+<td><p>left shift</p></td>
+<td><p>&#64;.age &lt;&lt; 2</p></td>
+<td><p>_.age &lt;&lt; 2</p></td>
+</tr>
+<tr class="row-even"><td><p>bit shift</p></td>
+<td><p>&gt;&gt;</p></td>
+<td><p>right shift</p></td>
+<td><p>&#64;.age &gt;&gt; 2</p></td>
+<td><p>_.age &gt;&gt; 2</p></td>
+</tr>
+<tr class="row-odd"><td><p>string regex match</p></td>
+<td><p>STARTS WITH</p></td>
+<td><p>whether the string starts with the given prefix</p></td>
+<td><p>&#64;.name STARTSWITH “ma”</p></td>
+<td><p>_.name STARTS WITH “ma”</p></td>
+</tr>
+<tr class="row-even"><td><p>string regex match</p></td>
+<td><p>NOT STARTS WITH</p></td>
+<td><p>whether the string does not start with the given prefix</p></td>
+<td><p>! (&#64;.name STARTSWITH “ma”)</p></td>
+<td><p>NOT _.name STARTS WITH “ma”</p></td>
+</tr>
+<tr class="row-odd"><td><p>string regex match</p></td>
+<td><p>ENDS WITH</p></td>
+<td><p>whether the string ends with the given suffix</p></td>
+<td><p>&#64;.name ENDSWITH “ko”</p></td>
+<td><p>_.name ENDS WITH “ko”</p></td>
+</tr>
+<tr class="row-even"><td><p>string regex match</p></td>
+<td><p>NOT ENDS WITH</p></td>
+<td><p>whether the string does not end with the given suffix</p></td>
+<td><p>! (&#64;.name ENDSWITH “ko”)</p></td>
+<td><p>NOT _.name ENDS WITH “ko”</p></td>
+</tr>
+<tr class="row-odd"><td><p>string regex match</p></td>
+<td><p>CONTAINS</p></td>
+<td><p>whether the string contains the given substring</p></td>
+<td><p>“ar” WITHIN &#64;.name</p></td>
+<td><p>_.name CONTAINS “ar”</p></td>
+</tr>
+<tr class="row-even"><td><p>string regex match</p></td>
+<td><p>NOT CONTAINS</p></td>
+<td><p>whether the string does not contain the given substring</p></td>
+<td><p>“ar” WITHOUT &#64;.name</p></td>
+<td><p>NOT _.name CONTAINS “ar”</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-</li>
-<li><p>logic connector</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@.age<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>@.age<span class="w"> </span>&lt;<span class="w"> </span><span class="m">20</span>
-@.age<span class="w"> </span>&lt;<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>@.age<span class="w"> </span>&gt;<span class="w"> </span><span class="m">20</span>
-</pre></div>
+<p>Function:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Category</p></th>
+<th class="head"><p>Function (Case-Insensitive)</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Before 0.26.0</p></th>
+<th class="head"><p>Since 0.27.0</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>aggregate</p></td>
+<td><p>COUNT</p></td>
+<td><p>count the number of the elements</p></td>
+<td><p>unsupported</p></td>
+<td><p>COUNT(_.age)</p></td>
+</tr>
+<tr class="row-odd"><td><p>aggregate</p></td>
+<td><p>SUM</p></td>
+<td><p>sum the values of the elements</p></td>
+<td><p>unsupported</p></td>
+<td><p>SUM(_.age)</p></td>
+</tr>
+<tr class="row-even"><td><p>aggregate</p></td>
+<td><p>MIN</p></td>
+<td><p>find the minimum value of the elements</p></td>
+<td><p>unsupported</p></td>
+<td><p>MIN(_.age)</p></td>
+</tr>
+<tr class="row-odd"><td><p>aggregate</p></td>
+<td><p>MAX</p></td>
+<td><p>find the maximum value of the elements</p></td>
+<td><p>unsupported</p></td>
+<td><p>MAX(_.age)</p></td>
+</tr>
+<tr class="row-even"><td><p>aggregate</p></td>
+<td><p>AVG</p></td>
+<td><p>calculate the average value of the elements</p></td>
+<td><p>unsupported</p></td>
+<td><p>AVG(_.age)</p></td>
+</tr>
+<tr class="row-odd"><td><p>aggregate</p></td>
+<td><p>COLLECT</p></td>
+<td><p>fold the elements into a list</p></td>
+<td><p>unsupported</p></td>
+<td><p>COLLECT(_.age)</p></td>
+</tr>
+<tr class="row-even"><td><p>aggregate</p></td>
+<td><p>HEAD(COLLECT())</p></td>
+<td><p>find the first value of the elements</p></td>
+<td><p>unsupported</p></td>
+<td><p>HEAD(COLLECT(_.age))</p></td>
+</tr>
+<tr class="row-odd"><td><p>other</p></td>
+<td><p>LABELS</p></td>
+<td><p>get the labels of the specified tag which is a vertex</p></td>
+<td><p>&#64;a.~label</p></td>
+<td><p>LABELS(a)</p></td>
+</tr>
+<tr class="row-even"><td><p>other</p></td>
+<td><p>TYPE</p></td>
+<td><p>get the type of the specified tag which is an edge</p></td>
+<td><p>&#64;a.~label</p></td>
+<td><p>TYPE(a)</p></td>
+</tr>
+<tr class="row-odd"><td><p>other</p></td>
+<td><p>LENGTH</p></td>
+<td><p>get the length of the specified tag which is a path</p></td>
+<td><p>&#64;a.~len</p></td>
+<td><p>LENGTH(a)</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-</li>
-<li><p>bit manipulation</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@.num<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">2</span>
-@.num<span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="m">2</span>
-@.num<span class="w"> </span>^<span class="w"> </span><span class="m">2</span>
-@.num<span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="m">2</span>
-@.num<span class="w"> </span>&lt;&lt;<span class="w"> </span><span class="m">2</span>
-</pre></div>
+<p>Expression in project or filter:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Category</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Before 0.26.0</p></th>
+<th class="head"><p>Since 0.27.0</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>filter</p></td>
+<td><p>filter the current traverser by the expression</p></td>
+<td><p>where(expr(“&#64;.name == \“marko\””))</p></td>
+<td><p>where(expr(_.name = “marko”))</p></td>
+</tr>
+<tr class="row-odd"><td><p>project</p></td>
+<td><p>project the current traverser to the value of the expression</p></td>
+<td><p>select(expr(“&#64;.name”))</p></td>
+<td><p>select(expr(_.name))</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-</li>
-<li><p>exponentiation</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@.num<span class="w"> </span>^^<span class="w"> </span><span class="m">3</span>
-@.num<span class="w"> </span>^^<span class="w"> </span>-3
-</pre></div>
+<p>Here we provide the precedence of the operators mentioned above, which is also based on the SQL standard.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Precedence</p></th>
+<th class="head"><p>Operator</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Associativity</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">.</span></code>, power(), count()…</p></td>
+<td><p>Parentheses, Member access, Function call</p></td>
+<td><p>Left-to-right</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>-a, +a</p></td>
+<td><p>Unary minus, Unary plus</p></td>
+<td><p>Right-to-left</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">%</span></code></p></td>
+<td><p>Multiplication, Division, Modulus</p></td>
+<td><p>Left-to-right</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, <code class="docutils literal notranslate"><span class="pre">^</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></p></td>
+<td><p>Addition, Subtraction, Bitwise AND, Bitwise OR, Bitwise XOR, Left shift, Right shift</p></td>
+<td><p>Left-to-right</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>STARTS WITH, ENDS WITH, CONTAINS, IN</p></td>
+<td><p>String regex match, Collection membership</p></td>
+<td><p>Left-to-right</p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code></p></td>
+<td><p>Comparison</p></td>
+<td><p>Left-to-right</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>IS NULL, IS NOT NULL</p></td>
+<td><p>Nullness check</p></td>
+<td><p>Left-to-right</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>NOT</p></td>
+<td><p>Logical NOT</p></td>
+<td><p>Right-to-left</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>AND</p></td>
+<td><p>Logical AND</p></td>
+<td><p>Left-to-right</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>OR</p></td>
+<td><p>Logical OR</p></td>
+<td><p>Left-to-right</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-</li>
-</ul>
-<p>Expression(s) in project or filter:</p>
-<ul>
-<li><p>filter: where(expr(“…”))</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>g.V<span class="o">()</span>.where<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@.name == \&quot;marko\&quot;&quot;</span><span class="o">))</span><span class="w"> </span><span class="c1"># = g.V().has(&quot;name&quot;, &quot;marko&quot;)</span>
-g.V<span class="o">()</span>.where<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@.age &gt; 10&quot;</span><span class="o">))</span><span class="w"> </span><span class="c1"># = g.V().has(&quot;age&quot;, P.gt(10))</span>
-g.V<span class="o">()</span>.as<span class="o">(</span><span class="s2">&quot;a&quot;</span><span class="o">)</span>.out<span class="o">()</span>.where<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@.name == \&quot;marko\&quot; || (@a.age &gt; 10)&quot;</span><span class="o">))</span>
-g.V<span class="o">()</span>.where<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@.age isNull&quot;</span><span class="o">))</span>
-</pre></div>
-</div>
-</li>
-<li><p>project: select(expr(“…”))</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>g.V<span class="o">()</span>.select<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@.name&quot;</span><span class="o">))</span><span class="w"> </span><span class="c1"># = g.V().values(&quot;name&quot;)</span>
-</pre></div>
-</div>
-</li>
-</ul>
-<p>Running Example:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gremlin&gt;<span class="w"> </span>g.V<span class="o">()</span>.where<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@.name == \&quot;marko\&quot;&quot;</span><span class="o">))</span>
+<section id="running-examples">
+<h4>Running Examples<a class="headerlink" href="#running-examples" title="Permalink to this heading">#</a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gremlin&gt;<span class="w"> </span>:submit<span class="w"> </span>g.V<span class="o">()</span>.where<span class="o">(</span>expr<span class="o">(</span>_.name<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;marko&quot;</span><span class="o">))</span>
 <span class="o">==</span>&gt;v<span class="o">[</span><span class="m">1</span><span class="o">]</span>
-gremlin&gt;<span class="w"> </span>g.V<span class="o">()</span>.as<span class="o">(</span><span class="s2">&quot;a&quot;</span><span class="o">)</span>.where<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@a.name == \&quot;marko\&quot; || (@a.age &gt; 10)&quot;</span><span class="o">))</span>
-<span class="o">==</span>&gt;v<span class="o">[</span><span class="m">2</span><span class="o">]</span>
-<span class="o">==</span>&gt;v<span class="o">[</span><span class="m">1</span><span class="o">]</span>
-<span class="o">==</span>&gt;v<span class="o">[</span><span class="m">4</span><span class="o">]</span>
+gremlin&gt;<span class="w"> </span>:submit<span class="w"> </span>g.V<span class="o">()</span>.as<span class="o">(</span><span class="s2">&quot;a&quot;</span><span class="o">)</span>.where<span class="o">(</span>expr<span class="o">(</span>a.name<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;marko&quot;</span><span class="w"> </span>OR<span class="w"> </span>a.age<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span><span class="o">))</span>
 <span class="o">==</span>&gt;v<span class="o">[</span><span class="m">6</span><span class="o">]</span>
-gremlin&gt;<span class="w"> </span>g.V<span class="o">()</span>.where<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@.age isNull&quot;</span><span class="o">))</span>.values<span class="o">(</span><span class="s2">&quot;name&quot;</span><span class="o">)</span>
-<span class="o">==</span>&gt;ripple
+<span class="o">==</span>&gt;v<span class="o">[</span><span class="m">1</span><span class="o">]</span>
+<span class="o">==</span>&gt;v<span class="o">[</span><span class="m">2</span><span class="o">]</span>
+<span class="o">==</span>&gt;v<span class="o">[</span><span class="m">4</span><span class="o">]</span>
+gremlin&gt;<span class="w"> </span>:submit<span class="w"> </span>g.V<span class="o">()</span>.as<span class="o">(</span><span class="s2">&quot;a&quot;</span><span class="o">)</span>.where<span class="o">(</span>expr<span class="o">(</span>a.age<span class="w"> </span>IS<span class="w"> </span>NULL<span class="o">))</span>.values<span class="o">(</span><span class="s2">&quot;name&quot;</span><span class="o">)</span>
 <span class="o">==</span>&gt;lop
-gremlin&gt;<span class="w">  </span>g.V<span class="o">()</span>.where<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;!(@.age isNull)&quot;</span><span class="o">))</span>.values<span class="o">(</span><span class="s2">&quot;name&quot;</span><span class="o">)</span>
-<span class="o">==</span>&gt;marko
+<span class="o">==</span>&gt;ripple
+gremlin&gt;<span class="w"> </span>:submit<span class="w"> </span>g.V<span class="o">()</span>.as<span class="o">(</span><span class="s2">&quot;a&quot;</span><span class="o">)</span>.where<span class="o">(</span>expr<span class="o">(</span>a.age<span class="w"> </span>IS<span class="w"> </span>NOT<span class="w"> </span>NULL<span class="o">))</span>.values<span class="o">(</span><span class="s2">&quot;name&quot;</span><span class="o">)</span>
 <span class="o">==</span>&gt;vadas
 <span class="o">==</span>&gt;josh
-<span class="o">==</span>&gt;peter
-gremlin&gt;<span class="w"> </span>g.V<span class="o">()</span>.select<span class="o">(</span>expr<span class="o">(</span><span class="s2">&quot;@.name&quot;</span><span class="o">))</span>
 <span class="o">==</span>&gt;marko
-<span class="o">==</span>&gt;vadas
-<span class="o">==</span>&gt;lop
-<span class="o">==</span>&gt;josh
-<span class="o">==</span>&gt;ripple
 <span class="o">==</span>&gt;peter
+gremlin&gt;<span class="w"> </span>:submit<span class="w"> </span>g.V<span class="o">()</span>.as<span class="o">(</span><span class="s2">&quot;a&quot;</span><span class="o">)</span>.where<span class="o">(</span>expr<span class="o">(</span>a.name<span class="w"> </span>STARTS<span class="w"> </span>WITH<span class="w"> </span><span class="s2">&quot;ma&quot;</span><span class="o">))</span>
+<span class="o">==</span>&gt;v<span class="o">[</span><span class="m">1</span><span class="o">]</span>
+gremlin&gt;<span class="w"> </span>:submit<span class="w"> </span>g.V<span class="o">()</span>.select<span class="o">(</span>expr<span class="o">(</span>_.name<span class="o">))</span>
+<span class="o">==</span>&gt;vadas
+<span class="o">==</span>&gt;josh
+<span class="o">==</span>&gt;lop
+<span class="o">==</span>&gt;ripple
+<span class="o">==</span>&gt;marko
+<span class="o">==</span>&gt;peter
+gremlin&gt;<span class="w"> </span>:submit<span class="w"> </span>g.V<span class="o">()</span>.hasLabel<span class="o">(</span><span class="s2">&quot;person&quot;</span><span class="o">)</span>.select<span class="o">(</span>expr<span class="o">(</span>_.age<span class="w"> </span>^<span class="w"> </span><span class="m">1</span><span class="o">))</span>
+<span class="o">==</span>&gt;26
+<span class="o">==</span>&gt;28
+<span class="o">==</span>&gt;33
+<span class="o">==</span>&gt;34
+gremlin&gt;<span class="w"> </span>:submit<span class="w"> </span>g.V<span class="o">()</span>.hasLabel<span class="o">(</span><span class="s2">&quot;person&quot;</span><span class="o">)</span>.select<span class="o">(</span>expr<span class="o">(</span>POWER<span class="o">(</span>_.age,<span class="w"> </span><span class="m">2</span><span class="o">)))</span>
+<span class="o">==</span>&gt;729
+<span class="o">==</span>&gt;1024
+<span class="o">==</span>&gt;1225
+<span class="o">==</span>&gt;841
 </pre></div>
 </div>
+</section>
 </section>
 <section id="aggregate-group">
 <h3>Aggregate (Group)<a class="headerlink" href="#aggregate-group" title="Permalink to this heading">#</a></h3>
@@ -1890,7 +2260,10 @@ It is a imperative syntax, not declarative.</p></li>
 <li><a class="reference internal" href="#endv">endV()</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#expression">Expression</a></li>
+<li><a class="reference internal" href="#expression">Expression</a><ul>
+<li><a class="reference internal" href="#running-examples">Running Examples</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#aggregate-group">Aggregate (Group)</a></li>
 </ul>
 </li>

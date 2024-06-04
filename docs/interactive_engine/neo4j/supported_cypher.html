@@ -11,7 +11,7 @@
 <meta name="description" content="This document outlines the current capabilities of GIE in supporting Neo4j’s Cypher queries and compares them to the syntax specified in Neo4j. While our goal is to comply with Neo4j’s syntax, GIE ..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Using LLM as an Assistant in GIE" href="llm_assistant.html" /><link rel="prev" title="GIE for Cypher" href="cypher_sdk.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Cypher Support - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -963,7 +963,7 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 <tr class="row-even"><td class="text-left"><p>Mathematical</p></td>
 <td class="text-left"><p>Exponentiation</p></td>
 <td class="text-left"><p>^</p></td>
-<td class="text-left"><p>^^</p></td>
+<td class="text-left"><p>power(a, b)</p></td>
 <td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
 <td class="text-left"><p></p></td>
 </tr>
@@ -1024,25 +1024,25 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 <td class="text-left"><p></p></td>
 </tr>
 <tr class="row-odd"><td class="text-left"><p>Comparison</p></td>
-<td class="text-left"><p>String starts with</p></td>
+<td class="text-left"><p>Perform case-sensitive matching on the beginning of a string</p></td>
 <td class="text-left"><p>STARTS WITH</p></td>
 <td class="text-left"><p>starts with</p></td>
-<td class="text-center"><p><input type="checkbox" disabled  /></p></td>
-<td class="text-left"><p>planned</p></td>
+<td class="text-center"><p><input type="checkbox" disabled  checked /></p></td>
+<td class="text-left"><p></p></td>
 </tr>
 <tr class="row-even"><td class="text-left"><p>Comparison</p></td>
-<td class="text-left"><p>String ends with</p></td>
+<td class="text-left"><p>Perform case-sensitive matching on the ending of a string</p></td>
 <td class="text-left"><p>ENDS WITH</p></td>
 <td class="text-left"><p>ends with</p></td>
-<td class="text-center"><p><input type="checkbox" disabled  /></p></td>
-<td class="text-left"><p>planned</p></td>
+<td class="text-center"><p><input type="checkbox" disabled  checked /></p></td>
+<td class="text-left"><p></p></td>
 </tr>
 <tr class="row-odd"><td class="text-left"><p>Comparison</p></td>
-<td class="text-left"><p>String contains</p></td>
+<td class="text-left"><p>Perform case-sensitive matching regardless of location within a string</p></td>
 <td class="text-left"><p>CONTAINS</p></td>
 <td class="text-left"><p>contains</p></td>
-<td class="text-center"><p><input type="checkbox" disabled  /></p></td>
-<td class="text-left"><p>planned</p></td>
+<td class="text-center"><p><input type="checkbox" disabled  checked /></p></td>
+<td class="text-left"><p></p></td>
 </tr>
 <tr class="row-even"><td class="text-left"><p>Boolean</p></td>
 <td class="text-left"><p>Conjunction</p></td>
@@ -1069,8 +1069,8 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 <td class="text-left"><p>Negation</p></td>
 <td class="text-left"><p>NOT</p></td>
 <td class="text-left"><p>not</p></td>
-<td class="text-center"><p><input type="checkbox" disabled /></p></td>
-<td class="text-left"><p>planned</p></td>
+<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
+<td class="text-left"><p></p></td>
 </tr>
 <tr class="row-even"><td class="text-left"><p>BitOpr</p></td>
 <td class="text-left"><p>Bit and</p></td>
@@ -1097,22 +1097,22 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 <td class="text-left"><p>Bit reverse</p></td>
 <td class="text-left"><p>via function</p></td>
 <td class="text-left"><p>~</p></td>
-<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
-<td class="text-left"><p></p></td>
+<td class="text-center"><p><input type="checkbox" disabled /></p></td>
+<td class="text-left"><p>planned</p></td>
 </tr>
 <tr class="row-even"><td class="text-left"><p>BitOpr</p></td>
 <td class="text-left"><p>Bit left shift</p></td>
 <td class="text-left"><p>via function</p></td>
 <td class="text-left"><p>&lt;&lt;</p></td>
-<td class="text-center"><p><input type="checkbox" disabled  /></p></td>
-<td class="text-left"><p>planned</p></td>
+<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
+<td class="text-left"><p></p></td>
 </tr>
 <tr class="row-odd"><td class="text-left"><p>BitOpr</p></td>
 <td class="text-left"><p>Bit right shift</p></td>
 <td class="text-left"><p>via function</p></td>
 <td class="text-left"><p>&gt;&gt;</p></td>
-<td class="text-center"><p><input type="checkbox" disabled  /></p></td>
-<td class="text-left"><p>planned</p></td>
+<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
+<td class="text-left"><p></p></td>
 </tr>
 <tr class="row-even"><td class="text-left"><p>Branch</p></td>
 <td class="text-left"><p>Use with <code class="docutils literal notranslate"><span class="pre">Project</span></code> and <code class="docutils literal notranslate"><span class="pre">Return</span></code></p></td>
@@ -1136,7 +1136,7 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 <td class="text-left"><p></p></td>
 </tr>
 <tr class="row-odd"><td class="text-left"><p>MapLiteral</p></td>
-<td class="text-left"><p>Fold expressions with keys into a sinle map</p></td>
+<td class="text-left"><p>Fold expressions with keys into a single map</p></td>
 <td class="text-left"><p>{}</p></td>
 <td class="text-left"><p>{}</p></td>
 <td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
@@ -1160,27 +1160,6 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 <td class="text-left"><p>Get interval value from a temporal type</p></td>
 <td class="text-left"><p>&lt;temporal&gt;.&lt;interval&gt;</p></td>
 <td class="text-left"><p>&lt;temporal&gt;.&lt;interval&gt;</p></td>
-<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
-<td class="text-left"><p></p></td>
-</tr>
-<tr class="row-odd"><td class="text-left"><p>Starts With</p></td>
-<td class="text-left"><p>Perform case-sensitive matching on the beginning of a string</p></td>
-<td class="text-left"><p>STARTS WITH</p></td>
-<td class="text-left"><p>STARTS WITH</p></td>
-<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
-<td class="text-left"><p></p></td>
-</tr>
-<tr class="row-even"><td class="text-left"><p>Ends With</p></td>
-<td class="text-left"><p>Perform case-sensitive matching on the ending of a string</p></td>
-<td class="text-left"><p>ENDS WITH</p></td>
-<td class="text-left"><p>ENDS WITH</p></td>
-<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
-<td class="text-left"><p></p></td>
-</tr>
-<tr class="row-odd"><td class="text-left"><p>Contains</p></td>
-<td class="text-left"><p>Perform case-sensitive matching regardless of location within a string</p></td>
-<td class="text-left"><p>CONTAINS</p></td>
-<td class="text-left"><p>CONTAINS</p></td>
 <td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
 <td class="text-left"><p></p></td>
 </tr>

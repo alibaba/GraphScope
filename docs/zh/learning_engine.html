@@ -11,7 +11,7 @@
 <meta name="description" content="GraphScope中的图学习引擎 ( GLE) 是面向大规模图神经网络的研发和应用而设计的一款分布式框架。 它从实际问题出发，提炼和抽象了一套适合于当下图神经网络模型的编程范式， 并已经成功应用在阿里巴巴 内部的诸如搜索推荐、网络安全、知识图谱等众多场景。 GL注重可移植和可扩展，对于开发者更为友好，为了应对GNN在工业场景中的多样性和快速发展的需求。 基于GL，开发者可以实现一种GNN算..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="常见问题" href="frequently_asked_questions.html" /><link rel="prev" title="图交互式分析引擎" href="interactive_engine.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>图学习引擎 - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -277,6 +277,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/zh/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/zh/index.html">
                 
                   v0.26.0
@@ -304,18 +316,6 @@ MathJax = {
               <dd><a href="../v0.24.0/zh/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/zh/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -431,7 +431,7 @@ GNNs, 知识图谱模型，图嵌入算法等，并且和主流的深度学习�
 <li><p>指定采样模式：用图采样、查询方法采样子图并组织成 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code>。</p>
 <p>我们抽象了4个基本的函数，<code class="docutils literal notranslate"><span class="pre">sample_seed</span></code>, <code class="docutils literal notranslate"><span class="pre">positive_sample</span></code>,
 <code class="docutils literal notranslate"><span class="pre">negative_sample</span></code> 和 <code class="docutils literal notranslate"><span class="pre">receptive_fn</span></code>。 <code class="docutils literal notranslate"><span class="pre">sample_seed</span></code> 用来遍历图数据产生 <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> 或者
-<code class="docutils literal notranslate"><span class="pre">Edges</span></code>, 然后 <code class="docutils literal notranslate"><span class="pre">positve_sample</span></code> 以这些 <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> 或者 <code class="docutils literal notranslate"><span class="pre">Edges</span></code> 为输入产生
+<code class="docutils literal notranslate"><span class="pre">Edges</span></code>, 然后 <code class="docutils literal notranslate"><span class="pre">positive_sample</span></code> 以这些 <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> 或者 <code class="docutils literal notranslate"><span class="pre">Edges</span></code> 为输入产生
 训练的正样本。对于无监督学习 <code class="docutils literal notranslate"><span class="pre">negative_sample</span></code> 产生负样本。
 GNNs需要聚合邻居信息, 我们抽象了 <code class="docutils literal notranslate"><span class="pre">receptive_fn</span></code> 来采样邻居。
 最后将 <code class="docutils literal notranslate"><span class="pre">sample_seed</span></code> 产生的 <code class="docutils literal notranslate"><span class="pre">Nodes</span></code>、<code class="docutils literal notranslate"><span class="pre">Edges</span></code> 以及采样出的邻居组成 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code>。</p>
@@ -585,7 +585,7 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
     <span class="k">return</span> <span class="n">GCN</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;class_num&#39;</span><span class="p">],</span>
                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;features_num&#39;</span><span class="p">],</span>
-               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;batch_szie&#39;</span><span class="p">],</span>
+               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;batch_size&#39;</span><span class="p">],</span>
                <span class="o">...</span><span class="p">)</span>
   <span class="n">trainer</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">LocalTFTrainer</span><span class="p">(</span><span class="n">model_fn</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
   <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>

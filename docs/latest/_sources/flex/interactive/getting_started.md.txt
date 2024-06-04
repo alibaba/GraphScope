@@ -34,8 +34,7 @@ To start the Interactive service, provide the raw graph data and meta info. For 
 ```bash
 bin/gs_interactive service start
 ```
-You should be able to see the port (by default: 7687) for accepting Cypher queries.  
-
+You should be able to see a message telling you what the `Gremlin/Cypher` endpoint that you should connect to.
 ### Stop the Service
 To stop the Interactive service, simple type in the following command:
 
@@ -65,34 +64,15 @@ Execute the command below to terminate the service. Please be aware that this ac
 bin/gs_interactive destroy
 ```
 
-## Running Queries
+## Running Cypher Queries
 GraphScope Interactive seamlessly integrates with the Neo4j ecosystem. You can establish a connection to the Interactive service using Neo4j's Bolt connector and execute Cypher queries. Our implementation of Cypher queries aligns with the standards set by the [openCypher](http://www.opencypher.org/) project. For a detailed overview of the supported Cypher queries, please visit [supported_cypher](https://graphscope.io/docs/latest/interactive_engine/neo4j/supported_cypher).
 
-### Connect to the Service
-Connect to the GraphScope Interactive Service using the cypher-shell from Neo4j:
+Follow the instructions in [Connect-to-cypher-service](../../interactive_engine/neo4j/cypher_sdk) to connect to the Cypher service using either the Python client or cypher-shell.
 
-```bash
-# Get Cypher-shell from: https://dist.neo4j.org/cypher-shell/cypher-shell-4.4.22.zip
-wget -O cypher-shell-4.4.22.zip https://dist.neo4j.org/cypher-shell/cypher-shell-4.4.22.zip
-unzip cypher-shell-4.4.22.zip
-./cypher-shell/cypher-shell -a neo4j://localhost:7687
-```
 
-User name and password are not needed for now, while such authentication will be provided in a future version. 
+Note: Cypher queries submitted to GraphScope Interactive are compiled into a dynamic library for execution. While the initial compilation might take some time, the execution for subsequent uses (of the **same** query) will be much faster since it is cached by Interactive.
 
-### Submit Queries
-Once connected, you can start submitting your queries:
+## Running Gremlin Queries
 
-```cypher
-@neo4j> MATCH(v:person { name: "peter"}) RETURN v.age;
-```
-Then you can get the age of `peter`.
-```txt
-+-----+
-| age |
-+-----+
-| 35  |
-+-----+
-```
-
-Note: Cypher queries submitted to GraphScope Interactive are compiled into a dynamic library for execution. While the initial compilation might take some time, a future version will provide caching the library to ensure faster execution for subsequent uses (of the **same** query).
+GraphScope Interactive supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
+Please refer to the following link to connect to the Tinkerpop Gremlin service provided by GraphScope Interactive: [Connect-to-gremlin-service](../../interactive_engine/tinkerpop/tinkerpop_gremlin)

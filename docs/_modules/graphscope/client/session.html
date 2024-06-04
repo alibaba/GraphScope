@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>graphscope.client.session - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
@@ -575,6 +575,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -602,18 +614,6 @@ MathJax = {
               <dd><a href="../../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -1134,7 +1134,7 @@ MathJax = {
 <span class="sd">                a GraphScope session.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># supress the grpc warnings, see also grpc/grpc#29103</span>
+        <span class="c1"># suppress the grpc warnings, see also grpc/grpc#29103</span>
         <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;GRPC_ENABLE_FORK_SUPPORT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;false&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;addr&quot;</span><span class="p">,</span>
@@ -1705,7 +1705,7 @@ MathJax = {
         <span class="n">namespace</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">kubernetes_launcher</span><span class="o">.</span><span class="n">namespace</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_vineyard_deployment_exists</span><span class="p">(</span><span class="n">vineyard_deployment_name</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_pvc_exists</span><span class="p">(</span><span class="n">pvc_name</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
-        <span class="c1"># The next function will create a kubernetes job for backuping</span>
+        <span class="c1"># The next function will create a kubernetes job for backing up</span>
         <span class="c1"># the specific graphIDs to the specific path of the specific pvc</span>
         <span class="n">vineyard</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vineyardctl</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">backup_job</span><span class="p">(</span>
             <span class="n">backup_name</span><span class="o">=</span><span class="s2">&quot;vineyard-backup-&quot;</span> <span class="o">+</span> <span class="n">random_string</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span>

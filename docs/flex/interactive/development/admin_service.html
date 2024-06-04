@@ -11,7 +11,7 @@
 <meta name="description" content="Introduction: Welcome to the GraphScope Interactive Admin Service documentation. This guide is tailored for developers and administrators seeking to manage the Interactive service more efficiently...." />
 <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="Glossary" href="../glossary.html" /><link rel="prev" title="Create c++ Stored Procedures on GraphScope Interactive" href="cpp_procedure.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>GraphScope Interactive Admin Service Documentation - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -1658,7 +1658,7 @@ MathJax = {
 <h3>UpdateProcedure (ProcedureManagement Category)<a class="headerlink" href="#updateprocedure-proceduremanagement-category" title="Permalink to this heading">#</a></h3>
 <section id="id36">
 <h4>Description<a class="headerlink" href="#id36" title="Permalink to this heading">#</a></h4>
-<p>Update a procedure’s metadata, enable/disable status, description. The procedure’s name can not be modified.</p>
+<p>Update a procedure’s metadata, enable/disable status, description. The procedure’s name cannot be modified.</p>
 </section>
 <section id="id37">
 <h4>HTTP Request<a class="headerlink" href="#id37" title="Permalink to this heading">#</a></h4>
@@ -1907,6 +1907,20 @@ The response of the http request will be like</p></li>
 </section>
 </section>
 </section>
+<section id="enable-adminservice-in-development">
+<h2>Enable AdminService in development<a class="headerlink" href="#enable-adminservice-in-development" title="Permalink to this heading">#</a></h2>
+<p>To start admin service in development, use the command line argument <code class="docutils literal notranslate"><span class="pre">--enable-admin-service</span> <span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">${ENGINE_CONFIG}</span></code> specifies the configuration for interactive query engine, see <a class="reference external" href="https://graphscope.io/docs/flex/interactive/configuration">engine-configuration</a>. <code class="docutils literal notranslate"><span class="pre">${WORKSPACE}</span></code> points to the directory where interactive related data is maintaned.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/interactive_server<span class="w"> </span>-c<span class="w"> </span><span class="si">${</span><span class="nv">ENGINE_CONFIG</span><span class="si">}</span><span class="w"> </span>-w<span class="w"> </span><span class="si">${</span><span class="nv">WORKSPACE</span><span class="si">}</span><span class="w"> </span>--enable-admin-service<span class="w"> </span><span class="nb">true</span>
+</pre></div>
+</div>
+<section id="start-compiler-service">
+<h3>Start Compiler Service<a class="headerlink" href="#start-compiler-service" title="Permalink to this heading">#</a></h3>
+<p>The Compiler service could be started as a subprocess of the AdminService. This ensures that when switching graphs in the AdminService, the Compiler service also switches to the corresponding graph’s schema. This is the default behavior in the current Interactive.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/interactive_server<span class="w"> </span>-c<span class="w"> </span><span class="si">${</span><span class="nv">ENGINE_CONFIG</span><span class="si">}</span><span class="w"> </span>-w<span class="w"> </span><span class="si">${</span><span class="nv">WORKSPACE</span><span class="si">}</span><span class="w"> </span>--enable-admin-service<span class="w"> </span><span class="nb">true</span><span class="w"> </span>--start-compiler<span class="w"> </span><span class="nb">true</span>
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
         </article>
@@ -2074,6 +2088,10 @@ The response of the http request will be like</p></li>
 <li><a class="reference internal" href="#id59">Status Codes</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li><a class="reference internal" href="#enable-adminservice-in-development">Enable AdminService in development</a><ul>
+<li><a class="reference internal" href="#start-compiler-service">Start Compiler Service</a></li>
 </ul>
 </li>
 </ul>

@@ -11,7 +11,7 @@
 <meta name="description" content="0. 术语: 标签(LABEL)：表示某一类顶点或者边, 属性(PROPERTY)：表示顶点或边所关联的数据, 原始ID(OID)：原始数据集中的id，不同标签的顶点允许有相同的OID, 子图ID(FID)：子图的唯一编号, 分区器(Partitioner)：能够确定顶点oid到分区id（FID）的映射, 子图(Fragment): 通过切边得到的子图，存储了顶点、边、顶点数据、边数据等信息..." />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Introduction to ArrowFragment - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -711,9 +711,9 @@ MathJax = {
 <section id="id2">
 <h2>1. 载图<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h2>
 <p>按照执行流程编号，描述了载图的主要逻辑：</p>
-<section id="partitoner">
-<h3>1.1 初始化partitoner<a class="headerlink" href="#partitoner" title="Permalink to this heading">#</a></h3>
-<p>分为HashPartitioner和SegmentedPartitoned, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。</p>
+<section id="partitioner">
+<h3>1.1 初始化partitioner<a class="headerlink" href="#partitioner" title="Permalink to this heading">#</a></h3>
+<p>分为HashPartitioner和SegmentedPartitioner, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。</p>
 </section>
 <section id="arrow-table">
 <h3>1.2 构建原始arrow table<a class="headerlink" href="#arrow-table" title="Permalink to this heading">#</a></h3>
@@ -973,7 +973,7 @@ edge arrow table包括src和dst的oid、属性</p>
 <span class="kt">bool</span><span class="w"> </span><span class="n">directed_</span><span class="p">;</span><span class="w">    </span><span class="c1">// 是否为有向图</span>
 <span class="n">label_id_t</span><span class="w"> </span><span class="n">vertex_label_num_</span><span class="p">;</span><span class="w"> </span><span class="c1">// 顶点种类数量</span>
 <span class="n">label_id_t</span><span class="w"> </span><span class="n">edge_label_num_</span><span class="p">;</span><span class="w">  </span><span class="c1">// 边种类数量</span>
-<span class="n">PropertyGraphSchema</span><span class="w"> </span><span class="n">schema_</span><span class="p">;</span><span class="w"> </span><span class="c1">// shcema</span>
+<span class="n">PropertyGraphSchema</span><span class="w"> </span><span class="n">schema_</span><span class="p">;</span><span class="w"> </span><span class="c1">// schema</span>
 <span class="n">vineyard</span><span class="o">::</span><span class="n">Array</span><span class="o">&lt;</span><span class="n">vid_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ivnums_</span><span class="p">,</span><span class="w"> </span><span class="n">ovnums_</span><span class="p">,</span><span class="w"> </span><span class="n">tvnums_</span><span class="p">;</span><span class="w"> </span><span class="c1">// 内部点、外部点、内部和外部点总数</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">Table</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">vertex_tables_</span><span class="p">;</span><span class="w"> </span><span class="c1">// 顶点属性表，不包含id列</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">vid_array_t</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">ovgid_lists_</span><span class="p">;</span><span class="w">  </span><span class="c1">// 外部点gid</span>

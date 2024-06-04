@@ -118,6 +118,12 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
+<tr class="memitem:aa0499d96d48275bc5ea2f1084c8f14d7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1BasicFragmentLoader.html#aa0499d96d48275bc5ea2f1084c8f14d7">append_vertex_loading_progress</a> (const std::string &amp;label_name, <a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64">LoadingStatus</a> status)</td></tr>
+<tr class="separator:aa0499d96d48275bc5ea2f1084c8f14d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e2d1202ee8632c5d657175622d8b686"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1BasicFragmentLoader.html#a1e2d1202ee8632c5d657175622d8b686">append_edge_loading_progress</a> (const std::string &amp;src_label_name, const std::string &amp;dst_label_name, const std::string &amp;edge_label_name, <a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64">LoadingStatus</a> status)</td></tr>
+<tr class="separator:a1e2d1202ee8632c5d657175622d8b686"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a781d7b8b16f6ed9cd0a661c56783c9bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1BasicFragmentLoader.html#a781d7b8b16f6ed9cd0a661c56783c9bd">init_loading_status_file</a> ()</td></tr>
+<tr class="separator:a781d7b8b16f6ed9cd0a661c56783c9bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05ce1f2949e555e4dfed2c0b751bb653"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1BasicFragmentLoader.html#a05ce1f2949e555e4dfed2c0b751bb653">init_vertex_data</a> ()</td></tr>
 <tr class="separator:a05ce1f2949e555e4dfed2c0b751bb653"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -141,6 +147,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a5abe085c6bc443c5143a261d0ff528ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00c8d205777a59952e401ffd85cf7d0b"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classgs_1_1Table.html">Table</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1BasicFragmentLoader.html#a00c8d205777a59952e401ffd85cf7d0b">vertex_data_</a></td></tr>
 <tr class="separator:a00c8d205777a59952e401ffd85cf7d0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8c34bc5f06167b8ddafa0714774c654"><td class="memItemLeft" align="right" valign="top">std::mutex&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1BasicFragmentLoader.html#af8c34bc5f06167b8ddafa0714774c654">loading_progress_mutex_</a></td></tr>
+<tr class="separator:af8c34bc5f06167b8ddafa0714774c654"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ae663106fecfeb97ecafed858be763978"></a>
@@ -250,6 +258,90 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="a1e2d1202ee8632c5d657175622d8b686"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e2d1202ee8632c5d657175622d8b686">&#9670;&nbsp;</a></span>append_edge_loading_progress()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::BasicFragmentLoader::append_edge_loading_progress </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>src_label_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>dst_label_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>edge_label_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64">LoadingStatus</a>&#160;</td>
+          <td class="paramname"><em>status</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aa0499d96d48275bc5ea2f1084c8f14d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa0499d96d48275bc5ea2f1084c8f14d7">&#9670;&nbsp;</a></span>append_vertex_loading_progress()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::BasicFragmentLoader::append_vertex_loading_progress </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>label_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#af90be9bafb4e5ed67a92428e0f1c8a64">LoadingStatus</a>&#160;</td>
+          <td class="paramname"><em>status</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a4a75acd749dfb5caead91a1fa050d7dd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4a75acd749dfb5caead91a1fa050d7dd">&#9670;&nbsp;</a></span>FinishAddingVertex()</h2>
 
@@ -344,6 +436,31 @@ template&lt;typename KEY_T &gt; </div>
   </td>
   <td class="mlabels-right">
 <span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a781d7b8b16f6ed9cd0a661c56783c9bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a781d7b8b16f6ed9cd0a661c56783c9bd">&#9670;&nbsp;</a></span>init_loading_status_file()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::BasicFragmentLoader::init_loading_status_file </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -580,6 +697,28 @@ template&lt;typename EDATA_T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt;<a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a>&gt; gs::BasicFragmentLoader::lf_indexers_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af8c34bc5f06167b8ddafa0714774c654"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af8c34bc5f06167b8ddafa0714774c654">&#9670;&nbsp;</a></span>loading_progress_mutex_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::mutex gs::BasicFragmentLoader::loading_progress_mutex_</td>
         </tr>
       </table>
   </td>

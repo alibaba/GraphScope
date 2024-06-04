@@ -579,7 +579,7 @@ The following steps are extended to denote more complex situations.
 In Graph querying, expanding a multiple-hops path from a starting point is called `PathExpand`, which is commonly used in graph scenarios. In addition, there are different requirements for expanding strategies in different scenarios, i.e. it is required to output a simple path or all vertices explored along the expanding path. We introduce the with()-step to configure the corresponding behaviors of the `PathExpand`-step.
 
 #### out()
-Expand a multiple-hops path along the outgoing edges, which length is within the given range. 
+Expand a multiple-hops path along the outgoing edges, which length is within the given range.
 
 Parameters: </br>
 lengthRange - the lower and the upper bounds of the path length, </br> edgeLabels - the edge labels to traverse.
@@ -693,86 +693,147 @@ g.V().out("1..10").with('RESULT_OPT', 'ALL_V')
 g.V().out("1..10").with('RESULT_OPT', 'ALL_V').endV()
 ```
 ### Expression
-Expression is introduced to denote property-based calculations or filters, which consists of the following basic entries:
-```bash
-@ # the value of the current entry
-@.name # the property value of `name` of the current entry
-@a # the value of the entry `a`
-@a.name # the property value of `name` of the entry `a`
-```
 
-And related operations can be performed based on these entries, including:
-* arithmetic
-    ```bash
-    @.age + 10
-    @.age * 10
-    (@.age + 4) / 10 + (@.age - 5)
-    ```
-* logic comparison
-    ```bash
-    @.name == "marko"
-    @.age != 10
-    @.age > 10
-    @.age < 10
-    @.age >= 10
-    @.weight <= 10.0
-    ```
-* logic connector
-    ```bash
-    @.age > 10 && @.age < 20
-    @.age < 10 || @.age > 20
-    ```
-* bit manipulation
-    ```bash
-    @.num | 2
-    @.num & 2
-    @.num ^ 2
-    @.num >> 2
-    @.num << 2
-    ```
-* exponentiation
-    ```bash
-    @.num ^^ 3
-    @.num ^^ -3
-    ```
+Expressions, expressed via the `expr()` syntactic sugar, have been introduced to facilitate writing expressions directly within steps such as `select()`, `project()`, `where()`, and `group()`. This update is part of an ongoing effort to standardize Gremlin's expression syntax, making it more aligned with [SQL expression syntax](https://www.w3schools.com/sql/sql_operators.asp). The updated syntax, effective from version 0.27.0, streamlines user operations and enhances readability. Below, we detail the updated syntax definitions and point out key distinctions from the syntax used prior to version 0.26.0.
 
-Expression(s) in project or filter:
-* filter: where(expr("..."))
-    ```bash
-    g.V().where(expr("@.name == \"marko\"")) # = g.V().has("name", "marko")
-    g.V().where(expr("@.age > 10")) # = g.V().has("age", P.gt(10))
-    g.V().as("a").out().where(expr("@.name == \"marko\" || (@a.age > 10)"))
-    g.V().where(expr("@.age isNull"))
-    ```
-* project: select(expr("..."))
-    ```bash
-    g.V().select(expr("@.name")) # = g.V().values("name")
-    ```
-Running Example:
+Literal:
+
+Category | Syntax
+---- | -------
+string | "marko"
+boolean | true, false
+integer | 1, 2, 3
+long | 1l, 1L
+float | 1.0f, 1.0F
+double | 1.0, 1.0d, 1.0D
+list | ["marko", "vadas"], [true, false], [1, 2], [1L, 2L], [1.0F, 2.0F], [1.0, 2.0]
+
+Variable:
+
+Category | Description | Before 0.26.0 | Since 0.27.0
+---- | ------- | ------- | -------
+current | the current entry | @ | _
+current property | the property value of the current entry | @.name | _.name
+tag | the specified tag | @a | a
+tag property | the property value of the specified tag | @a.name | a.name
+
+Operator:
+
+Category | Operation (Case-Insensitive) | Description | Before 0.26.0  | Since 0.27.0
+---- | ------- | ------- | ------- | -------
+logical | = | equal | @.name == "marko" | _.name = "marko"
+logical | <> | not equal | @.name != "marko" | _.name != "marko"
+logical | > | greater than | @.age > 10 | _.age > 10
+logical | < | less than | @.age < 10 | _.age < 10
+logical | >= | greater than or equal | @.age >= 10 | _.age >= 10
+logical | <= | less than or equal | @.age <= 10 | _.age <= 10
+logical | NOT | negate the logical expression | ! (@.name == "marko") | NOT _.name = "marko"
+logical | AND | connect two logical expressions with AND | @.name == "marko" && @.age > 10 | _.name = "marko" AND _.age > 10
+logical | OR | connect two logical expressions with OR | @.name == "marko" \|\| @.age > 10 | _.name = "marko" OR _.age > 10
+logical | IN | whether the value of the current entry is in the given list | @.name WITHIN ["marko", "vadas"] | _.name IN ["marko", "vadas"]
+logical | IS NULL | whether the value of the current entry ISNULL | @.age IS NULL | _.age IS NULL
+logical | IS NOT NULL | whether the value of the current entry IS NOT NULL | ! (@.age ISNULL) | _.age IS NOT NULL
+arithmetical | + | addition | @.age + 10 | _.age + 10
+arithmetical | - | subtraction | @.age - 10 | _.age - 10
+arithmetical | * | multiplication | @.age * 10 | _.age * 10
+arithmetical | / | division | @.age / 10 | _.age / 10
+arithmetical | % | modulo | @.age % 10 | _.age % 10
+arithmetical | POWER | exponentiation | @.age ^^ 3 | POWER(_.age, 3)
+temporal arithmetical | + | Add a duration to a temporal type | unsupported | _.creationDate + duration({years: 1})
+temporal arithmetical | - | Subtract a duration from a temporal type | unsupported | _.creationDate - duration({years: 1})
+temporal arithmetical | - | Subtract two temporal types, returning a duration in milliseconds | unsupported | a.creationDate - b.creationDate
+temporal arithmetical | + | Add two durations | unsupported | duration({years: 1}) + duration({months: 2})
+temporal arithmetical | - | Subtract two durations | unsupported | duration({years: 1}) - duration({months: 2})
+temporal arithmetical | * | Multiply a duration by a numeric value | unsupported | duration({years: 1}) * 2
+temporal arithmetical | / | Divide a duration by a numeric value | unsupported | duration({years: 1}) / 2, (a.creationDate - b.creationDate) / 1000
+bitwise | & | bitwise AND | @.age & 2 | _.age & 2
+bitwise | \| | bitwise OR | @.age \| 2 | _.age \| 2
+bitwise | ^ | bitwise XOR | @.age ^ 2 | _.age ^ 2
+bit shift | << | left shift | @.age << 2 | _.age << 2
+bit shift | >> | right shift | @.age >> 2 | _.age >> 2
+string regex match | STARTS WITH | whether the string starts with the given prefix | @.name STARTSWITH "ma" | _.name STARTS WITH "ma"
+string regex match | NOT STARTS WITH | whether the string does not start with the given prefix | ! (@.name STARTSWITH "ma") | NOT _.name STARTS WITH "ma"
+string regex match | ENDS WITH | whether the string ends with the given suffix | @.name ENDSWITH "ko" | _.name ENDS WITH "ko"
+string regex match | NOT ENDS WITH | whether the string does not end with the given suffix | ! (@.name ENDSWITH "ko") | NOT _.name ENDS WITH "ko"
+string regex match | CONTAINS | whether the string contains the given substring | "ar" WITHIN @.name | _.name CONTAINS "ar"
+string regex match | NOT CONTAINS | whether the string does not contain the given substring | "ar" WITHOUT @.name | NOT _.name CONTAINS "ar"
+
+Function:
+
+Category | Function (Case-Insensitive) | Description | Before 0.26.0 | Since 0.27.0
+---- | ------- | ------- | ------- | -------
+aggregate | COUNT | count the number of the elements | unsupported | COUNT(_.age)
+aggregate | SUM | sum the values of the elements | unsupported | SUM(_.age)
+aggregate | MIN | find the minimum value of the elements | unsupported | MIN(_.age)
+aggregate | MAX | find the maximum value of the elements | unsupported | MAX(_.age)
+aggregate | AVG | calculate the average value of the elements | unsupported | AVG(_.age)
+aggregate | COLLECT | fold the elements into a list | unsupported | COLLECT(_.age)
+aggregate | HEAD(COLLECT()) | find the first value of the elements | unsupported | HEAD(COLLECT(_.age))
+other | LABELS | get the labels of the specified tag which is a vertex | @a.~label | LABELS(a)
+other | elementId | get a vertex or an edge identifier, unique by an object type and a database | @a.~id | elementId(a)
+other | TYPE | get the type of the specified tag which is an edge | @a.~label |TYPE(a)
+other | LENGTH | get the length of the specified tag which is a path | @a.~len | LENGTH(a)
+
+Expression in project or filter:
+Category | Description | Before 0.26.0 | Since 0.27.0
+---- | ------- | ------- | -------
+filter | filter the current traverser by the expression | where(expr("@.name == \\"marko\\"")) | where(expr(_.name = "marko"))
+project | project the current traverser to the value of the expression | select(expr("@.name")) | select(expr(_.name))
+
+Here we provide the precedence of the operators mentioned above, which is also based on the SQL standard.
+
+Precedence | Operator | Description | Associativity
+--- | --- | --- | ---
+1 | `()`, `.`, power(), count()... | Parentheses, Member access, Function call | Left-to-right
+2 | -a, +a | Unary minus, Unary plus | Right-to-left
+3 | `*`, `/`, `%` | Multiplication, Division, Modulus | Left-to-right
+4 | `+`, `-`, `&`, `\|`, `^`, `<<`, `>>` | Addition, Subtraction, Bitwise AND, Bitwise OR, Bitwise XOR, Left shift, Right shift | Left-to-right
+5 | STARTS WITH, ENDS WITH, CONTAINS, IN | String regex match, Collection membership | Left-to-right
+6 | `=`, `<>`, `<`, `<=`, `>`, `>=` | Comparison | Left-to-right
+7 | IS NULL, IS NOT NULL | Nullness check | Left-to-right
+8 | NOT | Logical NOT | Right-to-left
+9 | AND | Logical AND | Left-to-right
+10 | OR | Logical OR | Left-to-right
+
+#### Running Examples
+
 ```bash
-gremlin> g.V().where(expr("@.name == \"marko\""))
+gremlin> :submit g.V().where(expr(_.name = "marko"))
 ==>v[1]
-gremlin> g.V().as("a").where(expr("@a.name == \"marko\" || (@a.age > 10)"))
-==>v[2]
-==>v[1]
-==>v[4]
+gremlin> :submit g.V().as("a").where(expr(a.name = "marko" OR a.age > 10))
 ==>v[6]
-gremlin> g.V().where(expr("@.age isNull")).values("name")
-==>ripple
+==>v[1]
+==>v[2]
+==>v[4]
+gremlin> :submit g.V().as("a").where(expr(a.age IS NULL)).values("name")
 ==>lop
-gremlin>  g.V().where(expr("!(@.age isNull)")).values("name")
-==>marko
+==>ripple
+gremlin> :submit g.V().as("a").where(expr(a.age IS NOT NULL)).values("name")
 ==>vadas
 ==>josh
-==>peter
-gremlin> g.V().select(expr("@.name"))
 ==>marko
-==>vadas
-==>lop
-==>josh
-==>ripple
 ==>peter
+gremlin> :submit g.V().as("a").where(expr(a.name STARTS WITH "ma"))
+==>v[1]
+gremlin> :submit g.V().select(expr(_.name))
+==>vadas
+==>josh
+==>lop
+==>ripple
+==>marko
+==>peter
+gremlin> :submit g.V().hasLabel("person").select(expr(_.age ^ 1))
+==>26
+==>28
+==>33
+==>34
+gremlin> :submit g.V().hasLabel("person").select(expr(POWER(_.age, 2)))
+==>729
+==>1024
+==>1225
+==>841
 ```
+
 ### Aggregate (Group)
 The group()-step in standard Gremlin has limited capabilities (i.e. grouping can only be performed based on a single key, and only one aggregate calculation can be applied in each group), which cannot be applied to the requirements of performing group calculations on multiple keys or values; Therefore, we further extend the capabilities of the group()-step, allowing multiple variables to be set and different aliases to be configured in key by()-step and value by()-step respectively.
 

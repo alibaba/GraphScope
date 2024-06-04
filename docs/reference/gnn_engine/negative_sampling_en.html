@@ -11,7 +11,7 @@
 <meta name="description" content="# 1 Introduction As an important method of unsupervised training, negative sampling refers to sample the vertices that have no direct edge connected the given vertex. Similar to neighbor sampling, ..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Negative Sampling - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -706,7 +706,7 @@ candidate vertex set to sample from. The sampling results are organized
 into <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> objects (similar to 1-hop neighbor sampling, but there is
 no <code class="docutils literal notranslate"><span class="pre">Edges</span></code> object).</p>
 <p>A negative sampling operation can be divided into the following three
-steps: - Define the negative sampling oprator by calling
+steps: - Define the negative sampling operator by calling
 <code class="docutils literal notranslate"><span class="pre">g.negative_sampler()</span></code> to get the <code class="docutils literal notranslate"><span class="pre">NegativeSampler</span></code> object <code class="docutils literal notranslate"><span class="pre">S</span></code>; -
 Invoke <code class="docutils literal notranslate"><span class="pre">S.get(ids)</span></code> to get the <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> object; - Invoke the
 <a class="reference external" href="graph_query_cn.md#FPU74">interface</a> of <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> object to get

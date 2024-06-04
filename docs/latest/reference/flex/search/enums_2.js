@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['propertytypeimpl_2553',['PropertyTypeImpl',['../namespacegs_1_1impl.html#a5cc1b39ca3e16408751461f5fab6813a',1,'gs::impl']]]
+  ['edgestrategy_2732',['EdgeStrategy',['../namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8',1,'gs']]]
 ];

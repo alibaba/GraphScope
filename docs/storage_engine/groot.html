@@ -11,7 +11,7 @@
 <meta name="description" content="Overview: In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, persistent graph store. While Vineyard focus..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="In-memory immutable graphs on Vineyard" href="vineyard.html" /><link rel="prev" title="GRIN: Graph Retrieval INterface" href="grin.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Groot: Persistent Graph Store - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -693,7 +693,7 @@ MathJax = {
 </section>
 <section id="known-limitation">
 <h2>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this heading">#</a></h2>
-<p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.</p>
+<p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going forward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.</p>
 </section>
 <section id="deploy-groot">
 <h2>Deploy Groot<a class="headerlink" href="#deploy-groot" title="Permalink to this heading">#</a></h2>
@@ -774,30 +774,26 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 <td><p>Number of Store Pod</p></td>
 <td><p>2</p></td>
 </tr>
-<tr class="row-even"><td><p>ingestor.replicaCount</p></td>
-<td><p>Number of Ingestor Pod</p></td>
-<td><p>2</p></td>
-</tr>
-<tr class="row-odd"><td><p>dataset.modern</p></td>
+<tr class="row-even"><td><p>dataset.modern</p></td>
 <td><p>Load <a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/getting-started/">modern graph</a> dataset at the start</p></td>
 <td><p>false</p></td>
 </tr>
-<tr class="row-even"><td><p>frontend.replicaCount</p></td>
+<tr class="row-odd"><td><p>frontend.replicaCount</p></td>
 <td><p>Number of Frontend</p></td>
 <td><p>1</p></td>
 </tr>
-<tr class="row-odd"><td><p>frontend.service.type</p></td>
+<tr class="row-even"><td><p>frontend.service.type</p></td>
 <td><p>Kubernetes Service type of frontend</p></td>
 <td><p>NodePort</p></td>
 </tr>
-<tr class="row-even"><td><p>frontend.query.per.second.limit</p></td>
+<tr class="row-odd"><td><p>frontend.query.per.second.limit</p></td>
 <td><p>the maximum qps can be handled by frontend service</p></td>
 <td><p>2147483647 (without limitation)</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, one Ingestor Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.</p>
+<p>If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.</p>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">--set</span> <span class="pre">key=value[,key=value]</span></code> command to set the parameters for <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span></code>, for example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> </span>graphscope/graphscope-store<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--set<span class="w"> </span>auth.username<span class="o">=</span>admin,auth.password<span class="o">=</span><span class="m">123456</span>
@@ -1099,7 +1095,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </pre></div>
 </div>
 <p>The first line of the data file is a header that describes the key of each field. The header is not required. If there is no header in the data file, you need to set skip.header to true in the data building process (For details, see params description in “Building a partitioned graph”).</p>
-<p>The rest lines are the data records. Each line represents one record. Data fields are seperated by a custom seperator (“|” in the example above). In the vertex data file person.csv, id field and name field are the primary-key and the property of the vertex type person respectively. In the edge data file person_knows_person.csv, person_id field is the primary-key of the source vertex, person_id_1 field is the primary-key of the destination vertex, date is the property of the edge type knows.</p>
+<p>The rest lines are the data records. Each line represents one record. Data fields are separated by a custom separator (“|” in the example above). In the vertex data file person.csv, id field and name field are the primary-key and the property of the vertex type person respectively. In the edge data file person_knows_person.csv, person_id field is the primary-key of the source vertex, person_id_1 field is the primary-key of the destination vertex, date is the property of the edge type knows.</p>
 <p>All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field cannot be parsed correctly, data building process would be failed with corresponding errors.</p>
 </section>
 <section id="loading-process">
@@ -1236,7 +1232,7 @@ Else, please proceed to ingest and commit.</p>
 <span class="c1"># Update one vertex to new properties</span>
 <span class="k">def</span> <span class="nf">update_vertex_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-<span class="c1"># Delele one vertex</span>
+<span class="c1"># Delete one vertex</span>
 <span class="k">def</span> <span class="nf">delete_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_pk</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
 <span class="c1"># Delete a list of vertices</span>
@@ -1257,7 +1253,7 @@ Else, please proceed to ingest and commit.</p>
 <span class="c1"># Delete a list of edges</span>
 <span class="k">def</span> <span class="nf">delete_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_pks</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-<span class="c1"># Make sure the snapshot is avaiable</span>
+<span class="c1"># Make sure the snapshot is available</span>
 <span class="k">def</span> <span class="nf">remote_flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span> <span class="k">pass</span>
 </pre></div>
 </div>
@@ -1386,7 +1382,7 @@ make<span class="w"> </span>graphscope-store<span class="w"> </span><span class=
 <h4>Viewing logs<a class="headerlink" href="#viewing-logs" title="Permalink to this heading">#</a></h4>
 <p>You can view the logs of each Pod using the command
 <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">${POD_NAME}</span></code>.</p>
-<p>It is common to check the logs of Frontend and Store roles. When debugging, it is often necessary to check the logs of Coordinator and Ingestor as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. For example,</p>
+<p>It is common to check the logs of Frontend and Store roles. When debugging, it is often necessary to check the logs of Coordinator as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. For example,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store-frontend-0
 kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store-store-0
 </pre></div>
@@ -1411,6 +1407,10 @@ to provide the ability to serve the querying requests as well as catching up the
 Also remember the data path, ZK connect string as well as Kafka endpoint and topic should be as same as the primary instance.
 And use a different <code class="docutils literal notranslate"><span class="pre">zk.base.path</span></code> for each secondary instance to avoid conflict with each other when doing node discovery.</p>
 <p><code class="docutils literal notranslate"><span class="pre">storeGcIntervalMs</span></code> controls how often should the secondary perform a <code class="docutils literal notranslate"><span class="pre">try_catch_up_with_primary</span></code> call, default to <code class="docutils literal notranslate"><span class="pre">5000</span></code> which is 5 seconds.</p>
+</section>
+<section id="traces">
+<h3>Traces<a class="headerlink" href="#traces" title="Permalink to this heading">#</a></h3>
+<p>use <code class="docutils literal notranslate"><span class="pre">--set</span> <span class="pre">otel.enabled=true</span></code> to enable trace export.</p>
 </section>
 </section>
 </section>
@@ -1534,6 +1534,7 @@ And use a different <code class="docutils literal notranslate"><span class="pre"
 </ul>
 </li>
 <li><a class="reference internal" href="#secondary-instance">Secondary Instance</a></li>
+<li><a class="reference internal" href="#traces">Traces</a></li>
 </ul>
 </li>
 </ul>

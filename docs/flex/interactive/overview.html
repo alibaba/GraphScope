@@ -11,7 +11,7 @@
 <meta name="description" content="GraphScope Interactive is a specialized construction of GraphScope Flex, designed to handle concurrent graph queries at an impressive speed. Its primary goal is to process as many queries as possib..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Installation" href="installation.html" /><link rel="prev" title="GraphScope Interactive" href="../interactive_intro.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Overview - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -706,10 +706,10 @@ MathJax = {
 <p>GraphScope Interactive boasts several key features:</p>
 <ol class="arabic simple">
 <li><p><strong>Exceptional Query Throughput</strong>: As highlighted, GraphScope Interactive’s foundation is laid on benchmarking triumphs, enabling it to process tens of thousands of queries swiftly.</p></li>
-<li><p><strong>Versatility in Language Support</strong>: GraphScope Interactive supports the use of Neo4j’s declarative query language, Cypher, for crafting stored procedures. For those who prefer a more comprehensive approach, C++ programming is also supported for stored procedure development.</p></li>
+<li><p><strong>Versatility in Language Support</strong>: GraphScope Interactive supports two graph query languages: TinkerPop Gremlin and Neo4j Cypher. Cypher can also be used for crafting stored procedures. For those who prefer a more comprehensive approach, C++ programming is also supported for stored procedure development.</p></li>
 <li><p><strong>Future-Ready Expansion Capabilities</strong>: Drawing from the prowess of GraphScope Flex, GraphScope Interactive is primed for adaptability:</p>
 <ul class="simple">
-<li><p>Support for Multiple Query Languages: In the near future, GraphScope Interactive will extend its language support to include <a class="reference external" href="https://tinkerpop.apache.org/gremlin.html">Gremlin</a>, and <a class="reference external" href="https://www.gqlstandards.org/">GQL</a>, further enhancing its versatility.</p></li>
+<li><p>Support for Multiple Query Languages: In the near future, GraphScope Interactive will extend its language support to <a class="reference external" href="https://www.gqlstandards.org/">GQL</a>, further enhancing its versatility.</p></li>
 <li><p>Scalability: GraphScope Interactive possesses the potential for distributed processing. This means it can be expanded with few effort to handle larger-scale graphs, ensuring it remains effective as your data grows.</p></li>
 </ul>
 </li>
@@ -732,11 +732,20 @@ MathJax = {
 <li><p><strong>On-the-Fly Read Queries</strong>: Users can submit Cypher read queries directly to the engine. These queries are then automatically compiled into a dynamic library for execution, providing immediate results.</p></li>
 <li><p><strong>Stored Procedures</strong>: Users can create a Cypher file with specified parameters denoted as <code class="docutils literal notranslate"><span class="pre">${param_name}</span></code>. Using the admin tool, this code can be compiled into a stored procedure and registered within the system. This stored procedure can then be invoked for future use via Cypher’s CALL clause.</p></li>
 </ol>
+<p>The Cypher endpoint is enabled by default and listens on port 7687. You can also turn of the bolt connector or customize the port it by setting properties under <code class="docutils literal notranslate"><span class="pre">compiler.endpoint.bolt_connector</span></code>. For more detail explanation, please refer to <a class="reference internal" href="configuration.html"><span class="doc std std-doc">Configuration</span></a> guide. For instructions on how to connect to the Cypher endpoint, please see <a class="reference internal" href="#./getting_started#running-cypher-queries"><span class="xref myst">GettingStarted</span></a>.</p>
+</section>
+<section id="the-gremlin-query-language">
+<h2>The Gremlin Query Language<a class="headerlink" href="#the-gremlin-query-language" title="Permalink to this heading">#</a></h2>
+<p>GraphScope Interactive also support <a class="reference internal" href="#(https://tinkerpop.apache.org/gremlin.html)"><span class="xref myst">Gremlin</span></a>, a graph traversal language of Apache TinkerPop, and is widely adopted by many other graph databases. Although the syntax of Gremlin is definitely different from cypher, thanks to the unified Intermediate Representation (IR) used by GraphScope Interactive, we can achieve good unification at the execution level(physical plan).</p>
+<p>You can use Gremlin Console/Driver to connect to GraphScope Interactive’ Gremlin endpoint to submit gremlin queries. Since Gremlin doesn’t support stored procedure, you can only run <strong>On-the-Fly</strong> Gremlin queries.</p>
+<p>The Gremlin endpoint is disabled by default. To enable the gremlin endpoint, you need to set <code class="docutils literal notranslate"><span class="pre">compiler.endpoint.gremlin_connector.disabled</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code> in the configuration.
+For more configurations about the Gremlin connector, please consult the <a class="reference internal" href="configuration.html"><span class="doc std std-doc">Configuration</span></a> guide. To learn how to connect to the Gremlin endpoint, refer to <a class="reference internal" href="#./getting_started#running-gremlin-queries"><span class="xref myst">GettingStarted</span></a>.</p>
 </section>
 <section id="limitations">
 <h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p>GraphScope Interactive now only supports a subset of Cypher read clause, as indicated in <a class="reference external" href="https://graphscope.io/docs/latest/interactive_engine/neo4j/supported_cypher">supported_cypher</a>. Write and DDL (for defining and modifying schema) functionalities are not currently provided.</p></li>
+<li><p>GraphScope Interactive now only supports a subset of Cypher read clause, as indicated in <a class="reference internal" href="../../interactive_engine/neo4j/supported_cypher.html"><span class="doc std std-doc">supported_cypher</span></a>. Write and DDL (for defining and modifying schema) functionalities are not currently provided.</p></li>
+<li><p>GraphScope Interactive also does not fully support all traversal steps of Gremlin, please check <a class="reference internal" href="../../interactive_engine/tinkerpop/supported_gremlin_steps.html"><span class="doc std std-doc">supported_gremlin_step</span></a>. It’s important to note that the <code class="docutils literal notranslate"><span class="pre">g.E()</span></code> step is currently not supported in Interactive.</p></li>
 <li><p>Writes are designed to be fulfilled via built-in stored procedures. Currently writes are not supported.</p></li>
 <li><p>ACID is currently not supported, but it is planned to be supported in the near future.</p></li>
 </ol>
@@ -806,6 +815,7 @@ MathJax = {
 <li><a class="reference internal" href="#key-features">Key Features</a></li>
 <li><a class="reference internal" href="#property-graph-model-and-graph-queries">Property Graph Model and Graph Queries</a></li>
 <li><a class="reference internal" href="#the-cypher-query-language">The Cypher Query Language</a></li>
+<li><a class="reference internal" href="#the-gremlin-query-language">The Gremlin Query Language</a></li>
 <li><a class="reference internal" href="#limitations">Limitations</a></li>
 </ul>
 </li>

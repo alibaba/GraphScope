@@ -7,11 +7,11 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="interactive_engine/deployment.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="We have demonstrated how to execute interactive queries easily by installing Graphscope via pip on a local machine. However, in real-life applications, graphs are often too large to fit on a single..." />
-<meta name="description" content="We have demonstrated how to execute interactive queries easily by installing Graphscope via pip on a local machine. However, in real-life applications, graphs are often too large to fit on a single..." />
+<meta property="og:description" content="We have demonstrated how to execute interactive queries easily by installing GraphScope via pip on a local machine. However, in real-life applications, graphs are often too large to fit on a single..." />
+<meta name="description" content="We have demonstrated how to execute interactive queries easily by installing GraphScope via pip on a local machine. However, in real-life applications, graphs are often too large to fit on a single..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Apache TinkerPop Ecosystem" href="tinkerpop_eco.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Standalone Deployment for GIE - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -686,7 +686,7 @@ MathJax = {
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="standalone-deployment-for-gie">
 <h1>Standalone Deployment for GIE<a class="headerlink" href="#standalone-deployment-for-gie" title="Permalink to this heading">#</a></h1>
-<p>We have demonstrated <a class="reference internal" href="getting_started.html"><span class="std std-doc">how to execute interactive queries</span></a> easily by installing Graphscope via <code class="docutils literal notranslate"><span class="pre">pip</span></code> on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a <a class="reference internal" href="#../deploy_graphscope_on_self_managed_k8s.md"><span class="xref myst">self-managed k8s cluster</span></a>, for processing large-scale graphs. But you may wonder, “what if I only need the GIE engine and not the whole package of GraphScope?” This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.</p>
+<p>We have demonstrated <a class="reference internal" href="getting_started.html"><span class="std std-doc">how to execute interactive queries</span></a> easily by installing GraphScope via <code class="docutils literal notranslate"><span class="pre">pip</span></code> on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, GraphScope can be deployed on a cluster, such as a <a class="reference internal" href="#../deploy_graphscope_on_self_managed_k8s.md"><span class="xref myst">self-managed k8s cluster</span></a>, for processing large-scale graphs. But you may wonder, “what if I only need the GIE engine and not the whole package of GraphScope?” This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.</p>
 <p>Throughout the tutorial, we assume all machines are running Linux system.
 We do not guarantee that it works as smoothly as Linux on the other platform.
 For your reference, we’ve tested the tutorial on Ubuntu 20.04.</p>
@@ -923,6 +923,10 @@ the above <code class="docutils literal notranslate"><span class="pre">data_path
 <tr class="row-even"><td class="text-left"><p>frontendQueryPerSecondLimit</p></td>
 <td><p>the maximum qps can be handled by frontend service</p></td>
 <td class="text-center"><p>2147483647 (without limitation)</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>gremlinScriptLanguageName</p></td>
+<td><p>the option allows you to choose different Gremlin compilations based on different IR layer, either Traversal-based (‘antlr_gremlin_traversal’) or Calcite-based (‘antlr_gremlin_calcite’)</p></td>
+<td class="text-center"><p>antlr_gremlin_traversal</p></td>
 </tr>
 </tbody>
 </table>

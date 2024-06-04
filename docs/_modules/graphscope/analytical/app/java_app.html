@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>graphscope.analytical.app.java_app - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=135e06be" />
@@ -575,6 +575,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -602,18 +614,6 @@ MathJax = {
               <dd><a href="../../../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -886,36 +886,70 @@ MathJax = {
 
     <span class="c1"># Override is_compatible to make sure type params of graph consists with java app.</span>
 <div class="viewcode-block" id="JavaApp.is_compatible"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.analytical.app.JavaApp.is_compatible">[docs]</a>    <span class="k">def</span> <span class="nf">is_compatible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
-        <span class="n">splited</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&lt;&quot;</span><span class="p">)</span>
+        <span class="c1"># The GraphTemplate can be vineyard::ArrowFragment&lt;OID_T,VID_T, VERTEX_MAP_T, COMPACT&gt;</span>
+        <span class="c1"># or gs::ArrowProjectedFragment&lt;OID_T,VID_T,VDATA_T,EDATA_T, VERTEX_MAP_T, COMPACT&gt;</span>
         <span class="n">java_app_type_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frag_param_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-        <span class="n">num_type_params</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splited</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="s2">&quot;Unrecoginizable graph template str: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">splited</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;vineyard::ArrowFragment&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;vineyard::ArrowFragment&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">java_app_type</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;property&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expected property app&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">java_app_type_params</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expected one type params.&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">False</span>
-            <span class="n">num_type_params</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="n">splited</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;gs::ArrowProjectedFragment&quot;</span><span class="p">:</span>
+            <span class="c1"># Get the OID_T from the graph template string</span>
+            <span class="n">split_parts</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&lt;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split_parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">type_parts</span> <span class="o">=</span> <span class="n">split_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">type_parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">oid_t</span> <span class="o">=</span> <span class="n">type_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="s2">&quot;Error format graph template str: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s2">&quot;Error format graph template str: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_type_param_consistent</span><span class="p">(</span><span class="n">oid_t</span><span class="p">,</span> <span class="n">java_app_type_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;gs::ArrowProjectedFragment&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">java_app_type</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;simple&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expected simple app&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">java_app_type_params</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expected 4 type params&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">False</span>
-            <span class="n">num_type_params</span> <span class="o">=</span> <span class="mi">4</span>
-        <span class="n">graph_actual_type_params</span> <span class="o">=</span> <span class="n">splited</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_type_params</span><span class="p">):</span>
-            <span class="n">graph_actual_type_param</span> <span class="o">=</span> <span class="n">graph_actual_type_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="n">java_app_type_param</span> <span class="o">=</span> <span class="n">java_app_type_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">_type_param_consistent</span><span class="p">(</span><span class="n">graph_actual_type_param</span><span class="p">,</span> <span class="n">java_app_type_param</span><span class="p">):</span>
-                <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
+            <span class="n">split_parts</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&lt;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split_parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">type_parts</span> <span class="o">=</span> <span class="n">split_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="n">cpp_graph_type</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">type_parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span>
+                <span class="p">):</span>  <span class="c1"># Check if there are at least 4 parts to extract</span>
+                    <span class="n">cpp_graph_type</span> <span class="o">=</span> <span class="n">type_parts</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;found type param </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cpp_graph_type</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="s2">&quot;Error format graph template str: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s2">&quot;checking type param </span><span class="si">{}</span><span class="s2">,</span><span class="si">{}</span><span class="s2">,</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">i</span><span class="p">,</span> <span class="n">cpp_graph_type</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">java_app_type_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">_type_param_consistent</span><span class="p">(</span>
+                        <span class="n">cpp_graph_type</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">java_app_type_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="p">):</span>
+                        <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Expect least </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;Unrecoginizable graph template str: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span>
+            <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_pack_jar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">full_jar_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">garfile</span> <span class="o">=</span> <span class="n">InMemoryZip</span><span class="p">()</span>

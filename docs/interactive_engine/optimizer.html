@@ -11,7 +11,7 @@
 <meta name="description" content="We have developed a versatile graph optimizer for the Graph Interactive Engine (GIE), capable of optimizing the execution for multiple query languages in GraphScope, including Gremlin and Cypher. T..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Design of GIE" href="design_of_gie.html" /><link rel="prev" title="Using LLM as an Assistant in GIE" href="neo4j/llm_assistant.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>A Generic Graph Optimizer for GIE - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -739,7 +739,7 @@ Return<span class="w"> </span>p1,<span class="w"> </span>p2<span class="p">;</sp
 Return<span class="w"> </span>p1,<span class="w"> </span>COUNT<span class="o">(</span>p2<span class="o">)</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>With this rule applied, instead of individually counting each neighbor of <code class="docutils literal notranslate"><span class="pre">p1</span></code>, we can directly obtain <code class="docutils literal notranslate"><span class="pre">p1</span></code>’s degree, streamlining the process considerably. This optimization effectively utilizes pre-existing graph data structures to expedite query execution.</p>
+<p>With this rule applied, instead of individually counting each neighbor of <code class="docutils literal notranslate"><span class="pre">p1</span></code>, we can directly obtain <code class="docutils literal notranslate"><span class="pre">p1</span></code>’s degree, streamlining the process considerably. This optimization effectively utilizes preexisting graph data structures to expedite query execution.</p>
 </section>
 <section id="notmatchtoantijoinrule">
 <h3>NotMatchToAntiJoinRule<a class="headerlink" href="#notmatchtoantijoinrule" title="Permalink to this heading">#</a></h3>

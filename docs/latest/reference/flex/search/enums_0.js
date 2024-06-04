@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['edgestrategy_2551',['EdgeStrategy',['../namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8',1,'gs']]]
+  ['appmode_2729',['AppMode',['../classgs_1_1AppBase.html#a3d3eb816f021d674cb8af9816f687c0d',1,'gs::AppBase']]],
+  ['apptype_2730',['AppType',['../classgs_1_1AppBase.html#a27ed6a61bb95503eee8fb33f233b3d80',1,'gs::AppBase']]]
 ];

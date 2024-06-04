@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>graphscope.framework.graph - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
@@ -575,6 +575,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -602,18 +614,6 @@ MathJax = {
               <dd><a href="../../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -796,10 +796,12 @@ MathJax = {
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;The Graph.unload() method has been deprecated, please using the `del` operator instead, e.g., `del graph`&quot;</span><span class="p">,</span>
-            <span class="ne">DeprecationWarning</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;always&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The Graph.unload() method has been deprecated, please using the `del` operator instead, i.e., `del graph`&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_from_nx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a gs graph from a nx graph.</span>
@@ -853,7 +855,7 @@ MathJax = {
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">vineyard_id</span><span class="p">))</span>
         <span class="c1"># FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard</span>
         <span class="c1">#</span>
-        <span class="c1"># the metadata should be retrived from vineyard</span>
+        <span class="c1"># the metadata should be retrieved from vineyard</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">OID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="s2">&quot;int64_t&quot;</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span>
@@ -867,7 +869,7 @@ MathJax = {
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">vineyard_name</span><span class="p">))</span>
         <span class="c1"># FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard</span>
         <span class="c1">#</span>
-        <span class="c1"># the metadata should be retrived from vineyard</span>
+        <span class="c1"># the metadata should be retrieved from vineyard</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">OID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="s2">&quot;int64_t&quot;</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span>

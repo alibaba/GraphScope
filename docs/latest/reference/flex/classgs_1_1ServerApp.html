@@ -69,7 +69,6 @@ $(function() {
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="classgs_1_1ServerApp-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">gs::ServerApp Class Reference</div>  </div>
@@ -82,8 +81,9 @@ Inheritance diagram for gs::ServerApp:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1ServerApp__inherit__graph.png" border="0" usemap="#gs_1_1ServerApp_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1ServerApp_inherit__map" id="gs_1_1ServerApp_inherit__map">
-<area shape="rect" title=" " alt="" coords="5,80,117,107"/>
-<area shape="rect" href="classgs_1_1AppBase.html" title=" " alt="" coords="10,5,113,32"/>
+<area shape="rect" title=" " alt="" coords="18,155,130,181"/>
+<area shape="rect" href="classgs_1_1WriteAppBase.html" title=" " alt="" coords="5,80,143,107"/>
+<area shape="rect" href="classgs_1_1AppBase.html" title=" " alt="" coords="23,5,125,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
@@ -91,19 +91,9 @@ Collaboration diagram for gs::ServerApp:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1ServerApp__coll__graph.png" border="0" usemap="#gs_1_1ServerApp_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1ServerApp_coll__map" id="gs_1_1ServerApp_coll__map">
-<area shape="rect" title=" " alt="" coords="529,317,641,344"/>
-<area shape="rect" href="classgs_1_1AppBase.html" title=" " alt="" coords="534,228,637,255"/>
-<area shape="rect" href="classgs_1_1GraphDBSession.html" title=" " alt="" coords="233,228,386,255"/>
-<area shape="rect" href="structgs_1_1SessionLocalContext.html" title=" " alt="" coords="73,317,253,344"/>
-<area shape="rect" href="classgs_1_1GraphDB.html" title=" " alt="" coords="314,407,417,433"/>
-<area shape="rect" href="classgs_1_1VersionManager.html" title=" " alt="" coords="354,317,505,344"/>
-<area shape="rect" href="classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="666,317,881,344"/>
-<area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="725,228,822,255"/>
-<area shape="rect" href="classgs_1_1IdIndexer.html" title=" " alt="" coords="703,109,843,151"/>
-<area shape="rect" href="structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="574,5,762,47"/>
-<area shape="rect" href="structgs_1_1GHash.html" title=" " alt="" coords="786,13,969,39"/>
-<area shape="rect" href="classgs_1_1WalWriter.html" title=" " alt="" coords="211,117,320,143"/>
-<area shape="rect" href="classgs_1_1ArenaAllocator.html" title=" " alt="" coords="5,117,147,143"/>
+<area shape="rect" title=" " alt="" coords="18,155,130,181"/>
+<area shape="rect" href="classgs_1_1WriteAppBase.html" title=" " alt="" coords="5,80,143,107"/>
+<area shape="rect" href="classgs_1_1AppBase.html" title=" " alt="" coords="23,5,125,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -114,24 +104,38 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac758ca40c6ae5295aa3228d0425dfa82"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ServerApp.html#ac758ca40c6ae5295aa3228d0425dfa82">ServerApp</a> (<a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;graph)</td></tr>
-<tr class="separator:ac758ca40c6ae5295aa3228d0425dfa82"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a37dc57cf51f5538839efda8ecfdcf424"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ServerApp.html#a37dc57cf51f5538839efda8ecfdcf424">Query</a> (<a class="el" href="classgs_1_1Decoder.html">Decoder</a> &amp;input, <a class="el" href="classgs_1_1Encoder.html">Encoder</a> &amp;output) override</td></tr>
-<tr class="separator:a37dc57cf51f5538839efda8ecfdcf424"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad883f6928515e8749ac085465ddf2ae2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ServerApp.html#ad883f6928515e8749ac085465ddf2ae2">ServerApp</a> ()</td></tr>
+<tr class="separator:ad883f6928515e8749ac085465ddf2ae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad4f376e51d7c1ec4ec47fc1e5a249c7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1AppBase.html#a27ed6a61bb95503eee8fb33f233b3d80">AppBase::AppType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ServerApp.html#aad4f376e51d7c1ec4ec47fc1e5a249c7">type</a> () const override</td></tr>
+<tr class="separator:aad4f376e51d7c1ec4ec47fc1e5a249c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b5301ecad66b14c743584e7d9ed4541"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ServerApp.html#a0b5301ecad66b14c743584e7d9ed4541">Query</a> (<a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;graph, <a class="el" href="classgs_1_1Decoder.html">Decoder</a> &amp;input, <a class="el" href="classgs_1_1Encoder.html">Encoder</a> &amp;output) override</td></tr>
+<tr class="separator:a0b5301ecad66b14c743584e7d9ed4541"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classgs_1_1WriteAppBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1WriteAppBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1WriteAppBase.html">gs::WriteAppBase</a></td></tr>
+<tr class="memitem:aacdf9f57c1a24c7180432cb9e7f25cd9 inherit pub_methods_classgs_1_1WriteAppBase"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1AppBase.html#a3d3eb816f021d674cb8af9816f687c0d">AppMode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WriteAppBase.html#aacdf9f57c1a24c7180432cb9e7f25cd9">mode</a> () const override</td></tr>
+<tr class="separator:aacdf9f57c1a24c7180432cb9e7f25cd9 inherit pub_methods_classgs_1_1WriteAppBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a067aa45f0e201403fe338d5ba0e71483 inherit pub_methods_classgs_1_1WriteAppBase"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WriteAppBase.html#a067aa45f0e201403fe338d5ba0e71483">run</a> (<a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;db, <a class="el" href="classgs_1_1Decoder.html">Decoder</a> &amp;input, <a class="el" href="classgs_1_1Encoder.html">Encoder</a> &amp;output) override</td></tr>
+<tr class="separator:a067aa45f0e201403fe338d5ba0e71483 inherit pub_methods_classgs_1_1WriteAppBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classgs_1_1AppBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1AppBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1AppBase.html">gs::AppBase</a></td></tr>
-<tr class="memitem:af490ef30a70821fa3cb3672f4544a822 inherit pub_methods_classgs_1_1AppBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AppBase.html#af490ef30a70821fa3cb3672f4544a822">AppBase</a> ()</td></tr>
-<tr class="separator:af490ef30a70821fa3cb3672f4544a822 inherit pub_methods_classgs_1_1AppBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a739aae4e5064f43f0d255922c5236149 inherit pub_methods_classgs_1_1AppBase"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AppBase.html#a739aae4e5064f43f0d255922c5236149">~AppBase</a> ()</td></tr>
 <tr class="separator:a739aae4e5064f43f0d255922c5236149 inherit pub_methods_classgs_1_1AppBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
-Private Attributes</h2></td></tr>
-<tr class="memitem:ae2dc5bdd0caa0384eab9bf40a3d54f90"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ServerApp.html#ae2dc5bdd0caa0384eab9bf40a3d54f90">graph_</a></td></tr>
-<tr class="separator:ae2dc5bdd0caa0384eab9bf40a3d54f90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pub_types_classgs_1_1AppBase"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classgs_1_1AppBase')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classgs_1_1AppBase.html">gs::AppBase</a></td></tr>
+<tr class="memitem:a27ed6a61bb95503eee8fb33f233b3d80 inherit pub_types_classgs_1_1AppBase"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AppBase.html#a27ed6a61bb95503eee8fb33f233b3d80">AppType</a> : uint8_t { <a class="el" href="classgs_1_1AppBase.html#a27ed6a61bb95503eee8fb33f233b3d80a6cc0cad37e3d7363171c5ed170d7f398">AppType::kCppProcedure</a> = 0, 
+<a class="el" href="classgs_1_1AppBase.html#a27ed6a61bb95503eee8fb33f233b3d80ad31f7fa205510dbab3ce5545aefe0a77">AppType::kCypherProcedure</a> = 1, 
+<a class="el" href="classgs_1_1AppBase.html#a27ed6a61bb95503eee8fb33f233b3d80a50107200ca4e6ee90bffec740d056078">AppType::kCypherAdhoc</a> = 2, 
+<a class="el" href="classgs_1_1AppBase.html#a27ed6a61bb95503eee8fb33f233b3d80a54eb7139101a91cded6ad8294e3ba756">AppType::kBuiltIn</a> = 3
+ }</td></tr>
+<tr class="separator:a27ed6a61bb95503eee8fb33f233b3d80 inherit pub_types_classgs_1_1AppBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d3eb816f021d674cb8af9816f687c0d inherit pub_types_classgs_1_1AppBase"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AppBase.html#a3d3eb816f021d674cb8af9816f687c0d">AppMode</a> : uint8_t { <a class="el" href="classgs_1_1AppBase.html#a3d3eb816f021d674cb8af9816f687c0da8604cf55a79d6bfdcb30f77d1622839b">AppMode::kRead</a> = 0, 
+<a class="el" href="classgs_1_1AppBase.html#a3d3eb816f021d674cb8af9816f687c0dad3ac0ba447a9859ad2db8e498056429f">AppMode::kWrite</a> = 1
+ }</td></tr>
+<tr class="separator:a3d3eb816f021d674cb8af9816f687c0d inherit pub_types_classgs_1_1AppBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ac758ca40c6ae5295aa3228d0425dfa82"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac758ca40c6ae5295aa3228d0425dfa82">&#9670;&nbsp;</a></span>ServerApp()</h2>
+<a id="ad883f6928515e8749ac085465ddf2ae2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad883f6928515e8749ac085465ddf2ae2">&#9670;&nbsp;</a></span>ServerApp()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -142,8 +146,7 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="memname">gs::ServerApp::ServerApp </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;&#160;</td>
-          <td class="paramname"><em>graph</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -157,8 +160,8 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a37dc57cf51f5538839efda8ecfdcf424"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a37dc57cf51f5538839efda8ecfdcf424">&#9670;&nbsp;</a></span>Query()</h2>
+<a id="a0b5301ecad66b14c743584e7d9ed4541"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b5301ecad66b14c743584e7d9ed4541">&#9670;&nbsp;</a></span>Query()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -169,6 +172,12 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="memname">bool gs::ServerApp::Query </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a> &amp;&#160;</td>
+          <td class="paramname"><em>graph</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="classgs_1_1Decoder.html">Decoder</a> &amp;&#160;</td>
           <td class="paramname"><em>input</em>, </td>
         </tr>
@@ -191,13 +200,12 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implements <a class="el" href="classgs_1_1AppBase.html#a77a82edde688166f6c90454182c7201e">gs::AppBase</a>.</p>
+<p>Implements <a class="el" href="classgs_1_1WriteAppBase.html#a06e05ea2eaf93413e8b01d3aabcb1152">gs::WriteAppBase</a>.</p>
 
 </div>
 </div>
-<h2 class="groupheader">Member Data Documentation</h2>
-<a id="ae2dc5bdd0caa0384eab9bf40a3d54f90"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae2dc5bdd0caa0384eab9bf40a3d54f90">&#9670;&nbsp;</a></span>graph_</h2>
+<a id="aad4f376e51d7c1ec4ec47fc1e5a249c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad4f376e51d7c1ec4ec47fc1e5a249c7">&#9670;&nbsp;</a></span>type()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -206,15 +214,20 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a>&amp; gs::ServerApp::graph_</td>
+          <td class="memname"><a class="el" href="classgs_1_1AppBase.html#a27ed6a61bb95503eee8fb33f233b3d80">AppBase::AppType</a> gs::ServerApp::type </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Reimplemented from <a class="el" href="classgs_1_1WriteAppBase.html#a658d7d163fd64e90dd514dc638904561">gs::WriteAppBase</a>.</p>
 
 </div>
 </div>

@@ -7,11 +7,11 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/tutorial_run_giraph_apps.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="Apache Giraph is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through pregel interface, user can write vertex-cetric graph algorithms. GraphScope aiming to prov..." />
-<meta name="description" content="Apache Giraph is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through pregel interface, user can write vertex-cetric graph algorithms. GraphScope aiming to prov..." />
+<meta property="og:description" content="Apache Giraph is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through pregel interface, user can write vertex-centric graph algorithms. GraphScope aiming to pro..." />
+<meta name="description" content="Apache Giraph is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through pregel interface, user can write vertex-centric graph algorithms. GraphScope aiming to pro..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Run GraphX Applications on GraphScope" href="tutorial_run_graphx_apps.html" /><link rel="prev" title="Tutorial: Develop your Algorithm in Java with PIE Model" href="tutorial_dev_algo_java.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Tutorial: Run Giraph Applications on GraphScope - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -686,9 +686,9 @@ MathJax = {
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="tutorial-run-giraph-applications-on-graphscope">
 <h1>Tutorial: Run Giraph Applications on GraphScope<a class="headerlink" href="#tutorial-run-giraph-applications-on-graphscope" title="Permalink to this heading">#</a></h1>
-<p><a class="reference external" href="https://giraph.apache.org/intro.html">Apache Giraph</a> is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through <code class="docutils literal notranslate"><span class="pre">pregel</span></code> interface, user can write <code class="docutils literal notranslate"><span class="pre">vertex-cetric</span></code> graph algorithms.</p>
-<p>GraphScope aiming to provide one-stop graph processing framework, including intergrating with popular open-source graph computing framework.
-Actually, Giraph algorithms can be easily run on Graphscope without any adaptation.</p>
+<p><a class="reference external" href="https://giraph.apache.org/intro.html">Apache Giraph</a> is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through <code class="docutils literal notranslate"><span class="pre">pregel</span></code> interface, user can write <code class="docutils literal notranslate"><span class="pre">vertex-centric</span></code> graph algorithms.</p>
+<p>GraphScope aiming to provide one-stop graph processing framework, including integrating with popular open-source graph computing framework.
+Actually, Giraph algorithms can be easily run on GraphScope without any adaptation.</p>
 <section id="try-some-example-giraph-apps">
 <h2>Try some example giraph apps<a class="headerlink" href="#try-some-example-giraph-apps" title="Permalink to this heading">#</a></h2>
 <p>We provide some example giraph algorithms, i.e. SSSP, PageRank in <a class="reference external" href="https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.19.0-shaded.jar">grape-demo.jar</a>.
@@ -706,7 +706,7 @@ You can try to run these Giraph algorithms on GraphScope.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>vertices and edges should points to vertex input and edge input. We also provide some example dataset <code class="docutils literal notranslate"><span class="pre">gstest</span></code> at <a class="reference external" href="https://github.com/7br/gstest.git">Graphscope/gstest</a>.
+<p>vertices and edges should points to vertex input and edge input. We also provide some example dataset <code class="docutils literal notranslate"><span class="pre">gstest</span></code> at <a class="reference external" href="https://github.com/7br/gstest.git">GraphScope/gstest</a>.
 In this tutorial we will only need <code class="docutils literal notranslate"><span class="pre">p2p</span></code> dataset. You can download it by:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://raw.githubusercontent.com/GraphScope/gstest/master/p2p-31.e<span class="w"> </span>/home/graphscope/p2p-31.e
 wget<span class="w"> </span>https://raw.githubusercontent.com/GraphScope/gstest/master/p2p-31.v<span class="w"> </span>/home/graphscope/p2p-31.v
@@ -754,7 +754,7 @@ mvn<span class="w"> </span>package<span class="w"> </span>-pl<span class="w"> </
 </pre></div>
 </div>
 <p>Then you could find <code class="docutils literal notranslate"><span class="pre">giraph-examples-1.4.0-SNAPSHOT-for-hadoop-1.2.1-jar-with-dependencies.jar</span></code> in directory <code class="docutils literal notranslate"><span class="pre">giraph-examples/target</span></code>.</p>
-<p>Although almost all APIs are supported, there are indeed some limitation of Giraph-on-Graphscope.</p>
+<p>Although almost all APIs are supported, there are indeed some limitation of Giraph-on-GraphScope.</p>
 <ul class="simple">
 <li><p>Currently graph modification API is not supported.</p></li>
 <li><p>Using of Complex Writable will cause performance degradation.</p></li>
@@ -765,7 +765,7 @@ mvn<span class="w"> </span>package<span class="w"> </span>-pl<span class="w"> </
 <p>The procedure almost the same as above, except that you need to replace the submitted jar, and choose right <code class="docutils literal notranslate"><span class="pre">InputFormat</span></code> classes.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 
-<span class="sd">&quot;&quot;&quot;Or lauch session in k8s cluster&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Or launch session in k8s cluster&quot;&quot;&quot;</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span> 
 
 <span class="c1"># path to local jar file, will be distributed over cluster</span>

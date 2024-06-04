@@ -11,7 +11,7 @@
 <meta name="description" content="GraphScope的交互查询引擎（简称GIE）是一个分布式系统，它为不同经验的用户提供了一个易用的交互式环境，支持海量复杂图数据上的 实时分析与交互探索 。该引擎支持 Gremlin 语言表达的交互图查询，并提供了自动化和用户透明的分布式并行执行。 Apache TinkerPop: Apache TinkerPop 是基于Gremlin语言开发交互式图应用的一个开源框架和事实标准。GIE..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="图学习引擎" href="learning_engine.html" /><link rel="prev" title="图分析引擎" href="analytics_engine.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>图交互式分析引擎 - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -277,6 +277,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/zh/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/zh/index.html">
                 
                   v0.26.0
@@ -304,18 +316,6 @@ MathJax = {
               <dd><a href="../v0.24.0/zh/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/zh/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -486,7 +486,7 @@ MathJax = {
 </section>
 <section id="gremlin-tinkerpop">
 <h2>Gremlin兼容性（对比TinkerPop）<a class="headerlink" href="#gremlin-tinkerpop" title="Permalink to this heading">#</a></h2>
-<p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>Websockets</em> 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
+<p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>WebSockets</em> 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
 <section id="id11">
 <h3>属性图模型约束<a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p>目前的 GAIA 技术预览版利用了 <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> 项目提供的分布式内存存储作为输入图，它支持一次载入 <em>不可修改</em> 的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：</p>
@@ -601,7 +601,7 @@ g.V().has(&quot;attrName&quot;, TextP.notEndingWith(&quot;substr&quot;))
 <li><p>Map（映射），如：</p></li>
 </ul>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//constant</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">contant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="s">&quot;aaa&quot;</span><span class="p">)</span>
 
 <span class="c1">//id</span>

@@ -11,7 +11,7 @@
 <meta name="description" content="Starting your GraphScope Interactive service can be straightforward, as demonstrated in our getting_started guide. By default, executing the command: will initialize the service with its default se..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Data Model" href="data_model.html" /><link rel="prev" title="Stored Procedures" href="stored_procedures.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Engine Configuration - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -720,6 +720,14 @@ MathJax = {
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FilterIntoJoinRule</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NotExistToAntiJoinRule</span>
 <span class="w">  </span><span class="nt">query_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20000</span><span class="w">  </span><span class="c1"># query timeout in milliseconds, default 20000</span>
+<span class="w">  </span><span class="nt">endpoint</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">default_listen_address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
+<span class="w">    </span><span class="nt">bolt_connector</span><span class="p">:</span><span class="w"> </span><span class="c1"># cypher query endpoint </span>
+<span class="w">      </span><span class="nt">disabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># disable cypher endpoint or not.</span>
+<span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7687</span>
+<span class="w">    </span><span class="nt">gremlin_connector</span><span class="p">:</span><span class="w"> </span><span class="c1"># gremlin query endpoint </span>
+<span class="w">      </span><span class="nt">disabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># disable gremlin endpoint or not.</span>
+<span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8182</span>
 <span class="nt">http_service</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">default_listen_address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
 <span class="w">  </span><span class="nt">admin_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7777</span>
@@ -783,17 +791,42 @@ MathJax = {
 <td><p>An optimization rule that transforms a “not exist” pattern into an anti-join operation</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-even"><td><p>http_service.default_listen_address</p></td>
+<tr class="row-even"><td><p>compiler.endpoint.default_listen_address</p></td>
+<td><p>localhost</p></td>
+<td><p>The address for compiler endpoint to bind</p></td>
+<td><p>0.0.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>compiler.endpoint.bolt_connector.disabled</p></td>
+<td><p>false</p></td>
+<td><p>Whether to disable the cypher endpoint</p></td>
+<td><p>0.0.3</p></td>
+</tr>
+<tr class="row-even"><td><p>compiler.endpoint.bolt_connector.port</p></td>
+<td><p>7687</p></td>
+<td><p>The port for compiler’s cypher endpoint.</p></td>
+<td><p>0.0.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>compiler.endpoint.gremlin_connector.disabled</p></td>
+<td><p>true</p></td>
+<td><p>Whether to disable the gremlin endpoint</p></td>
+<td><p>0.0.3</p></td>
+</tr>
+<tr class="row-even"><td><p>compiler.endpoint.gremlin_connector.port</p></td>
+<td><p>8182</p></td>
+<td><p>The port for compiler’s cypher endpoint.</p></td>
+<td><p>0.0.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>http_service.default_listen_address</p></td>
 <td><p>localhost</p></td>
 <td><p>The address for http service to bind</p></td>
 <td><p>0.0.2</p></td>
 </tr>
-<tr class="row-odd"><td><p>http_service.admin_port</p></td>
+<tr class="row-even"><td><p>http_service.admin_port</p></td>
 <td><p>7777</p></td>
 <td><p>The port for admin service to listen on</p></td>
 <td><p>0.0.2</p></td>
 </tr>
-<tr class="row-even"><td><p>http_service.query_port</p></td>
+<tr class="row-odd"><td><p>http_service.query_port</p></td>
 <td><p>10000</p></td>
 <td><p>The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved</p></td>
 <td><p>0.0.2</p></td>

@@ -11,7 +11,7 @@
 <meta name="description" content="GRIN is a proposed standard graph retrieval interface in GraphScope. Its goal is to provide a common way for graph computing engines to retrieve graph data stored in different storage engines withi..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Groot: Persistent Graph Store" href="groot.html" /><link rel="prev" title="Dev and Test" href="../learning_engine/dev_and_test.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>GRIN: Graph Retrieval INterface - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -582,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/index.html">
                 
                   v0.26.0
@@ -609,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.24.0/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -756,7 +756,7 @@ A Vineyard implementation for both computing and storage can be found in <a clas
 <span class="w">                    </span><span class="n">GRIN_VERTEX</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_neighbor_from_adjacent_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">adj_list</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the dst vertex u</span>
 <span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_value_from_vertex_property_table</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vpt</span><span class="p">,</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vp</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the property value of &quot;features&quot; of u</span>
 
-<span class="w">                    </span><span class="n">GRIN_VERTEX_REF</span><span class="w"> </span><span class="n">uref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_ref_for_vertex</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">u</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the reference of u that can be recoginized by other partitions</span>
+<span class="w">                    </span><span class="n">GRIN_VERTEX_REF</span><span class="w"> </span><span class="n">uref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_ref_for_vertex</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">u</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the reference of u that can be recognized by other partitions</span>
 <span class="w">                    </span><span class="n">GRIN_PARTITION</span><span class="w"> </span><span class="n">u_master_partition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_master_partition_from_vertex_ref</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">uref</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the master partition for u</span>
 
 <span class="w">                    </span><span class="n">send_value</span><span class="p">(</span><span class="n">u_master_partition</span><span class="p">,</span><span class="w"> </span><span class="n">uref</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vp_dt</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w">  </span><span class="c1">// the value must be casted to the correct type based on dst_vp_dt before sending</span>
@@ -993,7 +993,7 @@ different data types in the underlying storage for efficiency concerns (e.g., sh
 <h3>Label<a class="headerlink" href="#label" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>GRIN does <strong>NOT</strong> distinguish label on vertices and edges, that means a vertex and an edge may have a same label.</p></li>
-<li><p>However the storage can tell GRIN whether labels are enabled in vertices or edges seperatedly with macros of <code class="docutils literal notranslate"><span class="pre">WITH_VERTEX_LABEL</span></code> and <code class="docutils literal notranslate"><span class="pre">WITH_EDGE_LABEL</span></code> respectively.</p></li>
+<li><p>However the storage can tell GRIN whether labels are enabled in vertices or edges separatedly with macros of <code class="docutils literal notranslate"><span class="pre">WITH_VERTEX_LABEL</span></code> and <code class="docutils literal notranslate"><span class="pre">WITH_EDGE_LABEL</span></code> respectively.</p></li>
 </ul>
 </section>
 <section id="order">
@@ -1001,7 +1001,7 @@ different data types in the underlying storage for efficiency concerns (e.g., sh
 <ul class="simple">
 <li><p>GRIN provides sorted vertex list assumptions.</p></li>
 <li><p>GRIN also assumes that if a vertex list sorted, then there is complete ordering for the vertices from the list.</p></li>
-<li><p>Sorted vertex list faciliates computations like vertex list join and data structures like vertex array which uses vertex as the index of the array.</p></li>
+<li><p>Sorted vertex list facilitates computations like vertex list join and data structures like vertex array which uses vertex as the index of the array.</p></li>
 </ul>
 </section>
 <section id="reference">
@@ -1023,7 +1023,7 @@ be recognized in partitions other than the current partition where the instance 
 
 <span class="w">    </span><span class="cm">/* run.cc in machine 1 */</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_ref_for_vertex</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span><span class="w">  </span><span class="c1">// get v&#39;s vertex ref which can be recgonized in machine 2</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_ref_for_vertex</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span><span class="w">  </span><span class="c1">// get v&#39;s vertex ref which can be recognized in machine 2</span>
 
 <span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_serialize_vertex_ref</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">vref</span><span class="p">);</span><span class="w">  </span><span class="c1">// serialize into a message</span>
 
@@ -1033,7 +1033,7 @@ be recognized in partitions other than the current partition where the instance 
 
 <span class="w">    </span><span class="cm">/* run.cc in machine 2 */</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// recieve the message from machine 1...</span>
+<span class="w">        </span><span class="c1">// receive the message from machine 1...</span>
 
 <span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_deserialize_to_vertex_ref</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">);</span><span class="w">  </span><span class="c1">// deserialize back to vertex ref</span>
 
@@ -1048,15 +1048,15 @@ be recognized in partitions other than the current partition where the instance 
 <h3>Master and Mirror<a class="headerlink" href="#master-and-mirror" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Master &amp; mirror vertices are the concept borrowed from vertexcut partition strategy. When a vertex is recognized in
-serveral partitions, GRIN refers one of them as the master vertex while others as mirrors. This is primarily for data
-aggregation purpose to share a common centural node for every one.</p></li>
+several partitions, GRIN refers one of them as the master vertex while others as mirrors. This is primarily for data
+aggregation purpose to share a common central node for every one.</p></li>
 <li><p>While in edgecut partition, the concept becomes inner &amp; outer vertices. GRIN uses master &amp; mirror vertices to represent inner &amp; outer vertices respectively to unify these concepts.</p></li>
 </ul>
 </section>
 <section id="local-complete">
 <h3>Local Complete<a class="headerlink" href="#local-complete" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
-<li><p>The concept of local complete is with repect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.</p></li>
+<li><p>The concept of local complete is with respect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.</p></li>
 <li><p>Take vertex and properties as example. GRIN considers the vertex is “property local complete” if it can get all the properties of the vertex locally in the partition.</p></li>
 <li><p>There are concepts like “edge property local complete”, “vertex neighbor local complete” and so on.</p></li>
 <li><p>GRIN does <strong>NOT</strong> assume any local complete on master vertices. Since in some extremely cases, master vertices

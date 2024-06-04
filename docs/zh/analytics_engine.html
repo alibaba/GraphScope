@@ -11,7 +11,7 @@
 <meta name="description" content="GraphScope 的图分析引擎继承了 GRAPE ， 该系统于 SIGMOD2017 上首次提出并获得最佳论文奖。 与以往的系统的不同，GRAPE 支持将串行图算法自动并行化。在 GRAPE 中， 只需进行很小的更改即可轻松地将串行算法即插即用，使其并行化的运行在分布式环境，并高效地处理大规模图数据。 除了易于编程外，GRAPE 还被设计为高效且可拓展的系统，可灵活应对现实中图应用多变的..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="图交互式分析引擎" href="interactive_engine.html" /><link rel="prev" title="图的变换操作" href="graph_transformation.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>图分析引擎 - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -277,6 +277,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.27.0/zh/index.html">
+                
+                  v0.27.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.26.0/zh/index.html">
                 
                   v0.26.0
@@ -304,18 +316,6 @@ MathJax = {
               <dd><a href="../v0.24.0/zh/index.html">
                 
                   v0.24.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.23.0/zh/index.html">
-                
-                  v0.23.0
                 
               </a></dd>
             
@@ -700,7 +700,7 @@ GraphScope图分析引擎上运行这些示例算法。</p>
 <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">JavaApp</span>
 <span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
-<span class="sd">&quot;&quot;&quot;Or lauch session in k8s cluster&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Or launch session in k8s cluster&quot;&quot;&quot;</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span>
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
@@ -733,7 +733,7 @@ GraphScope图分析引擎上运行这些示例算法。</p>
 </pre></div>
 </div>
 <p>用户在开发自己算法的过程中，可能会用到其他的第三方jar包。为了解决依赖jar包的版本问题，用户需要使用确保自己生成的jar包包含所有依赖的jar包。
-例如，用户可以使用maven插件 <cite>maven-shade-pluging</cite>.</p>
+例如，用户可以使用maven插件 <cite>maven-shade-plugin</cite>.</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;plugin&gt;</span>
 <span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
 <span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>maven-shade-plugin<span class="nt">&lt;/artifactId&gt;</span>
@@ -834,7 +834,7 @@ python3<span class="w"> </span>java-app-runner.py<span class="w"> </span>--app<s
 <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">JavaApp</span>
 <span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
-<span class="sd">&quot;&quot;&quot;Or lauch session in k8s cluster&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Or launch session in k8s cluster&quot;&quot;&quot;</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span>
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
@@ -842,7 +842,7 @@ python3<span class="w"> </span>java-app-runner.py<span class="w"> </span>--app<s
 
 <span class="n">app</span><span class="o">=</span><span class="n">JavaApp</span><span class="p">(</span>
     <span class="n">full_jar_path</span><span class="o">=</span><span class="s2">&quot;{full/path/to/your/packed/jar}&quot;</span><span class="p">,</span>
-    <span class="n">java_app_class</span><span class="o">=</span><span class="s2">&quot;{fullly/qualified/class/name/of/your/app}&quot;</span><span class="p">,</span>
+    <span class="n">java_app_class</span><span class="o">=</span><span class="s2">&quot;{fully/qualified/class/name/of/your/app}&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">ctx</span><span class="o">=</span><span class="n">app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;${param string}&quot;</span><span class="p">)</span>
 </pre></div>

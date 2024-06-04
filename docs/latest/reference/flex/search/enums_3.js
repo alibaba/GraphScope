@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['statuscode_2554',['StatusCode',['../namespacegs.html#a64cf1725c649a5e2bca41deb419a67bd',1,'gs']]],
-  ['storagestrategy_2555',['StorageStrategy',['../namespacegs.html#ab0648a77c869a5dba149125848991be4',1,'gs']]]
+  ['inputformat_2733',['InputFormat',['../classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceb',1,'gs::GraphDBSession']]]
 ];

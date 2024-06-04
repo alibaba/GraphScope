@@ -1,4 +1,8 @@
 var searchData=
 [
-  ['key_5fbuffer_5ft_2527',['key_buffer_t',['../classgs_1_1IdIndexer.html#ae7cebed159c7fe05c43e1e88c9695632',1,'gs::IdIndexer::key_buffer_t()'],['../structgs_1_1__move__data.html#a960baed791fd871bb5ac9a779a46162d',1,'gs::_move_data::key_buffer_t()'],['../structgs_1_1__move__data_3_01std_1_1string__view_00_01INDEX__T_01_4.html#a958b9b3df37d6159c4ab5dba8ee7b383',1,'gs::_move_data&lt; std::string_view, INDEX_T &gt;::key_buffer_t()']]]
+  ['ind_5fbuffer_5ft_2699',['ind_buffer_t',['../classgs_1_1IdIndexer.html#a0fac3ced93c1e64be3dca6d2efba31b0',1,'gs::IdIndexer']]],
+  ['indexerbuildertype_2700',['IndexerBuilderType',['../namespacegs.html#a06124c81fb0cc4e466e61ca2303e553f',1,'gs']]],
+  ['indexertype_2701',['IndexerType',['../namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5',1,'gs']]],
+  ['intcolumn_2702',['IntColumn',['../namespacegs.html#ac13f98d1ef8645cfe123e9f3c9784609',1,'gs']]],
+  ['intemptycolumn_2703',['IntEmptyColumn',['../namespacegs.html#a8ef628511d251bb752f19f3768662dac',1,'gs']]]
 ];
