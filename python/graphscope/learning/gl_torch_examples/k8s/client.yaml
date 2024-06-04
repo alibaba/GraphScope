@@ -12,7 +12,7 @@ spec:
         spec:
           containers:
             - name: pytorch
-              image: registry.cn-hongkong.aliyuncs.com/graphscope/graphlearn-torch-client:0.28.0a20240416
+              image: registry.cn-hongkong.aliyuncs.com/graphscope/graphlearn-torch:0.28.0a20240526
               imagePullPolicy: IfNotPresent
               command:
                 - bash
@@ -39,7 +39,7 @@ spec:
         spec:
           containers:
             - name: pytorch
-              image: registry.cn-hongkong.aliyuncs.com/graphscope/graphlearn-torch-client:0.28.0a20240416
+              image: registry.cn-hongkong.aliyuncs.com/graphscope/graphlearn-torch:0.28.0a20240526
               imagePullPolicy: IfNotPresent
               command:
                 - bash
