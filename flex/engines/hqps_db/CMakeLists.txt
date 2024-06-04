@@ -35,7 +35,7 @@ add_library(hqps_plan_proto SHARED ${PROTO_SRCS_GIE})
 target_include_directories(hqps_plan_proto PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
-target_link_libraries(hqps_plan_proto PUBLIC protobuf::libprotobuf)
+target_link_libraries(hqps_plan_proto PUBLIC ${Protobuf_LIBRARIES})
 install_flex_target(hqps_plan_proto)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

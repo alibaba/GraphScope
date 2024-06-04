@@ -99,6 +99,8 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
 
   if (json.contains("data_update_time")) {
     meta.data_update_time = json["data_update_time"].get<int64_t>();
+  } else {
+    meta.data_update_time = 0;
   }
   if (json.contains("data_import_config")) {
     meta.data_import_config = json["data_import_config"].dump();
@@ -306,6 +308,7 @@ JobMeta JobMeta::FromJson(const nlohmann::json& json) {
 
 CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
+  LOG(INFO) << "CreateGraphMetaRequest::FromJson: " << json_str;
   CreateGraphMetaRequest request;
   nlohmann::json json;
   try {
@@ -326,9 +329,13 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
   }
   if (json.contains("data_update_time")) {
     request.data_update_time = json["data_update_time"].get<int64_t>();
+  } else {
+    request.data_update_time = 0;
   }
   if (json.contains("creation_time")) {
     request.creation_time = json["creation_time"].get<int64_t>();
+  } else {
+    request.creation_time = GetCurrentTimeStamp();
   }
   return request;
 }
@@ -340,6 +347,8 @@ std::string CreateGraphMetaRequest::ToString() const {
   json["schema"] = nlohmann::json::parse(schema);
   if (data_update_time.has_value()) {
     json["data_update_time"] = data_update_time.value();
+  } else {
+    json["data_update_time"] = 0;
   }
   json["creation_time"] = creation_time;
   return json.dump();
@@ -441,6 +450,8 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
   }
   if (j.contains("creation_time")) {
     request.creation_time = j["creation_time"].get<int64_t>();
+  } else {
+    request.creation_time = GetCurrentTimeStamp();
   }
   if (j.contains("description")) {
     request.description = j["description"].get<std::string>();
