@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
@@ -141,8 +142,11 @@ public class PathExpandConfig {
         @Nullable private String startAlias;
 
         protected Builder(GraphBuilder parentBuilder) {
-            super(parentBuilder.getContext(), (GraphOptCluster) parentBuilder.getCluster(), parentBuilder.getRelOptSchema());
-            if (parentBuilder.peek() != null) {
+            super(
+                    parentBuilder.getContext(),
+                    (GraphOptCluster) parentBuilder.getCluster(),
+                    parentBuilder.getRelOptSchema());
+            if (parentBuilder.size() > 0) {
                 this.push(parentBuilder.peek());
             }
             this.pathOpt = GraphOpt.PathExpandPath.ARBITRARY;
@@ -151,8 +155,9 @@ public class PathExpandConfig {
 
         public Builder expand(ExpandConfig config) {
             if (this.getV == null && this.expand == null) {
-                GraphLogicalExpand expandRel = (GraphLogicalExpand) super.expand(config).peek();
-                this.expand = GraphLogicalExpand.create(
+                GraphLogicalExpand expandRel = (GraphLogicalExpand) super.expand(config).build();
+                this.expand =
+                        GraphLogicalExpand.create(
                                 (GraphOptCluster) expandRel.getCluster(),
                                 ImmutableList.of(),
                                 null,
@@ -160,13 +165,14 @@ public class PathExpandConfig {
                                 expandRel.getTableConfig(),
                                 AliasInference.DEFAULT_NAME,
                                 AliasNameWithId.DEFAULT);
+                push(this.expand);
             }
             return this;
         }
 
         public Builder getV(GetVConfig config) {
             if (this.expand != null && this.getV == null) {
-                GraphLogicalGetV getVRel = (GraphLogicalGetV) super.getV(config).peek();
+                GraphLogicalGetV getVRel = (GraphLogicalGetV) super.getV(config).build();
                 this.getV =
                         GraphLogicalGetV.create(
                                 (GraphOptCluster) getVRel.getCluster(),
@@ -176,6 +182,7 @@ public class PathExpandConfig {
                                 getVRel.getTableConfig(),
                                 AliasInference.DEFAULT_NAME,
                                 AliasNameWithId.DEFAULT);
+                push(this.getV);
             }
             return this;
         }
@@ -217,7 +224,15 @@ public class PathExpandConfig {
 
         public PathExpandConfig buildConfig() {
             return new PathExpandConfig(
-                    expand, getV, offset, fetch, resultOpt, pathOpt, untilCondition, alias, startAlias);
+                    expand,
+                    getV,
+                    offset,
+                    fetch,
+                    resultOpt,
+                    pathOpt,
+                    untilCondition,
+                    alias,
+                    startAlias);
         }
     }
 }

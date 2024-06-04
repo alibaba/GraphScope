@@ -383,7 +383,9 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     public GraphBuilder visitTraversalMethod_both(GremlinGSParser.TraversalMethod_bothContext ctx) {
         if (pathExpandPattern(ctx.oC_ListLiteral(), ctx.oC_Expression())) {
             return builder.pathExpand(
-                    new PathExpandBuilderVisitor(this).visitTraversalMethod_both(ctx).buildConfig());
+                    new PathExpandBuilderVisitor(this)
+                            .visitTraversalMethod_both(ctx)
+                            .buildConfig());
         } else {
             return builder.expand(
                             new ExpandConfig(

@@ -104,9 +104,12 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
             case "RESULT_OPT":
                 Object resultValue = LiteralVisitor.INSTANCE.visit(ctx.oC_Literal());
                 return builder.resultOpt(
-                        GraphOpt.PathExpandResult.valueOf(String.valueOf(resultValue).toUpperCase()));
+                        GraphOpt.PathExpandResult.valueOf(
+                                String.valueOf(resultValue).toUpperCase()));
             case "UNTIL":
-                ExprVisitorResult exprRes = new ExtExpressionVisitor(builder, parent.getAliasInfer()).visit(ctx.traversalMethod_expr());
+                ExprVisitorResult exprRes =
+                        new ExtExpressionVisitor(builder, parent.getAliasInfer())
+                                .visitTraversalMethod_expr(ctx.traversalMethod_expr());
                 return builder.untilCondition(exprRes.getExpr());
             default:
                 return builder;
