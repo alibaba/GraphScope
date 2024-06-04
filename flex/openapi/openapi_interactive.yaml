@@ -901,9 +901,15 @@ paths:
       parameters:
         - name: graph_id
           in : path
+          required: false # Can be empty
+          schema:
+            type: string
+        - name: request_format
+          in: header
           required: true
           schema:
             type: string
+            enum: [proto, encoder, json]
       requestBody:
         content:
           text/plain:

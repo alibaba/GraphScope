@@ -43,6 +43,9 @@ public class DefaultSession implements Session {
 
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_WRITE_TIMEOUT = 30000;
+    private static String JSON_FORMAT_STRING = "json";
+    private static String PROTO_FORMAT_STRING = "proto";
+    private static String ENCODER_FORMAT_STRING = "encoder";
 
     private final ApiClient client, queryClient;
 
@@ -331,7 +334,7 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
             byte[] encodedStr = encodeString(request.toJson(), 1);
-            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
+            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName,JSON_FORMAT_STRING, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -358,7 +361,7 @@ public class DefaultSession implements Session {
             byte[] encodedStr = new byte[request.length + 1];
             System.arraycopy(request, 0, encodedStr, 0, request.length);
             encodedStr[request.length] = 0;
-            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
+            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, ENCODER_FORMAT_STRING, encodedStr);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
