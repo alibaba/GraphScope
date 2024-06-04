@@ -50,8 +50,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Although we have uniformly defined expression syntax through file 'ExprGS', antlr only allows resource reuse rather than generated code.
- * Therefore, we need to repeatedly reimplement related visitors for Gremlin to build the Calcite layer's expression structure from antlr trees.
+ * Although we have uniformly defined expression syntax through file 'ExprGS', antlr only allows resource reuse rather than generated code. Therefore, we need to repeatedly reimplement related visitors for Gremlin to build the Calcite layer's expression structure from antlr trees.
  */
 public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult> {
     private final GraphBuilder builder;
