@@ -94,7 +94,7 @@ class TestDriver(unittest.TestCase):
         self.createGraph()
         self.bulkLoading()
         self.waitJobFinish()
-        self.test_list_graph()
+        self.list_graph()
         self.runCypherQuery()
         self.runGremlinQuery()
         self.createCypherProcedure()
@@ -102,6 +102,7 @@ class TestDriver(unittest.TestCase):
         self.restart()
         self.callProcedure()
         self.callProcedureWithHttp()
+        self.callProcedureWithHttpCurrent()
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
@@ -197,7 +198,7 @@ class TestDriver(unittest.TestCase):
                 time.sleep(1)
         print("job finished")
 
-    def test_list_graph(self):
+    def list_graph(self):
         resp = self._sess.list_graphs()
         assert resp.is_ok()
         print("list graph: ", resp.get_value())
@@ -276,7 +277,7 @@ class TestDriver(unittest.TestCase):
                 )
             ]
         )
-        resp = self._sess.call_procedure(self._graph_id, req)
+        resp = self._sess.call_procedure(graph_id = self._graph_id, params = req)
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
 
@@ -292,7 +293,7 @@ class TestDriver(unittest.TestCase):
                 )
             ]
         )
-        resp = self._sess.call_procedure(req)
+        resp = self._sess.call_procedure_current(params = req)
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
 

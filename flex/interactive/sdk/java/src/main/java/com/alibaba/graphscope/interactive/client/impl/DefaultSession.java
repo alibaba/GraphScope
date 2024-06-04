@@ -326,7 +326,9 @@ public class DefaultSession implements Session {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
-            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName,JSON_FORMAT_STRING, request.toJson().getBytes());
+            ApiResponse<byte[]> response =
+                    queryApi.procCallWithHttpInfo(
+                            graphName, JSON_FORMAT_STRING, request.toJson().getBytes());
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -349,7 +351,9 @@ public class DefaultSession implements Session {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
-            ApiResponse<byte[]> response = queryApi.procCallCurrentWithHttpInfo(JSON_FORMAT_STRING, request.toJson().getBytes());
+            ApiResponse<byte[]> response =
+                    queryApi.procCallCurrentWithHttpInfo(
+                            JSON_FORMAT_STRING, request.toJson().getBytes());
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -373,7 +377,8 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, ENCODER_FORMAT_STRING, request);
+            ApiResponse<byte[]> response =
+                    queryApi.procCallWithHttpInfo(graphName, ENCODER_FORMAT_STRING, request);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -392,7 +397,8 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            ApiResponse<byte[]> response = queryApi.procCallCurrentWithHttpInfo(ENCODER_FORMAT_STRING, request);
+            ApiResponse<byte[]> response =
+                    queryApi.procCallCurrentWithHttpInfo(ENCODER_FORMAT_STRING, request);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));

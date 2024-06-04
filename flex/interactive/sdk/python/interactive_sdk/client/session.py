@@ -237,7 +237,7 @@ class ProcedureInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def call_procedure(
+    def call_procedure_current(
         self, params: QueryRequest
     ) -> Result[CollectiveResults]:
         raise NotImplementedError
@@ -247,7 +247,7 @@ class ProcedureInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def call_procedure_raw(self, params: str) -> Result[str]:
+    def call_procedure_current_raw(self, params: str) -> Result[str]:
         raise NotImplementedError
 
 class QueryServiceInterface:
@@ -531,7 +531,9 @@ class DefaultSession(Session):
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_with_http_info(
-                graph_id, self.JSON_FORMAT, params.to_json()
+                graph_id = graph_id, 
+                x_interactive_request_format = self.JSON_FORMAT,
+                body=params.to_json()
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -542,15 +544,15 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def call_procedure(
+    def call_procedure_current(
         self, params: QueryRequest
     ) -> Result[CollectiveResults]:
         try:
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_current_with_http_info(
-                self.JSON_FORMAT,
-                params.to_json()
+                x_interactive_request_format = self.JSON_FORMAT,
+                body = params.to_json()
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -566,18 +568,21 @@ class DefaultSession(Session):
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_with_http_info(
-                graph_id, self.ENCODER_FORMAT, params
+                graph_id = graph_id, 
+                x_interactive_request_format = self.ENCODER_FORMAT, 
+                body = params
             )
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)
         
-    def call_procedure_raw(self, params: str) -> Result[str]:
+    def call_procedure_current_raw(self, params: str) -> Result[str]:
         try:
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_current_with_http_info(
-                self.ENCODER_FORMAT, params
+                x_interactive_request_format = self.ENCODER_FORMAT, 
+                body = params
             )
             return Result.from_response(response)
         except Exception as e:
