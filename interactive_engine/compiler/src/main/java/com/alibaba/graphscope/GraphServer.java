@@ -20,16 +20,13 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
-import com.alibaba.graphscope.common.client.channel.MetaServiceChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
-import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.*;
@@ -190,18 +187,7 @@ public class GraphServer {
 
     private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
             throws IOException {
-        String readerMode = FrontendConfig.IR_META_READER_MODE.get(configs);
-        switch (readerMode) {
-            case "local":
-                return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
-            case "http":
-                return new DynamicIrMetaFetcher(
-                        configs,
-                        new HttpIrMetaReader(new MetaServiceChannelFetcher(configs)),
-                        tracker);
-            default:
-                throw new IllegalArgumentException("unknown ir meta reader mode: " + readerMode);
-        }
+        return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
     }
 
     private static GraphProperties getTestGraph(Configs configs) {

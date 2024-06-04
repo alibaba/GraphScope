@@ -21,8 +21,10 @@ import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
+import com.alibaba.graphscope.common.ir.meta.schema.FileFormatType;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphStatistics;
+import com.alibaba.graphscope.common.ir.meta.schema.SchemaInputStream;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
 import org.slf4j.Logger;

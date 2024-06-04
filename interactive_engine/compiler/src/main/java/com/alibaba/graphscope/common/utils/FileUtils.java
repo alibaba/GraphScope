@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.utils;
 
-import com.alibaba.graphscope.common.ir.meta.reader.FileFormatType;
+import com.alibaba.graphscope.common.ir.meta.schema.FileFormatType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 

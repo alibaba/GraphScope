@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
-import com.alibaba.graphscope.common.ir.meta.reader.SchemaInputStream;
 import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
