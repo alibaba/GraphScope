@@ -214,6 +214,7 @@ public class GraphIOProcessor {
                                         parent instanceof GraphLogicalGetV,
                                         "there should be a getV operator after path expand since"
                                                 + " edge in patten should have two endpoints");
+                                Preconditions.checkArgument(((GraphLogicalPathExpand) node).getUntilCondition() == null, "cannot apply optimization if path expand has until conditions");
                                 PatternVertex vertex = visitAndAddVertex((GraphLogicalGetV) parent);
                                 visitAndAddPxdEdge(
                                         (GraphLogicalPathExpand) node, lastVisited, vertex);
@@ -805,7 +806,7 @@ public class GraphIOProcessor {
                                 edge.getElementDetails().getRange().getOffset(),
                                 edge.getElementDetails().getRange().getFetch());
                 GraphLogicalPathExpand pxd =
-                        (GraphLogicalPathExpand) builder.pathExpand(pxdBuilder.build()).build();
+                        (GraphLogicalPathExpand) builder.pathExpand(pxdBuilder.buildConfig()).build();
                 GraphLogicalExpand expand = (GraphLogicalExpand) pxd.getExpand();
                 GraphSchemaType edgeType =
                         (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
@@ -854,6 +855,7 @@ public class GraphIOProcessor {
                         pxd.getFetch(),
                         pxd.getResultOpt(),
                         pxd.getPathOpt(),
+                        pxd.getUntilCondition(),
                         pxd.getAliasName(),
                         pxd.getStartAlias(),
                         optional);
@@ -868,6 +870,7 @@ public class GraphIOProcessor {
                         pxd.getFetch(),
                         pxd.getResultOpt(),
                         pxd.getPathOpt(),
+                        pxd.getUntilCondition(),
                         pxd.getAliasName(),
                         pxd.getStartAlias(),
                         optional);

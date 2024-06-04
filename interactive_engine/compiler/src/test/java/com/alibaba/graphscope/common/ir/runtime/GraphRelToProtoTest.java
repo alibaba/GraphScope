@@ -267,7 +267,7 @@ public class GraphRelToProtoTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode pxd =
                 builder.source(
                                 new SourceConfig(
@@ -1046,7 +1046,7 @@ public class GraphRelToProtoTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode pxd =
                 builder.source(
                                 new SourceConfig(

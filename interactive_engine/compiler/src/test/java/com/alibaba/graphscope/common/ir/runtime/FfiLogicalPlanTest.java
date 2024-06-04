@@ -54,7 +54,7 @@ public class FfiLogicalPlanTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode aggregate =
                 builder.source(
                                 new SourceConfig(

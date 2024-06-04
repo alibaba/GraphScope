@@ -428,7 +428,7 @@ public class ExpandGetVFusionTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode before =
                 builder.source(
                                 new SourceConfig(
@@ -485,7 +485,7 @@ public class ExpandGetVFusionTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode before =
                 builder.source(
                                 new SourceConfig(
@@ -544,7 +544,7 @@ public class ExpandGetVFusionTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode before =
                 builder.source(
                                 new SourceConfig(

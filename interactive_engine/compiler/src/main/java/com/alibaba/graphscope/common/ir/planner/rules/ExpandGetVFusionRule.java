@@ -308,6 +308,7 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
                             pathExpand.getFetch(),
                             pathExpand.getResultOpt(),
                             pathExpand.getPathOpt(),
+                            pathExpand.getUntilCondition(),
                             pathExpand.getAliasName(),
                             pathExpand.getStartAlias(),
                             pathExpand.isOptional());

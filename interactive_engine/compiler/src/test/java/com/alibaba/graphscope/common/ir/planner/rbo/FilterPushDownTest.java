@@ -68,7 +68,7 @@ public class FilterPushDownTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode sentence =
                 builder.source(
                                 new SourceConfig(

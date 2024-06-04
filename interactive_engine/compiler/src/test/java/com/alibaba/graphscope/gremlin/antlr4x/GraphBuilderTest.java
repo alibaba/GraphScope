@@ -1595,4 +1595,10 @@ public class GraphBuilderTest {
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
     }
+
+    @Test
+    public void test_path_expand() {
+        RelNode node = eval("g.V().out('1..3').with('UNTIL', expr(_.age > 40))).endV().values('age')");
+        System.out.println(node.explain());
+    }
 }

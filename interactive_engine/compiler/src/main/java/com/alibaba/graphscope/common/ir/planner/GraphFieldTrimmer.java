@@ -1,7 +1,5 @@
 package com.alibaba.graphscope.common.ir.planner;
 
-import static com.alibaba.graphscope.common.ir.tools.Utils.getOutputType;
-
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -22,7 +20,6 @@ import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.collect.ImmutableSet;
-
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
@@ -45,6 +42,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.alibaba.graphscope.common.ir.tools.Utils.getOutputType;
 
 public class GraphFieldTrimmer extends RelFieldTrimmer {
     private final ReflectUtil.MethodDispatcher<TrimResult> graphTrimFieldsDispatcher;
@@ -450,6 +449,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
                         pathExpand.getFetch(),
                         pathExpand.getResultOpt(),
                         pathExpand.getPathOpt(),
+                        pathExpand.getUntilCondition(),
                         pathExpand.getAliasName(),
                         pathExpand.getStartAlias());
         return result(newPathExpand, mapping, pathExpand);

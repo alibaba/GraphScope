@@ -95,7 +95,7 @@ public class ExpandTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode pathExpand =
                 builder.source(
                                 new SourceConfig(
@@ -163,7 +163,7 @@ public class ExpandTest {
                                         new LabelConfig(false).addLabel("person")))
                         .range(1, 3)
                         .startAlias("a")
-                        .build();
+                        .buildConfig();
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
