@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.ir.meta.QueryMode;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
@@ -38,25 +39,40 @@ import java.util.Objects;
  * logical plan for a query which can be a regular query or a procedure call
  */
 public class LogicalPlan {
-    private @Nullable RelNode regularQuery;
-    private @Nullable RexNode procedureCall;
-    private boolean returnEmpty;
-
+    private final @Nullable RelNode regularQuery;
+    private final @Nullable RexNode procedureCall;
+    private final boolean returnEmpty;
     private final List<StoredProcedureMeta.Parameter> dynamicParams;
+    private final QueryMode mode;
 
     public LogicalPlan(RelNode regularQuery) {
         this(regularQuery, ImmutableList.of());
     }
 
     public LogicalPlan(RelNode regularQuery, List<StoredProcedureMeta.Parameter> dynamicParams) {
-        this.regularQuery = Objects.requireNonNull(regularQuery);
-        this.returnEmpty = returnEmpty(this.regularQuery);
-        this.dynamicParams = Objects.requireNonNull(dynamicParams);
+        this(regularQuery, null, dynamicParams, analyzeMode(regularQuery));
     }
 
-    public LogicalPlan(RexNode procedureCall) {
-        this.procedureCall = Objects.requireNonNull(procedureCall);
-        this.dynamicParams = ImmutableList.of();
+    private static QueryMode analyzeMode(RelNode relNode) {
+        QueryModeVisitor visitor = new QueryModeVisitor();
+        visitor.go(relNode);
+        return visitor.getMode();
+    }
+
+    public LogicalPlan(RexNode procedureCall, QueryMode mode) {
+        this(null, procedureCall, ImmutableList.of(), mode);
+    }
+
+    protected LogicalPlan(
+            RelNode regularQuery,
+            RexNode procedureCall,
+            List<StoredProcedureMeta.Parameter> dynamicParams,
+            QueryMode mode) {
+        this.regularQuery = regularQuery;
+        this.procedureCall = procedureCall;
+        this.returnEmpty = (regularQuery == null) ? false : returnEmpty(regularQuery);
+        this.dynamicParams = dynamicParams;
+        this.mode = mode;
     }
 
     public @Nullable RelNode getRegularQuery() {
@@ -138,5 +154,9 @@ public class LogicalPlan {
 
     private RelDigest getDigest(RelNode rel) {
         return rel == null ? null : rel.getRelDigest();
+    }
+
+    public QueryMode getMode() {
+        return this.mode;
     }
 }

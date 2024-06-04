@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.meta.procedure;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.QueryMode;
 import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeConvertor;
 import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeDesc;
 import com.google.common.collect.ImmutableMap;
@@ -39,14 +40,14 @@ public class StoredProcedureMeta {
     private final String name;
     private final RelDataType returnType;
     private final List<Parameter> parameters;
-    private final Mode mode;
+    private final QueryMode mode;
     private final String description;
     private final String extension;
     private final Map<String, Object> options;
 
     protected StoredProcedureMeta(
             String name,
-            Mode mode,
+            QueryMode mode,
             String description,
             String extension,
             RelDataType returnType,
@@ -66,7 +67,7 @@ public class StoredProcedureMeta {
         // For optional keys, construct a map and pass it to the constructor.
         this(
                 Config.NAME.get(configs),
-                Mode.valueOf(Config.MODE.get(configs)),
+                QueryMode.valueOf(Config.MODE.get(configs)),
                 Config.DESCRIPTION.get(configs),
                 Config.EXTENSION.get(configs),
                 returnType,
@@ -92,6 +93,10 @@ public class StoredProcedureMeta {
 
     public Object getOption(String key) {
         return options.getOrDefault(key, null);
+    }
+
+    public QueryMode getMode() {
+        return this.mode;
     }
 
     @Override
@@ -206,7 +211,7 @@ public class StoredProcedureMeta {
             Map<String, Object> config = yaml.load(inputStream);
             return new StoredProcedureMeta(
                     getValue(Config.NAME, config),
-                    Mode.valueOf(getValue(Config.MODE, config)),
+                    QueryMode.valueOf(getValue(Config.MODE, config)),
                     getValue(Config.DESCRIPTION, config),
                     getValue(Config.EXTENSION, config),
                     createReturnType((List) config.get("returns"), typeConvertor),
@@ -263,12 +268,6 @@ public class StoredProcedureMeta {
             }
             return parameters;
         }
-    }
-
-    public enum Mode {
-        READ,
-        WRITE,
-        SCHEMA
     }
 
     public static class Config {

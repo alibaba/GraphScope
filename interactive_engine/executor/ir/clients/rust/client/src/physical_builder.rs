@@ -31,11 +31,12 @@ const DEFAULT_PLAN_ID: i32 = i32::MAX;
 pub struct PlanBuilder {
     id: i32,
     plan: Vec<pb::PhysicalOpr>,
+    query_mode: common_pb::QueryMode,
 }
 
 impl Default for PlanBuilder {
     fn default() -> Self {
-        PlanBuilder { id: DEFAULT_PLAN_ID, plan: vec![] }
+        PlanBuilder { id: DEFAULT_PLAN_ID, plan: vec![], query_mode: common_pb::QueryMode::Read }
     }
 }
 
@@ -55,7 +56,11 @@ impl DerefMut for PlanBuilder {
 
 impl PlanBuilder {
     pub fn new(plan_id: i32) -> Self {
-        PlanBuilder { id: plan_id, plan: vec![] }
+        PlanBuilder { id: plan_id, plan: vec![], query_mode: common_pb::QueryMode::Read }
+    }
+
+    pub fn with_query_mode(plan_id: i32, query_mode: common_pb::QueryMode) -> Self {
+        PlanBuilder { id: plan_id, plan: vec![], query_mode }
     }
 
     pub fn add_dummy_source(&mut self) -> &mut Self {
@@ -165,7 +170,11 @@ impl PlanBuilder {
         let apply = pb::Apply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys: vec![],
-            sub_plan: Some(pb::PhysicalPlan { plan: sub_plan.take(), plan_id: DEFAULT_PLAN_ID }),
+            sub_plan: Some(pb::PhysicalPlan {
+                plan: sub_plan.take(),
+                plan_id: DEFAULT_PLAN_ID,
+                query_mode: self.query_mode as i32,
+            }),
             alias,
         };
         let op = pb::physical_opr::operator::OpKind::Apply(apply);
@@ -193,7 +202,11 @@ impl PlanBuilder {
         let apply = pb::Apply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys,
-            sub_plan: Some(pb::PhysicalPlan { plan: sub_plan.take(), plan_id: DEFAULT_PLAN_ID }),
+            sub_plan: Some(pb::PhysicalPlan {
+                plan: sub_plan.take(),
+                plan_id: DEFAULT_PLAN_ID,
+                query_mode: self.query_mode as i32,
+            }),
             alias,
         };
         let op = pb::physical_opr::operator::OpKind::Apply(apply);
@@ -221,8 +234,16 @@ impl PlanBuilder {
             left_keys,
             right_keys,
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
-            left_plan: Some(pb::PhysicalPlan { plan: left_plan.take(), plan_id: DEFAULT_PLAN_ID }),
-            right_plan: Some(pb::PhysicalPlan { plan: right_plan.take(), plan_id: DEFAULT_PLAN_ID }),
+            left_plan: Some(pb::PhysicalPlan {
+                plan: left_plan.take(),
+                plan_id: DEFAULT_PLAN_ID,
+                query_mode: self.query_mode as i32,
+            }),
+            right_plan: Some(pb::PhysicalPlan {
+                plan: right_plan.take(),
+                plan_id: DEFAULT_PLAN_ID,
+                query_mode: self.query_mode as i32,
+            }),
         };
         let op = pb::physical_opr::operator::OpKind::Join(join);
         self.plan.push(op.into());
@@ -247,7 +268,11 @@ impl PlanBuilder {
     pub fn union(&mut self, mut plans: Vec<PlanBuilder>) -> &mut Self {
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
-            sub_plans.push(pb::PhysicalPlan { plan: plan.take(), plan_id: DEFAULT_PLAN_ID });
+            sub_plans.push(pb::PhysicalPlan {
+                plan: plan.take(),
+                plan_id: DEFAULT_PLAN_ID,
+                query_mode: self.query_mode as i32,
+            });
         }
         let union = pb::Union { sub_plans };
         let op = pb::physical_opr::operator::OpKind::Union(union);
@@ -259,7 +284,11 @@ impl PlanBuilder {
         let key = key.try_into().unwrap();
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
-            sub_plans.push(pb::PhysicalPlan { plan: plan.take(), plan_id: DEFAULT_PLAN_ID });
+            sub_plans.push(pb::PhysicalPlan {
+                plan: plan.take(),
+                plan_id: DEFAULT_PLAN_ID,
+                query_mode: common_pb::QueryMode::Read as i32,
+            });
         }
         let intersect = pb::Intersect { sub_plans, key };
         let op = pb::physical_opr::operator::OpKind::Intersect(intersect);
@@ -331,7 +360,7 @@ impl PlanBuilder {
     }
 
     pub fn build(self) -> pb::PhysicalPlan {
-        pb::PhysicalPlan { plan: self.plan, plan_id: self.id }
+        pb::PhysicalPlan { plan: self.plan, plan_id: self.id, query_mode: self.query_mode as i32 }
     }
 }
 

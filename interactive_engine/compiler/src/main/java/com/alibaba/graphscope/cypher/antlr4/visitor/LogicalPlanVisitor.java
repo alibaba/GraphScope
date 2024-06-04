@@ -65,10 +65,8 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
             Map<Integer, String> map = builderVisitor.getExpressionVisitor().getDynamicParams();
             return new LogicalPlan(regularQuery, getParameters(regularQuery, map));
         } else {
-            RexNode procedureCall =
-                    new ProcedureCallVisitor(this.builder, this.irMeta)
-                            .visitOC_StandaloneCall(ctx.oC_StandaloneCall());
-            return new LogicalPlan(procedureCall);
+            return new ProcedureCallVisitor(this.builder, this.irMeta)
+                    .visitOC_StandaloneCall(ctx.oC_StandaloneCall());
         }
     }
 
