@@ -48,8 +48,7 @@ public interface PrimitiveArray<T> extends Serializable {
             return (PrimitiveArray<TT>) new LongArray(len);
         } else if (clz.equals(int.class) || clz.equals(Integer.class)) {
             return (PrimitiveArray<TT>) new IntArray(len);
-        }
-        else {
+        } else {
             return (PrimitiveArray<TT>) new ObjectArray(clz, len);
         }
     }

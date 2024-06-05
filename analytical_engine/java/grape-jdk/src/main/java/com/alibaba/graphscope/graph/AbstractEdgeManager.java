@@ -93,7 +93,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         this.vidClass = vidClass;
         edata_t = grapeEdata2Int();
         BaseTypedArray<GRAPE_ED_T> newTypedArray;
-        if (edataClass.equals(StringView.class)){
+        if (edataClass.equals(StringView.class)) {
             newTypedArray = (BaseTypedArray<GRAPE_ED_T>) FFITypeFactoryhelper.newStringTypedArray();
         } else {
             newTypedArray = FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
@@ -272,13 +272,18 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             fillInEdataArray(edataArray);
         }
 
-        private void fillInEdataArray(BaseTypedArray<GRAPE_ED_T> edataArray)
-                throws IOException {
+        private void fillInEdataArray(BaseTypedArray<GRAPE_ED_T> edataArray) throws IOException {
             // first try to set directly.
             int index = 0;
             if (bizEdataClass.equals(edataClass)) {
-                logger.info("biz edata {} == grape edata, try to read direct, biz edata class {}, edata class {}", edata_t, bizEdataClass, edataClass);
-                PrimitiveTypedArray<BIZ_EDATA_T> primitiveTypedArray = FFITypeFactoryhelper.newPrimitiveTypedArray(bizEdataClass);
+                logger.info(
+                        "biz edata {} == grape edata, try to read direct, biz edata class {}, edata"
+                            + " class {}",
+                        edata_t,
+                        bizEdataClass,
+                        edataClass);
+                PrimitiveTypedArray<BIZ_EDATA_T> primitiveTypedArray =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(bizEdataClass);
                 primitiveTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid] + VID_SIZE_IN_BYTE;
@@ -371,8 +376,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         } else if (edataClass.equals(String.class)) {
             logger.info("edata: String");
             return 4;
-        }
-        else if (edataClass.equals(StringView.class)) {
+        } else if (edataClass.equals(StringView.class)) {
             logger.info("edata: StringView");
             return 5;
         }
@@ -459,8 +463,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
                     }
                 }
             case 5:
-                StringTypedArray stringViewTypedArray =
-                        FFITypeFactoryhelper.newStringTypedArray();
+                StringTypedArray stringViewTypedArray = FFITypeFactoryhelper.newStringTypedArray();
                 stringViewTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid];

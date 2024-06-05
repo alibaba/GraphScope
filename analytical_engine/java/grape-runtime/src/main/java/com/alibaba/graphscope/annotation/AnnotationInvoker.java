@@ -30,9 +30,9 @@ import static com.alibaba.graphscope.utils.JavaClassName.JAVA_ARROW_PROJECTED_FR
 import static com.alibaba.graphscope.utils.JavaClassName.JAVA_ARROW_PROJECTED_FRAGMENT_GETTER;
 import static com.alibaba.graphscope.utils.JavaClassName.JAVA_ARROW_PROJECTED_FRAGMENT_MAPPER;
 import static com.alibaba.graphscope.utils.JavaClassName.LONG;
+import static com.alibaba.graphscope.utils.JavaClassName.STD_STRING;
 import static com.alibaba.graphscope.utils.JavaClassName.STRING;
 import static com.alibaba.graphscope.utils.JavaClassName.STRING_VIEW;
-import static com.alibaba.graphscope.utils.JavaClassName.STD_STRING;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXTemplate;

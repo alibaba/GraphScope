@@ -23,6 +23,7 @@ import static org.apache.giraph.job.HadoopUtils.makeTaskAttemptContext;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.communication.Communicator;
 import com.alibaba.graphscope.ds.GSVertexArray;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.factory.GiraphComputationFactory;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.graph.AggregatorManager;
@@ -42,7 +43,6 @@ import com.alibaba.graphscope.stdcxx.FFIByteVector;
 import com.alibaba.graphscope.stdcxx.StdString;
 import com.alibaba.graphscope.utils.ConfigurationUtils;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-import com.alibaba.graphscope.ds.StringView;
 
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
@@ -263,11 +263,10 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                     }
                     // This string is not readable.
                     StdString value = (StdString) vertexArray.get(grapeVertex);
-                    //TODO: can be optimized without creating a java string
+                    // TODO: can be optimized without creating a java string
                     value.fromJavaString(new String(bytes));
                 }
-            }
-            else {
+            } else {
                 throw new IllegalStateException(
                         "Unrecognized vdata class:" + conf.getGrapeVdataClass().getName());
             }

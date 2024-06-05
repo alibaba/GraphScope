@@ -26,7 +26,6 @@ import com.alibaba.fastffi.FFIForeignType;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.fastffi.FFIVector;
-import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.fastffi.impl.CXXStdVector;
 import com.alibaba.graphscope.arrow.array.PrimitiveArrowArrayBuilder;
 import com.alibaba.graphscope.ds.DenseVertexSet;
@@ -34,6 +33,7 @@ import com.alibaba.graphscope.ds.EmptyType;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.PrimitiveTypedArray;
 import com.alibaba.graphscope.ds.StringTypedArray;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
@@ -83,7 +83,7 @@ public class FFITypeFactoryhelper {
             return "double";
         } else if (clz.getName() == String.class.getName()) {
             return "std::string";
-        } else if (clz.getName() == StringView.class.getName()){
+        } else if (clz.getName() == StringView.class.getName()) {
             return "std::string";
         } else {
             logger.error("Must be one of long, double, integer, but got: " + clz.getName());

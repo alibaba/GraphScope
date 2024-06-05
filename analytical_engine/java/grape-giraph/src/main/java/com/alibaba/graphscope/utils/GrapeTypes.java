@@ -15,12 +15,12 @@
  */
 package com.alibaba.graphscope.utils;
 
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
 import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
-import com.alibaba.graphscope.ds.StringView;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +81,7 @@ public class GrapeTypes {
             return Double.class;
         } else if (typeString.equals("float")) {
             return Float.class;
-        } else if (typeString.equals("std::string")){
+        } else if (typeString.equals("std::string")) {
             return StringView.class;
         }
         throw new IllegalStateException("Not supported type string" + typeString);

@@ -15,9 +15,9 @@
  */
 package com.alibaba.graphscope.serialization;
 
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
 import com.alibaba.graphscope.stdcxx.FFIByteVectorFactory;
-import com.alibaba.graphscope.ds.StringView;
 
 import java.io.DataOutput;
 import java.io.IOException;

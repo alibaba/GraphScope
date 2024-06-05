@@ -31,10 +31,9 @@ public class TypeUtils {
             return "double";
         } else if (javaClass.equals(Float.class) || javaClass.equals(float.class)) {
             return "float";
-        } else if (javaClass.equals(StringView.class)){
+        } else if (javaClass.equals(StringView.class)) {
             return "std::string";
-        }
-        else {
+        } else {
             throw new IllegalStateException("Not recognized class " + javaClass.getName());
         }
     }

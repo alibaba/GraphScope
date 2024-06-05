@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.example.giraph;
 
 import com.alibaba.graphscope.example.giraph.writable.MultipleLongWritable;
+
 import org.apache.giraph.conf.LongConfOption;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
@@ -31,7 +32,8 @@ import java.util.Objects;
  * Only send msg.
  */
 public class MessageAppWithUserWritable
-        extends BasicComputation<LongWritable, MultipleLongWritable, MultipleLongWritable, MultipleLongWritable> {
+        extends BasicComputation<
+                LongWritable, MultipleLongWritable, MultipleLongWritable, MultipleLongWritable> {
 
     public static LongConfOption MAX_SUPER_STEP;
     private static Logger logger = LoggerFactory.getLogger(MessageAppWithUserWritable.class);
@@ -72,7 +74,7 @@ public class MessageAppWithUserWritable
             MultipleLongWritable msg = new MultipleLongWritable(vertex.getId().get());
             sendMessageToAllEdges(vertex, msg);
         } else if (getSuperstep() < MAX_SUPER_STEP.get(getConf())) {
-            if (vertex.getId().get() < 20){
+            if (vertex.getId().get() < 20) {
                 logger.info("step [{}] Checking received msg", getSuperstep());
             }
             int msgCnt = 0;

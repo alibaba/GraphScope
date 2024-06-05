@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.example.giraph.format;
 
 import com.alibaba.graphscope.example.giraph.writable.MultipleLongWritable;
+
 import org.apache.giraph.io.EdgeReader;
 import org.apache.giraph.io.formats.TextEdgeInputFormat;
 import org.apache.hadoop.io.LongWritable;
@@ -26,7 +27,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.IOException;
 
-public class P2PEdgeMultipleLongInputFormat extends TextEdgeInputFormat<LongWritable, MultipleLongWritable> {
+public class P2PEdgeMultipleLongInputFormat
+        extends TextEdgeInputFormat<LongWritable, MultipleLongWritable> {
 
     /**
      * Create an edge reader for a given split. The framework will call {@link

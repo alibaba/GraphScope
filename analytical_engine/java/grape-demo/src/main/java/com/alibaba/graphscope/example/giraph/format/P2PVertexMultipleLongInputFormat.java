@@ -40,8 +40,9 @@ public class P2PVertexMultipleLongInputFormat
      * @return the text vertex reader to be used
      */
     @Override
-    public TextVertexInputFormat<LongWritable, MultipleLongWritable, MultipleLongWritable>.TextVertexReader
-    createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
+    public TextVertexInputFormat<LongWritable, MultipleLongWritable, MultipleLongWritable>
+                    .TextVertexReader
+            createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
         return new P2PVertexReader();
     }
 
@@ -79,7 +80,8 @@ public class P2PVertexMultipleLongInputFormat
         @Override
         protected Iterable<Edge<LongWritable, MultipleLongWritable>> getEdges(String[] tokens)
                 throws IOException {
-            List<Edge<LongWritable, MultipleLongWritable>> edges = Lists.newArrayListWithCapacity(0);
+            List<Edge<LongWritable, MultipleLongWritable>> edges =
+                    Lists.newArrayListWithCapacity(0);
             return edges;
         }
     }
