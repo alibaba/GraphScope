@@ -21,6 +21,7 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 
 from pydantic import Field, StrictStr
 
+from interactive_sdk.client.status import Status
 from interactive_sdk.openapi.api.admin_service_graph_management_api import (
     AdminServiceGraphManagementApi,
 )
@@ -523,11 +524,10 @@ class DefaultSession(Session):
             )
             result = CollectiveResults()
             if response.status_code == 200:
-                byte_data = response.data.encode('utf-8')
-                result.ParseFromString(byte_data)
-                return Result.from_response(response)
+                result.ParseFromString(response.data)
+                return Result.ok(result)
             else:
-                return Result.from_response(result)
+                return Result(Status.from_response(response), result)
         except Exception as e:
             return Result.from_exception(e)
 

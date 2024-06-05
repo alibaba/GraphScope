@@ -27,13 +27,14 @@ params = {
 # load the ogbn_arxiv graph as an example.
 sess = gs.session(
     with_dataset=True,
+    enabled_engines="gae,glt",
     k8s_service_type="LoadBalancer",
     k8s_namespace="default",  # to guarantee auth to launch the pytorchjobs
     k8s_vineyard_mem="8Gi",
     k8s_engine_mem="8Gi",
     vineyard_shared_mem="8Gi",
     k8s_image_pull_policy="IfNotPresent",
-    k8s_image_tag="0.28.0a20240511",
+    k8s_image_tag="0.28.0a20240526",
     num_workers=params["NUM_SERVER_NODES"],
 )
 g = load_ogbn_arxiv(sess=sess, prefix="/dataset/ogbn_arxiv")
