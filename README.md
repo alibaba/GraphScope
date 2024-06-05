@@ -24,6 +24,7 @@ GraphScope is a unified distributed graph computing platform that provides a one
 Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
 ## Latest News
+- [30/05/2024] 🏅 GraphScope Flex set new record-breaking [SNB Interactive audit results](https://ldbcouncil.org/benchmarks/snb-interactive/), as announced by LDBC on [X (Twitter)](https://twitter.com/LDBCouncil/status/1795886732950294630)!
 - [25/03/2024] 🙌🏻 We donated the graph file format [GraphAr](https://graphar.apache.org/) to [Apache Software Foundation](https://www.apache.org/) as an Incubating Project. 
 - [05/02/2024] 🎉 GraphScope Flex [paper](https://arxiv.org/abs/2312.12107) was accepted by [SIGMOD 2024](https://2024.sigmod.org/) Industry Track. See you in 🇨🇱!
 - [19/12/2023] 📑 A paper introducing GraphScope Flex released on [arXiv.org](https://arxiv.org/abs/2312.12107).
