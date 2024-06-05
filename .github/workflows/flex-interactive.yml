@@ -36,8 +36,9 @@ jobs:
 
     - name: Build Image
       run: |
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt && python3 setup.py build_proto
         cd ${GITHUB_WORKSPACE}
-        python3 -m pip install --upgrade pip && python3 -m pip install -r python/requirements.txt
         python3 ./gsctl.py flexbuild interactive --app docker
 
     - name: Build gsctl Wheel Package

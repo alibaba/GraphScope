@@ -26,13 +26,11 @@ if "site-packages" not in os.path.dirname(os.path.realpath(__file__)):
         0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..")
     )
 
-import graphscope
+from graphscope.gsctl.commands import get_command_collection
+from graphscope.gsctl.config import get_current_context
 
 
 def cli():
-    from graphscope.gsctl.commands import get_command_collection
-    from graphscope.gsctl.config import get_current_context
-
     context = get_current_context()
     # get the specified commands under the FLEX architecture
     commands = get_command_collection(context)
