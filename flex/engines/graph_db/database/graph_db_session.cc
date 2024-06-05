@@ -20,9 +20,14 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/utils/app_utils.h"
 
+#ifdef BUILD_HQPS
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
+#include "nlohmann/json.hpp"
+#endif  // BUILD_HQPS
+
 namespace gs {
 
-ReadTransaction GraphDBSession::GetReadTransaction() {
+ReadTransaction GraphDBSession::GetReadTransaction() const {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
   return ReadTransaction(db_.graph_, db_.version_manager_, ts);
 }
@@ -223,6 +228,61 @@ AppBase* GraphDBSession::GetApp(int type) {
 }
 
 #undef likely  // likely
+
+#ifdef BUILD_HQPS
+Result<std::pair<uint8_t, std::string_view>>
+GraphDBSession::parse_query_type_from_cypher_json(
+    const std::string_view& str_view) {
+  VLOG(10) << "string view: " << str_view;
+  nlohmann::json j;
+  try {
+    j = nlohmann::json::parse(str_view);
+  } catch (const nlohmann::json::parse_error& e) {
+    LOG(ERROR) << "Fail to parse json from input content: " << e.what();
+    return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
+        StatusCode::InternalError,
+        "Fail to parse json from input content:" + std::string(e.what())));
+  }
+  auto query_name = j["query_name"].get<std::string>();
+  const auto& app_name_to_path_index = schema().GetPlugins();
+  if (app_name_to_path_index.count(query_name) <= 0) {
+    LOG(ERROR) << "Query name is not registered: " << query_name;
+    return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
+        StatusCode::NotFound, "Query name is not registered: " + query_name));
+  }
+  if (j.contains("arguments")) {
+    for (auto& arg : j["arguments"]) {
+      VLOG(10) << "arg: " << arg;
+    }
+  }
+  VLOG(10) << "Query name: " << query_name;
+  return std::make_pair(app_name_to_path_index.at(query_name).second, str_view);
+}
+
+Result<std::pair<uint8_t, std::string_view>>
+GraphDBSession::parse_query_type_from_cypher_internal(
+    const std::string_view& str_view) {
+  procedure::Query cur_query;
+  if (!cur_query.ParseFromArray(str_view.data(), str_view.size())) {
+    LOG(ERROR) << "Fail to parse query from input content";
+    return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
+        StatusCode::InternalError, "Fail to parse query from input content"));
+  }
+  auto query_name = cur_query.query_name().name();
+  if (query_name.empty()) {
+    LOG(ERROR) << "Query name is empty";
+    return Result<std::pair<uint8_t, std::string_view>>(
+        gs::Status(StatusCode::NotFound, "Query name is empty"));
+  }
+  const auto& app_name_to_path_index = schema().GetPlugins();
+  if (app_name_to_path_index.count(query_name) <= 0) {
+    LOG(ERROR) << "Query name is not registered: " << query_name;
+    return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
+        StatusCode::NotFound, "Query name is not registered: " + query_name));
+  }
+  return std::make_pair(app_name_to_path_index.at(query_name).second, str_view);
+}
+#endif
 
 const AppMetric& GraphDBSession::GetAppMetric(int idx) const {
   return app_metrics_[idx];

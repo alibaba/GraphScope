@@ -250,6 +250,8 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
+#install header-only nlohmann-json.hpp to include/
+install(FILES ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp DESTINATION include/nlohmann)
 
 if(USE_PTHASH)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash

@@ -61,7 +61,7 @@ PropertyType StringToPrimitivePropertyType(const std::string& str) {
     return PropertyType::kBool;
   } else if (str == "Date" || str == DT_DATE) {
     return PropertyType::kDate;
-  } else if (str == "Day" || str == DT_DAY) {
+  } else if (str == "Day" || str == DT_DAY || str == "day") {
     return PropertyType::kDay;
   } else if (str == "String" || str == "STRING" || str == DT_STRING) {
     // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);

@@ -94,13 +94,15 @@ class TestDriver(unittest.TestCase):
         self.createGraph()
         self.bulkLoading()
         self.waitJobFinish()
-        # self.runCypherQuery()
-        # self.runGremlinQuery()
-        # self.createCypherProcedure()
+        self.list_graph()
+        self.runCypherQuery()
+        self.runGremlinQuery()
+        self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
-        # self.callProcedure()
+        self.callProcedure()
         self.callProcedureWithHttp()
+        self.callProcedureWithHttpCurrent()
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
@@ -196,6 +198,11 @@ class TestDriver(unittest.TestCase):
                 time.sleep(1)
         print("job finished")
 
+    def list_graph(self):
+        resp = self._sess.list_graphs()
+        assert resp.is_ok()
+        print("list graph: ", resp.get_value())
+
     def runCypherQuery(self):
         query = "MATCH (n) RETURN COUNT(n);"
         with self._driver.getNeo4jSession() as session:
@@ -270,10 +277,25 @@ class TestDriver(unittest.TestCase):
                 )
             ]
         )
-        resp = self._sess.call_procedure(self._graph_id, req)
+        resp = self._sess.call_procedure(graph_id = self._graph_id, params = req)
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
 
+    def callProcedureWithHttpCurrent(self):
+        req = QueryRequest(
+            query_name=self._cpp_proc_name,
+            arguments=[
+                TypedValue(
+                    type=GSDataType(
+                        PrimitiveType(primitive_type="DT_SIGNED_INT32")
+                    ),
+                    value = 1
+                )
+            ]
+        )
+        resp = self._sess.call_procedure_current(params = req)
+        assert resp.is_ok()
+        print("call procedure result: ", resp.get_value())
 
 if __name__ == "__main__":
     unittest.main()

@@ -37,6 +37,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
@@ -47,7 +48,6 @@ import com.google.common.collect.*;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -266,15 +266,20 @@ public class GraphIOProcessor {
                                 vertexOrEdgeDetails.put(existVertex, new DataValue(alias, filters));
                             } else if (filters != null) {
                                 DataValue value = vertexOrEdgeDetails.get(existVertex);
-                                if (value.getFilter() == null
-                                        || !RelOptUtil.conjunctions(value.getFilter())
-                                                .containsAll(RelOptUtil.conjunctions(filters))) {
-                                    throw new IllegalArgumentException(
-                                            "filters "
-                                                    + filters
-                                                    + " not exist in the previous vertex filters "
-                                                    + value.getFilter());
-                                }
+                                // reset condition
+                                RexNode newCondition =
+                                        (value.getFilter() == null)
+                                                ? filters
+                                                : RexUtil.composeConjunction(
+                                                        builder.getRexBuilder(),
+                                                        ImmutableList.of(
+                                                                filters, value.getFilter()));
+                                vertexOrEdgeDetails.put(
+                                        existVertex,
+                                        new DataValue(
+                                                value.getAlias(),
+                                                newCondition,
+                                                value.getParentAlias()));
                             }
                             return existVertex;
                         }
@@ -340,10 +345,21 @@ public class GraphIOProcessor {
                                             : ((RexLiteral) pxd.getFetch())
                                                     .getValueAs(Number.class)
                                                     .intValue();
+                            GraphPathType pathType =
+                                    (GraphPathType)
+                                            pxd.getRowType().getFieldList().get(0).getType();
+                            GraphLabelType labelType =
+                                    ((GraphSchemaType) pathType.getComponentType().getGetVType())
+                                            .getLabelType();
+                            List<Integer> innerGetVTypes =
+                                    labelType.getLabelsEntry().stream()
+                                            .map(k -> k.getLabelId())
+                                            .collect(Collectors.toList());
                             ElementDetails newDetails =
                                     new ElementDetails(
                                             expandEdge.getElementDetails().getSelectivity(),
-                                            new PathExpandRange(offset, fetch));
+                                            new PathExpandRange(offset, fetch),
+                                            innerGetVTypes);
                             expandEdge =
                                     (expandEdge instanceof SinglePatternEdge)
                                             ? new SinglePatternEdge(
@@ -442,16 +458,18 @@ public class GraphIOProcessor {
                                         expectedDstIds.add(k.getSrcLabelId());
                                     }
                                 });
-                Preconditions.checkArgument(
-                        Sets.newHashSet(src.getVertexTypeIds()).equals(expectedSrcIds),
-                        "src vertex types %s not consistent with edge types %s",
-                        src.getVertexTypeIds(),
-                        edge.getEdgeTypeIds());
-                Preconditions.checkArgument(
-                        Sets.newHashSet(dst.getVertexTypeIds()).equals(expectedDstIds),
-                        "dst vertex types %s not consistent with edge types %s",
-                        dst.getVertexTypeIds(),
-                        edge.getEdgeTypeIds());
+                if (edge.getElementDetails().getRange() == null) {
+                    Preconditions.checkArgument(
+                            Sets.newHashSet(src.getVertexTypeIds()).equals(expectedSrcIds),
+                            "src vertex types %s not consistent with edge types %s",
+                            src.getVertexTypeIds(),
+                            edge.getEdgeTypeIds());
+                    Preconditions.checkArgument(
+                            Sets.newHashSet(dst.getVertexTypeIds()).equals(expectedDstIds),
+                            "dst vertex types %s not consistent with edge types %s",
+                            dst.getVertexTypeIds(),
+                            edge.getEdgeTypeIds());
+                }
             }
         }
     }
@@ -776,8 +794,13 @@ public class GraphIOProcessor {
                 if (edgeValue.getFilter() != null) {
                     pxdBuilder.filter(edgeValue.getFilter());
                 }
+                GetVConfig innerGetVConfig =
+                        new GetVConfig(
+                                getVConfig.getOpt(),
+                                createLabels(edge.getElementDetails().getPxdInnerGetVTypes(), true),
+                                getVConfig.getAlias());
                 pxdBuilder
-                        .getV(getVConfig)
+                        .getV(innerGetVConfig)
                         .resultOpt(GraphOpt.PathExpandResult.END_V)
                         .pathOpt(GraphOpt.PathExpandPath.ARBITRARY)
                         .alias(edgeValue.getAlias())

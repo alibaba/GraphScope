@@ -226,6 +226,7 @@ impl RocksDB {
     }
 
     pub fn compact(&self) -> GraphResult<()> {
+        info!("begin to compact rocksdb");
         if self.is_secondary {
             info!("Cannot compact in secondary instance");
             return Ok(());

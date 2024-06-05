@@ -40,5 +40,9 @@ public interface ProcedureInterface {
 
     Result<IrResult.CollectiveResults> callProcedure(String graphId, QueryRequest request);
 
-    Result<String> callProcedureRaw(String graphId, String request);
+    Result<IrResult.CollectiveResults> callProcedure(QueryRequest request);
+
+    Result<byte[]> callProcedureRaw(String graphId, byte[] request);
+
+    Result<byte[]> callProcedureRaw(byte[] request);
 }

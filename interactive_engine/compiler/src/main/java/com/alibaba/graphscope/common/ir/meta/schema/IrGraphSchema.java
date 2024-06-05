@@ -110,7 +110,7 @@ public class IrGraphSchema implements GraphSchema {
     }
 
     @Override
-    public int getVersion() {
-        return this.getVersion();
+    public String getVersion() {
+        return this.graphSchema.getVersion();
     }
 }
