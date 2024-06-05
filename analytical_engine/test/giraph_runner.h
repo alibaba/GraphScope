@@ -78,7 +78,7 @@ std::pair<std::string, std::string> parse_property_type(
         if (type["label"] == "vertex_label") {
           if (type.contains("propertyDefList")) {
             auto properties = type["propertyDefList"];
-            CHECK(properties.size() == 1);
+            CHECK_EQ(properties.size(), 1);
             auto data_type = properties[0]["data_type"];
             vertex_type_name = data_type.get<std::string>();
           } else {
@@ -87,7 +87,7 @@ std::pair<std::string, std::string> parse_property_type(
         } else if (type["label"] == "edge_label") {
           if (type.contains("propertyDefList")) {
             auto properties = type["propertyDefList"];
-            CHECK(properties.size() == 1);
+            CHECK_EQ(properties.size(), 1);
             auto data_type = properties[0]["data_type"];
             edge_type_name = data_type.get<std::string>();
           } else {
