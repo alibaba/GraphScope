@@ -10,9 +10,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecutor {
 
@@ -78,6 +76,7 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         int propertyIdx = graphDef.getPropertyIdx();
         Map<String, Integer> propertyNameToId = graphDef.getPropertyNameToId();
         List<PropertyDef> incomingProperties = incomingTypeDef.getProperties();
+        checkDuplicatedPropertiesExists(incomingProperties);
         List<PropertyDef> previousProperties = previousTypeDef.getProperties();
         List<PropertyDef> allProperties = new ArrayList<>(previousProperties.size() + incomingProperties.size());
         List<PropertyDef> newIncomingProperties = new ArrayList<>(incomingProperties.size());
@@ -115,6 +114,17 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
             operations.add(operation);
         }
         return new DdlResult(newGraphDef, operations);
+    }
+
+    private void checkDuplicatedPropertiesExists(List<PropertyDef> propertyDefs) {
+        Set<String> propertyNameSet = new HashSet<>();
+        for (PropertyDef property : propertyDefs) {
+            String propertyName = property.getName();
+            if (propertyNameSet.contains(propertyName)) {
+                throw new DdlException("incoming propertyName [" + propertyName + "] has duplicated");
+            }
+            propertyNameSet.add(propertyName);
+        }
     }
 
     private void checkPropertiesExists(String label, PropertyDef property, List<PropertyDef> propertyDefs) {
