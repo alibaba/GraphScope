@@ -161,7 +161,7 @@ bool hqps_ic_handler::is_running_graph(const seastar::sstring& graph_id) const {
   return running_graph_res.value() == graph_id_str;
 }
 
-// Handles both /v1/graph/{graph_id}/query and /v1/query/
+// Handles both /v1/graph/{graph_id}/query and /v1/graph/current/query/
 seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     const seastar::sstring& path, std::unique_ptr<seastar::httpd::request> req,
     std::unique_ptr<seastar::httpd::reply> rep) {
