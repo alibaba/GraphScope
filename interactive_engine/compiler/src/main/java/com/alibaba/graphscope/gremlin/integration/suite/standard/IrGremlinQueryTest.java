@@ -1769,7 +1769,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Vertex> get_g_V_order_byXoutE_count_descX() {
-            return g.V().order().by(outE().count(), desc);
+            return g.V().order().by(outE().count(), Order.desc);
         }
 
         @Override
