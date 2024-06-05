@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.antlr4x;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
@@ -27,7 +28,6 @@ import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.antlr4x.parser.GremlinAntlr4Parser;
@@ -65,7 +65,11 @@ public class GraphBuilderTest {
                                 "graph.planner.cbo.glogue.schema",
                                 "target/test-classes/statistics/modern_statistics.txt"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockSchemaMeta("schema/modern.json");
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/modern.json",
+                        "statistics/modern_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     public static RelNode eval(String query) {
