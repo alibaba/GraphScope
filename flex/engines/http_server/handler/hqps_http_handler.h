@@ -31,6 +31,12 @@ namespace server {
 
 class hqps_ic_handler : public seastar::httpd::handler_base {
  public:
+  // extra headers
+  static constexpr const char* INTERACTIVE_REQUEST_FORMAT =
+      "X-Interactive-Request-Format";
+  static constexpr const char* PROTOCOL_FORMAT = "proto";
+  static constexpr const char* JSON_FORMAT = "json";
+  static constexpr const char* ENCODER_FORMAT = "encoder";
   hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
                   uint32_t group_inc_step, uint32_t shard_concurrency);
   ~hqps_ic_handler() override;
@@ -99,17 +105,9 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
 #endif
 };
 
-class hqps_exit_handler : public seastar::httpd::handler_base {
- public:
-  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
-      const seastar::sstring& path,
-      std::unique_ptr<seastar::httpd::request> req,
-      std::unique_ptr<seastar::httpd::reply> rep) override;
-};
-
 class hqps_http_handler {
  public:
-  hqps_http_handler(uint16_t http_port);
+  hqps_http_handler(uint16_t http_port, int32_t shard_num);
   ~hqps_http_handler();
 
   void start();
@@ -131,11 +129,10 @@ class hqps_http_handler {
  private:
   const uint16_t http_port_;
   seastar::httpd::http_server_control server_;
-  std::atomic<bool> running_{false};
+  std::atomic<bool> running_{false}, actors_running_{false};
 
-  hqps_ic_handler *ic_handler_, *proc_handler_;
-  hqps_adhoc_query_handler* adhoc_query_handler_;
-  hqps_exit_handler* exit_handler_;
+  std::vector<hqps_ic_handler*> ic_handlers_;
+  std::vector<hqps_adhoc_query_handler*> adhoc_query_handlers_;
 };
 
 }  // namespace server

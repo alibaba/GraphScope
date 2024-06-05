@@ -132,8 +132,8 @@ void run_builtin_graph_test(
     for (auto& proc_id : plugin_ids) {
       procedure::Query query;
       query.mutable_query_name()->set_name(proc_id);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
-                                   "text/plain");
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   query.SerializeAsString(), "text/plain");
       CHECK(res->status != 200);
       LOG(INFO) << "call procedure response: " << res->body;
       // find failed in res->body
@@ -160,8 +160,8 @@ void run_builtin_graph_test(
     for (auto& plugin_id : plugin_ids) {
       procedure::Query query;
       query.mutable_query_name()->set_name(plugin_id);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
-                                   "text/plain");
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   query.SerializeAsString(), "text/plain");
       CHECK(res->status == 200)
           << "call procedure should success: " << res->body
           << ", for query: " << query.DebugString();
@@ -298,8 +298,8 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
       auto query_str = pair.second;
       procedure::Query query;
       query.mutable_query_name()->set_name(query_name);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
-                                   "text/plain");
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   query.SerializeAsString(), "text/plain");
       CHECK(res->status != 200)
           << "call previous procedure on current graph should fail: "
           << res->body;
@@ -309,7 +309,8 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
   //----4. call procedures-----------------------------------------------
   for (auto& proc_id : plugin_ids) {
     auto call_proc_payload = generate_call_procedure_payload(graph_id, proc_id);
-    res = query_client.Post("/v1/query", call_proc_payload, "text/plain");
+    res = query_client.Post("/v1/graph/current/query", call_proc_payload,
+                            "text/plain");
     CHECK(res->status == 200) << "call procedure failed: " << res->body
                               << ", for query: " << call_proc_payload;
   }
@@ -325,7 +326,8 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
   if (procedures.size() > 0) {
     auto call_proc_payload =
         generate_call_procedure_payload(graph_id, plugin_ids[0]);
-    res = query_client.Post("/v1/query", call_proc_payload, "text/plain");
+    res = query_client.Post("/v1/graph/current/query", call_proc_payload,
+                            "text/plain");
     CHECK(res->status == 200) << "call procedure failed: " << res->body
                               << ", for query: " << call_proc_payload;
   }

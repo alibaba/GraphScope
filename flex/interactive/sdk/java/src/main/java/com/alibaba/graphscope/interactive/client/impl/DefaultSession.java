@@ -43,6 +43,9 @@ public class DefaultSession implements Session {
 
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_WRITE_TIMEOUT = 30000;
+    private static String JSON_FORMAT_STRING = "json";
+    private static String PROTO_FORMAT_STRING = "proto";
+    private static String ENCODER_FORMAT_STRING = "encoder";
 
     private final ApiClient client, queryClient;
 
@@ -316,13 +319,6 @@ public class DefaultSession implements Session {
         }
     }
 
-    private byte[] encodeString(String jsonStr, int lastByte) {
-        byte[] bytes = new byte[jsonStr.length() + 1];
-        System.arraycopy(jsonStr.getBytes(), 0, bytes, 0, jsonStr.length());
-        bytes[jsonStr.length()] = (byte) lastByte;
-        return bytes;
-    }
-
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(
             String graphName, QueryRequest request) {
@@ -330,8 +326,34 @@ public class DefaultSession implements Session {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
-            byte[] encodedStr = encodeString(request.toJson(), 1);
-            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
+            ApiResponse<byte[]> response =
+                    queryApi.procCallWithHttpInfo(
+                            graphName, JSON_FORMAT_STRING, request.toJson().getBytes());
+            if (response.getStatusCode() != 200) {
+                return Result.fromException(
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            }
+            IrResult.CollectiveResults results =
+                    IrResult.CollectiveResults.parseFrom(response.getData());
+            return new Result<>(results);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<IrResult.CollectiveResults> callProcedure(QueryRequest request) {
+        try {
+            // Interactive currently support four type of inputformat, see
+            // flex/engines/graph_db/graph_db_session.h
+            // Here we add byte of value 1 to denote the input format is in JSON format.
+            ApiResponse<byte[]> response =
+                    queryApi.procCallCurrentWithHttpInfo(
+                            JSON_FORMAT_STRING, request.toJson().getBytes());
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -355,10 +377,28 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            byte[] encodedStr = new byte[request.length + 1];
-            System.arraycopy(request, 0, encodedStr, 0, request.length);
-            encodedStr[request.length] = 0;
-            ApiResponse<byte[]> response = queryApi.procCallWithHttpInfo(graphName, encodedStr);
+            ApiResponse<byte[]> response =
+                    queryApi.procCallWithHttpInfo(graphName, ENCODER_FORMAT_STRING, request);
+            if (response.getStatusCode() != 200) {
+                return Result.fromException(
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            }
+            return new Result<byte[]>(response.getData());
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        }
+    }
+
+    @Override
+    public Result<byte[]> callProcedureRaw(byte[] request) {
+        try {
+            // Interactive currently support four type of inputformat, see
+            // flex/engines/graph_db/graph_db_session.h
+            // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
+            // format.
+            ApiResponse<byte[]> response =
+                    queryApi.procCallCurrentWithHttpInfo(ENCODER_FORMAT_STRING, request);
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
