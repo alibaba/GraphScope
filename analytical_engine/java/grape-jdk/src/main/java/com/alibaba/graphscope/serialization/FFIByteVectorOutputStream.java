@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.serialization;
 
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
 import com.alibaba.graphscope.stdcxx.FFIByteVectorFactory;
 
@@ -270,6 +271,15 @@ public class FFIByteVectorOutputStream extends OutputStream implements DataOutpu
         for (int i = 0; i < len; i++) {
             //            UnsafeHolder.U.putByte(newBase + i, (byte) data.charAt(i));
             vector.setRawByte(offset + i, (byte) s.charAt(i));
+        }
+        offset += len;
+    }
+
+    public void writeBytes(StringView s) throws IOException {
+        int len = (int) s.size();
+        vector.ensure(offset, len);
+        for (int i = 0; i < len; i++) {
+            vector.setRawByte(offset + i, (byte) s.byteAt(i));
         }
         offset += len;
     }
