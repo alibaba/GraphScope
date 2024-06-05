@@ -147,7 +147,7 @@ public class GiraphVertexIdManagerImpl<
             }
             outputStream.finishSetting();
             logger.info(
-                    "Vertex data stream size: "
+                    "Vertex id stream size: "
                             + outputStream.bytesWriten()
                             + ", vertices: "
                             + vertexNum);

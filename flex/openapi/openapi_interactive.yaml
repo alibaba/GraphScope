@@ -904,6 +904,43 @@ paths:
           required: true
           schema:
             type: string
+        - name: X-Interactive-Request-Format
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [proto, encoder, json]
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned. Empty if failed?
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
+        '500':
+          description: Server internal error
+  /v1/graph/current/query:
+    post:
+      tags:
+        - QueryService
+      summary: run queries on the running graph
+      operationId: proc_call_current
+      description: |
+        Submit a query to the running graph.
+      parameters:
+        - name: X-Interactive-Request-Format
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [proto, encoder, json]
       requestBody:
         content:
           text/plain:
