@@ -73,7 +73,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         strip ${INSTALL_DIR}/bin/grape_engine; \
         strip ${INSTALL_DIR}/lib/*.so; \
         sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/; \
-        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin; \
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin --enable_java_sdk ON; \
         strip ${INSTALL_DIR}/builtin/*/*.so || true; \
     fi
 
