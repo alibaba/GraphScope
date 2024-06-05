@@ -278,7 +278,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             if (bizEdataClass.equals(edataClass)) {
                 logger.info(
                         "biz edata {} == grape edata, try to read direct, biz edata class {}, edata"
-                            + " class {}",
+                                + " class {}",
                         edata_t,
                         bizEdataClass,
                         edataClass);
