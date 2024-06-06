@@ -4,7 +4,7 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.google.protobuf.ByteString;
 
-public class AddVertexTypePropertiesRequest extends AbstractDdlRequest{
+public class AddVertexTypePropertiesRequest extends AbstractDdlRequest {
 
     private TypeDef typeDef;
 

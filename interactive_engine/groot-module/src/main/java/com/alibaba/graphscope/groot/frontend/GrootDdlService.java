@@ -69,11 +69,12 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
                                         parseTypeDefPb(cvtReq.getTypeDef())));
                         break;
                     case ADD_VERTEX_TYPE_PROPERTIES_REQUEST:
-                        AddVertexTypePropertiesRequest avtpReq = ddlRequest.getAddVertexTypePropertiesRequest();
+                        AddVertexTypePropertiesRequest avtpReq =
+                                ddlRequest.getAddVertexTypePropertiesRequest();
                         builder.addDdlRequest(
                                 new com.alibaba.graphscope.groot.schema.request
                                         .AddVertexTypePropertiesRequest(
-                                                parseTypeDefPb(avtpReq.getTypeDef())));
+                                        parseTypeDefPb(avtpReq.getTypeDef())));
                         break;
                     case CREATE_EDGE_TYPE_REQUEST:
                         CreateEdgeTypeRequest cetReq = ddlRequest.getCreateEdgeTypeRequest();
@@ -83,11 +84,12 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
                                         parseTypeDefPb(cetReq.getTypeDef())));
                         break;
                     case ADD_EDGE_TYPE_PROPERTIES_REQUEST:
-                        AddEdgeTypePropertiesRequest aetpReq = ddlRequest.getAddEdgeTypePropertiesRequest();
+                        AddEdgeTypePropertiesRequest aetpReq =
+                                ddlRequest.getAddEdgeTypePropertiesRequest();
                         builder.addDdlRequest(
                                 new com.alibaba.graphscope.groot.schema.request
                                         .AddEdgeTypePropertiesRequest(
-                                                parseTypeDefPb(aetpReq.getTypeDef())));
+                                        parseTypeDefPb(aetpReq.getTypeDef())));
                         break;
                     case ADD_EDGE_KIND_REQUEST:
                         AddEdgeKindRequest addEdgeKindRequest = ddlRequest.getAddEdgeKindRequest();
@@ -171,8 +173,7 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
                 EdgeKindPb edgeKindPb =
                         EdgeKindPb.newBuilder()
                                 .setEdgeLabel(
-                                        graphDef.getTypeDef(edgeKind.getEdgeLabelId()).getLabel()
-                                        )
+                                        graphDef.getTypeDef(edgeKind.getEdgeLabelId()).getLabel())
                                 .setEdgeLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getEdgeLabelId().getId()))

@@ -33,7 +33,8 @@ public abstract class AbstractDdlExecutor {
         for (PropertyDef property : propertyDefs) {
             String propertyName = property.getName();
             if (propertyNameSet.contains(propertyName)) {
-                throw new DdlException("incoming propertyName [" + propertyName + "] has duplicated");
+                throw new DdlException(
+                        "incoming propertyName [" + propertyName + "] has duplicated");
             }
             propertyNameSet.add(propertyName);
         }

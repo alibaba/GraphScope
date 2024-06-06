@@ -7,6 +7,7 @@ import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.proto.groot.TypeDefPb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,8 @@ import java.util.*;
 
 public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecutor {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractAddTypePropertiesExecutor.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(AbstractAddTypePropertiesExecutor.class);
 
     private static final String NAME_REGEX = "^\\w{1,128}$";
 
@@ -25,21 +27,23 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         TypeDef incomingTypeDef = TypeDef.parseProto(typeDefPb);
         long version = graphDef.getSchemaVersion();
         String label = incomingTypeDef.getLabel();
-        logger.info("label is " + label);
-        
+
         TypeDef previousTypeDef = graphDef.getTypeDef(label);
         if (previousTypeDef == null) {
-            throw new DdlException("LabelName [" + label + "] cannot found exists label in Graph Def.");
+            throw new DdlException(
+                    "LabelName [" + label + "] cannot found exists label in Graph Def.");
         }
         if (previousTypeDef.getTypeEnum() != incomingTypeDef.getTypeEnum()) {
-            throw new DdlException("LabelName [" + label + "] type enum has been change. origin type ["
-                    + previousTypeDef.getTypeEnum() + "].");
+            throw new DdlException(
+                    "LabelName ["
+                            + label
+                            + "] type enum has been change. origin type ["
+                            + previousTypeDef.getTypeEnum()
+                            + "].");
         }
-        
+
         LabelId labelId = new LabelId(previousTypeDef.getLabelId());
-        logger.info("labelId is " + labelId);
         version++;
-        logger.info("new version: {}", version);
         if (!label.matches(NAME_REGEX)) {
             throw new DdlException("illegal label name [" + label + "]");
         }
@@ -55,7 +59,9 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
             }
             if (incomingTypeDef.getPkIdxs().size() > 0) {
                 throw new DdlException(
-                        "Can not add primary key properties in exists Vertex type. label [" + label + "]");
+                        "Can not add primary key properties in exists Vertex type. label ["
+                                + label
+                                + "]");
             }
         } else {
             if (this instanceof AddVertexTypePropertiesExecutor) {
@@ -63,7 +69,9 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
             }
             if (incomingTypeDef.getPkIdxs().size() > 0) {
                 throw new DdlException(
-                        "Can not add primary key properties in exists Edge type. label [" + label + "]");
+                        "Can not add primary key properties in exists Edge type. label ["
+                                + label
+                                + "]");
             }
         }
 
@@ -78,7 +86,8 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         List<PropertyDef> incomingProperties = incomingTypeDef.getProperties();
         checkDuplicatedPropertiesExists(incomingProperties);
         List<PropertyDef> previousProperties = previousTypeDef.getProperties();
-        List<PropertyDef> allProperties = new ArrayList<>(previousProperties.size() + incomingProperties.size());
+        List<PropertyDef> allProperties =
+                new ArrayList<>(previousProperties.size() + incomingProperties.size());
         List<PropertyDef> newIncomingProperties = new ArrayList<>(incomingProperties.size());
         allProperties.addAll(previousProperties);
         for (PropertyDef property : incomingProperties) {
@@ -94,10 +103,11 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
                 graphDefBuilder.putPropertyNameToId(propertyName, propertyId);
                 graphDefBuilder.setPropertyIdx(propertyIdx);
             }
-            PropertyDef propertyDef = PropertyDef.newBuilder(property)
-                    .setId(propertyId)
-                    .setInnerId(propertyId)
-                    .build();
+            PropertyDef propertyDef =
+                    PropertyDef.newBuilder(property)
+                            .setId(propertyId)
+                            .setInnerId(propertyId)
+                            .build();
             allProperties.add(propertyDef);
             newIncomingProperties.add(propertyDef);
         }
@@ -113,18 +123,27 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
             Operation operation = makeOperation(i, version, newIncomingTypeDef, newGraphDef);
             operations.add(operation);
         }
+        logger.info("new incoming type def is {}", JSON.toJson(newIncomingTypeDef));
         return new DdlResult(newGraphDef, operations);
     }
 
-    private void checkPropertiesExists(String label, PropertyDef property, List<PropertyDef> propertyDefs) {
+    private void checkPropertiesExists(
+            String label, PropertyDef property, List<PropertyDef> propertyDefs) {
         Integer propertyId = property.getId();
         String propertyName = property.getName();
         for (PropertyDef existsProperty : propertyDefs) {
             Integer curId = existsProperty.getId();
             String curName = existsProperty.getName();
             if (propertyName.equals(curName) || propertyId.equals(curId)) {
-                throw new DdlException("propertyName [" + propertyName + "], propertyId [" + propertyId + "]" +
-                        "already exists in Label [" + label + "].");
+                throw new DdlException(
+                        "propertyName ["
+                                + propertyName
+                                + "], propertyId ["
+                                + propertyId
+                                + "]"
+                                + "already exists in Label ["
+                                + label
+                                + "].");
             }
         }
     }

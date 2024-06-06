@@ -125,7 +125,8 @@ public class Schema {
             builder.addValue(ddlRequestBuilder);
         }
         for (VertexLabel label : vertexLabelsToAddProperties) {
-            AddVertexTypePropertiesRequest.Builder typeBuilder = AddVertexTypePropertiesRequest.newBuilder();
+            AddVertexTypePropertiesRequest.Builder typeBuilder =
+                    AddVertexTypePropertiesRequest.newBuilder();
             typeBuilder.setTypeDef(label.toProto());
             DDLRequest.Builder ddlRequestBuilder =
                     DDLRequest.newBuilder().setAddVertexTypePropertiesRequest(typeBuilder);
@@ -147,7 +148,8 @@ public class Schema {
             }
         }
         for (EdgeLabel label : edgeLabelsToAddProperties) {
-            AddEdgeTypePropertiesRequest.Builder typeBuilder = AddEdgeTypePropertiesRequest.newBuilder();
+            AddEdgeTypePropertiesRequest.Builder typeBuilder =
+                    AddEdgeTypePropertiesRequest.newBuilder();
             typeBuilder.setTypeDef(label.toProto());
             DDLRequest.Builder ddlRequestBuilder =
                     DDLRequest.newBuilder().setAddEdgeTypePropertiesRequest(typeBuilder);
@@ -198,9 +200,12 @@ public class Schema {
         }
 
         public Builder addVertexLabelProperties(VertexLabel label) {
-            if (vertexLabelsToAddProperties.stream().anyMatch(item -> item.getLabel().equals(label.getLabel()))) {
-                throw new IllegalArgumentException(label.getLabel() + " duplicated label in submission queue. " +
-                        "merge all properties if they belong to same label.");
+            if (vertexLabelsToAddProperties.stream()
+                    .anyMatch(item -> item.getLabel().equals(label.getLabel()))) {
+                throw new IllegalArgumentException(
+                        label.getLabel()
+                                + " duplicated label in submission queue. "
+                                + "merge all properties if they belong to same label.");
             }
             vertexLabelsToAddProperties.add(label);
             return this;
@@ -212,9 +217,12 @@ public class Schema {
         }
 
         public Builder addEdgeLabelProperties(EdgeLabel label) {
-            if (edgeLabelsToAddProperties.stream().anyMatch(item -> item.getLabel().equals(label.getLabel()))) {
-                throw new IllegalArgumentException(label.getLabel() + " duplicated label in submission queue. " +
-                        "merge all properties if they belong to same label.");
+            if (edgeLabelsToAddProperties.stream()
+                    .anyMatch(item -> item.getLabel().equals(label.getLabel()))) {
+                throw new IllegalArgumentException(
+                        label.getLabel()
+                                + " duplicated label in submission queue. "
+                                + "merge all properties if they belong to same label.");
             }
             edgeLabelsToAddProperties.add(label);
             return this;
@@ -267,8 +275,13 @@ public class Schema {
         }
 
         public Schema build() {
-            return new Schema(vertexLabels, edgeLabels, vertexLabelsToDrop, edgeLabelsToDrop,
-                    vertexLabelsToAddProperties, edgeLabelsToAddProperties);
+            return new Schema(
+                    vertexLabels,
+                    edgeLabels,
+                    vertexLabelsToDrop,
+                    edgeLabelsToDrop,
+                    vertexLabelsToAddProperties,
+                    edgeLabelsToAddProperties);
         }
     }
 }
