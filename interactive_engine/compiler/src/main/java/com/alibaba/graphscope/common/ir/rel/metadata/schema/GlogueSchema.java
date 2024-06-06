@@ -16,15 +16,11 @@
 
 package com.alibaba.graphscope.common.ir.rel.metadata.schema;
 
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
-import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
-import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
-import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
-import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
+import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
+import com.alibaba.graphscope.groot.common.schema.api.*;
 
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DirectedPseudograph;
 
 import java.util.HashMap;
 import java.util.List;
@@ -84,7 +80,7 @@ public class GlogueSchema {
         }
     }
 
-    public static GlogueSchema fromMeta(IrMeta irMeta) {
+    public static GlogueSchema fromMeta(IrMetaStats irMeta) {
         return new GlogueSchema(irMeta.getSchema(), irMeta.getStatistics());
     }
 

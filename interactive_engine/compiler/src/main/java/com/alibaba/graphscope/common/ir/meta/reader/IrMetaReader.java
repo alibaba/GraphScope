@@ -16,17 +16,18 @@
 
 package com.alibaba.graphscope.common.ir.meta.reader;
 
-import java.io.InputStream;
-import java.util.List;
+import com.alibaba.graphscope.common.ir.meta.GraphId;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 
-// MetaDataReader is used to read meta data from a data source (can be a local file or
-// remote web service)
-public interface MetaDataReader {
+import java.io.IOException;
 
-    // if enableProcedures is null, return all stored procedures
-    List<InputStream> getStoredProcedures() throws Exception;
+/**
+ * {@code IrMetaReader} is used to read Ir Meta from a data source (can be a local file or remote web service).
+ */
+public interface IrMetaReader {
+    IrMeta readMeta() throws IOException;
 
-    SchemaInputStream getGraphSchema() throws Exception;
-
-    SchemaInputStream getStatistics() throws Exception;
+    // get statistics from a graph referenced by graphId
+    GraphStatistics readStats(GraphId graphId) throws IOException;
 }
