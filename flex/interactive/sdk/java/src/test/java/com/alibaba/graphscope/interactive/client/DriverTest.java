@@ -483,6 +483,14 @@ public class DriverTest {
 
     @Test
     @Order(11)
+    public void test9GetGraphStatistics() {
+        Result<GetGraphStatisticsResponse> resp = session.getGraphStatistics(graphId);
+        assertOk(resp);
+        logger.info("graph statistics: " + resp.getValue());
+    }
+
+    @Test
+    @Order(12)
     public void test9CallCppProcedure1() {
         QueryRequest request = new QueryRequest();
         request.setQueryName(cppProcedureId1);
@@ -500,7 +508,7 @@ public class DriverTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     public void test9CallCppProcedure1Current() {
         QueryRequest request = new QueryRequest();
         request.setQueryName(cppProcedureId1);
@@ -518,7 +526,7 @@ public class DriverTest {
     }
 
     @Test
-    @Order(13)
+    @Order(14)
     public void test9CallCppProcedure2() {
         byte[] bytes = new byte[4 + 1];
         Encoder encoder = new Encoder(bytes);
@@ -529,7 +537,7 @@ public class DriverTest {
     }
 
     @Test
-    @Order(14)
+    @Order(15)
     public void test10CallCypherProcedureViaNeo4j() {
         String query = "CALL " + cypherProcedureId + "() YIELD *;";
         org.neo4j.driver.Result result = neo4jSession.run(query);
