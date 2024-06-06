@@ -106,8 +106,11 @@ impl VertexTypeManager {
     pub fn create_type(
         &self, si: SnapshotId, label: LabelId, codec: Codec, table0: Table,
     ) -> GraphResult<()> {
-        assert_eq!(si, table0.start_si, "type start si must be equal to table0.start_si");
-
+        if si != table0.start_si {
+            let msg = format!("type si {} must be equal to table0.start_si {}", si, table0.start_si);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_type);
+            return Err(err);
+        }
         let guard = &epoch::pin();
         let map = self.get_map(guard);
         let mut map_clone = unsafe { map.as_ref() }
@@ -134,8 +137,11 @@ impl VertexTypeManager {
     pub fn update_type(
         &self, si: SnapshotId, label: LabelId, codec: Codec, table0: Table,
     ) -> GraphResult<()> {
-        assert_eq!(si, table0.start_si, "type start si must be equal to table0.start_si");
-
+        if si != table0.start_si {
+            let msg = format!("type si {} must be equal to table0.start_si {}", si, table0.start_si);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, update_type);
+            return Err(err);
+        }
         let guard = &epoch::pin();
         let map = self.get_map(guard);
         let mut map_clone = unsafe { map.as_ref() }

@@ -619,7 +619,6 @@ class GraphSchema:
         self._edge_labels_to_add_property.append(item)
         return self._edge_labels_to_add_property[-1]
 
-
     def drop(self, label, src_label=None, dst_label=None):
         for item in self._vertex_labels:
             if label == item.label:
@@ -676,10 +675,14 @@ class GraphSchema:
                 requests.value.add().drop_edge_type_request.label = item.label
         for item in self._vertex_labels_to_add_property:
             type_pb = item.as_type_def()
-            requests.value.add().add_vertex_type_properties_request.type_def.CopyFrom(type_pb)
+            requests.value.add().add_vertex_type_properties_request.type_def.CopyFrom(
+                type_pb
+            )
         for item in self._edge_labels_to_add_property:
             type_pb = item.as_type_def()
-            requests.value.add().add_edge_type_properties_request.type_def.CopyFrom(type_pb)
+            requests.value.add().add_edge_type_properties_request.type_def.CopyFrom(
+                type_pb
+            )
         for item in self._vertex_labels_to_drop:
             requests.value.add().drop_vertex_type_request.label = item.label
         return requests
