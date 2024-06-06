@@ -339,7 +339,7 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
   }
 }
 
-void run_get_node_status(httplib::Client& cli) {
+void run_get_node_status(httplib::Client& cli, const std::string& graph_id) {
   auto res = cli.Get("/v1/node/status");
   if (res->status != 200) {
     LOG(FATAL) << "get node status failed: " << res->body;
@@ -359,6 +359,31 @@ void run_get_node_status(httplib::Client& cli) {
     LOG(FATAL) << "Empty response: ";
   }
   LOG(INFO) << "get service status response: " << body;
+  // Get current running graph's status
+  {
+    auto res = cli.Get("/v1/graph/" + graph_id + "/statistics");
+    if (res->status != 200) {
+      LOG(FATAL) << "get current graph status failed: " << res->body;
+    }
+    auto body = res->body;
+    if (body.empty()) {
+      LOG(FATAL) << "Empty response: ";
+    }
+    // check whether has total_edge_count, total_vertex_count, and the value
+    // should be greater than 0
+    nlohmann::json j = nlohmann::json::parse(body);
+    if (!j.contains("total_edge_count") || !j.contains("total_vertex_count")) {
+      LOG(FATAL) << "get current graph status response does not contain "
+                    "total_edge_count or total_vertex_count: "
+                 << body;
+    }
+    if (j["total_edge_count"].get<int>() <= 0 ||
+        j["total_vertex_count"].get<int>() <= 0) {
+      LOG(FATAL) << "get current graph status response total_edge_count or "
+                    "total_vertex_count should be greater than 0: "
+                 << body;
+    }
+  }
 }
 
 void test_delete_graph(httplib::Client& cli, const std::string& graph_id) {
@@ -428,7 +453,7 @@ int main(int argc, char** argv) {
   run_procedure_test(cli, cli_query, graph_id, builtin_graph_queries,
                      procedure_paths);
   LOG(INFO) << "run procedure tests done";
-  run_get_node_status(cli);
+  run_get_node_status(cli, graph_id);
   LOG(INFO) << "test delete graph done";
   return 0;
 }
