@@ -39,6 +39,7 @@ import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
@@ -570,10 +571,12 @@ public class GraphIOProcessor {
                             decomposition.getBuildPattern(),
                             buildOrderMap,
                             new ParentPattern(decomposition.getParentPatten(), 1));
+            RelNode joinLeft = decomposition.getLeft();
+            RelNode joinRight = decomposition.getRight();
             this.details = probeDetails;
-            RelNode newLeft = visitChild(decomposition, 0, decomposition.getLeft()).getInput(0);
+            RelNode newLeft = visitChild(decomposition, 0, joinLeft).getInput(0);
             this.details = buildDetails;
-            RelNode newRight = visitChild(decomposition, 1, decomposition.getRight()).getInput(1);
+            RelNode newRight = visitChild(decomposition, 1, joinRight).getInput(1);
             RexNode joinCondition =
                     createJoinFilter(
                             jointVertices,
@@ -648,8 +651,16 @@ public class GraphIOProcessor {
                                 concatExprs.add(
                                         builder.call(
                                                 SqlLibraryOperators.ARRAY_CONCAT,
-                                                builder.variable(probeAlias),
-                                                builder.variable(buildAlias)));
+                                                builder.variable(
+                                                        probeAlias,
+                                                        getConcatDirection(
+                                                                        probeJointVertex, joinLeft)
+                                                                .name()),
+                                                builder.variable(
+                                                        buildAlias,
+                                                        getConcatDirection(
+                                                                        buildJointVertex, joinRight)
+                                                                .name())));
                                 concatAliases.add(probeValue.getParentAlias());
                             }
                         }
@@ -661,6 +672,13 @@ public class GraphIOProcessor {
                 builder.project(concatExprs, concatAliases, true);
             }
             return builder.build();
+        }
+
+        private GraphProperty.Opt getConcatDirection(
+                PatternVertex concatVertex, RelNode splitPattern) {
+            ConcatDirectionVisitor visitor = new ConcatDirectionVisitor(concatVertex);
+            visitor.go(splitPattern);
+            return visitor.direction;
         }
 
         private RexNode createJoinFilter(
@@ -1133,6 +1151,53 @@ public class GraphIOProcessor {
                 srcOrderId = -1;
             }
             return new EdgeDataKey(srcOrderId, targetOrderId, edge.getDirection());
+        }
+
+        // given a concat vertex, help to determine its direction in the split path expand
+        private class ConcatDirectionVisitor extends RelVisitor {
+            private GraphProperty.Opt direction;
+            private final PatternVertex concatVertex;
+
+            public ConcatDirectionVisitor(PatternVertex concatVertex) {
+                this.concatVertex = concatVertex;
+                this.direction = null;
+            }
+
+            @Override
+            public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                if (direction != null) return;
+                if (node instanceof GraphExtendIntersect) {
+                    GlogueExtendIntersectEdge intersect =
+                            ((GraphExtendIntersect) node).getGlogueEdge();
+                    ExtendStep extendStep = intersect.getExtendStep();
+                    PatternVertex dstVertex =
+                            intersect
+                                    .getDstPattern()
+                                    .getVertexByOrder(extendStep.getTargetVertexOrder());
+                    if (dstVertex.equals(concatVertex)) {
+                        direction = GraphProperty.Opt.END_V;
+                        return;
+                    }
+                    for (ExtendEdge edge : extendStep.getExtendEdges()) {
+                        PatternVertex srcVertex =
+                                intersect
+                                        .getSrcPattern()
+                                        .getVertexByOrder(edge.getSrcVertexOrder());
+                        if (srcVertex.equals(concatVertex)) {
+                            direction = GraphProperty.Opt.START_V;
+                            return;
+                        }
+                    }
+                } else if (node instanceof GraphPattern) {
+                    PatternVertex vertex =
+                            ((GraphPattern) node).getPattern().getVertexSet().iterator().next();
+                    if (vertex.equals(concatVertex)) {
+                        direction = GraphProperty.Opt.START_V;
+                        return;
+                    }
+                }
+                node.childrenAccept(this);
+            }
         }
     }
 }

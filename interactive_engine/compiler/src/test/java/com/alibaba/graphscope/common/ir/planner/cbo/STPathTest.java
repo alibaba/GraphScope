@@ -63,7 +63,7 @@ public class STPathTest {
     }
 
     @Test
-    public void st_path_test() {
+    public void st_path_person_id_knows_person_id() {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
@@ -77,6 +77,19 @@ public class STPathTest {
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("proto/st_path_test.json"),
                 physicalBuilder.build().explain().trim());
+    }
+
+    @Test
+    public void st_path_person_id_knows_person() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a:PERSON {id: 1})-[c:KNOWS*6..7 {creationDate:"
+                                        + " 2012}]->(b:PERSON) Return c",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        System.out.println(after.explain());
     }
 
     @Test

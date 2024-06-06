@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import static java.util.Objects.requireNonNull;
-
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
@@ -33,8 +31,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
-import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
+import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -43,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -69,6 +66,8 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -546,6 +545,45 @@ public class GraphBuilder extends RelBuilder {
                     columnField.left,
                     varName,
                     getTypeFactory().createSqlType(SqlTypeName.ANY));
+        } else if (property.equals(GraphProperty.START_V_KEY)) {
+            if (!(aliasField.getType() instanceof GraphPathType)) {
+                throw new ClassCastException(
+                        "cannot get property='start_v' from type class ["
+                                + aliasField.getType().getClass()
+                                + "], should be ["
+                                + GraphPathType.class
+                                + "]");
+            } else {
+                Preconditions.checkArgument(size() > 0, "frame stack is empty");
+                RelNode peek = peek();
+                Preconditions.checkArgument(
+                        peek != null && !peek.getInputs().isEmpty(),
+                        "path expand should have start vertex");
+                RelNode input = peek.getInput(0);
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        new GraphProperty(GraphProperty.Opt.START_V),
+                        columnField.left,
+                        varName,
+                        input.getRowType().getFieldList().get(0).getType());
+            }
+        } else if (property.equals(GraphProperty.END_V_KEY)) {
+            if (!(aliasField.getType() instanceof GraphPathType)) {
+                throw new ClassCastException(
+                        "cannot get property='end_v' from type class ["
+                                + aliasField.getType().getClass()
+                                + "], should be ["
+                                + GraphPathType.class
+                                + "]");
+            } else {
+                GraphPathType pathType = (GraphPathType) aliasField.getType();
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        new GraphProperty(GraphProperty.Opt.END_V),
+                        columnField.left,
+                        varName,
+                        pathType.getComponentType().getGetVType());
+            }
         }
         GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
         List<String> properties = new ArrayList<>();

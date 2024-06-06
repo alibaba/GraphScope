@@ -30,6 +30,10 @@ message LengthKey {}
 
 message AllKey {}
 
+message StartVKey {}
+
+message EndVKey {}
+
 // Use `NameOrId` as key item, which is the same as `Option<NameOrId>`
 message NameOrIdKey {
   common.NameOrId key = 1;
@@ -47,6 +51,8 @@ message Property {
     AllKey all = 5;
     // Get property of key from the entity
     common.NameOrId key = 6;
+    StartVKey start_v = 7;
+    EndVKey end_v = 8;
   }
 }
 
