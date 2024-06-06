@@ -62,8 +62,8 @@ data:
     ## GOpt config
     graph.planner.opt={{ .Values.graphPlannerOpt }}
     graph.planner.rules={{ .Values.graphPlannerRules }}
+    graph.physical.opt={{ .Values.graphPhysicalOpt }}
     gremlin.script.language.name={{ .Values.gremlinScriptLanguageName }}
-    physical.opt.config={{ .Values.physicalOptConfig }}
     query.execution.timeout.ms={{ .Values.queryExecutionTimeoutMs }}
 
     log4rs.config=LOG4RS_CONFIG
