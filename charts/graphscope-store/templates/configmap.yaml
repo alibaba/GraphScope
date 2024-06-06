@@ -58,6 +58,13 @@ data:
     gremlin.server.port=12312
     ## disable neo4j when launching groot server by default
     neo4j.bolt.server.disabled=true
+  
+    ## GOpt config
+    graph.planner.opt={{ .Values.graphPlannerOpt }}
+    graph.planner.rules={{ .Values.graphPlannerRules }}
+    gremlin.script.language.name={{ .Values.gremlinScriptLanguageName }}
+    physical.opt.config={{ .Values.physicalOptConfig }}
+    query.execution.timeout.ms={{ .Values.queryExecutionTimeoutMs }}
 
     log4rs.config=LOG4RS_CONFIG
     ## Auth config
