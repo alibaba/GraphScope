@@ -217,6 +217,7 @@ public class GraphBuilder extends RelBuilder {
                         fetchNode,
                         pxdConfig.getResultOpt(),
                         pxdConfig.getPathOpt(),
+                        pxdConfig.getUntilCondition(),
                         pxdConfig.getAlias(),
                         getAliasNameWithId(
                                 pxdConfig.getStartAlias(),
@@ -1817,7 +1818,7 @@ public class GraphBuilder extends RelBuilder {
                                 fetch == null ? -1 : ((RexLiteral) fetch).getValueAs(Integer.class))
                         .startAlias(pxdExpand.getStartAlias().getAliasName())
                         .alias(alias);
-                pathExpand(pxdBuilder.build());
+                pathExpand(pxdBuilder.buildConfig());
             } else if (top instanceof GraphLogicalProject) {
                 GraphLogicalProject project = (GraphLogicalProject) top;
                 project(project.getProjects(), Lists.newArrayList(alias), project.isAppend());

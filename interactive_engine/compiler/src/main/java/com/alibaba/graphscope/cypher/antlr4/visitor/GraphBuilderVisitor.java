@@ -95,7 +95,9 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         // path_expand
         if (literalCtx != null && literalCtx.oC_IntegerLiteral().size() > 1) {
             builder.pathExpand(
-                    new PathExpandBuilderVisitor(this).visitOC_PatternElementChain(ctx).build());
+                    new PathExpandBuilderVisitor(this)
+                            .visitOC_PatternElementChain(ctx)
+                            .buildConfig());
             // extract the end vertex from path_expand results
             if (ctx.oC_NodePattern() != null) {
                 builder.getV(Utils.getVConfig(ctx.oC_NodePattern()));
