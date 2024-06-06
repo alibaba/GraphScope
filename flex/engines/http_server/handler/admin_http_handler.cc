@@ -110,6 +110,15 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
                     return return_reply_with_result(std::move(rep),
                                                     std::move(fut));
                   });
+        } else if (path.find("statistics") != seastar::sstring::npos) {
+          return admin_actor_refs_[dst_executor]
+              .run_get_graph_statistic(query_param{std::move(graph_id)})
+              .then_wrapped(
+                  [rep = std::move(rep)](
+                      seastar::future<admin_query_result>&& fut) mutable {
+                    return return_reply_with_result(std::move(rep),
+                                                    std::move(fut));
+                  });
         } else {
           // Get the metadata of graph.
           return admin_actor_refs_[dst_executor]
@@ -609,6 +618,16 @@ seastar::future<> admin_http_handler::set_routes() {
           new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
               interactive_admin_group_id, shard_admin_graph_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/schema");
+      r.add(match_rule, seastar::httpd::operation_type::GET);
+    }
+    {
+      // Get running graph statistics
+      auto match_rule =
+          new seastar::httpd::match_rule(new admin_http_graph_handler_impl(
+              interactive_admin_group_id, shard_admin_graph_concurrency));
+      match_rule->add_str("/v1/graph")
+          .add_param("graph_id")
+          .add_str("/statistics");
       r.add(match_rule, seastar::httpd::operation_type::GET);
     }
 

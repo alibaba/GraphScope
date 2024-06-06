@@ -100,6 +100,7 @@ class TestDriver(unittest.TestCase):
         self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
+        self.getStatistics()
         self.callProcedure()
         self.callProcedureWithHttp()
         self.callProcedureWithHttpCurrent()
@@ -259,6 +260,11 @@ class TestDriver(unittest.TestCase):
         print("restart: ", resp.get_value())
         # wait 5 seconds
         time.sleep(5)
+
+    def getStatistics(self):
+        resp = self._sess.get_graph_statistics(self._graph_id)
+        assert resp.is_ok()
+        print("get graph statistics: ", resp.get_value())
 
     def callProcedure(self):
         with self._driver.getNeo4jSession() as session:
