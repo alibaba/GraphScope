@@ -46,6 +46,10 @@ jobs:
         cd ${GITHUB_WORKSPACE}/python
         python3 setup_gsctl.py bdist_wheel
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: true
+
     - name: Test
       run: |
         # install gsctl
