@@ -151,6 +151,9 @@ public class Driver {
         } else {
             ServiceStatus status = serviceStatus.getValue();
             Integer boltPort = status.getBoltPort();
+            if (!status.getStatus().equals("Running")){
+                throw new RuntimeException("Interactive Query Service is not running");
+            }
             // Currently, we assume the host is the same as the gs server
             return Pair.of(host, boltPort);
         }

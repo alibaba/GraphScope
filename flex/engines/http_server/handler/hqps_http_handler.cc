@@ -534,7 +534,7 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
 }
 
 hqps_http_handler::hqps_http_handler(uint16_t http_port, int32_t shard_num)
-    : http_port_(http_port) {
+    : http_port_(http_port), actors_running_(true) {
   ic_handlers_.resize(shard_num);
   adhoc_query_handlers_.resize(shard_num);
 }
