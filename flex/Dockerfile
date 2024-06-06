@@ -40,7 +40,7 @@ RUN cd /tmp && git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --sing
 RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget libcurl4-openssl-dev && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
-    sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
+    sudo apt-get update && sudo apt-get install -y libarrow-dev=15.0.2-1
 
 # install opentelemetry
 RUN cd /tmp && git clone https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \

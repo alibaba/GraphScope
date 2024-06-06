@@ -36,7 +36,7 @@ if ! sudo apt-get install -y ./apache-arrow-apt-source-latest.deb; then
     cd arrow/cpp && mkdir build && cd build && cmake .. -DARROW_CSV=ON && make -j ${parallelism} && sudo make install
     popd && rm -r /tmp/arrow/
 else
-    sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
+    sudo apt-get update && sudo apt-get install -y libarrow-dev=15.0.2-1
 fi
 popd && rm -rf /tmp/apache-arrow-apt-source-latest.deb
 
