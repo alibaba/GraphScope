@@ -450,6 +450,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
                         pathExpand.getFetch(),
                         pathExpand.getResultOpt(),
                         pathExpand.getPathOpt(),
+                        pathExpand.getUntilCondition(),
                         pathExpand.getAliasName(),
                         pathExpand.getStartAlias());
         return result(newPathExpand, mapping, pathExpand);

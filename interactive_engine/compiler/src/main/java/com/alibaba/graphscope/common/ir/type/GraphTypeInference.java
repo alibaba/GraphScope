@@ -658,6 +658,7 @@ public class GraphTypeInference {
                     pxd.getFetch(),
                     pxd.getResultOpt(),
                     pxd.getPathOpt(),
+                    pxd.getUntilCondition(),
                     pxd.getAliasName(),
                     pxd.getStartAlias());
         }

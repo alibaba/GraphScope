@@ -355,7 +355,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     public GraphBuilder visitTraversalMethod_out(GremlinGSParser.TraversalMethod_outContext ctx) {
         if (pathExpandPattern(ctx.oC_ListLiteral(), ctx.oC_Expression())) {
             return builder.pathExpand(
-                    new PathExpandBuilderVisitor(this).visitTraversalMethod_out(ctx).build());
+                    new PathExpandBuilderVisitor(this).visitTraversalMethod_out(ctx).buildConfig());
         } else {
             return builder.expand(
                             new ExpandConfig(
@@ -369,7 +369,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     public GraphBuilder visitTraversalMethod_in(GremlinGSParser.TraversalMethod_inContext ctx) {
         if (pathExpandPattern(ctx.oC_ListLiteral(), ctx.oC_Expression())) {
             return builder.pathExpand(
-                    new PathExpandBuilderVisitor(this).visitTraversalMethod_in(ctx).build());
+                    new PathExpandBuilderVisitor(this).visitTraversalMethod_in(ctx).buildConfig());
         } else {
             return builder.expand(
                             new ExpandConfig(
@@ -383,7 +383,9 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     public GraphBuilder visitTraversalMethod_both(GremlinGSParser.TraversalMethod_bothContext ctx) {
         if (pathExpandPattern(ctx.oC_ListLiteral(), ctx.oC_Expression())) {
             return builder.pathExpand(
-                    new PathExpandBuilderVisitor(this).visitTraversalMethod_both(ctx).build());
+                    new PathExpandBuilderVisitor(this)
+                            .visitTraversalMethod_both(ctx)
+                            .buildConfig());
         } else {
             return builder.expand(
                             new ExpandConfig(
@@ -789,6 +791,10 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
 
     public GraphBuilder getGraphBuilder() {
         return this.builder;
+    }
+
+    public ExprUniqueAliasInfer getAliasInfer() {
+        return this.aliasInfer;
     }
 
     private RelBuilder.GroupKey convertGroupKeyBy(

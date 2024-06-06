@@ -64,11 +64,10 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
     public PathExpandConfig.Builder visitOC_Properties(CypherGSParser.OC_PropertiesContext ctx) {
         return (ctx == null)
                 ? builder
-                : builder.filter(
-                        Utils.propertyFilters(
-                                this.builder.getInnerBuilder(),
-                                this.parent.getExpressionVisitor(),
-                                ctx));
+                : (PathExpandConfig.Builder)
+                        builder.filter(
+                                Utils.propertyFilters(
+                                        this.builder, this.parent.getExpressionVisitor(), ctx));
     }
 
     @Override
