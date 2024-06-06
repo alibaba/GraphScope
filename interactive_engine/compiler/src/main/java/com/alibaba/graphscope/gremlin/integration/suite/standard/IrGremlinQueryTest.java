@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.gremlin.integration.suite.standard;
 
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
-import static org.apache.tinkerpop.gremlin.process.traversal.Order.desc;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeFalse;
@@ -182,9 +181,6 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, String>
             get_g_V_asXaX_outXcreatedX_whereXasXaX_name_isXjoshXX_inXcreatedX_name();
 
-    public abstract Traversal<Vertex, Map<String, Object>>
-            get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX();
-
     public abstract Traversal<Vertex, String> get_g_V_whereXnotXoutXcreatedXXX_name();
 
     public abstract Traversal<Vertex, String>
@@ -312,6 +308,9 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Map<String, Object>>
             get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_outXknowsX_bX();
+
+    public abstract Traversal<Vertex, Map<String, Object>>
+            get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX();
 
     @Test
     @LoadGraphWith(MODERN)
@@ -1261,8 +1260,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         checkMap(
                 new HashMap<Long, Long>() {
                     {
-                        put(1l, 3l);
-                        put(3l, 3l);
+                        put(1L, 3L);
+                        put(3L, 3L);
                     }
                 },
                 traversal.next());
@@ -1280,20 +1279,20 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         final Map<Long, Collection<String>> map = traversal.next();
         assertFalse(traversal.hasNext());
         assertEquals(4, map.size());
-        assertTrue(map.containsKey(0l));
-        assertTrue(map.containsKey(1l));
-        assertTrue(map.containsKey(2l));
-        assertTrue(map.containsKey(3l));
-        assertEquals(3, map.get(0l).size());
-        assertEquals(1, map.get(1l).size());
-        assertEquals(1, map.get(2l).size());
-        assertEquals(1, map.get(3l).size());
-        assertTrue(map.get(0l).contains("lop"));
-        assertTrue(map.get(0l).contains("ripple"));
-        assertTrue(map.get(0l).contains("vadas"));
-        assertTrue(map.get(1l).contains("peter"));
-        assertTrue(map.get(2l).contains("josh"));
-        assertTrue(map.get(3l).contains("marko"));
+        assertTrue(map.containsKey(0L));
+        assertTrue(map.containsKey(1L));
+        assertTrue(map.containsKey(2L));
+        assertTrue(map.containsKey(3L));
+        assertEquals(3, map.get(0L).size());
+        assertEquals(1, map.get(1L).size());
+        assertEquals(1, map.get(2L).size());
+        assertEquals(1, map.get(3L).size());
+        assertTrue(map.get(0L).contains("lop"));
+        assertTrue(map.get(0L).contains("ripple"));
+        assertTrue(map.get(0L).contains("vadas"));
+        assertTrue(map.get(1L).contains("peter"));
+        assertTrue(map.get(2L).contains("josh"));
+        assertTrue(map.get(3L).contains("marko"));
         checkSideEffects(traversal.asAdmin().getSideEffects());
     }
 
@@ -1447,7 +1446,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                     .values("name")
                     .order()
                     .by(select("a").out().count(), Order.asc)
-                    .by(select("a").values("name"), desc);
+                    .by(select("a").values("name"), Order.desc);
         }
 
         @Override
@@ -1756,7 +1755,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, String> get_g_V_whereXinXcreatedX_count_isXgte_2XX_valuesXnameX() {
-            return g.V().where(in("created").count().is(P.gte(2l))).values("name");
+            return g.V().where(in("created").count().is(P.gte(2L))).values("name");
         }
 
         @Override
@@ -1781,7 +1780,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Vertex> get_g_V_order_byXoutE_count_descX() {
-            return g.V().order().by(outE().count(), desc);
+            return g.V().order().by(outE().count(), Order.desc);
         }
 
         @Override
