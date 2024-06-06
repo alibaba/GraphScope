@@ -14,11 +14,28 @@
 package com.alibaba.graphscope.groot.schema.ddl;
 
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyDef;
+import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public abstract class AbstractDdlExecutor {
 
     public abstract DdlResult execute(ByteString ddlBlob, GraphDef graphDef, int partitionCount)
             throws InvalidProtocolBufferException;
+
+    protected void checkDuplicatedPropertiesExists(List<PropertyDef> propertyDefs) {
+        Set<String> propertyNameSet = new HashSet<>();
+        for (PropertyDef property : propertyDefs) {
+            String propertyName = property.getName();
+            if (propertyNameSet.contains(propertyName)) {
+                throw new DdlException("incoming propertyName [" + propertyName + "] has duplicated");
+            }
+            propertyNameSet.add(propertyName);
+        }
+    }
 }

@@ -53,7 +53,6 @@ impl IntoIterator for VertexTypeScan {
             let iter = self.storage.new_scan(&prefix).unwrap();
             let iter = iter.filter_map(move |(raw_key, raw_val)| {
                 let key = raw_key.to_slice();
-                info!("key is  {:?}", key);
                 let val = raw_val.to_slice();
                 match parse_vertex_key(key) {
                     Ok((vertex_id, ts)) => {

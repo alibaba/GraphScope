@@ -120,7 +120,6 @@ impl Meta {
             match item {
                 MetaItem::CreateVertexType(x) => {
                     let label_id = x.type_def.get_label_id();
-                    info!("CreateVertexType label {:?}, table {:?}, si {:?}, type def {:?}", label_id, x.table_id, x.si, x.type_def);
                     let mut graph_def = self.graph_def_lock.lock()?;
                     let current_label_idx = graph_def.get_label_idx();
                     if current_label_idx >= label_id {
@@ -148,8 +147,6 @@ impl Meta {
                 }
                 MetaItem::CreateEdgeType(x) => {
                     let label_id = x.type_def.get_label_id();
-                    info!("CreateEdgeType label {:?}, si {:?}, type def {:?}", label_id, x.si, x.type_def);
-
                     let mut graph_def = self.graph_def_lock.lock()?;
                     let current_label_idx = graph_def.get_label_idx();
                     if current_label_idx >= label_id {

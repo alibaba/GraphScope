@@ -116,17 +116,6 @@ public abstract class AbstractAddTypePropertiesExecutor extends AbstractDdlExecu
         return new DdlResult(newGraphDef, operations);
     }
 
-    private void checkDuplicatedPropertiesExists(List<PropertyDef> propertyDefs) {
-        Set<String> propertyNameSet = new HashSet<>();
-        for (PropertyDef property : propertyDefs) {
-            String propertyName = property.getName();
-            if (propertyNameSet.contains(propertyName)) {
-                throw new DdlException("incoming propertyName [" + propertyName + "] has duplicated");
-            }
-            propertyNameSet.add(propertyName);
-        }
-    }
-
     private void checkPropertiesExists(String label, PropertyDef property, List<PropertyDef> propertyDefs) {
         Integer propertyId = property.getId();
         String propertyName = property.getName();

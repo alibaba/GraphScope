@@ -68,6 +68,7 @@ public abstract class AbstractCreateTypeExecutor extends AbstractDdlExecutor {
         int propertyIdx = graphDef.getPropertyIdx();
         Map<String, Integer> propertyNameToId = graphDef.getPropertyNameToId();
         List<PropertyDef> inputPropertiesInfo = typeDef.getProperties();
+        checkDuplicatedPropertiesExists(inputPropertiesInfo);
         List<PropertyDef> propertyDefs = new ArrayList<>(inputPropertiesInfo.size());
         for (PropertyDef property : inputPropertiesInfo) {
             String propertyName = property.getName();

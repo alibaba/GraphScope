@@ -141,7 +141,6 @@ impl MultiVersionGraph for GraphStore {
                     .get_type_info(si as i64, label_id as i32)
                 {
                     Ok(vertex_type_info) => {
-                        info!("vertex_type_info is in");
                         let scan =
                             VertexTypeScan::new(self.storage.clone(), si, vertex_type_info, with_prop);
                         scan.into_iter()
@@ -251,7 +250,6 @@ impl MultiVersionGraph for GraphStore {
         &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
     ) -> GraphResult<bool> {
         debug!("create_vertex_type");
-        info!("table id  is  {:?}", table_id);
         let _guard = res_unwrap!(self.lock.lock(), create_vertex_type)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -287,7 +285,6 @@ impl MultiVersionGraph for GraphStore {
             let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, add_vertex_type_properties);
             return Err(err);
         }
-        info!("add proeprties tableid is  {:?}", table_id);
         self.meta
             .add_vertex_type_properties(si, schema_version, label_id, type_def, table_id)
             .and_then(|(table, cloned_typedef)| {
@@ -947,7 +944,6 @@ impl GraphStore {
                     .get_edge_info(si as i64, label_id as i32)
                 {
                     Ok(edge_info) => {
-                        info!("edge_info in");
                         let scan = EdgeTypeScan::new(
                             self.storage.clone(),
                             si,
