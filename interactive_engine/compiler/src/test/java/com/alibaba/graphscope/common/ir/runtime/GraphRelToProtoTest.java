@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
@@ -32,7 +33,6 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.ir.tools.config.PathExpandConfig;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1082,7 +1082,7 @@ public class GraphRelToProtoTest {
     @Test
     public void intersect_test() throws Exception {
         GraphRelOptimizer optimizer = getMockCBO();
-        IrMeta irMeta = getMockCBOMeta();
+        IrMeta irMeta = getMockCBOMeta(optimizer);
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
@@ -1117,7 +1117,7 @@ public class GraphRelToProtoTest {
 
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+                        getMockCBOConfig(), getMockCBOMeta(optimizer), new LogicalPlan(after))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/intersect_test.json"),
@@ -1126,7 +1126,9 @@ public class GraphRelToProtoTest {
 
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+                        getMockPartitionedCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_intersect_test.json"),
@@ -1137,7 +1139,7 @@ public class GraphRelToProtoTest {
     @Test
     public void intersect_test_02() throws Exception {
         GraphRelOptimizer optimizer = getMockCBO();
-        IrMeta irMeta = getMockCBOMeta();
+        IrMeta irMeta = getMockCBOMeta(optimizer);
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
@@ -1178,7 +1180,7 @@ public class GraphRelToProtoTest {
 
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+                        getMockCBOConfig(), getMockCBOMeta(optimizer), new LogicalPlan(after))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/intersect_test_2.json"),
@@ -1186,7 +1188,9 @@ public class GraphRelToProtoTest {
         }
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedCBOConfig(), getMockCBOMeta(), new LogicalPlan(after))) {
+                        getMockPartitionedCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_intersect_test_2.json"),
@@ -1224,10 +1228,11 @@ public class GraphRelToProtoTest {
         return new GraphRelOptimizer(getMockCBOConfig());
     }
 
-    private IrMeta getMockCBOMeta() {
+    private IrMeta getMockCBOMeta(GraphRelOptimizer optimizer) {
         return Utils.mockIrMeta(
                 "schema/ldbc_schema_exp_hierarchy.json",
-                "statistics/ldbc30_hierarchy_statistics.json");
+                "statistics/ldbc30_hierarchy_statistics.json",
+                optimizer.getGlogueHolder());
     }
 
     private Configs getMockGraphConfig() {
