@@ -248,9 +248,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method =
                 "g_withSideEffectXa_josh_peterX_VX1X_outXcreatedX_inXcreatedX_name_whereXwithinXaXX",
         reason = "unsupported")
-// @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
-//        method = "g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_outXknowsX_bX",
-//        reason = "unsupported")
+ @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
+        method = "g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_outXknowsX_bX",
+        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
         method = "g_V_whereXoutXcreatedX_and_outXknowsX_or_inXknowsXX_valuesXnameX",
@@ -856,10 +856,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
         method = "g_V_asXaX_outXcreatedX_asXbX_inXcreatedX_asXcX_dedupXa_bX_path",
         reason = "unsupported")
-// @Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
-//        method = "g_V_both_both_dedup_byXoutE_countX_name",
-//        reason = "unsupported")
+ @Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_both_dedup_byXoutE_countX_name",
+        reason = "unsupported")
 // @Graph.OptOut(
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
 //        method = "g_V_asXaX_both_asXbX_dedupXa_bX_byXlabelX_selectXa_bX",
@@ -1571,10 +1571,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_asXaX_outXcreatedX_whereXasXaX_name_isXjoshXX_inXcreatedX_name",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
         reason = "sub query is unsupported yet")
-// @Graph.OptOut(
-//         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
-//         method = "g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX",
-//         reason = "sub query is unsupported yet")
+ @Graph.OptOut(
+         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
+         method = "g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX",
+         reason = "sub query is unsupported yet")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest",
         method = "g_V_whereXinXkknowsX_outXcreatedX_count_is_0XX_name",

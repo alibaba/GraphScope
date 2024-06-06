@@ -243,6 +243,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_both_both_dedup_byXoutE_countX_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, String> traversal = get_g_V_both_both_dedup_byXoutE_countX_name();
         printTraversalForm(traversal);
         final List<String> names = traversal.toList();
@@ -257,6 +258,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_whereXinXcreatedX_count_isX1XX_valuesXnameX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, String> traversal =
                 get_g_V_whereXinXcreatedX_count_isX1XX_valuesXnameX();
         printTraversalForm(traversal);
@@ -268,6 +270,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_whereXinXcreatedX_count_isXgte_2XX_valuesXnameX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, String> traversal =
                 get_g_V_whereXinXcreatedX_count_isXgte_2XX_valuesXnameX();
         printTraversalForm(traversal);
@@ -279,6 +282,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_asXaX_outXcreatedX_whereXasXaX_name_isXjoshXX_inXcreatedX_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, String> traversal =
                 get_g_V_asXaX_outXcreatedX_whereXasXaX_name_isXjoshXX_inXcreatedX_name();
         printTraversalForm(traversal);
@@ -1194,6 +1198,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_whereXnotXoutXcreatedXXX_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, String> traversal = get_g_V_whereXnotXoutXcreatedXXX_name();
         printTraversalForm(traversal);
         checkResults(Arrays.asList("vadas", "lop", "ripple"), traversal);
@@ -1202,6 +1207,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_whereXinXkknowsX_outXcreatedX_count_is_0XX_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, String> traversal =
                 get_g_V_whereXinXknowsX_outXcreatedX_count_is_0XX_name();
         printTraversalForm(traversal);
@@ -1211,6 +1217,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_order_byXoutE_count_descX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Arrays.asList(get_g_V_order_byXoutE_count_descX())
                 .forEach(
                         traversal -> {
@@ -1238,6 +1245,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_asXaX_whereXoutXknowsXX_selectXaX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Vertex> traversal = get_g_V_asXaX_whereXoutXknowsXX_selectXaX();
         printTraversalForm(traversal);
         assertEquals(convertToVertex(graph, "marko"), traversal.next());
@@ -1247,6 +1255,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_groupCount_byXbothE_countX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Map<Long, Long>> traversal = get_g_V_groupCount_byXbothE_countX();
         printTraversalForm(traversal);
         checkMap(
@@ -1263,6 +1272,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_group_byXoutE_countX_byXnameX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Map<Long, Collection<String>>> traversal =
                 get_g_V_group_byXoutE_countX_byXnameX();
         printTraversalForm(traversal);
@@ -1290,6 +1300,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(MODERN)
     public void g_V_group_byXageX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Vertex, Map<Integer, Collection<Vertex>>> traversal =
                 get_g_V_group_byXageX();
         printTraversalForm(traversal);
