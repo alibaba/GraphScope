@@ -121,25 +121,22 @@ find_package(Boost REQUIRED COMPONENTS system filesystem
              context program_options regex thread date_time)
 add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 
+########## BrotliAlt, utf8proc, zstdAlt ##########
+# These third-party dependenices are actually not used in Flex, but included here 
+# to avoid cmake problems.
 include("cmake/FindBrotliAlt.cmake")
 if (NOT BrotliAlt_FOUND)
-    message(FATAL_ERROR "brotli not found, please install the brotli library")
-else ()
-    include_directories(SYSTEM ${BrotliAlt_INCLUDE_DIRS})
+    message(FATAL_ERROR "brotli not found, proceed without brotli")
 endif()
 
 include("cmake/Findutf8proc.cmake")
 if (NOT utf8proc_FOUND)
-    message(FATAL_ERROR "utf8proc not found, please install the utf8proc library")
-else ()
-    include_directories(SYSTEM ${utf8proc_INCLUDE_DIRS})
+    message(FATAL_ERROR "utf8proc not found, proceed without utf8proc")
 endif ()
 
 include("cmake/FindzstdAlt.cmake")
 if (NOT zstdAlt_FOUND)
-    message(FATAL_ERROR "zstd not found, please install the zstd library")
-else ()
-    include_directories(SYSTEM ${zstdAlt_INCLUDE_DIRS})
+    message(STATUS "zstd not found, proceed without zstd")
 endif ()
 
 #find arrow----------------------------------------------------------------------
