@@ -13,7 +13,7 @@ To use Interactive Java SDK
 ```xml
 <dependency>
     <groupId>com.alibaba.graphscope</groupId>
-    <artifactId>interactive-java-sdk</artifactId>
+    <artifactId>interactive-sdk</artifactId>
     <version>0.0.3</version>
 </dependency>
 ```
