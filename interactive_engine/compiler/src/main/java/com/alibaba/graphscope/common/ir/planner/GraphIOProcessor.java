@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.planner;
 
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.type.DataKey;
@@ -39,7 +40,6 @@ import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
@@ -48,7 +48,6 @@ import com.google.common.collect.*;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -267,15 +266,20 @@ public class GraphIOProcessor {
                                 vertexOrEdgeDetails.put(existVertex, new DataValue(alias, filters));
                             } else if (filters != null) {
                                 DataValue value = vertexOrEdgeDetails.get(existVertex);
-                                if (value.getFilter() == null
-                                        || !RelOptUtil.conjunctions(value.getFilter())
-                                                .containsAll(RelOptUtil.conjunctions(filters))) {
-                                    throw new IllegalArgumentException(
-                                            "filters "
-                                                    + filters
-                                                    + " not exist in the previous vertex filters "
-                                                    + value.getFilter());
-                                }
+                                // reset condition
+                                RexNode newCondition =
+                                        (value.getFilter() == null)
+                                                ? filters
+                                                : RexUtil.composeConjunction(
+                                                        builder.getRexBuilder(),
+                                                        ImmutableList.of(
+                                                                filters, value.getFilter()));
+                                vertexOrEdgeDetails.put(
+                                        existVertex,
+                                        new DataValue(
+                                                value.getAlias(),
+                                                newCondition,
+                                                value.getParentAlias()));
                             }
                             return existVertex;
                         }

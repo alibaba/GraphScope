@@ -17,10 +17,11 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +39,8 @@ public class QueryCacheTest {
                         configs,
                         (GraphBuilder builder, IrMeta irMeta, String q) ->
                                 new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)));
+                                        .visit(new CypherAntlr4Parser().parse(q)),
+                        new GraphRelOptimizer(configs));
         QueryCache cache = new QueryCache(configs);
         QueryCache.Key key1 =
                 cache.createKey(
@@ -67,7 +69,8 @@ public class QueryCacheTest {
                         configs,
                         (GraphBuilder builder, IrMeta irMeta, String q) ->
                                 new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)));
+                                        .visit(new CypherAntlr4Parser().parse(q)),
+                        new GraphRelOptimizer(configs));
         QueryCache cache = new QueryCache(configs);
         QueryCache.Key key1 =
                 cache.createKey(

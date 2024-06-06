@@ -10,7 +10,7 @@ Python 3.7+
 ### pip install
 
 ```bash
-pip3 install graphscope-interactive
+pip3 install interactive-sdk
 ```
 
 Then import the package:

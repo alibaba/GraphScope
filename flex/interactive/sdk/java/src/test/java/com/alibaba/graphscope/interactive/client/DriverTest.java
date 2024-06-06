@@ -483,6 +483,14 @@ public class DriverTest {
 
     @Test
     @Order(11)
+    public void test9GetGraphStatistics() {
+        Result<GetGraphStatisticsResponse> resp = session.getGraphStatistics(graphId);
+        assertOk(resp);
+        logger.info("graph statistics: " + resp.getValue());
+    }
+
+    @Test
+    @Order(12)
     public void test9CallCppProcedure1() {
         QueryRequest request = new QueryRequest();
         request.setQueryName(cppProcedureId1);
@@ -500,19 +508,36 @@ public class DriverTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
+    public void test9CallCppProcedure1Current() {
+        QueryRequest request = new QueryRequest();
+        request.setQueryName(cppProcedureId1);
+        request.addArgumentsItem(
+                new TypedValue()
+                        .value(1)
+                        .type(
+                                new GSDataType(
+                                        new PrimitiveType()
+                                                .primitiveType(
+                                                        PrimitiveType.PrimitiveTypeEnum
+                                                                .SIGNED_INT32))));
+        Result<IrResult.CollectiveResults> resp = session.callProcedure(request);
+        assertOk(resp);
+    }
+
+    @Test
+    @Order(14)
     public void test9CallCppProcedure2() {
         byte[] bytes = new byte[4 + 1];
         Encoder encoder = new Encoder(bytes);
         encoder.put_int(1);
         encoder.put_byte((byte) 1); // Assume the procedure index is 1
-        String encoded = new String(bytes);
-        Result<String> resp = session.callProcedureRaw(graphId, encoded);
+        Result<byte[]> resp = session.callProcedureRaw(graphId, bytes);
         assertOk(resp);
     }
 
     @Test
-    @Order(13)
+    @Order(15)
     public void test10CallCypherProcedureViaNeo4j() {
         String query = "CALL " + cypherProcedureId + "() YIELD *;";
         org.neo4j.driver.Result result = neo4jSession.run(query);

@@ -91,6 +91,8 @@ class ProcedureCaller():
         if not resp.is_ok():
             print("call sample_app failed: ", resp.get_status_message())
             exit(1)
+        res = resp.get_value()
+        print("call sample_app result: ", res)
         self.call_cypher_queries()
     
     def callProcedureWithEncoder(self, graph_id : str):
