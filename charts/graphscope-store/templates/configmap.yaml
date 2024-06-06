@@ -60,6 +60,7 @@ data:
     neo4j.bolt.server.disabled=true
   
     ## GOpt config
+    graph.planner.is.on={{ .Values.graphPlannerIsOn }}
     graph.planner.opt={{ .Values.graphPlannerOpt }}
     graph.planner.rules={{ .Values.graphPlannerRules }}
     graph.physical.opt={{ .Values.graphPhysicalOpt }}

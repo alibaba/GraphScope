@@ -489,6 +489,7 @@ zkBasePath: "/graphscope/groot"
 
 ## GOpt config
 ## To adopt a CBO planner, set graphPlannerOpt to CBO, set gremlinScriptLanguageName to antlr_gremlin_calcite, and set physicalOptConfig to proto.
+graphPlannerIsOn: true
 graphPlannerOpt: RBO
 graphPlannerRules: FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule, ExpandGetVFusionRule
 gremlinScriptLanguageName: antlr_gremlin_traversal
