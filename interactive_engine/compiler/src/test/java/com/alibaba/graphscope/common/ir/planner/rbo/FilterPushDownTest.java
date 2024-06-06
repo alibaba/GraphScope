@@ -54,7 +54,13 @@ public class FilterPushDownTest {
     // Match(x:person)-[:knows*1..3]->(z:person {age: 10})
     @Test
     public void push_filter_2_test() {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         GetVConfig getVConfig =
                 new GetVConfig(GraphOpt.GetV.END, new LabelConfig(false).addLabel("person"), "z");
@@ -68,16 +74,8 @@ public class FilterPushDownTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
-        RelNode sentence =
-                builder.source(
-                                new SourceConfig(
-                                        GraphOpt.Source.VERTEX,
-                                        new LabelConfig(false).addLabel("person"),
-                                        "x"))
-                        .pathExpand(pxdConfig)
-                        .getV(getVConfig)
-                        .build();
+                        .buildConfig();
+        RelNode sentence = builder.pathExpand(pxdConfig).getV(getVConfig).build();
         RelNode before =
                 builder.match(sentence, GraphOpt.Match.INNER)
                         .filter(

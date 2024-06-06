@@ -1680,4 +1680,25 @@ public class GraphBuilderTest {
                         + " alias=[_], fusedFilter=[[=(_.id, 1)]], opt=[VERTEX])",
                 node.explain().trim());
     }
+
+    @Test
+    public void g_V_path_expand_until_age_gt_30_values_age() {
+        RelNode node =
+                eval("g.V().out('1..3').with('UNTIL', expr(_.age > 30)).endV().values('age')");
+        Assert.assertEquals(
+                "GraphLogicalProject(age=[age], isAppend=[false])\n"
+                    + "  GraphLogicalProject(age=[_.age], isAppend=[true])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
+                    + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " until_condition=[>(_.age, 30)], alias=[_])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[VERTEX])",
+                node.explain().trim());
+    }
 }
