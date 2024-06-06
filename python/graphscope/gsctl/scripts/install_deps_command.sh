@@ -6,8 +6,6 @@ source ${script_dir}/lib/install_thirdparty_dependencies.sh
 source ${script_dir}/lib/install_vineyard.sh
 source ${script_dir}/lib/util.sh
 source ${script_dir}/initialize.sh
-source ${script_dir}/lib/install_libgrape_lite.sh
-source ${script_dir}/lib/install_hiactor.sh
 
 # parse args
 while getopts ":t:i:d:v:j:-:" opt; do
@@ -143,7 +141,8 @@ _install_apache_arrow_ubuntu() {
       -P /tmp/
     ${SUDO} apt-get install -y -V /tmp/apache-arrow-apt-source-latest-"$(lsb_release --codename --short)".deb
     ${SUDO} apt-get update -y
-    ${SUDO} apt-get install -y libarrow-dev libarrow-dataset-dev libarrow-acero-dev libparquet-dev
+    #TODO(weibin): Remove the arrow version constrait after issue is resolved: https://github.com/apache/incubator-graphar/issues/515
+    ${SUDO} apt-get install -y libarrow-dev=15.0.2-1 libarrow-dataset-dev=15.0.2-1 libarrow-acero-dev=15.0.2-1 libparquet-dev=15.0.2-1
     rm /tmp/apache-arrow-apt-source-latest-*.deb
   else
     log "apache-arrow (libarrow-dev) already installed, skip."
@@ -324,13 +323,7 @@ install_dependencies_analytical_universal() {
 }
 
 install_interactive_deps() {
-  # First install libgrape-lite
-  install_libgrape_lite
-  # arrow should already be installed by analytical dependencies
-  # install hiactor.
   install_hiactor
-  sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
-  sysctl -p /etc/sysctl.conf
 }
 
 write_env_config() {
