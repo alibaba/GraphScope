@@ -96,7 +96,8 @@ impl Meta {
                 .into_iter()
                 .map(|i| MetaItem::CommitDataLoad(i)),
         );
-        let add_vertex_property_items = res_unwrap!(get_items::<AddVertexPropertyItem>(store_ref), recover)?;
+        let add_vertex_property_items =
+            res_unwrap!(get_items::<AddVertexPropertyItem>(store_ref), recover)?;
         all.extend(
             add_vertex_property_items
                 .into_iter()
@@ -217,12 +218,14 @@ impl Meta {
                 }
                 MetaItem::AddVertexProperty(x) => {
                     let label_id = x.type_def.get_label_id();
-                    info!("AddVertexProperty label {:?}, table {:?}, si {:?}, type def {:?}", label_id, x.table_id, x.si, x.type_def);
+                    info!(
+                        "AddVertexProperty label {:?}, table {:?}, si {:?}, type def {:?}",
+                        label_id, x.table_id, x.si, x.type_def
+                    );
                     let mut graph_def = self.graph_def_lock.lock()?;
                     graph_def.update_type(label_id, x.type_def.clone());
                     graph_def.increase_version();
                     vertex_manager_builder.update_type(x.si, x.label_id, &x.type_def)?;
-
                 }
                 MetaItem::AddEdgeProperty(x) => {
                     let label_id = x.type_def.get_label_id();
@@ -319,8 +322,14 @@ impl Meta {
         if let Some(mut cloned) = graph_def.get_type(&label_id).cloned() {
             for new_property in type_def.get_prop_defs() {
                 let new_property_name = &new_property.name;
-                if cloned.get_prop_defs().any(|p| &p.id == &new_property.id || p.name == *new_property_name) {
-                    let msg = format!("Property with name '{}' already exists in type for label_id {}", new_property_name, label_id);
+                if cloned
+                    .get_prop_defs()
+                    .any(|p| &p.id == &new_property.id || p.name == *new_property_name)
+                {
+                    let msg = format!(
+                        "Property with name '{}' already exists in type for label_id {}",
+                        new_property_name, label_id
+                    );
                     return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
                 }
                 cloned.add_property(new_property.clone());
@@ -382,8 +391,14 @@ impl Meta {
         if let Some(mut cloned) = graph_def.get_type(&label_id).cloned() {
             for new_property in type_def.get_prop_defs() {
                 let new_property_name = &new_property.name;
-                if cloned.get_prop_defs().any(|p| &p.id == &new_property.id || p.name == *new_property_name) {
-                    let msg = format!("Property with name '{}' already exists in type for label_id {}", new_property_name, label_id);
+                if cloned
+                    .get_prop_defs()
+                    .any(|p| &p.id == &new_property.id || p.name == *new_property_name)
+                {
+                    let msg = format!(
+                        "Property with name '{}' already exists in type for label_id {}",
+                        new_property_name, label_id
+                    );
                     return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
                 }
                 cloned.add_property(new_property.clone());
@@ -910,7 +925,6 @@ impl ItemCommon for AddVertexPropertyItem {
         Ok((meta_key(&key), bytes))
     }
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 struct AddEdgePropertyItem {

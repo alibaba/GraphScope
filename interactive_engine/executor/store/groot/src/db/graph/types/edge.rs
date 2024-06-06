@@ -342,7 +342,9 @@ impl EdgeManagerBuilder {
         self.inner.drop_edge_type(si, label)
     }
 
-    pub fn update_edge_type(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
+    pub fn update_edge_type(
+        &mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef,
+    ) -> GraphResult<()> {
         self.inner.update_edge_type(si, label, type_def)
     }
     pub fn add_edge_kind(&mut self, si: SnapshotId, kind: &EdgeKind) -> GraphResult<()> {
@@ -423,7 +425,7 @@ impl EdgeManagerInner {
     fn create_edge_type(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
         if self.info_map.contains_key(&label) {
             let msg = format!("edge#{} already exists", label);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation,msg,create_edge_type);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_edge_type);
             return Err(err);
         }
         let info = EdgeInfo::new(si, label);
@@ -437,7 +439,7 @@ impl EdgeManagerInner {
     fn update_edge_type(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
         if !self.info_map.contains_key(&label) {
             let msg = format!("edge#{} not found.", label);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation,msg,update_edge_type);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, update_edge_type);
             return Err(err);
         }
         if let Some(info) = self.info_map.get(&label) {

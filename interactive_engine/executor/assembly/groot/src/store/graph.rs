@@ -12,8 +12,8 @@ use groot_store::db::api::{
 use groot_store::db::common::bytes::util::parse_pb;
 use groot_store::db::graph::store::GraphStore;
 use groot_store::db::proto::model::{
-    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, AddVertexTypePropertiesPb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeLocationPb,
-    OpTypePb, OperationBatchPb, OperationPb, VertexIdPb,
+    AddEdgeKindPb, AddVertexTypePropertiesPb, ConfigPb, CreateVertexTypePb, DataOperationPb,
+    DdlOperationPb, EdgeIdPb, EdgeLocationPb, OpTypePb, OperationBatchPb, OperationPb, VertexIdPb,
 };
 use groot_store::db::proto::model::{CommitDataLoadPb, PrepareDataLoadPb};
 use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
@@ -253,7 +253,8 @@ fn add_vertex_type_properties<G: MultiVersionGraph>(
     trace!("add_vertex_type_properties");
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
-    let add_vertex_type_properties_pb = parse_pb::<AddVertexTypePropertiesPb>(ddl_operation_pb.get_ddlBlob())?;
+    let add_vertex_type_properties_pb =
+        parse_pb::<AddVertexTypePropertiesPb>(ddl_operation_pb.get_ddlBlob())?;
     let table_id = add_vertex_type_properties_pb.get_tableIdx();
     let typedef_pb = add_vertex_type_properties_pb.get_typeDef();
     let label_id = typedef_pb.get_label_id().get_id();
