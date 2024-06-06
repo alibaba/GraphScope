@@ -2,10 +2,10 @@ package com.alibaba.graphscope.common.ir.planner.cbo;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -31,7 +31,11 @@ public class LdbcTest {
                                 "NotMatchToAntiJoinRule, FilterIntoJoinRule, FilterMatchRule,"
                                         + " ExtendIntersectRule, ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockIrMeta("schema/ldbc.json", "statistics/ldbc30_statistics.json");
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc.json",
+                        "statistics/ldbc30_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     @Test
