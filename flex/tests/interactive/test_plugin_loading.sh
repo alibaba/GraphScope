@@ -15,54 +15,109 @@
 set -e
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 FLEX_HOME=${SCRIPT_DIR}/../../
-BULK_LOADER=${FLEX_HOME}/build/bin/bulk_loader
 SERVER_BIN=${FLEX_HOME}/build/bin/interactive_server
-GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
-if [ $# -ne 3 ]; then
-  echo "Receives: $# args, need 3 args"
-  echo "Usage: $0 <SCHEMA_PATH> <IMPORT_FILE> <ENGINE_CONFIG>"
+kill_service(){
+    echo "Kill Service first"
+    ps -ef | grep "interactive_server" |  awk '{print $2}' | xargs kill -9  || true
+    ps -ef | grep "com.alibaba.graphscope.GraphServer" |  awk '{print $2}' | xargs kill -9  || true
+    sleep 3
+    # check if service is killed
+    echo "Kill Service success"
+}
+
+# kill service when exit
+trap kill_service EXIT
+
+start_engine_service(){
+    #check SERVER_BIN exists
+    if [ ! -f ${SERVER_BIN} ]; then
+        err "SERVER_BIN not found"
+        exit 1
+    fi
+    cmd="${SERVER_BIN} -w ${WORKSPACE} -c ${ENGINE_CONFIG_PATH} --enable-admin-service true"
+    cmd="${cmd} --start-compiler true"
+    
+    echo "Start engine service with command: ${cmd}"
+    ${cmd} &
+    sleep 10
+    #check interactive_server is running, if not, exit
+    ps -ef | grep "interactive_server" | grep -v grep
+
+    echo "Start engine service success"
+}
+
+if [ $# -ne 5 ]; then
+  echo "Receives: $# args, need 5 args"
+  echo "Usage: $0 <WORKSPACE> <GRAPH_NAME> <ENGINE_CONFIG> <SCHEMA_VERSION_00> <SCHEMA_VERSION_01>"
   exit 1
 fi
 
-SCHEMA_PATH=$1
-IMPORT_FILE=$2
+WORKSPACE=$1
+GRAPH_NAME=$2
 ENGINE_CONFIG_PATH=$3
+SCHEMA_VERSION_00=$4
+SCHEMA_VERSION_01=$5
 
-echo "SCHEMA_PATH: ${SCHEMA_PATH}"
-echo "IMPORT_FILE: ${IMPORT_FILE}"
-echo "ENGINE_CONFIG_PATH: ${ENGINE_CONFIG_PATH}"
-
-DATA_PATH=/tmp/test_plugin_loading
-if [ -d ${DATA_PATH} ]; then
-  rm -rf ${DATA_PATH}
+if [ ! -d ${WORKSPACE} ]; then
+  echo "WORKSPACE: ${WORKSPACE} not exists"
+  exit 1
 fi
-mkdir -p ${DATA_PATH}
+if [ ! -d ${WORKSPACE}/data/${GRAPH_NAME} ]; then
+  echo "GRAPH: ${GRAPH_NAME} not exists"
+  exit 1
+fi
 
-# First load the data with the bulk loader
-cmd="GLOG_v=10 ${BULK_LOADER} -g ${SCHEMA_PATH} -d ${DATA_PATH} -l ${IMPORT_FILE}"
-echo "Loading data with bulk loader"
-echo $cmd
-eval $cmd || exit 1
+if [ ! -f ${SCHEMA_VERSION_00} ]; then
+  echo "SCHEMA_VERSION_00: ${SCHEMA_VERSION_00} not exists"
+  exit 1
+fi
+
+if [ ! -f ${SCHEMA_VERSION_01} ]; then
+  echo "SCHEMA_VERSION_01: ${SCHEMA_VERSION_01} not exists"
+  exit 1
+fi
+
+echo "WORKSPACE: ${WORKSPACE}"
+echo "ENGINE_CONFIG_PATH: ${ENGINE_CONFIG_PATH}"
 
 
 # Try to start service with the generated plugins, for both v0.0 schema and v0.1 schema
 # and check if the service can be started successfully
-cmd="GLOG_v=10 ${SERVER_BIN} -g ${SCHEMA_PATH} --data-path ${DATA_PATH} -c ${ENGINE_CONFIG_PATH}"
-echo "Starting service with modern graph schema v0.0"
-echo $cmd
-eval "$cmd &" 
 
-sleep 10
-
-# check process is running, if not running, exit
-if ! ps -p $! > /dev/null
-then
-    echo "Test failed for modern graph schema v0.0"
+check_procedure_loading_and_calling_via_encoder() {
+  kill_service
+  if [ $# -ne 1 ]; then
+    echo "Receives: $# args, need 1 args"
+    echo "Usage: $0 <SCHEMA_FILE>"
     exit 1
-fi
+  fi
+  cp $1 ${WORKSPACE}/data/${GRAPH_NAME}/graph.yaml
+  start_engine_service
 
-# stop the service
-kill -9 $!
+  python3 test_call_proc.py --endpoint http://localhost:7777 --input-format encoder
 
-echo "Test passed for modern graph schema v0.0"
+  kill_service
+}
+
+check_procedure_loading_and_calling_via_cypher_json() {
+  kill_service
+  if [ $# -ne 1 ]; then
+    echo "Receives: $# args, need 1 args"
+    echo "Usage: $0 <SCHEMA_FILE>"
+    exit 1
+  fi
+  cp $1 ${WORKSPACE}/data/${GRAPH_NAME}/graph.yaml
+  start_engine_service
+
+  python3 test_call_proc.py --endpoint http://localhost:7777 --input-format json
+
+  kill_service
+}
+
+echo "Testing for schema file: ${SCHEMA_VERSION_00}"
+check_procedure_loading_and_calling_via_encoder ${SCHEMA_VERSION_00}
+echo "Testing for schema file: ${SCHEMA_VERSION_01}"
+check_procedure_loading_and_calling_via_cypher_json ${SCHEMA_VERSION_01}
+
+echo "Test passed for plugin loading and calling"

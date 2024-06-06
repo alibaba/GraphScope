@@ -16,9 +16,9 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.groot.frontend.SnapshotUpdateClient;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

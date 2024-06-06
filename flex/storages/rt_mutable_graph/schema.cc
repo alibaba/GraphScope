@@ -701,12 +701,14 @@ static Status parse_vertex_schema(YAML::Node node, Schema& schema) {
         property_types[primary_key_inds[i]] != PropertyType::kString &&
         property_types[primary_key_inds[i]] != PropertyType::kUInt64 &&
         property_types[primary_key_inds[i]] != PropertyType::kInt32 &&
-        property_types[primary_key_inds[i]] != PropertyType::kUInt32) {
+        property_types[primary_key_inds[i]] != PropertyType::kUInt32 &&
+        !property_types[primary_key_inds[i]].IsVarchar()) {
       LOG(ERROR) << "Primary key " << primary_key_name
-                 << " should be int64 or string";
-      return Status(
-          StatusCode::InvalidSchema,
-          "Primary key " + primary_key_name + " should be int64 or string");
+                 << " should be int64/int32/uint64/uint32 or string/varchar";
+      return Status(StatusCode::InvalidSchema,
+                    "Primary key " + primary_key_name +
+                        " should be int64/int32/uint64/"
+                        "uint32 or string/varchar");
     }
     primary_keys.emplace_back(property_types[primary_key_inds[i]],
                               property_names[primary_key_inds[i]],
@@ -997,21 +999,34 @@ static Status parse_stored_procedures_v00(
     }
   }
   schema.SetPluginDir(directory);
-  std::vector<std::pair<std::string, std::string>> plugin_name_or_path;
+  std::vector<std::pair<std::string, std::string>> plugin_name_or_paths;
   {
     std::vector<std::string> plugin_names;
     if (!get_sequence(stored_procedure_node, "enable_lists", plugin_names)) {
       LOG(ERROR) << "stored_procedures is not set properly";
     }
-    for (auto& plugin_name : plugin_names) {
-      plugin_name_or_path.emplace_back(plugin_name, "");
+    size_t plugin_cnt = 0;
+    for (auto& plugin_name_or_path : plugin_names) {
+      // The plugins names specified in enable_lists can be either the name of
+      // the plugin or the path to the plugin.
+      auto real_path = directory + "/" + plugin_name_or_path;
+      if (std::filesystem::exists(real_path)) {
+        plugin_name_or_paths.emplace_back(
+            std::string("plugin_") + std::to_string(plugin_cnt++), real_path);
+      } else if (std::filesystem::exists(plugin_name_or_path)) {
+        plugin_name_or_paths.emplace_back(
+            std::string("plugin_") + std::to_string(plugin_cnt++),
+            plugin_name_or_path);
+      } else {
+        LOG(WARNING) << "plugin " << plugin_name_or_path << " not found";
+      }
     }
   }
 
   // plugin_name_or_path contains the plugin name or path.
   // for path, we just use it as the plugin name, and emplace into the map,
   // for name, we try to find the plugin in the directory
-  if (!schema.EmplacePlugins(plugin_name_or_path)) {
+  if (!schema.EmplacePlugins(plugin_name_or_paths)) {
     LOG(ERROR) << "Fail to emplace all plugins";
     return Status(StatusCode::InvalidSchema, "Fail to emplace all plugins");
   }
@@ -1028,11 +1043,14 @@ static Status parse_stored_procedures_v01(
   std::vector<std::pair<std::string, std::string>> plugin_name_and_path;
   for (auto& cur_node : stored_procedure_node) {
     if (cur_node["name"] && cur_node["library"]) {
+      VLOG(10) << "Parse stored procedure: "
+               << cur_node["name"].as<std::string>()
+               << " with library: " << cur_node["library"].as<std::string>();
       plugin_name_and_path.push_back(
           std::make_pair(cur_node["name"].as<std::string>(),
                          cur_node["library"].as<std::string>()));
     } else {
-      LOG(ERROR) << "Library or name set properly for stored procedure";
+      LOG(WARNING) << "Library or name set properly for stored procedure";
       return Status(StatusCode::InvalidSchema,
                     "Library or name set properly for stored procedure");
     }

@@ -21,6 +21,7 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 
 from pydantic import Field, StrictStr
 
+from interactive_sdk.client.status import Status
 from interactive_sdk.openapi.api.admin_service_graph_management_api import (
     AdminServiceGraphManagementApi,
 )
@@ -234,11 +235,20 @@ class ProcedureInterface(metaclass=ABCMeta):
         self, graph_id: StrictStr, params: QueryRequest
     ) -> Result[CollectiveResults]:
         raise NotImplementedError
-    
+
+    @abstractmethod
+    def call_procedure_current(
+        self, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        raise NotImplementedError
+
     @abstractmethod
     def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
         raise NotImplementedError
 
+    @abstractmethod
+    def call_procedure_current_raw(self, params: str) -> Result[str]:
+        raise NotImplementedError
 
 class QueryServiceInterface:
     @abstractmethod
@@ -290,6 +300,9 @@ class Session(
 
 
 class DefaultSession(Session):
+    PROTOCOL_FORMAT = "proto"
+    JSON_FORMAT = "json"
+    ENCODER_FORMAT = "encoder"
     def __init__(self, uri: str):
         self._client = ApiClient(Configuration(host=uri))
 
@@ -517,17 +530,36 @@ class DefaultSession(Session):
         try:
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
-            params_str = params.to_json() + chr(1)
             response = self._query_api.proc_call_with_http_info(
-                graph_id, params_str
+                graph_id = graph_id, 
+                x_interactive_request_format = self.JSON_FORMAT,
+                body=params.to_json()
             )
             result = CollectiveResults()
             if response.status_code == 200:
-                byte_data = response.data.encode('utf-8')
-                result.ParseFromString(byte_data)
-                return Result.from_response(response)
+                result.ParseFromString(response.data)
+                return Result.ok(result)
             else:
-                return Result.from_response(result)
+                return Result(Status.from_response(response), result)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def call_procedure_current(
+        self, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in json format
+            response = self._query_api.proc_call_current_with_http_info(
+                x_interactive_request_format = self.JSON_FORMAT,
+                body = params.to_json()
+            )
+            result = CollectiveResults()
+            if response.status_code == 200:
+                result.ParseFromString(response.data)
+                return Result.ok(result)
+            else:
+                return Result(Status.from_response(response), result)
         except Exception as e:
             return Result.from_exception(e)
 
@@ -535,9 +567,22 @@ class DefaultSession(Session):
         try:
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
-            params = params + chr(0)
-            response = self._procedure_api.call_procedure_with_http_info(
-                graph_id, params
+            response = self._query_api.proc_call_with_http_info(
+                graph_id = graph_id, 
+                x_interactive_request_format = self.ENCODER_FORMAT, 
+                body = params
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+        
+    def call_procedure_current_raw(self, params: str) -> Result[str]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in encoder/decoder format
+            response = self._query_api.proc_call_current_with_http_info(
+                x_interactive_request_format = self.ENCODER_FORMAT, 
+                body = params
             )
             return Result.from_response(response)
         except Exception as e:

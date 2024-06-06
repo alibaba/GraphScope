@@ -16,7 +16,11 @@
 
 package com.alibaba.graphscope.gremlin.antlr4x;
 
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
@@ -29,6 +33,7 @@ import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.antlr4x.parser.GremlinAntlr4Parser;
 import com.alibaba.graphscope.gremlin.antlr4x.visitor.GraphBuilderVisitor;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.util.JsonFormat;
 
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -37,11 +42,44 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class GraphBuilderTest {
+    private static Configs configs;
+    private static IrMeta irMeta;
+    private static GraphRelOptimizer optimizer;
+
+    @BeforeClass
+    public static void beforeClass() {
+        configs =
+                new Configs(
+                        ImmutableMap.of(
+                                "graph.planner.is.on",
+                                "true",
+                                "graph.planner.opt",
+                                "CBO",
+                                "graph.planner.rules",
+                                "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                        + " ExpandGetVFusionRule",
+                                "graph.planner.cbo.glogue.schema",
+                                "target/test-classes/statistics/modern_statistics.txt"));
+        optimizer = new GraphRelOptimizer(configs);
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/modern.json",
+                        "statistics/modern_statistics.json",
+                        optimizer.getGlogueHolder());
+    }
+
     public static RelNode eval(String query) {
         GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilderVisitor visitor = new GraphBuilderVisitor(builder);
+        ParseTree parseTree = new GremlinAntlr4Parser().parse(query);
+        return visitor.visit(parseTree).build();
+    }
+
+    public static RelNode eval(String query, GraphBuilder builder) {
         GraphBuilderVisitor visitor = new GraphBuilderVisitor(builder);
         ParseTree parseTree = new GremlinAntlr4Parser().parse(query);
         return visitor.visit(parseTree).build();
@@ -1593,6 +1631,53 @@ public class GraphBuilderTest {
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
+                node.explain().trim());
+    }
+
+    // the filter conditions `has('age', 10)` and `has("name", "male")` should be composed and fused
+    // into the person 'b'
+    @Test
+    public void g_V_match_as_a_out_as_b_hasLabel_has_out_as_c_count_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode node =
+                eval(
+                        "g.V().match(__.as(\"a\").out(\"knows\").as(\"b\").has('age', 10),"
+                                + " __.as(\"b\").hasLabel(\"person\").has(\"name\","
+                                + " \"male\").out(\"knows\").as(\"c\")).count()",
+                        builder);
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[a, b,"
+                        + " c], aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[a], startAlias=[b], opt=[IN], physicalOpt=[VERTEX])\n"
+                        + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[c], startAlias=[b], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[b], fusedFilter=[[AND(=(_.name, _UTF-8'male'), =(_.age, 10))]],"
+                        + " opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    // id is the primary key of label 'person', should be fused as 'uniqueKeyFilters'
+    @Test
+    public void g_V_has_label_person_id_test() {
+        RelNode node = eval("g.V().has(\"person\", \"id\", 1)");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[_], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[_], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 1)])",
+                node.explain().trim());
+    }
+
+    // id is not the primary key of label 'software', should be fused as 'fusedFilter'
+    @Test
+    public void g_V_has_label_software_id_test() {
+        RelNode node = eval("g.V().has(\"software\", \"id\", 1)");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[_], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
+                        + " alias=[_], fusedFilter=[[=(_.id, 1)]], opt=[VERTEX])",
                 node.explain().trim());
     }
 }

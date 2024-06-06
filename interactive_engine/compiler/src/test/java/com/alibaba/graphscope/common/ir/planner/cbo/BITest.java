@@ -20,10 +20,10 @@ package com.alibaba.graphscope.common.ir.planner.cbo;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -52,7 +52,8 @@ public class BITest {
         irMeta =
                 Utils.mockIrMeta(
                         "schema/ldbc_schema_exp_hierarchy.json",
-                        "statistics/ldbc30_hierarchy_statistics.json");
+                        "statistics/ldbc30_hierarchy_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     @Test
