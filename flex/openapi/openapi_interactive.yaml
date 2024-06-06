@@ -904,18 +904,57 @@ paths:
           required: true
           schema:
             type: string
+        - name: X-Interactive-Request-Format
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [proto, encoder, json]
       requestBody:
         content:
           text/plain:
             schema:
               type: string
+              format: byte
       responses:
         '200':
           description: Successfully runned. Empty if failed?
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
+                format: byte
+        '500':
+          description: Server internal error
+  /v1/graph/current/query:
+    post:
+      tags:
+        - QueryService
+      summary: run queries on the running graph
+      operationId: proc_call_current
+      description: |
+        Submit a query to the running graph.
+      parameters:
+        - name: X-Interactive-Request-Format
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [proto, encoder, json]
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned. Empty if failed?
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
         '500':
           description: Server internal error
 components:
@@ -998,11 +1037,24 @@ components:
       properties:
         timestamp:
           type: string
+    DateType:
+      x-body-name: date_type
+      type: object
+      required:
+       - date32
+      properties:
+        date32:
+          type: string
     TemporalType:
       x-body-name: temporal_type
       type: object
-      oneOf:
-        - $ref: '#/components/schemas/TimeStampType'
+      required:
+        - temporal
+      properties:
+        temporal:
+          oneOf:
+            - $ref: '#/components/schemas/TimeStampType'
+            - $ref: '#/components/schemas/DateType'
     GSDataType:
       x-body-name: gs_data_type
       oneOf:
@@ -1364,6 +1416,10 @@ components:
                       - BOTH_OUT_IN
                   sort_on_compaction:
                     type: boolean
+                  oe_mutability:
+                    type: string
+                  ie_mutability:
+                    type: string
     CreateEdgeType:
       x-body-name: create_edge_type
       allOf:

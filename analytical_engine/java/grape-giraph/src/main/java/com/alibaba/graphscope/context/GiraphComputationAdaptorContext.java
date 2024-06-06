@@ -23,6 +23,7 @@ import static org.apache.giraph.job.HadoopUtils.makeTaskAttemptContext;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.communication.Communicator;
 import com.alibaba.graphscope.ds.GSVertexArray;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.factory.GiraphComputationFactory;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.graph.AggregatorManager;
@@ -39,6 +40,7 @@ import com.alibaba.graphscope.parallel.utils.NetworkMap;
 import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
+import com.alibaba.graphscope.stdcxx.StdString;
 import com.alibaba.graphscope.utils.ConfigurationUtils;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 
@@ -247,6 +249,22 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                     }
                     // This string is not readable.
                     vertexArray.setValue(grapeVertex, new String(bytes));
+                }
+            } else if (conf.getGrapeVdataClass().equals(StringView.class)) {
+                byte[] bytes = new byte[(int) maxOffset];
+                for (long lid = 0; lid < innerVerticesNum; ++lid) {
+                    grapeVertex.setValue((VID_T) (Long) lid);
+                    if (inputStream.longAvailable() <= 0) {
+                        throw new IllegalStateException(
+                                "Input stream too short for " + innerVerticesNum + " vertices");
+                    }
+                    if (inputStream.read(bytes, 0, (int) offsets[(int) lid]) == -1) {
+                        throw new IllegalStateException("read input stream failed");
+                    }
+                    // This string is not readable.
+                    StdString value = (StdString) vertexArray.get(grapeVertex);
+                    // TODO: can be optimized without creating a java string
+                    value.fromJavaString(new String(bytes));
                 }
             } else {
                 throw new IllegalStateException(
