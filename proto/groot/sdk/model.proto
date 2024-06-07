@@ -61,6 +61,9 @@ enum OpTypePb {
 
   CLEAR_VERTEX_PROPERTIES = 15;
   CLEAR_EDGE_PROPERTIES = 16;
+
+  ADD_VERTEX_TYPE_PROPERTIES = 17;
+  ADD_EDGE_TYPE_PROPERTIES = 18;
 }
 
 message VertexIdPb {
@@ -111,11 +114,15 @@ message CreateVertexTypePb {
   int64 tableIdx = 2;
 }
 
+message AddVertexTypePropertiesPb {
+  gs.rpc.graph.TypeDefPb typeDef = 1;
+  int64 tableIdx = 2;
+}
+
 message AddEdgeKindPb {
   gs.rpc.graph.EdgeKindPb edgeKind = 1;
   int64 tableIdx = 2;
 }
-
 
 message EdgeTableIdEntry {
   gs.rpc.graph.EdgeKindPb edgeKind = 1;

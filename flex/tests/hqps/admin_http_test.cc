@@ -132,8 +132,8 @@ void run_builtin_graph_test(
     for (auto& proc_id : plugin_ids) {
       procedure::Query query;
       query.mutable_query_name()->set_name(proc_id);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
-                                   "text/plain");
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   query.SerializeAsString(), "text/plain");
       CHECK(res->status != 200);
       LOG(INFO) << "call procedure response: " << res->body;
       // find failed in res->body
@@ -160,8 +160,8 @@ void run_builtin_graph_test(
     for (auto& plugin_id : plugin_ids) {
       procedure::Query query;
       query.mutable_query_name()->set_name(plugin_id);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
-                                   "text/plain");
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   query.SerializeAsString(), "text/plain");
       CHECK(res->status == 200)
           << "call procedure should success: " << res->body
           << ", for query: " << query.DebugString();
@@ -298,8 +298,8 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
       auto query_str = pair.second;
       procedure::Query query;
       query.mutable_query_name()->set_name(query_name);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
-                                   "text/plain");
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   query.SerializeAsString(), "text/plain");
       CHECK(res->status != 200)
           << "call previous procedure on current graph should fail: "
           << res->body;
@@ -309,7 +309,8 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
   //----4. call procedures-----------------------------------------------
   for (auto& proc_id : plugin_ids) {
     auto call_proc_payload = generate_call_procedure_payload(graph_id, proc_id);
-    res = query_client.Post("/v1/query", call_proc_payload, "text/plain");
+    res = query_client.Post("/v1/graph/current/query", call_proc_payload,
+                            "text/plain");
     CHECK(res->status == 200) << "call procedure failed: " << res->body
                               << ", for query: " << call_proc_payload;
   }
@@ -325,7 +326,8 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
   if (procedures.size() > 0) {
     auto call_proc_payload =
         generate_call_procedure_payload(graph_id, plugin_ids[0]);
-    res = query_client.Post("/v1/query", call_proc_payload, "text/plain");
+    res = query_client.Post("/v1/graph/current/query", call_proc_payload,
+                            "text/plain");
     CHECK(res->status == 200) << "call procedure failed: " << res->body
                               << ", for query: " << call_proc_payload;
   }
@@ -337,7 +339,7 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
   }
 }
 
-void run_get_node_status(httplib::Client& cli) {
+void run_get_node_status(httplib::Client& cli, const std::string& graph_id) {
   auto res = cli.Get("/v1/node/status");
   if (res->status != 200) {
     LOG(FATAL) << "get node status failed: " << res->body;
@@ -357,6 +359,31 @@ void run_get_node_status(httplib::Client& cli) {
     LOG(FATAL) << "Empty response: ";
   }
   LOG(INFO) << "get service status response: " << body;
+  // Get current running graph's status
+  {
+    auto res = cli.Get("/v1/graph/" + graph_id + "/statistics");
+    if (res->status != 200) {
+      LOG(FATAL) << "get current graph status failed: " << res->body;
+    }
+    auto body = res->body;
+    if (body.empty()) {
+      LOG(FATAL) << "Empty response: ";
+    }
+    // check whether has total_edge_count, total_vertex_count, and the value
+    // should be greater than 0
+    nlohmann::json j = nlohmann::json::parse(body);
+    if (!j.contains("total_edge_count") || !j.contains("total_vertex_count")) {
+      LOG(FATAL) << "get current graph status response does not contain "
+                    "total_edge_count or total_vertex_count: "
+                 << body;
+    }
+    if (j["total_edge_count"].get<int>() <= 0 ||
+        j["total_vertex_count"].get<int>() <= 0) {
+      LOG(FATAL) << "get current graph status response total_edge_count or "
+                    "total_vertex_count should be greater than 0: "
+                 << body;
+    }
+  }
 }
 
 void test_delete_graph(httplib::Client& cli, const std::string& graph_id) {
@@ -426,7 +453,7 @@ int main(int argc, char** argv) {
   run_procedure_test(cli, cli_query, graph_id, builtin_graph_queries,
                      procedure_paths);
   LOG(INFO) << "run procedure tests done";
-  run_get_node_status(cli);
+  run_get_node_status(cli, graph_id);
   LOG(INFO) << "test delete graph done";
   return 0;
 }

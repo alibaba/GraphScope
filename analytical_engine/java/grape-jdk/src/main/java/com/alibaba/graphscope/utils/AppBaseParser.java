@@ -183,7 +183,9 @@ public class AppBaseParser {
             return "java.lang.Integer";
         } else if (typeName.contains("LongWritable")) {
             return "java.lang.Long";
-        } else throw new IllegalStateException("Not recognized writable " + typeName);
+        } else {
+            return "com.alibaba.graphscope.ds.StringView";
+        }
     }
 
     private static Method getMethod(Class<?> clz) {

@@ -37,6 +37,8 @@ message BatchSubmitRequest {
       RemoveEdgeKindRequest remove_edge_kind_request = 4;
       DropVertexTypeRequest drop_vertex_type_request = 5;
       DropEdgeTypeRequest drop_edge_type_request = 6;
+      AddVertexTypePropertiesRequest add_vertex_type_properties_request = 7;
+      AddEdgeTypePropertiesRequest add_edge_type_properties_request = 8;
     }
   }
   repeated DDLRequest value = 3;
@@ -53,7 +55,15 @@ message CreateVertexTypeRequest {
     gs.rpc.graph.TypeDefPb type_def = 1;
 }
 
+message AddVertexTypePropertiesRequest {
+    gs.rpc.graph.TypeDefPb type_def = 1;
+}
+
 message CreateEdgeTypeRequest {
+    gs.rpc.graph.TypeDefPb type_def = 1;
+}
+
+message AddEdgeTypePropertiesRequest {
     gs.rpc.graph.TypeDefPb type_def = 1;
 }
 

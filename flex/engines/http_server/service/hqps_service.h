@@ -47,6 +47,7 @@ struct ServiceConfig {
   uint32_t admin_port;
   uint32_t query_port;
   uint32_t shard_num;
+  uint32_t memory_level;
   bool dpdk_mode;
   bool enable_thread_resource_pool;
   unsigned external_thread_num;

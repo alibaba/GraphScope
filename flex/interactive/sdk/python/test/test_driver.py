@@ -94,14 +94,16 @@ class TestDriver(unittest.TestCase):
         self.createGraph()
         self.bulkLoading()
         self.waitJobFinish()
-        self.test_list_graph()
+        self.list_graph()
         self.runCypherQuery()
         self.runGremlinQuery()
         self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
+        self.getStatistics()
         self.callProcedure()
         self.callProcedureWithHttp()
+        self.callProcedureWithHttpCurrent()
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
@@ -197,7 +199,7 @@ class TestDriver(unittest.TestCase):
                 time.sleep(1)
         print("job finished")
 
-    def test_list_graph(self):
+    def list_graph(self):
         resp = self._sess.list_graphs()
         assert resp.is_ok()
         print("list graph: ", resp.get_value())
@@ -259,6 +261,11 @@ class TestDriver(unittest.TestCase):
         # wait 5 seconds
         time.sleep(5)
 
+    def getStatistics(self):
+        resp = self._sess.get_graph_statistics(self._graph_id)
+        assert resp.is_ok()
+        print("get graph statistics: ", resp.get_value())
+
     def callProcedure(self):
         with self._driver.getNeo4jSession() as session:
             result = session.run("CALL test_procedure();")
@@ -276,10 +283,25 @@ class TestDriver(unittest.TestCase):
                 )
             ]
         )
-        resp = self._sess.call_procedure(self._graph_id, req)
+        resp = self._sess.call_procedure(graph_id = self._graph_id, params = req)
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
 
+    def callProcedureWithHttpCurrent(self):
+        req = QueryRequest(
+            query_name=self._cpp_proc_name,
+            arguments=[
+                TypedValue(
+                    type=GSDataType(
+                        PrimitiveType(primitive_type="DT_SIGNED_INT32")
+                    ),
+                    value = 1
+                )
+            ]
+        )
+        resp = self._sess.call_procedure_current(params = req)
+        assert resp.is_ok()
+        print("call procedure result: ", resp.get_value())
 
 if __name__ == "__main__":
     unittest.main()

@@ -64,7 +64,8 @@ void HQPSService::init(const ServiceConfig& config) {
   actor_sys_ = std::make_unique<actor_system>(
       config.shard_num, config.dpdk_mode, config.enable_thread_resource_pool,
       config.external_thread_num, [this]() { set_exit_state(); });
-  query_hdl_ = std::make_unique<hqps_http_handler>(config.query_port);
+  query_hdl_ =
+      std::make_unique<hqps_http_handler>(config.query_port, config.shard_num);
   if (config.start_admin_service) {
     admin_hdl_ = std::make_unique<admin_http_handler>(config.admin_port);
   }

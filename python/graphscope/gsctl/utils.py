@@ -23,6 +23,9 @@ import yaml
 from treelib import Node
 from treelib import Tree
 
+from graphscope.flex.rest import PrimitiveType
+from graphscope.flex.rest import StringType
+
 
 def read_yaml_file(path) -> dict:
     """Reads YAML file and returns as a python object."""
@@ -82,6 +85,15 @@ class TreeDisplay(object):
         self.tree = Tree()
         self.root_identifier = "GRAPH"
         self.tree.create_node(identifier=self.root_identifier)
+
+    def parse_property_type(self, property):
+        actual_instance = property.actual_instance
+        if isinstance(actual_instance, PrimitiveType):
+            return actual_instance.primitive_type
+        elif isinstance(actual_instance, StringType):
+            return "string"
+        else:
+            return str(actual_instance)
 
     def create_graph_node_for_groot(self, graph, recursive=True):
         # graph name must be unique
@@ -156,30 +168,32 @@ class TreeDisplay(object):
     def create_graph_node(self, graph, recursive=True):
         # graph name must be unique
         self.tree.create_node(
-            tag=f"identifier: {graph.name}",
-            identifier=graph.name,
+            tag=f"{graph.name}(identifier: {graph.id})",
+            identifier=graph.id,
             parent=self.root_identifier,
         )
         if recursive:
             self.create_schema_node(graph)
 
     def create_schema_node(self, graph):
-        schema_identifier = f"{graph.name}_schema"
+        schema_identifier = f"{graph.id}_schema"
         self.tree.create_node(
-            tag="schema", identifier=schema_identifier, parent=graph.name
+            tag="schema", identifier=schema_identifier, parent=graph.id
         )
         # vertex type
+        vertex_type_identifier = f"{schema_identifier}_vertex_types"
         self.tree.create_node(
             tag="vertex types",
-            identifier=f"{schema_identifier}_vertex_types",
+            identifier=vertex_type_identifier,
             parent=schema_identifier,
         )
         if graph.var_schema is not None and graph.var_schema.vertex_types is not None:
             for vertex in graph.var_schema.vertex_types:
+                vertex_identifier = f"{vertex_type_identifier}_{vertex.type_name}"
                 self.tree.create_node(
                     tag=f"{vertex.type_name}",
-                    identifier=f"{graph.name}_{vertex.type_name}",
-                    parent=f"{schema_identifier}_vertex_types",
+                    identifier=vertex_identifier,
+                    parent=vertex_type_identifier,
                 )
                 # property
                 if vertex.properties is not None:
@@ -187,23 +201,22 @@ class TreeDisplay(object):
                         is_primary_key = (
                             True if p.property_name in vertex.primary_keys else False
                         )
-                        identifier = (
-                            f"{graph.name}_{vertex.type_name}_{p.property_name}"
-                        )
+                        property_identifier = f"{vertex_identifier}_{p.property_name}"
                         tag = "Property(name: {0}, type: {1}, is_primary_key: {2})".format(
                             p.property_name,
-                            p.property_type.primitive_type,
+                            self.parse_property_type(p.property_type),
                             is_primary_key,
                         )
                         self.tree.create_node(
                             tag=tag,
-                            identifier=identifier,
-                            parent=f"{graph.name}_{vertex.type_name}",
+                            identifier=property_identifier,
+                            parent=vertex_identifier,
                         )
         # edge type
+        edge_type_identifier = f"{schema_identifier}_edge_types"
         self.tree.create_node(
             tag="edge types",
-            identifier=f"{schema_identifier}_edge_types",
+            identifier=edge_type_identifier,
             parent=schema_identifier,
         )
         if graph.var_schema is not None and graph.var_schema.edge_types is not None:
@@ -214,55 +227,63 @@ class TreeDisplay(object):
                         edge.type_name,
                         relation.destination_vertex,
                     )
+                    edge_identifier = f"{edge_type_identifier}_{edge_label}"
                     self.tree.create_node(
                         tag=f"{edge_label}",
-                        identifier=f"{graph.name}_{edge_label}",
-                        parent=f"{schema_identifier}_edge_types",
+                        identifier=edge_identifier,
+                        parent=edge_type_identifier,
                     )
                     if edge.properties is not None:
                         for p in edge.properties:
-                            identifier = f"{graph.name}_{edge_label}_{p.property_name}"
+                            is_primary_key = (
+                                True if p.property_name in edge.primary_keys else False
+                            )
+                            property_identifier = f"{edge_identifier}_{p.property_name}"
                             tag = "Property(name: {0}, type: {1}, is_primary_key: {2})".format(
-                                p.property_name, p.property_type.primitive_type, False
+                                p.property_name,
+                                self.parse_property_type(p.property_type),
+                                is_primary_key,
                             )
                             self.tree.create_node(
                                 tag=tag,
-                                identifier=identifier,
-                                parent=f"{graph.name}_{edge_label}",
+                                identifier=property_identifier,
+                                parent=edge_identifier,
                             )
 
-    def create_procedure_node(self, graph, procedures):
-        procedure_identifier = f"{graph.name}_procedure"
+    def create_stored_procedure_node(self, graph, stored_procedures):
+        stored_procedure_identifier = f"{graph.id}_stored_procedure"
         self.tree.create_node(
-            tag="stored procedure", identifier=procedure_identifier, parent=graph.name
+            tag="stored procedure",
+            identifier=stored_procedure_identifier,
+            parent=graph.id,
         )
-        for p in procedures:
+        for p in stored_procedures:
             self.tree.create_node(
-                tag="Procedure(identifier: {0}, type: {1}, runnable: {2}, query: {3}, description: {4})".format(
-                    p.name, p.type, p.runnable, p.query, p.description
+                tag="StoredProc(identifier: {0}, type: {1}, runnable: {2}, query: {3}, description: {4})".format(
+                    p.id, p.type, p.runnable, p.query, p.description
                 ),
-                identifier=f"{procedure_identifier}_{p.name}",
-                parent=procedure_identifier,
+                identifier=f"{stored_procedure_identifier}_{p.id}",
+                parent=stored_procedure_identifier,
             )
 
     def create_job_node(self, graph, jobs):
-        job_identifier = f"{graph.name}_job"
-        self.tree.create_node(tag="job", identifier=job_identifier, parent=graph.name)
+        job_identifier = f"{graph.id}_job"
+        self.tree.create_node(tag="job", identifier=job_identifier, parent=graph.id)
         for j in jobs:
-            if j.detail["graph_name"] != graph.name:
+            if j.detail["graph_id"] != graph.id:
                 continue
             self.tree.create_node(
                 tag="Job(identifier: {0}, type: {1}, status: {2}, start time: {3}, end time: {4})".format(
-                    j.job_id, j.type, j.status, j.start_time, str(j.end_time)
+                    j.id, j.type, j.status, j.start_time, str(j.end_time)
                 ),
-                identifier=f"{job_identifier}_{j.job_id}",
+                identifier=f"{job_identifier}_{j.id}",
                 parent=job_identifier,
             )
 
     def create_datasource_node(self, graph, datasource):
-        datasource_identifier = f"{graph.name}_datasource"
+        datasource_identifier = f"{graph.id}_datasource"
         self.tree.create_node(
-            tag="data sources", identifier=datasource_identifier, parent=graph.name
+            tag="data sources", identifier=datasource_identifier, parent=graph.id
         )
         # vertex mappings
         self.tree.create_node(
@@ -351,32 +372,27 @@ class TreeDisplay(object):
                         parent=f"{datasource_identifier}_{edge_label}",
                     )
 
-    def create_datasource_node_for_interactive(self, graph, job_config):
-        """Create data source from job configuration"""
-
-        def _get_vertex_primary_key(graph):
-            rlt = {}
-            for vertex in graph.var_schema.vertex_types:
-                rlt[vertex.type_name] = vertex.primary_keys[0]
-            return rlt
-
-        datasource_identifier = f"{graph.name}_datasource"
+    def create_datasource_mapping_node(self, graph, datasource_mapping):
+        datasource_identifier = f"{graph.id}_datasource"
         self.tree.create_node(
-            tag="data sources", identifier=datasource_identifier, parent=graph.name
+            tag="data sources", identifier=datasource_identifier, parent=graph.id
         )
-        vertex_type_2_primary_key = _get_vertex_primary_key(graph)
         # vertex mapping
+        vertex_mapping_identifier = f"{datasource_identifier}_vertex_mappings"
         self.tree.create_node(
             tag="vertex mappings",
-            identifier=f"{datasource_identifier}_vertex_mappings",
+            identifier=vertex_mapping_identifier,
             parent=datasource_identifier,
         )
-        if job_config.vertex_mappings is not None:
-            for mapping in job_config.vertex_mappings:
+        if datasource_mapping.vertex_mappings is not None:
+            for mapping in datasource_mapping.vertex_mappings:
+                specific_vertex_mapping_identifier = (
+                    f"{vertex_mapping_identifier}_{mapping.type_name}"
+                )
                 self.tree.create_node(
                     tag=f"{mapping.type_name}(input: {mapping.inputs[0]})",
-                    identifier=f"{datasource_identifier}_{mapping.type_name}",
-                    parent=f"{datasource_identifier}_vertex_mappings",
+                    identifier=specific_vertex_mapping_identifier,
+                    parent=vertex_mapping_identifier,
                 )
                 for property_column_mapping in mapping.column_mappings:
                     tag = "Property(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
@@ -384,48 +400,47 @@ class TreeDisplay(object):
                         property_column_mapping.column.index,
                         property_column_mapping.column.name,
                     )
-                    identifier = f"{datasource_identifier}_{mapping.type_name}_{property_column_mapping.var_property}"
+                    p_mapping_identifier = f"{specific_vertex_mapping_identifier}_{property_column_mapping.var_property}"
                     self.tree.create_node(
                         tag=tag,
-                        identifier=identifier,
-                        parent=f"{datasource_identifier}_{mapping.type_name}",
+                        identifier=p_mapping_identifier,
+                        parent=specific_vertex_mapping_identifier,
                     )
         # edge mapping
+        edge_mapping_identifier = f"{datasource_identifier}_edge_mappings"
         self.tree.create_node(
             tag="edge mappings",
-            identifier=f"{datasource_identifier}_edge_mappings",
+            identifier=edge_mapping_identifier,
             parent=datasource_identifier,
         )
-        if job_config.edge_mappings is not None:
-            for mapping in job_config.edge_mappings:
+        if datasource_mapping.edge_mappings is not None:
+            for mapping in datasource_mapping.edge_mappings:
                 edge_label = "({0}) -[{1}]-> ({2})".format(
                     mapping.type_triplet.source_vertex,
                     mapping.type_triplet.edge,
                     mapping.type_triplet.destination_vertex,
                 )
+                specific_edge_mapping_identifier = (
+                    f"{edge_mapping_identifier}_{edge_label}"
+                )
                 self.tree.create_node(
                     tag=f"{edge_label}(input: {mapping.inputs[0]})",
-                    identifier=f"{datasource_identifier}_{edge_label}",
-                    parent=f"{datasource_identifier}_edge_mappings",
+                    identifier=specific_edge_mapping_identifier,
+                    parent=edge_mapping_identifier,
                 )
                 # source vertex mapping
                 for source_vertex_column_mapping in mapping.source_vertex_mappings:
                     self.tree.create_node(
                         tag="SourceVertexPrimaryKey(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
-                            vertex_type_2_primary_key[
-                                mapping.type_triplet.source_vertex
-                            ],
+                            source_vertex_column_mapping.var_property,
                             source_vertex_column_mapping.column.index,
                             source_vertex_column_mapping.column.name,
                         ),
-                        identifier="{0}_{1}_source_vertex_primary_key_{2}".format(
-                            datasource_identifier,
-                            edge_label,
-                            vertex_type_2_primary_key[
-                                mapping.type_triplet.source_vertex
-                            ],
+                        identifier="{0}_source_vertex_primary_key_{1}".format(
+                            specific_edge_mapping_identifier,
+                            source_vertex_column_mapping.var_property,
                         ),
-                        parent=f"{datasource_identifier}_{edge_label}",
+                        parent=specific_edge_mapping_identifier,
                     )
                 # destination vertex mapping
                 for (
@@ -433,20 +448,15 @@ class TreeDisplay(object):
                 ) in mapping.destination_vertex_mappings:
                     self.tree.create_node(
                         tag="DestinationVertexPrimaryKey(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
-                            vertex_type_2_primary_key[
-                                mapping.type_triplet.destination_vertex
-                            ],
+                            destination_vertex_column_mapping.var_property,
                             destination_vertex_column_mapping.column.index,
                             destination_vertex_column_mapping.column.name,
                         ),
-                        identifier="{0}_{1}_destination_vertex_primary_key_{2}".format(
-                            datasource_identifier,
-                            edge_label,
-                            vertex_type_2_primary_key[
-                                mapping.type_triplet.destination_vertex
-                            ],
+                        identifier="{0}_destination_vertex_primary_key_{1}".format(
+                            specific_edge_mapping_identifier,
+                            destination_vertex_column_mapping.var_property,
                         ),
-                        parent=f"{datasource_identifier}_{edge_label}",
+                        parent=specific_edge_mapping_identifier,
                     )
                 # property mapping
                 for property_column_mapping in mapping.column_mappings:
@@ -455,11 +465,11 @@ class TreeDisplay(object):
                         property_column_mapping.column.index,
                         property_column_mapping.column.name,
                     )
-                    identifier = f"{datasource_identifier}_{edge_label}_{property_column_mapping.var_property}"
+                    p_mapping_identifier = f"{specific_edge_mapping_identifier}_{property_column_mapping.var_property}"
                     self.tree.create_node(
                         tag=tag,
-                        identifier=identifier,
-                        parent=f"{datasource_identifier}_{edge_label}",
+                        identifier=p_mapping_identifier,
+                        parent=specific_edge_mapping_identifier,
                     )
 
     def show(self, graph_identifier=None, stdout=False, sorting=False):
@@ -469,8 +479,10 @@ class TreeDisplay(object):
             click.secho(schema_tree.show(stdout=False, sorting=False))
             datasource_tree = self.tree.subtree(f"{graph_identifier}_datasource")
             click.secho(datasource_tree.show(stdout=False, sorting=False))
-            procedure_tree = self.tree.subtree(f"{graph_identifier}_procedure")
-            click.secho(procedure_tree.show(stdout=False, sorting=False))
+            stored_procedure_tree = self.tree.subtree(
+                f"{graph_identifier}_stored_procedure"
+            )
+            click.secho(stored_procedure_tree.show(stdout=False, sorting=False))
             job_tree = self.tree.subtree(f"{graph_identifier}_job")
             click.secho(job_tree.show(stdout=False, sorting=False))
         else:

@@ -32,6 +32,8 @@ public interface GraphInterface {
 
     Result<GetGraphSchemaResponse> getGraphSchema(String graphId);
 
+    Result<GetGraphStatisticsResponse> getGraphStatistics(String graphId);
+
     Result<GetGraphResponse> getGraphMeta(String graphId);
 
     Result<List<GetGraphResponse>> getAllGraphs();

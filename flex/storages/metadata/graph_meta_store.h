@@ -223,6 +223,28 @@ struct UpdateJobMetaRequest {
   static UpdateJobMetaRequest NewFinished(int rc);
 };
 
+struct GraphStatistics {
+  // type_id, type_name, count
+  using vertex_type_statistic = std::tuple<int32_t, std::string, int32_t>;
+  // src_vertex_type_name, dst_vertex_type_name, count
+  using vertex_type_pair_statistic =
+      std::tuple<std::string, std::string, int32_t>;
+  // edge_type_id, edge_type_name, Vec<vertex_type_pair_statistics>
+  using edge_type_statistic =
+      std::tuple<int32_t, std::string, std::vector<vertex_type_pair_statistic>>;
+
+  GraphStatistics() : total_vertex_count(0), total_edge_count(0) {}
+
+  uint64_t total_vertex_count;
+  uint64_t total_edge_count;
+  std::vector<vertex_type_statistic> vertex_type_statistics;
+  std::vector<edge_type_statistic> edge_type_statistics;
+
+  std::string ToJson() const;
+  static Result<GraphStatistics> FromJson(const std::string& json_str);
+  static Result<GraphStatistics> FromJson(const nlohmann::json& json);
+};
+
 /*
  * The metadata store is responsible for storing metadata of the graph, plugins
  * and other information.
