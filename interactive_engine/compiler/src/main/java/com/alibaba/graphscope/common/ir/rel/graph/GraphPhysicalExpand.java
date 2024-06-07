@@ -197,4 +197,8 @@ public class GraphPhysicalExpand extends SingleRel {
         }
         return shuttle.visit(this);
     }
+
+    public GraphLogicalGetV getFusedGetV() {
+        return fusedGetV;
+    }
 }

@@ -20,13 +20,13 @@ package com.alibaba.graphscope.common.ir.planner.cbo;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 
@@ -53,11 +53,13 @@ public class STPathTest {
                                 "graph.planner.rules",
                                 "NotMatchToAntiJoinRule, FilterIntoJoinRule, FilterMatchRule,"
                                         + " ExtendIntersectRule, JoinDecompositionRule,"
-                                        + " ExpandGetVFusionRule",
-                                "graph.planner.cbo.glogue.schema",
-                                "target/test-classes/statistics/ldbc30_statistics.txt"));
+                                        + " ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockSchemaMeta("schema/ldbc.json");
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc.json",
+                        "statistics/ldbc30_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     @Test
@@ -75,5 +77,36 @@ public class STPathTest {
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("proto/st_path_test.json"),
                 physicalBuilder.build().explain().trim());
+    }
+
+    @Test
+    public void st_path_between_person_and_place() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a:PERSON{id:933})-[c*2..3]->(b:PLACE{id:999}) Return"
+                                        + " count(a);",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[a],"
+                    + " aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                    + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PLACE]}], alias=[b],"
+                    + " fusedFilter=[[=(_.id, 999)]], opt=[END])\n"
+                    + "    GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[[EdgeLabel(ISPARTOF,"
+                    + " PLACE, PLACE), EdgeLabel(ISLOCATEDIN, PERSON, PLACE), EdgeLabel(KNOWS,"
+                    + " PERSON, PERSON), EdgeLabel(LIKES, PERSON, COMMENT), EdgeLabel(LIKES,"
+                    + " PERSON, POST), EdgeLabel(STUDYAT, PERSON, ORGANISATION), EdgeLabel(WORKAT,"
+                    + " PERSON, ORGANISATION), EdgeLabel(ISLOCATEDIN, COMMENT, PLACE),"
+                    + " EdgeLabel(ISLOCATEDIN, POST, PLACE), EdgeLabel(ISLOCATEDIN, ORGANISATION,"
+                    + " PLACE)]], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON, POST,"
+                    + " ORGANISATION, PLACE, COMMENT]}], alias=[_], opt=[END])\n"
+                    + "], offset=[2], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
+                    + " alias=[c], start_alias=[a])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[a], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 933)])",
+                after.explain().trim());
     }
 }

@@ -481,4 +481,27 @@ public class MatchTest {
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
     }
+
+    // test type inference of path expand, a can reach b through the following two paths: either 0
+    // or 1 edge(s)
+    // 1. (a)-[*0]->(b) -> (a:software)-[*0]->(b:software) or (a:person)-[*0]->(b:person)
+    // 2. (a)-[*1]->(b) -> (a:person)-[:created]->(b:software) or (a:person)-[:knows]->(b:person)
+    @Test
+    public void match_24_test() {
+        RelNode node = Utils.eval("Match (a)-[c*0..2]->(b) Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[b], opt=[END])\n"
+                    + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
+                    + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[END])\n"
+                    + "], fetch=[2], path_opt=[ARBITRARY], result_opt=[ALL_V_E], alias=[c])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                node.explain().trim());
+    }
 }

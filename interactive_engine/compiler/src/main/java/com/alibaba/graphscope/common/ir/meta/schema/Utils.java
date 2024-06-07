@@ -19,6 +19,8 @@ package com.alibaba.graphscope.common.ir.meta.schema;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.impl.*;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
+import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -262,6 +264,79 @@ public abstract class Utils {
             default:
                 throw new UnsupportedOperationException(
                         "convert from ir core type " + ordinal + " to DataType is unsupported yet");
+        }
+    }
+
+    /**
+     * build {@link GraphStatistics} from statistics json
+     * @param statisticsJson
+     * @return
+     */
+    public static final GraphStatistics buildStatisticsFromJson(String statisticsJson) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            JsonNode jsonNode = mapper.readTree(statisticsJson);
+            Map<LabelId, Long> vertexTypeCounts = Maps.newHashMap();
+            Map<EdgeKind, Long> edgeTypeCounts = Maps.newHashMap();
+            Map<String, Integer> vertexTypeNameIdMap = Maps.newHashMap();
+            Long num_vertices = jsonNode.get("total_vertex_count").asLong();
+            Long num_edges = jsonNode.get("total_edge_count").asLong();
+            JsonNode vertexTypeCountsNode = jsonNode.get("vertex_type_statistics");
+            JsonNode edgeTypeCountsNode = jsonNode.get("edge_type_statistics");
+            buildGraphElementStatisticsFromJson(
+                    vertexTypeCountsNode,
+                    "VERTEX",
+                    vertexTypeCounts,
+                    edgeTypeCounts,
+                    vertexTypeNameIdMap);
+            buildGraphElementStatisticsFromJson(
+                    edgeTypeCountsNode,
+                    "EDGE",
+                    vertexTypeCounts,
+                    edgeTypeCounts,
+                    vertexTypeNameIdMap);
+
+            return new DefaultGraphStatistics(
+                    vertexTypeCounts, edgeTypeCounts, num_vertices, num_edges);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final void buildGraphElementStatisticsFromJson(
+            JsonNode typeCountsNode,
+            String type,
+            Map<LabelId, Long> vertexTypeCounts,
+            Map<EdgeKind, Long> edgeTypeCounts,
+            Map<String, Integer> vertexTypeNameIdMap) {
+        Iterator var1 = typeCountsNode.iterator();
+        while (var1.hasNext()) {
+            JsonNode typeStatisticJsonNode = (JsonNode) var1.next();
+            int typeId = typeStatisticJsonNode.get("type_id").asInt();
+            String typeName = typeStatisticJsonNode.get("type_name").asText();
+            if (type.equals("VERTEX")) {
+                Long typeCount = typeStatisticJsonNode.get("count").asLong();
+                vertexTypeCounts.put(new LabelId(typeId), typeCount);
+                vertexTypeNameIdMap.put(typeName, typeId);
+            } else {
+                JsonNode entityPairs = typeStatisticJsonNode.get("vertex_type_pair_statistics");
+                Iterator var2 = entityPairs.iterator();
+                while (var2.hasNext()) {
+                    JsonNode pair = (JsonNode) var2.next();
+                    String sourceLabel = pair.get("source_vertex").asText();
+                    String dstLabel = pair.get("destination_vertex").asText();
+                    Long typeCount = pair.get("count").asLong();
+                    EdgeKind edgeKind =
+                            EdgeKind.newBuilder()
+                                    .setEdgeLabelId(new LabelId(typeId))
+                                    .setSrcVertexLabelId(
+                                            new LabelId(vertexTypeNameIdMap.get(sourceLabel)))
+                                    .setDstVertexLabelId(
+                                            new LabelId(vertexTypeNameIdMap.get(dstLabel)))
+                                    .build();
+                    edgeTypeCounts.put(edgeKind, typeCount);
+                }
+            }
         }
     }
 }

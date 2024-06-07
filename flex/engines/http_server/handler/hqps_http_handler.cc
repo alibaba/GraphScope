@@ -27,6 +27,49 @@
 #include "flex/engines/http_server/types.h"
 #include "flex/otel/otel.h"
 
+#include <seastar/core/when_all.hh>
+
+namespace seastar {
+namespace httpd {
+// The seastar::httpd::param_matcher will fail to match if param is not
+// specified.
+class optional_param_matcher : public matcher {
+ public:
+  /**
+   * Constructor
+   * @param name the name of the parameter, will be used as the key
+   * in the parameters object
+   * @param entire_path when set to true, the matched parameters will
+   * include all the remaining url until the end of it.
+   * when set to false the match will terminate at the next slash
+   */
+  explicit optional_param_matcher(const sstring& name) : _name(name) {}
+
+  size_t match(const sstring& url, size_t ind, parameters& param) override {
+    size_t last = find_end_param(url, ind);
+    if (last == url.size()) {
+      // Means we didn't find the parameter, but we still return true,
+      // and set the value to empty string.
+      param.set(_name, "");
+      return ind;
+    }
+    param.set(_name, url.substr(ind, last - ind));
+    return last;
+  }
+
+ private:
+  size_t find_end_param(const sstring& url, size_t ind) {
+    size_t pos = url.find('/', ind + 1);
+    if (pos == sstring::npos) {
+      return url.length();
+    }
+    return pos;
+  }
+  sstring _name;
+};
+}  // namespace httpd
+}  // namespace seastar
+
 namespace server {
 
 hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
@@ -118,7 +161,7 @@ bool hqps_ic_handler::is_running_graph(const seastar::sstring& graph_id) const {
   return running_graph_res.value() == graph_id_str;
 }
 
-// Handles both /v1/graph/{graph_id}/query and /v1/query/
+// Handles both /v1/graph/{graph_id}/query and /v1/graph/current/query/
 seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     const seastar::sstring& path, std::unique_ptr<seastar::httpd::request> req,
     std::unique_ptr<seastar::httpd::reply> rep) {
@@ -137,17 +180,37 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
       req->content.back();  // see graph_db_session.h#parse_query_type
   // TODO(zhanglei): choose read or write based on the request, after the
   // read/write info is supported in physical plan
-  if (req->param.exists("graph_id")) {
+  auto request_format = req->get_header(INTERACTIVE_REQUEST_FORMAT);
+  if (request_format.empty()) {
+    // If no format specfied, we use default format: proto
+    request_format = PROTOCOL_FORMAT;
+  }
+  if (request_format == JSON_FORMAT) {
+    req->content.append(gs::GraphDBSession::kCypherJson, 1);
+  } else if (request_format == PROTOCOL_FORMAT) {
+    req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
+  } else if (request_format == ENCODER_FORMAT) {
+    req->content.append(gs::GraphDBSession::kCppEncoder, 1);
+  } else {
+    LOG(ERROR) << "Unsupported request format: " << request_format;
+    rep->set_status(seastar::httpd::reply::status_type::internal_server_error);
+    rep->write_body("bin", seastar::sstring("Unsupported request format!"));
+    rep->done();
+    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+        std::move(rep));
+  }
+  if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
+    // TODO(zhanglei): get from graph_db.
     if (!is_running_graph(req->param["graph_id"])) {
       rep->set_status(
           seastar::httpd::reply::status_type::internal_server_error);
-      rep->write_body("bin", seastar::sstring("Failed to get running graph!"));
+      rep->write_body("bin",
+                      seastar::sstring("The querying query is not running:" +
+                                       req->param["graph_id"]));
       rep->done();
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     }
-  } else {
-    req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
   }
 #ifdef HAVE_OPENTELEMETRY_CPP
   auto tracer = otel::get_tracer("hqps_procedure_query_handler");
@@ -164,31 +227,30 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
-      .then([this,input_format
+      .then([request_format
 #ifdef HAVE_OPENTELEMETRY_CPP
              ,
-             outer_span = outer_span
+             this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& output) {
-        if (output.content.size() < 4) {
-          LOG(ERROR) << "Invalid output size: " << output.content.size();
-#ifdef HAVE_OPENTELEMETRY_CPP
-          outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
-                                "Invalid output size");
-          outer_span->End();
-          std::map<std::string, std::string> labels = {{"status", "fail"}};
-          total_counter_->Add(1, labels);
-#endif  // HAVE_OPENTELEMETRY_CPP
-          return seastar::make_ready_future<query_param>(std::move(output));
-        }
-        if (input_format == static_cast<uint8_t>(
-                                gs::GraphDBSession::InputFormat::kCppEncoder)) {
+        if (request_format == ENCODER_FORMAT) {
           return seastar::make_ready_future<query_param>(
               std::move(output.content));
         } else {
           // For cypher input format, the results are written with
           // output.put_string(), which will add extra 4 bytes. So we need to
           // remove the first 4 bytes here.
+          if (output.content.size() < 4) {
+            LOG(ERROR) << "Invalid output size: " << output.content.size();
+#ifdef HAVE_OPENTELEMETRY_CPP
+            outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                                  "Invalid output size");
+            outer_span->End();
+            std::map<std::string, std::string> labels = {{"status", "fail"}};
+            total_counter_->Add(1, labels);
+#endif  // HAVE_OPENTELEMETRY_CPP
+            return seastar::make_ready_future<query_param>(std::move(output));
+          }
           return seastar::make_ready_future<query_param>(
               std::move(output.content.substr(4)));
         }
@@ -416,10 +478,9 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
                   std::move(output.content));
             });
       })
-      .then([this
+      .then([
 #ifdef HAVE_OPENTELEMETRY_CPP
-             ,
-             outer_span = outer_span
+                this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
   ](auto&& output) {
         if (output.content.size() < 4) {
@@ -483,26 +544,10 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
       });
 }
 
-seastar::future<std::unique_ptr<seastar::httpd::reply>>
-hqps_exit_handler::handle(const seastar::sstring& path,
-                          std::unique_ptr<seastar::httpd::request> req,
-                          std::unique_ptr<seastar::httpd::reply> rep) {
-  HQPSService::get().set_exit_state();
-  rep->write_body("bin", seastar::sstring{"HQPS service is exiting ..."});
-  return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
-      std::move(rep));
-}
-
-hqps_http_handler::hqps_http_handler(uint16_t http_port)
-    : http_port_(http_port) {
-  ic_handler_ = new hqps_ic_handler(ic_query_group_id, max_group_id,
-                                    group_inc_step, shard_query_concurrency);
-  proc_handler_ = new hqps_ic_handler(proc_query_group_id, max_group_id,
-                                      group_inc_step, shard_query_concurrency);
-  adhoc_query_handler_ = new hqps_adhoc_query_handler(
-      ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
-      shard_adhoc_concurrency);
-  exit_handler_ = new hqps_exit_handler();
+hqps_http_handler::hqps_http_handler(uint16_t http_port, int32_t shard_num)
+    : http_port_(http_port), actors_running_(true) {
+  ic_handlers_.resize(shard_num);
+  adhoc_query_handlers_.resize(shard_num);
 }
 
 hqps_http_handler::~hqps_http_handler() {
@@ -518,9 +563,7 @@ uint16_t hqps_http_handler::get_port() const { return http_port_; }
 bool hqps_http_handler::is_running() const { return running_.load(); }
 
 bool hqps_http_handler::is_actors_running() const {
-  return !ic_handler_->is_current_scope_cancelled() &&
-         !adhoc_query_handler_->is_current_scope_cancelled() &&
-         proc_handler_->is_current_scope_cancelled();
+  return actors_running_.load();
 }
 
 void hqps_http_handler::start() {
@@ -554,43 +597,48 @@ void hqps_http_handler::stop() {
 
 seastar::future<> hqps_http_handler::stop_query_actors() {
   // First cancel the scope.
-  return ic_handler_->cancel_current_scope()
+  return ic_handlers_[hiactor::local_shard_id()]
+      ->cancel_current_scope()
       .then([this] {
-        LOG(INFO) << "Cancel ic scope";
-        return adhoc_query_handler_->cancel_current_scope();
+        LOG(INFO) << "Cancelled ic scope";
+        return adhoc_query_handlers_[hiactor::local_shard_id()]
+            ->cancel_current_scope();
       })
       .then([this] {
-        LOG(INFO) << "Cancel adhoc scope";
-        return proc_handler_->cancel_current_scope();
-      })
-      .then([] {
-        LOG(INFO) << "Cancel proc scope";
+        LOG(INFO) << "Cancelled proc scope";
+        actors_running_.store(false);
         return seastar::make_ready_future<>();
       });
 }
 
 void hqps_http_handler::start_query_actors() {
-  ic_handler_->create_actors();
-  adhoc_query_handler_->create_actors();
-  proc_handler_->create_actors();
-  LOG(INFO) << "Restart all actors";
+  ic_handlers_[hiactor::local_shard_id()]->create_actors();
+  adhoc_query_handlers_[hiactor::local_shard_id()]->create_actors();
+  actors_running_.store(true);
 }
 
 seastar::future<> hqps_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
+    auto ic_handler =
+        new hqps_ic_handler(ic_query_group_id, max_group_id, group_inc_step,
+                            shard_query_concurrency);
+    auto adhoc_query_handler = new hqps_adhoc_query_handler(
+        ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
+        shard_adhoc_concurrency);
+
+    auto rule_proc = new seastar::httpd::match_rule(ic_handler);
+    rule_proc->add_str("/v1/graph")
+        .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+        .add_str("/query");
+
+    r.add(rule_proc, seastar::httpd::operation_type::POST);
+
     r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/v1/query"), ic_handler_);
-    {
-      auto rule_proc = new seastar::httpd::match_rule(proc_handler_);
-      rule_proc->add_str("/v1/graph").add_param("graph_id").add_str("/query");
-      // Get All procedures
-      r.add(rule_proc, seastar::httpd::operation_type::POST);
-    }
-    r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/interactive/adhoc_query"),
-          adhoc_query_handler_);
-    r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/interactive/exit"), exit_handler_);
+          seastar::httpd::url("/interactive/adhoc_query"), adhoc_query_handler);
+
+    ic_handlers_[hiactor::local_shard_id()] = ic_handler;
+    adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler;
+
     return seastar::make_ready_future<>();
   });
 }

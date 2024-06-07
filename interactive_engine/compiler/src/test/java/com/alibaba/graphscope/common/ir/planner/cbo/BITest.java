@@ -20,10 +20,10 @@ package com.alibaba.graphscope.common.ir.planner.cbo;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -47,11 +47,13 @@ public class BITest {
                                 "CBO",
                                 "graph.planner.rules",
                                 "FilterIntoJoinRule, FilterMatchRule,"
-                                        + " ExtendIntersectRule, ExpandGetVFusionRule",
-                                "graph.planner.cbo.glogue.schema",
-                                "target/test-classes/statistics/ldbc30_hierarchy_statistics.txt"));
+                                        + " ExtendIntersectRule, ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockSchemaMeta("schema/ldbc_schema_exp_hierarchy.json");
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc_schema_exp_hierarchy.json",
+                        "statistics/ldbc30_hierarchy_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     @Test
@@ -180,14 +182,14 @@ public class BITest {
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASTYPE]}],"
                     + " alias=[_], startAlias=[PATTERN_VERTEX$11], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "        GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, COMMENT, TAG)]],"
-                    + " alias=[PATTERN_VERTEX$11], startAlias=[message], opt=[OUT],"
-                    + " physicalOpt=[VERTEX])\n"
-                    + "          GraphLogicalGetV(tableConfig=[{isAll=false, tables=[COMMENT]}],"
-                    + " alias=[message], opt=[END])\n"
+                    + "        GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, COMMENT, TAG),"
+                    + " EdgeLabel(HASTAG, POST, TAG)]], alias=[PATTERN_VERTEX$11],"
+                    + " startAlias=[message], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "          GraphLogicalGetV(tableConfig=[{isAll=false, tables=[POST,"
+                    + " COMMENT]}], alias=[message], opt=[END])\n"
                     + "           "
-                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[[EdgeLabel(REPLYOF,"
-                    + " COMMENT, POST)]], alias=[_], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[REPLYOF]}], alias=[_], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "], fetch=[6], path_opt=[ARBITRARY], result_opt=[END_V], alias=[_],"
                     + " start_alias=[post])\n"
                     + "              GraphPhysicalExpand(tableConfig=[{isAll=false,"
@@ -408,12 +410,12 @@ public class BITest {
                     + " values=[[{operands=[post], aggFunction=COUNT, alias='threadCnt',"
                     + " distinct=true}, {operands=[msg], aggFunction=COUNT, alias='msgCnt',"
                     + " distinct=true}]])\n"
-                    + "      GraphLogicalGetV(tableConfig=[{isAll=false, tables=[COMMENT]}],"
+                    + "      GraphLogicalGetV(tableConfig=[{isAll=false, tables=[POST, COMMENT]}],"
                     + " alias=[msg], fusedFilter=[[AND(>=(_.creationDate, ?0), <=(_.creationDate,"
                     + " ?1))]], opt=[END])\n"
                     + "       "
-                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[[EdgeLabel(REPLYOF,"
-                    + " COMMENT, POST)]], alias=[_], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[REPLYOF]}], alias=[_], opt=[IN], physicalOpt=[VERTEX])\n"
                     + "], fetch=[7], path_opt=[ARBITRARY], result_opt=[END_V], alias=[_],"
                     + " start_alias=[post])\n"
                     + "          GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}],"

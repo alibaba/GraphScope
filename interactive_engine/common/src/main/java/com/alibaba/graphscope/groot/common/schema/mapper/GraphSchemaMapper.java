@@ -35,13 +35,13 @@ import java.util.Map;
  */
 public class GraphSchemaMapper {
     private List<SchemaElementMapper> types;
-    private int version;
+    private String version;
 
     public List<SchemaElementMapper> getTypes() {
         return types;
     }
 
-    public int getVersion() {
+    public String getVersion() {
         return version;
     }
 
@@ -93,9 +93,9 @@ public class GraphSchemaMapper {
             GraphSchemaMapper graphSchema = new GraphSchemaMapper();
             JsonNode jsonNode = mapper.readTree(schemaJson);
             if (jsonNode.has("version")) {
-                graphSchema.version = jsonNode.get("version").asInt();
+                graphSchema.version = jsonNode.get("version").asText();
             } else {
-                graphSchema.version = 0;
+                graphSchema.version = "0";
             }
             graphSchema.types = new ArrayList<>();
             JsonNode typeArray = jsonNode.get("types");

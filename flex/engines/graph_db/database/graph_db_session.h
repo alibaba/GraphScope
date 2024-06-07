@@ -28,11 +28,6 @@
 #include "flex/utils/property/column.h"
 #include "flex/utils/result.h"
 
-#ifdef BUILD_HQPS
-#include "flex/proto_generated_gie/stored_procedure.pb.h"
-#include "nlohmann/json.hpp"
-#endif  // BUILD_HQPS
-
 namespace gs {
 
 class GraphDB;
@@ -52,6 +47,7 @@ class GraphDBSession {
   static constexpr int32_t MAX_RETRY = 3;
   static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
 #ifdef BUILD_HQPS
+  static constexpr const char* kCppEncoder = "\x00";
   static constexpr const char* kCypherJson = "\x01";
   static constexpr const char* kCypherInternalAdhoc = "\x02";
   static constexpr const char* kCypherInternalProcedure = "\x03";
@@ -71,7 +67,7 @@ class GraphDBSession {
   }
   ~GraphDBSession() {}
 
-  ReadTransaction GetReadTransaction();
+  ReadTransaction GetReadTransaction() const;
 
   InsertTransaction GetInsertTransaction();
 
@@ -114,6 +110,12 @@ class GraphDBSession {
   AppBase* GetApp(int idx);
 
  private:
+#ifdef BUILD_HQPS
+  Result<std::pair<uint8_t, std::string_view>>
+  parse_query_type_from_cypher_json(const std::string_view& input);
+  Result<std::pair<uint8_t, std::string_view>>
+  parse_query_type_from_cypher_internal(const std::string_view& input);
+#endif  // BUILD_HQPS
   /**
    * @brief Parse the input format of the query.
    *        There are four formats:
@@ -164,59 +166,15 @@ class GraphDBSession {
     } else if (input_tag == static_cast<uint8_t>(InputFormat::kCypherJson)) {
       // For cypherJson there is no query-id provided. The query name is
       // provided in the json string.
-      std::string_view str_view(input.data(), len - 2);
-      VLOG(10) << "string view: " << str_view;
-      nlohmann::json j;
-      try {
-        j = nlohmann::json::parse(str_view);
-      } catch (const nlohmann::json::parse_error& e) {
-        LOG(ERROR) << "Fail to parse json from input content: " << e.what();
-        return Result<std::pair<uint8_t, std::string_view>>(gs::Status(
-            StatusCode::InternalError,
-            "Fail to parse json from input content:" + std::string(e.what())));
-      }
-      auto query_name = j["query_name"].get<std::string>();
-      const auto& app_name_to_path_index = schema().GetPlugins();
-      if (app_name_to_path_index.count(query_name) <= 0) {
-        LOG(ERROR) << "Query name is not registered: " << query_name;
-        return Result<std::pair<uint8_t, std::string_view>>(
-            gs::Status(StatusCode::NotFound,
-                       "Query name is not registered: " + query_name));
-      }
-      if (j.contains("arguments")) {
-        for (auto& arg : j["arguments"]) {
-          VLOG(10) << "arg: " << arg;
-        }
-      }
-      VLOG(10) << "Query name: " << query_name;
-      return std::make_pair(app_name_to_path_index.at(query_name).second,
-                            std::string_view(str_data, len - 2));
+      std::string_view str_view(input.data(), len - 1);
+      return parse_query_type_from_cypher_json(str_view);
     } else if (input_tag ==
                static_cast<uint8_t>(InputFormat::kCypherInternalProcedure)) {
       // For cypher internal procedure, the query_name is
       // provided in the protobuf message.
-      procedure::Query cur_query;
-      if (!cur_query.ParseFromArray(input.data(), input.size() - 1)) {
-        LOG(ERROR) << "Fail to parse query from input content";
-        return Result<std::pair<uint8_t, std::string_view>>(
-            gs::Status(StatusCode::InternalError,
-                       "Fail to parse query from input content"));
-      }
-      auto query_name = cur_query.query_name().name();
-      if (query_name.empty()) {
-        LOG(ERROR) << "Query name is empty";
-        return Result<std::pair<uint8_t, std::string_view>>(
-            gs::Status(StatusCode::NotFound, "Query name is empty"));
-      }
-      const auto& app_name_to_path_index = schema().GetPlugins();
-      if (app_name_to_path_index.count(query_name) <= 0) {
-        LOG(ERROR) << "Query name is not registered: " << query_name;
-        return Result<std::pair<uint8_t, std::string_view>>(
-            gs::Status(StatusCode::NotFound,
-                       "Query name is not registered: " + query_name));
-      }
-      return std::make_pair(app_name_to_path_index.at(query_name).second,
-                            std::string_view(str_data, len - 1));
+      std::string_view str_view(input.data(), len - 1);
+      return parse_query_type_from_cypher_internal(str_view);
+
     }
 #endif  // BUILD_HQPS
     else {

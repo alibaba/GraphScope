@@ -1231,7 +1231,7 @@ struct convert<gs::PropertyType> {
     // compatibility with old config files
     else if (config["day"]) {
       property_type = gs::config_parsing::StringToPrimitivePropertyType(
-          config["type"].as<std::string>());
+          config["day"].as<std::string>());
     } else if (config["varchar"]) {
       if (config["varchar"]["max_length"]) {
         property_type = gs::PropertyType::Varchar(

@@ -16,40 +16,29 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
-import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
-import com.alibaba.graphscope.common.store.SnapshotId;
-import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
-import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 
-import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
-public class GrootMetaFetcher implements IrMetaFetcher {
-    private final SchemaFetcher schemaFetcher;
+public class GrootMetaFetcher extends IrMetaFetcher {
+    private static final Logger logger = LoggerFactory.getLogger(GrootMetaFetcher.class);
 
-    public GrootMetaFetcher(SchemaFetcher schemaFetcher) {
-        this.schemaFetcher = schemaFetcher;
+    public GrootMetaFetcher(IrMetaReader reader, IrMetaTracker tracker) {
+        super(reader, tracker);
     }
 
     @Override
     public Optional<IrMeta> fetch() {
-        Map<Long, GraphSchema> pair = this.schemaFetcher.getSchemaSnapshotPair();
-
-        if (!pair.isEmpty()) {
-            Map.Entry<Long, GraphSchema> entry = pair.entrySet().iterator().next();
-            Long snapshotId = entry.getKey();
-            GraphSchema schema = entry.getValue();
-
-            try {
-                return Optional.of(
-                        new IrMeta(
-                                new SnapshotId(true, snapshotId), new IrGraphSchema(schema, true)));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
+        try {
+            return Optional.of(reader.readMeta());
+        } catch (Exception e) {
+            logger.warn("fetch ir meta from groot failed: {}", e);
             return Optional.empty();
         }
     }

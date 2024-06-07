@@ -38,7 +38,10 @@ public enum OperationType {
 
     CLEAR_VERTEX_PROPERTIES(15),
 
-    CLEAR_EDGE_PROPERTIES(16);
+    CLEAR_EDGE_PROPERTIES(16),
+
+    ADD_VERTEX_TYPE_PROPERTIES(17),
+    ADD_EDGE_TYPE_PROPERTIES(18);
 
     private final byte b;
 

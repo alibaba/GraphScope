@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.planner;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PlannerConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.planner.rules.*;
@@ -27,11 +28,10 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -66,6 +66,7 @@ public class GraphRelOptimizer {
     private final RelOptPlanner matchPlanner;
     private final RelOptPlanner physicalPlanner;
     private final RelBuilderFactory relBuilderFactory;
+    private final GlogueHolder glogueHolder;
 
     public GraphRelOptimizer(Configs graphConfig) {
         this.config = new PlannerConfig(graphConfig);
@@ -73,6 +74,11 @@ public class GraphRelOptimizer {
         this.relPlanner = createRelPlanner();
         this.matchPlanner = createMatchPlanner();
         this.physicalPlanner = createPhysicalPlanner();
+        this.glogueHolder = new GlogueHolder(graphConfig);
+    }
+
+    public GlogueHolder getGlogueHolder() {
+        return glogueHolder;
     }
 
     public RelOptPlanner getMatchPlanner() {
@@ -87,11 +93,10 @@ public class GraphRelOptimizer {
         return relPlanner;
     }
 
-    public @Nullable RelMetadataQuery createMetaDataQuery() {
+    public @Nullable RelMetadataQuery createMetaDataQuery(IrMeta irMeta) {
         if (config.isOn() && config.getOpt() == PlannerConfig.Opt.CBO) {
-            GlogueSchema g = config.getGlogueSchema();
-            Glogue gl = new Glogue(g, config.getGlogueSize());
-            GlogueQuery gq = new GlogueQuery(gl);
+            GlogueQuery gq = this.glogueHolder.getGlogue();
+            Preconditions.checkArgument(gq != null, "glogue is not ready");
             return new GraphRelMetadataQuery(
                     new GraphMetadataHandlerProvider(this.matchPlanner, gq, this.config));
         }

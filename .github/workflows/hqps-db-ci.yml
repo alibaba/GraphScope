@@ -220,19 +220,28 @@ jobs:
 
     - name: Test cypher&cpp procedure generation and loading
       env:
-        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
-        PLUGIN_DIR: ${INTERACTIVE_WORKSPACE}/data/modern_graph/plugins
+        TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
+        PLUGIN_DIR: /tmp/temp_workspace/data/modern_graph/plugins
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
         LD_LIBRARY_PATH: /usr/local/lib
       run: |
+        rm -rf ${TMP_INTERACTIVE_WORKSPACE}
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+        mkdir -p ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/
+        cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
+  
         mkdir -p ${PLUGIN_DIR}
+        pip3 install argparse
         
         cd ${GITHUB_WORKSPACE}/flex/bin
-        ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/get_person_name.cypher -w=/tmp/codegen \
+        ./load_plan_and_gen.sh -e=hqps -i=../tests/interactive/plus_one.cc -w=/tmp/codegen \
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
-          --procedure_name=get_person_name \
+          --procedure_name=plus_one \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
-
+        
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/sdk/java/src/test/resources/sample_app.cc -w=/tmp/codegen \
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
           --procedure_name=sample_app \
@@ -242,15 +251,20 @@ jobs:
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml  -o=${PLUGIN_DIR} \
           --procedure_name=count_vertex_num \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
+        
+        # Among the above procedures, the correct input format for each is:
+        # count_vertex_num: () -> (num: int64), CypherProcedure.
+        # plus_one: (num: int64) -> (num: int64), CppEncoder
+        # sample_app: (num: int64) -> (num: int64), kCypherJson
 
+        sed -i 's/default_graph: movies/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
         cd ${GITHUB_WORKSPACE}/flex/tests/interactive/
-        bash test_plugin_loading.sh ./modern_graph_schema_v0_0.yaml \
-            ../../interactive/examples/modern_graph/bulk_load.yaml \
-           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
-
-        bash test_plugin_loading.sh ./modern_graph_schema_v0_1.yaml \
-            ../../interactive/examples/modern_graph/bulk_load.yaml \
-           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        bash test_plugin_loading.sh ${TMP_INTERACTIVE_WORKSPACE} modern_graph \
+           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
+           ./modern_graph_schema_v0_0.yaml  ./modern_graph_schema_v0_1.yaml
+        sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
 
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
