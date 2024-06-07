@@ -124,6 +124,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+  LOG(INFO) << "req size: " << req->content.size();
   if (req->content.size() <= 0) {
     // At least one input format byte is needed
     rep->set_status(seastar::httpd::reply::status_type::internal_server_error);

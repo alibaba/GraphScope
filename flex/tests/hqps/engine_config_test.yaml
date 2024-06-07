@@ -5,7 +5,7 @@ directories:
     logs: logs
     conf: conf
 log_level: INFO
-default_graph: test 
+default_graph: huoyan 
 compute_engine:
   type: hiactor
   workers:
