@@ -1,0 +1,3272 @@
+<!doctype html>
+<html>
+  <head>
+    <title>GraphScope FLEX HTTP SERVICE API</title>
+    <style type="text/css">
+      body {
+      	font-family: Trebuchet MS, sans-serif;
+      	font-size: 15px;
+      	color: #444;
+      	margin-right: 24px;
+      }
+      
+      h1	{
+      	font-size: 25px;
+      }
+      h2	{
+      	font-size: 20px;
+      }
+      h3	{
+      	font-size: 16px;
+      	font-weight: bold;
+      }
+      hr	{
+      	height: 1px;
+      	border: 0;
+      	color: #ddd;
+      	background-color: #ddd;
+      }
+      
+      .app-desc {
+        clear: both;
+        margin-left: 20px;
+      }
+      .param-name {
+        width: 100%;
+      }
+      .license-info {
+        margin-left: 20px;
+      }
+      
+      .license-url {
+        margin-left: 20px;
+      }
+      
+      .model {
+        margin: 0 0 0px 20px;
+      }
+      
+      .method {
+        margin-left: 20px;
+      }
+      
+      .method-notes	{
+      	margin: 10px 0 20px 0;
+      	font-size: 90%;
+      	color: #555;
+      }
+      
+      pre {
+        padding: 10px;
+        margin-bottom: 2px;
+      }
+      
+      .http-method {
+       text-transform: uppercase;
+      }
+      
+      pre.get {
+        background-color: #0f6ab4;
+      }
+      
+      pre.post {
+        background-color: #10a54a;
+      }
+      
+      pre.put {
+        background-color: #c5862b;
+      }
+      
+      pre.delete {
+        background-color: #a41e22;
+      }
+      
+      .huge	{
+      	color: #fff;
+      }
+      
+      pre.example {
+        background-color: #f3f3f3;
+        padding: 10px;
+        border: 1px solid #ddd;
+      }
+      
+      code {
+        white-space: pre;
+      }
+      
+      .nickname {
+        font-weight: bold;
+      }
+      
+      .method-path {
+        font-size: 1.5em;
+        background-color: #0f6ab4;
+      }
+      
+      .up {
+        float:right;
+      }
+      
+      .parameter {
+        width: 500px;
+      }
+      
+      .param {
+        width: 500px;
+        padding: 10px 0 0 20px;
+        font-weight: bold;
+      }
+      
+      .param-desc {
+        width: 700px;
+        padding: 0 0 0 20px;
+        color: #777;
+      }
+      
+      .param-type {
+        font-style: italic;
+      }
+      
+      .param-enum-header {
+      width: 700px;
+      padding: 0 0 0 60px;
+      color: #777;
+      font-weight: bold;
+      }
+      
+      .param-enum {
+      width: 700px;
+      padding: 0 0 0 80px;
+      color: #777;
+      font-style: italic;
+      }
+      
+      .field-label {
+        padding: 0;
+        margin: 0;
+        clear: both;
+      }
+      
+      .field-items	{
+      	padding: 0 0 15px 0;
+      	margin-bottom: 15px;
+      }
+      
+      .return-type {
+        clear: both;
+        padding-bottom: 10px;
+      }
+      
+      .param-header {
+        font-weight: bold;
+      }
+      
+      .method-tags {
+        text-align: right;
+      }
+      
+      .method-tag {
+        background: none repeat scroll 0% 0% #24A600;
+        border-radius: 3px;
+        padding: 2px 10px;
+        margin: 2px;
+        color: #FFF;
+        display: inline-block;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+  <h1>GraphScope FLEX HTTP SERVICE API</h1>
+    <div class="app-desc"><p>This is a specification for GraphScope FLEX HTTP service based on the OpenAPI 3.0 specification. You can find out more details about
+specification at <a href="https://swagger.io/specification/v3/">doc</a>.</p>
+<p>Some useful links:</p>
+<ul>
+<li><a href="https://github.com/alibaba/GraphScope">GraphScope Repository</a></li>
+<li><a href="https://github.com/GraphScope/portal/tree/main/httpservice">The Source API definition for GraphScope Interactive</a></li>
+</ul>
+</div>
+    <div class="app-desc">More information: <a href="https://helloreverb.com">https://helloreverb.com</a></div>
+    <div class="app-desc">Contact Info: <a href="graphscope@alibaba-inc.com">graphscope@alibaba-inc.com</a></div>
+    <div class="app-desc">Version: 1.0.0</div>
+    <div class="app-desc">BasePath:/GRAPHSCOPE/flex-api/1.0.0</div>
+    <div class="license-info">Apache 2.0</div>
+    <div class="license-url">http://www.apache.org/licenses/LICENSE-2.0.html</div>
+  <h2>Access</h2>
+
+  <h2><a name="__Methods">Methods</a></h2>
+  [ Jump to <a href="#__Models">Models</a> ]
+
+  <h3>Table of Contents </h3>
+  <div class="method-summary"></div>
+  <h4><a href="#Alert">Alert</a></h4>
+  <ul>
+  <li><a href="#createAlertReceiver"><code><span class="http-method">post</span> /api/v1/alert/receiver</code></a></li>
+  <li><a href="#delete alert rule by ID"><code><span class="http-method">delete</span> /api/v1/alert/rule/{rule_id}</code></a></li>
+  <li><a href="#deleteAlertMessageInBatch"><code><span class="http-method">delete</span> /api/v1/alert/message-collection</code></a></li>
+  <li><a href="#deleteAlertReceiverById"><code><span class="http-method">delete</span> /api/v1/alert/receiver/{receiver_id}</code></a></li>
+  <li><a href="#listAlertMessages"><code><span class="http-method">get</span> /api/v1/alert/message</code></a></li>
+  <li><a href="#listAlertReceivers"><code><span class="http-method">get</span> /api/v1/alert/receiver</code></a></li>
+  <li><a href="#listAlertRules"><code><span class="http-method">get</span> /api/v1/alert/rule</code></a></li>
+  <li><a href="#update alert rule by ID"><code><span class="http-method">put</span> /api/v1/alert/rule/{rule_id}</code></a></li>
+  <li><a href="#updateAlertMessageInBatch"><code><span class="http-method">put</span> /api/v1/alert/message-collection/status</code></a></li>
+  <li><a href="#updateAlertReceiverById"><code><span class="http-method">put</span> /api/v1/alert/receiver/{receiver_id}</code></a></li>
+  </ul>
+  <h4><a href="#DataSource">DataSource</a></h4>
+  <ul>
+  <li><a href="#bindDatasourceInBatch"><code><span class="http-method">post</span> /api/v1/graph/{graph_id}/datasource</code></a></li>
+  <li><a href="#getDatasourceById"><code><span class="http-method">get</span> /api/v1/graph/{graph_id}/datasource</code></a></li>
+  <li><a href="#unbindEdgeDatasource"><code><span class="http-method">delete</span> /api/v1/graph/{graph_id}/datasource/edge/{type_name}</code></a></li>
+  <li><a href="#unbindVertexDatasource"><code><span class="http-method">delete</span> /api/v1/graph/{graph_id}/datasource/vertex/{type_name}</code></a></li>
+  </ul>
+  <h4><a href="#Deployment">Deployment</a></h4>
+  <ul>
+  <li><a href="#getDeploymentInfo"><code><span class="http-method">get</span> /api/v1/deployment</code></a></li>
+  <li><a href="#getDeploymentStatus"><code><span class="http-method">get</span> /api/v1/deployment/status</code></a></li>
+  </ul>
+  <h4><a href="#Graph">Graph</a></h4>
+  <ul>
+  <li><a href="#createEdgeType"><code><span class="http-method">post</span> /api/v1/graph/{graph_id}/schema/edge</code></a></li>
+  <li><a href="#createGraph"><code><span class="http-method">post</span> /api/v1/graph</code></a></li>
+  <li><a href="#createVertexType"><code><span class="http-method">post</span> /api/v1/graph/{graph_id}/schema/vertex</code></a></li>
+  <li><a href="#deleteEdgeTypeByName"><code><span class="http-method">delete</span> /api/v1/graph/{graph_id}/schema/edge/{type_name}</code></a></li>
+  <li><a href="#deleteGraphById"><code><span class="http-method">delete</span> /api/v1/graph/{graph_id}</code></a></li>
+  <li><a href="#deleteVertexTypeByName"><code><span class="http-method">delete</span> /api/v1/graph/{graph_id}/schema/vertex/{type_name}</code></a></li>
+  <li><a href="#getGraphById"><code><span class="http-method">get</span> /api/v1/graph/{graph_id}</code></a></li>
+  <li><a href="#getSchemaById"><code><span class="http-method">get</span> /api/v1/graph/{graph_id}/schema</code></a></li>
+  <li><a href="#importSchemaById"><code><span class="http-method">post</span> /api/v1/graph/{graph_id}/schema</code></a></li>
+  <li><a href="#listGraphs"><code><span class="http-method">get</span> /api/v1/graph</code></a></li>
+  </ul>
+  <h4><a href="#Job">Job</a></h4>
+  <ul>
+  <li><a href="#deleteJobById"><code><span class="http-method">delete</span> /api/v1/job/{job_id}</code></a></li>
+  <li><a href="#getDataloadingJobConfig"><code><span class="http-method">get</span> /api/v1/graph/{graph_id}/dataloading/config</code></a></li>
+  <li><a href="#getJobById"><code><span class="http-method">get</span> /api/v1/job/{job_id}</code></a></li>
+  <li><a href="#listJobs"><code><span class="http-method">get</span> /api/v1/job</code></a></li>
+  <li><a href="#submitDataloadingJob"><code><span class="http-method">post</span> /api/v1/graph/{graph_id}/dataloading</code></a></li>
+  </ul>
+  <h4><a href="#Service">Service</a></h4>
+  <ul>
+  <li><a href="#getServiceStatusById"><code><span class="http-method">get</span> /api/v1/graph/{graph_id}/service</code></a></li>
+  <li><a href="#listServiceStatus"><code><span class="http-method">get</span> /api/v1/service</code></a></li>
+  <li><a href="#restartService"><code><span class="http-method">post</span> /api/v1/service/restart</code></a></li>
+  <li><a href="#startService"><code><span class="http-method">post</span> /api/v1/service/start</code></a></li>
+  <li><a href="#stopService"><code><span class="http-method">post</span> /api/v1/service/stop</code></a></li>
+  </ul>
+  <h4><a href="#StoredProcedure">StoredProcedure</a></h4>
+  <ul>
+  <li><a href="#createStoredProcedure"><code><span class="http-method">post</span> /api/v1/graph/{graph_id}/storedproc</code></a></li>
+  <li><a href="#deleteStoredProcedureById"><code><span class="http-method">delete</span> /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}</code></a></li>
+  <li><a href="#getStoredProcedureById"><code><span class="http-method">get</span> /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}</code></a></li>
+  <li><a href="#listStoredProcedures"><code><span class="http-method">get</span> /api/v1/graph/{graph_id}/storedproc</code></a></li>
+  <li><a href="#updateStoredProcedureById"><code><span class="http-method">put</span> /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}</code></a></li>
+  </ul>
+  <h4><a href="#Utils">Utils</a></h4>
+  <ul>
+  <li><a href="#uploadFile"><code><span class="http-method">post</span> /api/v1/file/uploading</code></a></li>
+  </ul>
+
+  <h1><a name="Alert">Alert</a></h1>
+  <div class="method"><a name="createAlertReceiver"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/alert/receiver</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">createAlertReceiver</span>)</div>
+    <div class="method-notes">Create a new alert receiver</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#CreateAlertReceiverRequest">CreateAlertReceiverRequest</a> (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully created the alert receiver
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="delete alert rule by ID"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/alert/rule/{rule_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">delete alert rule by ID</span>)</div>
+    <div class="method-notes"></div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">rule_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully deleted the alert rule
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="deleteAlertMessageInBatch"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/alert/message-collection</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">deleteAlertMessageInBatch</span>)</div>
+    <div class="method-notes">Delete alert message in batch</div>
+
+
+
+
+
+    <h3 class="field-label">Query parameters</h3>
+    <div class="field-items">
+      <div class="param">message_ids (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; A list of message id separated by comma, e.g. id1,id2,id3 </div>    </div>  <!-- field-items -->
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully deleted the alert message
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="deleteAlertReceiverById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/alert/receiver/{receiver_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">deleteAlertReceiverById</span>)</div>
+    <div class="method-notes">Delete the alert receiver by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">receiver_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully deleted the alert receiver
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="listAlertMessages"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/alert/message</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">listAlertMessages</span>)</div>
+    <div class="method-notes">List all alert messages</div>
+
+
+
+
+
+    <h3 class="field-label">Query parameters</h3>
+    <div class="field-items">
+      <div class="param">alert_type (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>      <div class="param">status (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>      <div class="param">severity (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>      <div class="param">start_time (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; format with &amp;quot;2023-02-21-11-56-30&amp;quot; </div>      <div class="param">end_time (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; format with &amp;quot;2023-02-21-11-56-30&amp;quot; </div>      <div class="param">limit (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  format: int32</div>    </div>  <!-- field-items -->
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      array[<a href="#GetAlertMessageResponse">GetAlertMessageResponse</a>]
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[ {
+  "severity" : "warning",
+  "trigger_time" : "trigger_time",
+  "metric_type" : "node",
+  "id" : "id",
+  "message" : "message",
+  "alert_name" : "alert_name",
+  "target" : [ "target", "target" ],
+  "status" : "unsolved"
+}, {
+  "severity" : "warning",
+  "trigger_time" : "trigger_time",
+  "metric_type" : "node",
+  "id" : "id",
+  "message" : "message",
+  "alert_name" : "alert_name",
+  "target" : [ "target", "target" ],
+  "status" : "unsolved"
+} ]</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the alert messages
+        
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[{&quot;id&quot;:&quot;ALERT-MESSAGE-QWERTYUIOP-1&quot;,&quot;alert_name&quot;:&quot;HighDiskUtilization&quot;,&quot;severity&quot;:&quot;warning&quot;,&quot;metric_type&quot;:&quot;node&quot;,&quot;target&quot;:[&quot;hostname-1&quot;],&quot;trigger_time&quot;:&quot;2023-02-21T11:56:30.000Z&quot;,&quot;status&quot;:&quot;unsolved&quot;,&quot;message&quot;:&quot;Disk usage node1 85.12%, exceeds threshold&quot;},{&quot;id&quot;:&quot;ALERT-MESSAGE-QWERTYUIOP-2&quot;,&quot;alert_name&quot;:&quot;HighDiskUtilization&quot;,&quot;severity&quot;:&quot;emergency&quot;,&quot;metric_type&quot;:&quot;node&quot;,&quot;target&quot;:[&quot;hostname-1&quot;],&quot;trigger_time&quot;:&quot;2023-02-21T11:56:30.000Z&quot;,&quot;status&quot;:&quot;solved&quot;,&quot;message&quot;:&quot;Disk usage node1 85.12%, exceeds threshold&quot;},{&quot;id&quot;:&quot;ALERT-MESSAGE-QWERTYUIOP-3&quot;,&quot;alert_name&quot;:&quot;HighDiskUtilization&quot;,&quot;severity&quot;:&quot;warning&quot;,&quot;metric_type&quot;:&quot;node&quot;,&quot;target&quot;:[&quot;hostname-1&quot;],&quot;trigger_time&quot;:&quot;2023-02-21T11:56:30.000Z&quot;,&quot;status&quot;:&quot;dealing&quot;,&quot;message&quot;:&quot;Disk usage node1 85.12%, exceeds threshold&quot;}]</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="listAlertReceivers"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/alert/receiver</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">listAlertReceivers</span>)</div>
+    <div class="method-notes">List all alert receivers</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      array[<a href="#GetAlertReceiverResponse">GetAlertReceiverResponse</a>]
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[ "", "" ]</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the alert receivers
+        
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[{&quot;id&quot;:&quot;RECEIVER-QWERTYUIOP-1&quot;,&quot;type&quot;:&quot;webhook&quot;,&quot;webhook_url&quot;:&quot;http://webhook.com&quot;,&quot;is_at_all&quot;:false,&quot;at_user_ids&quot;:[111111,222222],&quot;enable&quot;:false},{&quot;id&quot;:&quot;RECEIVER-QWERTYUIOP-2&quot;,&quot;type&quot;:&quot;webhook&quot;,&quot;webhook_url&quot;:&quot;http://webhook.com&quot;,&quot;is_at_all&quot;:false,&quot;at_user_ids&quot;:[111111,222222],&quot;enable&quot;:true,&quot;message&quot;:&quot;error message&quot;}]</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="listAlertRules"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/alert/rule</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">listAlertRules</span>)</div>
+    <div class="method-notes">List all alert rules</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      array[<a href="#GetAlertRuleResponse">GetAlertRuleResponse</a>]
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[ "", "" ]</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the alert rules
+        
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[{&quot;id&quot;:&quot;ALERTRULE-1&quot;,&quot;name&quot;:&quot;HighDiskUtilization&quot;,&quot;severity&quot;:&quot;warning&quot;,&quot;metric_type&quot;:&quot;node&quot;,&quot;conditions_description&quot;:&quot;disk usage &gt;&#x3D; 85&quot;,&quot;enable&quot;:true},{&quot;id&quot;:&quot;ALERTRULE-2&quot;,&quot;name&quot;:&quot;GremlinServiceAvailable&quot;,&quot;severity&quot;:&quot;emergency&quot;,&quot;metric_type&quot;:&quot;node&quot;,&quot;conditions_description&quot;:&quot;g.V().limit(1) failed&quot;,&quot;enable&quot;:false}]</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="update alert rule by ID"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="put"><code class="huge"><span class="http-method">put</span> /api/v1/alert/rule/{rule_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">update alert rule by ID</span>)</div>
+    <div class="method-notes"></div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">rule_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#CreateAlertRuleRequest">CreateAlertRuleRequest</a> (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully updated the alert rule
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="updateAlertMessageInBatch"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="put"><code class="huge"><span class="http-method">put</span> /api/v1/alert/message-collection/status</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">updateAlertMessageInBatch</span>)</div>
+    <div class="method-notes">Update the message status in batch</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#UpdateAlertMessageStatusRequest">UpdateAlertMessageStatusRequest</a> (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="updateAlertReceiverById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="put"><code class="huge"><span class="http-method">put</span> /api/v1/alert/receiver/{receiver_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">updateAlertReceiverById</span>)</div>
+    <div class="method-notes">Update alert receiver by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">receiver_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#CreateAlertReceiverRequest">CreateAlertReceiverRequest</a> (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully updated the alert receiver
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <h1><a name="DataSource">DataSource</a></h1>
+  <div class="method"><a name="bindDatasourceInBatch"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/graph/{graph_id}/datasource</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">bindDatasourceInBatch</span>)</div>
+    <div class="method-notes">Bind data sources in batches</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#SchemaMapping">SchemaMapping</a> (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful bind the data sources
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getDatasourceById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph/{graph_id}/datasource</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDatasourceById</span>)</div>
+    <div class="method-notes">Get data source by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#SchemaMapping">SchemaMapping</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "edge_mappings" : [ {
+    "inputs" : [ "inputs", "inputs" ],
+    "source_vertex_mappings" : [ null, null ],
+    "destination_vertex_mappings" : [ null, null ],
+    "column_mappings" : [ null, null ],
+    "type_triplet" : {
+      "edge" : "edge",
+      "source_vertex" : "source_vertex",
+      "destination_vertex" : "destination_vertex"
+    }
+  }, {
+    "inputs" : [ "inputs", "inputs" ],
+    "source_vertex_mappings" : [ null, null ],
+    "destination_vertex_mappings" : [ null, null ],
+    "column_mappings" : [ null, null ],
+    "type_triplet" : {
+      "edge" : "edge",
+      "source_vertex" : "source_vertex",
+      "destination_vertex" : "destination_vertex"
+    }
+  } ],
+  "vertex_mappings" : [ {
+    "type_name" : "type_name",
+    "inputs" : [ "file:///path/to/file.csv", "file:///path/to/file.csv" ],
+    "column_mappings" : [ {
+      "column" : {
+        "name" : "name",
+        "index" : 0
+      },
+      "property" : "property"
+    }, {
+      "column" : {
+        "name" : "name",
+        "index" : 0
+      },
+      "property" : "property"
+    } ]
+  }, {
+    "type_name" : "type_name",
+    "inputs" : [ "file:///path/to/file.csv", "file:///path/to/file.csv" ],
+    "column_mappings" : [ {
+      "column" : {
+        "name" : "name",
+        "index" : 0
+      },
+      "property" : "property"
+    }, {
+      "column" : {
+        "name" : "name",
+        "index" : 0
+      },
+      "property" : "property"
+    } ]
+  } ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful returned all data sources
+        <a href="#SchemaMapping">SchemaMapping</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;vertex_mappings&quot;:[{&quot;type_name&quot;:&quot;person&quot;,&quot;inputs&quot;:[&quot;file:///path/to/person.csv&quot;],&quot;column_mappings&quot;:[{&quot;column&quot;:{&quot;index&quot;:0,&quot;name&quot;:&quot;id&quot;},&quot;property&quot;:&quot;id&quot;},{&quot;column&quot;:{&quot;index&quot;:1,&quot;name&quot;:&quot;name&quot;},&quot;property&quot;:&quot;name&quot;}]},{&quot;type_name&quot;:&quot;software&quot;,&quot;inputs&quot;:[&quot;file:///path/to/software.csv&quot;],&quot;column_mappings&quot;:[{&quot;column&quot;:{&quot;index&quot;:0,&quot;name&quot;:&quot;id&quot;},&quot;property&quot;:&quot;id&quot;},{&quot;column&quot;:{&quot;index&quot;:1,&quot;name&quot;:&quot;name&quot;},&quot;property&quot;:&quot;name&quot;}]}],&quot;edge_mappings&quot;:[{&quot;type_triplet&quot;:{&quot;edge&quot;:&quot;knows&quot;,&quot;source_vertex&quot;:&quot;person&quot;,&quot;destination_vertex&quot;:&quot;person&quot;},&quot;inputs&quot;:[&quot;file:///path/to/knows.csv&quot;],&quot;source_vertex_mappings&quot;:[{&quot;column&quot;:{&quot;index&quot;:0,&quot;name&quot;:&quot;id&quot;},&quot;property&quot;:&quot;id&quot;}],&quot;destination_vertex_mappings&quot;:[{&quot;column&quot;:{&quot;index&quot;:1,&quot;name&quot;:&quot;id&quot;},&quot;property&quot;:&quot;id&quot;}],&quot;column_mappings&quot;:[{&quot;column&quot;:{&quot;index&quot;:2,&quot;name&quot;:&quot;weight&quot;},&quot;property&quot;:&quot;weight&quot;}]},{&quot;type_triplet&quot;:{&quot;edge&quot;:&quot;created&quot;,&quot;source_vertex&quot;:&quot;person&quot;,&quot;destination_vertex&quot;:&quot;software&quot;},&quot;inputs&quot;:[&quot;file:///path/to/created.csv&quot;],&quot;source_vertex_mappings&quot;:[{&quot;column&quot;:{&quot;index&quot;:0,&quot;name&quot;:&quot;id&quot;},&quot;property&quot;:&quot;id&quot;}],&quot;destination_vertex_mappings&quot;:[{&quot;column&quot;:{&quot;index&quot;:1,&quot;name&quot;:&quot;id&quot;},&quot;property&quot;:&quot;id&quot;}],&quot;column_mappings&quot;:[{&quot;column&quot;:{&quot;index&quot;:2,&quot;name&quot;:&quot;weight&quot;},&quot;property&quot;:&quot;weight&quot;}]}]}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="unbindEdgeDatasource"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/graph/{graph_id}/datasource/edge/{type_name}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">unbindEdgeDatasource</span>)</div>
+    <div class="method-notes">Unbind datas ource on an edge type</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>      <div class="param">type_name (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Query parameters</h3>
+    <div class="field-items">
+      <div class="param">source_vertex_type (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>      <div class="param">destination_vertex_type (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully unbind the data source
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="unbindVertexDatasource"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/graph/{graph_id}/datasource/vertex/{type_name}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">unbindVertexDatasource</span>)</div>
+    <div class="method-notes">Unbind data source on a vertex type</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>      <div class="param">type_name (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully unbind the data source
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <h1><a name="Deployment">Deployment</a></h1>
+  <div class="method"><a name="getDeploymentInfo"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/deployment</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDeploymentInfo</span>)</div>
+    <div class="method-notes">Deployment information</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#RunningDeploymentInfo">RunningDeploymentInfo</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "creation_time" : "creation_time",
+  "instance_name" : "instance_name",
+  "engine" : "Hiactor",
+  "cluster_type" : "HOSTS",
+  "storage" : "MutableCSR",
+  "version" : "version",
+  "frontend" : "Cypher/Gremlin"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the deployment information
+        <a href="#RunningDeploymentInfo">RunningDeploymentInfo</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;cluster_type&quot;:&quot;HOSTS&quot;,&quot;creation_time&quot;:&quot;2024-01-01T00:00:00.000Z&quot;,&quot;instance_name&quot;:&quot;demo&quot;,&quot;frontend&quot;:&quot;Cypher/Gremlin&quot;,&quot;engine&quot;:&quot;Hiactor&quot;,&quot;storage&quot;:&quot;MutableCSR&quot;,&quot;version&quot;:&quot;0.27.0&quot;}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getDeploymentStatus"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/deployment/status</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDeploymentStatus</span>)</div>
+    <div class="method-notes">Deployment status</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#RunningDeploymentStatus">RunningDeploymentStatus</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "nodes" : [ "", "" ],
+  "cluster_type" : "HOSTS"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the deployment status
+        <a href="#RunningDeploymentStatus">RunningDeploymentStatus</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;cluster_type&quot;:&quot;HOSTS&quot;,&quot;nodes&quot;:[{&quot;name&quot;:&quot;HOSTNAME-1&quot;,&quot;cpu_usage&quot;:83,&quot;memory_usage&quot;:37.5,&quot;disk_usage&quot;:97}]}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <h1><a name="Graph">Graph</a></h1>
+  <div class="method"><a name="createEdgeType"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/graph/{graph_id}/schema/edge</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">createEdgeType</span>)</div>
+    <div class="method-notes">Create a edge type</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#CreateEdgeType">CreateEdgeType</a> (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful created the edge type
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="createGraph"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/graph</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">createGraph</span>)</div>
+    <div class="method-notes">Create a new graph</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#CreateGraphRequest">CreateGraphRequest</a> (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#CreateGraphResponse">CreateGraphResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "graph_id" : "graph_id"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    The graph was created
+        <a href="#CreateGraphResponse">CreateGraphResponse</a>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="createVertexType"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/graph/{graph_id}/schema/vertex</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">createVertexType</span>)</div>
+    <div class="method-notes">Create a vertex type</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#CreateVertexType">CreateVertexType</a> (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful created a vertex type
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="deleteEdgeTypeByName"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/graph/{graph_id}/schema/edge/{type_name}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">deleteEdgeTypeByName</span>)</div>
+    <div class="method-notes">Delete edge type by name</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>      <div class="param">type_name (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Query parameters</h3>
+    <div class="field-items">
+      <div class="param">source_vertex_type (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>      <div class="param">destination_vertex_type (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful deleted the edge type
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="deleteGraphById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/graph/{graph_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">deleteGraphById</span>)</div>
+    <div class="method-notes">Delete graph by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully deleted the graph
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="deleteVertexTypeByName"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/graph/{graph_id}/schema/vertex/{type_name}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">deleteVertexTypeByName</span>)</div>
+    <div class="method-notes">Delete vertex type by name</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>      <div class="param">type_name (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful deleted the vertex type
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getGraphById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph/{graph_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getGraphById</span>)</div>
+    <div class="method-notes">Get graph by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#GetGraphResponse">GetGraphResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "creation_time" : "creation_time",
+  "schema" : {
+    "vertex_types" : [ "", "" ],
+    "edge_types" : [ "", "" ]
+  },
+  "stored_procedures" : [ "", "" ],
+  "name" : "name",
+  "description" : "description",
+  "schema_update_time" : "schema_update_time",
+  "id" : "id",
+  "store_type" : "mutable_csr",
+  "data_update_time" : "data_update_time"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the graph
+        <a href="#GetGraphResponse">GetGraphResponse</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;id&quot;:&quot;GRAPHID&quot;,&quot;name&quot;:&quot;demo&quot;,&quot;creation_time&quot;:&quot;2024-01-01 00:00:00&quot;,&quot;schema_update_time&quot;:&quot;2024-01-02 00:00:00&quot;,&quot;data_update_time&quot;:&quot;2024-01-03 00:00:00&quot;,&quot;stored_procedures&quot;:[{&quot;id&quot;:&quot;STORED-PROCEDURE-ID&quot;,&quot;name&quot;:&quot;stored_procedure_name&quot;,&quot;type&quot;:&quot;cypher&quot;,&quot;query&quot;:&quot;MATCH(a) return COUNT(a);&quot;,&quot;library&quot;:&quot;/path/to/library&quot;,&quot;params&quot;:[{&quot;name&quot;:&quot;param1&quot;,&quot;type&quot;:{&quot;string&quot;:{}}}],&quot;returns&quot;:[{&quot;name&quot;:&quot;return1&quot;,&quot;type&quot;:{&quot;PrimitiveType&quot;:&quot;DT_SIGNED_INT64&quot;}}],&quot;bound_graph&quot;:&quot;demo&quot;,&quot;runnable&quot;:true}],&quot;schema&quot;:{&quot;vertex_types&quot;:[{&quot;type_id&quot;:0,&quot;type_name&quot;:&quot;person&quot;,&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;id&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}},{&quot;property_id&quot;:1,&quot;property_name&quot;:&quot;name&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}}],&quot;primary_keys&quot;:[&quot;id&quot;]},{&quot;type_id&quot;:1,&quot;type_name&quot;:&quot;software&quot;,&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;id&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}},{&quot;property_id&quot;:1,&quot;property_name&quot;:&quot;name&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}}],&quot;primary_keys&quot;:[&quot;id&quot;]}],&quot;edge_types&quot;:[{&quot;type_id&quot;:0,&quot;type_name&quot;:&quot;knows&quot;,&quot;vertex_type_pair_relations&quot;:[{&quot;source_vertex&quot;:&quot;person&quot;,&quot;destination_vertex&quot;:&quot;person&quot;,&quot;relation&quot;:&quot;MANY_TO_MANY&quot;,&quot;x_csr_params&quot;:{&quot;edge_storage_strategy&quot;:&quot;ONLY_IN&quot;}}],&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;weight&quot;,&quot;property_type&quot;:{&quot;primitive_type&quot;:&quot;DT_DOUBLE&quot;}}]},{&quot;type_id&quot;:1,&quot;type_name&quot;:&quot;created&quot;,&quot;vertex_type_pair_relations&quot;:[{&quot;source_vertex&quot;:&quot;person&quot;,&quot;destination_vertex&quot;:&quot;software&quot;,&quot;relation&quot;:&quot;MANY_TO_MANY&quot;,&quot;x_csr_params&quot;:{&quot;edge_storage_strategy&quot;:&quot;ONLY_IN&quot;}}],&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;weight&quot;,&quot;property_type&quot;:{&quot;primitive_type&quot;:&quot;DT_DOUBLE&quot;}}]}]}}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getSchemaById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph/{graph_id}/schema</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getSchemaById</span>)</div>
+    <div class="method-notes">Get graph schema by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#GetGraphSchemaResponse">GetGraphSchemaResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "vertex_types" : [ "", "" ],
+  "edge_types" : [ "", "" ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the graph schema
+        <a href="#GetGraphSchemaResponse">GetGraphSchemaResponse</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;vertex_types&quot;:[{&quot;type_id&quot;:0,&quot;type_name&quot;:&quot;person&quot;,&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;id&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}},{&quot;property_id&quot;:1,&quot;property_name&quot;:&quot;name&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}}],&quot;primary_keys&quot;:[&quot;id&quot;]},{&quot;type_id&quot;:1,&quot;type_name&quot;:&quot;software&quot;,&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;id&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}},{&quot;property_id&quot;:1,&quot;property_name&quot;:&quot;name&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}}],&quot;primary_keys&quot;:[&quot;id&quot;]}],&quot;edge_types&quot;:[{&quot;type_id&quot;:0,&quot;type_name&quot;:&quot;knows&quot;,&quot;vertex_type_pair_relations&quot;:[{&quot;source_vertex&quot;:&quot;person&quot;,&quot;destination_vertex&quot;:&quot;person&quot;,&quot;relation&quot;:&quot;MANY_TO_MANY&quot;,&quot;x_csr_params&quot;:{&quot;edge_storage_strategy&quot;:&quot;ONLY_IN&quot;}}],&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;weight&quot;,&quot;property_type&quot;:{&quot;primitive_type&quot;:&quot;DT_DOUBLE&quot;}}]},{&quot;type_id&quot;:1,&quot;type_name&quot;:&quot;created&quot;,&quot;vertex_type_pair_relations&quot;:[{&quot;source_vertex&quot;:&quot;person&quot;,&quot;destination_vertex&quot;:&quot;software&quot;,&quot;relation&quot;:&quot;MANY_TO_MANY&quot;,&quot;x_csr_params&quot;:{&quot;edge_storage_strategy&quot;:&quot;ONLY_IN&quot;}}],&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;weight&quot;,&quot;property_type&quot;:{&quot;primitive_type&quot;:&quot;DT_DOUBLE&quot;}}]}]}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="importSchemaById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/graph/{graph_id}/schema</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">importSchemaById</span>)</div>
+    <div class="method-notes">Import graph schema</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#CreateGraphSchemaRequest">CreateGraphSchemaRequest</a> (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful imported the graph schema
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="listGraphs"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">listGraphs</span>)</div>
+    <div class="method-notes">List all graphs</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      array[<a href="#GetGraphResponse">GetGraphResponse</a>]
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[ {
+  "creation_time" : "creation_time",
+  "schema" : {
+    "vertex_types" : [ "", "" ],
+    "edge_types" : [ "", "" ]
+  },
+  "stored_procedures" : [ "", "" ],
+  "name" : "name",
+  "description" : "description",
+  "schema_update_time" : "schema_update_time",
+  "id" : "id",
+  "store_type" : "mutable_csr",
+  "data_update_time" : "data_update_time"
+}, {
+  "creation_time" : "creation_time",
+  "schema" : {
+    "vertex_types" : [ "", "" ],
+    "edge_types" : [ "", "" ]
+  },
+  "stored_procedures" : [ "", "" ],
+  "name" : "name",
+  "description" : "description",
+  "schema_update_time" : "schema_update_time",
+  "id" : "id",
+  "store_type" : "mutable_csr",
+  "data_update_time" : "data_update_time"
+} ]</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned all graphs
+        
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[{&quot;id&quot;:&quot;GRAPHID&quot;,&quot;name&quot;:&quot;demo&quot;,&quot;creation_time&quot;:&quot;2024-01-01 00:00:00&quot;,&quot;schema_update_time&quot;:&quot;2024-01-02 00:00:00&quot;,&quot;data_update_time&quot;:&quot;2024-01-03 00:00:00&quot;,&quot;stored_procedures&quot;:[{&quot;id&quot;:&quot;STORED-PROCEDURE-ID&quot;,&quot;name&quot;:&quot;stored_procedure_name&quot;,&quot;type&quot;:&quot;cypher&quot;,&quot;query&quot;:&quot;MATCH(a) return COUNT(a);&quot;,&quot;library&quot;:&quot;/path/to/library&quot;,&quot;params&quot;:[{&quot;name&quot;:&quot;param1&quot;,&quot;type&quot;:{&quot;string&quot;:{}}}],&quot;returns&quot;:[{&quot;name&quot;:&quot;return1&quot;,&quot;type&quot;:{&quot;PrimitiveType&quot;:&quot;DT_SIGNED_INT64&quot;}}],&quot;bound_graph&quot;:&quot;demo&quot;,&quot;runnable&quot;:true}],&quot;schema&quot;:{&quot;vertex_types&quot;:[{&quot;type_id&quot;:0,&quot;type_name&quot;:&quot;person&quot;,&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;id&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}},{&quot;property_id&quot;:1,&quot;property_name&quot;:&quot;name&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}}],&quot;primary_keys&quot;:[&quot;id&quot;]},{&quot;type_id&quot;:1,&quot;type_name&quot;:&quot;software&quot;,&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;id&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}},{&quot;property_id&quot;:1,&quot;property_name&quot;:&quot;name&quot;,&quot;property_type&quot;:{&quot;string&quot;:{}}}],&quot;primary_keys&quot;:[&quot;id&quot;]}],&quot;edge_types&quot;:[{&quot;type_id&quot;:0,&quot;type_name&quot;:&quot;knows&quot;,&quot;vertex_type_pair_relations&quot;:[{&quot;source_vertex&quot;:&quot;person&quot;,&quot;destination_vertex&quot;:&quot;person&quot;,&quot;relation&quot;:&quot;MANY_TO_MANY&quot;,&quot;x_csr_params&quot;:{&quot;edge_storage_strategy&quot;:&quot;ONLY_IN&quot;}}],&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;weight&quot;,&quot;property_type&quot;:{&quot;primitive_type&quot;:&quot;DT_DOUBLE&quot;}}]},{&quot;type_id&quot;:1,&quot;type_name&quot;:&quot;created&quot;,&quot;vertex_type_pair_relations&quot;:[{&quot;source_vertex&quot;:&quot;person&quot;,&quot;destination_vertex&quot;:&quot;software&quot;,&quot;relation&quot;:&quot;MANY_TO_MANY&quot;,&quot;x_csr_params&quot;:{&quot;edge_storage_strategy&quot;:&quot;ONLY_IN&quot;}}],&quot;properties&quot;:[{&quot;property_id&quot;:0,&quot;property_name&quot;:&quot;weight&quot;,&quot;property_type&quot;:{&quot;primitive_type&quot;:&quot;DT_DOUBLE&quot;}}]}]}}]</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <h1><a name="Job">Job</a></h1>
+  <div class="method"><a name="deleteJobById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/job/{job_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">deleteJobById</span>)</div>
+    <div class="method-notes">Delete job by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">job_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfuly cancelled the job
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getDataloadingJobConfig"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph/{graph_id}/dataloading/config</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDataloadingJobConfig</span>)</div>
+    <div class="method-notes">Get the data loading configuration</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#DataloadingJobConfig">DataloadingJobConfig</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "schedule" : "schedule",
+  "loading_config" : {
+    "format" : {
+      "metadata" : "",
+      "type" : "type"
+    },
+    "import_option" : "overwrite"
+  },
+  "vertices" : [ {
+    "type_name" : "type_name"
+  }, {
+    "type_name" : "type_name"
+  } ],
+  "repeat" : "once",
+  "edges" : [ {
+    "type_name" : "type_name",
+    "source_vertex" : "source_vertex",
+    "destination_vertex" : "destination_vertex"
+  }, {
+    "type_name" : "type_name",
+    "source_vertex" : "source_vertex",
+    "destination_vertex" : "destination_vertex"
+  } ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the dataloading job configuration
+        <a href="#DataloadingJobConfig">DataloadingJobConfig</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getJobById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/job/{job_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getJobById</span>)</div>
+    <div class="method-notes">Get job status by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">job_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#JobStatus">JobStatus</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "start_time" : "start_time",
+  "log" : "log",
+  "end_time" : "end_time",
+  "id" : "id",
+  "detail" : "",
+  "type" : "type",
+  "status" : "RUNNING"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the job status
+        <a href="#JobStatus">JobStatus</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="listJobs"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/job</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">listJobs</span>)</div>
+    <div class="method-notes">List all jobs</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      array[<a href="#JobStatus">JobStatus</a>]
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[ {
+  "start_time" : "start_time",
+  "log" : "log",
+  "end_time" : "end_time",
+  "id" : "id",
+  "detail" : "",
+  "type" : "type",
+  "status" : "RUNNING"
+}, {
+  "start_time" : "start_time",
+  "log" : "log",
+  "end_time" : "end_time",
+  "id" : "id",
+  "detail" : "",
+  "type" : "type",
+  "status" : "RUNNING"
+} ]</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful returned all the jobs
+        
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-1&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;RUNNING&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-2&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;CANCELLED&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-3&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;SUCCESS&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;end_time&quot;:&quot;2024-02-24T12:00:00.000Z&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-4&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;FAILED&quot;,&quot;start_time&quot;:&quot;2024-02-24T00:00:00.000Z&quot;,&quot;end_time&quot;:&quot;2024-02-24T12:00:00.000Z&quot;,&quot;log&quot;:&quot;logging...&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}},{&quot;id&quot;:&quot;JOB-QWERTYUIOPASDFGH-5&quot;,&quot;type&quot;:&quot;DATA IMPORT&quot;,&quot;status&quot;:&quot;WAITING&quot;,&quot;detail&quot;:{&quot;graph_name&quot;:&quot;demo&quot;}}]</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="submitDataloadingJob"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/graph/{graph_id}/dataloading</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">submitDataloadingJob</span>)</div>
+    <div class="method-notes">Submit a dataloading job</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#DataloadingJobConfig">DataloadingJobConfig</a> (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#CreateDataloadingJobResponse">CreateDataloadingJobResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "job_id" : "job_id"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully submitted the job
+        <a href="#CreateDataloadingJobResponse">CreateDataloadingJobResponse</a>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <h1><a name="Service">Service</a></h1>
+  <div class="method"><a name="getServiceStatusById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph/{graph_id}/service</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getServiceStatusById</span>)</div>
+    <div class="method-notes">Get service status by graph ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#ServiceStatus">ServiceStatus</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "start_time" : "start_time",
+  "graph_id" : "graph_id",
+  "sdk_endpoints" : {
+    "gremlin" : "gremlin",
+    "cypher" : "cypher",
+    "hqps" : "hqps",
+    "grpc" : "grpc"
+  },
+  "status" : "Running"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the service status
+        <a href="#ServiceStatus">ServiceStatus</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;graph_id&quot;:&quot;GRAPHID&quot;,&quot;status&quot;:&quot;Running&quot;,&quot;sdk_endpoints&quot;:{&quot;cypher&quot;:&quot;neo4j://mock.api.cypher:7676&quot;,&quot;gremin&quot;:&quot;ws://mock.api.gremlin/gremlin&quot;,&quot;hqps&quot;:&quot;http://mock.api.hqps:10000&quot;},&quot;start_time&quot;:&quot;2024-01-01 00:00:00&quot;}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="listServiceStatus"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/service</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">listServiceStatus</span>)</div>
+    <div class="method-notes">List all service status</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      array[<a href="#ServiceStatus">ServiceStatus</a>]
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[ {
+  "start_time" : "start_time",
+  "graph_id" : "graph_id",
+  "sdk_endpoints" : {
+    "gremlin" : "gremlin",
+    "cypher" : "cypher",
+    "hqps" : "hqps",
+    "grpc" : "grpc"
+  },
+  "status" : "Running"
+}, {
+  "start_time" : "start_time",
+  "graph_id" : "graph_id",
+  "sdk_endpoints" : {
+    "gremlin" : "gremlin",
+    "cypher" : "cypher",
+    "hqps" : "hqps",
+    "grpc" : "grpc"
+  },
+  "status" : "Running"
+} ]</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned all service status
+        
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[{&quot;graph_id&quot;:&quot;GRAPHID&quot;,&quot;status&quot;:&quot;Running&quot;,&quot;sdk_endpoints&quot;:{&quot;cypher&quot;:&quot;neo4j://mock.api.cypher:7676&quot;,&quot;gremin&quot;:&quot;ws://mock.api.gremlin/gremlin&quot;,&quot;hqps&quot;:&quot;http://mock.api.hqps:10000&quot;},&quot;start_time&quot;:&quot;2024-01-01 00:00:00&quot;}]</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="restartService"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/service/restart</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">restartService</span>)</div>
+    <div class="method-notes">Restart current service</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully restarted the service
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="startService"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/service/start</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">startService</span>)</div>
+    <div class="method-notes">Start service</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#StartServiceRequest">StartServiceRequest</a> (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully started the service
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="stopService"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/service/stop</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">stopService</span>)</div>
+    <div class="method-notes">Stop current service</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully stopped the service
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <h1><a name="StoredProcedure">StoredProcedure</a></h1>
+  <div class="method"><a name="createStoredProcedure"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/graph/{graph_id}/storedproc</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">createStoredProcedure</span>)</div>
+    <div class="method-notes">Create a new stored procedure on a certain graph</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#CreateStoredProcRequest">CreateStoredProcRequest</a> (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#CreateStoredProcResponse">CreateStoredProcResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "stored_procedure_id" : "stored_procedure_id"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully created a stored procedure
+        <a href="#CreateStoredProcResponse">CreateStoredProcResponse</a>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="deleteStoredProcedureById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">deleteStoredProcedureById</span>)</div>
+    <div class="method-notes">Delete a stored procedure by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>      <div class="param">stored_procedure_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully deleted the stored procedure
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getStoredProcedureById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getStoredProcedureById</span>)</div>
+    <div class="method-notes">Get a stored procedure by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>      <div class="param">stored_procedure_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#GetStoredProcResponse">GetStoredProcResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully returned the stored procedure
+        <a href="#GetStoredProcResponse">GetStoredProcResponse</a>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{&quot;id&quot;:&quot;STORED-PROCEDURE-ID&quot;,&quot;name&quot;:&quot;stored_procedure_name&quot;,&quot;type&quot;:&quot;cypher&quot;,&quot;query&quot;:&quot;MATCH(a) return COUNT(a);&quot;,&quot;library&quot;:&quot;/path/to/library&quot;,&quot;params&quot;:[{&quot;name&quot;:&quot;param1&quot;,&quot;type&quot;:{&quot;string&quot;:{}}}],&quot;returns&quot;:[{&quot;name&quot;:&quot;return1&quot;,&quot;type&quot;:{&quot;PrimitiveType&quot;:&quot;DT_SIGNED_INT64&quot;}}],&quot;bound_graph&quot;:&quot;demo&quot;,&quot;runnable&quot;:true}</code></pre>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="listStoredProcedures"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/v1/graph/{graph_id}/storedproc</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">listStoredProcedures</span>)</div>
+    <div class="method-notes">List all stored procedures on a certain graph</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      array[<a href="#GetStoredProcResponse">GetStoredProcResponse</a>]
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[ "", "" ]</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>[{&quot;id&quot;:&quot;STORED-PROCEDUREID-1&quot;,&quot;name&quot;:&quot;stored_procedure_name_1&quot;,&quot;type&quot;:&quot;cypher&quot;,&quot;query&quot;:&quot;MATCH(a) return COUNT(a);&quot;,&quot;library&quot;:&quot;/path/to/library&quot;,&quot;params&quot;:[{&quot;name&quot;:&quot;param1&quot;,&quot;type&quot;:{&quot;string&quot;:{}}}],&quot;returns&quot;:[{&quot;name&quot;:&quot;return1&quot;,&quot;type&quot;:{&quot;PrimitiveType&quot;:&quot;DT_SIGNED_INT64&quot;}}],&quot;bound_graph&quot;:&quot;demo&quot;,&quot;runnable&quot;:true},{&quot;id&quot;:&quot;STORED-PROCEDUREID-2&quot;,&quot;name&quot;:&quot;stored_procedure_name_2&quot;,&quot;type&quot;:&quot;cypher&quot;,&quot;query&quot;:&quot;MATCH(a) return COUNT(a);&quot;,&quot;library&quot;:&quot;/path/to/library&quot;,&quot;params&quot;:[{&quot;name&quot;:&quot;param1&quot;,&quot;type&quot;:{&quot;string&quot;:{}}}],&quot;returns&quot;:[{&quot;name&quot;:&quot;return1&quot;,&quot;type&quot;:{&quot;PrimitiveType&quot;:&quot;DT_SIGNED_INT64&quot;}}],&quot;bound_graph&quot;:&quot;demo&quot;,&quot;runnable&quot;:false}]</code></pre>
+    <h4 class="field-label">400</h4>
+    Bad request
+        <a href="#Error">Error</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="updateStoredProcedureById"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="put"><code class="huge"><span class="http-method">put</span> /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">updateStoredProcedureById</span>)</div>
+    <div class="method-notes">Update a stored procedure by ID</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">graph_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>      <div class="param">stored_procedure_id (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash;  </div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">body <a href="#UpdateStoredProcRequest">UpdateStoredProcRequest</a> (optional)</div>
+      
+            <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+                </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#APIResponse">APIResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>""</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successfully updated the stored procedure
+        <a href="#APIResponse">APIResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+  <h1><a name="Utils">Utils</a></h1>
+  <div class="method"><a name="uploadFile"></a>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /api/v1/file/uploading</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">uploadFile</span>)</div>
+    <div class="method-notes"></div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>multipart/form-data</code></li>
+    </ul>
+
+
+
+
+    <h3 class="field-label">Form parameters</h3>
+    <div class="field-items">
+      <div class="param">filestorage (required)</div>
+      
+            <div class="param-desc"><span class="param-type">Form Parameter</span> &mdash;  format: binary</div>    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#UploadFileResponse">UploadFileResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "file_path" : "file_path"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    successful operation
+        <a href="#UploadFileResponse">UploadFileResponse</a>
+    <h4 class="field-label">500</h4>
+    Server error
+        <a href="#Error">Error</a>
+  </div> <!-- method -->
+  <hr/>
+
+  <h2><a name="__Models">Models</a></h2>
+  [ Jump to <a href="#__Methods">Methods</a> ]
+
+  <h3>Table of Contents</h3>
+  <ol>
+    <li><a href="#APIResponse"><code>APIResponse</code></a></li>
+    <li><a href="#AnyValue"><code>AnyValue</code></a></li>
+    <li><a href="#BaseEdgeType"><code>BaseEdgeType</code></a></li>
+    <li><a href="#BaseEdgeType_vertex_type_pair_relations"><code>BaseEdgeType_vertex_type_pair_relations</code></a></li>
+    <li><a href="#BaseEdgeType_x_csr_params"><code>BaseEdgeType_x_csr_params</code></a></li>
+    <li><a href="#BasePropertyMeta"><code>BasePropertyMeta</code></a></li>
+    <li><a href="#BaseVertexType"><code>BaseVertexType</code></a></li>
+    <li><a href="#BaseVertexType_x_csr_params"><code>BaseVertexType_x_csr_params</code></a></li>
+    <li><a href="#ColumnMapping"><code>ColumnMapping</code></a></li>
+    <li><a href="#ColumnMapping_column"><code>ColumnMapping_column</code></a></li>
+    <li><a href="#CreateAlertReceiverRequest"><code>CreateAlertReceiverRequest</code></a></li>
+    <li><a href="#CreateAlertRuleRequest"><code>CreateAlertRuleRequest</code></a></li>
+    <li><a href="#CreateDataloadingJobResponse"><code>CreateDataloadingJobResponse</code></a></li>
+    <li><a href="#CreateEdgeType"><code>CreateEdgeType</code></a></li>
+    <li><a href="#CreateGraphRequest"><code>CreateGraphRequest</code></a></li>
+    <li><a href="#CreateGraphResponse"><code>CreateGraphResponse</code></a></li>
+    <li><a href="#CreateGraphSchemaRequest"><code>CreateGraphSchemaRequest</code></a></li>
+    <li><a href="#CreatePropertyMeta"><code>CreatePropertyMeta</code></a></li>
+    <li><a href="#CreateStoredProcRequest"><code>CreateStoredProcRequest</code></a></li>
+    <li><a href="#CreateStoredProcResponse"><code>CreateStoredProcResponse</code></a></li>
+    <li><a href="#CreateVertexType"><code>CreateVertexType</code></a></li>
+    <li><a href="#DataloadingJobConfig"><code>DataloadingJobConfig</code></a></li>
+    <li><a href="#DataloadingJobConfig_edges"><code>DataloadingJobConfig_edges</code></a></li>
+    <li><a href="#DataloadingJobConfig_loading_config"><code>DataloadingJobConfig_loading_config</code></a></li>
+    <li><a href="#DataloadingJobConfig_loading_config_format"><code>DataloadingJobConfig_loading_config_format</code></a></li>
+    <li><a href="#DataloadingJobConfig_vertices"><code>DataloadingJobConfig_vertices</code></a></li>
+    <li><a href="#EdgeMapping"><code>EdgeMapping</code></a></li>
+    <li><a href="#EdgeMapping_type_triplet"><code>EdgeMapping_type_triplet</code></a></li>
+    <li><a href="#Error"><code>Error</code></a></li>
+    <li><a href="#GSDataType"><code>GSDataType</code></a></li>
+    <li><a href="#GetAlertMessageResponse"><code>GetAlertMessageResponse</code></a></li>
+    <li><a href="#GetAlertReceiverResponse"><code>GetAlertReceiverResponse</code></a></li>
+    <li><a href="#GetAlertRuleResponse"><code>GetAlertRuleResponse</code></a></li>
+    <li><a href="#GetEdgeType"><code>GetEdgeType</code></a></li>
+    <li><a href="#GetGraphResponse"><code>GetGraphResponse</code></a></li>
+    <li><a href="#GetGraphSchemaResponse"><code>GetGraphSchemaResponse</code></a></li>
+    <li><a href="#GetPropertyMeta"><code>GetPropertyMeta</code></a></li>
+    <li><a href="#GetStoredProcResponse"><code>GetStoredProcResponse</code></a></li>
+    <li><a href="#GetVertexType"><code>GetVertexType</code></a></li>
+    <li><a href="#JobStatus"><code>JobStatus</code></a></li>
+    <li><a href="#LongText"><code>LongText</code></a></li>
+    <li><a href="#NodeStatus"><code>NodeStatus</code></a></li>
+    <li><a href="#Parameter"><code>Parameter</code></a></li>
+    <li><a href="#PrimitiveType"><code>PrimitiveType</code></a></li>
+    <li><a href="#RunningDeploymentInfo"><code>RunningDeploymentInfo</code></a></li>
+    <li><a href="#RunningDeploymentStatus"><code>RunningDeploymentStatus</code></a></li>
+    <li><a href="#SchemaMapping"><code>SchemaMapping</code></a></li>
+    <li><a href="#ServiceStatus"><code>ServiceStatus</code></a></li>
+    <li><a href="#ServiceStatus_sdk_endpoints"><code>ServiceStatus_sdk_endpoints</code></a></li>
+    <li><a href="#StartServiceRequest"><code>StartServiceRequest</code></a></li>
+    <li><a href="#StoredProcedureMeta"><code>StoredProcedureMeta</code></a></li>
+    <li><a href="#StringType"><code>StringType</code></a></li>
+    <li><a href="#UpdateAlertMessageStatusRequest"><code>UpdateAlertMessageStatusRequest</code></a></li>
+    <li><a href="#UpdateStoredProcRequest"><code>UpdateStoredProcRequest</code></a></li>
+    <li><a href="#UploadFileResponse"><code>UploadFileResponse</code></a></li>
+    <li><a href="#VertexMapping"><code>VertexMapping</code></a></li>
+    <li><a href="#file_uploading_body"><code>file_uploading_body</code></a></li>
+  </ol>
+
+  <div class="model">
+    <h3><a name="APIResponse"><code>APIResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+          </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="AnyValue"><code>AnyValue</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+          </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="BaseEdgeType"><code>BaseEdgeType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">vertex_type_pair_relations </div><div class="param-desc"><span class="param-type"><a href="#BaseEdgeType_vertex_type_pair_relations">array[BaseEdgeType_vertex_type_pair_relations]</a></span>  </div>
+<div class="param">directed (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">primary_keys (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="BaseEdgeType_vertex_type_pair_relations"><code>BaseEdgeType_vertex_type_pair_relations</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">source_vertex </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">destination_vertex </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">relation </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">MANY_TO_MANY</div><div class="param-enum">ONE_TO_MANY</div><div class="param-enum">MANY_TO_ONE</div><div class="param-enum">ONE_TO_ONE</div>
+<div class="param">x_csr_params (optional)</div><div class="param-desc"><span class="param-type"><a href="#BaseEdgeType_x_csr_params">BaseEdgeType_x_csr_params</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="BaseEdgeType_x_csr_params"><code>BaseEdgeType_x_csr_params</code></a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Used for storage optimization</div>
+    <div class="field-items">
+      <div class="param">edge_storage_strategy (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">ONLY_IN</div><div class="param-enum">ONLY_OUT</div><div class="param-enum">BOTH_OUT_IN</div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="BasePropertyMeta"><code>BasePropertyMeta</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">property_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">property_type </div><div class="param-desc"><span class="param-type"><a href="#GSDataType">GSDataType</a></span>  </div>
+<div class="param">nullable (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">default_value (optional)</div><div class="param-desc"><span class="param-type"><a href="#AnyValue">AnyValue</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="BaseVertexType"><code>BaseVertexType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">primary_keys </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">x_csr_params (optional)</div><div class="param-desc"><span class="param-type"><a href="#BaseVertexType_x_csr_params">BaseVertexType_x_csr_params</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="BaseVertexType_x_csr_params"><code>BaseVertexType_x_csr_params</code></a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Used for storage optimization</div>
+    <div class="field-items">
+      <div class="param">max_vertex_num (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ColumnMapping"><code>ColumnMapping</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">column </div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping_column">ColumnMapping_column</a></span>  </div>
+<div class="param">property </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span> must align with the schema </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ColumnMapping_column"><code>ColumnMapping_column</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">index (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+<div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateAlertReceiverRequest"><code>CreateAlertReceiverRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">webhook</div>
+<div class="param">webhook_url </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">at_user_ids </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">is_at_all </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">enable </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateAlertRuleRequest"><code>CreateAlertRuleRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">severity </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">warning</div><div class="param-enum">emergency</div>
+<div class="param">metric_type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">node</div><div class="param-enum">service</div>
+<div class="param">conditions_description </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">frequency </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span> (mins) </div>
+<div class="param">enable </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateDataloadingJobResponse"><code>CreateDataloadingJobResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">job_id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateEdgeType"><code>CreateEdgeType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">properties </div><div class="param-desc"><span class="param-type"><a href="#CreatePropertyMeta">array[CreatePropertyMeta]</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">vertex_type_pair_relations </div><div class="param-desc"><span class="param-type"><a href="#BaseEdgeType_vertex_type_pair_relations">array[BaseEdgeType_vertex_type_pair_relations]</a></span>  </div>
+<div class="param">directed (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">primary_keys (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateGraphRequest"><code>CreateGraphRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">stored_procedures (optional)</div><div class="param-desc"><span class="param-type"><a href="#CreateStoredProcRequest">array[CreateStoredProcRequest]</a></span>  </div>
+<div class="param">schema (optional)</div><div class="param-desc"><span class="param-type"><a href="#CreateGraphSchemaRequest">CreateGraphSchemaRequest</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateGraphResponse"><code>CreateGraphResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">graph_id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateGraphSchemaRequest"><code>CreateGraphSchemaRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">vertex_types </div><div class="param-desc"><span class="param-type"><a href="#CreateVertexType">array[CreateVertexType]</a></span>  </div>
+<div class="param">edge_types </div><div class="param-desc"><span class="param-type"><a href="#CreateEdgeType">array[CreateEdgeType]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreatePropertyMeta"><code>CreatePropertyMeta</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">property_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">property_type </div><div class="param-desc"><span class="param-type"><a href="#GSDataType">GSDataType</a></span>  </div>
+<div class="param">nullable (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">default_value (optional)</div><div class="param-desc"><span class="param-type"><a href="#AnyValue">AnyValue</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateStoredProcRequest"><code>CreateStoredProcRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">cpp</div><div class="param-enum">cypher</div>
+<div class="param">query </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateStoredProcResponse"><code>CreateStoredProcResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">stored_procedure_id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="CreateVertexType"><code>CreateVertexType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">properties </div><div class="param-desc"><span class="param-type"><a href="#CreatePropertyMeta">array[CreatePropertyMeta]</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">primary_keys </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">x_csr_params (optional)</div><div class="param-desc"><span class="param-type"><a href="#BaseVertexType_x_csr_params">BaseVertexType_x_csr_params</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="DataloadingJobConfig"><code>DataloadingJobConfig</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">loading_config </div><div class="param-desc"><span class="param-type"><a href="#DataloadingJobConfig_loading_config">DataloadingJobConfig_loading_config</a></span>  </div>
+<div class="param">vertices </div><div class="param-desc"><span class="param-type"><a href="#DataloadingJobConfig_vertices">array[DataloadingJobConfig_vertices]</a></span>  </div>
+<div class="param">edges </div><div class="param-desc"><span class="param-type"><a href="#DataloadingJobConfig_edges">array[DataloadingJobConfig_edges]</a></span>  </div>
+<div class="param">schedule (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span> format with &#x27;2023-02-21 11:56:30&#x27; </div>
+<div class="param">repeat (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">once</div><div class="param-enum">day</div><div class="param-enum">week</div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="DataloadingJobConfig_edges"><code>DataloadingJobConfig_edges</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type_name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">source_vertex (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">destination_vertex (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="DataloadingJobConfig_loading_config"><code>DataloadingJobConfig_loading_config</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">import_option (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">init</div><div class="param-enum">overwrite</div>
+          <div class="param-desc"><span class="param-type">example: overwrite</span></div>
+<div class="param">format (optional)</div><div class="param-desc"><span class="param-type"><a href="#DataloadingJobConfig_loading_config_format">DataloadingJobConfig_loading_config_format</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="DataloadingJobConfig_loading_config_format"><code>DataloadingJobConfig_loading_config_format</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">metadata (optional)</div><div class="param-desc"><span class="param-type"><a href="#object">map[String, Object]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="DataloadingJobConfig_vertices"><code>DataloadingJobConfig_vertices</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type_name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="EdgeMapping"><code>EdgeMapping</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type_triplet </div><div class="param-desc"><span class="param-type"><a href="#EdgeMapping_type_triplet">EdgeMapping_type_triplet</a></span>  </div>
+<div class="param">inputs </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">source_vertex_mappings </div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
+<div class="param">destination_vertex_mappings </div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
+<div class="param">column_mappings (optional)</div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="EdgeMapping_type_triplet"><code>EdgeMapping_type_triplet</code></a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>source label -&amp;gt; [edge label] -&amp;gt; destination label</div>
+    <div class="field-items">
+      <div class="param">edge </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">source_vertex </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">destination_vertex </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="Error"><code>Error</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">code </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span> Error code format: int32</div>
+<div class="param">message </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span> Error message </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GSDataType"><code>GSDataType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+          </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetAlertMessageResponse"><code>GetAlertMessageResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span> Generated in server side </div>
+<div class="param">alert_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">severity </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">warning</div><div class="param-enum">emergency</div>
+<div class="param">metric_type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">node</div><div class="param-enum">service</div>
+<div class="param">target </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">trigger_time </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">status </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">unsolved</div><div class="param-enum">solved</div><div class="param-enum">dealing</div>
+<div class="param">message </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetAlertReceiverResponse"><code>GetAlertReceiverResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">message </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span> Error message generated in server side </div>
+<div class="param">type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">webhook</div>
+<div class="param">webhook_url </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">at_user_ids </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">is_at_all </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">enable </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetAlertRuleResponse"><code>GetAlertRuleResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">severity </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">warning</div><div class="param-enum">emergency</div>
+<div class="param">metric_type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">node</div><div class="param-enum">service</div>
+<div class="param">conditions_description </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">frequency </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span> (mins) </div>
+<div class="param">enable </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetEdgeType"><code>GetEdgeType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type_id </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+<div class="param">properties </div><div class="param-desc"><span class="param-type"><a href="#GetPropertyMeta">array[GetPropertyMeta]</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">vertex_type_pair_relations </div><div class="param-desc"><span class="param-type"><a href="#BaseEdgeType_vertex_type_pair_relations">array[BaseEdgeType_vertex_type_pair_relations]</a></span>  </div>
+<div class="param">directed (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">primary_keys (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetGraphResponse"><code>GetGraphResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">store_type (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">mutable_csr</div>
+<div class="param">creation_time </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">data_update_time </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">schema_update_time </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">stored_procedures (optional)</div><div class="param-desc"><span class="param-type"><a href="#GetStoredProcResponse">array[GetStoredProcResponse]</a></span>  </div>
+<div class="param">schema </div><div class="param-desc"><span class="param-type"><a href="#GetGraphSchemaResponse">GetGraphSchemaResponse</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetGraphSchemaResponse"><code>GetGraphSchemaResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">vertex_types </div><div class="param-desc"><span class="param-type"><a href="#GetVertexType">array[GetVertexType]</a></span>  </div>
+<div class="param">edge_types </div><div class="param-desc"><span class="param-type"><a href="#GetEdgeType">array[GetEdgeType]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetPropertyMeta"><code>GetPropertyMeta</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">property_id </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+<div class="param">property_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">property_type </div><div class="param-desc"><span class="param-type"><a href="#GSDataType">GSDataType</a></span>  </div>
+<div class="param">nullable (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">default_value (optional)</div><div class="param-desc"><span class="param-type"><a href="#AnyValue">AnyValue</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetStoredProcResponse"><code>GetStoredProcResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">bound_graph </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">runnable </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">library </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">params </div><div class="param-desc"><span class="param-type"><a href="#Parameter">array[Parameter]</a></span>  </div>
+<div class="param">returns </div><div class="param-desc"><span class="param-type"><a href="#Parameter">array[Parameter]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetVertexType"><code>GetVertexType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type_id </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  format: int32</div>
+<div class="param">properties </div><div class="param-desc"><span class="param-type"><a href="#GetPropertyMeta">array[GetPropertyMeta]</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">primary_keys </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">x_csr_params (optional)</div><div class="param-desc"><span class="param-type"><a href="#BaseVertexType_x_csr_params">BaseVertexType_x_csr_params</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="JobStatus"><code>JobStatus</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">status </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">RUNNING</div><div class="param-enum">SUCCESS</div><div class="param-enum">FAILED</div><div class="param-enum">CANCELLED</div><div class="param-enum">WAITING</div>
+<div class="param">start_time (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">end_time (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">log (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span> logview URL or log string </div>
+<div class="param">detail (optional)</div><div class="param-desc"><span class="param-type"><a href="#object">map[String, Object]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="LongText"><code>LongText</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">long_text </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="NodeStatus"><code>NodeStatus</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">cpu_usage </div><div class="param-desc"><span class="param-type"><a href="#double">Double</a></span>  format: double</div>
+<div class="param">memory_usage </div><div class="param-desc"><span class="param-type"><a href="#double">Double</a></span>  format: double</div>
+<div class="param">disk_usage </div><div class="param-desc"><span class="param-type"><a href="#double">Double</a></span>  format: double</div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="Parameter"><code>Parameter</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type </div><div class="param-desc"><span class="param-type"><a href="#GSDataType">GSDataType</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="PrimitiveType"><code>PrimitiveType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">primitive_type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">DT_SIGNED_INT32</div><div class="param-enum">DT_UNSIGNED_INT32</div><div class="param-enum">DT_SIGNED_INT64</div><div class="param-enum">DT_UNSIGNED_INT64</div><div class="param-enum">DT_BOOL</div><div class="param-enum">DT_FLOAT</div><div class="param-enum">DT_DOUBLE</div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="RunningDeploymentInfo"><code>RunningDeploymentInfo</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">instance_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">cluster_type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">HOSTS</div><div class="param-enum">KUBERNETES</div>
+<div class="param">version </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">creation_time </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">frontend </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">Cypher/Gremlin</div><div class="param-enum">AnalyticalApps</div>
+<div class="param">engine </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">Hiactor</div><div class="param-enum">Gaia</div>
+<div class="param">storage </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">MutableCSR</div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="RunningDeploymentStatus"><code>RunningDeploymentStatus</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">cluster_type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">HOSTS</div><div class="param-enum">KUBERNETES</div>
+<div class="param">nodes </div><div class="param-desc"><span class="param-type"><a href="#">array[null]</a></span>  </div>
+              <div class="param-desc"><span class="param-type">items oneOf:</span>
+                  <a href="#NodeStatus"><code>NodeStatus</code></a>&nbsp;&nbsp;&nbsp;
+              </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="SchemaMapping"><code>SchemaMapping</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">vertex_mappings </div><div class="param-desc"><span class="param-type"><a href="#VertexMapping">array[VertexMapping]</a></span>  </div>
+<div class="param">edge_mappings </div><div class="param-desc"><span class="param-type"><a href="#EdgeMapping">array[EdgeMapping]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ServiceStatus"><code>ServiceStatus</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">graph_id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">status </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">Running</div><div class="param-enum">Stopped</div>
+<div class="param">sdk_endpoints (optional)</div><div class="param-desc"><span class="param-type"><a href="#ServiceStatus_sdk_endpoints">ServiceStatus_sdk_endpoints</a></span>  </div>
+<div class="param">start_time (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ServiceStatus_sdk_endpoints"><code>ServiceStatus_sdk_endpoints</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">cypher (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">gremlin (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">hqps (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">grpc (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="StartServiceRequest"><code>StartServiceRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">graph_id (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="StoredProcedureMeta"><code>StoredProcedureMeta</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">id </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">library </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">params </div><div class="param-desc"><span class="param-type"><a href="#Parameter">array[Parameter]</a></span>  </div>
+<div class="param">returns </div><div class="param-desc"><span class="param-type"><a href="#Parameter">array[Parameter]</a></span>  </div>
+<div class="param">name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">cpp</div><div class="param-enum">cypher</div>
+<div class="param">query </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="StringType"><code>StringType</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">string </div><div class="param-desc"><span class="param-type"><a href="#object">Object</a></span>  </div>
+      <div class="param-desc"><span class="param-type">oneOf:</span>
+              <a href="#LongText"><code>LongText</code></a>&nbsp;&nbsp;&nbsp;
+      </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="UpdateAlertMessageStatusRequest"><code>UpdateAlertMessageStatusRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">message_ids </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">status </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+        <div class="param-enum-header">Enum:</div>
+        <div class="param-enum">unsolved</div><div class="param-enum">solved</div><div class="param-enum">dealing</div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="UpdateStoredProcRequest"><code>UpdateStoredProcRequest</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">description </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="UploadFileResponse"><code>UploadFileResponse</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">file_path </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="VertexMapping"><code>VertexMapping</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">type_name </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">inputs </div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+<div class="param">column_mappings </div><div class="param-desc"><span class="param-type"><a href="#ColumnMapping">array[ColumnMapping]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="file_uploading_body"><code>file_uploading_body</code></a> <a class="up" href="#__Models">Up</a></h3>
+    
+    <div class="field-items">
+      <div class="param">filestorage (optional)</div><div class="param-desc"><span class="param-type"><a href="#binary">byte[]</a></span>  format: binary</div>
+    </div>  <!-- field-items -->
+  </div>
+  </body>
+</html>

@@ -68,7 +68,10 @@ message Collection {
 message KeyValues {
   message KeyValue {
     common.Value key = 1;
-    Element value = 2;
+    oneof value {
+      Element element = 2;
+      KeyValues nested = 3;
+    }
   }
   repeated KeyValue key_values = 1;
 }

@@ -62,8 +62,11 @@ def connect(coordinator_endpoint):
     except Exception as e:
         err(f"Unable to connect to server: {str(e)}")
     else:
+        serving_mode = "frontend: {0}, engine: {1}, storage: {2}".format(
+            resp.frontend, resp.engine, resp.storage
+        )
         succ(
-            f"Connected to {coordinator_endpoint}, coordinator is serving with {resp.solution} mode.\n"
+            f"Connected to {coordinator_endpoint}, coordinator is serving with {serving_mode} mode.\n"
         )
         info("Try 'gsctl --help' for help.")
 
