@@ -18,8 +18,7 @@ The program uses a round-robin strategy to iterate all the **enabled** queries w
     - substitution_parameters           // query parameter files using to fill the query templates
 - queries                               // query templates including LDBC queries, K-hop queries and user-defined queries
 - scripts
-    - gremlin_benchmark.sh              // script for running benchmark for gremlin queries
-    - cypher_benchmark.sh               // script for running benchmark for cypher queries
+    - benchmark.sh                      // script for running benchmark for queries
     - cal.py                            // script for calculating benchmark results
 - src                                   // source code of benchmark program
 ```
@@ -36,19 +35,12 @@ Build benchmark program using Maven:
 mvn clean package
 ```
 All the binary and queries would be packed into _target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz_, 
-and you can use deploy the package to anywhere could connect to the gremlin endpoint. 
+and you can use deploy the package to anywhere could connect to the gremlin endpoint (which should be provided in interactive-benchmark.properties). 
 
 ### Running the benchmark
 
 ```bash
-cd target
-tar -xvf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
-cd gaia-benchmark-0.0.1-SNAPSHOT
-vim config/interactive-benchmark.properties # specify the endpoint of your server and modify running configurations
-chmod +x ./scripts/gremlin_benchmark.sh 
-chmod +x ./scripts/cypher_benchmark.sh
-./scripts/gremlin_benchmark.sh                      # run the gremlin benchmark program
-./scripts/cypher_benchmark.sh                       # run the cypher benchmark program
+./scripts/benchmark.sh                        # run the gremlin benchmark program by default; if you want to run with cypher, run with `./scripts/benchmark.sh --cypher`
 ```
 
 Benchmark reports numbers as following:
