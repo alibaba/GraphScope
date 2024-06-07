@@ -189,6 +189,7 @@ traversalMethod_bothE
 traversalMethod_with
     : 'with' LPAREN StringLiteral COMMA oC_Literal RPAREN
     | 'with' LPAREN evaluationTimeoutKey COMMA evaluationTimeoutValue RPAREN
+    | 'with' LPAREN StringLiteral COMMA (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_expr RPAREN // to support path until condition in gremlin-calcite, i.e. with('UNTIL', expr(_.age > 20))
     ;
 
 evaluationTimeoutKey

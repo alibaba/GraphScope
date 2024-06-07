@@ -197,6 +197,21 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Map<Integer, Collection<Vertex>>> get_g_V_group_byXageX();
 
+    public abstract Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age();
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_path_expand_until_age_gt_30_values_age() {
+        // the until condition follows a sql-like expression syntax, which can only be opened when
+        // language type is antlr_gremlin_calcite
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal =
+                get_g_V_path_expand_until_age_gt_30_values_age();
+        printTraversalForm(traversal);
+        Assert.assertEquals(32, traversal.next());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_select_expr_power_age_by_2() {
@@ -1408,6 +1423,18 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                                     "a.name = 'marko' and (a.age > 20 OR a.age < 10)",
                                     ExprStep.Type.FILTER))
                     .values("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age() {
+            return ((IrCustomizedTraversal)
+                            g.V().out("1..100", "knows")
+                                    .with(
+                                            "UNTIL",
+                                            com.alibaba.graphscope.gremlin.integration.suite.utils
+                                                    .__.expr("_.age > 30", ExprStep.Type.FILTER)))
+                    .endV()
+                    .values("age");
         }
 
         @Override
