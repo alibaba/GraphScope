@@ -121,11 +121,12 @@ find_package(Boost REQUIRED COMPONENTS system filesystem
              context program_options regex thread date_time)
 add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 
+#find arrow----------------------------------------------------------------------
 find_package(Arrow REQUIRED)
 if (NOT Arrow_FOUND)
     message(FATAL_ERROR "arrow not found, please install the arrow library")
 else ()
-    include_directories(SYSTEM ${Arrow_INCLUDE_DIRS})
+    include_directories(SYSTEM ${ARROW_INCLUDE_DIRS})
     if (TARGET arrow_shared)
         set(ARROW_SHARED_LIB arrow_shared)
     endif()
