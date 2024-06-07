@@ -43,13 +43,46 @@ struct ProjectOperator {
 }
 
 #[derive(Debug)]
-pub enum Projector {
+enum VariableValue {
+    Value(TagKey),
+    Nest(VariableKeyValues),
+}
+
+#[derive(Debug)]
+struct VariableKeyValue {
+    key: Object,
+    value: VariableValue,
+}
+
+#[derive(Debug)]
+struct VariableKeyValues {
+    key_vals: Vec<VariableKeyValue>,
+}
+
+impl VariableKeyValues {
+    fn exec_projector(&self, input: &Record) -> FnExecResult<DynEntry> {
+        let mut map_collection = Vec::with_capacity(self.key_vals.len());
+        for kv in self.key_vals.iter() {
+            let key = kv.key.clone();
+            let value = match &kv.value {
+                VariableValue::Value(tag_key) => tag_key.get_arc_entry(input)?,
+                VariableValue::Nest(nest) => nest.exec_projector(input)?,
+            };
+            map_collection.push(PairEntry::new(key.into(), value).into());
+        }
+        Ok(DynEntry::new(CollectionEntry { inner: map_collection }))
+    }
+}
+
+#[derive(Debug)]
+enum Projector {
     ExprProjector(Evaluator),
     GraphElementProjector(TagKey),
-    /// MultiGraphElementProject will output a collection entry.
-    /// If the key is given, it is a collection of PairEntry with user-given key, and value of projected graph elements (computed via TagKey);
-    /// If the key is None, it is a collection of projected graph elements (computed via TagKey).
-    MultiGraphElementProjector(Vec<(Option<Object>, TagKey)>),
+    /// VecProjector will output a collection entry, which is a collection of projected graph elements (computed via TagKey).
+    VecProjector(Vec<TagKey>),
+    /// MapProjector will output a collection entry, which is a collection of key-value pairs. The key is a Object (preserve the user-given key), and the value is a projected graph element (computed via TagKey).
+    /// Besides, MapProjector supports nested map.
+    MapProjector(VariableKeyValues),
     /// A simple concatenation of multiple entries.
     ConcatProjector(Vec<TagKey>),
 }
@@ -69,18 +102,15 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
             DynEntry::new(projected_result)
         }
         Projector::GraphElementProjector(tag_key) => tag_key.get_arc_entry(input)?,
-        Projector::MultiGraphElementProjector(key_vals) => {
-            let mut collection = Vec::with_capacity(key_vals.len());
-            for (key, tag_key) in key_vals.iter() {
+        Projector::VecProjector(vec) => {
+            let mut collection = Vec::with_capacity(vec.len());
+            for tag_key in vec.iter() {
                 let entry = tag_key.get_arc_entry(input)?;
-                if let Some(key) = key {
-                    collection.push(PairEntry::new(key.clone().into(), entry).into());
-                } else {
-                    collection.push(entry);
-                }
+                collection.push(entry);
             }
             DynEntry::new(CollectionEntry { inner: collection })
         }
+        Projector::MapProjector(map) => map.exec_projector(input)?,
         Projector::ConcatProjector(concat_vars) => {
             if concat_vars.len() != 2 {
                 Err(FnExecError::unsupported_error("Only support concatenated 2 entries now"))?
@@ -182,27 +212,13 @@ impl FilterMapFuncGen for pb::Project {
                         let tag_keys = vars
                             .keys
                             .iter()
-                            .map(|var| match TagKey::try_from(var.clone()) {
-                                Ok(tag_key) => Ok((None, tag_key)),
-                                Err(err) => Err(err),
-                            })
-                            .collect::<Result<Vec<(Option<Object>, TagKey)>, _>>()?;
-                        Projector::MultiGraphElementProjector(tag_keys)
+                            .map(|var| TagKey::try_from(var.clone()))
+                            .collect::<Result<Vec<TagKey>, _>>()?;
+                        Projector::VecProjector(tag_keys)
                     }
                     common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Map(key_vals)), .. } => {
-                        let mut key_value_vec = Vec::with_capacity(key_vals.key_vals.len());
-                        for key_val in key_vals.key_vals.iter() {
-                            let key = key_val.key.as_ref().ok_or_else(|| {
-                                ParsePbError::EmptyFieldError(format!("key in Map Expr {:?}", key_val))
-                            })?;
-                            let key_obj = Object::try_from(key.clone())?;
-                            let val = key_val.value.as_ref().ok_or_else(|| {
-                                ParsePbError::EmptyFieldError(format!("value in Map Expr {:?}", key_val))
-                            })?;
-                            let tag_key = TagKey::try_from(val.clone())?;
-                            key_value_vec.push((Some(key_obj), tag_key));
-                        }
-                        Projector::MultiGraphElementProjector(key_value_vec)
+                        let variable_key_values = VariableKeyValues::try_from(key_vals.clone())?;
+                        Projector::MapProjector(variable_key_values)
                     }
                     common_pb::ExprOpr {
                         item: Some(common_pb::expr_opr::Item::Concat(concat_vars)),
@@ -231,6 +247,37 @@ impl FilterMapFuncGen for pb::Project {
             debug!("Runtime project operator {:?}", project_operator);
         }
         Ok(Box::new(project_operator))
+    }
+}
+
+impl TryFrom<common_pb::VariableKeyValues> for VariableKeyValues {
+    type Error = ParsePbError;
+
+    fn try_from(key_vals: common_pb::VariableKeyValues) -> Result<Self, Self::Error> {
+        let mut vec = Vec::with_capacity(key_vals.key_vals.len());
+        for key_val in key_vals.key_vals {
+            let (_key, _value) = (key_val.key, key_val.value);
+            let key = if let Some(key) = _key {
+                Object::try_from(key.clone())?
+            } else {
+                return Err(ParsePbError::from("empty key provided in Map"));
+            };
+            let value = if let Some(val) = _value {
+                match val {
+                    common_pb::variable_key_value::Value::Val(val) => {
+                        VariableValue::Value(TagKey::try_from(val.clone())?)
+                    }
+                    common_pb::variable_key_value::Value::Nested(nested_vals) => {
+                        let nested = VariableKeyValues::try_from(nested_vals)?;
+                        VariableValue::Nest(nested)
+                    }
+                }
+            } else {
+                return Err(ParsePbError::from("empty value provided in Map"));
+            };
+            vec.push(VariableKeyValue { key, value });
+        }
+        Ok(VariableKeyValues { key_vals: vec })
     }
 }
 
@@ -685,7 +732,7 @@ mod tests {
     }
 
     // g.V().valueMap('age', 'name') with alias of 'age' as 'newAge' and 'name' as 'newName', by map
-    // this is projected by MultiGraphElementProjector
+    // this is projected by MapProjector
     #[test]
     fn simple_project_map_mapping_test() {
         let project_opr_pb = pb::Project {
@@ -816,7 +863,7 @@ mod tests {
     }
 
     // g.V().as("a").select("a").by(valueMap("age", "name")),with alias of 'a.age' as 'newAge' and 'a.tname' as 'newName', by map
-    // this is projected by MultiGraphElementProjector
+    // this is projected by MapProjector
     #[test]
     fn simple_project_tag_map_mapping_test() {
         let project_opr_pb = pb::Project {
@@ -862,6 +909,102 @@ mod tests {
         let expected_result = vec![
             vec![(object!("newName"), object!("marko")), (object!("newAge"), object!(29))],
             vec![(object!("newName"), object!("vadas")), (object!("newAge"), object!(27))],
+        ];
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().as("a").select("a").by(valueMap("age", "name")), with expr_opr as a nested VariableKeyValues
+    // this is projected by MapProjector (nested)
+    #[test]
+    fn project_nested_map_test() {
+        // project a.{name, age}
+        let variable_key_value = common_pb::VariableKeyValues {
+            key_vals: vec![
+                common_pb::VariableKeyValue {
+                    key: Some(common_pb::Value::from("name".to_string())),
+                    value: Some(common_pb::variable_key_value::Value::Val(to_var_pb(
+                        None,
+                        Some("name".into()),
+                    ))),
+                },
+                common_pb::VariableKeyValue {
+                    key: Some(common_pb::Value::from("age".to_string())),
+                    value: Some(common_pb::variable_key_value::Value::Val(to_var_pb(
+                        None,
+                        Some("age".into()),
+                    ))),
+                },
+            ],
+        };
+        let nested_variable_key_vals = common_pb::VariableKeyValues {
+            key_vals: vec![common_pb::VariableKeyValue {
+                key: Some(common_pb::Value::from("a".to_string())),
+                value: Some(common_pb::variable_key_value::Value::Nested(variable_key_value)),
+            }],
+        };
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(common_pb::Expression {
+                    operators: vec![common_pb::ExprOpr {
+                        node_type: None,
+                        item: Some(common_pb::expr_opr::Item::Map(nested_variable_key_vals)),
+                    }],
+                }),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let collection = res
+                .get(None)
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap();
+            let mut result = vec![];
+            for entry in collection.inner.iter() {
+                let pair_entry = entry
+                    .as_any_ref()
+                    .downcast_ref::<PairEntry>()
+                    .unwrap();
+                let key = pair_entry
+                    .get_left()
+                    .as_any_ref()
+                    .downcast_ref::<Object>()
+                    .unwrap();
+                let value = pair_entry
+                    .get_right()
+                    .as_any_ref()
+                    .downcast_ref::<CollectionEntry>()
+                    .unwrap();
+                let mut result_value = vec![];
+                for entry in value.inner.iter() {
+                    let inner_pair = entry
+                        .as_any_ref()
+                        .downcast_ref::<PairEntry>()
+                        .unwrap();
+                    let inner_key = inner_pair
+                        .get_left()
+                        .as_any_ref()
+                        .downcast_ref::<Object>()
+                        .unwrap();
+                    let inner_val = inner_pair
+                        .get_right()
+                        .as_any_ref()
+                        .downcast_ref::<Object>()
+                        .unwrap();
+                    result_value.push((inner_key.clone(), inner_val.clone()));
+                }
+                result.push((key.clone(), result_value.clone()));
+            }
+            object_result.push(result);
+        }
+        let expected_result = vec![
+            vec![(object!("a"), vec![(object!("name"), object!("marko")), (object!("age"), object!(29))])],
+            vec![(object!("a"), vec![(object!("name"), object!("vadas")), (object!("age"), object!(27))])],
         ];
         assert_eq!(object_result, expected_result);
     }
