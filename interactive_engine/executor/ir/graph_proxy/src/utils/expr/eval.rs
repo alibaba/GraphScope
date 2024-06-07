@@ -582,6 +582,32 @@ impl TryFrom<common_pb::Variable> for Operand {
     }
 }
 
+impl TryFrom<common_pb::VariableKeyValues> for Operand {
+    type Error = ParsePbError;
+
+    fn try_from(key_vals: common_pb::VariableKeyValues) -> Result<Self, Self::Error> {
+        let mut vec = Vec::with_capacity(key_vals.key_vals.len());
+        for key_val in key_vals.key_vals {
+            let (_key, _value) = (key_val.key, key_val.value);
+            let key = if let Some(key) = _key {
+                Object::try_from(key)?
+            } else {
+                return Err(ParsePbError::from("empty key provided in Map"));
+            };
+            let value = if let Some(value) = _value {
+                match value {
+                    common_pb::variable_key_value::Value::Val(val) => Operand::try_from(val)?,
+                    common_pb::variable_key_value::Value::Nested(nested) => Operand::try_from(nested)?,
+                }
+            } else {
+                return Err(ParsePbError::from("empty value provided in Map"));
+            };
+            vec.push((key, value));
+        }
+        Ok(Self::Map(vec))
+    }
+}
+
 impl TryFrom<common_pb::ExprOpr> for Operand {
     type Error = ParsePbError;
 
@@ -605,25 +631,7 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                     }
                     Ok(Self::VarMap(vec))
                 }
-
-                Map(key_vals) => {
-                    let mut vec = Vec::with_capacity(key_vals.key_vals.len());
-                    for key_val in key_vals.key_vals {
-                        let (_key, _value) = (key_val.key, key_val.value);
-                        let key = if let Some(key) = _key {
-                            Object::try_from(key)?
-                        } else {
-                            return Err(ParsePbError::from("empty key provided in Map"));
-                        };
-                        let value = if let Some(value) = _value {
-                            Operand::try_from(value)?
-                        } else {
-                            return Err(ParsePbError::from("empty value provided in Map"));
-                        };
-                        vec.push((key, value));
-                    }
-                    Ok(Self::Map(vec))
-                }
+                Map(key_vals) => Operand::try_from(key_vals),
                 _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
             }
         } else {

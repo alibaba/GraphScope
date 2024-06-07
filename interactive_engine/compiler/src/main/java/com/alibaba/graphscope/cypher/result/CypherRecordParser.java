@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.common.result.Utils;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -119,6 +120,30 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
+    protected AnyValue parseElement(IrResult.KeyValues.KeyValue value, RelDataType type) {
+        switch (value.getValueCase()) {
+            case ELEMENT:
+                return parseElement(value.getElement(), type);
+            case NESTED:
+                if (type instanceof ArbitraryMapType) {
+                    return parseKeyValues(
+                            value.getNested(),
+                            ((ArbitraryMapType) type).getKeyTypes(),
+                            ((ArbitraryMapType) type).getValueTypes());
+                } else {
+                    return parseKeyValues(
+                            value.getNested(), type.getKeyType(), type.getValueType());
+                }
+            default:
+                throw new GremlinResultParserException(
+                        "keyValue ["
+                                + value
+                                + "] has invalid value type ["
+                                + value.getValueCase()
+                                + "]");
+        }
+    }
+
     protected AnyValue parseElement(IrResult.Element element, @Nullable RelDataType dataType) {
         switch (element.getInnerCase()) {
             case VERTEX:
@@ -195,9 +220,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 .getKeyValuesList()
                 .forEach(
                         entry -> {
-                            valueMap.put(
-                                    entry.getKey().getStr(),
-                                    parseElement(entry.getValue(), valueType));
+                            valueMap.put(entry.getKey().getStr(), parseElement(entry, valueType));
                         });
         return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
@@ -216,8 +239,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
         for (int i = 0; i < entries.size(); ++i) {
             IrResult.KeyValues.KeyValue entry = entries.get(i);
-            valueMap.put(
-                    entry.getKey().getStr(), parseElement(entry.getValue(), valueTypes.get(i)));
+            valueMap.put(entry.getKey().getStr(), parseElement(entry, valueTypes.get(i)));
         }
         return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
