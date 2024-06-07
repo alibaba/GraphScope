@@ -126,8 +126,6 @@ public class SimpleMatchTest {
 
     @Test
     public void run_simple_match_13_test() {
-        // TODO: when issue #3730 is fixed, this test could be enabled in pegagus.
-        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_13_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
