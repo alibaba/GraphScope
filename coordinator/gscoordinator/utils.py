@@ -695,6 +695,10 @@ def _type_param_consistent(graph_actucal_type_param, java_app_type_param):
         if graph_actucal_type_param in {"int32_t", "uint32_t"}:
             return True
         return False
+    if java_app_type_param == "com.alibaba.graphscope.ds.StringView":
+        if graph_actucal_type_param in {"std::string"}:
+            return True
+        return False
     return False
 
 

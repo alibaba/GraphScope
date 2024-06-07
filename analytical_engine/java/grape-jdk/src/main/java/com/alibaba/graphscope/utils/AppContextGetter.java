@@ -201,6 +201,9 @@ public class AppContextGetter {
         } else if (ret.getName() == "java.lang.Long") {
             return "int64_t";
         }
+        else if (ret.getName() == "com.alibaba.graphscope.ds.StringView") {
+            return "std::string";
+        }
         return null;
     }
 }

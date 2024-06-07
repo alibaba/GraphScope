@@ -144,6 +144,15 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
         std::shared_ptr<inner_ctx_type> inner_ctx_impl_shared(inner_ctx_impl);
         return std::make_shared<inner_ctx_wrapper_type>(id, frag_wrapper,
                                                         inner_ctx_impl_shared);
+      } else if (data_type == "std::string") {
+        using inner_ctx_type = grape::VertexDataContext<FRAG_T, std::string>;
+        using inner_ctx_wrapper_type =
+            VertexDataContextWrapper<FRAG_T, std::string>;
+        auto inner_ctx_impl =
+            reinterpret_cast<inner_ctx_type*>(this->inner_context_addr());
+        std::shared_ptr<inner_ctx_type> inner_ctx_impl_shared(inner_ctx_impl);
+        return std::make_shared<inner_ctx_wrapper_type>(id, frag_wrapper,
+                                                        inner_ctx_impl_shared);
       } else {
         LOG(ERROR) << "Unrecognizable data type: " << data_type;
       }
