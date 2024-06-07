@@ -969,6 +969,10 @@ static Status parse_edge_schema(YAML::Node node, Schema& schema) {
 }
 
 static Status parse_edges_schema(YAML::Node node, Schema& schema) {
+  if (node.IsNull()){
+    LOG(INFO) << "No edge is set";
+    return Status::OK();
+  }
   if (!node.IsSequence()) {
     LOG(ERROR) << "edge is not set properly";
     return Status(StatusCode::InvalidSchema, "edge is not set properly");
