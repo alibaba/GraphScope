@@ -205,7 +205,7 @@ public class SchemaManager {
             } catch (InterruptedException interruptedException) {
                 // Ignore
             }
-            this.singleThreadExecutor.execute(() -> recover());
+            this.singleThreadExecutor.execute(this::recover);
         }
     }
 
@@ -217,7 +217,7 @@ public class SchemaManager {
         GraphDef graphDef = this.graphDefFetcher.fetchGraphDef();
         this.graphDefRef.set(graphDef);
         this.ready = true;
-        // logger.info("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
+        logger.debug("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
     }
 
     public void stop() {

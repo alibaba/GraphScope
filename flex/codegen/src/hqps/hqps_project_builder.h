@@ -254,10 +254,16 @@ std::string project_key_values_to_string(
     auto& key_value = mappings[i];
     auto& key = key_value.key();
     CHECK(key.item_case() == common::Value::kStr);
-    auto& value = key_value.value();
-    auto key_value_str = project_key_value_to_string(ctx, key.str(), value);
-    if (!key_value_str.empty()) {
-      key_value_strs.emplace_back(key_value_str);
+    if (key_value.has_val()) {
+      auto& value = key_value.val();
+      auto key_value_str = project_key_value_to_string(ctx, key.str(), value);
+      if (!key_value_str.empty()) {
+        key_value_strs.emplace_back(key_value_str);
+      }
+    } else if (key_value.has_nested()) {
+      LOG(FATAL) << "Nested key value not supported yet";
+    } else {
+      LOG(FATAL) << "Unknown key value type";
     }
   }
 

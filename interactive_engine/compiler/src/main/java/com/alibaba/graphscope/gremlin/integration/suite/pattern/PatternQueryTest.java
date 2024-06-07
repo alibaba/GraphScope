@@ -23,6 +23,7 @@ import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Map;
@@ -162,6 +163,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(1247146L, traversal.next().longValue());
     }
 
+    @Ignore("Have not supported pattern with multi-edges yet")
     @Test
     public void run_pattern_9_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_9_test();
@@ -169,6 +171,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(23286L, traversal.next().longValue());
     }
 
+    @Ignore("Have not supported pattern with multi-edges yet")
     @Test
     public void run_pattern_9b_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_9b_test();

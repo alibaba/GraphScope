@@ -186,11 +186,21 @@ public class SimpleMatchQueries {
 
         List<String> expected =
                 Arrays.asList(
-                        "Record<{aId: 94, c: path[], bId: 987}>",
-                        "Record<{aId: 94, c: path[], bId: 2199023256154}>",
-                        "Record<{aId: 94, c: path[], bId: 2199023256776}>",
-                        "Record<{aId: 94, c: path[], bId: 6597069767432}>",
-                        "Record<{aId: 94, c: path[], bId: 8796093022369}>");
+                        "Record<{aId: 94, c:"
+                                + " path[[(72057594037928030)-[771484:KNOWS]->(72057594037928923)],"
+                                + " bId: 987}>",
+                        "Record<{aId: 94, c:"
+                            + " path[(72057594037928030)-[771485:KNOWS]->(72059793061184090)], bId:"
+                            + " 2199023256154}>",
+                        "Record<{aId: 94, c:"
+                            + " path[(72057594037928030)-[771486:KNOWS]->(72059793061184712)], bId:"
+                            + " 2199023256776}>",
+                        "Record<{aId: 94, c:"
+                            + " path[(72057594037928030)-[771487:KNOWS]->(72064191107695368)], bId:"
+                            + " 6597069767432}>",
+                        "Record<{aId: 94, c:"
+                                + " path[(72057594037928030)-[771488:KNOWS]->(72066390130950305)]],"
+                                + " bId: 8796093022369}>");
         return new QueryContext(query, expected);
     }
 

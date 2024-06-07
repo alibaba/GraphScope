@@ -41,7 +41,7 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
 
 # build coordinator
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
-        cd ${HOME}/GraphScope/flex/coordinator && \
+        cd ${HOME}/GraphScope/coordinator && \
         python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
     fi
@@ -134,6 +134,7 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 RUN chmod +x /opt/flex/bin/*
 
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      pip3 install --upgrade pip && \
       pip3 install /opt/flex/wheel/*.whl; \
     fi
 
