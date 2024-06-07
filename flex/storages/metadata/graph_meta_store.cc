@@ -695,6 +695,68 @@ JobStatus parseFromString(const std::string& status_string) {
   }
 }
 
+std::string GraphStatistics::ToJson() const {
+  nlohmann::json json;
+  json["total_vertex_count"] = total_vertex_count;
+  json["total_edge_count"] = total_edge_count;
+  json["vertex_type_statistics"] = nlohmann::json::array();
+  for (auto& type_stat : vertex_type_statistics) {
+    nlohmann::json type_stat_json;
+    type_stat_json["type_id"] = std::get<0>(type_stat);
+    type_stat_json["type_name"] = std::get<1>(type_stat);
+    type_stat_json["count"] = std::get<2>(type_stat);
+    json["vertex_type_statistics"].push_back(type_stat_json);
+  }
+  json["edge_type_statistics"] = nlohmann::json::array();
+  for (auto& type_stat : edge_type_statistics) {
+    nlohmann::json type_stat_json;
+    type_stat_json["type_id"] = std::get<0>(type_stat);
+    type_stat_json["type_name"] = std::get<1>(type_stat);
+    type_stat_json["vertex_type_pair_statistics"] = nlohmann::json::array();
+    for (auto& pair_stat : std::get<2>(type_stat)) {
+      nlohmann::json pair_stat_json;
+      pair_stat_json["source_vertex"] = std::get<0>(pair_stat);
+      pair_stat_json["destination_vertex"] = std::get<1>(pair_stat);
+      pair_stat_json["count"] = std::get<2>(pair_stat);
+      type_stat_json["vertex_type_pair_statistics"].push_back(pair_stat_json);
+    }
+    json["edge_type_statistics"].push_back(type_stat_json);
+  }
+  return json.dump();
+}
+
+Result<GraphStatistics> GraphStatistics::FromJson(const std::string& json_str) {
+  auto j = nlohmann::json::parse(json_str);
+  return GraphStatistics::FromJson(j);
+}
+
+Result<GraphStatistics> GraphStatistics::FromJson(const nlohmann::json& json) {
+  GraphStatistics stat;
+  stat.total_vertex_count = json["total_vertex_count"].get<int64_t>();
+  stat.total_edge_count = json["total_edge_count"].get<int64_t>();
+  for (auto& type_stat : json["vertex_type_statistics"]) {
+    stat.vertex_type_statistics.push_back(
+        {type_stat["type_id"].get<int32_t>(),
+         type_stat["type_name"].get<std::string>(),
+         type_stat["count"].get<int64_t>()});
+  }
+  for (auto& type_stat : json["edge_type_statistics"]) {
+    std::vector<typename GraphStatistics::vertex_type_pair_statistic>
+        vertex_type_pair_statistics;
+    for (auto& pair : type_stat["vertex_type_pair_statistics"]) {
+      vertex_type_pair_statistics.push_back(
+          {pair["source_vertex"].get<std::string>(),
+           pair["destination_vertex"].get<std::string>(),
+           pair["count"].get<int64_t>()});
+    }
+    stat.edge_type_statistics.push_back(
+        {type_stat["type_id"].get<int32_t>(),
+         type_stat["type_name"].get<std::string>(),
+         vertex_type_pair_statistics});
+  }
+  return stat;
+}
+
 }  // namespace gs
 
 namespace std {

@@ -34,10 +34,10 @@ public class EdgeTypeMapper extends SchemaElementMapper {
 
     public static SchemaElementMapper parseFromEdgeType(GraphEdge graphEdge) {
         EdgeTypeMapper edgeTypeMapper = new EdgeTypeMapper();
+        edgeTypeMapper.setVersionId(graphEdge.getVersionId());
         edgeTypeMapper.setId(graphEdge.getLabelId());
         edgeTypeMapper.setLabel(graphEdge.getLabel());
         edgeTypeMapper.setType(TypeEnum.EDGE.toString());
-
         ElementIndexMapper elementIndexMapper = new ElementIndexMapper();
         elementIndexMapper.setName("primary_key");
         elementIndexMapper.setIndexType("PRIMARY_KEY");

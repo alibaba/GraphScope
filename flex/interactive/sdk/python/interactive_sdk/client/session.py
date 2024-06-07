@@ -57,6 +57,7 @@ from interactive_sdk.openapi.models.get_graph_response import GetGraphResponse
 from interactive_sdk.openapi.models.get_graph_schema_response import (
     GetGraphSchemaResponse,
 )
+from interactive_sdk.openapi.models.get_graph_statistics_response import GetGraphStatisticsResponse
 from interactive_sdk.openapi.models.get_procedure_response import GetProcedureResponse
 from interactive_sdk.openapi.models.job_response import JobResponse
 from interactive_sdk.openapi.models.job_status import JobStatus
@@ -179,6 +180,14 @@ class GraphInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    def get_graph_statistics(
+        graph_id: Annotated[
+            StrictStr, Field(description="The id of graph to get")
+        ],
+    ) -> Result[GetGraphStatisticsResponse]:
+        raise NotImplementedError
+
+    @abstractmethod
     def delete_graph(
         graph_id: Annotated[
             StrictStr, Field(description="The id of graph to delete")
@@ -235,11 +244,20 @@ class ProcedureInterface(metaclass=ABCMeta):
         self, graph_id: StrictStr, params: QueryRequest
     ) -> Result[CollectiveResults]:
         raise NotImplementedError
-    
+
+    @abstractmethod
+    def call_procedure_current(
+        self, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        raise NotImplementedError
+
     @abstractmethod
     def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
         raise NotImplementedError
 
+    @abstractmethod
+    def call_procedure_current_raw(self, params: str) -> Result[str]:
+        raise NotImplementedError
 
 class QueryServiceInterface:
     @abstractmethod
@@ -291,6 +309,9 @@ class Session(
 
 
 class DefaultSession(Session):
+    PROTOCOL_FORMAT = "proto"
+    JSON_FORMAT = "json"
+    ENCODER_FORMAT = "encoder"
     def __init__(self, uri: str):
         self._client = ApiClient(Configuration(host=uri))
 
@@ -425,6 +446,16 @@ class DefaultSession(Session):
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)
+    
+    def get_graph_statistics(
+        self,
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
+    ) -> Result[GetGraphStatisticsResponse]:
+        try:
+            response = self._graph_api.get_graph_statistic_with_http_info(graph_id)
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     def delete_graph(
         self,
@@ -518,9 +549,29 @@ class DefaultSession(Session):
         try:
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
-            params_str = params.to_json() + chr(1)
             response = self._query_api.proc_call_with_http_info(
-                graph_id, params_str
+                graph_id = graph_id, 
+                x_interactive_request_format = self.JSON_FORMAT,
+                body=params.to_json()
+            )
+            result = CollectiveResults()
+            if response.status_code == 200:
+                result.ParseFromString(response.data)
+                return Result.ok(result)
+            else:
+                return Result(Status.from_response(response), result)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def call_procedure_current(
+        self, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in json format
+            response = self._query_api.proc_call_current_with_http_info(
+                x_interactive_request_format = self.JSON_FORMAT,
+                body = params.to_json()
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -535,9 +586,22 @@ class DefaultSession(Session):
         try:
             # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
-            params = params + chr(0)
             response = self._query_api.proc_call_with_http_info(
-                graph_id, params
+                graph_id = graph_id, 
+                x_interactive_request_format = self.ENCODER_FORMAT, 
+                body = params
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+        
+    def call_procedure_current_raw(self, params: str) -> Result[str]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in encoder/decoder format
+            response = self._query_api.proc_call_current_with_http_info(
+                x_interactive_request_format = self.ENCODER_FORMAT, 
+                body = params
             )
             return Result.from_response(response)
         except Exception as e:

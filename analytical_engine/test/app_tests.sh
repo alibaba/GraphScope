@@ -453,6 +453,12 @@ then
       --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \
       --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
       --user_app_class com.alibaba.graphscope.example.giraph.SSSP
+
+    echo "Test Giraph app user Customized Writable"
+    ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexMultipleLongInputFormat \
+      --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeMultipleLongInputFormat --vfile "${test_dir}"/p2p-31.v \
+      --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
+      --user_app_class com.alibaba.graphscope.example.giraph.MessageAppWithUserWritable
   fi
 fi
 

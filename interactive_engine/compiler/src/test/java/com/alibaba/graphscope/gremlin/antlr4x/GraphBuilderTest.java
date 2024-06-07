@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.antlr4x;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
@@ -27,7 +28,6 @@ import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.antlr4x.parser.GremlinAntlr4Parser;
@@ -65,7 +65,11 @@ public class GraphBuilderTest {
                                 "graph.planner.cbo.glogue.schema",
                                 "target/test-classes/statistics/modern_statistics.txt"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockSchemaMeta("schema/modern.json");
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/modern.json",
+                        "statistics/modern_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     public static RelNode eval(String query) {
@@ -1674,6 +1678,27 @@ public class GraphBuilderTest {
                 "GraphLogicalProject($f0=[_], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
                         + " alias=[_], fusedFilter=[[=(_.id, 1)]], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_path_expand_until_age_gt_30_values_age() {
+        RelNode node =
+                eval("g.V().out('1..3').with('UNTIL', expr(_.age > 30)).endV().values('age')");
+        Assert.assertEquals(
+                "GraphLogicalProject(age=[age], isAppend=[false])\n"
+                    + "  GraphLogicalProject(age=[_.age], isAppend=[true])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[_], opt=[END])\n"
+                    + "     "
+                    + " GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
+                    + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " until_condition=[>(_.age, 30)], alias=[_])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[VERTEX])",
                 node.explain().trim());
     }
 }

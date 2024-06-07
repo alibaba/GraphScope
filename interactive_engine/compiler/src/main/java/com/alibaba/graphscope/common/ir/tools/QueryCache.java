@@ -18,8 +18,8 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

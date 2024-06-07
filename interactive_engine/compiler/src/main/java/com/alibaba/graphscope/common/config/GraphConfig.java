@@ -21,18 +21,4 @@ public class GraphConfig {
     public static final Config<String> GRAPH_STATISTICS =
             Config.stringConfig("graph.statistics", "");
     public static final Config<String> GRAPH_STORE = Config.stringConfig("graph.store", "exp");
-
-    @Deprecated
-    public static final Config<String> GRAPH_STORED_PROCEDURES =
-            Config.stringConfig("graph.stored.procedures", "");
-
-    @Deprecated
-    public static final Config<String> GRAPH_STORED_PROCEDURES_ENABLE_LISTS =
-            Config.stringConfig("graph.stored.procedures.enable.lists", "");
-
-    // denote stored procedures in yaml format, refer to test resource file
-    // 'config/modern/graph.yaml' for more info about
-    // the format
-    public static final Config<String> GRAPH_STORED_PROCEDURES_YAML =
-            Config.stringConfig("graph.stored.procedures.yaml", "");
 }
