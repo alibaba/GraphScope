@@ -34,11 +34,11 @@ if (GLOG_FOUND)
 endif ()
 
 #find arrow----------------------------------------------------------------------
-include("../../../../flex/cmake/FindArrow.cmake")
+find_package(Arrow REQUIRED)
 if (NOT ARROW_FOUND)
     message(FATAL_ERROR "arrow not found, please install the arrow library")
 else ()
-    include_directories(SYSTEM ${ARROW_INCLUDE_DIRS})
+    include_directories(SYSTEM ${ARROW_INCLUDE_DIR})
     if (TARGET arrow_shared)
         set(ARROW_SHARED_LIB arrow_shared)
     endif()
