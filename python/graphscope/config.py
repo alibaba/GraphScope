@@ -235,6 +235,8 @@ class CoordinatorConfig:
     """
     service_port: int = 63800  # Coordinator service port that will be listening on.
 
+    http_port: int = 8080  # Coordinator HTTP service port
+
     monitor: bool = False  # Enable or disable prometheus exporter.
     monitor_port: int = 9090  # Coordinator prometheus exporter service port.
 
