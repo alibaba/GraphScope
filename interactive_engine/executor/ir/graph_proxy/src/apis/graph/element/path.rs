@@ -152,6 +152,13 @@ impl GraphPath {
         }
     }
 
+    pub fn get_path_start(&self) -> Option<&VertexOrEdge> {
+        match self {
+            GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) => p.first(),
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
     pub fn get_path_end(&self) -> &VertexOrEdge {
         match self {
             GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) => p.last().unwrap(),
@@ -170,6 +177,38 @@ impl GraphPath {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
             GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
+    // append another path to the current path, and return the flag of whether the path has been appended or not.
+    // notice that, if the path is a simple path, we simply concatenate the two paths, without checking the duplication (this may not be as expected)
+    // e.g., [1,2,3] + [4,5] = [1,2,3,4,5]
+    pub fn append_path(&mut self, other: GraphPath) {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => {
+                if let Some(other_path) = other.take_path() {
+                    p.extend(other_path);
+                }
+            }
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => {}
+        }
+    }
+
+    // pop the last element from the path, and return the element.
+    pub fn pop(&mut self) -> Option<VertexOrEdge> {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => p.pop(),
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
+    // reverse the path.
+    pub fn reverse(&mut self) {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => {
+                p.reverse();
+            }
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => {}
         }
     }
 }
