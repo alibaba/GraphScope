@@ -115,6 +115,13 @@ else ()
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 endif ()
 
+# find yaml-cpp-----------------------------------------------------------------
+find_package(yaml-cpp REQUIRED)
+include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
+if (NOT yaml-cpp_FOUND)
+    message(FATAL_ERROR "yaml-cpp not found, please install the yaml-cpp library")
+endif ()
+
 #find boost----------------------------------------------------------------------
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
