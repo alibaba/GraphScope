@@ -10,5 +10,7 @@ maxdepth: 2
 ---
 development/cypher_procedure
 development/cpp_procedure
-development/admin_service
+development/restful_api
+development/java/java_sdk
+development/python/python_sdk
 ```

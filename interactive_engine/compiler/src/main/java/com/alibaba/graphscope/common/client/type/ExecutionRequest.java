@@ -19,17 +19,19 @@ package com.alibaba.graphscope.common.client.type;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
+import java.math.BigInteger;
+
 /**
  * request to submit to remote engine service
  */
 public class ExecutionRequest {
-    private final long requestId;
+    private final BigInteger requestId;
     private final String requestName;
     private final LogicalPlan requestLogical;
     private final PhysicalPlan requestPhysical;
 
     public ExecutionRequest(
-            long requestId,
+            BigInteger requestId,
             String requestName,
             LogicalPlan requestLogical,
             PhysicalPlan requestPhysical) {
@@ -39,7 +41,7 @@ public class ExecutionRequest {
         this.requestPhysical = requestPhysical;
     }
 
-    public long getRequestId() {
+    public BigInteger getRequestId() {
         return requestId;
     }
 

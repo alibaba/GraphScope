@@ -2175,6 +2175,7 @@ mod graph {
             alias: None,
             expand_opt: unsafe { std::mem::transmute::<FfiExpandOpt, i32>(expand_opt) },
             meta_data: None,
+            is_optional: false,
         });
 
         Box::into_raw(edgexpd) as *const c_void
@@ -2339,6 +2340,7 @@ mod graph {
             path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
             result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
             condition: None,
+            is_optional: false,
         });
 
         Box::into_raw(pathxpd) as *const c_void
@@ -2362,6 +2364,7 @@ mod graph {
             path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
             result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
             condition: None,
+            is_optional: false,
         });
 
         Box::into_raw(pathxpd) as *const c_void

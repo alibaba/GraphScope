@@ -32,17 +32,18 @@ struct Expression1 {
   int64_t oid_;
 };
 
-class SampleQuery : public AppBase {
+class SampleQuery : public ReadAppBase {
  public:
   using GRAPH_INTERFACE = gs::MutableCSRInterface;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
-  SampleQuery(const GraphDBSession& session) : graph(session) {}
-  bool Query(Decoder& input, Encoder& output) override {
+  bool Query(const GraphDBSession& graph, Decoder& input,
+             Encoder& output) override {
     int64_t id = input.get_long();
     int64_t maxDate = input.get_long();
-    auto res = Query(graph, id, maxDate);
+    gs::MutableCSRInterface interface(graph);
+    auto res = Query(interface, id, maxDate);
     std::string res_str = res.SerializeAsString();
     // encode results to encoder
     output.put_string(res_str);
@@ -106,7 +107,6 @@ class SampleQuery : public AppBase {
                    std::move(mapper7)});
     return Engine::Sink(graph, ctx5);
   }
-  gs::MutableCSRInterface graph;
 };
 }  // namespace gs
 #endif  // TESTS_HQPS_SAMPLE_QUERY_H_

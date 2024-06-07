@@ -150,6 +150,7 @@
       "alias": 3
     }, {
       "type": {
+        "dataType": "STRING_ARRAY"
       },
       "alias": 4
     }]

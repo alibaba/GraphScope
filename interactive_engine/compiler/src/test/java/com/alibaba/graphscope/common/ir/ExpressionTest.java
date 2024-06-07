@@ -16,18 +16,25 @@
 
 package com.alibaba.graphscope.common.ir;
 
+import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
-import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.utils.FileUtils;
+import com.google.protobuf.util.JsonFormat;
 
+import org.apache.calcite.avatica.util.TimeUnit;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlIntervalQualifier;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.math.BigDecimal;
 
 public class ExpressionTest {
     private GraphBuilder builder;
@@ -53,7 +60,7 @@ public class ExpressionTest {
     @Test
     public void variable_1_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable((String) null);
-        Assert.assertEquals("DEFAULT", node.toString());
+        Assert.assertEquals("_", node.toString());
     }
 
     // a
@@ -79,7 +86,7 @@ public class ExpressionTest {
     public void variable_4_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable(null, "name");
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.CHAR);
-        Assert.assertEquals("DEFAULT.name", node.toString());
+        Assert.assertEquals("_.name", node.toString());
     }
 
     // a.age
@@ -191,8 +198,7 @@ public class ExpressionTest {
                                 builder.variable(null, "name"),
                                 builder.literal("^marko"));
         Assert.assertEquals(SqlTypeName.BOOLEAN, regex.getType().getSqlTypeName());
-        Assert.assertEquals(
-                "POSIX REGEX CASE SENSITIVE(DEFAULT.name, _UTF-8'^marko')", regex.toString());
+        Assert.assertEquals("POSIX REGEX CASE SENSITIVE(_.name, _UTF-8'^marko')", regex.toString());
     }
 
     @Test
@@ -205,10 +211,132 @@ public class ExpressionTest {
                                 builder.variable(null, "id"),
                                 builder.literal("age"),
                                 builder.variable(null, "age"));
-        Assert.assertEquals(
-                "MAP(_UTF-8'id', DEFAULT.id, _UTF-8'age', DEFAULT.age)", map.toString());
+        Assert.assertEquals("MAP(_UTF-8'id', _.id, _UTF-8'age', _.age)", map.toString());
         // key type is string while value type is bigint
         Assert.assertEquals("(CHAR(3), BIGINT) MAP", map.getType().toString());
+    }
+
+    // extract year from creationDate, i.e. creationDate.day
+    @Test
+    public void extract_year_test() throws Exception {
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        RexNode expr =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("software"),
+                                        null))
+                        .call(
+                                GraphStdOperatorTable.EXTRACT,
+                                rexBuilder.makeIntervalLiteral(
+                                        null,
+                                        new SqlIntervalQualifier(
+                                                TimeUnit.DAY, null, SqlParserPos.ZERO)),
+                                builder.variable(null, "creationDate"));
+        Assert.assertEquals("EXTRACT(FLAG(DAY), _.creationDate)", expr.toString());
+        RexToProtoConverter converter = new RexToProtoConverter(true, false, rexBuilder);
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("proto/extract_year.json").trim(),
+                JsonFormat.printer().print(expr.accept(converter)));
+    }
+
+    // _.creationDate + duration({years: 3, months: 1})
+    @Test
+    public void date_plus_literal_interval_test() throws Exception {
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        // interval + interval: 3 years + 1 month
+        RexNode expr =
+                builder.call(
+                        GraphStdOperatorTable.PLUS,
+                        rexBuilder.makeIntervalLiteral(
+                                new BigDecimal("3"),
+                                new SqlIntervalQualifier(TimeUnit.YEAR, null, SqlParserPos.ZERO)),
+                        rexBuilder.makeIntervalLiteral(
+                                new BigDecimal("1"),
+                                new SqlIntervalQualifier(TimeUnit.MONTH, null, SqlParserPos.ZERO)));
+        Assert.assertEquals("+(3:INTERVAL YEAR, 1:INTERVAL MONTH)", expr.toString());
+        // datetime + interval: creationDate + ( 3 years + 1 month )
+        expr =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("software"),
+                                        null))
+                        .call(
+                                GraphStdOperatorTable.PLUS,
+                                builder.variable(null, "creationDate"),
+                                expr);
+        Assert.assertEquals(
+                "+(_.creationDate, +(3:INTERVAL YEAR, 1:INTERVAL MONTH))", expr.toString());
+        RexToProtoConverter converter = new RexToProtoConverter(true, false, rexBuilder);
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("proto/date_plus_literal_interval.json").trim(),
+                JsonFormat.printer().print(expr.accept(converter)));
+    }
+
+    // _.creationDate + duration({years: $year, months: $month})
+    @Test
+    public void date_plus_param_interval_test() throws Exception {
+        GraphRexBuilder rexBuilder = (GraphRexBuilder) builder.getRexBuilder();
+        RexNode expr =
+                builder.call(
+                        GraphStdOperatorTable.PLUS,
+                        rexBuilder.makeGraphDynamicParam(
+                                builder.getTypeFactory()
+                                        .createSqlIntervalType(
+                                                new SqlIntervalQualifier(
+                                                        TimeUnit.DAY, null, SqlParserPos.ZERO)),
+                                "year",
+                                0),
+                        rexBuilder.makeGraphDynamicParam(
+                                builder.getTypeFactory()
+                                        .createSqlIntervalType(
+                                                new SqlIntervalQualifier(
+                                                        TimeUnit.HOUR, null, SqlParserPos.ZERO)),
+                                "month",
+                                1));
+        expr =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("software"),
+                                        null))
+                        .call(
+                                GraphStdOperatorTable.PLUS,
+                                builder.variable(null, "creationDate"),
+                                expr);
+        Assert.assertEquals("+(_.creationDate, +(?0, ?1))", expr.toString());
+        RexToProtoConverter converter = new RexToProtoConverter(true, false, rexBuilder);
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("proto/date_plus_param_interval.json").trim(),
+                JsonFormat.printer().print(expr.accept(converter)));
+    }
+
+    // (a.creationDate - b.creationDate) / 1000 / 60
+    @Test
+    public void date_minus_date_test() throws Exception {
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        RexNode expr =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true), "a"))
+                        .expand(new ExpandConfig(GraphOpt.Expand.BOTH))
+                        .getV(new GetVConfig(GraphOpt.GetV.OTHER, new LabelConfig(true), "b"))
+                        .call(
+                                GraphStdOperatorTable.DATETIME_MINUS,
+                                builder.variable("a", "creationDate"),
+                                builder.variable("b", "creationDate"),
+                                rexBuilder.makeIntervalLiteral(
+                                        null,
+                                        new SqlIntervalQualifier(
+                                                TimeUnit.MILLISECOND, null, SqlParserPos.ZERO)));
+        expr = builder.call(GraphStdOperatorTable.DIVIDE, expr, builder.literal(1000));
+        Assert.assertEquals(
+                "/(DATETIME_MINUS(a.creationDate, b.creationDate, null:INTERVAL MILLISECOND),"
+                        + " 1000)",
+                expr.toString());
+        RexToProtoConverter converter = new RexToProtoConverter(true, false, rexBuilder);
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("proto/date_minus_date.json"),
+                JsonFormat.printer().print(expr.accept(converter)));
     }
 
     private SourceConfig mockSourceConfig(String alias) {

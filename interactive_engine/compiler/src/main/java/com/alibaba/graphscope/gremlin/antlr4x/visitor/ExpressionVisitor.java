@@ -20,13 +20,12 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
-import com.alibaba.graphscope.gremlin.antlr4.GenericLiteralVisitor;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 
 import org.apache.calcite.rex.RexNode;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -78,9 +77,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         return builder.call(
                 GraphStdOperatorTable.EQUALS,
                 propertyKey,
-                builder.literal(
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral())));
+                builder.literal(LiteralVisitor.INSTANCE.visit(ctx.oC_Literal())));
     }
 
     @Override
@@ -88,9 +85,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         return builder.call(
                 GraphStdOperatorTable.NOT_EQUALS,
                 propertyKey,
-                builder.literal(
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral())));
+                builder.literal(LiteralVisitor.INSTANCE.visit(ctx.oC_Literal())));
     }
 
     @Override
@@ -98,9 +93,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         return builder.call(
                 GraphStdOperatorTable.LESS_THAN,
                 propertyKey,
-                builder.literal(
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral())));
+                builder.literal(LiteralVisitor.INSTANCE.visit(ctx.oC_Literal())));
     }
 
     @Override
@@ -108,9 +101,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         return builder.call(
                 GraphStdOperatorTable.LESS_THAN_OR_EQUAL,
                 propertyKey,
-                builder.literal(
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral())));
+                builder.literal(LiteralVisitor.INSTANCE.visit(ctx.oC_Literal())));
     }
 
     @Override
@@ -118,9 +109,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         return builder.call(
                 GraphStdOperatorTable.GREATER_THAN,
                 propertyKey,
-                builder.literal(
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral())));
+                builder.literal(LiteralVisitor.INSTANCE.visit(ctx.oC_Literal())));
     }
 
     @Override
@@ -128,32 +117,30 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         return builder.call(
                 GraphStdOperatorTable.GREATER_THAN_OR_EQUAL,
                 propertyKey,
-                builder.literal(
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral())));
+                builder.literal(LiteralVisitor.INSTANCE.visit(ctx.oC_Literal())));
     }
 
     @Override
     public RexNode visitTraversalPredicate_within(
             GremlinGSParser.TraversalPredicate_withinContext ctx) {
-        Object[] points = GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList());
+        List<Object> points =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(Object.class);
         return builder.getRexBuilder()
                 .makeIn(
                         propertyKey,
-                        Arrays.asList(points).stream()
-                                .map(k -> builder.literal(k))
-                                .collect(Collectors.toList()));
+                        points.stream().map(k -> builder.literal(k)).collect(Collectors.toList()));
     }
 
     @Override
     public RexNode visitTraversalPredicate_without(
             GremlinGSParser.TraversalPredicate_withoutContext ctx) {
-        Object[] points = GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList());
+        List<Object> points =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(Object.class);
         return builder.not(
                 builder.getRexBuilder()
                         .makeIn(
                                 propertyKey,
-                                Arrays.asList(points).stream()
+                                points.stream()
                                         .map(k -> builder.literal(k))
                                         .collect(Collectors.toList())));
     }
@@ -166,14 +153,8 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_inside(
             GremlinGSParser.TraversalPredicate_insideContext ctx) {
-        Number lower =
-                (Number)
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral(0));
-        Number upper =
-                (Number)
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral(1));
+        Number lower = (Number) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal(0));
+        Number upper = (Number) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal(1));
         return builder.getRexBuilder()
                 .makeBetween(
                         propertyKey,
@@ -184,14 +165,8 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_outside(
             GremlinGSParser.TraversalPredicate_outsideContext ctx) {
-        Number lower =
-                (Number)
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral(0));
-        Number upper =
-                (Number)
-                        GenericLiteralVisitor.getInstance()
-                                .visitGenericLiteral(ctx.genericLiteral(1));
+        Number lower = (Number) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal(0));
+        Number upper = (Number) LiteralVisitor.INSTANCE.visit(ctx.oC_Literal(1));
         return builder.not(
                 builder.getRexBuilder()
                         .makeBetween(
@@ -203,7 +178,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_startingWith(
             GremlinGSParser.TraversalPredicate_startingWithContext ctx) {
-        String posixRegex = "^" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
+        String posixRegex = "^" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + ".*";
         return builder.call(
                 GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
                 propertyKey,
@@ -213,7 +188,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_notStartingWith(
             GremlinGSParser.TraversalPredicate_notStartingWithContext ctx) {
-        String posixRegex = "^" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
+        String posixRegex = "^" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + ".*";
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
@@ -224,7 +199,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_endingWith(
             GremlinGSParser.TraversalPredicate_endingWithContext ctx) {
-        String posixRegex = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + "$";
+        String posixRegex = ".*" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + "$";
         return builder.call(
                 GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
                 propertyKey,
@@ -234,7 +209,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_notEndingWith(
             GremlinGSParser.TraversalPredicate_notEndingWithContext ctx) {
-        String posixRegex = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + "$";
+        String posixRegex = ".*" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + "$";
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
@@ -245,8 +220,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_containing(
             GremlinGSParser.TraversalPredicate_containingContext ctx) {
-        String posixRegex =
-                ".*" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + ".*";
+        String posixRegex = ".*" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + ".*";
         return builder.call(
                 GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
                 propertyKey,
@@ -256,8 +230,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_notContaining(
             GremlinGSParser.TraversalPredicate_notContainingContext ctx) {
-        String posixRegex =
-                ".*" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + ".*";
+        String posixRegex = ".*" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + ".*";
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,

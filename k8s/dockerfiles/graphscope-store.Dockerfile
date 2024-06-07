@@ -3,6 +3,7 @@ ARG BUILDER_VERSION=latest
 FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION as builder
 
 ARG CI=false
+ARG ENABLE_COORDINATOR=false
 
 ARG profile=debug
 ENV profile=$profile
@@ -19,12 +20,27 @@ RUN cd /home/graphscope/graphscope \
     && mvn clean package -P groot -DskipTests --quiet -Drust.compile.mode="$profile" \
     && tar xzf /home/graphscope/graphscope/interactive_engine/assembly/target/groot.tar.gz -C /home/graphscope/
 
+# build coordinator
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      cd /home/graphscope/graphscope/flex/coordinator \
+      && python3 setup.py bdist_wheel \
+      && mkdir -p /home/graphscope/groot/wheel \
+      && cp dist/*.whl /home/graphscope/groot/wheel; \
+    fi
+
 FROM ubuntu:22.04
+
+ARG ENABLE_COORDINATOR=false
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# shanghai zoneinfo
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo '$TZ' > /etc/timezone
+
 RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk dnsutils tzdata \
+    apt-get install -y sudo default-jdk dnsutils tzdata lsof \
         libjemalloc-dev libunwind-dev binutils less && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
@@ -38,10 +54,19 @@ RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN sudo chmod a+wrx /tmp
 
+# install coordinator
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      apt-get update -y && apt-get install -y python3-pip && \
+      apt-get clean -y && rm -rf /var/lib/apt/lists/* && \
+      pip3 install --upgrade pip && \
+      pip3 install /usr/local/groot/wheel/*.whl; \
+    fi
+
 USER graphscope
 WORKDIR /home/graphscope
 
 ENV PATH=${PATH}:/home/graphscope/.local/bin
+ENV SOLUTION=GRAPHSCOPE_INSIGHT
 
 # init log directory
 RUN sudo mkdir /var/log/graphscope \

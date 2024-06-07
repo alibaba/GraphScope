@@ -1162,13 +1162,6 @@ class Session(object):
         with default_session(self):
             return graphscope.load_from(*args, **kwargs)
 
-    def load_from_gar(self, *args, **kwargs):
-        """Load a graph from gar format files within the session.
-        See more information in :meth:`graphscope.load_from_gar`.
-        """
-        with default_session(self):
-            return graphscope.load_from_gar(*args, **kwargs)
-
     @deprecated("Please use `sess.interactive` instead.")
     def gremlin(self, graph, params=None):
         """This method is going to be deprecated.
@@ -1335,17 +1328,30 @@ class Session(object):
         node_labels=None,
         edge_dir="out",
         random_node_split=None,
+        num_clients=1,
+        manifest_path=None,
+        client_folder_path="./",
     ):
         from graphscope.learning.gl_torch_graph import GLTorchGraph
+        from graphscope.learning.utils import fill_params_in_yaml
+        from graphscope.learning.utils import read_folder_files_content
 
         handle = {
             "vineyard_socket": self._engine_config["vineyard_socket"],
             "vineyard_id": graph.vineyard_id,
             "fragments": graph.fragments,
-            "master_addr": "localhost",
-            "num_servers": 1,
-            "num_clients": 1,
+            "num_servers": len(graph.fragments),
+            "num_clients": num_clients,
         }
+        manifest_params = {
+            "NUM_CLIENT_NODES": handle["num_clients"],
+            "NUM_SERVER_NODES": handle["num_servers"],
+            "NUM_WORKER_REPLICAS": handle["num_clients"] - 1,
+        }
+        if manifest_path is not None:
+            handle["manifest"] = fill_params_in_yaml(manifest_path, manifest_params)
+        if client_folder_path is not None:
+            handle["client_content"] = read_folder_files_content(client_folder_path)
 
         handle = base64.b64encode(
             json.dumps(handle).encode("utf-8", errors="ignore")
@@ -1673,6 +1679,9 @@ def graphlearn_torch(
     node_labels=None,
     edge_dir="out",
     random_node_split=None,
+    num_clients=1,
+    manifest_path=None,
+    client_folder_path="./",
 ):
     assert graph is not None, "graph cannot be None"
     assert (
@@ -1687,4 +1696,7 @@ def graphlearn_torch(
         node_labels,
         edge_dir,
         random_node_split,
+        num_clients,
+        manifest_path,
+        client_folder_path,
     )  # pylint: disable=protected-access

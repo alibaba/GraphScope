@@ -110,7 +110,7 @@ static std::string value_pb_to_str(const common::Value& value) {
 
 bool contains_vertex_id(const std::vector<codegen::ParamConst>& params) {
   for (auto& param : params) {
-    if (param.type == codegen::DataType::kVertexId) {
+    if (param.type == codegen::DataType::kGlobalVertexId) {
       return true;
     }
   }

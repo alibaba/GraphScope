@@ -21,11 +21,13 @@ import logging
 import socket
 
 import psutil
-from gs_flex_coordinator.core.alert.alert_rule import AlertRule
-from gs_flex_coordinator.core.alert.message_collector import AlertMessageCollector
-from gs_flex_coordinator.core.config import CLUSTER_TYPE, SOLUTION
+from gremlin_python.driver.client import Client
 
-logger = logging.getLogger("graphscope")
+from gs_flex_coordinator.core import client_wrapper
+from gs_flex_coordinator.core.alert.alert_rule import AlertRule
+from gs_flex_coordinator.core.alert.message_collector import \
+    AlertMessageCollector
+from gs_flex_coordinator.core.config import CLUSTER_TYPE, SOLUTION
 
 
 class HighDiskUtilizationAlert(AlertRule):
@@ -71,7 +73,55 @@ class HighDiskUtilizationAlert(AlertRule):
                 alert_message = self.generate_alert_message(target, message)
                 self.alert(alert_message)
         except Exception as e:
-            logger.warn("Failed to get disk usage: %s", str(e))
+            logging.warn("Failed to get disk usage: %s", str(e))
+
+
+class GremlinServiceAvailableAlert(AlertRule):
+    def __init__(
+        self,
+        name,
+        severity,
+        metric_type,
+        conditions_description,
+        frequency,
+        message_collector,
+        enable=True,
+    ):
+        super().__init__(
+            name,
+            severity,
+            metric_type,
+            conditions_description,
+            frequency,
+            message_collector,
+            enable,
+        )
+
+    def run_alert(self):
+        """This function needs to handle exception by itself"""
+        try:
+            graph = client_wrapper.get_current_graph()
+            gremlin_interface = graph.gremlin_interface
+            client = Client(
+                gremlin_interface["gremlin_endpoint"],
+                "g",
+                username=gremlin_interface["username"],
+                password=gremlin_interface["password"],
+            )
+            client.submit(
+                "g.with('evaluationTimeout', 5000).V().limit(1)"
+            ).all().result()
+        except Exception as e:
+            message = "Gremlin service unavailable: {0}".format(str(e))
+            # unable to distinguish whether frontend or executor is unavailable,
+            # thus, we set the target "-"
+            alert_message = self.generate_alert_message("-", message)
+            self.alert(alert_message)
+        finally:
+            try:
+                client.close()
+            except:  # noqa: E722, B110
+                pass
 
 
 def init_builtin_alert_rules(message_collector: AlertMessageCollector):
@@ -82,9 +132,19 @@ def init_builtin_alert_rules(message_collector: AlertMessageCollector):
         severity="warning",
         metric_type="node",
         conditions_description="disk_utilization>80",
-        frequency=1,
+        frequency=180,
         message_collector=message_collector,
         threshold=80,
         enable=True,
     )
+    if SOLUTION == "GRAPHSCOPE_INSIGHT":
+        alert_rules["GremlinServiceAvailable"] = GremlinServiceAvailableAlert(
+            name="GremlinServiceAvailable",
+            severity="emergency",
+            metric_type="service",
+            conditions_description="g.V().limit(1) failed",
+            frequency=5,
+            message_collector=message_collector,
+            enable=True,
+        )
     return alert_rules

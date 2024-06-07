@@ -42,6 +42,7 @@ static constexpr const char* LABEL_ID_T_CASTER = "(label_id_t)";
 static constexpr const char* EMPTY_TYPE = "grape::EmptyType";
 static constexpr const char* INNER_ID_PROPERTY_NAME = "InnerIdProperty";
 static constexpr const char* VERTEX_ID_T = "vertex_id_t";
+static constexpr const char* GLOBAL_VERTEX_ID_T = "GlobalId";
 static constexpr const char* EDGE_ID_T = "const DefaultEdge<vertex_id_t>&";
 static constexpr const char* LENGTH_KEY_T = "LengthKey";
 static constexpr const char* MAKE_PROJECT_EXPR = "make_project_expr";
@@ -55,9 +56,13 @@ static constexpr const char* PROPERTY_SELECTOR =
     "gs::PropertySelector<%1%>(\"%2%\")";
 static constexpr const char* PROP_NAME_ARRAY = "gs::PropNameArray<%1%>{%2%}";
 
-std::string project_is_append_str(bool is_append) {
+std::string project_is_append_str(bool is_append, bool is_temp) {
   if (is_append) {
-    return "PROJ_TO_APPEND";
+    if (is_temp) {
+      return "PROJ_TO_APPEND_TEMP";
+    } else {
+      return "PROJ_TO_APPEND_PERSIST";
+    }
   } else {
     return "PROJ_TO_NEW";
   }
@@ -66,6 +71,17 @@ std::string project_is_append_str(bool is_append) {
 std::string res_alias_to_append_opt(int res_alias) {
   return res_alias == -1 ? APPEND_OPT_TEMP : APPEND_OPT_PERSIST;
 }
+
+std::string res_alias_to_append_opt(int res_alias, int in_alias) {
+  if (res_alias == -1) {
+    return APPEND_OPT_TEMP;
+  } else if (res_alias == in_alias) {
+    return APPEND_OPT_REPLACE;
+  } else {
+    return APPEND_OPT_PERSIST;
+  }
+}
+
 
 template <typename LabelIdT>
 std::string ensure_label_id(LabelIdT label_id) {

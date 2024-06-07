@@ -12,9 +12,8 @@ project (
 
 option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
-option(BUILD_DOC "Whether to build doc" ON)
-option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
-
+option(BUILD_DOC "Whether to build doc" OFF)
+option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 option(USE_PTHASH "Whether to use pthash" OFF)
 
 #print options
@@ -22,7 +21,6 @@ message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
 message(STATUS "Build test: ${BUILD_TEST}")
 message(STATUS "Build doc: ${BUILD_DOC}")
 message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
-
 message(STATUS "Use pthash indexer : ${USE_PTHASH}")
 
 # ------------------------------------------------------------------------------
@@ -121,6 +119,7 @@ endif ()
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
              context program_options regex thread date_time)
+add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 
 #find arrow----------------------------------------------------------------------
 include("cmake/FindArrow.cmake")
@@ -134,6 +133,13 @@ else ()
     if (TARGET arrow_static)
         set(ARROW_STATIC_LIB arrow_static)
     endif()
+endif ()
+
+find_package(opentelemetry-cpp CONFIG)
+if (OPENTELEMETRY_CPP_FOUND)
+    find_package(Protobuf REQUIRED)
+    find_package(CURL REQUIRED)
+    add_definitions(-DHAVE_OPENTELEMETRY_CPP)
 endif ()
 
 # Find Doxygen
@@ -151,6 +157,7 @@ if (BUILD_DOC)
                 VERBATIM)
     endif(DOXYGEN_FOUND)
 endif()
+
 
 # Check whether ${CMAKE_SOURCE_DIR}/third_party/single_include/nlohmann/json.hpp exists
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp)
@@ -185,6 +192,9 @@ add_subdirectory(codegen)
 add_subdirectory(storages)
 add_subdirectory(engines)
 add_subdirectory(bin)
+if (OPENTELEMETRY_CPP_FOUND)
+    add_subdirectory(otel)
+endif()
 if (BUILD_TEST)
    add_subdirectory(tests)
 endif()
@@ -211,10 +221,11 @@ file(GLOB_RECURSE FILES_NEED_LINT
         "bin/*.cc"
         "storages/*.h"
         "storages/*.cc"
+        "otel/*.h"
+        "otel/*.cc"
         "test/*.h"
         "test/*.cc"
-        "third_party/*.h"
-        "third_party/*.cc" EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
+        EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
 list(FILTER FILES_NEED_LINT EXCLUDE REGEX ".*\.act.h$|.*\.actg.h$|.*\.autogen.h$|.*\.autogen.cc$")
 # gsa_clformat
 add_custom_target(flex_clformat
@@ -239,6 +250,8 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
+#install header-only nlohmann-json.hpp to include/
+install(FILES ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp DESTINATION include/nlohmann)
 
 if(USE_PTHASH)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash

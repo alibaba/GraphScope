@@ -63,6 +63,8 @@ void actor_system::launch_worker() {
   hiactor::actor_app app{std::move(conf)};
   app.run(argc, argv.data(), [this] {
     sem_post(&ready_);
+    seastar::engine().handle_signal(SIGINT, on_exit_);
+    seastar::engine().handle_signal(SIGTERM, on_exit_);
     return seastar::make_ready_future<>();
   });
 }

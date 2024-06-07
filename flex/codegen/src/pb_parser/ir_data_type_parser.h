@@ -128,6 +128,7 @@ std::vector<std::vector<int32_t>> parse_edge_label_triplet_from_ir_data_type(
   }
   default: {
     LOG(FATAL) << "Unsupported data type: " << ir_data_type.DebugString();
+    return edge_label_triplets;
   }
   }
 }

@@ -661,6 +661,8 @@ class TypedRefColumn : public RefColumnBase {
                               : extra_buffer.get(index - basic_size);
   }
 
+  size_t size() const { return basic_size + extra_size; }
+
   Any get(size_t index) const override {
     return AnyConverter<T>::to_any(get_view(index));
   }
@@ -690,6 +692,27 @@ class TypedRefColumn<LabelKey> : public RefColumnBase {
 
  private:
   LabelKey label_key_;
+};
+
+template <>
+class TypedRefColumn<GlobalId> : public RefColumnBase {
+ public:
+  using label_t = typename LabelKey::label_data_type;
+  TypedRefColumn(label_t label_key) : label_key_(label_key) {}
+
+  ~TypedRefColumn() {}
+
+  inline GlobalId get_view(size_t index) const {
+    return GlobalId(label_key_, index);
+  }
+
+  Any get(size_t index) const override {
+    LOG(ERROR) << "GlobalId Column does not support get() to Any";
+    return Any();
+  }
+
+ private:
+  label_t label_key_;
 };
 
 }  // namespace gs

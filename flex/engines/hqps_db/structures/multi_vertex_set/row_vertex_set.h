@@ -133,8 +133,18 @@ class RowVertexSetImplBuilder {
     datas_.emplace_back(std::move(data));
   }
 
+  void Insert(const std::tuple<GlobalId, data_tuple_t>& ele_tuple) {
+    vids_.emplace_back(std::get<0>(ele_tuple).vid());
+    datas_.emplace_back(std::get<1>(ele_tuple));
+  }
+
   void Insert(const VID_T& vid, const data_tuple_t& data) {
     vids_.push_back(vid);
+    datas_.push_back(data);
+  }
+
+  void Insert(const GlobalId& global_id, const data_tuple_t& data) {
+    vids_.push_back(global_id.vid());
     datas_.push_back(data);
   }
 
@@ -181,6 +191,10 @@ class RowVertexSetImplBuilder<LabelT, VID_T, grape::EmptyType> {
 
   void Insert(VID_T&& vid) { vids_.emplace_back(vid); }
 
+  void Insert(const GlobalId& global_id) {
+    vids_.emplace_back(global_id.vid());
+  }
+
   void Insert(const VID_T& vid) { vids_.push_back(vid); }
 
   void Insert(const std::tuple<size_t, VID_T>& flat_eles) {
@@ -199,24 +213,27 @@ class RowVertexSetImplBuilder<LabelT, VID_T, grape::EmptyType> {
 template <typename LabelT, typename VID_T, typename... T>
 using RowVertexSetBuilder = RowVertexSetImplBuilder<LabelT, VID_T, T...>;
 
-template <typename VID_T, typename... T>
+template <typename LabelT, typename VID_T, typename... T>
 class RowVertexSetIter {
  public:
   using lid_t = VID_T;
+  using ele_tuple_t =
+      typename RowVertexSetImpl<LabelT, VID_T, T...>::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, VID_T>;
 
   using data_tuple_t = std::tuple<T...>;
-  using self_type_t = RowVertexSetIter<VID_T, T...>;
+  using self_type_t = RowVertexSetIter<LabelT, VID_T, T...>;
 
   // from this tuple, we can reconstruct the partial set.
   using flat_ele_tuple_t = std::tuple<size_t, VID_T, std::tuple<T...>>;
   static constexpr VID_T NULL_VID = std::numeric_limits<VID_T>::max();
 
   RowVertexSetIter(const std::vector<lid_t>& vids,
-                   const std::vector<data_tuple_t>& datas, size_t ind)
-      : vids_(vids), datas_(datas), cur_ind_(ind) {}
+                   const std::vector<data_tuple_t>& datas, LabelT label,
+                   size_t ind)
+      : vids_(vids), datas_(datas), label_(label), cur_ind_(ind) {}
 
-  lid_t GetElement() const { return vids_[cur_ind_]; }
+  ele_tuple_t GetElement() const { return GlobalId(label_, vids_[cur_ind_]); }
 
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(cur_ind_, vids_[cur_ind_]);
@@ -267,24 +284,27 @@ class RowVertexSetIter {
  private:
   const std::vector<lid_t>& vids_;
   const std::vector<data_tuple_t>& datas_;
+  LabelT label_;
   size_t cur_ind_;
 };
 
-template <typename VID_T>
-class RowVertexSetIter<VID_T, grape::EmptyType> {
+template <typename LabelT, typename VID_T>
+class RowVertexSetIter<LabelT, VID_T, grape::EmptyType> {
  public:
   using lid_t = VID_T;
+  using ele_tuple_t =
+      typename RowVertexSetImpl<LabelT, VID_T, grape::EmptyType>::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, VID_T>;
   using data_tuple_t = std::tuple<grape::EmptyType>;
-  using self_type_t = RowVertexSetIter<VID_T, grape::EmptyType>;
+  using self_type_t = RowVertexSetIter<LabelT, VID_T, grape::EmptyType>;
   // from this tuple, we can reconstruct the partial set.
   using flat_ele_tuple_t = std::tuple<size_t, VID_T>;
   static constexpr VID_T NULL_VID = std::numeric_limits<VID_T>::max();
 
-  RowVertexSetIter(const std::vector<lid_t>& vids, size_t ind)
-      : vids_(vids), cur_ind_(ind) {}
+  RowVertexSetIter(const std::vector<lid_t>& vids, LabelT label, size_t ind)
+      : vids_(vids), label_(label), cur_ind_(ind) {}
 
-  lid_t GetElement() const { return vids_[cur_ind_]; }
+  ele_tuple_t GetElement() const { return GlobalId(label_, vids_[cur_ind_]); }
 
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(cur_ind_, vids_[cur_ind_]);
@@ -328,6 +348,7 @@ class RowVertexSetIter<VID_T, grape::EmptyType> {
 
  private:
   const std::vector<lid_t>& vids_;
+  LabelT label_;
   size_t cur_ind_;
 };
 
@@ -854,7 +875,8 @@ subSetWithRemovedIndicesImpl(std::vector<offset_t>& removed_indices,
 template <typename LabelT, typename VID_T, typename... T>
 class RowVertexSetImpl {
  public:
-  using element_type = VID_T;
+  using ele_tuple_t = GlobalId;
+  using element_type = ele_tuple_t;
   using element_t = VID_T;
   using lid_t = VID_T;
   using data_tuple_t = std::tuple<T...>;
@@ -862,7 +884,7 @@ class RowVertexSetImpl {
   // from this tuple, we can reconstruct the partial set.
   using flat_ele_tuple_t = std::tuple<size_t, VID_T, std::tuple<T...>>;
   using flat_t = RowVertexSetImpl<LabelT, VID_T, T...>;
-  using iterator = RowVertexSetIter<VID_T, T...>;
+  using iterator = RowVertexSetIter<LabelT, VID_T, T...>;
   using self_type_t = RowVertexSetImpl<LabelT, VID_T, T...>;
   using EntityValueType = VID_T;
   using builder_t = RowVertexSetImplBuilder<LabelT, VID_T, T...>;
@@ -915,9 +937,11 @@ class RowVertexSetImpl {
         data_tuples_(other.data_tuples_),
         prop_names_(other.prop_names_) {}
 
-  iterator begin() const { return iterator(vids_, data_tuples_, 0); }
+  iterator begin() const { return iterator(vids_, data_tuples_, v_label_, 0); }
 
-  iterator end() const { return iterator(vids_, data_tuples_, vids_.size()); }
+  iterator end() const {
+    return iterator(vids_, data_tuples_, v_label_, vids_.size());
+  }
 
   size_t Size() const { return vids_.size(); }
 
@@ -1184,8 +1208,9 @@ class RowVertexSetImpl {
 template <typename LabelT, typename VID_T>
 class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
  public:
+  using ele_tuple_t = GlobalId;
   using element_t = VID_T;
-  using element_type = VID_T;
+  using element_type = ele_tuple_t;
   using lid_t = VID_T;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   // from this tuple, we can reconstruct the partial set.
@@ -1193,7 +1218,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
 
   using index_ele_tuple_t = std::tuple<size_t, VID_T>;
   using flat_t = RowVertexSetImpl<LabelT, VID_T, grape::EmptyType>;
-  using iterator = RowVertexSetIter<VID_T, grape::EmptyType>;
+  using iterator = RowVertexSetIter<LabelT, VID_T, grape::EmptyType>;
   using self_type_t = RowVertexSetImpl<LabelT, VID_T, grape::EmptyType>;
   using EntityValueType = VID_T;
   using builder_t = RowVertexSetImplBuilder<LabelT, VID_T, grape::EmptyType>;
@@ -1223,9 +1248,9 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   RowVertexSetImpl(const self_type_t& other) noexcept
       : vids_(other.vids_), v_label_(other.v_label_) {}
 
-  iterator begin() const { return iterator(vids_, 0); }
+  iterator begin() const { return iterator(vids_, v_label_, 0); }
 
-  iterator end() const { return iterator(vids_, vids_.size()); }
+  iterator end() const { return iterator(vids_, v_label_, vids_.size()); }
 
   size_t Size() const { return vids_.size(); }
 

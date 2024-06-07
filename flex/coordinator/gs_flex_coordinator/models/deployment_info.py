@@ -14,7 +14,7 @@ class DeploymentInfo(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, name=None, cluster_type=None, version=None, solution=None, graphs_info=None):  # noqa: E501
+    def __init__(self, name=None, cluster_type=None, version=None, solution=None, creation_time=None, graphs_info=None):  # noqa: E501
         """DeploymentInfo - a model defined in OpenAPI
 
         :param name: The name of this DeploymentInfo.  # noqa: E501
@@ -25,6 +25,8 @@ class DeploymentInfo(Model):
         :type version: str
         :param solution: The solution of this DeploymentInfo.  # noqa: E501
         :type solution: str
+        :param creation_time: The creation_time of this DeploymentInfo.  # noqa: E501
+        :type creation_time: str
         :param graphs_info: The graphs_info of this DeploymentInfo.  # noqa: E501
         :type graphs_info: Dict[str, DeploymentInfoGraphsInfoValue]
         """
@@ -33,6 +35,7 @@ class DeploymentInfo(Model):
             'cluster_type': str,
             'version': str,
             'solution': str,
+            'creation_time': str,
             'graphs_info': Dict[str, DeploymentInfoGraphsInfoValue]
         }
 
@@ -41,6 +44,7 @@ class DeploymentInfo(Model):
             'cluster_type': 'cluster_type',
             'version': 'version',
             'solution': 'solution',
+            'creation_time': 'creation_time',
             'graphs_info': 'graphs_info'
         }
 
@@ -48,6 +52,7 @@ class DeploymentInfo(Model):
         self._cluster_type = cluster_type
         self._version = version
         self._solution = solution
+        self._creation_time = creation_time
         self._graphs_info = graphs_info
 
     @classmethod
@@ -156,6 +161,27 @@ class DeploymentInfo(Model):
             )
 
         self._solution = solution
+
+    @property
+    def creation_time(self) -> str:
+        """Gets the creation_time of this DeploymentInfo.
+
+
+        :return: The creation_time of this DeploymentInfo.
+        :rtype: str
+        """
+        return self._creation_time
+
+    @creation_time.setter
+    def creation_time(self, creation_time: str):
+        """Sets the creation_time of this DeploymentInfo.
+
+
+        :param creation_time: The creation_time of this DeploymentInfo.
+        :type creation_time: str
+        """
+
+        self._creation_time = creation_time
 
     @property
     def graphs_info(self) -> Dict[str, DeploymentInfoGraphsInfoValue]:

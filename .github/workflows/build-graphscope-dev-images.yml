@@ -367,7 +367,7 @@ jobs:
     # since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
     if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
 
-    needs: [manifest-push-vineyard-dev-image]
+    needs: [build-vineyard-dev-image-x86-64]
     steps:
     - uses: actions/checkout@v3
       with:

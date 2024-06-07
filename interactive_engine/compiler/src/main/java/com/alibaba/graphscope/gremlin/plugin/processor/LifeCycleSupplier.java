@@ -18,11 +18,11 @@ package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
-import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.resultx.GremlinRecordParser;
@@ -33,26 +33,32 @@ import com.google.common.base.Preconditions;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.Context;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Supplier;
 
 public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
+    private final Configs configs;
     private final QueryCache queryCache;
     private final ExecutionClient client;
     private final Context ctx;
-    private final long queryId;
+    private final BigInteger queryId;
     private final String queryName;
     private final IrMeta meta;
     private final QueryStatusCallback statusCallback;
+    private final QueryTimeoutConfig timeoutConfig;
 
     public LifeCycleSupplier(
+            Configs configs,
             Context ctx,
             QueryCache queryCache,
             ExecutionClient client,
-            long queryId,
+            BigInteger queryId,
             String queryName,
             IrMeta meta,
-            QueryStatusCallback statusCallback) {
+            QueryStatusCallback statusCallback,
+            QueryTimeoutConfig timeoutConfig) {
+        this.configs = configs;
         this.ctx = ctx;
         this.queryCache = queryCache;
         this.client = client;
@@ -60,11 +66,11 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
         this.queryName = queryName;
         this.meta = meta;
         this.statusCallback = statusCallback;
+        this.timeoutConfig = timeoutConfig;
     }
 
     @Override
     public GremlinExecutor.LifeCycle get() {
-        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         return GremlinExecutor.LifeCycle.build()
                 .evaluationTimeoutOverride(timeoutConfig.getExecutionTimeoutMS())
                 .beforeEval(
@@ -88,12 +94,14 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                         .info("ir plan {}", summary.getPhysicalPlan().explain());
                                 ResultSchema resultSchema =
                                         new ResultSchema(summary.getLogicalPlan());
-                                ExecutionResponseListener listener =
+                                GremlinResultProcessor listener =
                                         new GremlinResultProcessor(
+                                                configs,
                                                 ctx,
-                                                statusCallback,
                                                 new GremlinRecordParser(resultSchema),
-                                                resultSchema);
+                                                resultSchema,
+                                                statusCallback,
+                                                timeoutConfig);
                                 if (value.result != null && value.result.isCompleted) {
                                     List<IrResult.Results> records = value.result.records;
                                     records.forEach(k -> listener.onNext(k.getRecord()));
@@ -108,6 +116,8 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                             listener,
                                             timeoutConfig);
                                 }
+                                // request results from remote engine in a blocking way
+                                listener.request();
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }

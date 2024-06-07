@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 #include "flex/engines/http_server/codegen_proxy.h"
+#include "flex/engines/http_server/service/hqps_service.h"
+#include "flex/engines/http_server/workdir_manipulator.h"
 
 namespace server {
 CodegenProxy& CodegenProxy::get() {
@@ -43,16 +45,16 @@ bool CodegenProxy::Initialized() { return initialized_; }
 
 void CodegenProxy::Init(std::string working_dir, std::string codegen_bin,
                         std::string ir_compiler_prop,
-                        std::string compiler_graph_schema) {
+                        std::string default_graph_schema_path) {
   working_directory_ = working_dir;
   codegen_bin_ = codegen_bin;
   ir_compiler_prop_ = ir_compiler_prop;
-  compiler_graph_schema_ = compiler_graph_schema;
+  default_graph_schema_path_ = default_graph_schema_path;
   initialized_ = true;
   LOG(INFO) << "CodegenProxy working dir: " << working_directory_
             << ",codegen bin " << codegen_bin_ << ", ir compiler prop "
-            << ir_compiler_prop_ << ", compiler graph schema "
-            << compiler_graph_schema_;
+            << ir_compiler_prop_ << ", default graph schema "
+            << default_graph_schema_path_;
 }
 
 seastar::future<std::pair<int32_t, std::string>> CodegenProxy::DoGen(
@@ -66,28 +68,55 @@ seastar::future<std::pair<int32_t, std::string>> CodegenProxy::DoGen(
              [this, next_job_id] { return !check_job_running(next_job_id); });
   }
 
-  return call_codegen_cmd(plan).then_wrapped([this,
-                                              next_job_id](auto&& future) {
-    int return_code;
-    try {
-      return_code = future.get();
-    } catch (std::exception& e) {
-      LOG(ERROR) << "Compilation failed: " << e.what();
-      return seastar::make_ready_future<std::pair<int32_t, std::string>>(
-          std::make_pair(next_job_id,
-                         std::string("Compilation failed: ") + e.what()));
-    }
-    if (return_code != 0) {
-      LOG(ERROR) << "Codegen failed";
+  auto cur_graph_schema_path = default_graph_schema_path_;
+  if (cur_graph_schema_path.empty()) {
+    auto& hqps_service = server::HQPSService::get();
+    if (hqps_service.get_metadata_store()) {
+      auto running_graph_res =
+          hqps_service.get_metadata_store()->GetRunningGraph();
+      if (!running_graph_res.ok()) {
+        return seastar::make_exception_future<std::pair<int32_t, std::string>>(
+            std::runtime_error("Get running graph failed"));
+      }
+      cur_graph_schema_path =
+          WorkDirManipulator::GetGraphSchemaPath(running_graph_res.value());
+    } else {
+      LOG(ERROR) << "Graph schema path is empty";
       return seastar::make_exception_future<std::pair<int32_t, std::string>>(
-          std::runtime_error("Codegen failed"));
+          std::runtime_error("Graph schema path is empty"));
     }
-    return get_res_lib_path_from_cache(next_job_id);
-  });
+  }
+
+  if (cur_graph_schema_path.empty()) {
+    LOG(ERROR) << "Graph schema path is empty";
+    return seastar::make_exception_future<std::pair<int32_t, std::string>>(
+        std::runtime_error("Graph schema path is empty"));
+  }
+
+  return call_codegen_cmd(plan, cur_graph_schema_path)
+      .then_wrapped([this, next_job_id](auto&& future) {
+        int return_code;
+        try {
+          return_code = future.get();
+        } catch (std::exception& e) {
+          LOG(ERROR) << "Compilation failed: " << e.what();
+          return seastar::make_ready_future<std::pair<int32_t, std::string>>(
+              std::make_pair(next_job_id,
+                             std::string("Compilation failed: ") + e.what()));
+        }
+        if (return_code != 0) {
+          LOG(ERROR) << "Codegen failed";
+          return seastar::make_exception_future<
+              std::pair<int32_t, std::string>>(
+              std::runtime_error("Codegen failed"));
+        }
+        return get_res_lib_path_from_cache(next_job_id);
+      });
 }
 
 seastar::future<int> CodegenProxy::call_codegen_cmd(
-    const physical::PhysicalPlan& plan) {
+    const physical::PhysicalPlan& plan,
+    const std::string& cur_graph_schema_path) {
   // if the desired query lib for next_job_id is in cache, just return 0
   // otherwise, call codegen cmd
   auto next_job_id = plan.plan_id();
@@ -111,8 +140,8 @@ seastar::future<int> CodegenProxy::call_codegen_cmd(
   }
 
   std::string expected_res_lib_path = work_dir + "/lib" + query_name + ".so";
-  return CallCodegenCmd(plan_path, query_name, work_dir, work_dir,
-                        compiler_graph_schema_, ir_compiler_prop_, codegen_bin_)
+  return CallCodegenCmd(codegen_bin_, plan_path, query_name, work_dir, work_dir,
+                        cur_graph_schema_path, ir_compiler_prop_)
       .then([this, next_job_id, expected_res_lib_path](int codegen_res) {
         if (codegen_res != 0 ||
             !std::filesystem::exists(expected_res_lib_path)) {
@@ -153,15 +182,18 @@ CodegenProxy::get_res_lib_path_from_cache(int32_t next_job_id) {
 }
 
 seastar::future<int> CodegenProxy::CallCodegenCmd(
-    const std::string& plan_path, const std::string& query_name,
-    const std::string& work_dir, const std::string& output_dir,
-    const std::string& graph_schema_path, const std::string& engine_config,
-    const std::string& codegen_bin) {
+    const std::string& codegen_bin, const std::string& plan_path,
+    const std::string& query_name, const std::string& work_dir,
+    const std::string& output_dir, const std::string& graph_schema_path,
+    const std::string& engine_config, const std::string& procedure_desc) {
   // TODO: different suffix for different platform
   std::string cmd = codegen_bin + " -e=hqps " + " -i=" + plan_path +
-                    " -o=" + output_dir + " --procedure_name=" + query_name +
-                    " -w=" + work_dir + " --ir_conf=" + engine_config +
+                    " -o=" + output_dir + " --procedure_name=\"" + query_name +
+                    "\" -w=" + work_dir + " --ir_conf=" + engine_config +
                     " --graph_schema_path=" + graph_schema_path;
+  if (!procedure_desc.empty()) {
+    cmd += " --procedure_desc=\'" + procedure_desc + "\'";
+  }
   LOG(INFO) << "Start call codegen cmd: [" << cmd << "]";
 
   return hiactor::thread_resource_pool::submit_work([cmd] {

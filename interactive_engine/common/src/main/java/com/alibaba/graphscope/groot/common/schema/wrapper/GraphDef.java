@@ -39,16 +39,16 @@ import java.util.Set;
 
 public class GraphDef implements GraphSchema {
 
-    private long version;
-    private Map<String, LabelId> labelToId;
-    private Map<LabelId, TypeDef> idToType;
-    private Map<LabelId, Set<EdgeKind>> idToKinds;
-    private Map<String, Integer> propertyNameToId;
-    private int labelIdx;
-    private int propertyIdx;
-    private Map<LabelId, Long> vertexTableIds;
-    private Map<EdgeKind, Long> edgeTableIds;
-    private long tableIdx;
+    private final long version;
+    private final Map<String, LabelId> labelToId;
+    private final Map<LabelId, TypeDef> idToType;
+    private final Map<LabelId, Set<EdgeKind>> idToKinds;
+    private final Map<String, Integer> propertyNameToId;
+    private final int labelIdx;
+    private final int propertyIdx;
+    private final Map<LabelId, Long> vertexTableIds;
+    private final Map<EdgeKind, Long> edgeTableIds;
+    private final long tableIdx;
 
     private Map<LabelId, GraphVertex> vertexTypes;
     private Map<LabelId, GraphEdge> edgeTypes;
@@ -141,7 +141,19 @@ public class GraphDef implements GraphSchema {
         }
         Map<LabelId, Set<EdgeKind>> idToKinds = new HashMap<>();
         for (EdgeKindPb edgeKindPb : proto.getEdgeKindsList()) {
-            EdgeKind edgeKind = EdgeKind.parseProto(edgeKindPb);
+            LabelId edgeLabelId = LabelId.parseProto(edgeKindPb.getEdgeLabelId());
+            LabelId srcLabelId = LabelId.parseProto(edgeKindPb.getSrcVertexLabelId());
+            LabelId dstLabelId = LabelId.parseProto(edgeKindPb.getDstVertexLabelId());
+            EdgeKind edgeKind =
+                    EdgeKind.newBuilder()
+                            .setEdgeLabelId(edgeLabelId)
+                            .setSrcVertexLabelId(srcLabelId)
+                            .setDstVertexLabelId(dstLabelId)
+                            .setEdgeLabel(idToType.get(edgeLabelId).getLabel())
+                            .setSrcVertexLabel(idToType.get(srcLabelId).getLabel())
+                            .setDstVertexLabel(idToType.get(dstLabelId).getLabel())
+                            .build();
+
             Set<EdgeKind> edgeKindSet =
                     idToKinds.computeIfAbsent(edgeKind.getEdgeLabelId(), k -> new HashSet<>());
             edgeKindSet.add(edgeKind);
@@ -315,8 +327,8 @@ public class GraphDef implements GraphSchema {
     }
 
     @Override
-    public int getVersion() {
-        return (int) version;
+    public String getVersion() {
+        return String.valueOf(version);
     }
 
     public long getSchemaVersion() {

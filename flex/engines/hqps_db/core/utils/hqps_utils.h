@@ -169,54 +169,6 @@ inline bool check_edge_dir_consist_vopt(const Direction& dir, VOpt vopt) {
   return false;
 }
 
-// customized operator
-// 0. WithIn
-const struct WithIn_ {
-} WithIn;
-
-template <typename T>
-struct WithProxy {
-  WithProxy(const T& t) : t_(t) {}
-  const T& t_;
-};
-
-template <typename T>
-WithProxy<T> operator<(const T& lhs, const WithIn_& rhs) {
-  return WithProxy<T>(lhs);
-}
-
-template <
-    typename T, size_t N,
-    typename std::enable_if<std::is_pod_v<T> && (N == 1)>::type* = nullptr>
-bool operator>(const WithProxy<T>& lhs, const std::array<T, N>& rhs) {
-  return lhs.t_ == rhs[0];
-}
-
-template <typename T, size_t N,
-          typename std::enable_if<std::is_pod_v<T> && (N > 1)>::type* = nullptr>
-bool operator>(const WithProxy<T>& lhs, const std::array<T, N>& rhs) {
-  return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_);
-}
-
-template <size_t N, typename std::enable_if<(N > 0)>::type* = nullptr>
-bool operator>(const WithProxy<LabelKey>& lhs,
-               const std::array<int64_t, N>& rhs) {
-  return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_.label_id);
-}
-
-template <size_t N, typename std::enable_if<(N == 0)>::type* = nullptr>
-bool operator>(const WithProxy<LabelKey>& lhs,
-               const std::array<int64_t, N>& rhs) {
-  return false;
-}
-
-template <
-    typename T, size_t N,
-    typename std::enable_if<std::is_pod_v<T> && (N == 0)>::type* = nullptr>
-bool operator>(const WithProxy<T>& lhs, const std::array<T, N>& rhs) {
-  return false;
-}
-
 template <
     std::size_t nth, std::size_t... Head, std::size_t... Tail,
     typename... Types,
@@ -647,12 +599,6 @@ using SharedPtrTypeOf = std::shared_ptr<gs::TypedColumn<T>>;
 template <typename T>
 using GetterTypeOf = typename T::GetterType;
 
-template <typename GETTER_T>
-using ElementTypeOf = typename GETTER_T::element_type;
-
-template <typename T>
-using DataOfColumnPtr = typename T::element_type::value_type;
-
 template <typename T>
 using IterOf = typename T::iterator;
 
@@ -767,6 +713,21 @@ struct to_string_impl<std::vector<T>> {
   }
 };
 
+template <typename K, typename V>
+struct to_string_impl<std::unordered_map<K, V>> {
+  static inline std::string to_string(const std::unordered_map<K, V>& vec) {
+    std::ostringstream ss;
+    // map{key:value, ...}
+    ss << "map{";
+    for (auto& [k, v] : vec) {
+      ss << to_string_impl<K>::to_string(k) << ":"
+         << to_string_impl<V>::to_string(v) << ",";
+    }
+    ss << "}";
+    return ss.str();
+  }
+};
+
 template <typename T, size_t N>
 struct to_string_impl<std::array<T, N>> {
   static inline std::string to_string(const std::array<T, N>& empty) {
@@ -799,6 +760,8 @@ struct to_string_impl<AppendOpt> {
       return "Persist";
     } else if (empty == AppendOpt::Temp) {
       return "Temp";
+    } else if (empty == AppendOpt::Replace) {
+      return "Replace";
     } else {
       throw std::runtime_error("Unknown AppendOpt");
     }
@@ -1023,6 +986,12 @@ struct Edge<VID_T, grape::EmptyType> {
 template <typename VID_T>
 using DefaultEdge = Edge<VID_T, grape::EmptyType>;
 
+template <typename VID_T>
+inline bool operator==(const DefaultEdge<VID_T>& lhs,
+                       const DefaultEdge<VID_T>& rhs) {
+  return lhs.src == rhs.src && lhs.dst == rhs.dst;
+}
+
 struct QPSError {
   std::string message;
   explicit QPSError(std::string msg) : message(std::move(msg)) {}
@@ -1052,6 +1021,28 @@ struct function_traits<ReturnType (ClassType::*)(Args...) const>
   };
 };
 
+template <typename label_id_t>
+static std::tuple<label_id_t, label_id_t> get_graph_label_pair(
+    Direction& direction, label_id_t query_src_label,
+    label_id_t query_dst_label) {
+  label_id_t src_label, dst_label;
+  if (direction == Direction::In) {
+    src_label = query_dst_label;
+    dst_label = query_src_label;
+  } else {
+    src_label = query_src_label;
+    dst_label = query_dst_label;
+  }
+  return std::tuple{src_label, dst_label};
+}
+
 }  // namespace gs
+
+namespace boost {
+template <typename VID_T>
+inline std::size_t hash_value(const gs::DefaultEdge<VID_T>& key) {
+  return std::hash<VID_T>()(key.src) ^ std::hash<VID_T>()(key.dst);
+}
+}  // namespace boost
 
 #endif  // ENGINES_HQPS_ENGINE_HQPS_UTILS_H_

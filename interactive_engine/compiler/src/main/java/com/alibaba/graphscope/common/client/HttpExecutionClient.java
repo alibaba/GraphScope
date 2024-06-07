@@ -27,6 +27,16 @@ import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.semconv.SemanticAttributes;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +55,18 @@ import java.util.concurrent.TimeUnit;
 public class HttpExecutionClient extends ExecutionClient<URI> {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutionClient.class);
     private static final String CONTENT_TYPE = "Content-Type";
+    private static final String INTERACTIVE_REQUEST_FORMAT = "X-Interactive-Request-Format";
     private static final String TEXT_PLAIN = "text/plain;charset=UTF-8";
-    private static final String INTERACTIVE_QUERY_PATH = "/interactive/query";
+    private static final String PROTOCOL_FORMAT = "proto";
+    private static final String INTERACTIVE_QUERY_PATH = "/v1/graph/current/query";
     private static final String INTERACTIVE_ADHOC_QUERY_PATH = "/interactive/adhoc_query";
     private final HttpClient httpClient;
+
+    private final OpenTelemetry openTelemetry;
+    private final Tracer tracer;
+
+    private final TextMapSetter<HttpRequest.Builder> setter =
+            (carrier, key, value) -> carrier.headers(key, value);
 
     public HttpExecutionClient(Configs graphConfig, ChannelFetcher<URI> channelFetcher) {
         super(channelFetcher);
@@ -57,6 +75,8 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                         .connectTimeout(
                                 Duration.ofMillis(HiactorConfig.HIACTOR_TIMEOUT.get(graphConfig)))
                         .build();
+        this.openTelemetry = GlobalOpenTelemetry.get();
+        this.tracer = openTelemetry.getTracer(HttpExecutionClient.class.getName());
     }
 
     @Override
@@ -67,48 +87,72 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
             throws Exception {
         List<CompletableFuture> responseFutures = Lists.newArrayList();
         for (URI httpURI : channelFetcher.fetch()) {
-            HttpRequest httpRequest =
-                    HttpRequest.newBuilder()
-                            .uri(resolvePath(httpURI, request))
-                            .headers(CONTENT_TYPE, TEXT_PLAIN)
-                            .POST(
-                                    HttpRequest.BodyPublishers.ofByteArray(
-                                            (byte[]) request.getRequestPhysical().getContent()))
-                            .build();
-            CompletableFuture<HttpResponse<byte[]>> responseFuture =
-                    httpClient
-                            .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray())
-                            .orTimeout(timeoutConfig.getChannelTimeoutMS(), TimeUnit.MILLISECONDS)
-                            .whenComplete(
-                                    (response, exception) -> {
-                                        if (exception != null) {
-                                            listener.onError(exception);
-                                        }
-                                        try {
-                                            // if response is not 200
-                                            if (response.statusCode() != 200) {
-                                                // parse String from response.body()
-                                                String errorMessage = new String(response.body());
-                                                listener.onError(
-                                                        new RuntimeException(
-                                                                "Query execution failed: response"
-                                                                        + " status code is "
-                                                                        + response.statusCode()
-                                                                        + ", error message: "
-                                                                        + errorMessage));
+            Span outgoing =
+                    tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
+            try (Scope scope = outgoing.makeCurrent()) {
+                URI uri = resolvePath(httpURI, request);
+                outgoing.setAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "POST");
+                outgoing.setAttribute(SemanticAttributes.URL_FULL, uri.toString());
+
+                HttpRequest.Builder httpRequest =
+                        HttpRequest.newBuilder()
+                                .uri(uri)
+                                .headers(CONTENT_TYPE, TEXT_PLAIN)
+                                .headers(INTERACTIVE_REQUEST_FORMAT, PROTOCOL_FORMAT)
+                                .POST(
+                                        HttpRequest.BodyPublishers.ofByteArray(
+                                                (byte[])
+                                                        request.getRequestPhysical().getContent()));
+                openTelemetry
+                        .getPropagators()
+                        .getTextMapPropagator()
+                        .inject(Context.current(), httpRequest, setter);
+
+                CompletableFuture<HttpResponse<byte[]>> responseFuture =
+                        httpClient
+                                .sendAsync(
+                                        httpRequest.build(),
+                                        HttpResponse.BodyHandlers.ofByteArray())
+                                .orTimeout(
+                                        timeoutConfig.getChannelTimeoutMS(), TimeUnit.MILLISECONDS)
+                                .whenComplete(
+                                        (response, exception) -> {
+                                            if (exception != null) {
+                                                listener.onError(exception);
+                                                outgoing.recordException(exception);
                                             }
-                                            IrResult.CollectiveResults results =
-                                                    IrResult.CollectiveResults.parseFrom(
-                                                            response.body());
-                                            for (IrResult.Results irResult :
-                                                    results.getResultsList()) {
-                                                listener.onNext(irResult.getRecord());
+                                            try {
+                                                // if response is not 200
+                                                if (response.statusCode() != 200) {
+                                                    // parse String from response.body()
+                                                    String errorMessage =
+                                                            new String(response.body());
+                                                    RuntimeException ex =
+                                                            new RuntimeException(
+                                                                    "Query execution failed:"
+                                                                        + " response status code is"
+                                                                        + " "
+                                                                            + response.statusCode()
+                                                                            + ", error message: "
+                                                                            + errorMessage);
+                                                    outgoing.recordException(ex);
+                                                    listener.onError(ex);
+                                                } else {
+                                                    outgoing.end();
+                                                }
+                                                IrResult.CollectiveResults results =
+                                                        IrResult.CollectiveResults.parseFrom(
+                                                                response.body());
+                                                for (IrResult.Results irResult :
+                                                        results.getResultsList()) {
+                                                    listener.onNext(irResult.getRecord());
+                                                }
+                                            } catch (InvalidProtocolBufferException e) {
+                                                listener.onError(e);
                                             }
-                                        } catch (InvalidProtocolBufferException e) {
-                                            listener.onError(e);
-                                        }
-                                    });
-            responseFutures.add(responseFuture);
+                                        });
+                responseFutures.add(responseFuture);
+            }
         }
         CompletableFuture<Void> joinFuture =
                 CompletableFuture.runAsync(

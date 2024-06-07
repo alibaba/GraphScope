@@ -1,8 +1,9 @@
 name: movies
+version: v0.1
 schema:
   vertex_types:
     - type_name: Movie
-      properties:
+      properties: 
         - property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
@@ -11,10 +12,12 @@ schema:
             primitive_type: DT_SIGNED_INT32
         - property_name: tagline
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_name: title
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_name: Person
@@ -27,7 +30,8 @@ schema:
             primitive_type: DT_SIGNED_INT32
         - property_name: name
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_name: User
@@ -40,7 +44,8 @@ schema:
             primitive_type: DT_SIGNED_INT32
         - property_name: name
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
   edge_types:

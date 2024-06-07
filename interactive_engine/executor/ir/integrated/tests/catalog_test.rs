@@ -68,6 +68,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v = pb::GetV {
             tag: None,
@@ -104,6 +105,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_b = pb::GetV {
             tag: None,
@@ -151,6 +153,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v = pb::GetV {
             tag: None,
@@ -204,6 +207,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_b = pb::GetV {
             tag: None,
@@ -268,6 +272,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr_in = pb::EdgeExpand {
             v_tag: None,
@@ -276,6 +281,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_start = pb::GetV {
             tag: None,
@@ -327,6 +333,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr_in = pb::EdgeExpand {
             v_tag: None,
@@ -335,6 +342,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_a = pb::GetV {
             tag: None,
@@ -386,6 +394,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v = pb::GetV {
             tag: None,
@@ -439,6 +448,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_b = pb::GetV {
             tag: None,
@@ -503,6 +513,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v = pb::GetV {
             tag: None,
@@ -571,6 +582,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr_a_c = pb::EdgeExpand {
             v_tag: None,
@@ -579,6 +591,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr_b_c = pb::EdgeExpand {
             v_tag: None,
@@ -587,6 +600,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_b = pb::GetV {
             tag: None,
@@ -694,6 +708,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v = pb::GetV {
             tag: None,
@@ -713,6 +728,7 @@ mod test {
             path_opt: pb::path_expand::PathOpt::Simple as i32,
             result_opt: pb::path_expand::ResultOpt::EndV as i32,
             condition: None,
+            is_optional: false,
         };
         let pattern = pb::Pattern {
             sentences: vec![pb::pattern::Sentence {
@@ -742,6 +758,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v = pb::GetV {
             tag: None,
@@ -761,6 +778,7 @@ mod test {
             path_opt: pb::path_expand::PathOpt::Simple as i32,
             result_opt: pb::path_expand::ResultOpt::EndV as i32,
             condition: None,
+            is_optional: false,
         };
         let pattern = pb::Pattern {
             sentences: vec![
@@ -798,6 +816,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v = pb::GetV {
             tag: None,
@@ -828,6 +847,7 @@ mod test {
             path_opt: pb::path_expand::PathOpt::Simple as i32,
             result_opt: pb::path_expand::ResultOpt::EndV as i32,
             condition: None,
+            is_optional: false,
         };
         let pattern = pb::Pattern {
             sentences: vec![
@@ -865,6 +885,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr_in = pb::EdgeExpand {
             v_tag: None,
@@ -873,6 +894,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_end = pb::GetV {
             tag: None,
@@ -936,6 +958,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr_in = pb::EdgeExpand {
             v_tag: None,
@@ -944,6 +967,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_end = pb::GetV {
             tag: None,
@@ -1024,6 +1048,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr_in = pb::EdgeExpand {
             v_tag: None,
@@ -1032,6 +1057,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_end = pb::GetV {
             tag: None,
@@ -1105,6 +1131,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr_in = pb::EdgeExpand {
             v_tag: None,
@@ -1113,6 +1140,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_lop = pb::GetV {
             tag: None,
@@ -1210,6 +1238,7 @@ mod test {
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let get_v_software = pb::GetV {
             tag: None,
@@ -1250,6 +1279,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let select_person =
             pb::Select { predicate: Some(str_to_expr_pb("@.~label == 1".to_string()).unwrap()) };
@@ -1311,6 +1341,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr2 = pb::EdgeExpand {
             v_tag: None,
@@ -1319,6 +1350,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr3 = pb::EdgeExpand {
             v_tag: None,
@@ -1327,6 +1359,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let select_person =
             pb::Select { predicate: Some(str_to_expr_pb("@.~label == 1".to_string()).unwrap()) };
@@ -1379,6 +1412,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let pattern = pb::Pattern {
             sentences: vec![
@@ -1451,6 +1485,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr2 = pb::EdgeExpand {
             v_tag: None,
@@ -1459,6 +1494,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr3 = pb::EdgeExpand {
             v_tag: None,
@@ -1467,6 +1503,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr4 = pb::EdgeExpand {
             v_tag: None,
@@ -1475,6 +1512,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let pattern = pb::Pattern {
             sentences: vec![
@@ -1525,6 +1563,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr1 = pb::EdgeExpand {
             v_tag: None,
@@ -1533,6 +1572,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let expand_opr2 = pb::EdgeExpand {
             v_tag: None,
@@ -1541,6 +1581,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
         let pattern = pb::Pattern {
             sentences: vec![

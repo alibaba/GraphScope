@@ -20,6 +20,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "flex/engines/hqps_db/core/null_record.h"
+#include "flex/utils/property/types.h"
 #include "grape/util.h"
 #include "grape/utils/bitset.h"
 
@@ -28,11 +30,136 @@ namespace gs {
 template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetImpl;
 
+// Keyed two label vertex set builder
+template <typename VID_T, typename LabelT, typename... T>
+class TwoLabelVertexSetImplKeyedBuilder {
+ public:
+  using key_t = GlobalId;
+  using res_t = TwoLabelVertexSetImpl<VID_T, LabelT, T...>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
+  using data_tuple_t = std::tuple<T...>;
+  using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
+
+  static constexpr bool is_row_vertex_set_builder = false;
+  static constexpr bool is_flat_edge_set_builder = false;
+  static constexpr bool is_general_edge_set_builder = false;
+  static constexpr bool is_two_label_set_builder = true;
+  static constexpr bool is_collection_builder = false;
+
+  TwoLabelVertexSetImplKeyedBuilder(
+      size_t size, const std::array<LabelT, 2>& labels,
+      const std::array<std::string, sizeof...(T)>& props)
+      : ind_(0), labels_(labels), props_(props) {
+    vec_.reserve(size);
+    data_.reserve(size);
+    bitset_.init(size);
+  }
+
+  TwoLabelVertexSetImplKeyedBuilder(const res_t& res)
+      : TwoLabelVertexSetImplKeyedBuilder(res.Size(), res.GetLabels(),
+                                          res.GetPropNames()) {}
+
+  int32_t insert(const index_ele_tuple_t& tuple, const data_tuple_t& data) {
+    auto global_id = GlobalId(std::get<1>(tuple), std::get<2>(tuple));
+    if (IsNull(global_id)) {
+      return -1;
+    }
+    if (global_id_map_.find(global_id) != global_id_map_.end()) {
+      return global_id_map_[global_id];
+    } else {
+      global_id_map_[global_id] = ind_;
+      data_.emplace_back(data);
+      if (std::get<1>(tuple) == 0) {
+        bitset_.set_bit(vec_.size());
+      }
+      vec_.emplace_back(std::get<2>(tuple));
+      return ind_++;
+    }
+  }
+
+  res_t Build() {
+    VLOG(10) << "Try to resize from " << bitset_.cardinality() << ", to "
+             << vec_.size();
+    bitset_.resize(vec_.size());
+    return res_t(std::move(vec_), std::move(data_), std::move(labels_),
+                 std::move(props_), std::move(bitset_));
+  }
+
+  size_t Size() const { return vec_.size(); }
+
+ private:
+  size_t ind_;
+  std::vector<VID_T> vec_;
+  std::vector<data_tuple_t> data_;
+  std::array<LabelT, 2> labels_;
+  std::array<std::string, sizeof...(T)> props_;
+  std::unordered_map<GlobalId, size_t> global_id_map_;
+  grape::Bitset bitset_;
+};
+
+template <typename VID_T, typename LabelT>
+class TwoLabelVertexSetImplKeyedBuilder<VID_T, LabelT, grape::EmptyType> {
+ public:
+  using key_t = GlobalId;
+  using res_t = TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
+  using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
+
+  static constexpr bool is_row_vertex_set_builder = false;
+  static constexpr bool is_flat_edge_set_builder = false;
+  static constexpr bool is_general_edge_set_builder = false;
+  static constexpr bool is_two_label_set_builder = true;
+  static constexpr bool is_collection_builder = false;
+
+  TwoLabelVertexSetImplKeyedBuilder(size_t size,
+                                    const std::array<LabelT, 2>& labels)
+      : ind_(0), labels_(labels) {
+    vec_.reserve(size);
+    bitset_.init(size);
+  }
+
+  TwoLabelVertexSetImplKeyedBuilder(const res_t& res)
+      : TwoLabelVertexSetImplKeyedBuilder(res.Size(), res.GetLabels()) {}
+
+  int32_t insert(const index_ele_tuple_t& tuple) {
+    auto global_id = GlobalId(std::get<1>(tuple), std::get<2>(tuple));
+    if (IsNull(global_id)) {
+      return -1;
+    }
+    if (global_id_map_.find(global_id) != global_id_map_.end()) {
+      return global_id_map_[global_id];
+    } else {
+      global_id_map_[global_id] = ind_;
+      if (std::get<1>(tuple) == 0) {
+        bitset_.set_bit(vec_.size());
+      }
+      vec_.emplace_back(std::get<2>(tuple));
+      return ind_++;
+    }
+  }
+
+  res_t Build() {
+    VLOG(10) << "Try to resize from " << bitset_.cardinality() << ", to "
+             << vec_.size();
+    bitset_.resize(vec_.size());
+    return res_t(std::move(vec_), std::move(labels_), std::move(bitset_));
+  }
+
+  size_t Size() const { return vec_.size(); }
+
+ private:
+  size_t ind_;
+  std::vector<VID_T> vec_;
+  std::array<LabelT, 2> labels_;
+  std::unordered_map<GlobalId, size_t> global_id_map_;
+  grape::Bitset bitset_;
+};
+
 template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetImplBuilder {
  public:
   using res_t = TwoLabelVertexSetImpl<VID_T, LabelT, T...>;
-  using ele_tuple_t = std::tuple<int32_t, VID_T>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
   using data_tuple_t = std::tuple<T...>;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
@@ -93,7 +220,7 @@ template <typename VID_T, typename LabelT>
 class TwoLabelVertexSetImplBuilder<VID_T, LabelT, grape::EmptyType> {
  public:
   using res_t = TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType>;
-  using ele_tuple_t = std::tuple<int32_t, VID_T>;
+  using ele_tuple_t = typename res_t::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
   static constexpr bool is_row_vertex_set_builder = false;
@@ -188,21 +315,22 @@ auto two_label_project_vertices_impl(
   offset.emplace_back(0);
   double t0 = -grape::GetCurrentTime();
   for (size_t i = 0; i < old_vec.size(); ++i) {
+    auto vid = old_vec[i];
     if (old_bit_set.get_bit(i) && label_flag[0]) {
-      auto vid = old_vec[i];
       if (std::apply(expr, prop_getters[0].get_view(vid))) {
         res_bitset.set_bit(res_vec.size());
         res_vec.emplace_back(old_vec[i]);
       }
-    } else if (label_flag[1] &&
-               std::apply(expr, prop_getters[1].get_view(old_vec[i]))) {
-      res_vec.emplace_back(old_vec[i]);
+    } else if (label_flag[1] && !old_bit_set.get_bit(i)) {
+      if (std::apply(expr, prop_getters[1].get_view(vid))) {
+        res_vec.emplace_back(old_vec[i]);
+      }
     }
-
     offset.emplace_back(res_vec.size());
   }
   t0 += grape::GetCurrentTime();
-  VLOG(10) << "expr + copy cost: " << t0;
+  VLOG(10) << "expr + copy cost: " << t0
+           << ", res_vec: " << gs::to_string(res_vec);
 
   res_bitset.resize(res_vec.size());
 
@@ -490,26 +618,28 @@ auto twoLabelSetFlatImpl(
                          std::move(res_bitset));
 }
 
-template <typename VID_T, typename... T>
+template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetIter {
  public:
   using lid_t = VID_T;
   using self_type_t = TwoLabelVertexSetIter<VID_T, T...>;
-  using ele_tuple_t = std::pair<int32_t, VID_T>;
+  using ele_tuple_t =
+      typename TwoLabelVertexSetImpl<VID_T, LabelT, T...>::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
   using data_tuple_t = std::tuple<T...>;
 
   TwoLabelVertexSetIter(const std::vector<VID_T>& vec,
                         const std::vector<data_tuple_t>& data,
-                        const grape::Bitset& bitset, size_t ind)
-      : vec_(vec), data_(data), bitset_(bitset), ind_(ind) {}
+                        const grape::Bitset& bitset,
+                        const std::array<LabelT, 2>& labels, size_t ind)
+      : vec_(vec), data_(data), bitset_(bitset), labels_(labels), ind_(ind) {}
 
   ele_tuple_t GetElement() const {
     if (bitset_.get_bit(ind_)) {
-      return std::make_pair(0, vec_[ind_]);
+      return GlobalId(labels_[0], vec_[ind_]);
     } else {
-      return std::make_pair(1, vec_[ind_]);
+      return GlobalId(labels_[1], vec_[ind_]);
     }
   }
 
@@ -557,28 +687,32 @@ class TwoLabelVertexSetIter {
   const std::vector<VID_T>& vec_;
   const std::vector<data_tuple_t>& data_;
   const grape::Bitset& bitset_;
+  std::array<LabelT, 2> labels_;
   size_t ind_;
 };
 
-template <typename VID_T>
-class TwoLabelVertexSetIter<VID_T, grape::EmptyType> {
+template <typename VID_T, typename LabelT>
+class TwoLabelVertexSetIter<VID_T, LabelT, grape::EmptyType> {
  public:
   using lid_t = VID_T;
-  using self_type_t = TwoLabelVertexSetIter<VID_T, grape::EmptyType>;
-  using ele_tuple_t = std::pair<int32_t, lid_t>;
+  using self_type_t = TwoLabelVertexSetIter<VID_T, LabelT, grape::EmptyType>;
+  using ele_tuple_t =
+      typename TwoLabelVertexSetImpl<VID_T, LabelT,
+                                     grape::EmptyType>::ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
 
   using data_tuple_t = std::tuple<grape::EmptyType>;
 
   TwoLabelVertexSetIter(const std::vector<VID_T>& vec,
-                        const grape::Bitset& bitset, size_t ind)
-      : vec_(vec), bitset_(bitset), ind_(ind) {}
+                        const grape::Bitset& bitset,
+                        const std::array<LabelT, 2>& labels, size_t ind)
+      : vec_(vec), bitset_(bitset), labels_(labels), ind_(ind) {}
 
   ele_tuple_t GetElement() const {
     if (bitset_.get_bit(ind_)) {
-      return std::make_pair(0, vec_[ind_]);
+      return GlobalId(labels_[0], vec_[ind_]);
     } else {
-      return std::make_pair(1, vec_[ind_]);
+      return GlobalId(labels_[1], vec_[ind_]);
     }
   }
 
@@ -625,6 +759,7 @@ class TwoLabelVertexSetIter<VID_T, grape::EmptyType> {
  private:
   const std::vector<VID_T>& vec_;
   const grape::Bitset& bitset_;
+  std::array<LabelT, 2> labels_;
   size_t ind_;
 };
 
@@ -635,7 +770,7 @@ class TwoLabelVertexSetImpl {
  public:
   using lid_t = VID_T;
   using self_type_t = TwoLabelVertexSetImpl<VID_T, LabelT, T...>;
-  using iterator = TwoLabelVertexSetIter<VID_T, T...>;
+  using iterator = TwoLabelVertexSetIter<VID_T, LabelT, T...>;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
   using data_tuple_t = std::tuple<T...>;
   using flat_t = self_type_t;
@@ -683,10 +818,12 @@ class TwoLabelVertexSetImpl {
     return builder_t(vec_.size(), label_names_, named_property_);
   }
 
-  iterator begin() const { return iterator(vec_, data_tuple_, bitset_, 0); }
+  iterator begin() const {
+    return iterator(vec_, data_tuple_, label_names_, bitset_, 0);
+  }
 
   iterator end() const {
-    return iterator(vec_, data_tuple_, bitset_, vec_.size());
+    return iterator(vec_, data_tuple_, label_names_, bitset_, vec_.size());
   }
 
   template <typename EXPRESSION, size_t num_labels, typename PROP_GETTER,
@@ -756,6 +893,19 @@ class TwoLabelVertexSetImpl {
       }
     }
     return res;
+  }
+
+  std::vector<uint8_t> GenerateLabelIndices() const {
+    std::vector<uint8_t> label_indices;
+    label_indices.resize(vec_.size(), 255);
+    for (size_t i = 0; i < vec_.size(); ++i) {
+      if (bitset_.get_bit(i)) {
+        label_indices[i] = 0;
+      } else {
+        label_indices[i] = 1;
+      }
+    }
+    return label_indices;
   }
 
   LabelT GetLabel(size_t i) const { return label_names_[i]; }
@@ -829,15 +979,12 @@ class TwoLabelVertexSetImpl {
     for (size_t i = 0; i < repeat_array.size(); ++i) {
       if (bitset_.get_bit(i)) {
         for (size_t j = 0; j < repeat_array[i]; ++j) {
-          // VLOG(10) << "Project: " << vids_[i];
           next_set.set_bit(next_vids.size());
           next_vids.push_back(vec_[i]);
           next_datas.push_back(data_tuple_[i]);
         }
       } else {
         for (size_t j = 0; j < repeat_array[i]; ++j) {
-          // VLOG(10) << "Project: " << vids_[i];
-          //   next_set.set_bit(next_vids.size());
           next_vids.push_back(vec_[i]);
           next_datas.push_back(data_tuple_[i]);
         }
@@ -932,8 +1079,9 @@ template <typename VID_T, typename LabelT>
 class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
  public:
   using lid_t = VID_T;
+  using ele_tuple_t = GlobalId;
   using self_type_t = TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType>;
-  using iterator = TwoLabelVertexSetIter<VID_T, grape::EmptyType>;
+  using iterator = TwoLabelVertexSetIter<VID_T, LabelT, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, int32_t, VID_T>;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   using flat_t = self_type_t;
@@ -984,9 +1132,11 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
         std::move(named_prop), std::move(copied_bitset));
   }
 
-  iterator begin() const { return iterator(vec_, bitset_, 0); }
+  iterator begin() const { return iterator(vec_, bitset_, label_names_, 0); }
 
-  iterator end() const { return iterator(vec_, bitset_, vec_.size()); }
+  iterator end() const {
+    return iterator(vec_, bitset_, label_names_, vec_.size());
+  }
 
   template <typename EXPRESSION, size_t num_labels, typename PROP_GETTER_T,
             typename RES_SET_T = self_type_t,
@@ -1032,6 +1182,19 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
       }
     }
     return res;
+  }
+
+  std::vector<uint8_t> GenerateLabelIndices() const {
+    std::vector<uint8_t> label_indices;
+    label_indices.resize(vec_.size(), 255);
+    for (size_t i = 0; i < vec_.size(); ++i) {
+      if (bitset_.get_bit(i)) {
+        label_indices[i] = 0;
+      } else {
+        label_indices[i] = 1;
+      }
+    }
+    return label_indices;
   }
 
   LabelT GetLabel(size_t i) const { return label_names_[i]; }
@@ -1179,6 +1342,7 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
         ++i;
       }
     }
+    new_bitset.resize(new_vec.size());
     vec_.swap(new_vec);
     // safe?
     bitset_.swap(new_bitset);

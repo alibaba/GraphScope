@@ -972,9 +972,7 @@ class OperationExecutor:
             except:  # noqa: E722, pylint: disable=bare-except
                 storage_options = {}
                 read_options = {}
-            filetype = storage_options.get("filetype", None)
-            if filetype is None:
-                filetype = read_options.get("filetype", None)
+            filetype = read_options.get("filetype", None)
             filetype = str(filetype).upper()
             if (
                 protocol in ("hdfs", "hive", "oss", "s3")

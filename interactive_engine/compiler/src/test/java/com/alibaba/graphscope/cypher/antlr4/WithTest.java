@@ -40,7 +40,7 @@ public class WithTest {
                 "GraphLogicalProject(name=[a.name], d=[b], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[DEFAULT], opt=[END])\n"
+                    + " person]}], alias=[_], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[b], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
@@ -57,7 +57,7 @@ public class WithTest {
                 "GraphLogicalProject(c=[+(a.age, -(10, b.weight))], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[DEFAULT], opt=[OTHER])\n"
+                    + " person]}], alias=[_], opt=[OTHER])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[b], opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
@@ -85,8 +85,8 @@ public class WithTest {
         RelNode project =
                 Utils.eval("Match (a) Return a.name as name, count(a.name) + 1 as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(name=[EXPR$1], d=[+(EXPR$0, 1)], isAppend=[false])\n"
-                        + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[EXPR$1]}],"
+                "GraphLogicalProject(name=[name], d=[+(EXPR$0, 1)], isAppend=[false])\n"
+                        + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}],"
                         + " values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0',"
                         + " distinct=false}]])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
@@ -169,16 +169,16 @@ public class WithTest {
                     + "      GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
+                    + " opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])\n"
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
+                    + " opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
@@ -195,10 +195,10 @@ public class WithTest {
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[END])\n"
                     + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[END])\n"
-                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " alias=[_], opt=[END])\n"
+                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
                     + " alias=[k])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
@@ -215,8 +215,8 @@ public class WithTest {
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[OTHER])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[DEFAULT], opt=[BOTH])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
+                    + " opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
@@ -235,5 +235,18 @@ public class WithTest {
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
         Assert.assertEquals("RecordType(CHAR(1) name)", project.getRowType().toString());
+    }
+
+    @Test
+    public void with_14_test() {
+        RelNode project =
+                Utils.eval("Match (a:person) Return a.age & 2 | 3 ^ 1 as b, power(a.age, 5) as c")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(b=[^(|(&(a.age, 2), 3), 1)], c=[POWER(a.age, 5)],"
+                        + " isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                project.explain().trim());
     }
 }

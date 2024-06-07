@@ -1,5 +1,6 @@
 name: graph_algo
 store_type: mutable_csr
+version: v0.1
 schema:
   vertex_types:
     - type_id: 0
@@ -12,15 +13,18 @@ schema:
         - property_id: 1
           property_name: conference
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_id: 2
           property_name: CCFRank
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_id: 3
           property_name: CCFField
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_id: 4
           property_name: year
           property_type:
@@ -28,7 +32,8 @@ schema:
         - property_id: 5
           property_name: paper
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_id: 1
@@ -41,7 +46,8 @@ schema:
         - property_id: 1
           property_name: challenge
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_id: 2
@@ -54,7 +60,8 @@ schema:
         - property_id: 1
           property_name: category
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_id: 3
@@ -67,7 +74,8 @@ schema:
         - property_id: 1
           property_name: task
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_id: 4
@@ -80,7 +88,8 @@ schema:
         - property_id: 1
           property_name: solution
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_id: 5
@@ -93,7 +102,8 @@ schema:
         - property_id: 1
           property_name: field
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
   edge_types:

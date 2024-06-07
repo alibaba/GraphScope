@@ -17,7 +17,8 @@
 package com.alibaba.graphscope.common.ir.meta.procedure;
 
 import com.alibaba.graphscope.common.config.Configs;
-import com.google.common.collect.ImmutableBiMap;
+import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeConvertor;
+import com.alibaba.graphscope.common.ir.meta.schema.GSDataTypeDesc;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -41,6 +42,7 @@ public class StoredProcedureMeta {
     private final Mode mode;
     private final String description;
     private final String extension;
+    private final Map<String, Object> options;
 
     protected StoredProcedureMeta(
             String name,
@@ -48,24 +50,32 @@ public class StoredProcedureMeta {
             String description,
             String extension,
             RelDataType returnType,
-            List<Parameter> parameters) {
+            List<Parameter> parameters,
+            Map<String, Object> options) {
         this.name = name;
         this.mode = mode;
         this.description = description;
         this.extension = extension;
         this.returnType = returnType;
         this.parameters = Objects.requireNonNull(parameters);
+        this.options = options;
     }
 
     public StoredProcedureMeta(
-            Configs configs, RelDataType returnType, List<Parameter> parameters) {
+            Configs configs, String queryStr, RelDataType returnType, List<Parameter> parameters) {
+        // For optional keys, construct a map and pass it to the constructor.
         this(
                 Config.NAME.get(configs),
                 Mode.valueOf(Config.MODE.get(configs)),
                 Config.DESCRIPTION.get(configs),
                 Config.EXTENSION.get(configs),
                 returnType,
-                parameters);
+                parameters,
+                ImmutableMap.of(
+                        Config.TYPE.getKey(),
+                        Config.TYPE.get(configs),
+                        Config.QUERY.getKey(),
+                        queryStr));
     }
 
     public String getName() {
@@ -80,6 +90,10 @@ public class StoredProcedureMeta {
         return Collections.unmodifiableList(parameters);
     }
 
+    public Object getOption(String key) {
+        return options.getOrDefault(key, null);
+    }
+
     @Override
     public String toString() {
         return "StoredProcedureMeta{"
@@ -90,6 +104,8 @@ public class StoredProcedureMeta {
                 + returnType
                 + ", parameters="
                 + parameters
+                + ", option="
+                + options
                 + '}';
     }
 
@@ -139,14 +155,16 @@ public class StoredProcedureMeta {
         }
 
         private static Map<String, Object> createProduceMetaMap(StoredProcedureMeta meta) {
-            return ImmutableBiMap.of(
-                    "name",
+            GSDataTypeConvertor<RelDataType> typeConvertor =
+                    GSDataTypeConvertor.Factory.create(RelDataType.class, typeFactory);
+            return ImmutableMap.of(
+                    Config.NAME.getKey(),
                     meta.name,
-                    "description",
+                    Config.DESCRIPTION.getKey(),
                     meta.description,
-                    "mode",
+                    Config.MODE.getKey(),
                     meta.mode.name(),
-                    "extension",
+                    Config.EXTENSION.getKey(),
                     meta.extension,
                     "library",
                     String.format("lib%s%s", meta.name, meta.extension),
@@ -158,7 +176,9 @@ public class StoredProcedureMeta {
                                                     "name",
                                                     k.name,
                                                     "type",
-                                                    Utils.typeToStr(k.getDataType())))
+                                                    typeConvertor
+                                                            .convert(k.getDataType())
+                                                            .getYamlDesc()))
                             .collect(Collectors.toList()),
                     "returns",
                     meta.returnType.getFieldList().stream()
@@ -166,26 +186,49 @@ public class StoredProcedureMeta {
                                     k ->
                                             ImmutableMap.of(
                                                     "name", k.getName(),
-                                                    "type", Utils.typeToStr(k.getType())))
-                            .collect(Collectors.toList()));
+                                                    "type",
+                                                            typeConvertor
+                                                                    .convert(k.getType())
+                                                                    .getYamlDesc()))
+                            .collect(Collectors.toList()),
+                    Config.TYPE.getKey(),
+                    meta.options.get(Config.TYPE.getKey()),
+                    Config.QUERY.getKey(),
+                    meta.options.get(Config.QUERY.getKey()));
         }
     }
 
     public static class Deserializer {
         public static StoredProcedureMeta perform(InputStream inputStream) throws IOException {
+            GSDataTypeConvertor<RelDataType> typeConvertor =
+                    GSDataTypeConvertor.Factory.create(RelDataType.class, typeFactory);
             Yaml yaml = new Yaml();
             Map<String, Object> config = yaml.load(inputStream);
             return new StoredProcedureMeta(
-                    (String) config.get("name"),
-                    Mode.valueOf((String) config.get("mode")),
-                    (String) config.get("description"),
-                    (String) config.get("extension"),
-                    createReturnType((List) config.get("returns")),
-                    createParameters((List) config.get("params")));
+                    getValue(Config.NAME, config),
+                    Mode.valueOf(getValue(Config.MODE, config)),
+                    getValue(Config.DESCRIPTION, config),
+                    getValue(Config.EXTENSION, config),
+                    createReturnType((List) config.get("returns"), typeConvertor),
+                    createParameters((List) config.get("params"), typeConvertor),
+                    ImmutableMap.of(
+                            Config.TYPE.getKey(), getValue(Config.TYPE, config),
+                            Config.QUERY.getKey(), getValue(Config.QUERY, config)));
         }
 
-        private static RelDataType createReturnType(List config) {
+        private static <T> T getValue(
+                com.alibaba.graphscope.common.config.Config<T> config,
+                Map<String, Object> valueMap) {
+            Object value = valueMap.get(config.getKey());
+            return (value != null) ? (T) value : config.get(new Configs(ImmutableMap.of()));
+        }
+
+        private static RelDataType createReturnType(
+                List config, GSDataTypeConvertor<RelDataType> typeConvertor) {
             List<RelDataTypeField> fields = Lists.newArrayList();
+            if (config == null) {
+                return new RelRecordType(fields);
+            }
             Iterator iterator = config.iterator();
             int index = 0;
             while (iterator.hasNext()) {
@@ -194,21 +237,29 @@ public class StoredProcedureMeta {
                         new RelDataTypeFieldImpl(
                                 (String) field.get("name"),
                                 index,
-                                Utils.strToType((String) field.get("type"), typeFactory)));
+                                typeConvertor.convert(
+                                        new GSDataTypeDesc(
+                                                (Map<String, Object>) field.get("type")))));
                 ++index;
             }
             return new RelRecordType(fields);
         }
 
-        private static List<StoredProcedureMeta.Parameter> createParameters(List config) {
+        private static List<StoredProcedureMeta.Parameter> createParameters(
+                List config, GSDataTypeConvertor<RelDataType> typeConvertor) {
             List<StoredProcedureMeta.Parameter> parameters = Lists.newArrayList();
+            if (config == null) {
+                return parameters;
+            }
             Iterator iterator = config.iterator();
             while (iterator.hasNext()) {
                 Map<String, Object> field = (Map<String, Object>) iterator.next();
                 parameters.add(
                         new StoredProcedureMeta.Parameter(
                                 (String) field.get("name"),
-                                Utils.strToType((String) field.get("type"), typeFactory)));
+                                typeConvertor.convert(
+                                        new GSDataTypeDesc(
+                                                (Map<String, Object>) field.get("type")))));
             }
             return parameters;
         }
@@ -230,5 +281,11 @@ public class StoredProcedureMeta {
                 com.alibaba.graphscope.common.config.Config.stringConfig("extension", ".so");
         public static final com.alibaba.graphscope.common.config.Config<String> MODE =
                 com.alibaba.graphscope.common.config.Config.stringConfig("mode", "READ");
+        // option configurations.
+        public static final com.alibaba.graphscope.common.config.Config<String> TYPE =
+                com.alibaba.graphscope.common.config.Config.stringConfig(
+                        "type", "UNKNOWN"); // cypher or cpp
+        public static final com.alibaba.graphscope.common.config.Config<String> QUERY =
+                com.alibaba.graphscope.common.config.Config.stringConfig("query", "UNKNOWN");
     }
 }

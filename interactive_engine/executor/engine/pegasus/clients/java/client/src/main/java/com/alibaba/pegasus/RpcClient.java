@@ -84,7 +84,11 @@ public class RpcClient {
             if (finished.get()) {
                 return;
             }
-            processor.process(jobResponse);
+            try {
+                processor.process(jobResponse);
+            } catch (Throwable t) {
+                onError(t);
+            }
         }
 
         @Override
@@ -101,7 +105,11 @@ public class RpcClient {
         public void onCompleted() {
             if (counter.decrementAndGet() == 0) {
                 logger.info("finish get job response from all servers");
-                processor.finish();
+                try {
+                    processor.finish();
+                } catch (Throwable t) {
+                    onError(t);
+                }
             }
         }
     }

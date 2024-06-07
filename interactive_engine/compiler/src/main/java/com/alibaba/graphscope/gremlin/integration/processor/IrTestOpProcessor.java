@@ -19,15 +19,14 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
-import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.resultx.GremlinTestRecordParser;
@@ -54,6 +53,7 @@ import org.apache.tinkerpop.gremlin.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -111,8 +111,16 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                         (context -> {
                             Bytecode byteCode =
                                     (Bytecode) message.getArgs().get(Tokens.ARGS_GREMLIN);
-                            String script = getScript(byteCode);
-                            long queryId = idGenerator.generateId();
+                            String language =
+                                    FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
+                            // hack ways to remove quote in expr, so we can use ANTLR to perform
+                            // syntax checking
+                            boolean removeQuoteInExpr =
+                                    language.equals(GremlinCalciteScriptEngineFactory.LANGUAGE_NAME)
+                                            ? true
+                                            : false;
+                            String script = getScript(byteCode, removeQuoteInExpr);
+                            BigInteger queryId = idGenerator.generateId();
                             String queryName = idGenerator.generateName(queryId);
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =
@@ -120,8 +128,6 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             QueryTimeoutConfig timeoutConfig =
                                     new QueryTimeoutConfig(
                                             FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs));
-                            String language =
-                                    FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
                             switch (language) {
                                 case AntlrGremlinScriptEngineFactory.LANGUAGE_NAME:
                                     Traversal traversal =
@@ -131,11 +137,11 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             traversal,
                                             new com.alibaba.graphscope.gremlin.integration.result
                                                     .GremlinTestResultProcessor(
+                                                    configs,
                                                     ctx,
                                                     traversal,
                                                     statusCallback,
                                                     testGraph,
-                                                    this.configs,
                                                     timeoutConfig),
                                             irMeta,
                                             new QueryTimeoutConfig(ctx.getRequestTimeout()),
@@ -147,14 +153,16 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                     GraphPlanner.Summary summary = value.summary;
                                     ResultSchema resultSchema =
                                             new ResultSchema(summary.getLogicalPlan());
-                                    ExecutionResponseListener listener =
+                                    GremlinTestResultProcessor listener =
                                             new GremlinTestResultProcessor(
+                                                    configs,
                                                     ctx,
-                                                    statusCallback,
                                                     new GremlinTestRecordParser(
                                                             resultSchema,
                                                             testGraph.getProperties(configs)),
-                                                    resultSchema);
+                                                    resultSchema,
+                                                    statusCallback,
+                                                    timeoutConfig);
                                     if (value.result != null && value.result.isCompleted) {
                                         List<IrResult.Results> records = value.result.records;
                                         records.forEach(k -> listener.onNext(k.getRecord()));
@@ -169,6 +177,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                                 listener,
                                                 timeoutConfig);
                                     }
+                                    // request results from remote engine in a blocking way
+                                    listener.request();
                                     break;
                                 default:
                                     throw new IllegalArgumentException(
@@ -189,7 +199,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
         }
     }
 
-    private String getScript(Bytecode byteCode) {
+    private String getScript(Bytecode byteCode, boolean removeQuoteInExpr) {
         String script = GroovyTranslator.of("g").translate(byteCode).getScript();
         // remove type cast from original script, g.V().has("age",P.gt((int) 30))
         List<String> typeCastStrs =
@@ -197,6 +207,48 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
         for (String type : typeCastStrs) {
             script = script.replaceAll(type, "");
         }
+        if (removeQuoteInExpr) {
+            String exprPattern = "expr(";
+            int exprIdx = script.indexOf(exprPattern);
+            if (exprIdx < 0) {
+                return script;
+            }
+            int i;
+            for (i = exprIdx + exprPattern.length();
+                    i < script.length() && !isQuote(script.charAt(i));
+                    ++i)
+                ;
+            if (i == script.length()) {
+                return script;
+            }
+            int leftQuoteIdx = i;
+            int leftBraceCnt = 1;
+            for (; i < script.length() && leftBraceCnt != 0; ++i) {
+                if (script.charAt(i) == '(') {
+                    ++leftBraceCnt;
+                } else if (script.charAt(i) == ')') {
+                    --leftBraceCnt;
+                }
+            }
+            if (i == script.length()) {
+                return script;
+            }
+            while (i > leftQuoteIdx && !isQuote(script.charAt(i))) {
+                --i;
+            }
+            if (i == leftQuoteIdx) {
+                return script;
+            }
+            int rightQuoteIdx = i;
+            script =
+                    script.substring(0, leftQuoteIdx)
+                            + script.substring(leftQuoteIdx + 1, rightQuoteIdx)
+                            + script.substring(rightQuoteIdx + 1);
+        }
         return script;
+    }
+
+    private boolean isQuote(char ch) {
+        return ch == '\'' || ch == '\"';
     }
 }

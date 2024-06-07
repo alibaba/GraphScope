@@ -45,11 +45,11 @@ public class GroupTest {
                                 builder.count(false, "c", ImmutableList.of()))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
-                        + " b]}], values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='c',"
+                "GraphLogicalAggregate(keys=[{variables=[_.name, _.age], aliases=[a,"
+                        + " b]}], values=[[{operands=[_], aggFunction=COUNT, alias='c',"
                         + " distinct=false}]])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
@@ -75,11 +75,11 @@ public class GroupTest {
                                                 builder.literal(1))))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name], aliases=[name]}],"
+                "GraphLogicalAggregate(keys=[{variables=[_.name], aliases=[name]}],"
                     + " values=[[{operands=[$f0], aggFunction=SUM, alias='x', distinct=false}]])\n"
-                    + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
+                    + "  GraphLogicalProject($f0=[+(_.age, 1)], isAppend=[true])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[VERTEX])",
+                    + " alias=[_], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
@@ -102,11 +102,11 @@ public class GroupTest {
                                 builder.collect(false, "c", ImmutableList.of()))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
-                        + " b]}], values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='c',"
+                "GraphLogicalAggregate(keys=[{variables=[_.name, _.age], aliases=[a,"
+                        + " b]}], values=[[{operands=[_], aggFunction=COLLECT, alias='c',"
                         + " distinct=false}]])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
@@ -129,11 +129,11 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[$f0], aliases=[$f0]}],"
-                        + " values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='c',"
+                        + " values=[[{operands=[_], aggFunction=COUNT, alias='c',"
                         + " distinct=false}]])\n"
-                        + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
+                        + "  GraphLogicalProject($f0=[+(_.age, 1)], isAppend=[true])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
@@ -152,10 +152,9 @@ public class GroupTest {
                                     builder.count(false, "c", ImmutableList.of()))
                             .build();
         } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{alias=DEFAULT} not found; expected aliases are: []", e.getMessage());
+            Assert.assertEquals("{alias=_} not found; expected aliases are: []", e.getMessage());
             return;
         }
-        Assert.fail("alias=DEFAULT does not exist");
+        Assert.fail("alias=_ does not exist");
     }
 }

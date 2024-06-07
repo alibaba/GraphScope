@@ -32,10 +32,7 @@ ENGINE_CONFIG_PATH=$2
 GS_TEST_DIR=$3
 if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} not exists"
-  mkdir -p ${INTERACTIVE_WORKSPACE}
-else 
-  echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} exists"
-  rm -rf ${INTERACTIVE_WORKSPACE}
+  exit 1
 fi
 if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
   echo "ENGINE_CONFIG: ${ENGINE_CONFIG_PATH} not exists"
@@ -46,15 +43,12 @@ if [ ! -d ${GS_TEST_DIR} ]; then
   exit 1
 fi
 
-GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/movies/movies_schema.yaml
-GRAPH_BULK_LOAD_YAML=${GS_TEST_DIR}/flex/movies/movies_import.yaml
+GRAPH_SCHEMA_YAML=${FLEX_HOME}/interactive/examples/movies/graph.yaml
+GRAPH_BULK_LOAD_YAML=${FLEX_HOME}/interactive/examples/movies/import.yaml
 RAW_CSV_FILES=${FLEX_HOME}/interactive/examples/movies/
 GRAPH_CSR_DATA_DIR=${HOME}/csr-data-dir/
 TEST_CYPHER_QUERIES="${FLEX_HOME}/interactive/examples/movies/0_get_user.cypher ${FLEX_HOME}/interactive/examples/movies/5_recommend_rule.cypher"
-# rm data dir if exists
-if [ -d ${GRAPH_CSR_DATA_DIR} ]; then
-  rm -rf ${GRAPH_CSR_DATA_DIR}
-fi
+
 
 
 RED='\033[0;31m'
@@ -89,10 +83,10 @@ start_engine_service(){
     fi
 
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} --enable-admin-service true "
-    cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} "
+    cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} &"
 
     echo "Start engine service with command: ${cmd}"
-    ${cmd} &
+    eval ${cmd} 
     sleep 5
     #check interactive_server is running, if not, exit
     ps -ef | grep "interactive_server" | grep -v grep
@@ -101,12 +95,12 @@ start_engine_service(){
 }
 
 run_admin_test(){
-  echo "run movie test"
+  echo "run admin test"
   pushd ${FLEX_HOME}/build/
   cmd="GLOG_v=10 ./tests/hqps/admin_http_test ${ADMIN_PORT} ${QUERY_PORT} ${GRAPH_SCHEMA_YAML} ${GRAPH_BULK_LOAD_YAML} ${RAW_CSV_FILES} ${TEST_CYPHER_QUERIES}"
-  echo "Start movie test: ${cmd}"
-  eval ${cmd} || (err "movie test failed" &&  exit 1)
-  info "Finish movie test"
+  echo "Start admin test: ${cmd}"
+  eval ${cmd} || (err "admin test failed" &&  exit 1)
+  info "Finish admin test"
   popd
 }
 

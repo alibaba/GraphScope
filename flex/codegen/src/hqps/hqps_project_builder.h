@@ -37,6 +37,13 @@ static constexpr const char* PROJECT_MAPPER_VAR_TEMPLATE_STR =
 static constexpr const char* PROJECT_MAPPER_EXPR_TEMPLATE_STR =
     "gs::make_mapper_with_expr<%1%>(%2%(%3%) %4%)";
 
+static constexpr const char* PROJECT_MAPPER_KEY_VALUE_TEMPLATE_STR =
+    "gs::make_key_value_mapper<%1%>(\"%2%\", %3%)";
+
+// multiple key-value pairs
+static constexpr const char* PROJECT_KEY_VALUES_TEMPLATE_STR =
+    "gs::make_key_value_mappers(%1%)";
+
 static constexpr const char* PROJECT_OP_TEMPLATE_STR =
     "auto %1% = Engine::Project<%2%>(%3%, std::move(%4%), std::tuple{%5%});\n";
 
@@ -98,7 +105,7 @@ std::tuple<std::string, std::string, std::string> concatenate_expr_built_result(
 // same(excluding null)
 std::string project_case_when_from_project_mapping(
     BuildingContext& ctx, const common::Case& expr_case,
-    common::DataType data_type, int32_t out_alias_tag) {
+    common::DataType data_type) {
   // the common::case contains three expression, input-expr, when-expr,
   // then-expr the input-expr can be null. if it is null, it means we just
   // evaluate when-expr, then-expr like case when.
@@ -145,8 +152,7 @@ std::string project_case_when_from_project_mapping(
 }
 
 std::string project_expression_from_project_mapping(
-    BuildingContext& ctx, const common::Expression& expr,
-    int32_t out_alias_tag) {
+    BuildingContext& ctx, const common::Expression& expr) {
   auto expr_builder = ExprBuilder(ctx);
   VLOG(10) << "Projecting expression: " << expr.DebugString();
   auto ret_data_type = eval_expr_return_type(expr);
@@ -181,47 +187,117 @@ std::string project_expression_from_project_mapping(
   return formater.str();
 }
 
+std::pair<std::string, codegen::DataType> get_prop_name_type_from_variable(
+    const common::Variable& var) {
+  if (!var.has_property()) {
+    return std::make_pair("", codegen::DataType::kEmpty);
+  }
+  auto& property = var.property();
+  if (property.item_case() == common::Property::kId) {
+    return std::make_pair("", codegen::DataType::kGlobalVertexId);
+  } else if (property.item_case() == common::Property::kKey) {
+    return std::make_pair(
+        property.key().name(),
+        common_data_type_pb_2_data_type(var.node_type().data_type()));
+  } else if (property.item_case() == common::Property::kLen) {
+    return std::make_pair("length", codegen::DataType::kLength);
+  } else if (property.item_case() == common::Property::kLabel) {
+    // return the label id.
+    return std::make_pair("label", codegen::DataType::kLabelId);
+  } else {
+    LOG(FATAL) << "Unknown property type" << property.DebugString();
+  }
+}
+
+std::string project_key_value_to_string(BuildingContext& ctx,
+                                        std::string key_str,
+                                        const common::Variable& variable) {
+  int32_t real_in_col_id = -1;
+  if (variable.has_tag()) {
+    auto tag_id = variable.tag().id();
+    if (tag_id != -1) {
+      if (ctx.GetTagIdAndIndMapping().HasTagId(tag_id)) {
+        real_in_col_id = ctx.GetTagIdAndIndMapping().GetTagInd(tag_id);
+      } else if (ctx.GetTagIdAndIndMapping().GetMaxTagId() + 1 == tag_id) {
+        real_in_col_id = -1;
+      } else {
+        LOG(WARNING) << "Tag id: " << tag_id << " not found in tag id mapping";
+        return "";
+      }
+    }
+  }
+
+  auto [prop_name, data_type] = get_prop_name_type_from_variable(variable);
+  // when project key_value to string with empty type, we should project to
+  // globalId.
+  if (data_type == codegen::DataType::kEmpty) {
+    data_type = codegen::DataType::kGlobalVertexId;
+  }
+
+  boost::format select_formater(PROPERTY_SELECTOR);
+  select_formater % data_type_2_string(data_type) % prop_name;
+  auto selector_str = select_formater.str();
+
+  boost::format formater(PROJECT_MAPPER_KEY_VALUE_TEMPLATE_STR);
+  formater % real_in_col_id % key_str % selector_str;
+  return formater.str();
+}
+
 std::string project_variable_mapping_to_string(BuildingContext& ctx,
-                                               const common::ExprOpr& expr_op,
-                                               int32_t real_res_col_id) {
-  int32_t in_tag_id = -2;
+                                               const common::ExprOpr& expr_op);
+
+std::string project_key_values_to_string(
+    BuildingContext& ctx, const common::VariableKeyValues& key_values) {
+  std::vector<std::string> key_value_strs;
+  auto& mappings = key_values.key_vals();
+  for (int32_t i = 0; i < mappings.size(); ++i) {
+    auto& key_value = mappings[i];
+    auto& key = key_value.key();
+    CHECK(key.item_case() == common::Value::kStr);
+    auto& value = key_value.value();
+    auto key_value_str = project_key_value_to_string(ctx, key.str(), value);
+    if (!key_value_str.empty()) {
+      key_value_strs.emplace_back(key_value_str);
+    }
+  }
+
+  auto key_value_str = join_string(key_value_strs, ", ");
+  boost::format formater(PROJECT_KEY_VALUES_TEMPLATE_STR);
+  formater % key_value_str;
+  return formater.str();
+}
+
+std::string project_variable_mapping_to_string(BuildingContext& ctx,
+                                               const common::ExprOpr& expr_op) {
+  int32_t in_tag_id =
+      -2;  // in_tag_id used for expr_opr except for map and case_when
   std::vector<std::string> prop_names;
   std::vector<codegen::DataType> data_types;
-  bool project_self = false;
   switch (expr_op.item_case()) {
   case common::ExprOpr::kCase: {
     VLOG(10) << "Got case when in projecting";
     auto case_when = expr_op.case_();
     VLOG(10) << case_when.DebugString();
     return project_case_when_from_project_mapping(
-        ctx, case_when, expr_op.node_type().data_type(), real_res_col_id);
+        ctx, case_when, expr_op.node_type().data_type());
+  }
+  case common::ExprOpr::kMap: {
+    VLOG(10) << "Got map in projecting";
+    auto& map = expr_op.map();
+    return project_key_values_to_string(ctx, map);
   }
   case common::ExprOpr::kVar: {
     VLOG(10) << "Got var in projecting";
     auto& var = expr_op.var();
-    in_tag_id = var.tag().id();
-    if (var.has_property()) {
-      auto& prop = var.property();
-      if (prop.item_case() == common::Property::kId) {
-        project_self = true;
-      } else if (prop.item_case() == common::Property::kKey) {
-        prop_names.push_back(prop.key().name());
-        data_types.push_back(
-            common_data_type_pb_2_data_type(var.node_type().data_type()));
-      } else if (prop.item_case() == common::Property::kLen) {
-        prop_names.push_back("length");
-        data_types.push_back(codegen::DataType::kLength);
-      } else if (prop.item_case() == common::Property::kLabel) {
-        // return the label id.
-        prop_names.push_back("label");
-        data_types.push_back(codegen::DataType::kLabelId);
-      } else {
-        LOG(FATAL) << "Unknown property type" << prop.DebugString();
-      }
+    if (var.has_tag()) {
+      in_tag_id = var.tag().id();
     } else {
-      VLOG(10) << "receives no property, project itself";
-      project_self = true;
+      in_tag_id = -1;
     }
+    // auto& prop = var.property();
+    auto [prop_name, data_type] = get_prop_name_type_from_variable(var);
+    prop_names.push_back(prop_name);
+    data_types.push_back(data_type);
     break;
   }
   case common::ExprOpr::kVarMap: {
@@ -241,77 +317,43 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
       } else {
         CHECK(in_tag_id == var.tag().id()) << "can only support one tag";
       }
-
-      auto& prop = var.property();
-      // if (prop.has_id()) {
-      if (prop.item_case() == common::Property::kId) {
-        LOG(FATAL) << "Not support project id in projecting with vars";
-        // } else if (prop.has_key()) {
-      } else if (prop.item_case() == common::Property::kKey) {
-        prop_names.push_back(prop.key().name());
-        data_types.push_back(
-            common_data_type_pb_2_data_type(var.node_type().data_type()));
-      } else {
-        LOG(FATAL) << "Unknown property type" << prop.DebugString();
-      }
+      auto [prop_name, data_type] = get_prop_name_type_from_variable(var);
+      prop_names.push_back(prop_name);
+      data_types.push_back(data_type);
     }
     break;
   }
+
   default:
-    LOG(FATAL) << "Unknown variable type";
+    LOG(FATAL) << "Unknown variable type: " << expr_op.DebugString();
   }
-  auto real_in_col_id = ctx.GetTagInd(in_tag_id);
+
+  int32_t real_in_col_id = -1;
+  if (in_tag_id != -1) {
+    if (ctx.GetTagIdAndIndMapping().HasTagId(in_tag_id)) {
+      real_in_col_id = ctx.GetTagIdAndIndMapping().GetTagInd(in_tag_id);
+    } else if (ctx.GetTagIdAndIndMapping().GetMaxTagId() + 1 == in_tag_id) {
+      real_in_col_id = -1;
+    } else {
+      LOG(WARNING) << "Tag id: " << in_tag_id << " not found in tag id mapping";
+      return "";
+    }
+  }
+
   VLOG(10) << "real_in_tag_id: " << real_in_col_id
            << " in_tag_id: " << in_tag_id;
 
-  if (project_self) {
-    VLOG(10) << "Projecting self";
-    CHECK(prop_names.size() == 0 && data_types.size() == 0);
-    std::string selector_str;
-    {
-      boost::format select_formater(PROPERTY_SELECTOR);
-      select_formater % EMPTY_TYPE % "";
-      selector_str = select_formater.str();
-    }
-    boost::format formater(PROJECT_MAPPER_VAR_TEMPLATE_STR);
+  CHECK(prop_names.size() == data_types.size());
+  std::string selector_str;
+  VLOG(10) << "Projecting properties" << gs::to_string(prop_names);
+  CHECK(prop_names.size() == 1);
+  boost::format select_formater(PROPERTY_SELECTOR);
+  select_formater % data_type_2_string(data_types[0]) % prop_names[0];
+  selector_str = select_formater.str();
 
-    formater % real_in_col_id % selector_str;
-    return formater.str();
-  } else {
-    VLOG(10) << "Projecting properties" << gs::to_string(prop_names);
-    CHECK(prop_names.size() == data_types.size());
-    CHECK(prop_names.size() == 1);
-    std::string selector_str;
-    {
-      boost::format select_formater(PROPERTY_SELECTOR);
-      select_formater % data_type_2_string(data_types[0]) % prop_names[0];
-      selector_str = select_formater.str();
-    }
-    boost::format formater(PROJECT_MAPPER_VAR_TEMPLATE_STR);
-    formater % real_in_col_id % selector_str;
-    return formater.str();
-  }
-}
-
-std::string project_mapping_to_string(
-    BuildingContext& ctx, const physical::Project::ExprAlias& mapping,
-    TagIndMapping& new_tag_ind_map) {
-  int32_t res_alias = mapping.alias().value();
-  // TODO: Currently we assume each expr_alias contains only property for that
-  // input tag
-
-  auto real_res_alias = new_tag_ind_map.CreateOrGetTagInd(res_alias);
-  auto& expr = mapping.expr();
-  // CHECK(expr.operators_size() == 1) << "can only support one variable";
-  if (expr.operators_size() > 1) {
-    return project_expression_from_project_mapping(ctx, expr, real_res_alias);
-  } else if (expr.operators_size() == 1) {
-    auto& expr_op = expr.operators(0);
-    return project_variable_mapping_to_string(ctx, expr_op, real_res_alias);
-  } else {
-    LOG(FATAL) << "expect at least one expr opr";
-    return "";
-  }
+  boost::format formater(PROJECT_MAPPER_VAR_TEMPLATE_STR);
+  formater % real_in_col_id % selector_str;
+  return formater.str();
 }
 
 /**
@@ -329,6 +371,11 @@ class ProjectOpBuilder {
     return *this;
   }
 
+  ProjectOpBuilder& res_alias(int32_t res_alias) {
+    res_alias_ = res_alias;
+    return *this;
+  }
+
   ProjectOpBuilder& add_mapping(const physical::Project::ExprAlias& mapping) {
     mappings_.push_back(mapping);
     return *this;
@@ -337,20 +384,35 @@ class ProjectOpBuilder {
   // return make_project code and call project code.
   std::string Build() const {
     TagIndMapping new_tag_id_mapping;
+    if (is_append_) {
+      new_tag_id_mapping = ctx_.GetTagIdAndIndMapping();
+    }
     std::string project_cols_code;
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
     std::stringstream ss;
     for (size_t i = 0; i < mappings_.size(); ++i) {
-      ss << project_mapping_to_string(ctx_, mappings_[i], new_tag_id_mapping);
-      if (i != mappings_.size() - 1) {
-        ss << ", ";
+      auto res = project_mapping_to_string(mappings_[i]);
+      if (!res.empty()) {
+        ss << res;
+        if (i != mappings_.size() - 1) {
+          ss << ", ";
+        }
+        // Only insert res_alias to new_tag_ind_map when res is not empty
+        int32_t res_alias = -1;
+        if (mappings_[i].has_alias()) {
+          res_alias = mappings_[i].alias().value();
+        }
+        new_tag_id_mapping.CreateOrGetTagInd(res_alias);
       }
     }
     project_cols_code = ss.str();
+    LOG(INFO) << "res alias: " << res_alias_.has_value()
+              << " res_alias: " << res_alias_.value();
+    bool is_temp = res_alias_.has_value() && res_alias_.value() == -1;
 
     boost::format formater(PROJECT_OP_TEMPLATE_STR);
-    formater % next_ctx_name % project_is_append_str(is_append_) %
+    formater % next_ctx_name % project_is_append_str(is_append_, is_temp) %
         ctx_.GraphVar() % prev_ctx_name % project_cols_code;
     ctx_.UpdateTagIdAndIndMapping(new_tag_id_mapping);
 
@@ -358,8 +420,24 @@ class ProjectOpBuilder {
   }
 
  private:
+  std::string project_mapping_to_string(
+      const physical::Project::ExprAlias& mapping) const {
+    auto& expr = mapping.expr();
+    // CHECK(expr.operators_size() == 1) << "can only support one variable";
+    if (expr.operators_size() > 1) {
+      return project_expression_from_project_mapping(ctx_, expr);
+    } else if (expr.operators_size() == 1) {
+      auto& expr_op = expr.operators(0);
+      return project_variable_mapping_to_string(ctx_, expr_op);
+    } else {
+      LOG(FATAL) << "expect at least one expr opr";
+      return "";
+    }
+  }
+
   BuildingContext& ctx_;
   bool is_append_;
+  std::optional<int32_t> res_alias_;
   std::vector<physical::Project::ExprAlias> mappings_;
 };
 
@@ -368,6 +446,7 @@ static std::string BuildProjectOp(
     const physical::PhysicalOpr::MetaData& meta_data) {
   ProjectOpBuilder builder(ctx);
   builder.is_append(project_pb.is_append());
+  builder.res_alias(meta_data.alias());
   auto& mappings = project_pb.mappings();
   for (int32_t i = 0; i < mappings.size(); ++i) {
     builder.add_mapping(mappings[i]);

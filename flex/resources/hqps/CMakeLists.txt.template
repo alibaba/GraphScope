@@ -8,6 +8,7 @@ include(FindPackageHandleStandardArgs)
 project(HighQpsCodeGen
         VERSION 1.0
         LANGUAGES CXX)
+add_definitions(-DBUILD_HQPS)
 
 # the query name, 
 if (QUERY_NAME)
@@ -33,7 +34,7 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN -O3 -flto -Werror=unused-result -fPIC -no-pie")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN -O0 -flto -Werror=unused-result -fPIC -no-pie")
 
 add_library(${QUERY_NAME} SHARED ${PROJECT_SOURCE_DIR}/${QUERY_NAME}.cc)
 target_include_directories(${QUERY_NAME} PUBLIC ${FLEX_INCLUDE_PREFIX} ${FLEX_INCLUDE_PREFIX}/flex/build/engines/hqps_db/)

@@ -19,14 +19,16 @@ package com.alibaba.graphscope.gremlin.plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
+
 public class QueryLogger {
     private static final Logger defaultLogger = LoggerFactory.getLogger(QueryLogger.class);
     private static Logger metricLogger = LoggerFactory.getLogger("MetricLog");
 
     private final String query;
-    private final long queryId;
+    private final BigInteger queryId;
 
-    public QueryLogger(String query, long queryId) {
+    public QueryLogger(String query, BigInteger queryId) {
         this.query = query;
         this.queryId = queryId;
     }
@@ -60,7 +62,7 @@ public class QueryLogger {
         return query;
     }
 
-    public long getQueryId() {
+    public BigInteger getQueryId() {
         return queryId;
     }
 }

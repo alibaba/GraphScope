@@ -79,7 +79,7 @@ public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E>
     }
 
     public GraphTraversal<S, Vertex> expr(String expr, ExprStep.Type type) {
-        this.asAdmin().getBytecode().addStep("expr", expr, type);
+        this.asAdmin().getBytecode().addStep("expr", expr);
         return this.asAdmin().addStep(new ExprStep(this.asAdmin(), expr, type));
     }
 

@@ -49,8 +49,8 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -70,7 +70,7 @@ public class FilterTest {
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -90,7 +90,7 @@ public class FilterTest {
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -108,8 +108,8 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                        + " fusedFilter=[[>(_.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -127,7 +127,7 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
                         + " opt=[VERTEX])",
                 filter.explain().trim());
     }
@@ -167,7 +167,7 @@ public class FilterTest {
         RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                        + " alias=[DEFAULT], fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
+                        + " alias=[_], fusedFilter=[[>(_.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -185,7 +185,7 @@ public class FilterTest {
                                         builder.variable(null, "age"),
                                         ((GraphRexBuilder) builder.getRexBuilder())
                                                 .makeGraphDynamicParam("age", 0));
-        Assert.assertEquals(">(DEFAULT.age, ?0)", greater.toString());
+        Assert.assertEquals(">(_.age, ?0)", greater.toString());
         Assert.assertEquals(
                 SqlTypeName.INTEGER, greater.getOperands().get(1).getType().getSqlTypeName());
     }
@@ -209,9 +209,9 @@ public class FilterTest {
                         builder.literal("marko"));
         RelNode filter = builder.filter(condition1, condition2).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                    + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, _UTF-8'marko'))]],"
-                    + " opt=[VERTEX])",
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                        + " fusedFilter=[[AND(>(_.age, 20), =(_.name, _UTF-8'marko'))]],"
+                        + " opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -236,8 +236,8 @@ public class FilterTest {
                 builder.filter(builder.call(GraphStdOperatorTable.AND, condition1, condition2))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                    + " fusedFilter=[[AND(>(DEFAULT.age, 20), <(DEFAULT.age, 30))]], opt=[VERTEX])",
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                        + " fusedFilter=[[AND(>(_.age, 20), <(_.age, 30))]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -254,7 +254,7 @@ public class FilterTest {
                                         builder.literal("person")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
                         + " opt=[VERTEX])",
                 node.explain().trim());
     }
@@ -326,8 +326,8 @@ public class FilterTest {
                                         builder.literal("person")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -372,7 +372,7 @@ public class FilterTest {
                                         ImmutableList.of(builder.literal("person"))))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
                         + " opt=[VERTEX])",
                 node.explain().trim());
     }
@@ -394,7 +394,7 @@ public class FilterTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
+                        + " alias=[_], opt=[VERTEX], uniqueKeyFilters=[SEARCH(_.~id,"
                         + " Sarg[1, 2, 3])])",
                 node.explain().trim());
     }

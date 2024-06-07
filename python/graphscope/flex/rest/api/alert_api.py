@@ -557,7 +557,7 @@ class AlertApi:
     @validate_call
     def list_alert_messages(
         self,
-        type: Optional[StrictStr] = None,
+        alert_type: Optional[StrictStr] = None,
         status: Optional[StrictStr] = None,
         severity: Optional[StrictStr] = None,
         start_time: Annotated[Optional[StrictStr], Field(description="format with \"2023-02-21-11-56-30\"")] = None,
@@ -578,8 +578,8 @@ class AlertApi:
         """list_alert_messages
 
 
-        :param type:
-        :type type: str
+        :param alert_type:
+        :type alert_type: str
         :param status:
         :type status: str
         :param severity:
@@ -611,7 +611,7 @@ class AlertApi:
         """ # noqa: E501
 
         _param = self._list_alert_messages_serialize(
-            type=type,
+            alert_type=alert_type,
             status=status,
             severity=severity,
             start_time=start_time,
@@ -639,7 +639,7 @@ class AlertApi:
     @validate_call
     def list_alert_messages_with_http_info(
         self,
-        type: Optional[StrictStr] = None,
+        alert_type: Optional[StrictStr] = None,
         status: Optional[StrictStr] = None,
         severity: Optional[StrictStr] = None,
         start_time: Annotated[Optional[StrictStr], Field(description="format with \"2023-02-21-11-56-30\"")] = None,
@@ -660,8 +660,8 @@ class AlertApi:
         """list_alert_messages
 
 
-        :param type:
-        :type type: str
+        :param alert_type:
+        :type alert_type: str
         :param status:
         :type status: str
         :param severity:
@@ -693,7 +693,7 @@ class AlertApi:
         """ # noqa: E501
 
         _param = self._list_alert_messages_serialize(
-            type=type,
+            alert_type=alert_type,
             status=status,
             severity=severity,
             start_time=start_time,
@@ -721,7 +721,7 @@ class AlertApi:
     @validate_call
     def list_alert_messages_without_preload_content(
         self,
-        type: Optional[StrictStr] = None,
+        alert_type: Optional[StrictStr] = None,
         status: Optional[StrictStr] = None,
         severity: Optional[StrictStr] = None,
         start_time: Annotated[Optional[StrictStr], Field(description="format with \"2023-02-21-11-56-30\"")] = None,
@@ -742,8 +742,8 @@ class AlertApi:
         """list_alert_messages
 
 
-        :param type:
-        :type type: str
+        :param alert_type:
+        :type alert_type: str
         :param status:
         :type status: str
         :param severity:
@@ -775,7 +775,7 @@ class AlertApi:
         """ # noqa: E501
 
         _param = self._list_alert_messages_serialize(
-            type=type,
+            alert_type=alert_type,
             status=status,
             severity=severity,
             start_time=start_time,
@@ -798,7 +798,7 @@ class AlertApi:
 
     def _list_alert_messages_serialize(
         self,
-        type,
+        alert_type,
         status,
         severity,
         start_time,
@@ -823,9 +823,9 @@ class AlertApi:
 
         # process the path parameters
         # process the query parameters
-        if type is not None:
+        if alert_type is not None:
             
-            _query_params.append(('type', type))
+            _query_params.append(('alert_type', alert_type))
             
         if status is not None:
             

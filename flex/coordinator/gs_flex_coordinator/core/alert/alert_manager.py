@@ -23,14 +23,14 @@ import pickle
 from typing import List, Union
 
 from gs_flex_coordinator.core.alert.alert_receiver import DingTalkReceiver
-from gs_flex_coordinator.core.alert.builtin_rules import init_builtin_alert_rules
-from gs_flex_coordinator.core.alert.message_collector import AlertMessageCollector
+from gs_flex_coordinator.core.alert.builtin_rules import \
+    init_builtin_alert_rules
+from gs_flex_coordinator.core.alert.message_collector import \
+    AlertMessageCollector
 from gs_flex_coordinator.core.config import ALERT_WORKSPACE
 from gs_flex_coordinator.core.scheduler import schedule
 from gs_flex_coordinator.core.utils import decode_datetimestr, encode_datetime
 from gs_flex_coordinator.models import AlertMessage, AlertReceiver, AlertRule
-
-logger = logging.getLogger("graphscope")
 
 
 class AlertManager(object):
@@ -56,18 +56,20 @@ class AlertManager(object):
     def _try_to_recover_from_disk(self):
         try:
             if os.path.exists(self._receiver_path):
-                logger.info("Recover alert receiver from file: %s", self._receiver_path)
+                logging.info(
+                    "Recover alert receiver from file: %s", self._receiver_path
+                )
                 with open(self._receiver_path, "rb") as f:
                     self._receivers = pickle.load(f)
         except Exception as e:
-            logger.warn("Failed to recover alert receiver: %s", str(e))
+            logging.warn("Failed to recover alert receiver: %s", str(e))
 
     def _pickle_receiver_impl(self):
         try:
             with open(self._receiver_path, "wb") as f:
                 pickle.dump(self._receivers, f)
         except Exception as e:
-            logger.warn("Failed to dump receiver: %s", str(e))
+            logging.warn("Failed to dump receiver: %s", str(e))
 
     def list_alert_rules(self) -> List[AlertRule]:
         rlt = []
@@ -114,7 +116,7 @@ class AlertManager(object):
             # date -> date
             start_date_filter = decode_datetimestr(start_time)
             end_date_filter = decode_datetimestr(end_time)
-        logger.info(
+        logging.info(
             "Fetch alert messages from %s to %s",
             encode_datetime(start_date_filter),
             encode_datetime(end_date_filter),

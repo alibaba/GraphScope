@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictBool, StrictStr
+from pydantic import BaseModel, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.groot_graph_gremlin_interface import GrootGraphGremlinInterface
 from graphscope.flex.rest.models.groot_schema import GrootSchema
@@ -30,11 +30,22 @@ class GrootGraph(BaseModel):
     GrootGraph
     """ # noqa: E501
     name: Optional[StrictStr] = None
+    type: Optional[StrictStr] = None
     directed: Optional[StrictBool] = None
     creation_time: Optional[StrictStr] = None
     var_schema: Optional[GrootSchema] = Field(default=None, alias="schema")
     gremlin_interface: Optional[GrootGraphGremlinInterface] = None
-    __properties: ClassVar[List[str]] = ["name", "directed", "creation_time", "schema", "gremlin_interface"]
+    __properties: ClassVar[List[str]] = ["name", "type", "directed", "creation_time", "schema", "gremlin_interface"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['GrootGraph']):
+            raise ValueError("must be one of enum values ('GrootGraph')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -94,6 +105,7 @@ class GrootGraph(BaseModel):
 
         _obj = cls.model_validate({
             "name": obj.get("name"),
+            "type": obj.get("type"),
             "directed": obj.get("directed"),
             "creation_time": obj.get("creation_time"),
             "schema": GrootSchema.from_dict(obj["schema"]) if obj.get("schema") is not None else None,

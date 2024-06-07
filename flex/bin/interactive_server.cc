@@ -20,6 +20,7 @@
 #include "flex/engines/http_server/codegen_proxy.h"
 #include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
+#include "flex/otel/otel.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/utils/service_utils.h"
 
@@ -31,9 +32,6 @@
 namespace bpo = boost::program_options;
 
 namespace gs {
-static constexpr const uint32_t DEFAULT_SHARD_NUM = 1;
-static constexpr const uint32_t DEFAULT_QUERY_PORT = 10000;
-static constexpr const uint32_t DEFAULT_ADMIN_PORT = 7777;
 
 std::string parse_codegen_dir(const bpo::variables_map& vm) {
   std::string codegen_dir;
@@ -56,64 +54,20 @@ std::string parse_codegen_dir(const bpo::variables_map& vm) {
   return codegen_dir;
 }
 
-// parse from yaml
-std::tuple<uint32_t, uint32_t, uint32_t, std::string> parse_from_server_config(
-    const std::string& server_config_path) {
-  YAML::Node config = YAML::LoadFile(server_config_path);
-  uint32_t shard_num = DEFAULT_SHARD_NUM;
-  uint32_t query_port = DEFAULT_QUERY_PORT;
-  uint32_t admin_port = DEFAULT_ADMIN_PORT;
-  auto engine_node = config["compute_engine"];
-  if (engine_node) {
-    auto engine_type = engine_node["type"];
-    if (engine_type) {
-      auto engine_type_str = engine_type.as<std::string>();
-      if (engine_type_str != "hiactor" && engine_type_str != "Hiactor") {
-        LOG(FATAL) << "compute_engine type should be hiactor, found: "
-                   << engine_type_str;
-      }
-    }
-    auto shard_num_node = engine_node["thread_num_per_worker"];
-    if (shard_num_node) {
-      shard_num = shard_num_node.as<uint32_t>();
-    } else {
-      LOG(INFO) << "shard_num not found, use default value "
-                << DEFAULT_SHARD_NUM;
-    }
-  } else {
-    LOG(FATAL) << "Fail to find compute_engine configuration";
-  }
-  auto http_service_node = config["http_service"];
-  if (http_service_node) {
-    auto query_port_node = http_service_node["query_port"];
-    if (query_port_node) {
-      query_port = query_port_node.as<uint32_t>();
-    } else {
-      LOG(INFO) << "query_port not found, use default value "
-                << DEFAULT_QUERY_PORT;
-    }
-    auto admin_port_node = http_service_node["admin_port"];
-    if (admin_port_node) {
-      admin_port = admin_port_node.as<uint32_t>();
-    } else {
-      LOG(INFO) << "admin_port not found, use default value "
-                << DEFAULT_ADMIN_PORT;
-    }
-  } else {
-    LOG(FATAL) << "Fail to find http_service configuration";
-  }
-  auto default_graph_node = config["default_graph"];
-  if (default_graph_node) {
-    auto default_graph = default_graph_node.as<std::string>();
-    return std::make_tuple(shard_num, admin_port, query_port, default_graph);
-  } else {
-    LOG(FATAL) << "Fail to find default_graph configuration";
+void blockSignal(int sig) {
+  sigset_t set;
+  sigemptyset(&set);
+  sigaddset(&set, sig);
+  if (pthread_sigmask(SIG_BLOCK, &set, NULL) != 0) {
+    perror("pthread_sigmask");
   }
 }
 
+// When graph_schema is not specified, codegen proxy will use the running graph
+// schema in hqps_service
 void init_codegen_proxy(const bpo::variables_map& vm,
-                        const std::string& graph_schema_file,
-                        const std::string& engine_config_file) {
+                        const std::string& engine_config_file,
+                        const std::string& graph_schema_file = "") {
   std::string codegen_dir = parse_codegen_dir(vm);
   std::string codegen_bin;
   if (vm.count("codegen-bin") == 0) {
@@ -130,23 +84,28 @@ void init_codegen_proxy(const bpo::variables_map& vm,
                                    graph_schema_file);
 }
 
-void initWorkspace(const std::string workspace, int32_t thread_num,
-                   const std::string& default_graph) {
-  // If workspace directory not exists, create.
-
+void openDefaultGraph(const std::string workspace, int32_t thread_num,
+                      const std::string& default_graph, uint32_t memory_level) {
   if (!std::filesystem::exists(workspace)) {
-    std::filesystem::create_directory(workspace);
+    LOG(ERROR) << "Workspace directory not exists: " << workspace;
   }
-  // Create subdirectories
-  std::filesystem::create_directory(workspace + "/" +
-                                    server::WorkDirManipulator::DATA_DIR_NAME);
+  auto data_dir_path =
+      workspace + "/" + server::WorkDirManipulator::DATA_DIR_NAME;
+  if (!std::filesystem::exists(data_dir_path)) {
+    LOG(ERROR) << "Data directory not exists: " << data_dir_path;
+    return;
+  }
 
-  LOG(INFO) << "Finish creating workspace directory " << workspace;
   // Get current executable path
 
   server::WorkDirManipulator::SetWorkspace(workspace);
 
   VLOG(1) << "Finish init workspace";
+
+  if (default_graph.empty()) {
+    LOG(FATAL) << "No Default graph is specified";
+    return;
+  }
 
   auto& db = gs::GraphDB::get();
   auto schema_path =
@@ -167,13 +126,16 @@ void initWorkspace(const std::string workspace, int32_t thread_num,
                << ", for graph: " << default_graph;
   }
   db.Close();
-  if (!db.Open(schema_res.value(), data_dir, thread_num).ok()) {
+  gs::GraphDBConfig config(schema_res.value(), data_dir, thread_num);
+  config.memory_level = memory_level;
+  if (config.memory_level >= 2) {
+    config.enable_auto_compaction = true;
+  }
+  if (!db.Open(config).ok()) {
     LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
   }
   LOG(INFO) << "Successfully init graph db for default graph: "
             << default_graph;
-
-  server::WorkDirManipulator::SetRunningGraph(default_graph);
 }
 
 }  // namespace gs
@@ -182,6 +144,10 @@ void initWorkspace(const std::string workspace, int32_t thread_num,
  * The main entrance for InteractiveServer.
  */
 int main(int argc, char** argv) {
+  // block sigint and sigterm in main thread, let seastar handle it
+  gs::blockSignal(SIGINT);
+  gs::blockSignal(SIGTERM);
+
   bpo::options_description desc("Usage:");
   desc.add_options()("help,h", "Display help messages")(
       "enable-admin-service,e", bpo::value<bool>()->default_value(false),
@@ -199,7 +165,13 @@ int main(int argc, char** argv) {
       "open-thread-resource-pool", bpo::value<bool>()->default_value(true),
       "open thread resource pool")("worker-thread-number",
                                    bpo::value<unsigned>()->default_value(2),
-                                   "worker thread number");
+                                   "worker thread number")(
+      "enable-trace", bpo::value<bool>()->default_value(false),
+      "whether to enable opentelemetry tracing")(
+      "start-compiler", bpo::value<bool>()->default_value(false),
+      "whether or not to start compiler")(
+      "memory-level,m", bpo::value<unsigned>()->default_value(1),
+      "memory allocation strategy");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -214,24 +186,38 @@ int main(int argc, char** argv) {
   }
 
   //// declare vars
-  int32_t shard_num = 1;
-  int32_t admin_port = gs::DEFAULT_ADMIN_PORT;
-  int32_t query_port = gs::DEFAULT_QUERY_PORT;
-  bool start_admin_service;
-  std::string workspace, default_graph;
-
-  start_admin_service = vm["enable-admin-service"].as<bool>();
-
+  std::string workspace, engine_config_file;
   if (vm.count("workspace")) {
     workspace = vm["workspace"].as<std::string>();
   }
-  auto engine_config_file = vm["server-config"].as<std::string>();
-  // When only starting query service.
-  std::tie(shard_num, admin_port, query_port, default_graph) =
-      gs::parse_from_server_config(engine_config_file);
+
+  if (!vm.count("server-config")) {
+    LOG(FATAL) << "server-config is needed";
+  }
+  engine_config_file = vm["server-config"].as<std::string>();
+
+  YAML::Node node = YAML::LoadFile(engine_config_file);
+  // Parse service config
+  server::ServiceConfig service_config = node.as<server::ServiceConfig>();
+  service_config.engine_config_path = engine_config_file;
+  service_config.start_admin_service = vm["enable-admin-service"].as<bool>();
+  service_config.start_compiler = vm["start-compiler"].as<bool>();
+  service_config.memory_level = vm["memory-level"].as<unsigned>();
+
   auto& db = gs::GraphDB::get();
 
-  if (start_admin_service) {
+  if (vm["enable-trace"].as<bool>()) {
+#ifdef HAVE_OPENTELEMETRY_CPP
+    LOG(INFO) << "Initialize opentelemetry...";
+    otel::initTracer();
+    otel::initMeter();
+    otel::initLogger();
+#else
+    LOG(WARNING) << "OpenTelemetry is not enabled in this build";
+#endif
+  }
+
+  if (service_config.start_admin_service) {
     // When start admin service, we need a workspace to put all the meta data
     // and graph indices. We will initiate the query service with default graph.
     if (vm.count("graph-config") || vm.count("data-path")) {
@@ -239,21 +225,17 @@ int main(int argc, char** argv) {
                     "data-path should NOT be specified";
     }
 
-    gs::initWorkspace(
-        workspace, shard_num,
-        default_graph);  // Suppose the default_graph is already loaded.
+    gs::openDefaultGraph(workspace, service_config.shard_num,
+                         service_config.default_graph,
+                         service_config.memory_level);
+    // Suppose the default_graph is already loaded.
     LOG(INFO) << "Finish init workspace";
-
-    server::HQPSService::get().init(shard_num, admin_port, query_port, false,
-                                    vm["open-thread-resource-pool"].as<bool>(),
-                                    vm["worker-thread-number"].as<unsigned>());
-    server::HQPSService::get().run_and_wait_for_exit();
+    auto schema_file = server::WorkDirManipulator::GetGraphSchemaPath(
+        service_config.default_graph);
+    gs::init_codegen_proxy(vm, engine_config_file);
   } else {
     LOG(INFO) << "Start query service only";
     std::string graph_schema_path, data_path;
-    if (!vm.count("server-config")) {
-      LOG(FATAL) << "server-config is needed";
-    }
 
     // init graph
     if (!vm.count("graph-config")) {
@@ -274,19 +256,22 @@ int main(int argc, char** argv) {
     }
 
     // The schema is loaded just to get the plugin dir and plugin list
-    gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
+    gs::init_codegen_proxy(vm, engine_config_file, graph_schema_path);
     db.Close();
-    auto load_res = db.Open(schema_res.value(), data_path, shard_num);
+    auto load_res =
+        db.Open(schema_res.value(), data_path, service_config.shard_num);
     if (!load_res.ok()) {
       LOG(FATAL) << "Failed to load graph from data directory: "
                  << load_res.status().error_message();
     }
-
-    server::HQPSService::get().init(shard_num, query_port, false,
-                                    vm["open-thread-resource-pool"].as<bool>(),
-                                    vm["worker-thread-number"].as<unsigned>());
-    server::HQPSService::get().run_and_wait_for_exit();
   }
+
+  server::HQPSService::get().init(service_config);
+  server::HQPSService::get().run_and_wait_for_exit();
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+  otel::cleanUpTracer();
+#endif
 
   return 0;
 }

@@ -22,7 +22,6 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,56 +66,12 @@ public class YamlConfigs extends Configs {
                             }
                         })
                 .put(
-                        "graph.stored.procedures",
+                        "graph.store",
                         (Configs configs) -> {
-                            String workspace = configs.get("directories.workspace");
-                            String subdir = configs.get("directories.subdirs.data");
-                            String graphName = configs.get("default_graph");
-                            try {
-                                if (workspace != null && subdir != null && graphName != null) {
-                                    File schemaFile =
-                                            new File(GraphConfig.GRAPH_SCHEMA.get(configs));
-                                    if (!schemaFile.exists()
-                                            || !schemaFile.getName().endsWith(".yaml")) {
-                                        return null;
-                                    }
-                                    Yaml yaml = new Yaml();
-                                    Map<String, Object> yamlAsMap =
-                                            yaml.load(new FileInputStream(schemaFile));
-                                    Object value;
-                                    if ((value = yamlAsMap.get("stored_procedures")) == null
-                                            || (value = ((Map) value).get("directory")) == null) {
-                                        return null;
-                                    }
-                                    String directory = value.toString();
-                                    return Path.of(workspace, subdir, graphName, directory)
-                                            .toString();
-                                } else {
-                                    return null;
-                                }
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                .put(
-                        "graph.stored.procedures.enable.lists",
-                        (Configs configs) -> {
-                            File schemaFile = new File(GraphConfig.GRAPH_SCHEMA.get(configs));
-                            if (!schemaFile.exists() || !schemaFile.getName().endsWith(".yaml")) {
-                                return null;
-                            }
-                            try {
-                                Yaml yaml = new Yaml();
-                                Map<String, Object> yamlAsMap =
-                                        yaml.load(new FileInputStream(schemaFile));
-                                Object value;
-                                if ((value = yamlAsMap.get("stored_procedures")) == null
-                                        || (value = ((Map) value).get("enable_lists")) == null) {
-                                    return null;
-                                }
-                                return value.toString().replace("[", "").replace("]", "");
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
+                            if (configs.get("compute_engine.store.type") != null) {
+                                return configs.get("compute_engine.store.type");
+                            } else {
+                                return "cpp-mcsr";
                             }
                         })
                 .put(
@@ -200,7 +155,10 @@ public class YamlConfigs extends Configs {
                 .put("engine.type", (Configs configs) -> configs.get("compute_engine.type"))
                 .put(
                         "calcite.default.charset",
-                        (Configs configs) -> configs.get("compiler.calcite_default_charset"));
+                        (Configs configs) -> configs.get("compiler.calcite_default_charset"))
+                .put(
+                        "gremlin.script.language.name",
+                        (Configs configs) -> configs.get("compiler.gremlin_script_language_name"));
         valueGetterMap = mapBuilder.build();
     }
 

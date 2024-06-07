@@ -40,7 +40,12 @@ public class FfiLogicalPlanTest {
     // Return count(*)
     @Test
     public void logical_plan_1_test() throws Exception {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         GetVConfig getVConfig =
                 new GetVConfig(GraphOpt.GetV.END, new LabelConfig(false).addLabel("person"));
@@ -54,7 +59,7 @@ public class FfiLogicalPlanTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode aggregate =
                 builder.source(
                                 new SourceConfig(
@@ -73,14 +78,14 @@ public class FfiLogicalPlanTest {
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[x],"
                     + " aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
-                    + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                    + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                    + " fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                     + "    GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                    + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[END])\n"
+                    + " alias=[_], opt=[END])\n"
                     + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                    + " alias=[DEFAULT])\n"
+                    + " alias=[_])\n"
                     + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])",
                 aggregate.explain().trim());
@@ -112,7 +117,7 @@ public class FfiLogicalPlanTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
-                        + " fusedFilter=[[=(DEFAULT.age, ?0)]], opt=[VERTEX])",
+                        + " fusedFilter=[[=(_.age, ?0)]], opt=[VERTEX])",
                 filter.explain().trim());
         try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
@@ -153,7 +158,7 @@ public class FfiLogicalPlanTest {
     public void logical_plan_4_test() throws Exception {
         LogicalPlan logicalPlan =
                 com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
-                        "Call ldbc_ic2(10l, 20120112l)");
+                        "Call ldbc_ic2(10l, 20120112l)", "config/modern/graph.yaml");
         try (PhysicalBuilder ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
             PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
@@ -214,7 +219,7 @@ public class FfiLogicalPlanTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                        + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[1, 2, 3])]],"
+                        + " alias=[_], fusedFilter=[[SEARCH(_.age, Sarg[1, 2, 3])]],"
                         + " opt=[VERTEX])",
                 node.explain().trim());
         try (PhysicalBuilder ffiBuilder =
@@ -243,7 +248,7 @@ public class FfiLogicalPlanTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                        + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[[1..10]])]],"
+                        + " alias=[_], fusedFilter=[[SEARCH(_.age, Sarg[[1..10]])]],"
                         + " opt=[VERTEX])",
                 node.explain().trim());
         try (PhysicalBuilder ffiBuilder =
@@ -271,7 +276,7 @@ public class FfiLogicalPlanTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
+                        + " alias=[_], opt=[VERTEX], uniqueKeyFilters=[SEARCH(_.~id,"
                         + " Sarg[1, 2])])",
                 node.explain().trim());
         try (PhysicalBuilder ffiBuilder =

@@ -13,15 +13,15 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
-import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.servers.ir.IrServiceProducer;
 import com.alibaba.graphscope.groot.store.*;
@@ -29,7 +29,6 @@ import com.alibaba.graphscope.groot.store.backup.BackupAgent;
 import com.alibaba.graphscope.groot.store.backup.StoreBackupService;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogServiceFactory;
-import com.google.common.annotations.VisibleForTesting;
 
 import io.grpc.NameResolver;
 
@@ -37,18 +36,18 @@ import java.io.IOException;
 
 public class Store extends NodeBase {
 
-    private NodeDiscovery discovery;
-    private ChannelManager channelManager;
-    private MetaService metaService;
-    private StoreService storeService;
-    private WriterAgent writerAgent;
-    private BackupAgent backupAgent;
-    private RpcServer rpcServer;
-    private AbstractService executorService;
+    private final NodeDiscovery discovery;
+    private final ChannelManager channelManager;
+    private final MetaService metaService;
+    private final StoreService storeService;
+    private final WriterAgent writerAgent;
+    private final BackupAgent backupAgent;
+    private final RpcServer rpcServer;
+    private final AbstractService executorService;
 
-    private KafkaProcessor processor;
+    private final KafkaProcessor processor;
 
-    private PartitionService partitionService;
+    private final PartitionService partitionService;
 
     public Store(Configs configs) {
         super(configs);
@@ -59,35 +58,26 @@ public class Store extends NodeBase {
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
-        MetricsCollector metricsCollector = new MetricsCollector(configs);
-        this.storeService = new StoreService(configs, this.metaService, metricsCollector);
-        SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
-        MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
+        this.storeService = new StoreService(configs, this.metaService);
+        RoleClients<SnapshotCommitClient> snapshotCommitter =
+                new RoleClients<>(channelManager, RoleType.COORDINATOR, SnapshotCommitClient::new);
         LogService logService = LogServiceFactory.makeLogService(configs);
 
         this.writerAgent =
-                new WriterAgent(
-                        configs,
-                        this.storeService,
-                        this.metaService,
-                        snapshotCommitter,
-                        metricsCollector);
-        StoreWriteService storeWriteService = new StoreWriteService(this.writerAgent);
+                new WriterAgent(configs, this.storeService, this.metaService, snapshotCommitter);
         this.backupAgent = new BackupAgent(configs, this.storeService);
         StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);
-        StoreIngestService storeIngestService = new StoreIngestService(this.storeService);
+        FrontendStoreService storeIngestService = new FrontendStoreService(this.storeService);
         StoreSnapshotService storeSnapshotService = new StoreSnapshotService(this.storeService);
         this.rpcServer =
                 new RpcServer(
                         configs,
                         localNodeProvider,
-                        storeWriteService,
                         storeBackupService,
                         storeSchemaService,
                         storeIngestService,
-                        storeSnapshotService,
-                        metricsCollectService);
+                        storeSnapshotService);
         IrServiceProducer serviceProducer = new IrServiceProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);
@@ -103,7 +93,6 @@ public class Store extends NodeBase {
         } catch (IOException e) {
             throw new GrootException(e);
         }
-        this.writerAgent.init(0);
         this.writerAgent.start();
         this.backupAgent.start();
         try {
@@ -138,10 +127,5 @@ public class Store extends NodeBase {
         Store store = new Store(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(store);
         nodeLauncher.start();
-    }
-
-    @VisibleForTesting
-    public StoreService getStoreService() {
-        return storeService;
     }
 }

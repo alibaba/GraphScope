@@ -40,10 +40,10 @@ public class ExpandTest {
                                         new LabelConfig(false).addLabel("knows")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[DEFAULT],"
+                "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 expand.explain().trim());
     }
 
@@ -66,7 +66,7 @@ public class ExpandTest {
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[x],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 expand.explain().trim());
     }
 
@@ -75,7 +75,12 @@ public class ExpandTest {
     // SIMPLE).with('RESULT_OPT', ALL_V)
     @Test
     public void expand_3_test() {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -95,7 +100,7 @@ public class ExpandTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode pathExpand =
                 builder.source(
                                 new SourceConfig(
@@ -105,13 +110,13 @@ public class ExpandTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + " alias=[_], fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                        + " alias=[DEFAULT])\n"
+                        + " alias=[_])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 pathExpand.explain().trim());
     }
 
@@ -140,7 +145,7 @@ public class ExpandTest {
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
                         + " startAlias=[a], opt=[OUT])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 expand.explain().trim());
@@ -149,7 +154,12 @@ public class ExpandTest {
     // g.V().hasLabel("person").as("a").outE("knows").select("a").out("1..3", "knows")
     @Test
     public void expand_5_test() {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -163,7 +173,7 @@ public class ExpandTest {
                                         new LabelConfig(false).addLabel("person")))
                         .range(1, 3)
                         .startAlias("a")
-                        .build();
+                        .buildConfig();
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
@@ -178,13 +188,13 @@ public class ExpandTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[ARBITRARY], result_opt=[END_V],"
-                        + " alias=[DEFAULT], start_alias=[a])\n"
+                        + " alias=[_], start_alias=[a])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 expand.explain().trim());

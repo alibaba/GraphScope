@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.store.jna;
 
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
@@ -61,8 +62,10 @@ public class JnaGraphStore implements GraphPartition {
             Path walPath = Paths.get(walDir, "" + partitionId);
             builder.put(StoreConfig.STORE_WAL_DIR.getKey(), walPath.toString());
         }
-        if (!Files.isDirectory(secondPath)) {
-            Files.createDirectories(secondPath);
+        if (CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs)) {
+            if (!Files.isDirectory(secondPath)) {
+                Files.createDirectories(secondPath);
+            }
         }
         if (!Files.isDirectory(partitionPath)) {
             Files.createDirectories(partitionPath);

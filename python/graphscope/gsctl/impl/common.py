@@ -36,7 +36,7 @@ def connect_coordinator(coordinator_endpoint: str) -> ConnectionStatus:
         # coordinator connected, set the context
         if connection_status.status == "CONNECTED":
             context = Context(
-                solution=connection_status.solution,
+                flex=connection_status.solution,
                 coordinator_endpoint=coordinator_endpoint,
             )
             config = load_gs_config()

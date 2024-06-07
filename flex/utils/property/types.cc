@@ -20,6 +20,70 @@
 
 namespace gs {
 
+namespace config_parsing {
+
+std::string PrimitivePropertyTypeToString(PropertyType type) {
+  if (type == PropertyType::kInt32) {
+    return DT_SIGNED_INT32;
+  } else if (type == PropertyType::kUInt32) {
+    return DT_UNSIGNED_INT32;
+  } else if (type == PropertyType::kBool) {
+    return DT_BOOL;
+  } else if (type == PropertyType::kDate) {
+    return DT_DATE;
+  } else if (type == PropertyType::kDay) {
+    return DT_DAY;
+  } else if (type == PropertyType::kString) {
+    return DT_STRING;
+  } else if (type == PropertyType::kStringMap) {
+    return DT_STRINGMAP;
+  } else if (type == PropertyType::kEmpty) {
+    return "Empty";
+  } else if (type == PropertyType::kInt64) {
+    return DT_SIGNED_INT64;
+  } else if (type == PropertyType::kUInt64) {
+    return DT_UNSIGNED_INT64;
+  } else if (type == PropertyType::kFloat) {
+    return DT_FLOAT;
+  } else if (type == PropertyType::kDouble) {
+    return DT_DOUBLE;
+  } else {
+    return "Empty";
+  }
+}
+
+PropertyType StringToPrimitivePropertyType(const std::string& str) {
+  if (str == "int32" || str == "INT" || str == DT_SIGNED_INT32) {
+    return PropertyType::kInt32;
+  } else if (str == "uint32" || str == DT_UNSIGNED_INT32) {
+    return PropertyType::kUInt32;
+  } else if (str == "bool" || str == "BOOL" || str == DT_BOOL) {
+    return PropertyType::kBool;
+  } else if (str == "Date" || str == DT_DATE) {
+    return PropertyType::kDate;
+  } else if (str == "Day" || str == DT_DAY || str == "day") {
+    return PropertyType::kDay;
+  } else if (str == "String" || str == "STRING" || str == DT_STRING) {
+    // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);
+    return PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
+  } else if (str == DT_STRINGMAP) {
+    return PropertyType::kStringMap;
+  } else if (str == "Empty") {
+    return PropertyType::kEmpty;
+  } else if (str == "int64" || str == "LONG" || str == DT_SIGNED_INT64) {
+    return PropertyType::kInt64;
+  } else if (str == "uint64" || str == DT_UNSIGNED_INT64) {
+    return PropertyType::kUInt64;
+  } else if (str == "float" || str == "FLOAT" || str == DT_FLOAT) {
+    return PropertyType::kFloat;
+  } else if (str == "double" || str == "DOUBLE" || str == DT_DOUBLE) {
+    return PropertyType::kDouble;
+  } else {
+    return PropertyType::kEmpty;
+  }
+}
+}  // namespace config_parsing
+
 const PropertyType PropertyType::kEmpty =
     PropertyType(impl::PropertyTypeImpl::kEmpty);
 const PropertyType PropertyType::kBool =
@@ -48,6 +112,10 @@ const PropertyType PropertyType::kString =
     PropertyType(impl::PropertyTypeImpl::kString);
 const PropertyType PropertyType::kStringMap =
     PropertyType(impl::PropertyTypeImpl::kStringMap);
+const PropertyType PropertyType::kVertexGlobalId =
+    PropertyType(impl::PropertyTypeImpl::kVertexGlobalId);
+const PropertyType PropertyType::kLabel =
+    PropertyType(impl::PropertyTypeImpl::kLabel);
 
 bool PropertyType::operator==(const PropertyType& other) const {
   if (type_enum == impl::PropertyTypeImpl::kVarChar &&
@@ -120,6 +188,14 @@ PropertyType PropertyType::Varchar(uint16_t max_length) {
   return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
 }
 
+PropertyType PropertyType::VertexGlobalId() {
+  return PropertyType(impl::PropertyTypeImpl::kVertexGlobalId);
+}
+
+PropertyType PropertyType::Label() {
+  return PropertyType(impl::PropertyTypeImpl::kLabel);
+}
+
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value) {
   in_archive << value.type_enum;
@@ -164,6 +240,10 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << value.type << value.value.day.to_u32();
   } else if (value.type == PropertyType::String()) {
     in_archive << value.type << value.value.s;
+  } else if (value.type == PropertyType::VertexGlobalId()) {
+    in_archive << value.type << value.value.vertex_gid;
+  } else if (value.type == PropertyType::Label()) {
+    in_archive << value.type << value.value.label_key;
   } else {
     in_archive << PropertyType::kEmpty;
   }
@@ -202,6 +282,10 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     value.value.day.from_u32(val);
   } else if (value.type == PropertyType::String()) {
     out_archive >> value.value.s;
+  } else if (value.type == PropertyType::VertexGlobalId()) {
+    out_archive >> value.value.vertex_gid;
+  } else if (value.type == PropertyType::Label()) {
+    out_archive >> value.value.label_key;
   } else {
     value.type = PropertyType::kEmpty;
   }
@@ -224,6 +308,52 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
                          size);
   return out_archive;
 }
+
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const GlobalId& value) {
+  in_archive << value.global_id;
+  return in_archive;
+}
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, GlobalId& value) {
+  out_archive >> value.global_id;
+  return out_archive;
+}
+
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const LabelKey& value) {
+  in_archive << value.label_id;
+  return in_archive;
+}
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, LabelKey& value) {
+  out_archive >> value.label_id;
+  return out_archive;
+}
+
+GlobalId::label_id_t GlobalId::get_label_id(gid_t gid) {
+  return static_cast<label_id_t>(gid >> label_id_offset);
+}
+
+GlobalId::vid_t GlobalId::get_vid(gid_t gid) {
+  return static_cast<vid_t>(gid & vid_mask);
+}
+
+GlobalId::GlobalId() : global_id(0) {}
+
+GlobalId::GlobalId(label_id_t label_id, vid_t vid) {
+  global_id = (static_cast<uint64_t>(label_id) << label_id_offset) | vid;
+}
+
+GlobalId::GlobalId(gid_t gid) : global_id(gid) {}
+
+GlobalId::label_id_t GlobalId::label_id() const {
+  return static_cast<label_id_t>(global_id >> label_id_offset);
+}
+
+GlobalId::vid_t GlobalId::vid() const {
+  return static_cast<vid_t>(global_id & vid_mask);
+}
+
+std::string GlobalId::to_string() const { return std::to_string(global_id); }
 
 Date::Date(int64_t x) : milli_second(x) {}
 

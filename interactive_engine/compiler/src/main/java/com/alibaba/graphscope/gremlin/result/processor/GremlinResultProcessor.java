@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.result.processor;
 
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
@@ -33,11 +34,17 @@ public class GremlinResultProcessor extends AbstractResultProcessor {
     private static Logger logger = LoggerFactory.getLogger(GremlinResultProcessor.class);
 
     public GremlinResultProcessor(
+            Configs configs,
             Context writeResult,
             Traversal traversal,
             QueryStatusCallback statusCallback,
             QueryTimeoutConfig timeoutConfig) {
-        super(writeResult, GremlinResultAnalyzer.analyze(traversal), statusCallback, timeoutConfig);
+        super(
+                configs,
+                writeResult,
+                GremlinResultAnalyzer.analyze(traversal),
+                statusCallback,
+                timeoutConfig);
     }
 
     // format group result as a single map

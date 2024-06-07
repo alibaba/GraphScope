@@ -35,7 +35,12 @@ enum DedupProp {
 };
 
 static constexpr const char* DEDUP_OP_TEMPLATE_STR =
-    "auto %1%= Engine::template Dedup<%2%>(std::move(%3%));";
+    "auto %1%= Engine::template Dedup<%2%>(%3%, std::move(%4%), "
+    "std::tuple{%5%});";
+
+// we dedup on innerId, we should use global id.
+static constexpr const char* GLOBAL_ID_SELECTOR = "GlobalIdSelector()";
+static constexpr const char* Label_ID_SELECTOR = "LabelIdSelector()";
 
 class DedupOpBuilder {
  public:
@@ -43,10 +48,17 @@ class DedupOpBuilder {
 
   // dedup on kId
   DedupOpBuilder& dedup_on_inner_id(int32_t tag_id) {
-    // dedup_prop_ = "none";
-    // dedup_prop_type_ = DedupProp::kInnerId;
     int32_t real_tag_ind = ctx_.GetTagInd(tag_id);
     dedup_tag_ids_.emplace_back(real_tag_ind);
+    dedup_props_.emplace_back(GLOBAL_ID_SELECTOR);
+    return *this;
+  }
+
+  // dedup on kLabel
+  DedupOpBuilder& dedup_on_label(int32_t tag_id) {
+    int32_t real_tag_ind = ctx_.GetTagInd(tag_id);
+    dedup_tag_ids_.emplace_back(real_tag_ind);
+    dedup_props_.emplace_back(Label_ID_SELECTOR);
     return *this;
   }
 
@@ -66,13 +78,16 @@ class DedupOpBuilder {
       dedup_tag_ids_str = ss.str();
     }
     boost::format formater(DEDUP_OP_TEMPLATE_STR);
-    formater % next_ctx_name % dedup_tag_ids_str % prev_ctx_name;
+    auto dedup_prop_str = join_string(dedup_props_, ",");
+    formater % next_ctx_name % dedup_tag_ids_str % ctx_.GraphVar() %
+        prev_ctx_name % dedup_prop_str;
     return formater.str();
   }
 
  private:
   BuildingContext& ctx_;
   std::vector<int32_t> dedup_tag_ids_;
+  std::vector<std::string> dedup_props_;
 };
 
 static std::string BuildDedupOp(
@@ -83,13 +98,20 @@ static std::string BuildDedupOp(
   CHECK(keys.size() > 0) << "Dedup keys size should be gt 0";
 
   for (auto& key : keys) {
+    int32_t tag = -1;
+    if (key.has_tag()) {
+      tag = key.tag().id();
+    }
     if (key.has_property()) {
-      LOG(FATAL) << "dedup on property" << key.property().DebugString()
-                 << "not supported";
-      // dedup_builder.dedup_prop(key.property());
+      VLOG(10) << "dedup on property";
+      if (key.property().has_label()) {
+        dedup_builder.dedup_on_label(tag);
+      } else {
+        LOG(FATAL) << "Not support dedup on property: " << key.DebugString();
+      }
     } else {
-      VLOG(10) << "dedup on innerid";
-      dedup_builder.dedup_on_inner_id(key.tag().id());
+      VLOG(10) << "dedup on innerid: " << tag;
+      dedup_builder.dedup_on_inner_id(tag);
     }
   }
 

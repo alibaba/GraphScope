@@ -21,16 +21,19 @@ import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.AuthConfig;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.common.config.PlannerConfig;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
 import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
-import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
+import com.alibaba.graphscope.groot.frontend.SnapshotUpdateClient;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.servers.AbstractService;
 import com.alibaba.graphscope.groot.store.StoreService;
 
@@ -55,8 +58,12 @@ public class IrServiceProducer {
                 new RpcChannelManagerFetcher(channelManager, executorCount, RoleType.GAIA_RPC);
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
         logger.info("IR configs: {}", irConfigs);
-        IrMetaFetcher irMetaFetcher = new GrootMetaFetcher(schemaFetcher);
-        SnapshotUpdateCommitter updateCommitter = new SnapshotUpdateCommitter(channelManager);
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(irConfigs);
+        IrMetaFetcher irMetaFetcher =
+                new GrootMetaFetcher(
+                        new GrootIrMetaReader(schemaFetcher), optimizer.getGlogueHolder());
+        RoleClients<SnapshotUpdateClient> updateCommitter =
+                new RoleClients<>(channelManager, RoleType.COORDINATOR, SnapshotUpdateClient::new);
         int frontendId = CommonConfig.NODE_IDX.get(configs);
         FrontendQueryManager queryManager =
                 new FrontendQueryManager(irMetaFetcher, frontendId, updateCommitter);
@@ -64,7 +71,11 @@ public class IrServiceProducer {
         return new AbstractService() {
             private final GraphServer graphServer =
                     new GraphServer(
-                            irConfigs, channelFetcher, queryManager, TestGraphFactory.GROOT);
+                            irConfigs,
+                            channelFetcher,
+                            queryManager,
+                            TestGraphFactory.GROOT,
+                            optimizer);
 
             @Override
             public void start() {
@@ -119,6 +130,10 @@ public class IrServiceProducer {
         addToConfigMapIfExist(FrontendConfig.FRONTEND_SERVER_NUM.getKey(), configMap);
         // add frontend qps limit
         addToConfigMapIfExist(FrontendConfig.QUERY_PER_SECOND_LIMIT.getKey(), configMap);
+        // add graph planner configs
+        addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_IS_ON.getKey(), configMap);
+        addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_OPT.getKey(), configMap);
+        addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_RULES.getKey(), configMap);
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 

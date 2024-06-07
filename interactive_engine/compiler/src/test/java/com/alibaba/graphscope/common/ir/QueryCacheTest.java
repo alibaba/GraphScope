@@ -17,10 +17,11 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.collect.ImmutableMap;
@@ -38,13 +39,14 @@ public class QueryCacheTest {
                         configs,
                         (GraphBuilder builder, IrMeta irMeta, String q) ->
                                 new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)));
+                                        .visit(new CypherAntlr4Parser().parse(q)),
+                        new GraphRelOptimizer(configs));
         QueryCache cache = new QueryCache(configs, graphPlanner);
         QueryCache.Key key1 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
         Assert.assertEquals(
                 "GraphLogicalProject(n=[n], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[n], fusedFilter=[[=(DEFAULT.name, _UTF-8'ma')]], opt=[VERTEX])",
+                    + " alias=[n], fusedFilter=[[=(_.name, _UTF-8'ma')]], opt=[VERTEX])",
                 key1.logicalPlan.explain().trim());
         QueryCache.Key key2 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
         QueryCache.Key key3 = cache.createKey("Match (n {age: 10}) Return n", Utils.schemaMeta);
@@ -61,7 +63,8 @@ public class QueryCacheTest {
                         configs,
                         (GraphBuilder builder, IrMeta irMeta, String q) ->
                                 new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)));
+                                        .visit(new CypherAntlr4Parser().parse(q)),
+                        new GraphRelOptimizer(configs));
         QueryCache cache = new QueryCache(configs, graphPlanner);
         QueryCache.Key key1 = cache.createKey("Match (n {name: 'ma'}) Return n", Utils.schemaMeta);
         QueryCache.Key key2 = cache.createKey("Match (n {age: 10}) Return n", Utils.schemaMeta);

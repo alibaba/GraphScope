@@ -61,8 +61,11 @@ class InteractiveInstanceManager(object):
 
 
 class LearningInstanceManager(object):
-    def __init__(self, object_id):
-        self.type = "gle_manager"
+    def __init__(self, object_id, learning_backend):
+        if learning_backend == 0:
+            self.type = "gle_manager"
+        else:
+            self.type = "glt_manager"
         self.object_id = object_id
 
 

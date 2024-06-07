@@ -84,6 +84,7 @@ public class LogRecycler {
         List<Long> queueOffsets = this.snapshotManager.getQueueOffsets();
         for (int i = 0; i < queueOffsets.size(); i++) {
             long offset = queueOffsets.get(i);
+            offset = Math.max(offset - 3600, 0); // Leave some spaces
             try {
                 logService.deleteBeforeOffset(i, offset);
                 logger.info("recycled queue [{}] offset [{}]", i, offset);

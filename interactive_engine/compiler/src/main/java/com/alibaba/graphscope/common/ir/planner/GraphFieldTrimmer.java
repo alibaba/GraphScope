@@ -450,6 +450,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
                         pathExpand.getFetch(),
                         pathExpand.getResultOpt(),
                         pathExpand.getPathOpt(),
+                        pathExpand.getUntilCondition(),
                         pathExpand.getAliasName(),
                         pathExpand.getStartAlias());
         return result(newPathExpand, mapping, pathExpand);
@@ -550,7 +551,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
             SourceConfig config =
                     new SourceConfig(source.getOpt(), labelConfig, source.getAliasName());
             RelNode newSource = graphBuilder.source(config).build();
-            ((AbstractBindableTableScan) newSource).setRowType((GraphSchemaType) field.getType());
+            ((AbstractBindableTableScan) newSource)
+                    .setSchemaType((GraphSchemaType) field.getType());
             return result(newSource, mapping, source);
 
         } else if (tableScan instanceof GraphLogicalExpand) {
@@ -561,7 +563,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
             ExpandConfig config =
                     new ExpandConfig(expand.getOpt(), labelConfig, expand.getAliasName());
             RelNode newExpand = graphBuilder.push(newInput).expand(config).build();
-            ((AbstractBindableTableScan) newExpand).setRowType((GraphSchemaType) field.getType());
+            ((AbstractBindableTableScan) newExpand)
+                    .setSchemaType((GraphSchemaType) field.getType());
             return result(newExpand, mapping, expand);
 
         } else if (tableScan instanceof GraphLogicalGetV) {
@@ -571,7 +574,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
             RelNode newInput = result.left;
             GetVConfig config = new GetVConfig(getV.getOpt(), labelConfig, getV.getAliasName());
             RelNode newGetV = graphBuilder.push(newInput).getV(config).build();
-            ((AbstractBindableTableScan) newGetV).setRowType((GraphSchemaType) field.getType());
+            ((AbstractBindableTableScan) newGetV).setSchemaType((GraphSchemaType) field.getType());
             return result(newGetV, mapping, getV);
         }
 

@@ -19,6 +19,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::config::BlockMode;
 use crate::receive::start_net_receiver;
 use crate::send::start_net_sender;
 use crate::transport::ConnectionParams;
@@ -55,6 +56,14 @@ pub fn listen_on<A: ToSocketAddrs>(
                                     let remote = Server { id: remote_id, addr };
                                     if params.is_nonblocking {
                                         stream.set_nonblocking(true).ok();
+                                    } else {
+                                        if let BlockMode::Blocking(Some(write_timelout)) =
+                                            params.get_write_params().mode
+                                        {
+                                            stream
+                                                .set_write_timeout(Some(write_timelout))
+                                                .ok();
+                                        }
                                     }
                                     let recv_poisoned = Arc::new(AtomicBool::new(false));
                                     start_net_sender(
@@ -107,13 +116,16 @@ pub fn listen_on<A: ToSocketAddrs>(
 ///
 /// 如果参数中的`server_id` 大于等于当前服务的id，并不会发起连接，返回`Ok(())`;
 ///
-pub fn connect<A: ToSocketAddrs>(
-    local_id: u64, remote_id: u64, params: ConnectionParams, addr: A,
+pub fn connect(
+    local_id: u64, remote_id: u64, params: ConnectionParams, addr: SocketAddr,
 ) -> Result<(), NetError> {
     // 连接请求可能会失败， 或许由于对端服务器未启动端口监听，调用方需要根据返回内容确定是否重试;
-    let mut conn = TcpStream::connect(addr)?;
+    info!("Try to connect to server {:?}", addr);
+    let timeout = std::time::Duration::from_secs(10);
+    let mut conn = TcpStream::connect_timeout(&addr, timeout)?;
+    // let mut conn = TcpStream::connect(addr)?;
     let addr = conn.peer_addr()?;
-    debug!("connect to server {:?};", addr);
+    info!("connect to server {:?};", addr);
     let hb_sec = params.get_hb_interval_sec();
     super::setup_connection(local_id, hb_sec, &mut conn)?;
     info!("setup connection to {:?} success;", addr);
@@ -124,6 +136,11 @@ pub fn connect<A: ToSocketAddrs>(
                 let remote = Server { id: remote_id, addr };
                 if params.is_nonblocking {
                     conn.set_nonblocking(true).ok();
+                } else {
+                    if let BlockMode::Blocking(Some(write_timelout)) = params.get_write_params().mode {
+                        conn.set_write_timeout(Some(write_timelout))
+                            .ok();
+                    }
                 }
                 let read_half = conn
                     .try_clone()

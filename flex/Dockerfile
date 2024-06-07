@@ -1,47 +1,54 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 ARG CI=false
 
 # change bash as default
 SHELL ["/bin/bash", "-c"]
 
-
-RUN apt-get update && apt-get -y install locales && locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-
+ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# install dependencies
-RUN apt-get update && apt-get install -y vim wget \
-      git g++ libgoogle-glog-dev cmake libopenmpi-dev default-jdk \
-      libboost-all-dev
-RUN apt-get install -y maven openssl \
-      gcc make python3 libyaml-cpp-dev \
-      libc-ares-dev doxygen python3-pip net-tools curl libncurses5-dev
+# g++ + jre 500MB
+RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless && \
+    locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/* 
+
+
+RUN apt-get update && apt-get install -y protobuf-compiler libprotobuf-dev maven git vim curl \
+    wget python3 make libc-ares-dev doxygen python3-pip net-tools curl default-jdk nlohmann-json3-dev \
+    libgoogle-glog-dev libopenmpi-dev libboost-all-dev libyaml-cpp-dev libcrypto++-dev openssl libcurl4-openssl-dev && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # install libgrape-lite
 RUN cd /tmp && \
     git clone https://github.com/alibaba/libgrape-lite.git -b v0.3.2 --single-branch && cd libgrape-lite && \
-    mkdir build && cd build && cmake .. && make -j && make install && rm -rf /tmp/libgrape-lite
+    mkdir build && cd build && cmake .. -DBUILD_LIBGRAPELITE_TESTS=OFF && make -j && make install && rm -rf /tmp/libgrape-lite
 
+RUN apt-get update && apt-get -y install pkg-config ninja-build xfslibs-dev ragel libpciaccess-dev libxml2-dev libgnutls28-dev liblz4-dev libsctp-dev systemtap-sdt-dev stow libfmt-dev valgrind && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/* 
+
+# install hiactor
 RUN cd /tmp && git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --single-branch && cd hiactor && \
     git submodule update --init --recursive && ./seastar/seastar/install-dependencies.sh && mkdir build && cd build && \
     cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" .. && \
     make -j && make install && rm -rf /tmp/hiactor
 
-#install protobuf
-RUN apt-get install -y protobuf-compiler libprotobuf-dev
-
-#install arrow
-RUN cd /tmp && apt-get install -y -V ca-certificates lsb-release wget && \
+# install arrow
+RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget libcurl4-openssl-dev && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
-    apt-get install -y ./apache-arrow-apt-source-latest.deb && \
-    apt-get update && apt-get install -y libarrow-dev=8.0.0-1
-    
-RUN apt-get install -y sudo
+    sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
+    sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
+
+# install opentelemetry
+RUN cd /tmp && git clone https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
+    cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
+    -DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
+    -DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
+    -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && make -j  && make install && rm -rf /tmp/opentelemetry-cpp
 
 # Add graphscope user with user id 1001
 RUN useradd -m graphscope -u 1001 && \
@@ -50,7 +57,6 @@ RUN useradd -m graphscope -u 1001 && \
 # Change to graphscope user
 USER graphscope
 WORKDIR /home/graphscope
-
 # set HOME
 ENV HOME /home/graphscope
 

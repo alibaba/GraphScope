@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.FetchSchemaRequest;
 import com.alibaba.graphscope.proto.groot.FetchSchemaResponse;
@@ -22,22 +23,21 @@ import com.alibaba.graphscope.proto.groot.StoreSchemaGrpc;
 import io.grpc.ManagedChannel;
 
 public class StoreSchemaClient extends RpcClient {
-
-    private final StoreSchemaGrpc.StoreSchemaBlockingStub stub;
-
-    public StoreSchemaClient(ManagedChannel channel) {
+    public StoreSchemaClient(RpcChannel channel) {
         super(channel);
-        this.stub = StoreSchemaGrpc.newBlockingStub(channel);
     }
 
     public StoreSchemaClient(StoreSchemaGrpc.StoreSchemaBlockingStub stub) {
         super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
+    }
+
+    private StoreSchemaGrpc.StoreSchemaBlockingStub getStub() {
+        return StoreSchemaGrpc.newBlockingStub(rpcChannel.getChannel());
     }
 
     public GraphDef fetchSchema() {
-        FetchSchemaResponse response =
-                this.stub.fetchSchema(FetchSchemaRequest.newBuilder().build());
+        StoreSchemaGrpc.StoreSchemaBlockingStub stub = getStub();
+        FetchSchemaResponse response = stub.fetchSchema(FetchSchemaRequest.newBuilder().build());
         return GraphDef.parseProto(response.getGraphDef());
     }
 }

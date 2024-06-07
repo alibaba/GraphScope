@@ -27,13 +27,13 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
+import com.alibaba.graphscope.gremlin.antlr4x.visitor.LiteralList;
+import com.alibaba.graphscope.gremlin.antlr4x.visitor.LiteralVisitor;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.TextP;
-
-import java.util.Collection;
 
 public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
     private static TraversalPredicateVisitor instance;
@@ -84,10 +84,7 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      */
     private Object getSingleGenericLiteralArgument(final ParseTree ctx) {
         final int childIndexOfParameterValue = 2;
-        return GenericLiteralVisitor.getInstance()
-                .visitGenericLiteral(
-                        (GremlinGSParser.GenericLiteralContext)
-                                ctx.getChild(childIndexOfParameterValue));
+        return LiteralVisitor.INSTANCE.visit(ctx.getChild(childIndexOfParameterValue));
     }
 
     /**
@@ -175,17 +172,9 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      */
     @Override
     public P visitTraversalPredicate_within(GremlinGSParser.TraversalPredicate_withinContext ctx) {
-        if (ctx.genericLiteralList() != null) {
-            Object args = GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList());
-            P within;
-            if (args instanceof Object[]) {
-                within = P.within((Object[]) args);
-            } else if (args instanceof Collection) {
-                within = P.within((Collection) args);
-            } else {
-                within = P.within(args);
-            }
-            return within;
+        LiteralList literalList = new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression());
+        if (!literalList.isEmpty()) {
+            return P.within(literalList.toList(Object.class));
         } else {
             throw new UnsupportedEvalException(
                     ctx.getClass(), "supported pattern is [within('a')] or [within('a', 'b')]");
@@ -198,17 +187,9 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
     @Override
     public P visitTraversalPredicate_without(
             GremlinGSParser.TraversalPredicate_withoutContext ctx) {
-        if (ctx.genericLiteralList() != null) {
-            Object args = GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList());
-            P without;
-            if (args instanceof Object[]) {
-                without = P.without((Object[]) args);
-            } else if (args instanceof Collection) {
-                without = P.without((Collection) args);
-            } else {
-                without = P.without(args);
-            }
-            return without;
+        LiteralList literalList = new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression());
+        if (!literalList.isEmpty()) {
+            return P.without(literalList.toList(Object.class));
         } else {
             throw new UnsupportedEvalException(
                     ctx.getClass(), "supported pattern is [without('a')] or [without('a', 'b')]");
@@ -218,37 +199,37 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
     @Override
     public P visitTraversalPredicate_containing(
             final GremlinGSParser.TraversalPredicate_containingContext ctx) {
-        return TextP.containing(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        return TextP.containing((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
     }
 
     @Override
     public P visitTraversalPredicate_notContaining(
             final GremlinGSParser.TraversalPredicate_notContainingContext ctx) {
-        return TextP.notContaining(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        return TextP.notContaining((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
     }
 
     @Override
     public P visitTraversalPredicate_startingWith(
             final GremlinGSParser.TraversalPredicate_startingWithContext ctx) {
-        return TextP.startingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        return TextP.startingWith((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
     }
 
     @Override
     public P visitTraversalPredicate_notStartingWith(
             final GremlinGSParser.TraversalPredicate_notStartingWithContext ctx) {
-        return TextP.notStartingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        return TextP.notStartingWith((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
     }
 
     @Override
     public P visitTraversalPredicate_endingWith(
             final GremlinGSParser.TraversalPredicate_endingWithContext ctx) {
-        return TextP.endingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        return TextP.endingWith((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
     }
 
     @Override
     public P visitTraversalPredicate_notEndingWith(
             final GremlinGSParser.TraversalPredicate_notEndingWithContext ctx) {
-        return TextP.notEndingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        return TextP.notEndingWith((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
     }
 
     /**
@@ -258,18 +239,10 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
     private Object[] getDoubleGenericLiteralArgument(ParseTree ctx) {
         final int childIndexOfParameterFirst = 2;
         final int childIndexOfParameterSecond = 4;
-
         final Object first =
-                GenericLiteralVisitor.getInstance()
-                        .visitGenericLiteral(
-                                (GremlinGSParser.GenericLiteralContext)
-                                        ctx.getChild(childIndexOfParameterFirst));
+                LiteralVisitor.INSTANCE.visit(ctx.getChild(childIndexOfParameterFirst));
         final Object second =
-                GenericLiteralVisitor.getInstance()
-                        .visitGenericLiteral(
-                                (GremlinGSParser.GenericLiteralContext)
-                                        ctx.getChild(childIndexOfParameterSecond));
-
+                LiteralVisitor.INSTANCE.visit(ctx.getChild(childIndexOfParameterSecond));
         return new Object[] {first, second};
     }
 }

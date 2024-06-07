@@ -55,6 +55,8 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
                                 schemaType.getFieldList(),
                                 nullable);
             }
+        } else if (type instanceof GraphPathType) {
+            newType = new GraphPathType(((GraphPathType) type).getComponentType(), nullable);
         } else {
             newType = super.createTypeWithNullability(type, nullable);
         }

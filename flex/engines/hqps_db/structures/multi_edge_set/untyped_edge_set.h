@@ -74,11 +74,53 @@ class UnTypedEdgeSetIter {
 
   inline LabelT GetEdgeLabel() const { return cur_iter_.GetEdgeLabel(); }
 
-  inline VID_T GetSrc() const { return src_vertices_[vid_ind_]; }
-  inline VID_T GetDst() const { return cur_iter_.GetDstId(); }
+  inline VID_T GetSrc() const {
+    auto dir = get_cur_direction();
+    if (dir == Direction::Out) {
+      return src_vertices_[vid_ind_];
+    } else if (dir == Direction::In) {
+      return cur_iter_.GetDstId();
+    } else {
+      LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
+    }
+  }
 
-  inline label_t GetDstLabel() const { return cur_iter_.GetDstLabel(); }
-  inline label_t GetSrcLabel() const { return cur_iter_.GetSrcLabel(); }
+  inline VID_T GetDst() const {
+    auto dir = get_cur_direction();
+    if (dir == Direction::Out) {
+      return cur_iter_.GetDstId();
+    } else if (dir == Direction::In) {
+      return src_vertices_[vid_ind_];
+    } else {
+      LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
+    }
+  }
+
+  inline label_t GetDstLabel() const {
+    auto dir = get_cur_direction();
+    if (dir == Direction::Out) {
+      return cur_iter_.GetDstLabel();
+    } else if (dir == Direction::In) {
+      return cur_iter_.GetSrcLabel();
+    } else {
+      LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
+    }
+  }
+
+  inline label_t GetSrcLabel() const {
+    auto dir = get_cur_direction();
+    if (dir == Direction::Out) {
+      return cur_iter_.GetSrcLabel();
+    } else if (dir == Direction::In) {
+      return cur_iter_.GetDstLabel();
+    } else {
+      LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
+    }
+  }
+
+  inline label_t GetOtherLabel() const { return cur_iter_.GetDstLabel(); }
+
+  inline VID_T GetOther() const { return cur_iter_.GetDstId(); }
 
   inline Any GetData() const { return cur_iter_.GetData(); }
   inline const std::vector<std::string>& GetPropNames() const {
@@ -123,6 +165,9 @@ class UnTypedEdgeSetIter {
   inline const self_type_t* operator->() const { return this; }
 
  private:
+  inline Direction get_cur_direction() const {
+    return cur_iter_.GetDirection();
+  }
   // try to find next valid edge
   inline void probe_for_next() {
     // assume cur_iter_ is invalid
@@ -146,7 +191,6 @@ class UnTypedEdgeSetIter {
       iter_ind_ = 0;
     }
   }
-
   const std::vector<vid_t>& src_vertices_;
   std::vector<std::vector<edge_iter_t>> adj_lists_;
   size_t vid_ind_, iter_ind_;
@@ -168,8 +212,9 @@ class UnTypedEdgeSet {
   using index_ele_tuple_t = typename iterator::index_ele_tuple_t;
   using ele_tuple_t = typename iterator::ele_tuple_t;
   using self_type_t = UnTypedEdgeSet<vid_t, label_t, sub_graph_t>;
-  using flat_t = UnTypedEdgeSet;
+  using flat_t = FlatEdgeSet<vid_t, label_t, Any>;
   using data_tuple_t = std::tuple<vid_t, vid_t, Any>;
+  using builder_t = FlatEdgeSetBuilder<vid_t, label_t, Any>;
 
   static constexpr bool is_edge_set = true;
 
@@ -201,9 +246,25 @@ class UnTypedEdgeSet {
                     src_vertices_.size());
   }
 
+  builder_t CreateBuilder() const {
+    auto triplet = get_edge_triplets();
+    std::vector<std::array<LabelT, 3>> edge_triplets;
+    for (size_t i = 0; i < triplet.size(); ++i) {
+      auto& cur_triplets_vec = triplet[i];
+      for (size_t j = 0; j < cur_triplets_vec.size(); ++j) {
+        edge_triplets.emplace_back(std::array{
+            std::get<0>(cur_triplets_vec[j]), std::get<1>(cur_triplets_vec[j]),
+            std::get<2>(cur_triplets_vec[j])});
+      }
+    }
+    return builder_t(edge_triplets, get_prop_names(),
+                     get_label_triplet_indices(), get_directions());
+  }
+
   std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     res.reserve(Size());
+    auto edge_iters = generate_iters();
     VLOG(1) << "GetLabelVec for UntypedEdgeSet, size: " << Size();
     for (size_t i = 0; i < src_vertices_.size(); ++i) {
       auto label_ind = label_indices_[i];
@@ -216,6 +277,123 @@ class UnTypedEdgeSet {
           for (size_t j = 0; j < edge_iters.Size(); ++j) {
             res.emplace_back(edge_label);
           }
+        }
+      }
+    }
+    return res;
+  }
+
+  template <size_t col_ind, typename... index_ele_tuple_t_>
+  flat_t Flat(
+      std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
+    using res_ele_tuple_t = std::tuple<vid_t, vid_t, Any>;
+    std::vector<res_ele_tuple_t> dst_eles;
+    dst_eles.reserve(index_ele_tuple.size());
+    auto edge_label_triplets = get_edge_triplets();
+    auto edge_iters = generate_iters();
+    std::vector<uint8_t> label_triplet_indices;
+    label_triplet_indices.reserve(index_ele_tuple.size());
+    std::vector<size_t> sizes;
+    sizes.emplace_back(0);
+    for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
+      sizes.emplace_back(sizes.back() + edge_label_triplets[i].size());
+    }
+
+    std::vector<size_t> selected_indices;
+    selected_indices.reserve(index_ele_tuple.size());
+    for (auto& t : index_ele_tuple) {
+      auto& cur_tuple = std::get<col_ind>(t);
+      CHECK(std::get<0>(cur_tuple) < Size());
+      selected_indices.emplace_back(std::get<0>(cur_tuple));
+    }
+    sort(selected_indices.begin(), selected_indices.end());
+
+    // 0,2,4
+    size_t cur_ind = 0;
+    size_t selected_ind = 0;
+    for (size_t i = 0; i < src_vertices_.size(); ++i) {
+      auto src_vid = src_vertices_[i];
+      auto& cur_edge_iters = edge_iters[i];
+      auto src_label_ind = label_indices_[i];
+      auto src_label = src_labels_[src_label_ind];
+
+      for (size_t j = 0; j < cur_edge_iters.size(); ++j) {
+        auto& cur_iter = cur_edge_iters[j];
+        while (cur_iter.IsValid()) {
+          if (cur_ind == selected_indices[selected_ind]) {
+            auto dst_vid = cur_iter.GetDstId();
+            auto data = cur_iter.GetData();
+            dst_eles.emplace_back(std::make_tuple(src_vid, dst_vid, data));
+            label_triplet_indices.emplace_back(sizes[src_label_ind] + j);
+            selected_ind += 1;
+            if (selected_ind == selected_indices.size()) {
+              break;
+            }
+          }
+          cur_iter.Next();
+          cur_ind += 1;
+        }
+        if (selected_ind == selected_indices.size()) {
+          break;
+        }
+      }
+    }
+    std::vector<std::array<LabelT, 3>> res_label_triplets;
+    // put edge_label_triplets into res_label_triplets
+    for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
+      auto& cur_triplets_vec = edge_label_triplets[i];
+      for (size_t j = 0; j < cur_triplets_vec.size(); ++j) {
+        res_label_triplets.emplace_back(std::array{
+            std::get<0>(cur_triplets_vec[j]), std::get<1>(cur_triplets_vec[j]),
+            std::get<2>(cur_triplets_vec[j])});
+      }
+    }
+    std::vector<std::vector<std::string>> prop_names = get_prop_names();
+    CHECK(prop_names.size() == res_label_triplets.size());
+    auto directions = get_directions();
+    return FlatEdgeSet<vid_t, label_t, Any>(
+        std::move(dst_eles), std::move(res_label_triplets), prop_names,
+        std::move(label_triplet_indices), std::move(directions));
+  }
+
+  std::vector<Direction> get_directions() const {
+    std::vector<Direction> res;
+    auto edge_triplet = get_edge_triplets();
+    for (auto src_label_ind = 0; src_label_ind < src_labels_.size();
+         ++src_label_ind) {
+      auto src_label = src_labels_[src_label_ind];
+      std::vector<std::tuple<LabelT, LabelT, LabelT, Direction>> tmp;
+      if (adj_lists_.find(src_label) != adj_lists_.end()) {
+        auto& sub_graphs = adj_lists_.at(src_label);
+        for (auto& sub_graph : sub_graphs) {
+          res.emplace_back(sub_graph.GetDirection());
+        }
+      }
+    }
+    return res;
+  }
+
+  std::vector<uint8_t> get_label_triplet_indices() const {
+    std::vector<uint8_t> res;
+    auto edge_label_triplets = get_edge_triplets();
+    res.reserve(Size());
+    std::vector<size_t> sizes;
+    sizes.emplace_back(0);
+    auto edge_iters = generate_iters();
+    for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
+      sizes.emplace_back(sizes.back() + edge_label_triplets[i].size());
+    }
+    for (size_t i = 0; i < src_vertices_.size(); ++i) {
+      auto src_vid = src_vertices_[i];
+      auto& cur_edge_iters = edge_iters[i];
+      auto src_label_ind = label_indices_[i];
+      auto src_label = src_labels_[src_label_ind];
+
+      for (size_t j = 0; j < cur_edge_iters.size(); ++j) {
+        auto& cur_iter = cur_edge_iters[j];
+        while (cur_iter.IsValid()) {
+          res.emplace_back(sizes[src_label_ind] + j);
+          cur_iter.Next();
         }
       }
     }
@@ -252,7 +430,7 @@ class UnTypedEdgeSet {
     size_t cur_ind = 0;
     while (iter != end_iter) {
       auto edata = iter.GetData();
-      PropT prop;
+      PropT prop{};
       if (edata.type == TypeConverter<PropT>::property_type()) {
         ConvertAny<PropT>::to(edata, prop);
       }
@@ -283,7 +461,6 @@ class UnTypedEdgeSet {
       if (v_labels_vec.empty()) {
         v_labels_vec = src_labels_;
       }
-      return getSrcVertices(v_labels_vec);
     } else if ((v_opt == VOpt::Start && direction_ == Direction::In) ||
                (v_opt == VOpt::End && direction_ == Direction::Out) ||
                (v_opt == VOpt::Other)) {
@@ -292,55 +469,57 @@ class UnTypedEdgeSet {
         v_labels_vec =
             std::vector<label_t>(dst_label_set.begin(), dst_label_set.end());
       }
-      return getDstVertices(v_labels_vec);
     } else {
       LOG(FATAL) << "Not supported for " << gs::to_string(v_opt);
     }
+    return getVerticesImpl(v_labels_vec, v_opt);
   }
+
+  // std::pair<GeneralVertexSet<vid_t, label_t, grape::EmptyType>,
+  //           std::vector<offset_t>>
+  // getSrcVertices(const std::vector<label_t>& req_labels) const {
+  //   VLOG(10) << "getSrcVertices for UntypedEdgeSet";
+  //   std::vector<vid_t> ret;
+  //   std::vector<offset_t> offset;
+  //   ret.reserve(Size());
+  //   offset.reserve(Size());
+  //   std::vector<label_t> res_label_vec;
+  //   std::unordered_map<label_t, size_t> label_to_ind;
+  //   std::tie(res_label_vec, label_to_ind) =
+  //       preprocess_getting_labels(req_labels);
+
+  //   std::vector<grape::Bitset> bitsets(res_label_vec.size());
+  //   for (size_t i = 0; i < bitsets.size(); ++i) {
+  //     bitsets[i].init(Size());
+  //   }
+  //   size_t cur_cnt = 0;
+  //   for (auto iter : *this) {
+  //     offset.emplace_back(cur_cnt);
+  //     auto label = iter.GetSrcLabel();
+  //     if (label_to_ind.find(label) != label_to_ind.end()) {
+  //       auto ind = label_to_ind[label];
+  //       auto vid = iter.GetSrc();
+  //       ret.emplace_back(vid);
+  //       CHECK(ind < res_label_vec.size());
+  //       bitsets[ind].set_bit(cur_cnt);
+  //       cur_cnt += 1;
+  //     }
+  //   }
+  //   CHECK(cur_cnt <= Size());
+  //   offset.emplace_back(cur_cnt);
+  //   for (size_t i = 0; i < bitsets.size(); ++i) {
+  //     bitsets[i].resize(cur_cnt);
+  //   }
+  //   LOG(INFO) << "After resize from " << Size() << " to " << cur_cnt;
+  //   auto general_set =
+  //       make_general_set(std::move(ret), res_label_vec, std::move(bitsets));
+  //   return std::make_pair(std::move(general_set), std::move(offset));
+  // }
 
   std::pair<GeneralVertexSet<vid_t, label_t, grape::EmptyType>,
             std::vector<offset_t>>
-  getSrcVertices(const std::vector<label_t>& req_labels) const {
-    std::vector<vid_t> ret;
-    std::vector<offset_t> offset;
-    ret.reserve(Size());
-    offset.reserve(Size());
-    std::vector<label_t> res_label_vec;
-    std::unordered_map<label_t, size_t> label_to_ind;
-    std::tie(res_label_vec, label_to_ind) =
-        preprocess_getting_labels(req_labels, src_labels_);
-
-    std::vector<grape::Bitset> bitsets(res_label_vec.size());
-    for (size_t i = 0; i < bitsets.size(); ++i) {
-      bitsets[i].init(Size());
-    }
-    size_t cur_cnt = 0;
-    for (auto iter : *this) {
-      offset.emplace_back(cur_cnt);
-      auto label = iter.GetSrcLabel();
-      if (label_to_ind.find(label) != label_to_ind.end()) {
-        auto ind = label_to_ind[label];
-        auto vid = iter.GetSrc();
-        ret.emplace_back(vid);
-        CHECK(ind < res_label_vec.size());
-        bitsets[ind].set_bit(cur_cnt);
-        cur_cnt += 1;
-      }
-    }
-    CHECK(cur_cnt <= Size());
-    offset.emplace_back(cur_cnt);
-    for (size_t i = 0; i < bitsets.size(); ++i) {
-      bitsets[i].resize(cur_cnt);
-    }
-    LOG(INFO) << "After resize from " << Size() << " to " << cur_cnt;
-    auto general_set =
-        make_general_set(std::move(ret), res_label_vec, std::move(bitsets));
-    return std::make_pair(std::move(general_set), std::move(offset));
-  }
-
-  std::pair<GeneralVertexSet<vid_t, label_t, grape::EmptyType>,
-            std::vector<offset_t>>
-  getDstVertices(const std::vector<label_t>& req_labels) const {
+  getVerticesImpl(const std::vector<label_t>& req_labels, VOpt vopt) const {
+    VLOG(10) << "getVerticesImpl for UntypedEdgeSet: " << gs::to_string(vopt);
     std::vector<vid_t> ret;
     std::vector<offset_t> offset;
     ret.reserve(Size());
@@ -349,15 +528,14 @@ class UnTypedEdgeSet {
     std::unordered_map<label_t, size_t> label_to_ind;
 
     label_t max_label_id = 0;
-    std::vector<label_t> all_cur_labels;
+    std::tie(res_label_vec, label_to_ind) =
+        preprocess_getting_labels(req_labels);
     {
-      auto dst_label_set = get_dst_label_set();
-      for (auto iter : dst_label_set) {
-        all_cur_labels.emplace_back(iter);
+      VLOG(10) << "res label size: " << res_label_vec.size();
+      for (auto l : res_label_vec) {
+        VLOG(10) << "res label: " << gs::to_string(l);
       }
     }
-    std::tie(res_label_vec, label_to_ind) =
-        preprocess_getting_labels(req_labels, all_cur_labels);
 
     std::vector<grape::Bitset> bitsets(res_label_vec.size());
     for (size_t i = 0; i < bitsets.size(); ++i) {
@@ -376,14 +554,32 @@ class UnTypedEdgeSet {
     size_t cur_cnt = 0;
     for (auto iter : *this) {
       offset.emplace_back(cur_cnt);
-      auto label = iter.GetDstLabel();
+      VLOG(10) << "edge: " << iter.GetSrc() << "("
+               << gs::to_string(iter.GetSrcLabel()) << ") -> " << iter.GetDst()
+               << "(" << gs::to_string(iter.GetDstLabel());
+
+      label_t label;
+      vid_t vid;
+      if (vopt == VOpt::Start) {
+        label = iter.GetSrcLabel();
+        vid = iter.GetSrc();
+      } else if (vopt == VOpt::End) {
+        label = iter.GetDstLabel();
+        vid = iter.GetDst();
+      } else if (vopt == VOpt::Other) {
+        label = iter.GetOtherLabel();
+        vid = iter.GetOther();
+      } else {
+        LOG(FATAL) << "Not supported for " << gs::to_string(vopt);
+      }
       auto ind = label_to_ind_vec[label];
       if (ind != -1) {
         auto ind = label_to_ind[label];
-        auto vid = iter.GetDst();
         ret.emplace_back(vid);
         bitsets[ind].set_bit(cur_cnt);
         cur_cnt += 1;
+      } else {
+        VLOG(10) << "Skip edge with label " << gs::to_string(label);
       }
     }
     CHECK(cur_cnt <= Size());
@@ -452,27 +648,29 @@ class UnTypedEdgeSet {
     for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
       auto& cur_triplets_vec = edge_label_triplets[i];
       for (size_t j = 0; j < cur_triplets_vec.size(); ++j) {
-        res_label_triplets.emplace_back(cur_triplets_vec[j]);
+        res_label_triplets.emplace_back(std::array{
+            std::get<0>(cur_triplets_vec[j]), std::get<1>(cur_triplets_vec[j]),
+            std::get<2>(cur_triplets_vec[j])});
       }
     }
     std::vector<std::vector<std::string>> prop_names = get_prop_names();
     CHECK(prop_names.size() == res_label_triplets.size());
+
+    auto directions = get_directions();
     return FlatEdgeSet<vid_t, label_t, Any>(
         std::move(dst_eles), std::move(res_label_triplets), prop_names,
-        std::move(label_triplet_indices), direction_);
+        std::move(label_triplet_indices), std::move(directions));
   }
 
  private:
   std::pair<std::vector<label_t>, std::unordered_map<label_t, size_t>>
-  preprocess_getting_labels(const std::vector<label_t>& req_labels,
-                            const std::vector<label_t>& all_cur_labels) const {
+  preprocess_getting_labels(const std::vector<label_t>& req_labels) const {
     std::unordered_map<label_t, size_t> label_to_ind;
     std::vector<label_t> res_label_vec;
-    for (size_t i = 0; i < all_cur_labels.size(); ++i) {
-      if (std::find(req_labels.begin(), req_labels.end(), all_cur_labels[i]) !=
-          req_labels.end()) {
-        res_label_vec.emplace_back(all_cur_labels[i]);
-        label_to_ind[all_cur_labels[i]] = res_label_vec.size() - 1;
+    for (size_t i = 0; i < req_labels.size(); ++i) {
+      if (label_to_ind.find(req_labels[i]) == label_to_ind.end()) {
+        label_to_ind[req_labels[i]] = res_label_vec.size();
+        res_label_vec.emplace_back(req_labels[i]);
       }
     }
     return std::make_pair(std::move(res_label_vec), std::move(label_to_ind));
@@ -515,18 +713,19 @@ class UnTypedEdgeSet {
     return edge_iter_vecs;
   }
 
-  std::vector<std::vector<std::array<LabelT, 3>>> get_edge_triplets() const {
-    std::vector<std::vector<std::array<LabelT, 3>>> ret;
+  std::vector<std::vector<std::tuple<LabelT, LabelT, LabelT>>>
+  get_edge_triplets() const {
+    std::vector<std::vector<std::tuple<LabelT, LabelT, LabelT>>> ret;
     for (auto src_label_ind = 0; src_label_ind < src_labels_.size();
          ++src_label_ind) {
       auto src_label = src_labels_[src_label_ind];
-      std::vector<std::array<LabelT, 3>> tmp;
+      std::vector<std::tuple<LabelT, LabelT, LabelT>> tmp;
       if (adj_lists_.find(src_label) != adj_lists_.end()) {
         auto& sub_graphs = adj_lists_.at(src_label);
         for (auto& sub_graph : sub_graphs) {
-          tmp.emplace_back(std::array<LabelT, 3>({sub_graph.GetSrcLabel(),
-                                                  sub_graph.GetDstLabel(),
-                                                  sub_graph.GetEdgeLabel()}));
+          tmp.emplace_back(std::make_tuple(sub_graph.GetSrcLabel(),
+                                           sub_graph.GetDstLabel(),
+                                           sub_graph.GetEdgeLabel()));
         }
       }
       ret.emplace_back(std::move(tmp));

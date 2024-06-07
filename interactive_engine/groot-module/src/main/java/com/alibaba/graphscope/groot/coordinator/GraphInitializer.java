@@ -113,10 +113,12 @@ public class GraphInitializer {
         if (this.logService.initialized()) {
             this.logService.destroy();
         }
-        String zkRoot = ZkConfig.ZK_BASE_PATH.get(configs);
-        Stat stat = this.curator.checkExists().forPath(zkRoot);
-        if (stat != null) {
-            this.curator.delete().deletingChildrenIfNeeded().forPath(zkRoot);
+        if (this.curator != null) {
+            String zkRoot = ZkConfig.ZK_BASE_PATH.get(configs);
+            Stat stat = this.curator.checkExists().forPath(zkRoot);
+            if (stat != null) {
+                this.curator.delete().deletingChildrenIfNeeded().forPath(zkRoot);
+            }
         }
     }
 }

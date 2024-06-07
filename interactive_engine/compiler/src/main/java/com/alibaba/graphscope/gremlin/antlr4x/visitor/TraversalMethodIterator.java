@@ -27,6 +27,7 @@ import java.util.Objects;
 public class TraversalMethodIterator implements Iterator<GremlinGSParser.TraversalMethodContext> {
     private GremlinGSParser.TraversalMethodContext next;
     private GremlinGSParser.TraversalSourceSpawnMethodContext sourceNext;
+    private GremlinGSParser.NestedTraversalContext nestedNext;
 
     public TraversalMethodIterator(GremlinGSParser.TraversalMethodContext next) {
         this.next = Objects.requireNonNull(next);
@@ -34,15 +35,22 @@ public class TraversalMethodIterator implements Iterator<GremlinGSParser.Travers
 
     public TraversalMethodIterator(GremlinGSParser.TraversalSourceSpawnMethodContext sourceNext) {
         this.sourceNext = Objects.requireNonNull(sourceNext);
-        this.next = null;
+    }
+
+    public TraversalMethodIterator(GremlinGSParser.NestedTraversalContext nestedNext) {
+        this.nestedNext = Objects.requireNonNull(nestedNext);
     }
 
     @Override
     public boolean hasNext() {
         if (this.next == null) {
-            GremlinGSParser.RootTraversalContext rootCtx =
-                    (GremlinGSParser.RootTraversalContext) sourceNext.getParent();
-            return rootCtx != null && rootCtx.chainedTraversal() != null;
+            if (sourceNext != null) {
+                GremlinGSParser.RootTraversalContext rootCtx =
+                        (GremlinGSParser.RootTraversalContext) sourceNext.getParent();
+                return rootCtx != null && rootCtx.chainedTraversal() != null;
+            } else if (nestedNext != null) {
+                return nestedNext.chainedTraversal() != null;
+            }
         }
         ParseTree parent = getParent(getParent(next));
         return parent != null && parent.getChildCount() >= 3;
@@ -51,11 +59,17 @@ public class TraversalMethodIterator implements Iterator<GremlinGSParser.Travers
     @Override
     public GremlinGSParser.TraversalMethodContext next() {
         if (this.next == null) {
-            GremlinGSParser.RootTraversalContext rootCtx =
-                    (GremlinGSParser.RootTraversalContext) sourceNext.getParent();
-            if (rootCtx == null || rootCtx.chainedTraversal() == null) return null;
-            next = leftDfs(rootCtx.chainedTraversal());
-            return next;
+            if (sourceNext != null) {
+                GremlinGSParser.RootTraversalContext rootCtx =
+                        (GremlinGSParser.RootTraversalContext) sourceNext.getParent();
+                if (rootCtx == null || rootCtx.chainedTraversal() == null) return null;
+                next = leftDfs(rootCtx.chainedTraversal());
+                return next;
+            } else if (nestedNext != null) {
+                if (nestedNext.chainedTraversal() == null) return null;
+                next = leftDfs(nestedNext.chainedTraversal());
+                return next;
+            }
         }
         ParseTree parent = getParent(getParent(next));
         if (parent == null || parent.getChildCount() < 3) return null;
@@ -65,11 +79,6 @@ public class TraversalMethodIterator implements Iterator<GremlinGSParser.Travers
 
     private @Nullable ParseTree getParent(ParseTree child) {
         Class<? extends ParseTree> parentClass = GremlinGSParser.ChainedTraversalContext.class;
-        while (child != null
-                && child.getParent() != null
-                && !child.getParent().getClass().equals(parentClass)) {
-            child = child.getParent();
-        }
         return (child != null
                         && child.getParent() != null
                         && child.getParent().getClass().equals(parentClass))

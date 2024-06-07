@@ -18,6 +18,9 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
@@ -44,6 +47,7 @@ import org.junit.Test;
 import java.util.Collections;
 
 public class GraphRelToProtoTest {
+
     @Test
     public void scan_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -108,7 +112,7 @@ public class GraphRelToProtoTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[VERTEX])",
                 scan.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -135,7 +139,7 @@ public class GraphRelToProtoTest {
                                         new LabelConfig(false).addLabel("knows")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[DEFAULT],"
+                "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[x], opt=[VERTEX])",
@@ -180,10 +184,10 @@ public class GraphRelToProtoTest {
                                         new LabelConfig(false).addLabel("person")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
                         + " opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[x], opt=[VERTEX])",
                 getV.explain().trim());
@@ -229,10 +233,10 @@ public class GraphRelToProtoTest {
                                         builder.literal(10)))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[x], opt=[VERTEX])",
                 getV.explain().trim());
@@ -248,7 +252,12 @@ public class GraphRelToProtoTest {
 
     @Test
     public void path_expand_test() throws Exception {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -263,7 +272,7 @@ public class GraphRelToProtoTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode pxd =
                 builder.source(
                                 new SourceConfig(
@@ -274,11 +283,11 @@ public class GraphRelToProtoTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                        + " alias=[DEFAULT])\n"
+                        + " alias=[_])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[x], opt=[VERTEX])",
                 pxd.explain().trim());
@@ -395,7 +404,7 @@ public class GraphRelToProtoTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
-                        + " fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]], opt=[VERTEX])",
+                        + " fusedFilter=[[=(_.name, _UTF-8'marko')]], opt=[VERTEX])",
                 filter.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -532,16 +541,6 @@ public class GraphRelToProtoTest {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/aggregate_test_2.json"),
-                    plan.explain().trim());
-        }
-        try (PhysicalBuilder protoBuilder =
-                new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedGraphConfig(),
-                        Utils.schemaMeta,
-                        new LogicalPlan(aggregate))) {
-            PhysicalPlan plan = protoBuilder.build();
-            Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/partitioned_aggregate_test_2.json"),
                     plan.explain().trim());
         }
     }
@@ -764,9 +763,9 @@ public class GraphRelToProtoTest {
                         .sort(builder.variable(null, "name"))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[ASC])\n"
+                "GraphLogicalSort(sort0=[_.name], dir0=[ASC])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 sort.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -798,7 +797,7 @@ public class GraphRelToProtoTest {
         Assert.assertEquals(
                 "GraphLogicalSort(fetch=[10])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 limit.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -834,12 +833,12 @@ public class GraphRelToProtoTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
-                        + " values=[[{operands=[DEFAULT], aggFunction=$SUM0, alias='cnt',"
+                        + " values=[[{operands=[_], aggFunction=$SUM0, alias='cnt',"
                         + " distinct=false}]])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT], physicalOpt=[DEGREE])\n"
+                        + " alias=[_], opt=[OUT], physicalOpt=[DEGREE])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -863,7 +862,7 @@ public class GraphRelToProtoTest {
         }
     }
 
-    // g.V().hasLabel("person").outE("knows").inV()
+    // g.V().hasLabel("person").outE("knows").inV().as("a")
     @Test
     public void expand_vertex_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -879,25 +878,26 @@ public class GraphRelToProtoTest {
                         .getV(
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
-                                        new LabelConfig(false).addLabel("person")))
+                                        new LabelConfig(false).addLabel("person"),
+                                        "a"))
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[a], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[DEFAULT],"
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[a],"
                         + " opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -921,7 +921,7 @@ public class GraphRelToProtoTest {
         }
     }
 
-    // g.V().hasLabel("person").outE("knows").inV().has("age",10), can be fused into
+    // g.V().hasLabel("person").outE("knows").inV().as("a").has("age",10), can be fused into
     // GraphPhysicalExpand + GraphPhysicalGetV
     @Test
     public void expand_vertex_filter_test() throws Exception {
@@ -949,11 +949,11 @@ public class GraphRelToProtoTest {
 
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -1015,13 +1015,13 @@ public class GraphRelToProtoTest {
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[a], fusedFilter=[[=(DEFAULT.weight, 5E-1)]], opt=[OUT],"
+                        + " alias=[_], fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT],"
                         + " physicalOpt=[VERTEX])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -1036,7 +1036,12 @@ public class GraphRelToProtoTest {
 
     @Test
     public void path_expand_fused_test() throws Exception {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -1051,7 +1056,7 @@ public class GraphRelToProtoTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode pxd =
                 builder.source(
                                 new SourceConfig(
@@ -1062,11 +1067,11 @@ public class GraphRelToProtoTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                        + " alias=[DEFAULT])\n"
+                        + " alias=[_])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[x], opt=[VERTEX])",
                 pxd.explain().trim());
@@ -1082,6 +1087,162 @@ public class GraphRelToProtoTest {
                     FileUtils.readJsonFromResource("proto/path_fused_expand_test.json"),
                     plan.explain().trim());
         }
+    }
+
+    @Test
+    public void intersect_test() throws Exception {
+        GraphRelOptimizer optimizer = getMockCBO();
+        IrMeta irMeta = getMockCBOMeta(optimizer);
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (message:COMMENT|POST)-[:HASCREATOR]->(person:PERSON), \n"
+                                        + "      (message:COMMENT|POST)-[:HASTAG]->(tag:TAG), \n"
+                                        + "      (person:PERSON)-[:HASINTEREST]->(tag:TAG)\n"
+                                        + "Return count(person);",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  MultiJoin(joinFilter=[=(tag, tag)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
+                    + " projFields=[[ALL, ALL]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, COMMENT, TAG),"
+                    + " EdgeLabel(HASTAG, POST, TAG)]], alias=[tag], startAlias=[message],"
+                    + " opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-697155798]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + " alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-697155798]])\n"
+                    + "common#-697155798:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
+                    + " alias=[message], startAlias=[person], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockCBOConfig(), getMockCBOMeta(optimizer), new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/intersect_test.json"),
+                    plan.explain().trim());
+        }
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/partitioned_intersect_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    @Test
+    public void intersect_test_02() throws Exception {
+        GraphRelOptimizer optimizer = getMockCBO();
+        IrMeta irMeta = getMockCBOMeta(optimizer);
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (message:COMMENT|POST)-[e1:HASCREATOR]->(person:PERSON), \n"
+                                        + "      (message:COMMENT|POST)-[e2:HASTAG]->(tag:TAG), \n"
+                                        + "      (person:PERSON)-[e3:HASINTEREST]->(tag:TAG)\n"
+                                        + "Return count(person);",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  MultiJoin(joinFilter=[=(tag, tag)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
+                    + " projFields=[[ALL, ALL]])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[TAG]}], alias=[tag],"
+                    + " opt=[END])\n"
+                    + "      GraphLogicalExpand(tableConfig=[[EdgeLabel(HASTAG, COMMENT, TAG),"
+                    + " EdgeLabel(HASTAG, POST, TAG)]], alias=[e2], startAlias=[message],"
+                    + " opt=[OUT])\n"
+                    + "        CommonTableScan(table=[[common#-676410541]])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[TAG]}], alias=[tag],"
+                    + " opt=[END])\n"
+                    + "      GraphLogicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + " alias=[e3], startAlias=[person], opt=[OUT])\n"
+                    + "        CommonTableScan(table=[[common#-676410541]])\n"
+                    + "common#-676410541:\n"
+                    + "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[POST, COMMENT]}],"
+                    + " alias=[message], opt=[START])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
+                    + " alias=[e1], startAlias=[person], opt=[IN])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockCBOConfig(), getMockCBOMeta(optimizer), new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/intersect_test_2.json"),
+                    plan.explain().trim());
+        }
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/partitioned_intersect_test_2.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    private Configs getMockCBOConfig() {
+        return new Configs(
+                ImmutableMap.of(
+                        "graph.planner.is.on",
+                        "true",
+                        "graph.planner.opt",
+                        "CBO",
+                        "graph.planner.rules",
+                        "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                + " ExpandGetVFusionRule"));
+    }
+
+    private Configs getMockPartitionedCBOConfig() {
+        return new Configs(
+                ImmutableMap.of(
+                        "graph.planner.is.on",
+                        "true",
+                        "graph.planner.opt",
+                        "CBO",
+                        "graph.planner.rules",
+                        "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                + " ExpandGetVFusionRule",
+                        "pegasus.hosts",
+                        "host1,host2"));
+    }
+
+    private GraphRelOptimizer getMockCBO() {
+        return new GraphRelOptimizer(getMockCBOConfig());
+    }
+
+    private IrMeta getMockCBOMeta(GraphRelOptimizer optimizer) {
+        return Utils.mockIrMeta(
+                "schema/ldbc_schema_exp_hierarchy.json",
+                "statistics/ldbc30_hierarchy_statistics.json",
+                optimizer.getGlogueHolder());
     }
 
     private Configs getMockGraphConfig() {

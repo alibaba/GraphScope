@@ -28,6 +28,8 @@ limitations under the License.
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
+#include <yaml-cpp/yaml.h>
+
 namespace grape {
 
 inline bool operator<(const EmptyType& lhs, const EmptyType& rhs) {
@@ -37,6 +39,21 @@ inline bool operator<(const EmptyType& lhs, const EmptyType& rhs) {
 }  // namespace grape
 
 namespace gs {
+
+// primitive types
+static constexpr const char* DT_UNSIGNED_INT8 = "DT_UNSIGNED_INT8";
+static constexpr const char* DT_UNSIGNED_INT16 = "DT_UNSIGNED_INT16";
+static constexpr const char* DT_SIGNED_INT32 = "DT_SIGNED_INT32";
+static constexpr const char* DT_UNSIGNED_INT32 = "DT_UNSIGNED_INT32";
+static constexpr const char* DT_SIGNED_INT64 = "DT_SIGNED_INT64";
+static constexpr const char* DT_UNSIGNED_INT64 = "DT_UNSIGNED_INT64";
+static constexpr const char* DT_BOOL = "DT_BOOL";
+static constexpr const char* DT_FLOAT = "DT_FLOAT";
+static constexpr const char* DT_DOUBLE = "DT_DOUBLE";
+static constexpr const char* DT_STRING = "DT_STRING";
+static constexpr const char* DT_STRINGMAP = "DT_STRINGMAP";
+static constexpr const char* DT_DATE = "DT_DATE32";
+static constexpr const char* DT_DAY = "DT_DAY32";
 
 enum class StorageStrategy {
   kNone,
@@ -62,6 +79,8 @@ enum class PropertyTypeImpl {
   kUInt16,
   kStringMap,
   kVarChar,
+  kVertexGlobalId,
+  kLabel,
 };
 
 // Stores additional type information for PropertyTypeImpl
@@ -101,6 +120,8 @@ struct PropertyType {
   static PropertyType String();
   static PropertyType StringMap();
   static PropertyType Varchar(uint16_t max_length);
+  static PropertyType VertexGlobalId();
+  static PropertyType Label();
 
   static const PropertyType kEmpty;
   static const PropertyType kBool;
@@ -116,10 +137,55 @@ struct PropertyType {
   static const PropertyType kDay;
   static const PropertyType kString;
   static const PropertyType kStringMap;
+  static const PropertyType kVertexGlobalId;
+  static const PropertyType kLabel;
 
   bool operator==(const PropertyType& other) const;
   bool operator!=(const PropertyType& other) const;
 };
+
+namespace config_parsing {
+std::string PrimitivePropertyTypeToString(PropertyType type);
+PropertyType StringToPrimitivePropertyType(const std::string& str);
+}  // namespace config_parsing
+
+// encoded with label_id and vid_t.
+struct GlobalId {
+  using label_id_t = uint8_t;
+  using vid_t = uint32_t;
+  using gid_t = uint64_t;
+  static constexpr int32_t label_id_offset = 64 - sizeof(label_id_t) * 8;
+  static constexpr uint64_t vid_mask = (1ULL << label_id_offset) - 1;
+
+  static label_id_t get_label_id(gid_t gid);
+  static vid_t get_vid(gid_t gid);
+
+  uint64_t global_id;
+
+  GlobalId();
+  GlobalId(label_id_t label_id, vid_t vid);
+  GlobalId(gid_t gid);
+
+  label_id_t label_id() const;
+  vid_t vid() const;
+
+  std::string to_string() const;
+};
+
+inline bool operator==(const GlobalId& lhs, const GlobalId& rhs) {
+  return lhs.global_id == rhs.global_id;
+}
+
+inline bool operator!=(const GlobalId& lhs, const GlobalId& rhs) {
+  return lhs.global_id != rhs.global_id;
+}
+inline bool operator<(const GlobalId& lhs, const GlobalId& rhs) {
+  return lhs.global_id < rhs.global_id;
+}
+
+inline bool operator>(const GlobalId& lhs, const GlobalId& rhs) {
+  return lhs.global_id > rhs.global_id;
+}
 
 struct __attribute__((packed)) Date {
   Date() = default;
@@ -202,14 +268,6 @@ struct LabelKey {
   int32_t label_id;
   LabelKey() = default;
   LabelKey(label_data_type id) : label_id(id) {}
-  LabelKey(LabelKey&&) = default;
-  LabelKey(const LabelKey&) = default;
-
-  // operator=
-  LabelKey& operator=(const LabelKey& other) {
-    label_id = other.label_id;
-    return *this;
-  }
 };
 
 union AnyValue {
@@ -222,6 +280,8 @@ union AnyValue {
   float f;
   int64_t l;
   uint64_t ul;
+  GlobalId vertex_gid;
+  LabelKey label_key;
 
   Date d;
   Day day;
@@ -275,6 +335,16 @@ struct Any {
   void set_u64(uint64_t v) {
     type = PropertyType::kUInt64;
     value.ul = v;
+  }
+
+  void set_vertex_gid(GlobalId v) {
+    type = PropertyType::kVertexGlobalId;
+    value.vertex_gid = v;
+  }
+
+  void set_label_key(LabelKey v) {
+    type = PropertyType::kLabel;
+    value.label_key = v;
   }
 
   void set_date(int64_t v) {
@@ -345,6 +415,10 @@ struct Any {
       return value.b ? "true" : "false";
     } else if (type == PropertyType::kFloat) {
       return std::to_string(value.f);
+    } else if (type == PropertyType::kVertexGlobalId) {
+      return value.vertex_gid.to_string();
+    } else if (type == PropertyType::kLabel) {
+      return std::to_string(value.label_key.label_id);
     } else {
       LOG(FATAL) << "Unexpected property type: "
                  << static_cast<int>(type.type_enum);
@@ -407,6 +481,16 @@ struct Any {
     return value.day;
   }
 
+  const GlobalId& AsGlobalId() const {
+    assert(type == PropertyType::kVertexGlobalId);
+    return value.vertex_gid;
+  }
+
+  const LabelKey& AsLabelKey() const {
+    assert(type == PropertyType::kLabel);
+    return value.label_key;
+  }
+
   template <typename T>
   static Any From(const T& value) {
     return AnyConverter<T>::to_any(value);
@@ -436,6 +520,10 @@ struct Any {
         return value.b == other.value.b;
       } else if (type == PropertyType::kFloat) {
         return value.f == other.value.f;
+      } else if (type == PropertyType::kVertexGlobalId) {
+        return value.vertex_gid == other.value.vertex_gid;
+      } else if (type == PropertyType::kLabel) {
+        return value.label_key.label_id == other.value.label_key.label_id;
       } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
         if (other.type.type_enum != impl::PropertyTypeImpl::kVarChar) {
           return false;
@@ -473,6 +561,10 @@ struct Any {
         return value.b < other.value.b;
       } else if (type == PropertyType::kFloat) {
         return value.f < other.value.f;
+      } else if (type == PropertyType::kVertexGlobalId) {
+        return value.vertex_gid < other.value.vertex_gid;
+      } else if (type == PropertyType::kLabel) {
+        return value.label_key.label_id < other.value.label_key.label_id;
       } else {
         return false;
       }
@@ -531,6 +623,22 @@ struct ConvertAny<uint64_t> {
   static void to(const Any& value, uint64_t& out) {
     CHECK(value.type == PropertyType::kUInt64);
     out = value.value.ul;
+  }
+};
+
+template <>
+struct ConvertAny<GlobalId> {
+  static void to(const Any& value, GlobalId& out) {
+    CHECK(value.type == PropertyType::kVertexGlobalId);
+    out = value.value.vertex_gid;
+  }
+};
+
+template <>
+struct ConvertAny<LabelKey> {
+  static void to(const Any& value, LabelKey& out) {
+    CHECK(value.type == PropertyType::kLabel);
+    out = value.value.label_key;
   }
 };
 
@@ -749,6 +857,32 @@ struct AnyConverter<uint64_t> {
 };
 
 template <>
+struct AnyConverter<GlobalId> {
+  static PropertyType type() { return PropertyType::kVertexGlobalId; }
+
+  static Any to_any(const GlobalId& value) {
+    Any ret;
+    ret.set_vertex_gid(value);
+    return ret;
+  }
+
+  static AnyValue to_any_value(const GlobalId& value) {
+    AnyValue ret;
+    ret.vertex_gid = value;
+    return ret;
+  }
+
+  static const GlobalId& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kVertexGlobalId);
+    return value.value.vertex_gid;
+  }
+
+  static const GlobalId& from_any_value(const AnyValue& value) {
+    return value.vertex_gid;
+  }
+};
+
+template <>
 struct AnyConverter<Date> {
   static PropertyType type() { return PropertyType::kDate; }
 
@@ -936,6 +1070,32 @@ struct AnyConverter<float> {
   static const float& from_any_value(const AnyValue& value) { return value.f; }
 };
 
+template <>
+struct AnyConverter<LabelKey> {
+  static PropertyType type() { return PropertyType::kLabel; }
+
+  static Any to_any(const LabelKey& value) {
+    Any ret;
+    ret.set_label_key(value);
+    return ret;
+  }
+
+  static AnyValue to_any_value(const LabelKey& value) {
+    AnyValue ret;
+    ret.label_key = value;
+    return ret;
+  }
+
+  static const LabelKey& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kLabel);
+    return value.value.label_key;
+  }
+
+  static const LabelKey& from_any_value(const AnyValue& value) {
+    return value.label_key;
+  }
+};
+
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,
@@ -949,21 +1109,26 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,
                               std::string_view& value);
 
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const GlobalId& value);
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, GlobalId& value);
+
 }  // namespace gs
 
 namespace boost {
 // override boost hash function for EmptyType
 inline std::size_t hash_value(const grape::EmptyType& value) { return 0; }
+inline std::size_t hash_value(const gs::GlobalId& value) {
+  return std::hash<uint64_t>()(value.global_id);
+}
+// overload hash_value for LabelKey
+inline std::size_t hash_value(const gs::LabelKey& key) {
+  return std::hash<int32_t>()(key.label_id);
+}
+
 }  // namespace boost
 
 namespace std {
-inline bool operator==(const grape::EmptyType& a, const grape::EmptyType& b) {
-  return true;
-}
-
-inline bool operator!=(const grape::EmptyType& a, const grape::EmptyType& b) {
-  return false;
-}
 
 inline ostream& operator<<(ostream& os, const gs::Date& dt) {
   os << dt.to_string();
@@ -1006,12 +1171,110 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
     os << "string_map";
   } else if (pt.type_enum == gs::impl::PropertyTypeImpl::kVarChar) {
     os << "varchar(" << pt.additional_type_info.max_length << ")";
+  } else if (pt == gs::PropertyType::VertexGlobalId()) {
+    os << "vertex_global_id";
   } else {
     os << "unknown";
   }
   return os;
 }
 
+template <>
+struct hash<gs::GlobalId> {
+  size_t operator()(const gs::GlobalId& value) const {
+    return std::hash<uint64_t>()(value.global_id);
+  }
+};
+
 }  // namespace std
+
+namespace grape {
+inline bool operator==(const EmptyType& a, const EmptyType& b) { return true; }
+
+inline bool operator!=(const EmptyType& a, const EmptyType& b) { return false; }
+}  // namespace grape
+
+namespace YAML {
+template <>
+struct convert<gs::PropertyType> {
+  // concurrently preseve backwards compatibility with old config files
+  static bool decode(const Node& config, gs::PropertyType& property_type) {
+    if (config["primitive_type"]) {
+      property_type = gs::config_parsing::StringToPrimitivePropertyType(
+          config["primitive_type"].as<std::string>());
+    } else if (config["string"]) {
+      if (config["string"].IsMap()) {
+        if (config["string"]["long_text"]) {
+          property_type = gs::PropertyType::String();
+        } else if (config["string"]["var_char"]) {
+          if (config["string"]["var_char"]["max_length"]) {
+            property_type = gs::PropertyType::Varchar(
+                config["string"]["var_char"]["max_length"].as<int32_t>());
+          }
+          property_type = gs::PropertyType::Varchar(
+              gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+        } else {
+          LOG(ERROR) << "Unrecognized string type";
+        }
+      } else {
+        LOG(ERROR) << "string should be a map";
+      }
+    } else if (config["temporal"]) {
+      if (config["temporal"]["date32"]) {
+        property_type = gs::PropertyType::Day();
+      } else if (config["temporal"]["timestamp"]) {
+        property_type = gs::PropertyType::Date();
+      } else {
+        LOG(ERROR) << "Unrecognized temporal type";
+      }
+    }
+    // compatibility with old config files
+    else if (config["day"]) {
+      property_type = gs::config_parsing::StringToPrimitivePropertyType(
+          config["day"].as<std::string>());
+    } else if (config["varchar"]) {
+      if (config["varchar"]["max_length"]) {
+        property_type = gs::PropertyType::Varchar(
+            config["varchar"]["max_length"].as<int32_t>());
+      } else {
+        property_type = gs::PropertyType::Varchar(
+            gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+      }
+    } else if (config["date"]) {
+      property_type = gs::PropertyType::Date();
+    } else {
+      LOG(ERROR) << "Unrecognized property type: " << config;
+      return false;
+    }
+    return true;
+  }
+
+  static Node encode(const gs::PropertyType& type) {
+    YAML::Node node;
+    if (type == gs::PropertyType::Bool() || type == gs::PropertyType::Int32() ||
+        type == gs::PropertyType::UInt32() ||
+        type == gs::PropertyType::Float() ||
+        type == gs::PropertyType::Int64() ||
+        type == gs::PropertyType::UInt64() ||
+        type == gs::PropertyType::Double()) {
+      node["primitive_type"] =
+          gs::config_parsing::PrimitivePropertyTypeToString(type);
+    } else if (type == gs::PropertyType::String() ||
+               type == gs::PropertyType::StringMap()) {
+      node["string"]["long_text"] = "";
+    } else if (type.IsVarchar()) {
+      node["string"]["var_char"]["max_length"] =
+          type.additional_type_info.max_length;
+    } else if (type == gs::PropertyType::Date()) {
+      node["temporal"]["timestamp"] = "";
+    } else if (type == gs::PropertyType::Day()) {
+      node["temporal"]["date32"] = "";
+    } else {
+      LOG(ERROR) << "Unrecognized property type: " << type;
+    }
+    return node;
+  }
+};
+}  // namespace YAML
 
 #endif  // GRAPHSCOPE_TYPES_H_

@@ -1184,7 +1184,9 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
 
   // must return 1,1,1,.
   std::vector<offset_t> ObtainOffsetFromTag(int dst_tag) const {
-    CHECK(dst_tag == cur_alias);
+    CHECK(dst_tag == cur_alias || (dst_tag == 0 && cur_alias == -1) ||
+          dst_tag == -1)
+        << "dst tag: " << dst_tag << ", cur_alias: " << cur_alias;
     auto size = cur_.Size();
     std::vector<offset_t> res;
     res.reserve(size + 1);

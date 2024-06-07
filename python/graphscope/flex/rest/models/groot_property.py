@@ -39,8 +39,8 @@ class GrootProperty(BaseModel):
         if value is None:
             return value
 
-        if value not in set(['STRING', 'LONG', 'DOUBLE']):
-            raise ValueError("must be one of enum values ('STRING', 'LONG', 'DOUBLE')")
+        if value not in set(['DT_STRING', 'DT_SIGNED_INT64', 'DT_DOUBLE']):
+            raise ValueError("must be one of enum values ('DT_STRING', 'DT_SIGNED_INT64', 'DT_DOUBLE')")
         return value
 
     model_config = {

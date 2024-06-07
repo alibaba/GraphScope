@@ -192,7 +192,7 @@ impl Decoder {
         if idx > self.src.fixed_len_prop_count {
             start_off = bytes_to_len(reader.read_bytes(self.src.offsets[idx - 1], 3));
         }
-        if end_off <= start_off {
+        if end_off < start_off {
             error!("fatal error! This codec cannot decode the bytes: idx {}, end_off: {}, start_off: {}, props: {:?}, ", idx, end_off, start_off, self.src.props);
             return None;
         }

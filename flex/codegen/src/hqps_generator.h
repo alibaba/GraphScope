@@ -34,6 +34,7 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_sink_builder.h"
 #include "flex/codegen/src/hqps/hqps_sort_builder.h"
 #include "flex/proto_generated_gie/physical.pb.h"
+#include "flex/storages/rt_mutable_graph/schema.h"
 
 namespace gs {
 
@@ -43,7 +44,7 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "// DO NOT EDIT\n"
     "\n"
     "#include \"flex/engines/hqps_db/core/sync_engine.h\"\n"
-    "#include \"flex/engines/graph_db/app/app_base.h\"\n"  // app_base_header.h
+    "#include \"flex/engines/hqps_db/app/interactive_app_base.h\"\n"
     "#include \"%1%\"\n"  // graph_interface_header.h
     "\n"
     "\n"
@@ -52,21 +53,25 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "%2%\n"
     "\n"
     "// Auto generated query class definition\n"
-    "class %3% : public AppBase {\n"
+    "class %3% : public %11% {\n"
     " public:\n"
     "  using Engine = SyncEngine<%4%>;\n"
     "  using label_id_t = typename %4%::label_id_t;\n"
     "  using vertex_id_t = typename %4%::vertex_id_t;\n"
+    "  using gid_t = typename %4%::gid_t;\n"
     " // constructor\n"
-    "  %3%(const GraphDBSession& session) : %6%(session) {}\n"
+    "  %3%() {}\n"
     "// Query function for query class\n"
     "  %5% Query(%7%) const{\n"
     "     %8%\n"
     "  }\n"
     "// Wrapper query function for query class\n"
-    "  bool Query(Decoder& decoder, Encoder& encoder) override {\n"
+    "  bool DoQuery(gs::GraphDBSession& sess, Decoder& decoder, Encoder& "
+    "encoder) "
+    "override {\n"
     "    //decoding params from decoder, and call real query func\n"
     "    %9%\n"
+    "    %4% %6%(sess);"
     "    auto res =  Query(%10%);\n"
     "    // dump results to string\n"
     "    std::string res_str = res.SerializeAsString();\n"
@@ -78,14 +83,13 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "  }\n"
     "  //private members\n"
     " private:\n"
-    "  %4% %6%;\n"
     "};\n"
     "} // namespace gs\n"
     "\n"
     "// extern c interfaces\n"
     "extern \"C\" {\n"
     "void* CreateApp(gs::GraphDBSession& db) {\n"
-    "  gs::%3%* app = new gs::%3%(db);\n"
+    "  gs::%3%* app = new gs::%3%();\n"
     "  return static_cast<void*>(app);\n"
     "}\n"
     "void DeleteApp(void* app) {\n"
@@ -116,9 +120,39 @@ static std::array<std::string, 4> BuildIntersectOp(
 // get_v can contains labels and filters.
 // what ever it takes, we will always fuse label info into edge_expand,
 // but if get_v contains expression, we will not fuse it into edge_expand
-bool simple_get_v(const physical::GetV& get_v_op) {
+bool simple_get_v(const physical::GetV& get_v_op,
+                  const physical::EdgeExpand& edge_expand_op) {
   if (get_v_op.params().has_predicate()) {
     return false;
+  }
+  // There are 5 possible combinations of get_v and edge_expand
+  // Direction::Out & GetVOpt::End
+  // Direction::Out & GetVOpt::Start
+  // Direction::In & GetVOpt::End
+  // Direction::In & GetVOpt::Start
+  // Whatever Direction & GetVOpt::Other
+  //
+  if (get_v_op.opt() == physical::GetV::OTHER) {
+    return true;
+  }
+  if (get_v_op.opt() == physical::GetV::BOTH) {
+    return false;
+  }
+  if (get_v_op.opt() == physical::GetV::END) {
+    if (edge_expand_op.direction() == physical::EdgeExpand::OUT) {
+      return true;
+    }
+    if (edge_expand_op.direction() == physical::EdgeExpand::IN) {
+      return false;
+    }
+  }
+  if (get_v_op.opt() == physical::GetV::START) {
+    if (edge_expand_op.direction() == physical::EdgeExpand::OUT) {
+      return false;
+    }
+    if (edge_expand_op.direction() == physical::EdgeExpand::IN) {
+      return true;
+    }
   }
   return true;
 }
@@ -178,7 +212,11 @@ class QueryGenerator {
   static constexpr bool FUSE_EDGE_GET_V = true;
   static constexpr bool FUSE_PATH_EXPAND_V = true;
   QueryGenerator(BuildingContext& ctx, const physical::PhysicalPlan& plan)
-      : ctx_(ctx), plan_(plan) {}
+      : ctx_(ctx), plan_(plan), schema_() {}
+
+  QueryGenerator(BuildingContext& ctx, const physical::PhysicalPlan& plan,
+                 const Schema& schema)
+      : ctx_(ctx), plan_(plan), schema_(schema) {}
 
   std::string GenerateQuery() {
     // During generate query body, we will track the parameters
@@ -194,15 +232,24 @@ class QueryGenerator {
       ss << std::endl;
       expr_code = ss.str();
     }
-    std::string dynamic_vars_str = concat_param_vars(ctx_.GetParameterVars());
+    std::string dynamic_vars_str =
+        ctx_.GetGraphInterface() + "& " + ctx_.GraphVar();
+    if (ctx_.GetParameterVars().size() > 0) {
+      dynamic_vars_str += ", ";
+      dynamic_vars_str += concat_param_vars(ctx_.GetParameterVars());
+    }
     std::string decoding_params_code, decoded_params_str;
     std::tie(decoding_params_code, decoded_params_str) =
         decode_params_from_decoder(ctx_.GetParameterVars());
+    std::string call_query_input_code = ctx_.GraphVar();
+    if (decoded_params_str.size() > 0) {
+      call_query_input_code += ", " + decoded_params_str;
+    }
     boost::format formater(QUERY_TEMPLATE_STR);
     formater % ctx_.GetGraphHeader() % expr_code % ctx_.GetQueryClassName() %
         ctx_.GetGraphInterface() % ctx_.GetQueryRet() % ctx_.GraphVar() %
         dynamic_vars_str % query_code % decoding_params_code %
-        decoded_params_str;
+        call_query_input_code % get_app_base_name();
     return formater.str();
   }
 
@@ -215,6 +262,13 @@ class QueryGenerator {
   }
 
  private:
+  // Interactive separate app into read app and write app.
+  // Different app may have different base name.
+  // This info should be parse from physical plan.
+  // Currently always return writeAppBase, since physical plan hasn't
+  // provided this info.
+  std::string get_app_base_name() { return "CypherInternalPbWriteAppBase"; }
+
   // copy the param vars to sort
   std::string concat_param_vars(
       std::vector<codegen::ParamConst> param_vars) const {
@@ -314,7 +368,7 @@ class QueryGenerator {
         LOG(INFO) << "Found a scan operator";
         auto& scan_op = opr.scan();
 
-        ss << BuildScanOp(ctx_, scan_op, meta_data) << std::endl;
+        ss << BuildScanOp(ctx_, scan_op, meta_data, schema_) << std::endl;
         break;
       }
 
@@ -330,7 +384,7 @@ class QueryGenerator {
             extract_vertex_labels(get_v_op, dst_vertex_labels);
 
             if (FUSE_EDGE_GET_V) {
-              if (simple_get_v(get_v_op) &&
+              if (simple_get_v(get_v_op, real_edge_expand) &&
                   intermediate_edge_op(real_edge_expand)) {
                 CHECK(dst_vertex_labels.size() > 0);
                 VLOG(10) << "When fusing edge+get_v, get_v has labels: "
@@ -378,9 +432,12 @@ class QueryGenerator {
       case physical::PhysicalOpr::Operator::kProject: {  // project
         // project op can result into multiple meta data
         // auto& meta_data = meta_datas[0];
-        physical::PhysicalOpr::MetaData meta_data;
         LOG(INFO) << "Found a project operator";
         auto& project_op = opr.project();
+        physical::PhysicalOpr_MetaData meta_data;
+        if (meta_datas.size() > 0) {
+          meta_data = meta_datas[0];
+        }
         std::string call_project_code;
         call_project_code = BuildProjectOp(ctx_, project_op, meta_data);
         ss << call_project_code;
@@ -479,18 +536,12 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kIntersect: {
         LOG(INFO) << "Found a intersect operator";
-        // a intersect op must be followed by a unfold op
-        CHECK(i + 1 < size) << " intersect op must be followed by a unfold op";
-        auto& next_op = plan_.plan(i + 1).opr();
-        CHECK(next_op.op_kind_case() ==
-              physical::PhysicalOpr::Operator::kUnfold)
-            << "intersect op must be followed by a unfold op";
+        // Note that intersect operator will not be followed by unfold anymore.
         auto& intersect_op = opr.intersect();
         auto intersect_opt_code = BuildIntersectOp<LabelT>(ctx_, intersect_op);
         for (auto& line : intersect_opt_code) {
           ss << line << std::endl;
         }
-        i += 1;  // skip unfold
         break;
       }
 
@@ -535,6 +586,7 @@ class QueryGenerator {
 
   BuildingContext& ctx_;
   const physical::PhysicalPlan& plan_;
+  std::optional<Schema> schema_;
 };
 
 // When building a join op, we need to consider the following cases:
@@ -733,7 +785,6 @@ static std::array<std::string, 4> BuildIntersectOp(
   std::string intersect_code;
 
   auto right_context = ctx.CreateSubTaskContext("right_");
-  CHECK(!ctx.EmptyContext());
 
   {
     std::stringstream cur_ss;

@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.store;
 
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.CommitSnapshotIdRequest;
 import com.alibaba.graphscope.proto.groot.SnapshotCommitGrpc;
@@ -22,17 +23,16 @@ import io.grpc.ManagedChannel;
 import java.util.List;
 
 public class SnapshotCommitClient extends RpcClient {
-
-    private SnapshotCommitGrpc.SnapshotCommitBlockingStub stub;
-
-    public SnapshotCommitClient(ManagedChannel channel) {
+    public SnapshotCommitClient(RpcChannel channel) {
         super(channel);
-        this.stub = SnapshotCommitGrpc.newBlockingStub(channel);
     }
 
     public SnapshotCommitClient(SnapshotCommitGrpc.SnapshotCommitBlockingStub stub) {
         super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
+    }
+
+    private SnapshotCommitGrpc.SnapshotCommitBlockingStub getStub() {
+        return SnapshotCommitGrpc.newBlockingStub(rpcChannel.getChannel());
     }
 
     public void commitSnapshotId(
@@ -44,6 +44,6 @@ public class SnapshotCommitClient extends RpcClient {
                         .setDdlSnapshotId(ddlSnapshotId)
                         .addAllQueueOffsets(queueOffsets)
                         .build();
-        stub.commitSnapshotId(req);
+        getStub().commitSnapshotId(req);
     }
 }

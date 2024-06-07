@@ -1,0 +1,77 @@
+name: demo-graph
+schema:
+  vertex_types:
+    - type_name: person
+      description: "person description"
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: "person id"
+          nullable: false
+        - property_name: "name"
+          property_type:
+            string:
+              long_text:
+          description: "person name"
+          default_value: ""
+          nullable: false
+        - property_name: "age"
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: "person age"
+          default_value: 0
+          nullable: false
+      primary_keys:
+        - id
+    - type_name: software
+      description: "software description"
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: "person id"
+          nullable: false
+        - property_name: "name"
+          property_type:
+            string:
+              long_text:
+          description: "person name"
+          default_value: ""
+          nullable: false
+        - property_name: "lang"
+          property_type:
+            string:
+              long_text:
+          description: "software language type"
+          default_value: ""
+          nullable: false
+      primary_keys:
+        - id
+  edge_types:
+    - type_name: knows
+      description: "person -> knows -> person"
+      vertex_type_pair_relations:
+        - source_vertex: person
+          destination_vertex: person
+      properties:
+        - property_name: weight
+          property_type:
+            primitive_type: DT_DOUBLE
+          description: "knows weight"
+          default_value: 0.0
+          nullable: false
+    - type_name: created
+      description: "person -> created -> software"
+      vertex_type_pair_relations:
+        - source_vertex: person
+          destination_vertex: software
+      properties:
+        - property_name: weight
+          property_type:
+            primitive_type: DT_DOUBLE
+          description: "created weight"
+          default_value: 0.0
+          nullable: false
+      primary_keys:  # this is not necessary, just for testing the primary key of edges
+        - weight

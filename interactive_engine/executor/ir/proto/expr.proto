@@ -165,6 +165,26 @@ message Extract {
   Interval interval = 1;
 }
 
+// denote time interval, i.e. 3 DAYS, 4 HOURS, 5 MINUTES
+message TimeInterval {
+    Extract.Interval interval = 1;
+
+    oneof value {
+        common.Value const = 2;
+        DynamicParam param = 3;
+    }
+}
+
+message DateTimeMinus {
+    Extract.Interval interval = 1;
+}
+
+// e.g., supposing p1 refers to [v1->v2->v3], p2 refers to [v3->v4->v5],
+// then CONCAT(p1, p2) outputs [v1->v2->v3->v4->v5]
+message Concat {
+  repeated Variable vars = 1;
+}
+
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   enum Brace {
@@ -185,6 +205,9 @@ message ExprOpr {
     Extract extract = 11;
     // TODO: the new definition for var_map, that allows user-given key name. Will remove the old var_map soon.
     VariableKeyValues map = 13;
+    TimeInterval time_interval = 14;
+    DateTimeMinus date_time_minus = 15;
+    Concat concat = 16;
   }
   // The data of type of ExprOpr
   common.IrDataType node_type = 12;

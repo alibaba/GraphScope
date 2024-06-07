@@ -23,10 +23,10 @@ import java.util.concurrent.CountDownLatch;
 public class NodeLauncher {
     private static final Logger logger = LoggerFactory.getLogger(NodeLauncher.class);
 
-    private NodeBase node;
+    private final NodeBase node;
 
-    private Thread keepAliveThread;
-    private CountDownLatch keepAliveLatch = new CountDownLatch(1);
+    private final Thread keepAliveThread;
+    private final CountDownLatch keepAliveLatch = new CountDownLatch(1);
 
     public NodeLauncher(NodeBase node) {
         this.node = node;
@@ -54,7 +54,7 @@ public class NodeLauncher {
                                         logger.error("failed to stop node", e);
                                     }
                                 }));
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> keepAliveLatch.countDown()));
+        Runtime.getRuntime().addShutdownHook(new Thread(keepAliveLatch::countDown));
         try {
             this.node.start();
         } catch (Exception e) {

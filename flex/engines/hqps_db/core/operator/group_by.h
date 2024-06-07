@@ -28,16 +28,16 @@ limitations under the License.
 
 namespace gs {
 
-// For each aggregator, return the type of applying aggregate on the desired col.
-// with possible aggregate func.
+// For each aggregator, return the type of applying aggregate on the desired
+// col. with possible aggregate func.
 
 template <typename CTX_T, typename GROUP_KEY>
 struct CommonBuilderT;
 
 template <typename CTX_T, int col_id>
 struct CommonBuilderT<CTX_T, GroupKey<col_id, grape::EmptyType>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<
+      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
   using builder_t = typename set_t::builder_t;
   using result_t = typename builder_t::result_t;
   using result_ele_t = typename result_t::element_type;
@@ -45,8 +45,8 @@ struct CommonBuilderT<CTX_T, GroupKey<col_id, grape::EmptyType>> {
 
 template <typename CTX_T, int col_id, typename T>
 struct CommonBuilderT<CTX_T, GroupKey<col_id, T>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<
+      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
   using builder_t = CollectionBuilder<T>;
   using result_t = typename builder_t::result_t;
   using result_ele_t = typename result_t::element_type;
@@ -57,8 +57,8 @@ struct GroupKeyResT;
 
 template <typename CTX_T, int col_id, typename T>
 struct GroupKeyResT<CTX_T, GroupKey<col_id, T>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<
+      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
   using result_t = typename KeyedT<set_t, PropertySelector<T>>::keyed_set_t;
 };
 
@@ -75,8 +75,9 @@ struct GroupValueResT<CTX_T,
                       AggregateProp<agg_func, std::tuple<SELECTOR...>,
                                     std::integer_sequence<int, Is...>>,
                       typename std::enable_if<(sizeof...(Is) == 1)>::type> {
-  using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<FirstElement<Is...>::value>())>>;
+  using old_set_t = std::remove_const_t<std::remove_reference_t<
+      decltype(std::declval<CTX_T>()
+                   .template GetNode<FirstElement<Is...>::value>())>>;
   using result_t =
       typename GroupValueResTImpl<old_set_t, agg_func,
                                   std::tuple<SELECTOR...>>::result_t;
@@ -89,8 +90,8 @@ struct GroupValueResT<CTX_T,
                                     std::integer_sequence<int, Is...>>,
                       typename std::enable_if<(sizeof...(Is) > 1)>::type> {
   using old_set_tuple_t =
-      std::tuple<std::remove_const_t<std::remove_reference_t<decltype(
-          std::declval<CTX_T>().template GetNode<Is>())>>...>;
+      std::tuple<std::remove_const_t<std::remove_reference_t<
+          decltype(std::declval<CTX_T>().template GetNode<Is>())>>...>;
   using result_t =
       typename GroupValueResTImpl<old_set_tuple_t, agg_func,
                                   std::tuple<SELECTOR...>>::result_t;
@@ -101,31 +102,37 @@ struct GroupValueResT<CTX_T,
 template <typename SET_T>
 struct GroupValueResTImpl<SET_T, AggFunc::COUNT,
                           std::tuple<PropertySelector<grape::EmptyType>>> {
-  using result_t = Collection<size_t>;
+  using result_t = Collection<int64_t>;
 };
 
 template <typename SET_T>
 struct GroupValueResTImpl<SET_T, AggFunc::COUNT_DISTINCT,
                           std::tuple<PropertySelector<grape::EmptyType>>> {
-  using result_t = Collection<size_t>;
+  using result_t = Collection<int64_t>;
 };
 
 // PropSelectorTuple doesn't effect the result type.
 template <typename SET_TUPLE_T, typename PropSelectorTuple>
 struct GroupValueResTImpl<SET_TUPLE_T, AggFunc::COUNT_DISTINCT,
                           PropSelectorTuple> {
-  using result_t = Collection<size_t>;
+  using result_t = Collection<int64_t>;
 };
 
 template <typename SET_TUPLE_T, typename PropSelectorTuple>
 struct GroupValueResTImpl<SET_TUPLE_T, AggFunc::COUNT, PropSelectorTuple> {
-  using result_t = Collection<size_t>;
+  using result_t = Collection<int64_t>;
 };
 
 template <typename T>
 struct GroupValueResTImpl<Collection<T>, AggFunc::SUM,
                           std::tuple<PropertySelector<grape::EmptyType>>> {
   using result_t = Collection<T>;
+};
+
+template <typename VID_T, typename LabelT, typename... SET_T, typename PropT>
+struct GroupValueResTImpl<TwoLabelVertexSetImpl<VID_T, LabelT, SET_T...>,
+                          AggFunc::SUM, std::tuple<PropertySelector<PropT>>> {
+  using result_t = Collection<PropT>;
 };
 
 // specialization for to_set
@@ -151,6 +158,27 @@ struct GroupValueResTImpl<Collection<T>, AggFunc::TO_LIST,
   using result_t = Collection<std::vector<T>>;
 };
 
+// When group vertices to list, we should return a vector of global ids.
+template <typename VID_T, typename LabelT, typename... T>
+struct GroupValueResTImpl<TwoLabelVertexSet<VID_T, LabelT, T...>,
+                          AggFunc::TO_LIST,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<std::vector<GlobalId>>;
+};
+
+template <typename VID_T, typename LabelT, typename... T>
+struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, T...>, AggFunc::TO_LIST,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<std::vector<GlobalId>>;
+};
+
+template <typename VID_T, typename LabelT, typename... T>
+struct GroupValueResTImpl<GeneralVertexSet<VID_T, LabelT, T...>,
+                          AggFunc::TO_LIST,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<std::vector<GlobalId>>;
+};
+
 // get the vertex's certain properties as list
 template <typename LabelT, typename VID_T, typename... SET_T, typename PropT>
 struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, SET_T...>,
@@ -168,10 +196,46 @@ struct GroupValueResTImpl<Collection<T>, AggFunc::MIN,
   using result_t = Collection<T>;
 };
 
+template <typename VID_T, typename LabelT, typename... T, typename PropT>
+struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, T...>, AggFunc::MIN,
+                          std::tuple<PropertySelector<PropT>>> {
+  using result_t = Collection<PropT>;
+};
+
+template <typename VID_T, typename LabelT, typename... T, typename PropT>
+struct GroupValueResTImpl<TwoLabelVertexSet<VID_T, LabelT, T...>, AggFunc::MIN,
+                          std::tuple<PropertySelector<PropT>>> {
+  using result_t = Collection<PropT>;
+};
+
+template <typename VID_T, typename LabelT, typename... T, typename PropT>
+struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, T...>, AggFunc::AVG,
+                          std::tuple<PropertySelector<PropT>>> {
+  using result_t = Collection<PropT>;
+};
+
+template <typename VID_T, typename LabelT, typename... T, typename PropT>
+struct GroupValueResTImpl<TwoLabelVertexSet<VID_T, LabelT, T...>, AggFunc::AVG,
+                          std::tuple<PropertySelector<PropT>>> {
+  using result_t = Collection<PropT>;
+};
+
+template <typename VID_T, typename LabelT, typename... T, typename PropT>
+struct GroupValueResTImpl<GeneralVertexSet<VID_T, LabelT, T...>, AggFunc::AVG,
+                          std::tuple<PropertySelector<PropT>>> {
+  using result_t = Collection<PropT>;
+};
+
 // support get max of vertexset's id
 template <typename LabelT, typename VID_T, typename... SET_T, typename T>
 struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, SET_T...>, AggFunc::MAX,
                           std::tuple<PropertySelector<T>>> {
+  using result_t = Collection<T>;
+};
+
+template <typename LabelT, typename VID_T, typename... SET_T, typename T>
+struct GroupValueResTImpl<TwoLabelVertexSet<VID_T, LabelT, SET_T...>,
+                          AggFunc::MAX, std::tuple<PropertySelector<T>>> {
   using result_t = Collection<T>;
 };
 
@@ -192,6 +256,15 @@ struct GroupValueResTImpl<TwoLabelVertexSet<VID_T, LabelT, SET_T...>,
   // the old_set_t is vertex_set or collection
   using result_t =
       typename AggFirst<TwoLabelVertexSet<VID_T, LabelT, SET_T...>>::result_t;
+};
+
+template <typename VID_T, typename LabelT, typename... SET_T>
+struct GroupValueResTImpl<GeneralVertexSet<VID_T, LabelT, SET_T...>,
+                          AggFunc::FIRST,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  // the old_set_t is vertex_set or collection
+  using result_t =
+      typename AggFirst<GeneralVertexSet<VID_T, LabelT, SET_T...>>::result_t;
 };
 
 // get first from collection
@@ -317,10 +390,7 @@ class GroupByOp {
                           std::integer_sequence<int32_t, 0>>>) {
       auto& builder = std::get<0>(value_set_builder_tuple);
       auto size = ctx.GetHead().Size();
-      std::tuple<std::tuple<grape::EmptyType>> empty_tuple;
-      for (size_t i = 0; i < size; ++i) {
-        builder.insert(0, empty_tuple, empty_tuple);
-      }
+      builder.inc_count(0, size);
     } else {
       for (auto iter : ctx) {
         auto ele_tuple = iter.GetAllIndexElement();
@@ -337,25 +407,10 @@ class GroupByOp {
                               std::make_index_sequence<grouped_value_num>());
     return RES_T(std::move(std::get<0>(value_set_built)),
                  ctx.get_sub_task_start_tag());
-
-    // // create offset array with one-one mapping.
-    // if (grouped_value_num == 1) {
-    // } else {
-    //   auto offset_vec = make_offset_vector(
-    //       grouped_value_num - 1, std::get<0>(value_set_built).size() + 1);
-    //   VLOG(10) << "after group by, the set size: " << keyed_set_built.Size();
-    //   VLOG(10) << "offset vec: " << offset_vec.size();
-    //   VLOG(10) << "," << offset_vec[0].size();
-
-    //   RES_T res(std::move(std::get<grouped_value_num - 1>(value_set_built)),
-    //             std::move(gs::tuple_slice<0, grouped_value_num - 1>(
-    //                 std::move(value_set_built))),
-    //             std::move(offset_vec));
-    //   return res;
-    // }
   }
 
   // group by only one key_alias
+  // TODO: Filter out null values.
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
             typename... CTX_PREV, typename GROUP_KEY, typename... AGG_T,
             typename RES_T = typename GroupResT<
@@ -384,13 +439,23 @@ class GroupByOp {
         KeyedT<old_key_set_t, key_alias_t>::create_keyed_builder(
             old_key_set, std::get<0>(group_keys).selector_);
 
-    // VLOG(10) << "Create keyed set builder";
+    // TODO(zhanglei): Refactor the Builders for each agg function, avoid
+    // specialization for each ds.
     auto value_set_builder_tuple = create_keyed_value_set_builder_tuple(
         graph, ctx, agg_tuple, std::make_index_sequence<grouped_value_num>());
 
-    // if group_key use property, we need property getter
-    // else we just insert into key_set
-    if constexpr (group_key_on_property<key_alias_t>::value) {
+    // using key_res_ele_t = typename CommonBuilderT<
+    //     Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
+    //     GROUP_KEY>::result_ele_t;
+    // std::unordered_map<key_res_ele_t, size_t, boost::hash<key_res_ele_t>>
+    //     key_set;
+    // size_t cur_ind = 0;
+    // Create tuple of prop getters from aggregating tuples.
+    // auto value_prop_getter_tuple = create_value_prop_getter_tuple(
+    //     graph, ctx, agg_tuple,
+    //     std::make_index_sequence<grouped_value_num>());
+
+    if constexpr (group_key_on_property<GROUP_KEY>::value) {
       auto named_property = create_prop_desc_from_selector<GROUP_KEY::col_id>(
           std::get<0>(group_keys).selector_);
       auto prop_getter =
@@ -399,23 +464,36 @@ class GroupByOp {
         auto ele_tuple = iter.GetAllIndexElement();
         auto data_tuple = iter.GetAllData();
 
-        auto key_ele = gs::get_from_tuple<GROUP_KEY::col_id>(ele_tuple);
-        size_t ind = insert_to_keyed_set_with_prop_getter(keyed_set_builder,
-                                                          prop_getter, key_ele);
-
-        insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
-                                    data_tuple, ind);
+        auto key_ind_ele = gs::get_from_tuple<GROUP_KEY::col_id>(ele_tuple);
+        auto key_prop = prop_getter.get_view(key_ind_ele);
+        // apply get_view on key_ind_ele with value_prop_getter_tuple
+        if (IsNull(key_prop)) {
+          VLOG(10) << "Skip null values";
+          continue;
+        }
+        int32_t ind = insert_to_keyed_set_with_prop_getter(
+            keyed_set_builder, prop_getter, key_ind_ele);
+        if (ind != -1) {
+          insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
+                                      data_tuple, ind);
+        }
       }
     } else {
       for (auto iter : ctx) {
         auto ele_tuple = iter.GetAllIndexElement();
         auto data_tuple = iter.GetAllData();
 
-        auto key_ele = gs::get_from_tuple<key_alias_t::tag_id>(ele_tuple);
-        auto data_ele = gs::get_from_tuple<key_alias_t::tag_id>(data_tuple);
-        size_t ind = insert_to_keyed_set(keyed_set_builder, key_ele, data_ele);
-        insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
-                                    data_tuple, ind);
+        auto key_ele = gs::get_from_tuple<GROUP_KEY::col_id>(ele_tuple);
+        if (IsNull(key_ele)) {
+          continue;
+        }
+        auto data_ele = gs::get_from_tuple<GROUP_KEY::col_id>(data_tuple);
+        int32_t ind = insert_to_keyed_set(keyed_set_builder, key_ele, data_ele);
+        // CHECK(ind != -1);
+        if (ind != -1) {
+          insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
+                                      data_tuple, ind);
+        }
       }
     }
 
@@ -457,9 +535,6 @@ class GroupByOp {
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr size_t group_key_num = std::tuple_size_v<alias_tuple_t>;
 
-    // the result context must be one-to-one mapping.
-    auto key_set_ref_tuple = std::tie(gs::Get<KEY_ALIAS::col_id>(ctx)...);
-
     auto value_set_builder_tuple = create_keyed_value_set_builder_tuple(
         graph, ctx, aggs, std::make_index_sequence<grouped_value_num>());
     VLOG(10) << "Create value set builders";
@@ -476,9 +551,12 @@ class GroupByOp {
     std::unordered_map<con_key_ele_t, int, boost::hash<con_key_ele_t>>
         key_tuple_set;
 
-    auto named_properties = create_prop_descs_from_group_keys(group_keys);
+    auto group_key_prop_desc = create_prop_descs_from_group_keys(group_keys);
     auto prop_getters =
-        create_prop_getters_from_prop_desc(graph, ctx, named_properties);
+        create_prop_getters_from_prop_desc(graph, ctx, group_key_prop_desc);
+    // auto value_prop_getter_tuple = create_value_prop_getter_tuple(
+    // graph, ctx, aggs, std::make_index_sequence<grouped_value_num>());
+
     size_t cur_ind = 0;
     for (auto iter : ctx) {
       auto ele_tuple = iter.GetAllElement();
@@ -487,18 +565,25 @@ class GroupByOp {
       auto key_data_tuple =
           std::make_tuple(gs::get_from_tuple<KEY_ALIAS::col_id>(data_tuple)...);
       auto key_tuple = create_key_tuple_ele(ele_tuple, prop_getters);
+      // auto value_prop =
+      // apply_get_view(value_prop_getter_tuple, ind_ele_tuple, data_tuple,
+      //  std::make_index_sequence<grouped_value_num>());
+      // TODO: determine what to do if the key or value has null value
+      if (HasNull(key_tuple)) {
+        VLOG(10) << "Skip null values: " << gs::to_string(key_tuple);
+        continue;
+      }
       size_t ind = 0;
       if (key_tuple_set.find(key_tuple) != key_tuple_set.end()) {
         // already exist
         ind = key_tuple_set[key_tuple];
       } else {
         // not exist
-        ind = cur_ind++;
         insert_into_comment_builder_tuple<0>(
             keyed_set_builder_tuple, group_keys, key_tuple, key_data_tuple);
+        ind = cur_ind++;
         key_tuple_set[key_tuple] = ind;
       }
-      // CHECK insert key.
       insert_to_value_set_builder(value_set_builder_tuple, ind_ele_tuple,
                                   data_tuple, ind);
     }
@@ -530,14 +615,17 @@ class GroupByOp {
   // ind is the index of the key in the key set
   template <size_t Is = 0, typename ele_tuple_t, typename data_tuple_t,
             typename... SET_T>
-  static void insert_to_value_set_builder(
+  static bool insert_to_value_set_builder(
       std::tuple<SET_T...>& value_set_builder, const ele_tuple_t& ele_tuple,
       const data_tuple_t& data_tuple, size_t ind) {
-    std::get<Is>(value_set_builder).insert(ind, ele_tuple, data_tuple);
-    if constexpr (Is + 1 < sizeof...(SET_T)) {
-      insert_to_value_set_builder<Is + 1>(value_set_builder, ele_tuple,
-                                          data_tuple, ind);
+    if (!std::get<Is>(value_set_builder).insert(ind, ele_tuple, data_tuple)) {
+      return false;
     }
+    if constexpr (Is + 1 < sizeof...(SET_T)) {
+      return insert_to_value_set_builder<Is + 1>(value_set_builder, ele_tuple,
+                                                 data_tuple, ind);
+    }
+    return true;
   }
 
   template <typename... BUILDER_T, size_t... Is>
@@ -555,6 +643,29 @@ class GroupByOp {
       std::tuple<AGG_T...>& agg_tuple, std::index_sequence<Is...>) {
     return std::make_tuple(create_keyed_value_set_builder(
         graph, ctx.GetPrevCols(), ctx.GetHead(), std::get<Is>(agg_tuple))...);
+  }
+
+  // create tuple of prop getters for aggregation functions
+  template <typename... CTX_PREV, typename HEAD_T, int cur_alias, int base_tag,
+            typename... AGG_T, size_t... Is>
+  static auto create_value_prop_getter_tuple(
+      const GRAPH_INTERFACE& graph,
+      Context<HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx,
+      std::tuple<AGG_T...>& agg_tuple, std::index_sequence<Is...>) {
+    return std::make_tuple(create_prop_getter_from_prop_desc(
+        graph, ctx,
+        create_prop_desc_from_aggregate_prop(std::get<Is>(agg_tuple)))...);
+  }
+
+  // Apply get_view on each element in ele_tuple with prop_getter_tuple
+  template <typename... PROP_GETTER_T, typename... ELE_T, typename... DATA_T,
+            size_t... Is>
+  static auto apply_get_view(std::tuple<PROP_GETTER_T...>& prop_getter_tuple,
+                             const std::tuple<ELE_T...>& ele_tuple,
+                             const std::tuple<DATA_T...>& data_tuple,
+                             std::index_sequence<Is...>) {
+    return std::make_tuple(
+        std::get<Is>(prop_getter_tuple).get_from_all_element(ele_tuple)...);
   }
 
   // create for ctx with only one column
@@ -586,7 +697,7 @@ class GroupByOp {
       const HEAD_T& head,
       AggregateProp<_agg_func, std::tuple<PropertySelector<T>>,
                     std::integer_sequence<int32_t, tag_id>>& agg) {
-    if constexpr (tag_id < sizeof...(SET_T)) {
+    if constexpr (tag_id >= 0 && tag_id < (int32_t) sizeof...(SET_T)) {
       auto old_set = gs::get_from_tuple<tag_id>(tuple);
       using old_set_t = typename std::remove_const_t<
           std::remove_reference_t<decltype(old_set)>>;
@@ -638,6 +749,18 @@ class GroupByOp {
     }
   }
 
+  template <typename... SET_T, typename HEAD_T, AggFunc _agg_func, typename T,
+            int tag_id>
+  static auto create_keyed_value_set_builder(
+      const GRAPH_INTERFACE& graph, const HEAD_T& head,
+      AggregateProp<_agg_func, std::tuple<PropertySelector<T>>,
+                    std::integer_sequence<int32_t, tag_id>>& agg) {
+    static_assert(tag_id == 0 || tag_id == -1);
+    return KeyedAggT<GRAPH_INTERFACE, HEAD_T, _agg_func, std::tuple<T>,
+                     std::integer_sequence<int32_t, tag_id>>::
+        create_agg_builder(head, graph, agg.selectors_);
+  }
+
   // create builder for single key_alias
   template <typename... SET_T, typename HEAD_T, int col_id, typename KEY_PROP>
   static auto create_unkeyed_set_builder(
@@ -656,21 +779,9 @@ class GroupByOp {
     }
   }
 
-  template <typename... SET_T, typename HEAD_T, AggFunc _agg_func, typename T,
-            int tag_id>
-  static auto create_keyed_value_set_builder(
-      const GRAPH_INTERFACE& graph, const HEAD_T& head,
-      AggregateProp<_agg_func, std::tuple<PropertySelector<T>>,
-                    std::integer_sequence<int32_t, tag_id>>& agg) {
-    static_assert(tag_id == 0 || tag_id == -1);
-    return KeyedAggT<GRAPH_INTERFACE, HEAD_T, _agg_func, std::tuple<T>,
-                     std::integer_sequence<int32_t, tag_id>>::
-        create_agg_builder(head, graph, agg.selectors_);
-  }
-
   // insert_to_key_set with respect to property type
   template <typename BuilderT, typename PROP_GETTER, typename ELE>
-  static inline auto insert_to_keyed_set_with_prop_getter(
+  static inline int32_t insert_to_keyed_set_with_prop_getter(
       BuilderT& builder, const PROP_GETTER& prop_getter, const ELE& ele) {
     return builder.insert(prop_getter.get_view(ele));
   }
@@ -719,7 +830,6 @@ class GroupByOp {
     auto& ele = std::get<Ind>(eles);
     auto& d = std::get<Ind>(data);
     insert_to_keyed_set_with_group_key(builder, group_key, ele, d);
-
     if constexpr (Ind + 1 < sizeof...(BuilderT)) {
       insert_into_comment_builder_tuple<Ind + 1>(builders, keys, eles, data);
     }
@@ -730,15 +840,20 @@ class GroupByOp {
   static inline void insert_to_keyed_set_with_group_key(
       BuilderT& builder, const GroupKey<col_id, T>& group_key, const ELE& ele,
       const DATA& data) {
-    builder.Insert(ele);
+    if constexpr (std::is_same_v<DATA, grape::EmptyType> ||
+                  std::is_same_v<DATA, std::tuple<grape::EmptyType>>) {
+      builder.Insert(ele);
+    } else {
+      builder.Insert(ele, data);
+    }
   }
 
-  template <typename BuilderT, int col_id, typename ELE, typename DATA>
-  static inline void insert_to_keyed_set_with_group_key(
-      BuilderT& builder, const GroupKey<col_id, grape::EmptyType>& group_key,
-      const ELE& ele, const DATA& data) {
-    insert_into_builder_v2_impl(builder, ele, data);
-  }
+  // template <typename BuilderT, int col_id, typename ELE, typename DATA>
+  // static inline bool insert_to_keyed_set_with_group_key(
+  //     BuilderT& builder, const GroupKey<col_id, grape::EmptyType>& group_key,
+  //     const ELE& ele, const DATA& data) {
+  //   return insert_into_builder_v2_impl(builder, ele, data);
+  // }
 };
 }  // namespace gs
 

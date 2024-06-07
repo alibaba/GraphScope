@@ -85,6 +85,7 @@ jobs:
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/**'
+            - 'python/requirements.txt'
           gie-function-test:
             - 'interactive_engine/**'
             - 'python/graphscope/interactive/**'
@@ -298,7 +299,7 @@ jobs:
           # install tensorflow
           python3 -m pip install --no-cache-dir pytest pytest-xdist "tensorflow" "pandas" --user
           # install pytorch
-          python3 -m pip install --no-cache-dir "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu
+          python3 -m pip install --no-cache-dir "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
@@ -379,6 +380,7 @@ jobs:
       run: |
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        export TMPDIR="${TMPDIR:-$(dirname $(mktemp))}"
 
         python3 -m pytest -d --tx popen//python=python3 \
                           -s -v \
@@ -421,6 +423,7 @@ jobs:
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/!(tests)'
             - 'python/graphscope/nx/tests/!(convert)'
+            - 'python/requirements.txt'
           convert:
             - 'python/graphscope/nx/convert.py'
             - 'python/graphscope/nx/convert_matrix.py'

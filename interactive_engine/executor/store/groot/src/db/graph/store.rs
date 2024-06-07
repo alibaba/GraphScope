@@ -271,6 +271,31 @@ impl MultiVersionGraph for GraphStore {
         Ok(true)
     }
 
+    fn add_vertex_type_properties(
+        &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
+    ) -> GraphResult<bool> {
+        debug!("add_vertex_type_properties");
+        let _guard = res_unwrap!(self.lock.lock(), add_vertex_type_properties)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        if !self.vertex_manager.contains_type(si, label_id) {
+            let msg = format!("vertex#{} does not exist", label_id);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, add_vertex_type_properties);
+            return Err(err);
+        }
+        self.meta
+            .add_vertex_type_properties(si, schema_version, label_id, type_def, table_id)
+            .and_then(|(table, cloned_typedef)| {
+                let codec = Codec::from(&cloned_typedef);
+                self.vertex_manager
+                    .update_type(si, label_id, codec, table)
+            })
+            .map(|_| self.update_si_guard(si))?;
+        Ok(true)
+    }
+
     fn create_edge_type(
         &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
     ) -> GraphResult<bool> {
@@ -290,6 +315,30 @@ impl MultiVersionGraph for GraphStore {
             .and_then(|_| {
                 self.edge_manager
                     .create_edge_type(si, label_id, type_def)
+            })
+            .map(|_| self.update_si_guard(si))?;
+        Ok(true)
+    }
+
+    fn add_edge_type_properties(
+        &self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
+    ) -> GraphResult<bool> {
+        debug!("add_edge_type_properties");
+        let _guard = res_unwrap!(self.lock.lock(), add_edge_type_properties)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        if !self.edge_manager.contains_edge(label_id) {
+            let msg = format!("edge#{} does not exist", label_id);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, add_edge_type_properties);
+            return Err(err);
+        }
+        self.meta
+            .add_edge_type_properties(si, schema_version, label_id, type_def)
+            .and_then(|cloned| {
+                self.edge_manager
+                    .update_edge_type(si, label_id, &cloned)
             })
             .map(|_| self.update_si_guard(si))?;
         Ok(true)
@@ -562,14 +611,18 @@ impl MultiVersionGraph for GraphStore {
 
     fn gc(&self, si: i64) -> GraphResult<()> {
         let vertex_tables = self.vertex_manager.gc(si)?;
+        if !vertex_tables.is_empty() {
+            info!("garbage collect vertex table {:?}", vertex_tables);
+        }
         for vt in vertex_tables {
-            info!("garbage collect vertex table {}", vt);
             let table_prefix = vertex_table_prefix(vt);
             self.delete_table_by_prefix(table_prefix, true)?;
         }
         let edge_tables = self.edge_manager.gc(si)?;
+        if !edge_tables.is_empty() {
+            info!("garbage collect edge table {:?}", edge_tables);
+        }
         for et in edge_tables {
-            info!("garbage collect edge table {}", et);
             let out_table_prefix = edge_table_prefix(et, EdgeDirection::Out);
             self.delete_table_by_prefix(out_table_prefix, false)?;
         }
@@ -648,7 +701,10 @@ impl GraphStore {
         let path = config
             .get_storage_option("store.data.path")
             .expect("invalid config, missing store.data.path");
-        info!("open graph store at {} with config {:?}", path, config);
+        let parts: Vec<&str> = path.split("/").collect();
+        if parts.get(parts.len() - 1) == Some(&"0") {
+            info!("open graph store at {} with config {:?}", path, config);
+        }
         match config.get_storage_engine() {
             "rocksdb" => {
                 let res = RocksDB::open(config.get_storage_options()).and_then(|db| {

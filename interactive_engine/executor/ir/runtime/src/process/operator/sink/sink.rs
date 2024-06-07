@@ -30,7 +30,7 @@ use prost::Message;
 
 use crate::error::{FnExecError, FnExecResult, FnGenResult};
 use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryType, PairEntry};
-use crate::process::operator::map::IntersectionEntry;
+use crate::process::operator::map::{GeneralIntersectionEntry, IntersectionEntry};
 use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
 
@@ -77,20 +77,40 @@ impl RecordSinkEncoder {
                 }
             }
             EntryType::Intersection => {
-                let intersection = e
+                if let Some(intersection) = e
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
-                    .unwrap();
-                let mut collection_pb = Vec::with_capacity(intersection.len());
-                for v in intersection.iter() {
-                    let vertex_pb = self.vid_to_pb(v);
-                    let element_pb =
-                        result_pb::Element { inner: Some(result_pb::element::Inner::Vertex(vertex_pb)) };
-                    collection_pb.push(element_pb);
+                {
+                    let mut collection_pb = Vec::with_capacity(intersection.len());
+                    for v in intersection.iter() {
+                        let vertex_pb = self.vid_to_pb(v);
+                        let element_pb = result_pb::Element {
+                            inner: Some(result_pb::element::Inner::Vertex(vertex_pb)),
+                        };
+                        collection_pb.push(element_pb);
+                    }
+                    Some(result_pb::entry::Inner::Collection(result_pb::Collection {
+                        collection: collection_pb,
+                    }))
+                } else if let Some(general_intersection) = e
+                    .as_any_ref()
+                    .downcast_ref::<GeneralIntersectionEntry>()
+                {
+                    let mut collection_pb = Vec::with_capacity(general_intersection.len());
+                    for v in general_intersection.iter() {
+                        let vertex_pb = self.vid_to_pb(v);
+                        let element_pb = result_pb::Element {
+                            inner: Some(result_pb::element::Inner::Vertex(vertex_pb)),
+                        };
+                        collection_pb.push(element_pb);
+                    }
+
+                    Some(result_pb::entry::Inner::Collection(result_pb::Collection {
+                        collection: collection_pb,
+                    }))
+                } else {
+                    Err(FnExecError::unsupported_error("unsupported intersection entry type"))?
                 }
-                Some(result_pb::entry::Inner::Collection(result_pb::Collection {
-                    collection: collection_pb,
-                }))
             }
             _ => {
                 if let Some(map_pb) = self.try_map_to_pb(e) {

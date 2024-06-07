@@ -77,7 +77,7 @@ jobs:
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         cd ${GITHUB_WORKSPACE}/interactive_engine
         mvn clean install -P groot -Drust.compile.mode=debug -DskipTests --quiet
-
+        mvn clean install -Pgroot-data-load --quiet
         sccache --show-stats
 
     - name: Gremlin Test
@@ -165,7 +165,7 @@ jobs:
 
         # helm deployment and testing
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA},distributed.enabled=true,store.replicaCount=2 ./graphscope-store
         helm test ci --timeout 5m0s
 
     - name: Test the helm deployment
@@ -176,10 +176,10 @@ jobs:
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
 
         # 2. deploy hadoop hdfs
-        tar -zxf /home/runner/hadoop-2.10.1.tar.gz -C /tmp/
+        tar -zxf /home/runner/hadoop-2.10.2.tar.gz -C /tmp/
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
-        ./prepare_hadoop.sh /tmp/hadoop-2.10.1
-        export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
+        ./prepare_hadoop.sh /tmp/hadoop-2.10.2
+        export PATH=${PATH}:/tmp/hadoop-2.10.2/bin
 
         # data-load-tool is needed for offline_load.sh
         # see .github/workflows/hadoop_scripts/offline_load.sh
@@ -206,7 +206,7 @@ jobs:
         helm uninstall ci
         sleep 30
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA},distributed.enabled=true,store.replicaCount=2 ./graphscope-store
 
     - name: Helm Test with Helm Deployment and PersistentVolume
       run: |

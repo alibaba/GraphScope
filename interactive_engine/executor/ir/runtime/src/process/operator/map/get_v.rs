@@ -73,12 +73,19 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     Ok(None)
                 }
             } else if let Some(graph_path) = entry.as_graph_path() {
-                // we check VOpt here:
-                // for `Other`, we treat it as to get_other_id() in the Edge within the Path (in which case is expanding the path with a adj vertex)
-                // for `End`, we treat it as to get EndV() in the Path (in which case is getting the end vertex from the path)
-                match self.opt {
-                    VOpt::Other => {
-                        let graph_path = input
+                // Specifically, when dealing with `GetV` on a path entry, we need to consider the following cases:
+                // 1. if the last entry is an edge, we expand the path with the other vertex of the edge; (in which case is expanding the path with a adj vertex)
+                // 2. if the last entry is a vertex, we get the vertex. (in which case is getting the end vertex from the path)
+                let path_end = graph_path.get_path_end();
+                if let Some(path_end_edge) = path_end.as_edge() {
+                    let label = path_end_edge.get_other_label();
+                    if self.contains_label(label)? {
+                        let vertex = Vertex::new(
+                            path_end_edge.get_other_id(),
+                            label.cloned(),
+                            DynDetails::default(),
+                        );
+                        let mut_graph_path = input
                             .get_mut(self.start_tag)
                             .ok_or_else(|| {
                                 FnExecError::unexpected_data_error(&format!(
@@ -91,51 +98,29 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                             .ok_or_else(|| {
                                 FnExecError::unexpected_data_error(&format!("entry is not a path in GetV"))
                             })?;
-                        let path_end_edge = graph_path
-                            .get_path_end()
-                            .as_edge()
-                            .ok_or_else(|| {
-                                FnExecError::unexpected_data_error(&format!(
-                                    "GetOtherVertex on a path entry with input: {:?}",
-                                    graph_path.get_path_end()
-                                ))
-                            })?;
-                        let label = path_end_edge.get_other_label();
-                        if self.contains_label(label)? {
-                            let vertex = Vertex::new(
-                                path_end_edge.get_other_id(),
-                                label.cloned(),
-                                DynDetails::default(),
-                            );
-                            graph_path.append(vertex);
+                        if mut_graph_path.append(vertex) {
                             Ok(Some(input))
                         } else {
                             Ok(None)
                         }
+                    } else {
+                        Ok(None)
                     }
-                    VOpt::End => {
-                        let path_end_vertex = graph_path
-                            .get_path_end()
-                            .as_vertex()
-                            .ok_or_else(|| FnExecError::unsupported_error("Get end edge on a path entry"))?
-                            .clone();
-                        let label = path_end_vertex.label();
-                        if self.contains_label(label.as_ref())? {
-                            input.append(path_end_vertex, self.alias.clone());
-                            Ok(Some(input))
-                        } else {
-                            Ok(None)
-                        }
+                } else if let Some(path_end_vertex) = path_end.as_vertex() {
+                    let label = path_end_vertex.label();
+                    if self.contains_label(label.as_ref())? {
+                        input.append(path_end_vertex.clone(), self.alias.clone());
+                        Ok(Some(input))
+                    } else {
+                        Ok(None)
                     }
-                    _ => Err(FnExecError::unsupported_error(&format!(
-                        "Wired opt in GetVertexOperator for GraphPath: {:?}",
-                        self.opt
-                    )))?,
+                } else {
+                    Err(FnExecError::unexpected_data_error("unreachable path end entry in GetV"))?
                 }
             } else {
-                Err(FnExecError::unexpected_data_error(
-                    "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
-                ))?
+                Err(FnExecError::unexpected_data_error( &format!(
+                    "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry, while the entry is {:?}", entry
+                )))?
             }
         } else {
             Ok(None)
@@ -171,7 +156,15 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     // pruning by labels
                     return Ok(None);
                 } else if !self.query_params.has_predicates() && !self.query_params.has_columns() {
-                    // if only filter by labels, directly return the results.
+                    // if only filter by labels, return the results.
+                    // if it has alias, append without moving head
+                    if let Some(alias) = self.alias {
+                        // append without moving head
+                        let entry_clone = entry.clone();
+                        input
+                            .get_columns_mut()
+                            .insert(alias as usize, entry_clone);
+                    }
                     return Ok(Some(input));
                 }
             }

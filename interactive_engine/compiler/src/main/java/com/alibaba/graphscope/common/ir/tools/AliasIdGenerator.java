@@ -32,7 +32,7 @@ public class AliasIdGenerator {
     }
 
     public int generate(@Nullable String aliasName) {
-        if (aliasName == null || aliasName == AliasInference.DEFAULT_NAME) {
+        if (AliasInference.isDefaultAlias(aliasName)) {
             return AliasInference.DEFAULT_ID;
         }
         Integer aliasId = aliasNameToIdMap.get(aliasName);

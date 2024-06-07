@@ -332,7 +332,7 @@
             "name": "id"
           },
           "data_type": 2,
-          "is_primary_key": false
+          "is_primary_key": true
         },
         {
           "key": {
@@ -884,6 +884,26 @@
           "src": {
             "id": 11,
             "name": "COMPANY"
+          },
+          "dst": {
+            "id": 8,
+            "name": "COUNTRY"
+          }
+        },
+        {
+          "src": {
+            "id": 3,
+            "name": "POST"
+          },
+          "dst": {
+            "id": 8,
+            "name": "COUNTRY"
+          }
+        },
+        {
+          "src": {
+            "id": 2,
+            "name": "COMMENT"
           },
           "dst": {
             "id": 8,

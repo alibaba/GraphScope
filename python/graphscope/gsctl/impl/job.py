@@ -24,6 +24,7 @@ import graphscope.flex.rest
 from graphscope.flex.rest import JobStatus
 from graphscope.flex.rest import SchemaMapping
 from graphscope.gsctl.config import get_current_context
+from graphscope.gsctl.impl.utils import upload_file
 
 
 def list_jobs() -> List[JobStatus]:
@@ -71,6 +72,15 @@ def create_dataloading_job(graph_name: str, job_config: dict) -> str:
         )
 
 
+def get_dataloading_config(graph_name: str) -> SchemaMapping:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.JobApi(api_client)
+        return api_instance.get_dataloading_config(graph_name)
+
+
 def delete_job_by_id(job_id: str) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
@@ -78,12 +88,3 @@ def delete_job_by_id(job_id: str) -> str:
     ) as api_client:
         api_instance = graphscope.flex.rest.JobApi(api_client)
         return api_instance.delete_job_by_id(job_id)
-
-
-def upload_file(filename: str, content: bytes, location: str) -> str:
-    context = get_current_context()
-    with graphscope.flex.rest.ApiClient(
-        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
-    ) as api_client:
-        api_instance = graphscope.flex.rest.UtilsApi(api_client)
-        return api_instance.upload_file(location)

@@ -130,6 +130,9 @@ impl ExprToken for pb::ExprOpr {
         }
     }
 
+    // Currently we define the precedence basically in accordance with the precedence of the operators in SQL, which can be referred in the following link:
+    // https://learn.microsoft.com/en-us/sql/t-sql/language-elements/operator-precedence-transact-sql?view=sql-server-ver16
+    // a higher precedence means that the operator has larger priority to get operated
     fn precedence(&self) -> i32 {
         use pb::expr_opr::Item::*;
         if self.item.is_some() {
@@ -137,34 +140,38 @@ impl ExprToken for pb::ExprOpr {
                 &Arith(a) => {
                     let arith = unsafe { std::mem::transmute::<i32, pb::Arithmetic>(a) };
                     match arith {
-                        pb::Arithmetic::Add | pb::Arithmetic::Sub => 95,
-                        pb::Arithmetic::Mul | pb::Arithmetic::Div | pb::Arithmetic::Mod => 100,
-                        pb::Arithmetic::Exp => 120,
-                        pb::Arithmetic::Bitlshift | pb::Arithmetic::Bitrshift => 130,
-                        pb::Arithmetic::Bitand | pb::Arithmetic::Bitor | pb::Arithmetic::Bitxor => 140,
+                        pb::Arithmetic::Exp => 120,                                             // 1.
+                        pb::Arithmetic::Mul | pb::Arithmetic::Div | pb::Arithmetic::Mod => 110, // 2.
+                        pb::Arithmetic::Add
+                        | pb::Arithmetic::Sub
+                        | pb::Arithmetic::Bitlshift
+                        | pb::Arithmetic::Bitrshift
+                        | pb::Arithmetic::Bitand
+                        | pb::Arithmetic::Bitor
+                        | pb::Arithmetic::Bitxor => 100, // 3.
                     }
                 }
                 &Logical(l) => {
                     let logical = unsafe { std::mem::transmute::<i32, pb::Logical>(l) };
                     match logical {
+                        pb::Logical::Within
+                        | pb::Logical::Without
+                        | pb::Logical::Startswith
+                        | pb::Logical::Endswith
+                        | pb::Logical::Regex => 90, // 4.
                         pb::Logical::Eq
                         | pb::Logical::Ne
                         | pb::Logical::Lt
                         | pb::Logical::Le
                         | pb::Logical::Gt
-                        | pb::Logical::Ge
-                        | pb::Logical::Within
-                        | pb::Logical::Without
-                        | pb::Logical::Startswith
-                        | pb::Logical::Endswith
-                        | pb::Logical::Isnull
-                        | pb::Logical::Regex => 80,
-                        pb::Logical::And => 75,
-                        pb::Logical::Or => 70,
-                        pb::Logical::Not => 110,
+                        | pb::Logical::Ge => 80, // 5.
+                        pb::Logical::Isnull => 70, // 6.
+                        pb::Logical::Not => 60,    // 7
+                        pb::Logical::And => 50,    // 8.
+                        pb::Logical::Or => 40,     // 9.
                     }
                 }
-                &Brace(_) => 0,
+                &Brace(_) => 0, // 10.
                 _ => 200,
             }
         } else {

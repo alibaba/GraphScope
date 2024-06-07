@@ -18,6 +18,7 @@
 #include <time.h>
 #include <climits>
 #include <iostream>
+#include <regex>
 #include <string>
 // #include "grape/grape.h"
 #include "flex/engines/hqps_db/core/utils/hqps_type.h"
@@ -31,8 +32,17 @@ namespace gs {
 #define INPUT_COL_ID(x) (x)
 #define LAST_COL -1
 
-#define PROJ_TO_NEW false
-#define PROJ_TO_APPEND true
+enum class ProjectDesc {
+  New = 0,  // Create a new column in Context.(Project To new context will
+            // persist all columns)
+  AppendTemp = 1,     // Append the result to the last column in Context.
+  AppendPersist = 2,  // Append the result to the last column in Context and
+                      // persist it.
+};
+
+#define PROJ_TO_NEW ProjectDesc::New
+#define PROJ_TO_APPEND_TEMP ProjectDesc::AppendTemp
+#define PROJ_TO_APPEND_PERSIST ProjectDesc::AppendPersist
 
 // Indicator flag for appending the result column to Context.
 enum class AppendOpt {
@@ -71,6 +81,8 @@ struct PropertySelector {
 };
 
 using InternalIdSelector = PropertySelector<grape::EmptyType>;
+using GlobalIdSelector = PropertySelector<GlobalId>;
+using LabelIdSelector = PropertySelector<LabelKey>;
 
 // @brief Mapping a vertex/edge to new data with expr& selector.
 // @tparam EXPR
@@ -90,6 +102,42 @@ struct IdentityMapper {
   IdentityMapper(SELECTOR&& selector) : selector_(std::move(selector)) {}
   IdentityMapper() = default;
 };
+
+// Create a key-value mapping record with key(string) and value selector.
+// Implement IR's VariableKeyValues.
+template <int _in_col_id, typename SELECTOR>
+struct KeyValueMapper {
+  static constexpr int in_col_id = _in_col_id;
+  std::string key_;
+  SELECTOR value_selector_;
+  KeyValueMapper(const std::string& key, SELECTOR&& value_selector)
+      : key_(key), value_selector_(std::move(value_selector)) {}
+};
+
+template <int in_col_id, typename SELECTOR>
+auto make_key_value_mapper(const std::string& key, SELECTOR&& value_selector) {
+  return KeyValueMapper<in_col_id, SELECTOR>(key, std::move(value_selector));
+}
+
+template <typename... Mapper>
+struct KeyValueMappers {};
+
+template <int... in_col_id, typename... SELECTOR>
+struct KeyValueMappers<KeyValueMapper<in_col_id, SELECTOR>...> {
+  std::tuple<KeyValueMapper<in_col_id, SELECTOR>...> mappers_;
+  KeyValueMappers(KeyValueMapper<in_col_id, SELECTOR>&&... mappers)
+      : mappers_(std::move(mappers)...) {}
+};
+
+template <int... in_col_id, typename... SELECTOR>
+auto make_key_value_mappers(KeyValueMapper<in_col_id, SELECTOR>&&... mappers) {
+  return KeyValueMappers<KeyValueMapper<in_col_id, SELECTOR>...>(
+      std::move(mappers)...);
+}
+
+// a type alias for unordered_map, which is used to store the key-value mapping
+// for VariableKeyValues
+using VariableKeyValue = std::vector<std::pair<std::string, Any>>;
 
 template <typename EXPR, typename... SELECTOR>
 struct Filter {
@@ -151,12 +199,12 @@ struct AggFuncReturnValue {
 
 template <typename T>
 struct AggFuncReturnValue<AggFunc::COUNT, T> {
-  using return_t = size_t;
+  using return_t = int64_t;
 };
 
 template <typename T>
 struct AggFuncReturnValue<AggFunc::COUNT_DISTINCT, T> {
-  using return_t = size_t;
+  using return_t = int64_t;
 };
 
 // for grouping values, for which key, and to which alias, applying which
@@ -225,6 +273,12 @@ struct InnerIdProperty {
   InnerIdProperty() = default;
 };
 
+template <int _tag_id_ = -1>
+struct GlobalIdProperty {
+  static constexpr int tag_id = _tag_id_;
+  GlobalIdProperty() = default;
+};
+
 // Denote the length of a path
 struct LengthKey {
   using length_data_type = int32_t;
@@ -244,11 +298,6 @@ inline bool operator!=(const LabelKey& lhs, const LabelKey& rhs) {
 
 inline bool operator>(const LabelKey& lhs, const LabelKey& rhs) {
   return lhs.label_id > rhs.label_id;
-}
-
-// overload hash_value for LabelKey
-inline std::size_t hash_value(const LabelKey& key) {
-  return std::hash<int32_t>()(key.label_id);
 }
 
 // static constexpr size_t dist_col = 0;
@@ -320,8 +369,9 @@ enum PathOpt {
 };
 
 enum ResultOpt {
-  EndV = 0,  // Get the end vertex of path. i.e. [3],[4]
-  AllV = 1,  // Get all the vertex on path. i.e. [1,2,3],[1,2,4]
+  EndV = 0,   // Get the end vertex of path. i.e. [3],[4]
+  AllV = 1,   // Get all the vertex on path. i.e. [1,2,3],[1,2,4]
+  AllVE = 2,  // Get all the vertex and edge on path. i.e. [1,2,3,4]
 };
 
 enum Interval {
@@ -518,7 +568,7 @@ struct EdgeExpandEMultiLabelOpt<num_labels, LabelT, EDGE_FILTER_FUNC,
   Direction dir_;
   LabelT edge_label_;
   std::array<LabelT, num_labels> other_label_;
-  EDGE_FILTER_FUNC edge_filter_;
+  Filter<EDGE_FILTER_FUNC, SELECTOR...> edge_filter_;
 };
 
 // EdgeExpandE with multiple edge triplet pairs.
@@ -573,7 +623,7 @@ auto make_edge_expande_opt(Direction dir, LabelT edge_label,
 }
 
 // make edge expand with multiple labels
-template <typename LabelT, typename FILTER_T, typename... PropTuple>
+template <typename LabelT, typename... PropTuple, typename FILTER_T>
 auto make_edge_expand_multie_opt(
     Direction dir,
     std::array<std::array<LabelT, 3>, sizeof...(PropTuple)>&&
@@ -1025,6 +1075,140 @@ NamedProperty<T, _tag_id> alias_tag_prop_to_named_property(
   return NamedProperty<T, _tag_id>(alias_tag_prop.tag_prop_.prop_names_[0]);
 }
 
+// customized operator
+// 0. WithIn
+const struct WithIn_ {
+} WithIn;
+
+template <typename T>
+struct WithProxy {
+  WithProxy(const T& t) : t_(t) {}
+  const T& t_;
+};
+
+template <typename T>
+WithProxy<T> operator<(const T& lhs, const WithIn_& rhs) {
+  return WithProxy<T>(lhs);
+}
+
+template <
+    typename T1, typename T2, size_t N,
+    typename std::enable_if<std::is_pod_v<T1> && (N == 1)>::type* = nullptr>
+bool operator>(const WithProxy<T1>& lhs, const std::array<T2, N>& rhs) {
+  return lhs.t_ == rhs[0];
+}
+
+template <
+    typename T1, typename T2, size_t N,
+    typename std::enable_if<std::is_pod_v<T1> && (N > 1)>::type* = nullptr>
+bool operator>(const WithProxy<T1>& lhs, const std::array<T2, N>& rhs) {
+  return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_);
+}
+
+template <size_t N, typename std::enable_if<(N > 0)>::type* = nullptr>
+bool operator>(const WithProxy<LabelKey>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_.label_id);
+}
+
+template <size_t N, typename std::enable_if<(N == 0)>::type* = nullptr>
+bool operator>(const WithProxy<LabelKey>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return false;
+}
+
+template <size_t N, typename std::enable_if<(N > 0)>::type* = nullptr>
+bool operator>(const WithProxy<GlobalId>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_.global_id);
+}
+
+template <size_t N, typename std::enable_if<(N == 0)>::type* = nullptr>
+bool operator>(const WithProxy<GlobalId>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return false;
+}
+
+template <
+    typename T1, typename T2, size_t N,
+    typename std::enable_if<std::is_pod_v<T1> && (N == 0)>::type* = nullptr>
+bool operator>(const WithProxy<T1>& lhs, const std::array<T2, N>& rhs) {
+  return false;
+}
+
+const struct EndWith_ {
+} EndWith;
+
+const struct StartWith_ {
+} StartWith;
+
+template <typename T>
+struct StartWithProxy {
+  StartWithProxy(const T& t) : t_(t) {}
+  const T& t_;
+};
+
+template <typename T>
+struct EndWithProxy {
+  EndWithProxy(const T& t) : t_(t) {}
+  const T& t_;
+};
+
+template <typename T>
+inline StartWithProxy<T> operator<(const T& lhs, const StartWith_& rhs) {
+  return StartWithProxy<T>(lhs);
+}
+
+inline bool operator>(const StartWithProxy<std::string>& lhs,
+                      const std::string& rhs) {
+  return lhs.t_.find(rhs, 0) == 0;
+}
+
+// string_view
+inline bool operator>(const StartWithProxy<std::string_view>& lhs,
+                      const std::string_view& rhs) {
+  return lhs.t_.find(rhs, 0) == 0;
+}
+
+// same as startwith
+template <typename T>
+inline EndWithProxy<T> operator<(const T& lhs, const EndWith_& rhs) {
+  return EndWithProxy<T>(lhs);
+}
+
+inline bool operator>(const EndWithProxy<std::string>& lhs,
+                      const std::string& rhs) {
+  return lhs.t_.rfind(rhs) == (lhs.t_.size() - rhs.size());
+}
+
+inline bool operator>(const EndWithProxy<std::string_view>& lhs,
+                      const std::string_view& rhs) {
+  return lhs.t_.rfind(rhs) == (lhs.t_.size() - rhs.size());
+}
+
+const struct Regex_ {
+} Regex;
+
+struct RegexProxy {
+  RegexProxy(const std::string& t) : t_(t) {}
+  RegexProxy(const std::string_view& t) : t_{t} {}
+  std::string t_;
+};
+
+inline RegexProxy operator<(const std::string& lhs, const Regex_& rhs) {
+  return RegexProxy(lhs);
+}
+
+inline RegexProxy operator<(const std::string_view& lhs, const Regex_& rhs) {
+  return RegexProxy(lhs);
+}
+
+inline bool operator>(const RegexProxy& lhs, const std::string& rhs) {
+  LOG(INFO) << "matching: " << lhs.t_ << " with " << rhs << ",result: "
+            << std::to_string(std::regex_match(lhs.t_, std::regex(rhs)));
+  return std::regex_match(lhs.t_, std::regex(rhs));
+}
+
 // ShortestPath
 /*
 message ShortestPathExpand {
@@ -1064,6 +1248,11 @@ namespace std {
 
 inline ostream& operator<<(ostream& os, const gs::Dist& g) {
   os << g.dist;
+  return os;
+}
+
+inline ostream& operator<<(ostream& os, const gs::GlobalId& g) {
+  os << g.global_id;
   return os;
 }
 }  // namespace std

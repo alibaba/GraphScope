@@ -31,10 +31,12 @@ static std::string work_dir;
 void signal_handler(int signal) {
   LOG(INFO) << "Received signal " << signal << ", exiting...";
   // support SIGKILL, SIGINT, SIGTERM
-  if (signal == SIGKILL || signal == SIGINT || signal == SIGTERM) {
+  if (signal == SIGKILL || signal == SIGINT || signal == SIGTERM ||
+      signal == SIGSEGV || signal == SIGABRT) {
     LOG(ERROR) << "Received signal " << signal
                << ",Clearing directory: " << work_dir << ", exiting...";
-    gs::clear_tmp(work_dir);
+    // remove all files in work_dir
+    std::filesystem::remove_all(work_dir);
     exit(0);
   } else {
     LOG(ERROR) << "Received unexpected signal " << signal << ", exiting...";
@@ -125,10 +127,13 @@ int main(int argc, char** argv) {
 
   work_dir = data_dir_path.string();
 
-  // Register handlers for SIGKILL, SIGINT, SIGTERM
+  // Register handlers for SIGKILL, SIGINT, SIGTERM, SIGSEGV, SIGABRT
+  // LOG(FATAL) cause SIGABRT
   std::signal(SIGINT, signal_handler);
   std::signal(SIGTERM, signal_handler);
   std::signal(SIGKILL, signal_handler);
+  std::signal(SIGSEGV, signal_handler);
+  std::signal(SIGABRT, signal_handler);
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
       data_dir_path.string(), schema_res.value(), loading_config_res.value(),

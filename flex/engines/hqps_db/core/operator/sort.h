@@ -331,15 +331,6 @@ class SortOp {
     return ctx.Flat(std::move(index_eles));
   }
 
-  template <size_t Is = 0, typename... IND_ELE, typename... GETTER>
-  static inline void update_prop_getter(std::tuple<GETTER...>& getters,
-                                        std::tuple<IND_ELE...>& ind_eles) {
-    std::get<Is>(getters).set_ind_ele(ind_eles);
-    if constexpr (Is + 1 < sizeof...(GETTER)) {
-      update_prop_getter<Is + 1>(getters, ind_eles);
-    }
-  }
-
   template <typename... ORDER_PAIR, typename CTX_HEAD_T, int cur_alias,
             int base_tag, typename... CTX_PREV, size_t... Is>
   static auto create_prop_getter_tuple(

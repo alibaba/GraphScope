@@ -56,10 +56,12 @@ schema:
             primitive_type: DT_SIGNED_INT32
         - property_name: tagline
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_name: title
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
     - type_name: Person
@@ -72,7 +74,8 @@ schema:
             primitive_type: DT_SIGNED_INT32
         - property_name: name
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
   edge_types:
@@ -120,8 +123,6 @@ Supported primitive data types for properties include:
 - DT_BOOL
 - DT_FLOAT
 - DT_DOUBLE
-- DT_STRING
-- DT_DATE32
 
 For a comprehensive list of supported types, please refer to the [data model](./data_model) page.
 

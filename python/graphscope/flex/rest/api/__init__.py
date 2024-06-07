@@ -3,6 +3,7 @@
 # import apis into api package
 from graphscope.flex.rest.api.alert_api import AlertApi
 from graphscope.flex.rest.api.connection_api import ConnectionApi
+from graphscope.flex.rest.api.datasource_api import DatasourceApi
 from graphscope.flex.rest.api.deployment_api import DeploymentApi
 from graphscope.flex.rest.api.graph_api import GraphApi
 from graphscope.flex.rest.api.job_api import JobApi

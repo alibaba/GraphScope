@@ -18,13 +18,15 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
-import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.gremlin.antlr4x.visitor.LiteralList;
+import com.alibaba.graphscope.gremlin.antlr4x.visitor.LiteralVisitor;
 import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.alibaba.graphscope.gremlin.plugin.type.AnyValue;
+import com.google.common.base.Preconditions;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -63,25 +65,21 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_hasLabel(
             GremlinGSParser.TraversalMethod_hasLabelContext ctx) {
-        if (ctx.getChildCount() == 4) {
-            return graphTraversal.hasLabel(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
-        } else if (ctx.stringLiteralList() != null) {
-            return graphTraversal.hasLabel(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
-                    GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
-        } else {
-            throw new UnsupportedEvalException(
-                    ctx.getClass(),
-                    "supported pattern is [hasLabel('str')] or hasLabel('str1', ...)");
-        }
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        Preconditions.checkArgument(
+                !labels.isEmpty(), "there should be at least one label parameter in `hasLabel`");
+        return graphTraversal.hasLabel(
+                labels.get(0), labels.subList(1, labels.size()).toArray(new String[0]));
     }
 
     @Override
     public Traversal visitTraversalMethod_hasId(GremlinGSParser.TraversalMethod_hasIdContext ctx) {
-        return graphTraversal.hasId(
-                GenericLiteralVisitor.getIntegerLiteralExpr(
-                        ctx.nonEmptyIntegerLiteralList().integerLiteralExpr()));
+        List<Number> ids =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(Number.class);
+        Preconditions.checkArgument(
+                !ids.isEmpty(), "there should be at least one id parameter in `hasId`");
+        return graphTraversal.hasId(ids.toArray(new Number[0]));
     }
 
     @Override
@@ -90,30 +88,30 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 "supported pattern is [has('key', 'value')] or [has('key', P)] or [has('label',"
                         + " 'key', 'value')] or [has('label', 'key', P)]";
         int childCount = ctx.getChildCount();
-        if (childCount == 6 && ctx.genericLiteral() != null) {
+        if (childCount == 6 && ctx.oC_Literal() != null) {
             return graphTraversal.has(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
-                    GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral(0)),
+                    LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()));
         } else if (childCount == 6 && ctx.traversalPredicate() != null) {
             return graphTraversal.has(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral(0)),
                     TraversalPredicateVisitor.getInstance()
                             .visitTraversalPredicate(ctx.traversalPredicate()));
-        } else if (childCount == 8 && ctx.genericLiteral() != null) {
+        } else if (childCount == 8 && ctx.oC_Literal() != null) {
             return graphTraversal.has(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1)),
-                    GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral(0)),
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral(1)),
+                    LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()));
         } else if (childCount == 8 && ctx.traversalPredicate() != null) {
             return graphTraversal.has(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1)),
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral(0)),
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral(1)),
                     TraversalPredicateVisitor.getInstance()
                             .visitTraversalPredicate(ctx.traversalPredicate()));
-        } else if (childCount == 4 && ctx.stringLiteral() != null) {
+        } else if (childCount == 4 && ctx.StringLiteral() != null) {
             P eqAny = P.eq(AnyValue.INSTANCE);
             return graphTraversal.has(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)), eqAny);
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral(0)), eqAny);
         } else {
             throw new UnsupportedEvalException(ctx.getClass(), notice);
         }
@@ -124,14 +122,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             GremlinGSParser.TraversalMethod_hasNotContext ctx) {
         P neqAny = P.neq(AnyValue.INSTANCE);
         return graphTraversal.has(
-                GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()), neqAny);
+                (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()), neqAny);
     }
 
     @Override
     public Traversal visitTraversalMethod_is(GremlinGSParser.TraversalMethod_isContext ctx) {
-        if (ctx.genericLiteral() != null) {
-            return graphTraversal.is(
-                    GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
+        if (ctx.oC_Literal() != null) {
+            return graphTraversal.is(LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()));
         } else if (ctx.traversalPredicate() != null) {
             return graphTraversal.is(
                     TraversalPredicateVisitor.getInstance()
@@ -144,10 +141,11 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_out(GremlinGSParser.TraversalMethod_outContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        if (!labels.isEmpty() && isRangeExpression(labels.get(0))) {
             GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
-            String[] ranges = labels[0].split("\\.\\.");
+            String[] ranges = labels.get(0).split("\\.\\.");
             RangeGlobalStep rangeStep =
                     new RangeGlobalStep(
                             nestedRange.asAdmin(),
@@ -155,10 +153,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                             Integer.valueOf(ranges[1]));
             nestedRange.asAdmin().addStep(rangeStep);
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
-            labels = Utils.removeStringEle(0, labels);
-            return traversal.out(nestedRange, labels);
+            return traversal.out(
+                    nestedRange, labels.subList(1, labels.size()).toArray(new String[0]));
         } else {
-            return graphTraversal.out(labels);
+            return graphTraversal.out(labels.toArray(new String[0]));
         }
     }
 
@@ -168,10 +166,11 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_in(GremlinGSParser.TraversalMethod_inContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        if (!labels.isEmpty() && isRangeExpression(labels.get(0))) {
             GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
-            String[] ranges = labels[0].split("\\.\\.");
+            String[] ranges = labels.get(0).split("\\.\\.");
             RangeGlobalStep rangeStep =
                     new RangeGlobalStep(
                             nestedRange.asAdmin(),
@@ -179,19 +178,20 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                             Integer.valueOf(ranges[1]));
             nestedRange.asAdmin().addStep(rangeStep);
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
-            labels = Utils.removeStringEle(0, labels);
-            return traversal.in(nestedRange, labels);
+            return traversal.in(
+                    nestedRange, labels.subList(1, labels.size()).toArray(new String[0]));
         } else {
-            return graphTraversal.in(labels);
+            return graphTraversal.in(labels.toArray(new String[0]));
         }
     }
 
     @Override
     public Traversal visitTraversalMethod_both(GremlinGSParser.TraversalMethod_bothContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        if (!labels.isEmpty() && isRangeExpression(labels.get(0))) {
             GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
-            String[] ranges = labels[0].split("\\.\\.");
+            String[] ranges = labels.get(0).split("\\.\\.");
             RangeGlobalStep rangeStep =
                     new RangeGlobalStep(
                             nestedRange.asAdmin(),
@@ -199,49 +199,49 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                             Integer.valueOf(ranges[1]));
             nestedRange.asAdmin().addStep(rangeStep);
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
-            labels = Utils.removeStringEle(0, labels);
-            return traversal.both(nestedRange, labels);
+            return traversal.both(
+                    nestedRange, labels.subList(1, labels.size()).toArray(new String[0]));
         } else {
-            return graphTraversal.both(labels);
+            return graphTraversal.both(labels.toArray(new String[0]));
         }
     }
 
     @Override
     public Traversal visitTraversalMethod_outE(GremlinGSParser.TraversalMethod_outEContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
         if (ctx.traversalMethod_inV() != null) {
-            return graphTraversal.out(labels);
+            return graphTraversal.out(labels.toArray(new String[0]));
         } else {
-            return graphTraversal.outE(labels);
+            return graphTraversal.outE(labels.toArray(new String[0]));
         }
     }
 
     @Override
     public Traversal visitTraversalMethod_inE(GremlinGSParser.TraversalMethod_inEContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
         if (ctx.traversalMethod_outV() != null) {
-            return graphTraversal.in(labels);
+            return graphTraversal.in(labels.toArray(new String[0]));
         } else {
-            return graphTraversal.inE(labels);
+            return graphTraversal.inE(labels.toArray(new String[0]));
         }
     }
 
     @Override
     public Traversal visitTraversalMethod_bothE(GremlinGSParser.TraversalMethod_bothEContext ctx) {
-        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        List<String> labels =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
         if (ctx.traversalMethod_otherV() != null) {
-            return graphTraversal.both(labels);
+            return graphTraversal.both(labels.toArray(new String[0]));
         } else {
-            return graphTraversal.bothE(labels);
+            return graphTraversal.bothE(labels.toArray(new String[0]));
         }
     }
 
     @Override
     public Traversal visitTraversalMethod_limit(GremlinGSParser.TraversalMethod_limitContext ctx) {
-        Number integer =
-                (Number)
-                        GenericLiteralVisitor.getInstance()
-                                .visitIntegerLiteral(ctx.integerLiteral());
+        Number integer = (Number) LiteralVisitor.INSTANCE.visit(ctx.oC_IntegerLiteral());
         return graphTraversal.limit(integer.longValue());
     }
 
@@ -276,35 +276,34 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_valueMap(
             GremlinGSParser.TraversalMethod_valueMapContext ctx) {
-        return graphTraversal.valueMap(
-                GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        List<String> properties =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        return graphTraversal.valueMap(properties.toArray(new String[0]));
     }
 
     @Override
     public Traversal visitTraversalMethod_elementMap(
             GremlinGSParser.TraversalMethod_elementMapContext ctx) {
-        return graphTraversal.elementMap(
-                GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        List<String> properties =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        return graphTraversal.elementMap(properties.toArray(new String[0]));
     }
 
     @Override
     public Traversal visitTraversalMethod_select(
             GremlinGSParser.TraversalMethod_selectContext ctx) {
-        if (ctx.stringLiteral() != null) {
-            String tag = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
-            // set tags
-            if (ctx.stringLiteralList() != null) {
-                String[] tags = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-                if (tags.length == 0) { // select one tag
-                    graphTraversal.select(tag);
-                } else if (tags.length == 1) {
-                    graphTraversal.select(tag, tags[0]);
-                } else {
-                    String[] otherTags = Utils.removeStringEle(0, tags);
-                    graphTraversal.select(tag, tags[0], otherTags);
-                }
-            } else { // select one tag
-                graphTraversal.select(tag);
+        LiteralList literalList = new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression());
+        if (!literalList.isEmpty()) {
+            List<String> selectTags = literalList.toList(String.class);
+            Preconditions.checkArgument(
+                    !selectTags.isEmpty(), "there should be at least one select tag in `select`");
+            if (selectTags.size() == 1) {
+                graphTraversal.select(selectTags.get(0));
+            } else {
+                graphTraversal.select(
+                        selectTags.get(0),
+                        selectTags.get(1),
+                        selectTags.subList(2, selectTags.size()).toArray(new String[0]));
             }
         } else if (ctx.traversalColumn() != null) {
             Column column =
@@ -313,6 +312,11 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             graphTraversal.select(column);
         } else if (ctx.traversalMethod_expr() != null) {
             visitExpr(ctx.traversalMethod_expr(), ExprStep.Type.PROJECTION);
+        } else {
+            throw new InvalidGremlinScriptException(
+                    ctx.getText()
+                            + " is invalid, supported pattern is [select('key')] or [select('key1',"
+                            + " 'key2', ...)] or [select(Column.keys)] or [select(expr)]");
         }
         // set by traversal
         if (ctx.traversalMethod_selectby_list() != null) {
@@ -327,8 +331,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 if (byChildCount == 3) {
                     step.modulateBy();
                 } else if (byChildCount == 4
-                        && byCtx.stringLiteral() != null) { // select(..).by('name')
-                    step.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+                        && byCtx.StringLiteral() != null) { // select(..).by('name')
+                    step.modulateBy((String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
                 } else if (byChildCount == 4
                         && byCtx.traversalToken() != null) { // select(..).by(T.label/T.id)
                     step.modulateBy(
@@ -384,8 +388,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                             TraversalEnumParser.parseTraversalEnumFromContext(
                                     Order.class, byCtx.traversalOrder());
                 }
-                if (byCtx.stringLiteral() != null) {
-                    strAsKey = GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral());
+                if (byCtx.StringLiteral() != null) {
+                    strAsKey = (String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral());
                 }
                 if (byCtx.traversalMethod_values() != null) {
                     TraversalMethodVisitor nestedVisitor =
@@ -427,8 +431,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_as(GremlinGSParser.TraversalMethod_asContext ctx) {
-        if (ctx.getChildCount() == 4 && ctx.stringLiteral() != null) {
-            return graphTraversal.as(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        if (ctx.getChildCount() == 4 && ctx.StringLiteral() != null) {
+            return graphTraversal.as((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
         }
         throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [as('..')]");
     }
@@ -461,8 +465,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         int childCount = ctx.getChildCount();
         if (childCount == 3) {
             return graphTraversal.by();
-        } else if (childCount == 4 && ctx.stringLiteral() != null) {
-            return graphTraversal.by(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        } else if (childCount == 4 && ctx.StringLiteral() != null) {
+            return graphTraversal.by((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
         } else if (childCount == 4 && ctx.nonStringKeyByList() != null) {
             GremlinGSParser.NonStringKeyByListContext nonStringCtxs = ctx.nonStringKeyByList();
             List<Traversal.Admin> keyByList = new ArrayList<>();
@@ -487,8 +491,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         int childCount = ctx.getChildCount();
         if (childCount == 3) {
             return graphTraversal.by();
-        } else if (childCount == 4 && ctx.stringLiteral() != null) {
-            return graphTraversal.by(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        } else if (childCount == 4 && ctx.StringLiteral() != null) {
+            return graphTraversal.by((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
         } else if (childCount == 4 && ctx.nonStringValueByList() != null) {
             GremlinGSParser.NonStringValueByListContext nonStringCtxs = ctx.nonStringValueByList();
             List<Traversal.Admin> valueByList = new ArrayList<>();
@@ -515,14 +519,15 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         Traversal nestedTraversal = null;
         if (ctx.traversalMethod_dedup() != null) {
             nestedTraversal = nestedVisitor.visitTraversalMethod_dedup(ctx.traversalMethod_dedup());
-            if (ctx.traversalMethod_count() != null) {
-                nestedTraversal =
-                        nestedVisitor.visitTraversalMethod_count(ctx.traversalMethod_count());
-            } else if (ctx.traversalMethod_fold() != null) {
-                nestedTraversal =
-                        nestedVisitor.visitTraversalMethod_fold(ctx.traversalMethod_fold());
+            if (ctx.oC_AggregateFunctionInvocation() != null) {
+                String functionName = ctx.oC_AggregateFunctionInvocation().getChild(0).getText();
+                if (functionName.equals("count") || functionName.equals("fold")) {
+                    nestedTraversal =
+                            nestedVisitor.visitOC_AggregateFunctionInvocation(
+                                    ctx.oC_AggregateFunctionInvocation());
+                }
             }
-        } else if (ctx.traversalMethod_aggregate_func() != null) {
+        } else if (ctx.oC_AggregateFunctionInvocation() != null) {
             if (ctx.traversalMethod_select() != null) {
                 nestedVisitor.visitTraversalMethod_select(ctx.traversalMethod_select());
             }
@@ -530,8 +535,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
             }
             nestedTraversal =
-                    nestedVisitor.visitTraversalMethod_aggregate_func(
-                            ctx.traversalMethod_aggregate_func());
+                    nestedVisitor.visitOC_AggregateFunctionInvocation(
+                            ctx.oC_AggregateFunctionInvocation());
         }
         if (ctx.traversalMethod_as() != null) {
             nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
@@ -543,75 +548,49 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitTraversalMethod_aggregate_func(
-            GremlinGSParser.TraversalMethod_aggregate_funcContext ctx) {
-        if (ctx.traversalMethod_count() != null) {
-            return visitTraversalMethod_count(ctx.traversalMethod_count());
-        } else if (ctx.traversalMethod_fold() != null) {
-            return visitTraversalMethod_fold(ctx.traversalMethod_fold());
-        } else if (ctx.traversalMethod_sum() != null) {
-            return visitTraversalMethod_sum(ctx.traversalMethod_sum());
-        } else if (ctx.traversalMethod_min() != null) {
-            return visitTraversalMethod_min(ctx.traversalMethod_min());
-        } else if (ctx.traversalMethod_max() != null) {
-            return visitTraversalMethod_max(ctx.traversalMethod_max());
-        } else if (ctx.traversalMethod_mean() != null) {
-            return visitTraversalMethod_mean(ctx.traversalMethod_mean());
-        } else {
-            throw new UnsupportedEvalException(
-                    ctx.getClass(),
-                    "supported aggregation functions are count/sum/min/max/mean/fold");
+    public Traversal visitOC_AggregateFunctionInvocation(
+            GremlinGSParser.OC_AggregateFunctionInvocationContext ctx) {
+        String functionName = ctx.getChild(0).getText();
+        switch (functionName) {
+            case "count":
+                return graphTraversal.count();
+            case "sum":
+                return graphTraversal.sum();
+            case "min":
+                return graphTraversal.min();
+            case "max":
+                return graphTraversal.max();
+            case "mean":
+                return graphTraversal.mean();
+            case "fold":
+                return graphTraversal.fold();
+            default:
+                throw new UnsupportedEvalException(
+                        ctx.getClass(),
+                        "supported aggregation functions are count/sum/min/max/mean/fold");
         }
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_sum(GremlinGSParser.TraversalMethod_sumContext ctx) {
-        return graphTraversal.sum();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_min(GremlinGSParser.TraversalMethod_minContext ctx) {
-        return graphTraversal.min();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_max(GremlinGSParser.TraversalMethod_maxContext ctx) {
-        return graphTraversal.max();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_mean(GremlinGSParser.TraversalMethod_meanContext ctx) {
-        return graphTraversal.mean();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_count(GremlinGSParser.TraversalMethod_countContext ctx) {
-        return graphTraversal.count();
     }
 
     @Override
     public Traversal visitTraversalMethod_values(
             GremlinGSParser.TraversalMethod_valuesContext ctx) {
-        if (ctx.getChildCount() == 4 && ctx.stringLiteral() != null) {
+        if (ctx.getChildCount() == 4 && ctx.StringLiteral() != null) {
             return graphTraversal.values(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
         }
         throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [values('..')]");
     }
 
     @Override
-    public Traversal visitTraversalMethod_fold(GremlinGSParser.TraversalMethod_foldContext ctx) {
-        return graphTraversal.fold();
-    }
-
-    @Override
     public Traversal visitTraversalMethod_dedup(GremlinGSParser.TraversalMethod_dedupContext ctx) {
-        graphTraversal.dedup(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        List<String> dedupTags =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        graphTraversal.dedup(dedupTags.toArray(new String[0]));
         DedupGlobalStep dedup = (DedupGlobalStep) graphTraversal.asAdmin().getEndStep();
         if (ctx.traversalMethod_dedupby() != null) {
             GremlinGSParser.TraversalMethod_dedupbyContext byCtx = ctx.traversalMethod_dedupby();
-            if (byCtx.stringLiteral() != null) {
-                dedup.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+            if (byCtx.StringLiteral() != null) {
+                dedup.modulateBy((String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
             } else if (byCtx.traversalToken() != null) {
                 dedup.modulateBy(
                         TraversalEnumParser.parseTraversalEnumFromContext(
@@ -626,9 +605,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_where(GremlinGSParser.TraversalMethod_whereContext ctx) {
-        if (ctx.stringLiteral() != null && ctx.traversalPredicate() != null) {
+        if (ctx.StringLiteral() != null && ctx.traversalPredicate() != null) {
             graphTraversal.where(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()),
                     TraversalPredicateVisitor.getInstance()
                             .visitTraversalPredicate(ctx.traversalPredicate()));
         } else if (ctx.traversalPredicate() != null) {
@@ -658,9 +637,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 int byChildCount = byCtx.getChildCount();
                 if (byChildCount == 3) { // by()
                     byModulating.modulateBy();
-                } else if (byChildCount == 4 && byCtx.stringLiteral() != null) {
+                } else if (byChildCount == 4 && byCtx.StringLiteral() != null) {
                     byModulating.modulateBy(
-                            GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+                            (String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
                 } else if (byCtx.traversalMethod_values() != null) {
                     // select(..).by(valueMap())
                     TraversalMethodVisitor nestedVisitor =
@@ -731,7 +710,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     "edge induced subgraph should follow an edge output operator [E, inE, outE,"
                             + " bothE]");
         }
-        return graphTraversal.subgraph(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        return graphTraversal.subgraph((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
     }
 
     // steps which have edge type as output, i.e. E(), inE(), outE(), bothE()
@@ -756,16 +735,14 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_coin(
             final GremlinGSParser.TraversalMethod_coinContext ctx) {
-        return graphTraversal.coin(Double.valueOf(ctx.floatLiteral().getText()));
+        return graphTraversal.coin(
+                ((Number) LiteralVisitor.INSTANCE.visit(ctx.oC_DoubleLiteral())).doubleValue());
     }
 
     @Override
     public Traversal visitTraversalMethod_sample(
             final GremlinGSParser.TraversalMethod_sampleContext ctx) {
-        Number amountToSample =
-                (Number)
-                        GenericLiteralVisitor.getInstance()
-                                .visitIntegerLiteral(ctx.integerLiteral());
+        Number amountToSample = (Number) LiteralVisitor.INSTANCE.visit(ctx.oC_IntegerLiteral());
         graphTraversal.sample(amountToSample.intValue());
         SampleGlobalStep sample = (SampleGlobalStep) graphTraversal.asAdmin().getEndStep();
         if (ctx.traversalMethod_sampleby() != null) {
@@ -774,8 +751,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 sample.modulateBy(
                         TraversalEnumParser.parseTraversalEnumFromContext(
                                 T.class, byCtx.traversalToken()));
-            } else if (byCtx.stringLiteral() != null) {
-                sample.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+            } else if (byCtx.StringLiteral() != null) {
+                sample.modulateBy((String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
             } else if (byCtx.nestedTraversal() != null) {
                 Traversal nested = visitNestedTraversal(byCtx.nestedTraversal());
                 sample.modulateBy(nested.asAdmin());
@@ -793,9 +770,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     "with should follow source or path expand, i.e. g.with(..) or"
                             + " out('1..2').with(..)");
         }
-        String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
-        Object optValue =
-                GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());
+        String optKey = (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral());
+        Object optValue = LiteralVisitor.INSTANCE.visit(ctx.oC_Literal());
         return graphTraversal.with(optKey, optValue);
     }
 
@@ -812,16 +788,15 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_constant(
             GremlinGSParser.TraversalMethod_constantContext ctx) {
-        return graphTraversal.constant(
-                GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
+        return graphTraversal.constant(LiteralVisitor.INSTANCE.visit(ctx.oC_Literal()));
     }
 
     private Traversal visitExpr(
             GremlinGSParser.TraversalMethod_exprContext ctx, ExprStep.Type type) {
-        if (ctx.stringLiteral() != null) {
+        if (ctx.StringLiteral() != null) {
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
             return traversal.expr(
-                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()), type);
+                    (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()), type);
         } else {
             throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [expr(...)]");
         }

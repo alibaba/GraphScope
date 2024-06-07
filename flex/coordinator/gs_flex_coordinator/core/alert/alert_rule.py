@@ -23,8 +23,6 @@ from abc import ABCMeta, abstractmethod
 from gs_flex_coordinator.core.alert.alert_message import AlertMessage
 from gs_flex_coordinator.core.scheduler import cancel_job, schedule
 
-logger = logging.getLogger("graphscope")
-
 
 class AlertRule(metaclass=ABCMeta):
     """Base class for alert rule"""

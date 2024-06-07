@@ -143,13 +143,13 @@ public class KafkaLogService implements LogService {
                 if (this.adminClient == null) {
                     try {
                         this.adminClient = createAdminWithRetry();
+                        logger.info("Created AdminClient");
                     } catch (InterruptedException e) {
                         logger.error("Create Kafka Client interrupted");
                     }
                 }
             }
         }
-        logger.info("Created AdminClient");
         return this.adminClient;
     }
 
@@ -161,7 +161,7 @@ public class KafkaLogService implements LogService {
             try {
                 return AdminClient.create(adminConfig);
             } catch (Exception e) {
-                logger.warn("Error creating Kafka AdminClient", e);
+                logger.warn("Error creating Kafka AdminClient, servers: {}", servers, e);
                 Thread.sleep(10000);
             }
         }

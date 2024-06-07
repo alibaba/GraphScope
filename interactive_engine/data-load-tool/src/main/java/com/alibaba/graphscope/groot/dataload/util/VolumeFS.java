@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.dataload.unified.UniConfig;
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.Volume;
@@ -17,21 +18,21 @@ import java.io.*;
 import java.util.*;
 
 public class VolumeFS extends AbstractFileSystem {
-    private String projectName;
-    private String volumeName;
-    private String partSpec;
+    private final String projectName;
+    private final String volumeName;
+    private final String partSpec;
     FileSystem fs;
-
-    public VolumeFS(Properties properties) {
-        projectName = properties.getProperty(DataLoadConfig.ODPS_VOLUME_PROJECT); // Could be null
-        volumeName = properties.getProperty(DataLoadConfig.ODPS_VOLUME_NAME);
-        partSpec = properties.getProperty(DataLoadConfig.ODPS_VOLUME_PARTSPEC);
-    }
 
     public VolumeFS(JobConf jobConf) throws IOException {
         projectName = jobConf.get(DataLoadConfig.ODPS_VOLUME_PROJECT);
         volumeName = jobConf.get(DataLoadConfig.ODPS_VOLUME_NAME);
         partSpec = jobConf.get(DataLoadConfig.ODPS_VOLUME_PARTSPEC);
+    }
+
+    public VolumeFS(UniConfig properties) {
+        projectName = properties.getProperty(DataLoadConfig.ODPS_VOLUME_PROJECT); // Could be null
+        volumeName = properties.getProperty(DataLoadConfig.ODPS_VOLUME_NAME);
+        partSpec = properties.getProperty(DataLoadConfig.ODPS_VOLUME_PARTSPEC);
     }
 
     public void setJobConf(JobConf jobConf) {

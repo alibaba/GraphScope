@@ -57,4 +57,7 @@ public class FrontendConfig {
 
     public static final Config<String> PHYSICAL_OPT_CONFIG =
             Config.stringConfig("physical.opt.config", "ffi");
+
+    public static final Config<Integer> PER_QUERY_STREAM_BUFFER_MAX_CAPACITY =
+            Config.intConfig("per.query.stream.buffer.max.capacity", 256);
 }

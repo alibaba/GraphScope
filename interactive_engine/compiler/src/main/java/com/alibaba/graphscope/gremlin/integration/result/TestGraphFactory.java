@@ -79,7 +79,7 @@ public enum TestGraphFactory implements GraphProperties {
             return JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {});
         }
     },
-    MCSR {
+    RUST_MCSR {
         @Override
         public Map<String, Object> getProperties(Configs configs) {
             String json =
@@ -295,6 +295,61 @@ public enum TestGraphFactory implements GraphProperties {
                                 + "  }\n"
                                 + "}";
             }
+            return JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {});
+        }
+    },
+    CPP_MCSR {
+        @Override
+        public Map<String, Object> getProperties(Configs configs) {
+            String json =
+                    "{\n"
+                            + "  \"vertex_properties\": {\n"
+                            + "    \"0\": {\n"
+                            + "      \"name\": \"marko\",\n"
+                            + "      \"age\": 29\n"
+                            + "    },\n"
+                            + "    \"1\": {\n"
+                            + "      \"name\": \"vadas\",\n"
+                            + "      \"age\": 27\n"
+                            + "    },\n"
+                            + "    \"2\": {\n"
+                            + "      \"name\": \"josh\",\n"
+                            + "      \"age\": 32\n"
+                            + "    },\n"
+                            + "    \"3\": {\n"
+                            + "      \"name\": \"peter\",\n"
+                            + "      \"age\": 35\n"
+                            + "    },\n"
+                            + "    \"72057594037927936\": {\n"
+                            + "      \"name\": \"lop\",\n"
+                            + "      \"lang\": \"java\"\n"
+                            + "    },\n"
+                            + "    \"72057594037927937\": {\n"
+                            + "      \"name\": \"ripple\",\n"
+                            + "      \"lang\": \"java\"\n"
+                            + "    }\n"
+                            + "  },\n"
+                            + "  \"edge_properties\": {\n"
+                            + "    \"1103806595072\": {\n"
+                            + "      \"weight\": 0.4\n" // 1-[created]->3
+                            + "    },\n"
+                            + "    \"1103808692224\": {\n"
+                            + "      \"weight\": 0.4\n" // 4-[created]->3
+                            + "    },\n"
+                            + "    \"1103809740800\": {\n"
+                            + "      \"weight\": 1.0\n" // 6-[created]->3
+                            + "    },\n"
+                            + "    \"1103808692225\": {\n"
+                            + "      \"weight\": 0.2\n" // 4-[created]->5
+                            + "    },\n"
+                            + "    \"1\": {\n"
+                            + "      \"weight\": 0.5\n" // 1-[knows]->2
+                            + "    },\n"
+                            + "    \"2\": {\n"
+                            + "      \"weight\": 1.0\n" // 2-[knows]->4
+                            + "    }\n"
+                            + "  }\n"
+                            + "}";
             return JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {});
         }
     }

@@ -42,15 +42,14 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.21.3
+VINEYARD_VERSION ?= v0.22.0
 PROFILE ?= release
 CI ?= false
 
 graphscope:
 	cd $(WORKING_DIR)/../.. && \
 	git submodule update --init && \
-	docker build --progress=$(BUILD_PROGRESS) \
-				 --build-arg CI=${CI} \
+	docker build --build-arg CI=${CI} \
 				 -t graphscope/graphscope:${SHORT_SHA} \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile .
 
@@ -97,7 +96,7 @@ graphscope-darwin-py3:
 		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		rm -rf build && \
 		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
-		pip3 install delocate && \
+		pip3 install delocate==0.10.7 && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
@@ -157,7 +156,7 @@ graphscope-manylinux2014-py3:
 graphscope-client-manylinux2014-py3-nodocker:
 	set -euxo pipefail && \
 	cd $(WORKING_DIR)/../../python && \
-		python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install ${PIP_ARGS} "networkx<=3.0" --user && \
 		python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 	git submodule update --init third_party/pybind11 && \
@@ -174,6 +173,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		python3 -m pip install ${PIP_ARGS} -U pip; \
+		python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" --index-url https://download.pytorch.org/whl/cpu --user; \
 		if [[ "$$py" == "cp311-cp311" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -181,7 +181,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 			else \
 				python3 -m pip install ${PIP_ARGS} "grpcio" "grpcio-tools"; \
 			fi; \
-			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.23.2" "pandas" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.23.2" "pandas" wheel "auditwheel==5.2.0"; \
 		elif [[ "$$py" == "cp310-cp310" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -189,7 +189,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 			else \
 				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.21.2" "pandas" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.21.2" "pandas" wheel "auditwheel==5.2.0"; \
 		elif [[ "$$py" == "cp39-cp39" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -197,7 +197,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 			else \
 				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.19.3" "pandas" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.19.3" "pandas" wheel "auditwheel==5.2.0"; \
 		else \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -205,18 +205,19 @@ graphscope-client-manylinux2014-py3-nodocker:
 			else \
 				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy" "pandas" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy" "pandas" wheel "auditwheel==5.2.0"; \
 		fi; \
 		sudo rm -rf build; \
 		sudo rm -rf dist/*.whl; \
+		python3 setup.py build_gltorch_ext; \
 		python3 setup.py bdist_wheel; \
 		cd dist; \
-		auditwheel repair ./*.whl --plat=manylinux2014_${ARCH}; \
+		auditwheel repair ./*.whl --plat=manylinux2014_${ARCH} --exclude libtorch_cpu.so --exclude libc10.so --exclude libtorch_python.so --exclude libtorch.so; \
 	done
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../python && \
-		python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 		python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		(git submodule update --init third_party/pybind11 || true) && \
@@ -229,6 +230,7 @@ graphscope-client-darwin-py3:
 		cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 		make graphlearn_shared -j`nproc` && \
 		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:/usr/local/lib:${GRAPHSCOPE_HOME}/lib:$$DYLD_LIBRARY_PATH && \
+		export DYLD_LIBRARY_PATH=$$(dirname $$(python3 -c "import torch; print(torch.__file__)"))/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../../python && \
 		py=$$(python3 -V 2>&1 | awk '{print $$2}' | awk -F '.' '{print $$1$$2}') && \
 		pip3 install ${PIP_ARGS} -U pip && \
@@ -250,9 +252,10 @@ graphscope-client-darwin-py3:
 			fi; \
 		fi; \
 		rm -rf build dist/*.whl || true && \
+		python3 setup.py build_gltorch_ext --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		for wheel in `ls dist/*.whl`; do \
-			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
+			delocate-wheel -e libtorch_cpu.dylib -e libc10.dylib -e libtorch_python.dylib -e libtorch.dylib -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done
 
 graphscope-client-manylinux2014-py3:

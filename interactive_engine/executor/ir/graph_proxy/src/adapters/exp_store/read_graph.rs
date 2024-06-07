@@ -276,12 +276,9 @@ impl ReadGraph for ExpStore {
                 }
             };
             let gid: DefaultId = LDBCVertexParser::to_global_id(store_indexed_id, label as StoreLabelId);
-            if let Some(local_vertex) = self.store.get_vertex(gid) {
-                let v = to_runtime_vertex(local_vertex, params.columns.clone());
-                Ok(Some(v))
-            } else {
-                Ok(None)
-            }
+            Ok(self
+                .get_vertex(&vec![gid as ID], params)?
+                .next())
         } else {
             Ok(None)
         }

@@ -48,6 +48,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -58,6 +59,7 @@ mod test {
             path_opt,
             result_opt,
             condition: None,
+            is_optional: false,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -98,6 +100,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -108,6 +111,7 @@ mod test {
             path_opt: 0,
             result_opt: 1,
             condition: str_to_expr_pb("@.name == \"marko\"".to_string()).ok(),
+            is_optional: false,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -138,6 +142,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let getv = pb::GetV {
@@ -156,6 +161,7 @@ mod test {
             path_opt: 0,
             result_opt: if is_whole_path { 1 } else { 0 },
             condition: None,
+            is_optional: false,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -896,6 +902,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -906,6 +913,7 @@ mod test {
             path_opt: 0, // Arbitrary
             result_opt,
             condition: None,
+            is_optional: false,
         };
 
         let project_opr = pb::Project {
@@ -978,6 +986,7 @@ mod test {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -988,6 +997,7 @@ mod test {
             path_opt: 0, // Arbitrary
             result_opt,
             condition: None,
+            is_optional: false,
         };
 
         let unfold_opr = pb::Unfold { tag: None, alias: None, meta_data: None };
@@ -1067,6 +1077,97 @@ mod test {
                         result_collection.push(format!("v{}", v.id()));
                     } else if let Some(e) = entry.get(None).unwrap().as_edge() {
                         result_collection.push(format!("e[{}->{}]", e.src_id, e.dst_id));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_collection.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_collection);
+    }
+
+    // g.V().hasLabel("person").both("3..4").with('RESULT_OPT', 'ALL_V_E').with('PATH_OPT', 'SIMPLE').endV().values("name")
+    #[test]
+    fn path_expand_endv_project_test() {
+        let source_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: Some(query_params(vec![], vec![], None)),
+            expand_opt: 0,
+            alias: None,
+            meta_data: None,
+            is_optional: false,
+        };
+
+        let path_expand_opr = pb::PathExpand {
+            base: Some(edge_expand.into()),
+            start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 3, upper: 4 }),
+            path_opt: 1,   // Simple
+            result_opt: 2, // AllVE
+            condition: None,
+            is_optional: false,
+        };
+
+        let path_end = pb::GetV {
+            tag: None,
+            opt: 1, // endV
+            params: None,
+            alias: None,
+            meta_data: None,
+        };
+
+        let project_opr = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
+                alias: None,
+            }],
+            is_append: true,
+            meta_data: vec![],
+        };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.get_v(path_end);
+        job_builder.project(project_opr);
+        job_builder.sink(default_sink_pb());
+
+        let request = job_builder.build().unwrap();
+
+        initialize();
+        let mut results = submit_query(request, 2);
+
+        let mut expected_result_collection: Vec<String> = vec![
+            "marko", "josh", "josh", "peter", "peter", "peter", "vadas", "vadas", "lop", "ripple",
+            "ripple", "ripple",
+        ]
+        .into_iter()
+        .map(|name| name.to_string())
+        .collect();
+
+        let mut result_collection = vec![];
+
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(v) = entry.get(None).unwrap().as_object() {
+                        result_collection.push(v.to_string());
                     }
                 }
                 Err(e) => {

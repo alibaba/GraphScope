@@ -28,6 +28,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.util.Sarg;
 
 import java.util.List;
@@ -57,13 +58,49 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitArrayValueConstructor(call);
         } else if (operator.getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR) {
             return visitMapValueConstructor(call);
+        } else if (operator.getKind() == SqlKind.ARRAY_CONCAT) {
+            return visitArrayConcat(call);
         } else if (operator.getKind() == SqlKind.EXTRACT) {
             return visitExtract(call);
+        } else if (operator.getKind() == SqlKind.OTHER
+                && operator.getName().equals("DATETIME_MINUS")) {
+            return visitDateMinus(call);
         } else if (call.getOperands().size() == 1) {
             return visitUnaryOperator(call);
         } else {
             return visitBinaryOperator(call);
         }
+    }
+
+    private OuterExpression.Expression visitDateMinus(RexCall call) {
+        OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
+        RexLiteral interval = (RexLiteral) call.getOperands().get(2);
+        SqlOperator operator = call.getOperator();
+        for (int i = 0; i < 2; ++i) {
+            RexNode operand = call.getOperands().get(i);
+            if (i != 0) {
+                exprBuilder.addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setDateTimeMinus(
+                                        OuterExpression.DateTimeMinus.newBuilder()
+                                                .setInterval(Utils.protoInterval(interval)))
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)));
+            }
+            if (needBrace(operator, operand)) {
+                exprBuilder.addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE)
+                                .build());
+            }
+            exprBuilder.addAllOperators(operand.accept(this).getOperatorsList());
+            if (needBrace(operator, operand)) {
+                exprBuilder.addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE)
+                                .build());
+            }
+        }
+        return exprBuilder.build();
     }
 
     private OuterExpression.Expression visitCase(RexCall call) {
@@ -83,6 +120,25 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .addOperators(
                         OuterExpression.ExprOpr.newBuilder()
                                 .setCase(caseBuilder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private OuterExpression.Expression visitArrayConcat(RexCall call) {
+        OuterExpression.Concat.Builder concatBuilder = OuterExpression.Concat.newBuilder();
+        call.getOperands()
+                .forEach(
+                        operand -> {
+                            Preconditions.checkArgument(
+                                    operand instanceof RexGraphVariable,
+                                    "parameters of 'CONCAT' should be"
+                                            + " 'variable' in ir core structure");
+                            concatBuilder.addVars(operand.accept(this).getOperators(0).getVar());
+                        });
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setConcat(concatBuilder)
                                 .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
                 .build();
     }
@@ -333,10 +389,21 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
 
     @Override
     public OuterExpression.Expression visitLiteral(RexLiteral literal) {
+        OuterExpression.ExprOpr.Builder oprBuilder = OuterExpression.ExprOpr.newBuilder();
+        if (literal.getType() instanceof IntervalSqlType) {
+            // convert to time interval
+            oprBuilder.setTimeInterval(
+                    OuterExpression.TimeInterval.newBuilder()
+                            .setInterval(Utils.protoInterval(literal))
+                            .setConst(
+                                    Common.Value.newBuilder()
+                                            .setI64(literal.getValueAs(Number.class).longValue())));
+        } else {
+            oprBuilder.setConst(Utils.protoValue(literal));
+        }
         return OuterExpression.Expression.newBuilder()
                 .addOperators(
-                        OuterExpression.ExprOpr.newBuilder()
-                                .setConst(Utils.protoValue(literal))
+                        oprBuilder
                                 .setNodeType(Utils.protoIrDataType(literal.getType(), isColumnId))
                                 .build())
                 .build();
@@ -362,7 +429,9 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
 
     @Override
     public OuterExpression.Expression visitSubQuery(RexSubQuery subQuery) {
-        throw new UnsupportedOperationException(
-                "conversion from subQuery to ir core structure is unsupported yet");
+        throw new IllegalArgumentException(
+                "cannot convert sub query ["
+                        + subQuery
+                        + "] to physical expression, please use 'apply' instead");
     }
 }

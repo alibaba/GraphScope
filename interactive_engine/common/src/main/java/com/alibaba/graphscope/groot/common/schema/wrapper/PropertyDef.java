@@ -19,13 +19,13 @@ import com.alibaba.graphscope.proto.groot.PropertyDefPb;
 import java.util.Objects;
 
 public class PropertyDef implements GraphProperty {
-    private int id;
-    private int innerId;
-    private String name;
-    private DataType dataType;
-    private PropertyValue defaultValue;
-    private boolean pk;
-    private String comment;
+    private final int id;
+    private final int innerId;
+    private final String name;
+    private final DataType dataType;
+    private final PropertyValue defaultValue;
+    private final boolean pk;
+    private final String comment;
 
     public PropertyDef(
             int id,

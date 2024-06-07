@@ -21,10 +21,6 @@ option java_multiple_files = true;
 
 import "groot/sdk/model.proto";
 
-service StoreWrite {
-  rpc writeStore(WriteStoreRequest) returns (WriteStoreResponse);
-}
-
 message PartitionToBatchPb {
   map<int32, OperationBatchPb> partitionToBatch = 1;
 }

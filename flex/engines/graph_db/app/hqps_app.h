@@ -22,49 +22,49 @@
 namespace gs {
 
 /**
- * @brief HQPSAdhocApp is a builtin, proxy app used to evaluate adhoc query.
+ * @brief HQPSAdhocReadApp is a builtin, proxy app used to evaluate
+ * adhoc read query.
  */
-class HQPSAdhocApp : public AppBase {
+class HQPSAdhocReadApp : public ReadAppBase {
  public:
-  HQPSAdhocApp(GraphDBSession& graph);
+  HQPSAdhocReadApp() {}
 
-  bool Query(Decoder& input, Encoder& output) override;
+  AppType type() const override { return AppType::kCypherAdhoc; }
 
- private:
-  GraphDBSession& graph_;
+  bool Query(const GraphDBSession& graph, Decoder& input,
+             Encoder& output) override;
 };
 
 /**
- * @brief HQPSProcedureApp is a builtin, proxy app used to evaluate procedure
- * query.
+ * @brief HQPSAdhocWriteApp is a builtin, proxy app used to evaluate
+ * adhoc write query.
  */
-class HQPSProcedureApp : public AppBase {
+class HQPSAdhocWriteApp : public WriteAppBase {
  public:
-  HQPSProcedureApp(GraphDBSession& graph);
+  HQPSAdhocWriteApp() {}
 
-  bool Query(Decoder& input, Encoder& output) override;
+  AppType type() const override { return AppType::kCypherAdhoc; }
 
- private:
-  GraphDBSession& graph_;
+  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
 };
 
 // Factory
-class HQPSAdhocAppFactory : public AppFactoryBase {
+class HQPSAdhocReadAppFactory : public AppFactoryBase {
  public:
-  HQPSAdhocAppFactory();
-  ~HQPSAdhocAppFactory();
+  HQPSAdhocReadAppFactory() = default;
+  ~HQPSAdhocReadAppFactory() = default;
 
-  AppWrapper CreateApp(GraphDBSession& graph) override;
+  AppWrapper CreateApp(const GraphDB& db) override;
 };
 
-// Factory
-class HQPSProcedureAppFactory : public AppFactoryBase {
+class HQPSAdhocWriteAppFactory : public AppFactoryBase {
  public:
-  HQPSProcedureAppFactory();
-  ~HQPSProcedureAppFactory();
+  HQPSAdhocWriteAppFactory() = default;
+  ~HQPSAdhocWriteAppFactory() = default;
 
-  AppWrapper CreateApp(GraphDBSession& graph) override;
+  AppWrapper CreateApp(const GraphDB& db) override;
 };
+
 }  // namespace gs
 
 #endif  // ENGINES_GRAPH_DB_APP_HQPS_APP_H_

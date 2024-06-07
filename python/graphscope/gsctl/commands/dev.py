@@ -56,7 +56,7 @@ def cli():
 
 @cli.group()
 def flexbuild():
-    """Build a customized stack using specific components."""
+    """Build docker image for Interactive, Insight product."""
     pass
 
 
@@ -65,7 +65,34 @@ def flexbuild():
     "--app",
     type=click.Choice(["docker"]),
     required=True,
-    help="Applicatin type of the built artifacts you want to build",
+    help="Application type of the built artifacts you want to build",
+)
+@click.option(
+    "--graphscope-repo",
+    required=False,
+    help="GraphScope code repo location.",
+)
+def insight(app, graphscope_repo):
+    """Build GraphScope Insight for BI analysis scenarios"""
+    if graphscope_repo is None:
+        graphscope_repo = default_graphscope_repo_path
+    insight_build_dir = os.path.join(graphscope_repo, "k8s")
+    if not os.path.exists(insight_build_dir) or not os.path.isdir(insight_build_dir):
+        click.secho(
+            f"No such file or directory {insight_build_dir}, try --graphscope-repo param.",
+            fg="red",
+        )
+        return
+    cmd = ["make", "graphscope-store", "ENABLE_COORDINATOR=true"]
+    run_shell_cmd(cmd, os.path.join(graphscope_repo, insight_build_dir))
+
+
+@flexbuild.command()
+@click.option(
+    "--app",
+    type=click.Choice(["docker"]),
+    required=True,
+    help="Application type of the built artifacts you want to build",
 )
 @click.option(
     "--graphscope-repo",
@@ -168,6 +195,7 @@ def install_deps(
     """Install dependencies for building GraphScope."""
     cmd = [
         "bash",
+        "-e",
         install_deps_script,
         "-t",
         type,
@@ -251,6 +279,7 @@ def make(component, graphscope_repo, install_prefix, storage_type):
 
     cmd = [
         "bash",
+        "-e",
         make_script,
         "-c",
         component,
@@ -312,7 +341,7 @@ def make_image(component, graphscope_repo, registry, tag):
     if component is None:
         component = "all"
 
-    cmd = ["bash", make_image_script, "-c", component, "-r", registry, "-t", tag]
+    cmd = ["bash", "-e", make_image_script, "-c", component, "-r", registry, "-t", tag]
     run_shell_cmd(cmd, graphscope_repo)
 
 
@@ -384,6 +413,7 @@ def test(type, graphscope_repo, testdata, local, storage_type, k8s, nx):
         type = ""
     cmd = [
         "bash",
+        "-e",
         test_script,
         "-t",
         type,

@@ -67,6 +67,7 @@ std::string agg_func_pb_2_str(
     return "gs::AggFunc::FIRST";
   default:
     LOG(FATAL) << "Unsupported aggregate function";
+    return "";
   }
 }
 
@@ -82,8 +83,22 @@ std::pair<std::string, std::string> gen_agg_var_and_code(
   auto& vars = agg_func.vars();
   for (int32_t i = 0; i < vars.size(); ++i) {
     auto& var = vars[i];
-    auto raw_tag_id = var.tag().id();
-    in_tags.push_back(ctx.GetTagInd(raw_tag_id));
+    int32_t raw_tag_id = -1;
+    if (var.has_tag()) {
+      raw_tag_id = var.tag().id();
+    }
+    if (raw_tag_id == -1) {
+      in_tags.push_back(-1);
+    } else if (ctx.GetTagIdAndIndMapping().HasTagId(raw_tag_id)) {
+      in_tags.push_back(ctx.GetTagInd(raw_tag_id));
+    } else if (raw_tag_id == ctx.GetTagIdAndIndMapping().GetMaxTagId() + 1) {
+      in_tags.push_back(-1);
+    } else {
+      LOG(WARNING) << "tag id " << raw_tag_id << " not found in tag id mapping";
+      in_tags.push_back(-1);
+    }
+
+    // in_tags.push_back(ctx.GetTagInd(raw_tag_id));
     if (var.has_property()) {
       auto var_prop = var.property();
       if (var_prop.item_case() == common::Property::kId) {
@@ -142,13 +157,16 @@ class GroupByOpBuilder {
   // counting of tag_ind
   GroupByOpBuilder& AddKeyAlias(const physical::GroupBy::KeyAlias& key_alias) {
     CHECK(key_alias.has_alias());
-    CHECK(key_alias.key().has_tag());
+    // CHECK(key_alias.key().has_tag());
     std::string prop_name = "None";
     std::string prop_type;
     auto group_key_var_name = ctx_.GetNextGroupKeyName();
 
     // first in tag id, then alias id
-    int32_t input_tag_id = ctx_.GetTagInd(key_alias.key().tag().id());
+    int32_t input_tag_id = -1;
+    if (key_alias.key().has_tag()) {
+      input_tag_id = ctx_.GetTagInd(key_alias.key().tag().id());
+    }
     int32_t output_tag_id =
         new_tag_id_mapping.CreateOrGetTagInd(key_alias.alias().value());
     // output_col_id should equal to current key's length

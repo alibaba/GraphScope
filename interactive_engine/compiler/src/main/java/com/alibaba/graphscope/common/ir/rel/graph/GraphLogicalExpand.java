@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -34,6 +35,7 @@ import java.util.List;
 
 public class GraphLogicalExpand extends AbstractBindableTableScan {
     private final GraphOpt.Expand opt;
+    private final boolean optional;
 
     protected GraphLogicalExpand(
             GraphOptCluster cluster,
@@ -42,9 +44,11 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
             GraphOpt.Expand opt,
             TableConfig tableConfig,
             @Nullable String alias,
-            AliasNameWithId startAlias) {
+            AliasNameWithId startAlias,
+            boolean optional) {
         super(cluster, hints, input, tableConfig, alias, startAlias);
         this.opt = opt;
+        this.optional = optional;
     }
 
     public static GraphLogicalExpand create(
@@ -55,16 +59,33 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
             TableConfig tableConfig,
             @Nullable String alias,
             AliasNameWithId startAlias) {
-        return new GraphLogicalExpand(cluster, hints, input, opt, tableConfig, alias, startAlias);
+        return create(cluster, hints, input, opt, tableConfig, alias, startAlias, false);
+    }
+
+    public static GraphLogicalExpand create(
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            RelNode input,
+            GraphOpt.Expand opt,
+            TableConfig tableConfig,
+            @Nullable String alias,
+            AliasNameWithId startAlias,
+            boolean optional) {
+        return new GraphLogicalExpand(
+                cluster, hints, input, opt, tableConfig, alias, startAlias, optional);
     }
 
     public GraphOpt.Expand getOpt() {
         return this.opt;
     }
 
+    public boolean isOptional() {
+        return this.optional;
+    }
+
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("opt", getOpt());
+        return super.explainTerms(pw).item("opt", getOpt()).itemIf("optional", optional, optional);
     }
 
     @Override
@@ -77,10 +98,12 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
                         this.getOpt(),
                         this.tableConfig,
                         this.getAliasName(),
-                        this.getStartAlias());
+                        this.getStartAlias(),
+                        this.isOptional());
         if (ObjectUtils.isNotEmpty(this.getFilters())) {
             copy.setFilters(this.getFilters());
         }
+        copy.setSchemaType((GraphSchemaType) this.getRowType().getFieldList().get(0).getType());
         return copy;
     }
 

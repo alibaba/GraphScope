@@ -64,7 +64,7 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
                         .build();
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
-                        .setJobId(request.getRequestId())
+                        .setJobId(request.getRequestId().longValue())
                         .setJobName(request.getRequestName())
                         .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(graphConfig))
                         .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(graphConfig))

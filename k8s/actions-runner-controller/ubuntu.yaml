@@ -13,6 +13,8 @@ spec:
       containers:
       - name: runner
         env: []
+        # securityContext:
+        #   privileged: true
         resources:
           limits:
             cpu: "31.0"
@@ -21,7 +23,16 @@ spec:
           requests:
             cpu: "27.0"
             memory: "60Gi"
-            ephemeral-storage: 100Gi
+            ephemeral-storage: 200Gi
+      # - name: docker
+      #   resources:
+      #     limits:
+      #       cpu: "2.0"
+      #       memory: "8Gi"
+      #     requests:
+      #       cpu: "2.0"
+      #       memory: "8Gi"
+      #       ephemeral-storage: 1Gi
 ---
 apiVersion: actions.summerwind.dev/v1alpha1
 kind: HorizontalRunnerAutoscaler
@@ -30,6 +41,7 @@ metadata:
 spec:
   scaleDownDelaySecondsAfterScaleOut: 900
   scaleTargetRef:
+    kind: RunnerDeployment
     name: graphscope-runner-ubuntu
     # Uncomment the below in case the target is not RunnerDeployment but RunnerSet
     #kind: RunnerSet

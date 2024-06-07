@@ -24,13 +24,10 @@ import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.gaia.proto.Common;
-import com.alibaba.graphscope.gaia.proto.DataType;
-import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
+import com.alibaba.graphscope.gaia.proto.*;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra.GroupBy.AggFunc.Aggregate;
-import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
-import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.Int32Value;
 
 import org.apache.calcite.avatica.util.TimeUnit;
@@ -41,6 +38,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Sarg;
@@ -48,11 +46,7 @@ import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -193,6 +187,14 @@ public abstract class Utils {
                     return OuterExpression.ExprOpr.newBuilder()
                             .setArith(OuterExpression.Arithmetic.EXP)
                             .build();
+                } else if (operator.getName().equals("<<")) {
+                    return OuterExpression.ExprOpr.newBuilder()
+                            .setArith(OuterExpression.Arithmetic.BITLSHIFT)
+                            .build();
+                } else if (operator.getName().equals(">>")) {
+                    return OuterExpression.ExprOpr.newBuilder()
+                            .setArith(OuterExpression.Arithmetic.BITRSHIFT)
+                            .build();
                 }
             case EQUALS:
                 return OuterExpression.ExprOpr.newBuilder()
@@ -242,6 +244,24 @@ public abstract class Utils {
                 return OuterExpression.ExprOpr.newBuilder()
                         .setLogical(OuterExpression.Logical.REGEX)
                         .build();
+            case BIT_AND:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setArith(OuterExpression.Arithmetic.BITAND)
+                        .build();
+            case BIT_OR:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setArith(OuterExpression.Arithmetic.BITOR)
+                        .build();
+            case BIT_XOR:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setArith(OuterExpression.Arithmetic.BITXOR)
+                        .build();
+            case OTHER:
+                if (operator.getName().equals("IN")) {
+                    return OuterExpression.ExprOpr.newBuilder()
+                            .setLogical(OuterExpression.Logical.WITHIN)
+                            .build();
+                }
             default:
                 throw new UnsupportedOperationException(
                         "operator type="
@@ -253,6 +273,8 @@ public abstract class Utils {
     }
 
     public static final Common.DataType protoBasicDataType(RelDataType basicType) {
+        // hack ways: convert interval type to int64 to avoid complexity
+        if (basicType instanceof IntervalSqlType) return Common.DataType.INT64;
         if (basicType instanceof GraphLabelType) return Common.DataType.INT32;
         switch (basicType.getSqlTypeName()) {
             case NULL:
@@ -322,8 +344,26 @@ public abstract class Utils {
             case MULTISET:
             case ARRAY:
             case MAP:
-                logger.warn("multiset or array type can not be converted to any ir core data type");
-                return DataType.IrDataType.newBuilder().build();
+                SqlTypeName typeName =
+                        (dataType != null && dataType.getComponentType() != null)
+                                ? dataType.getComponentType().getSqlTypeName()
+                                : null;
+                List<SqlTypeName> basicTypes =
+                        ImmutableList.of(
+                                SqlTypeName.BOOLEAN,
+                                SqlTypeName.INTEGER,
+                                SqlTypeName.BIGINT,
+                                SqlTypeName.CHAR,
+                                SqlTypeName.DECIMAL,
+                                SqlTypeName.FLOAT,
+                                SqlTypeName.DOUBLE);
+                if (typeName == null || !basicTypes.contains(typeName)) {
+                    logger.warn(
+                            "collection type with component type = ["
+                                    + typeName
+                                    + "] can not be converted to any ir core data type");
+                    return DataType.IrDataType.newBuilder().build();
+                }
             default:
                 return DataType.IrDataType.newBuilder()
                         .setDataType(protoBasicDataType(dataType))
@@ -398,10 +438,14 @@ public abstract class Utils {
     }
 
     public static final OuterExpression.Extract.Interval protoInterval(RexLiteral literal) {
-        Preconditions.checkArgument(
-                literal.getType().getSqlTypeName() == SqlTypeName.SYMBOL,
-                "interval should be an literal of 'SYMBOL' type");
-        TimeUnit timeUnit = literal.getValueAs(TimeUnit.class);
+        TimeUnit timeUnit;
+        if (literal.getType().getSqlTypeName() == SqlTypeName.SYMBOL) {
+            timeUnit = literal.getValueAs(TimeUnit.class);
+        } else if (literal.getType() instanceof IntervalSqlType) {
+            timeUnit = literal.getType().getIntervalQualifier().getUnit();
+        } else {
+            throw new IllegalArgumentException("cannot get interval field from literal " + literal);
+        }
         switch (timeUnit) {
             case YEAR:
                 return OuterExpression.Extract.Interval.YEAR;
@@ -415,6 +459,8 @@ public abstract class Utils {
                 return OuterExpression.Extract.Interval.MINUTE;
             case SECOND:
                 return OuterExpression.Extract.Interval.SECOND;
+            case MILLISECOND:
+                return OuterExpression.Extract.Interval.MILLISECOND;
             default:
                 throw new UnsupportedOperationException("unsupported interval type " + timeUnit);
         }

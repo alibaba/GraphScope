@@ -153,21 +153,27 @@ public class GraphAlgoQueries {
         return new QueryContext(query, expected);
     }
 
-    public static QueryContext get_graph_algo_test9() {
-        String query = "MATCH (a)-[b:WorkOn]-() return count(b) AS count;";
+    public static QueryContext get_graph_algo_test9_0() {
+        String query = "MATCH (a)-[b:WorkOn]->() return count(b) AS count;";
         List<String> expected = Arrays.asList("Record<{count: 123}>");
         return new QueryContext(query, expected);
     }
 
+    public static QueryContext get_graph_algo_test9_1() {
+        String query = "MATCH (a)-[b:WorkOn]-() return count(b) AS count;";
+        List<String> expected = Arrays.asList("Record<{count: 246}>");
+        return new QueryContext(query, expected);
+    }
+
     public static QueryContext get_graph_algo_test10() {
-        String query = "MATCH (a: Paper)-[]-() return count(a) AS count;";
-        List<String> expected = Arrays.asList("Record<{count: 336}>");
+        String query = "MATCH (a: Paper)-[]->() return count(a) AS count;";
+        List<String> expected = Arrays.asList("Record<{count: 685}>");
         return new QueryContext(query, expected);
     }
 
     public static QueryContext get_graph_algo_test11() {
         String query = "MATCH (a)-[b:Target]-() return count(b) AS count;";
-        List<String> expected = Arrays.asList("Record<{count: 69}>");
+        List<String> expected = Arrays.asList("Record<{count: 114}>");
         return new QueryContext(query, expected);
     }
 

@@ -1,3 +1,4 @@
+{{- if .Values.distributed.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -17,11 +18,9 @@ spec:
   clusterIP: None
   publishNotReadyAddresses: true
   ports:
-    - name: service-port
-      port: {{ .Values.frontend.service.servicePort }}
-      targetPort: service-port
     - name: port
       port: {{ .Values.frontend.service.port }}
       targetPort: port
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
+{{- end -}}

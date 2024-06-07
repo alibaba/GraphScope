@@ -21,11 +21,11 @@ import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
 
@@ -44,6 +44,7 @@ import org.neo4j.values.virtual.MapValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -114,7 +115,7 @@ public class GraphQueryExecutor extends FabricExecutor {
             Preconditions.checkArgument(
                     cacheValue != null,
                     "value should have been loaded automatically in query cache");
-            long jobId = idGenerator.generateId();
+            BigInteger jobId = idGenerator.generateId();
             String jobName = idGenerator.generateName(jobId);
             GraphPlanner.Summary planSummary =
                     new GraphPlanner.Summary(

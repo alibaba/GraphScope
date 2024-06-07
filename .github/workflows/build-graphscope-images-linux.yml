@@ -19,6 +19,7 @@ on:
       - 'k8s/dockerfiles/coordinator.Dockerfile'
       - 'k8s/dockerfiles/interactive.Dockerfile'
       - 'k8s/dockerfiles/learning.Dockerfile'
+      - 'k8s/dockerfiles/graphlearn-torch.Dockerfile'
       - '.github/workflows/build-graphscope-images-linux.yml'
 
 concurrency:
@@ -61,6 +62,8 @@ jobs:
         df -h
         make learning CI=false VERSION=${SHORT_SHA}
         df -h
+        make graphlearn-torch CI=false VERSION=${SHORT_SHA}
+        df -h
 
     - name: Release Nightly Image
       if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
@@ -84,6 +87,7 @@ jobs:
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+        sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -93,6 +97,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         # dataset image
         # Note! dataset image are built manually just use the latest one.
@@ -124,6 +129,7 @@ jobs:
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+        sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -132,6 +138,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         # dataset image
         # Note! dataset image are built manually just use the latest one.
@@ -148,6 +155,7 @@ jobs:
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+        sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -156,6 +164,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
 
   build-image-aarch64:
@@ -182,6 +191,7 @@ jobs:
           make interactive-frontend CI=false VERSION=${SHORT_SHA}
           make interactive-executor CI=false VERSION=${SHORT_SHA}
           make learning CI=false VERSION=${SHORT_SHA}
+          # make graphlearn-torch CI=false VERSION=${SHORT_SHA}
 
       - name: Release Nightly Image
         if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
@@ -205,6 +215,7 @@ jobs:
           sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
           sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
           sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+          # sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
   
           sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -214,6 +225,7 @@ jobs:
           sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+          # sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
   
       - name: Extract Tag Name
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
@@ -239,6 +251,7 @@ jobs:
           sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
           sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
           sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+          # sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
   
           sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -247,6 +260,7 @@ jobs:
           sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+          # sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
           # Release the latest tag
           tag=latest-${arch}
@@ -257,6 +271,7 @@ jobs:
           sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
           sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
           sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+          # sudo docker tag graphscope/graphlearn-torch:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
   
           sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -265,6 +280,7 @@ jobs:
           sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
           sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+          # sudo docker push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag}
 
       - name: Clean Nightly Image
         if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
@@ -282,6 +298,7 @@ jobs:
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag} || true
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag} || true
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/learning:${tag} || true
+          # sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag} || true
           tag=${SHORT_SHA}
           sudo docker rmi -f graphscope/coordinator:${tag} || true
           sudo docker rmi -f graphscope/analytical:${tag} || true
@@ -289,6 +306,7 @@ jobs:
           sudo docker rmi -f graphscope/interactive-frontend:${tag} || true
           sudo docker rmi -f graphscope/interactive-executor:${tag} || true
           sudo docker rmi -f graphscope/learning:${tag} || true
+          # sudo docker rmi -f graphscope/graphlearn-torch:${tag} || true
 
       - name: Clean Release Image
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
@@ -303,6 +321,7 @@ jobs:
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag} || true
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag} || true
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/learning:${tag} || true
+          # sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag} || true
           tag=latest-${arch}
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/coordinator:${tag} || true
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/analytical:${tag} || true
@@ -310,6 +329,7 @@ jobs:
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag} || true
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag} || true
           sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/learning:${tag} || true
+          # sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${tag} || true
           tag=${SHORT_SHA}
           sudo docker rmi -f graphscope/coordinator:${tag} || true
           sudo docker rmi -f graphscope/analytical:${tag} || true
@@ -317,6 +337,7 @@ jobs:
           sudo docker rmi -f graphscope/interactive-frontend:${tag} || true
           sudo docker rmi -f graphscope/interactive-executor:${tag} || true
           sudo docker rmi -f graphscope/learning:${tag} || true
+          # sudo docker rmi -f graphscope/graphlearn-torch:${tag} || true
 
 
   manifest-push-image:
@@ -366,6 +387,10 @@ jobs:
           ${{ env.REGISTRY }}/graphscope/learning:${version}a${time}-aarch64
 
         sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${version}a${time}-x86_64
+
+        sudo docker manifest create \
           ${{ env.REGISTRY }}/graphscope/dataset:${version}a${time} \
           ${{ env.REGISTRY }}/graphscope/dataset:${version}a${time}-x86_64 
 
@@ -375,6 +400,7 @@ jobs:
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time}
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time}
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/learning:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${version}a${time}
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/dataset:${version}a${time}
 
     - name: Extract Tag Name
@@ -414,6 +440,10 @@ jobs:
           ${{ env.REGISTRY }}/graphscope/learning:${{ steps.tag.outputs.TAG }}-aarch64
 
         sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${{ steps.tag.outputs.TAG }} \
+          ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${{ steps.tag.outputs.TAG }}-x86_64
+
+        sudo docker manifest create \
           ${{ env.REGISTRY }}/graphscope/dataset:${{ steps.tag.outputs.TAG }} \
           ${{ env.REGISTRY }}/graphscope/dataset:${{ steps.tag.outputs.TAG }}-x86_64
 
@@ -442,12 +472,17 @@ jobs:
           ${{ env.REGISTRY }}/graphscope/learning:latest-x86_64 \
           ${{ env.REGISTRY }}/graphscope/learning:latest-aarch64
 
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/graphlearn-torch:latest \
+          ${{ env.REGISTRY }}/graphscope/graphlearn-torch:latest-x86_64
+
         # push
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/coordinator:${{ steps.tag.outputs.TAG }}
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/analytical:${{ steps.tag.outputs.TAG }}
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${{ steps.tag.outputs.TAG }}
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-executor:${{ steps.tag.outputs.TAG }}
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/learning:${{ steps.tag.outputs.TAG }}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:${{ steps.tag.outputs.TAG }}
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/dataset:${{ steps.tag.outputs.TAG }}
 
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/coordinator:latest
@@ -455,4 +490,5 @@ jobs:
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-frontend:latest
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-executor:latest
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/learning:latest
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/graphlearn-torch:latest
 

@@ -23,11 +23,11 @@ concurrency:
 
 jobs:
   test-build-flex:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-22.04]
         platform: [x86_64]
 
     steps:
@@ -54,7 +54,7 @@ jobs:
   test-cmake-options:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
     strategy:
       matrix:
         BUILD_HQPS: [ON, OFF]
@@ -75,7 +75,7 @@ jobs:
   test-AOCC-compilation:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
     steps:
     - uses: actions/checkout@v3
 
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
     steps:
     - uses: actions/checkout@v3
 
@@ -166,6 +166,16 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
         GLOG_v=10 ./tests/rt_mutable_graph/string_edge_property_test ${SCHEMA_FILE} /tmp/csr-data-dir/
 
+    - name: Test schema parsing and loading on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_unified_schema.yaml
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+
     - name: Test build empty graph
       run: |
         rm -rf /tmp/csr-data-dir/
@@ -196,8 +206,8 @@ jobs:
         rm -rf /tmp/csr-data-dir/
 
         cd ${GITHUB_WORKSPACE}/flex/build/
-        SCHEMA_FILE=${GS_TEST_DIR}/type_test/graph.yaml
-        BULK_LOAD_FILE=${GS_TEST_DIR}/type_test/import.yaml
+        SCHEMA_FILE=${GS_TEST_DIR}/flex/type_test/graph.yaml
+        BULK_LOAD_FILE=${GS_TEST_DIR}/flex/type_test/import.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/ -p 2
 
     - name: Test Graph Loading on LDBC SNB sf0.1

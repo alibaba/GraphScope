@@ -20,31 +20,73 @@
 
 import os
 import random
+import time
 from string import ascii_letters
 
 from graphscope.gsctl.utils import read_yaml_file
 from graphscope.gsctl.utils import write_yaml_file
 
-GS_CONFIG_DEFAULT_LOCATION = os.environ.get(
-    "GSCONFIG", os.path.expanduser("~/.graphscope/config")
-)
+GS_CONFIG_DEFAULT_LOCATION = os.environ.get("GSCONFIG", os.path.expanduser("~/.gsctl"))
+
+logo = """
+    ______                 __   _____
+   / ____/________ _____  / /_ / ___/_________  ____  ___
+  / / __/ ___/ __ `/ __ \/ __ \\\__ \/ ___/ __ \/ __ \/ _ \\
+ / /_/ / /  / /_/ / /_/ / / / /__/ / /__/ /_/ / /_/ /  __/
+ \____/_/   \__,_/ .___/_/ /_/____/\___/\____/ .___/\___/
+                /_/                         /_/
+"""  # noqa: W605
 
 
 class Context(object):
-    def __init__(self, coordinator_endpoint, solution, name=None):
+    def __init__(
+        self,
+        coordinator_endpoint,
+        flex,
+        name=None,
+        timestamp=time.time(),
+        context="global",
+    ):
         if name is None:
             name = "context_" + "".join(random.choices(ascii_letters, k=8))
 
         self.name = name
-        self.solution = solution
+        self.flex = flex
         self.coordinator_endpoint = coordinator_endpoint
+        # switch to specific graph after `using graph`
+        self.context = context
+        self.timestamp = timestamp
 
-    def to_dict(self):
+    def switch_context(self, context: str):
+        self.context = context
+
+    def to_dict(self) -> dict:
         return {
             "name": self.name,
-            "solution": self.solution,
+            "flex": self.flex,
             "coordinator_endpoint": self.coordinator_endpoint,
+            "context": self.context,
+            "timestamp": self.timestamp,
         }
+
+    @classmethod
+    def from_dict(cls, dikt):
+        return Context(
+            coordinator_endpoint=dikt.get("coordinator_endpoint"),
+            flex=dikt.get("flex"),
+            name=dikt.get("name"),
+            timestamp=dikt.get("timestamp"),
+            context=dikt.get("context"),
+        )
+
+    def is_expired(self, validity_period=86400) -> bool:
+        current_timestamp = time.time()
+        if current_timestamp - self.timestamp > validity_period:
+            return True
+        return False
+
+    def reset_timestamp(self):
+        self.timestamp = time.time()
 
 
 class GSConfig(object):
@@ -55,7 +97,7 @@ class GSConfig(object):
     def current_context(self) -> Context:
         if self._current_context is None:
             return None
-        if self._current_context not in self._contexts.keys():
+        if self._current_context not in self._contexts:
             raise RuntimeError(
                 f"Failed to get current context: {self._current_context}"
             )
@@ -66,12 +108,26 @@ class GSConfig(object):
         for _, v in self._contexts.items():
             if (
                 context.coordinator_endpoint == v.coordinator_endpoint
-                and context.solution == v.solution
+                and context.flex == v.flex
             ):
                 return
 
         # set
         self._current_context = context.name
+        self._contexts[context.name] = context
+
+        # write
+        contexts = [v.to_dict() for _, v in self._contexts.items()]
+        write_yaml_file(
+            {"contexts": contexts, "current-context": self._current_context},
+            GS_CONFIG_DEFAULT_LOCATION,
+        )
+
+    def update_and_write(self, context: Context):
+        if context.name not in self._contexts:
+            raise RuntimeError(f"Failed to get context: {context.name}")
+
+        # update
         self._contexts[context.name] = context
 
         # write
@@ -111,11 +167,7 @@ class GSConfigLoader(object):
         for c in config_dict["contexts"]:
             if current_context == c["name"]:
                 current_context_exists = True
-            contexts[c["name"]] = Context(
-                name=c["name"],
-                solution=c["solution"],
-                coordinator_endpoint=c["coordinator_endpoint"],
-            )
+            contexts[c["name"]] = Context.from_dict(c)
 
         if not current_context_exists:
             raise RuntimeError(

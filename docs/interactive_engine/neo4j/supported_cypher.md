@@ -73,7 +73,14 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Mathematical  | Multiplication | * | * | <input type="checkbox" disabled checked /> |  |
 | Mathematical  | Division  | /  | / | <input type="checkbox" disabled checked /> |  |
 | Mathematical  | Modulo division | %  | % |  <input type="checkbox" disabled checked /> |  |
-| Mathematical  | Exponentiation | ^ | ^^ |  <input type="checkbox" disabled checked /> |  |
+| Mathematical  | Exponentiation | ^ | power(a, b) |  <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Add a duration to a temporal type | \<temporal\> + \<duration\> | \<temporal\> + \<duration\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Subtract a duration from a temporal type | \<temporal\> - \<duration\> | \<temporal\> - \<duration\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Subtract two temporal types, returning a duration in milliseconds | \<temporal\> - \<temporal\> | \<temporal\> - \<temporal\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Add two durations | \<duration\> + \<duration\> | \<duration\> + \<duration\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Subtract two durations | \<duration\> - \<duration\> | \<duration\> - \<duration\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Multiply a duration by a numeric value | \<duration\> * \<numeric\> | \<duration\> * \<numeric\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Divide a duration by a numeric value | \<duration\> / \<numeric\> | \<duration\> / \<numeric\> | <input type="checkbox" disabled checked /> |  |
 | Comparison | Equality | = | = |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Inequality| <> | <> |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Less than | < | < |  <input type="checkbox" disabled checked /> |  |
@@ -82,30 +89,27 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Comparison | Greater than or equal | >= | >= |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Verify as `NULL`| IS NULL | is null |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Verify as `NOT NULL`| IS NOT NULL | is not null |  <input type="checkbox" disabled checked /> |  |
-| Comparison | String starts with | STARTS WITH | starts with  | <input type="checkbox" disabled  />|  planned |
-| Comparison | String ends with | ENDS WITH | ends with | <input type="checkbox" disabled  />|  planned |
-| Comparison | String contains | CONTAINS | contains | <input type="checkbox" disabled  />|  planned |
+| Comparison | Perform case-sensitive matching on the beginning of a string | STARTS WITH | starts with  | <input type="checkbox" disabled  checked />|  |
+| Comparison | Perform case-sensitive matching on the ending of a string | ENDS WITH | ends with | <input type="checkbox" disabled  checked />|  |
+| Comparison | Perform case-sensitive matching regardless of location within a string | CONTAINS | contains | <input type="checkbox" disabled  checked />|  |
 | Boolean | Conjunction | AND | and |  <input type="checkbox" disabled checked /> |   |
 | Boolean | Disjunction | OR | or |  <input type="checkbox" disabled checked /> |   |
 | Boolean | Exclusive Disjunction | XOR | xor |  <input type="checkbox" disabled /> | planned |
-| Boolean | Negation | NOT | not |  <input type="checkbox" disabled /> | planned  |
+| Boolean | Negation | NOT | not |  <input type="checkbox" disabled checked /> |  |
 | BitOpr  | Bit and | via function | & |  <input type="checkbox" disabled checked /> |  |
 | BitOpr  | Bit or | via function | \| |  <input type="checkbox" disabled checked /> |  |
 | Boolean | Bit xor | via function | ^ |  <input type="checkbox" disabled checked /> |   |
-| BitOpr  | Bit reverse | via function | ~ |  <input type="checkbox" disabled checked /> |  |
-| BitOpr  | Bit left shift | via function | << |  <input type="checkbox" disabled  />| planned |
-| BitOpr  | Bit right shift | via function | >> |  <input type="checkbox" disabled  />| planned |
+| BitOpr  | Bit reverse | via function | ~ |  <input type="checkbox" disabled /> | planned |
+| BitOpr  | Bit left shift | via function | << |  <input type="checkbox" disabled checked />|  |
+| BitOpr  | Bit right shift | via function | >> |  <input type="checkbox" disabled checked />|  |
 | Branch | Use with `Project` and `Return` | CASE WHEN  | CASE WHEN |  <input type="checkbox" disabled  />| planned |
 | Scalar | Returns the length of a path | length() | length() | <input type="checkbox" disabled checked /> | |
 | ListLiteral | Fold expressions into a single list | [] | [] | <input type="checkbox" disabled checked /> |   |
 | MapLiteral | Fold expressions with keys into a single map | {} | {} | <input type="checkbox" disabled checked /> |   |
 | Labels | Get label name of a vertex type | labels() | labels() | <input type="checkbox" disabled checked /> |   |
+| elementId | Get a vertex or an edge identifier, unique by an object type and a database | elementId() | elementId() | <input type="checkbox" disabled checked /> |   |
 | Type | Get label name of an edge type | type() | type() | <input type="checkbox" disabled checked /> |   |
 | Extract | Get interval value from a temporal type | \<temporal\>.\<interval\> | \<temporal\>.\<interval\> | <input type="checkbox" disabled checked /> |   |
-| Starts With | Perform case-sensitive matching on the beginning of a string | STARTS WITH | STARTS WITH | <input type="checkbox" disabled checked /> | |
-| Ends With | Perform case-sensitive matching on the ending of a string | ENDS WITH | ENDS WITH | <input type="checkbox" disabled checked /> | |
-| Contains | Perform case-sensitive matching regardless of location within a string | CONTAINS | CONTAINS | <input type="checkbox" disabled checked /> | |
-
 
 ## Clause
 A notable limitation for now is that we do not

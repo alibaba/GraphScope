@@ -16,13 +16,21 @@
 # limitations under the License.
 #
 
+import sys
+
 import click
 
 from graphscope.gsctl.commands.common import cli as common
 from graphscope.gsctl.commands.dev import cli as dev
-from graphscope.gsctl.commands.interactive import cli as interactive
+from graphscope.gsctl.commands.insight.graph import cli as insight_graph
+from graphscope.gsctl.commands.interactive.glob import cli as interactive
+from graphscope.gsctl.commands.interactive.graph import cli as interactive_graph
 from graphscope.gsctl.config import Context
+from graphscope.gsctl.config import load_gs_config
+from graphscope.gsctl.config import logo
 from graphscope.gsctl.impl import connect_coordinator
+from graphscope.gsctl.utils import err
+from graphscope.gsctl.utils import info
 
 
 def get_command_collection(context: Context):
@@ -33,25 +41,56 @@ def get_command_collection(context: Context):
     # e.g. initialize and manage cluster, install the dependencies required to
     # build graphscope locally.
     if context is None:
+        if len(sys.argv) == 1:
+            info(logo, fg="green", bold=True)
+            click.secho("Currently, gsctl hasn't connect to any service.", fg="yellow")
+            message = """
+you can use gsctl as an utility script.
+Or you can connect to a launched GraphScopoe service by `gsctl connect --coordinator-endpoint <address>`.
+See more detailed information at https://graphscope.io/docs/utilities/gs.
+            """
+            info(message)
         return commands
 
-    # connect to coordinator and parse the commands with solution
-    try:
-        response = connect_coordinator(context.coordinator_endpoint)
-        solution = response.solution
-        if solution == "INTERACTIVE":
+    if context.is_expired():
+        try:
+            # connect to coordinator and reset the timestamp
+            response = connect_coordinator(context.coordinator_endpoint)
+            solution = response.solution
+        except Exception as e:
+            err(
+                "Failed to connect to coordinator at {0}: {1}".format(
+                    context.coordinator_endpoint, str(e)
+                )
+            )
+            info(
+                "Please check the availability of the service, fall back to the default commands."
+            )
+            return commands
+        else:
+            # check consistency
+            if solution != context.flex:
+                raise RuntimeError(
+                    f"Instance changed: {context.flex} -> {solution}, please close and reconnect to the coordinator"
+                )
+            context.reset_timestamp()
+            config = load_gs_config()
+            config.update_and_write(context)
+
+    if context.flex == "INTERACTIVE":
+        if context.context == "global":
+            if len(sys.argv) < 2 or sys.argv[1] != "use":
+                info("Using GLOBAL.", fg="green", bold=True)
+                info(
+                    "Run `gsctl use GRAPH <graph_identifier>` to switch to a specific graph context.\n"
+                )
             commands = click.CommandCollection(sources=[common, interactive])
-    except Exception as e:
-        click.secho(
-            "Failed to connect to coordinator at {0}: {1}".format(
-                context.coordinator_endpoint, str(e)
-            ),
-            fg="red",
-        )
-        click.secho(
-            "Please check the availability of the service, or close/reconnect the service.",
-            fg="blue",
-        )
-        click.secho("Fall back to the default commands.", fg="blue")
-    finally:
-        return commands
+        else:
+            if len(sys.argv) < 2 or sys.argv[1] != "use":
+                info(f"Using GRAPH {context.context}.", fg="green", bold=True)
+                info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
+            commands = click.CommandCollection(sources=[common, interactive_graph])
+    elif context.flex == "GRAPHSCOPE_INSIGHT":
+        commands = click.CommandCollection(sources=[common, insight_graph])
+
+    return commands

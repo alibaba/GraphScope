@@ -108,17 +108,19 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   // is not serialized and deserialized.
   auto& mutable_schema = graph_.mutable_schema();
   mutable_schema.SetPluginDir(schema.GetPluginDir());
-  std::vector<std::string> plugin_paths;
+  std::vector<std::pair<std::string, std::string>> plugin_name_paths;
   const auto& plugins = schema.GetPlugins();
   for (auto plugin_pair : plugins) {
-    plugin_paths.emplace_back(plugin_pair.first);
+    plugin_name_paths.emplace_back(
+        std::make_pair(plugin_pair.first, plugin_pair.second.first));
   }
 
-  std::sort(plugin_paths.begin(), plugin_paths.end(),
-            [&](const std::string& a, const std::string& b) {
-              return plugins.at(a).second < plugins.at(b).second;
+  std::sort(plugin_name_paths.begin(), plugin_name_paths.end(),
+            [&](const std::pair<std::string, std::string>& a,
+                const std::pair<std::string, std::string>& b) {
+              return plugins.at(a.first).second < plugins.at(b.first).second;
             });
-  mutable_schema.EmplacePlugins(plugin_paths);
+  mutable_schema.EmplacePlugins(plugin_name_paths);
 
   last_compaction_ts_ = 0;
   MemoryStrategy allocator_strategy = MemoryStrategy::kMemoryOnly;
@@ -304,7 +306,7 @@ AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
                << " is not registered.";
     return AppWrapper(NULL, NULL);
   } else {
-    return app_factories_[app_type]->CreateApp(contexts_[thread_id].session);
+    return app_factories_[app_type]->CreateApp(*this);
   }
 }
 
@@ -399,10 +401,10 @@ void GraphDB::initApps(
   // Builtin apps
   app_factories_[0] = std::make_shared<ServerAppFactory>();
 #ifdef BUILD_HQPS
-  app_factories_[Schema::HQPS_ADHOC_PLUGIN_ID] =
-      std::make_shared<HQPSAdhocAppFactory>();
-  app_factories_[Schema::HQPS_PROCEDURE_PLUGIN_ID] =
-      std::make_shared<HQPSProcedureAppFactory>();
+  app_factories_[Schema::HQPS_ADHOC_READ_PLUGIN_ID] =
+      std::make_shared<HQPSAdhocReadAppFactory>();
+  app_factories_[Schema::HQPS_ADHOC_WRITE_PLUGIN_ID] =
+      std::make_shared<HQPSAdhocWriteAppFactory>();
 #endif  // BUILD_HQPS
 
   size_t valid_plugins = 0;

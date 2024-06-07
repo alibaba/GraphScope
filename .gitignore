@@ -52,6 +52,10 @@ docs/source/reference/
 docs/reference/generated/
 docs/reference/networkx/generated/
 docs/_build/
+docs/flex/interactive/development/java
+!docs/flex/interactive/development/java/java_sdk.mod
+docs/flex/interactive/development/python
+!docs/flex/interactive/development/python/python_sdk.mod
 
 analytical_engine/build/
 
@@ -99,3 +103,38 @@ flex/interactive/logs/*
 flex/interactive/examples/sf0.1-raw/
 flex/interactive/.running
 flex/interactive/.env
+
+# interactive sdk related
+flex/interactive/sdk/java/.github/
+flex/interactive/sdk/java/.gitignore
+flex/interactive/sdk/java/docs/
+flex/interactive/sdk/java/build.sbt
+flex/interactive/sdk/java/build.gradle
+flex/interactive/sdk/java/gradle.properties
+flex/interactive/sdk/java/gradlew.bat
+flex/interactive/sdk/java/gradlew
+flex/interactive/sdk/java/.travis.yml
+flex/interactive/sdk/java/git_push.sh
+flex/interactive/sdk/java/gradle/
+flex/interactive/sdk/java/api/
+flex/interactive/sdk/java/.openapi-generator/*
+flex/interactive/sdk/java/src/main/AndroidManifest.xml
+flex/interactive/sdk/java/.openapi-generate/
+flex/interactive/sdk/java/settings.gradle
+flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/openapi/
+
+flex/interactive/sdk/python/.github/
+flex/interactive/sdk/python/.gitignore
+flex/interactive/sdk/python/docs/
+flex/interactive/sdk/python/git_push.sh
+flex/interactive/sdk/python/.gitlab-ci.yml
+flex/interactive/sdk/python/.openapi-generator/
+flex/interactive/sdk/python/dist/
+flex/interactive/sdk/python/.travis.yml
+flex/interactive/sdk/python/tox.ini
+flex/interactive/sdk/python/pyproject.toml
+flex/interactive/sdk/python/interactive_sdk/openapi/
+!flex/interactive/sdk/python/interactive_sdk/client/generated/__init__.py
+
+
+**/.cache/

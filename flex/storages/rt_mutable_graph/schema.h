@@ -20,6 +20,7 @@
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
+#include "flex/utils/property/types.h"
 #include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
 
@@ -32,10 +33,12 @@ class Schema {
   static constexpr uint8_t RESERVED_PLUGIN_NUM = 1;
 #ifdef BUILD_HQPS
   static constexpr uint8_t MAX_PLUGIN_ID = 253;
-  static constexpr uint8_t HQPS_ADHOC_PLUGIN_ID = 254;
-  static constexpr uint8_t HQPS_PROCEDURE_PLUGIN_ID = 255;
-  static constexpr const char* HQPS_ADHOC_PLUGIN_ID_STR = "\xFE";
-  static constexpr const char* HQPS_PROCEDURE_PLUGIN_ID_STR = "\xFF";
+  static constexpr uint8_t HQPS_ADHOC_READ_PLUGIN_ID = 254;
+  static constexpr uint8_t HQPS_ADHOC_WRITE_PLUGIN_ID = 255;
+  //   static constexpr uint8_t HQPS_PROCEDURE_PLUGIN_ID = 255;
+  static constexpr const char* HQPS_ADHOC_READ_PLUGIN_ID_STR = "\xFE";
+  static constexpr const char* HQPS_ADHOC_WRITE_PLUGIN_ID_STR = "\xFF";
+//   static constexpr const char* HQPS_PROCEDURE_PLUGIN_ID_STR = "\xFF";
 #else
   static constexpr uint8_t MAX_PLUGIN_ID = 255;
 #endif  // BUILD_HQPS
@@ -44,9 +47,15 @@ class Schema {
   static constexpr const char* MAX_LENGTH_KEY = "max_length";
   static constexpr const uint16_t STRING_DEFAULT_MAX_LENGTH = 256;
 
+  // An array containing all compatible versions of schema.
+  static const std::vector<std::string> COMPATIBLE_VERSIONS;
+  static constexpr const char* DEFAULT_SCHEMA_VERSION = "v0.0";
+
   using label_type = label_t;
   Schema();
   ~Schema();
+
+  static const std::vector<std::string>& GetCompatibleVersions();
 
   void Clear();
 
@@ -56,7 +65,8 @@ class Schema {
       const std::vector<std::tuple<PropertyType, std::string, size_t>>&
           primary_key,
       const std::vector<StorageStrategy>& strategies = {},
-      size_t max_vnum = static_cast<size_t>(1) << 32);
+      size_t max_vnum = static_cast<size_t>(1) << 32,
+      const std::string& description = "");
 
   void add_edge_label(const std::string& src_label,
                       const std::string& dst_label,
@@ -66,7 +76,8 @@ class Schema {
                       EdgeStrategy oe = EdgeStrategy::kMultiple,
                       EdgeStrategy ie = EdgeStrategy::kMultiple,
                       bool oe_mutable = true, bool ie_mutable = true,
-                      bool sort_on_compaction = false);
+                      bool sort_on_compaction = false,
+                      const std::string& description = "");
 
   label_t vertex_label_num() const;
 
@@ -86,10 +97,14 @@ class Schema {
   const std::vector<std::string>& get_vertex_property_names(
       const std::string& label) const;
 
+  const std::string& get_vertex_description(const std::string& label) const;
+
   const std::vector<PropertyType>& get_vertex_properties(label_t label) const;
 
   const std::vector<std::string>& get_vertex_property_names(
       label_t label) const;
+
+  const std::string& get_vertex_description(label_t label) const;
 
   const std::vector<StorageStrategy>& get_vertex_storage_strategies(
       const std::string& label) const;
@@ -109,6 +124,13 @@ class Schema {
   const std::vector<PropertyType>& get_edge_properties(label_t src_label,
                                                        label_t dst_label,
                                                        label_t label) const;
+
+  std::string get_edge_description(const std::string& src_label,
+                                   const std::string& dst_label,
+                                   const std::string& label) const;
+
+  std::string get_edge_description(label_t src_label, label_t dst_label,
+                                   label_t label) const;
 
   PropertyType get_edge_property(label_t src, label_t dst, label_t edge) const;
 
@@ -188,13 +210,22 @@ class Schema {
   const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
   GetPlugins() const;
 
-  bool EmplacePlugins(const std::vector<std::string>& plugin_paths_or_names);
+  bool EmplacePlugins(
+      const std::vector<std::pair<std::string, std::string>>& plugins);
 
   void SetPluginDir(const std::string& plugin_dir);
 
   void RemovePlugin(const std::string& plugin_name);
 
   std::string GetPluginDir() const;
+
+  std::string GetDescription() const;
+
+  void SetDescription(const std::string& description);
+
+  void SetVersion(const std::string& version);
+
+  std::string GetVersion() const;
 
  private:
   label_t vertex_label_to_index(const std::string& label);
@@ -207,12 +238,14 @@ class Schema {
   IdIndexer<std::string, label_t> elabel_indexer_;
   std::vector<std::vector<PropertyType>> vproperties_;
   std::vector<std::vector<std::string>> vprop_names_;
+  std::vector<std::string> v_descriptions_;
   std::vector<std::vector<std::tuple<PropertyType, std::string, size_t>>>
       v_primary_keys_;  // the third element is the index of the property in the
                         // vertex property list
   std::vector<std::vector<StorageStrategy>> vprop_storage_;
   std::map<uint32_t, std::vector<PropertyType>> eproperties_;
   std::map<uint32_t, std::vector<std::string>> eprop_names_;
+  std::map<uint32_t, std::string> e_descriptions_;
   std::map<uint32_t, EdgeStrategy> oe_strategy_;
   std::map<uint32_t, EdgeStrategy> ie_strategy_;
   std::map<uint32_t, bool> oe_mutability_;
@@ -220,9 +253,11 @@ class Schema {
   std::map<uint32_t, bool> sort_on_compactions_;
   std::vector<size_t> max_vnum_;
   std::unordered_map<std::string, std::pair<std::string, uint8_t>>
-      plugin_name_to_path_and_id_;  // key is plugin name, value is plugin path
-                                    // and plugin id
+      plugin_name_to_path_and_id_;  // key is plugin_name, value is plugin_path
+                                    // and plugin_id
   std::string plugin_dir_;
+  std::string description_;
+  std::string version_;
 };
 
 }  // namespace gs

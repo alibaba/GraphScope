@@ -431,7 +431,7 @@ class MutableNbrSliceMut<std::string_view> {
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
 
     nbr_t* ptr_;
-    StringColumn & column_;
+    StringColumn& column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 

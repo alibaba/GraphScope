@@ -32,10 +32,6 @@ import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
-import com.alibaba.graphscope.groot.metrics.MetricsCollectClient;
-import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
-import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.AuthorizationServerInterceptor;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
@@ -61,17 +57,17 @@ public class Frontend extends NodeBase {
     private static final Logger logger = LoggerFactory.getLogger(Frontend.class);
 
     private CuratorFramework curator;
-    private NodeDiscovery discovery;
-    private ChannelManager channelManager;
-    private MetaService metaService;
-    private RpcServer rpcServer;
-    private RpcServer serviceServer;
-    private ClientService clientService;
-    private AbstractService graphService;
+    private final NodeDiscovery discovery;
+    private final ChannelManager channelManager;
+    private final MetaService metaService;
+    private final RpcServer rpcServer;
+    private final RpcServer serviceServer;
+    private final ClientService clientService;
+    private final AbstractService graphService;
 
-    private SnapshotCache snapshotCache;
+    private final SnapshotCache snapshotCache;
 
-    private GraphWriter graphWriter;
+    private final GraphWriter graphWriter;
 
     public Frontend(Configs configs) {
         super(configs);
@@ -88,21 +84,10 @@ public class Frontend extends NodeBase {
 
         snapshotCache = new SnapshotCache();
 
-        RoleClients<MetricsCollectClient> frontendMetricsCollectClients =
-                new RoleClients<>(
-                        this.channelManager, RoleType.FRONTEND, MetricsCollectClient::new);
-        RoleClients<MetricsCollectClient> storeMetricsCollectClients =
-                new RoleClients<>(this.channelManager, RoleType.STORE, MetricsCollectClient::new);
-        MetricsAggregator metricsAggregator =
-                new MetricsAggregator(
-                        configs, frontendMetricsCollectClients, storeMetricsCollectClients);
-
-        StoreIngestClients storeIngestClients =
-                new StoreIngestClients(this.channelManager, RoleType.STORE, StoreIngestClient::new);
-        SchemaWriter schemaWriter =
-                new SchemaWriter(
-                        new RoleClients<>(
-                                this.channelManager, RoleType.COORDINATOR, SchemaClient::new));
+        RoleClients<FrontendStoreClient> frontendStoreClients =
+                new RoleClients<>(this.channelManager, RoleType.STORE, FrontendStoreClient::new);
+        RoleClients<SchemaClient> schemaWriter =
+                new RoleClients<>(this.channelManager, RoleType.COORDINATOR, SchemaClient::new);
 
         BatchDdlClient batchDdlClient =
                 new BatchDdlClient(new DdlExecutors(), snapshotCache, schemaWriter);
@@ -111,17 +96,10 @@ public class Frontend extends NodeBase {
 
         this.clientService =
                 new ClientService(
-                        snapshotCache,
-                        metricsAggregator,
-                        storeIngestClients,
-                        this.metaService,
-                        batchDdlClient);
+                        snapshotCache, frontendStoreClients, this.metaService, batchDdlClient);
 
         FrontendSnapshotService frontendSnapshotService =
                 new FrontendSnapshotService(snapshotCache);
-
-        MetricsCollector metricsCollector = new MetricsCollector(configs);
-        MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
 
         GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
 
@@ -129,9 +107,7 @@ public class Frontend extends NodeBase {
 
         LogService logService = LogServiceFactory.makeLogService(configs);
         KafkaAppender kafkaAppender = new KafkaAppender(configs, metaService, logService);
-        this.graphWriter =
-                new GraphWriter(
-                        snapshotCache, edgeIdGenerator, metricsCollector, kafkaAppender, configs);
+        this.graphWriter = new GraphWriter(snapshotCache, edgeIdGenerator, kafkaAppender, configs);
         ClientWriteService clientWriteService = new ClientWriteService(graphWriter);
 
         RoleClients<BackupClient> backupClients =
@@ -146,7 +122,6 @@ public class Frontend extends NodeBase {
                         configs,
                         localNodeProvider,
                         frontendSnapshotService,
-                        metricsCollectService,
                         ingestorSnapshotService,
                         ingestorWriteService);
 

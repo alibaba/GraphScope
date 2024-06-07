@@ -38,7 +38,11 @@ public class Codec {
 
     public Codec(GraphElement graphElement) {
         this.version = graphElement.getVersionId();
-
+        System.out.println(
+                "Created Codec with "
+                        + graphElement.getLabel()
+                        + " version "
+                        + graphElement.getVersionId());
         List<GraphProperty> propertyList = graphElement.getPropertyList();
         propertyList.sort(
                 (p1, p2) -> {

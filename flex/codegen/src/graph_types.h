@@ -37,13 +37,14 @@ enum class DataType {
   kInt64Array = 5,
   kInt32Array = 6,
   kBoolean = 7,
-  kVertexId = 8,
+  kGlobalVertexId = 8,
   kEdgeId = 9,
   kLength = 10,
   kDate = 11,
   kTime = 12,
   kTimeStamp = 13,
-  kLabelId = 14
+  kLabelId = 14,
+  kEmpty = 15,
 };
 
 // a parameter const, the real data will be feed at runtime.
@@ -189,16 +190,19 @@ static std::string data_type_2_string(const codegen::DataType& data_type) {
     return "std::vector<int32_t>";
   case codegen::DataType::kBoolean:
     return "bool";
-  case codegen::DataType::kVertexId:
-    return VERTEX_ID_T;
+  case codegen::DataType::kGlobalVertexId:
+    return GLOBAL_VERTEX_ID_T;
   case codegen::DataType::kLength:
     return LENGTH_KEY_T;
   case codegen::DataType::kEdgeId:
     return EDGE_ID_T;
   case codegen::DataType::kDate:
+  case codegen::DataType::kTimeStamp:
     return "Date";
   case codegen::DataType::kLabelId:
     return "LabelKey";
+  case codegen::DataType::kEmpty:
+    return GRAPE_EMPTY_TYPE;
   default:
     // LOG(FATAL) << "unknown data type" << static_cast<int>(data_type);
     throw std::runtime_error(
@@ -243,10 +247,11 @@ static std::string data_type_2_rust_string(const codegen::DataType& data_type) {
     return "Vector<i32>";
   case codegen::DataType::kBoolean:
     return "bool";
-  case codegen::DataType::kVertexId:
+  case codegen::DataType::kGlobalVertexId:
     return "ID";
   default:
     LOG(FATAL) << "unknown data type" << static_cast<int>(data_type);
+    return "";
   }
 }
 
@@ -265,6 +270,7 @@ static common::DataType common_value_2_data_type(const common::Value& value) {
   default:
     LOG(FATAL) << "unknown value" << value.DebugString();
   }
+  return common::DataType::NONE;
 }
 
 static void parse_param_const_from_pb(

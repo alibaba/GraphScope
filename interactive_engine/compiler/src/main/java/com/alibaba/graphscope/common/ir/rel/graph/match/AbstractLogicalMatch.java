@@ -19,8 +19,8 @@ package com.alibaba.graphscope.common.ir.rel.graph.match;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.google.common.collect.ImmutableList;
 
+import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.SingleRel;
@@ -36,7 +36,7 @@ import java.util.List;
 public abstract class AbstractLogicalMatch extends SingleRel {
     protected AbstractLogicalMatch(
             GraphOptCluster cluster, @Nullable List<RelHint> hints, @Nullable RelNode input) {
-        super(cluster, RelTraitSet.createEmpty(), input);
+        super(cluster, cluster.traitSetOf(Convention.NONE), input);
     }
 
     @Override
@@ -52,7 +52,7 @@ public abstract class AbstractLogicalMatch extends SingleRel {
                         super.visit(node, ordinal, parent);
                         List<RelDataTypeField> fields = node.getRowType().getFieldList();
                         for (RelDataTypeField field : fields) {
-                            if (!field.getName().equals(AliasInference.DEFAULT_NAME)) {
+                            if (!AliasInference.isDefaultAlias(field.getName())) {
                                 addTo.add(field);
                             }
                         }

@@ -95,8 +95,15 @@ public class GraphAlgoTest {
     }
 
     @Test
-    public void run_graph_query9_test() {
-        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test9();
+    public void run_graph_query9_0_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test9_0();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_graph_query9_1_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test9_1();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }

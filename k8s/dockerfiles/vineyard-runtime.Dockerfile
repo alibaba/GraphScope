@@ -32,7 +32,7 @@ RUN apt-get update -y && \
         -P /tmp/ --no-check-certificate && \
     sudo apt-get install -y -V /tmp/apache-arrow-apt-source-latest-jammy.deb && \
     sudo apt-get update -y && \
-    sudo apt-get install -y libarrow-dev && \
+    sudo apt-get install -y libarrow-dev libarrow-dataset-dev libarrow-acero-dev libparquet-dev && \
     rm /tmp/apache-arrow-apt-source-latest-*.deb && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*

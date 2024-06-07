@@ -19,8 +19,10 @@
 from typing import List
 
 import graphscope.flex.rest
+from graphscope.flex.rest import EdgeType
 from graphscope.flex.rest import Graph
 from graphscope.flex.rest import ModelSchema
+from graphscope.flex.rest import VertexType
 from graphscope.gsctl.config import get_current_context
 
 
@@ -60,3 +62,46 @@ def delete_graph_by_name(graph_name: str) -> str:
     ) as api_client:
         api_instance = graphscope.flex.rest.GraphApi(api_client)
         return api_instance.delete_graph(graph_name)
+
+
+def create_vertex_type(graph_name: str, vtype: dict) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
+        return api_instance.create_vertex_type(graph_name, VertexType.from_dict(vtype))
+
+
+def create_edge_type(graph_name: str, etype: dict) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
+        return api_instance.create_edge_type(graph_name, EdgeType.from_dict(etype))
+
+
+def delete_vertex_type(graph_name: str, vertex_type: str) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
+        return api_instance.delete_vertex_type(graph_name, vertex_type)
+
+
+def delete_edge_type(
+    graph_name: str,
+    edge_type: str,
+    source_vertex_type: str,
+    destination_vertex_type: str,
+) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
+        return api_instance.delete_edge_type(
+            graph_name, edge_type, source_vertex_type, destination_vertex_type
+        )

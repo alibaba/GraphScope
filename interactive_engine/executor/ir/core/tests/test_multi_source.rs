@@ -55,6 +55,7 @@ mod tests {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let expand_opr2 = expand_opr1.clone();
@@ -134,6 +135,7 @@ mod tests {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         let expand_opr2 = expand_opr1.clone();
@@ -217,6 +219,7 @@ mod tests {
             expand_opt: 0,
             alias: None,
             meta_data: None,
+            is_optional: false,
         };
 
         // build pattern 1: as('a').out().as('b')

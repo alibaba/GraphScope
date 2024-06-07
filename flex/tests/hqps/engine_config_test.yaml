@@ -11,6 +11,10 @@ compute_engine:
   workers:
     - localhost:10000
   thread_num_per_worker: 1
+  store:
+    type: cpp-mcsr
+  metadata_store:
+    type: file # file/sqlite/etcd
 compiler:
   planner:
     is_on: true
@@ -25,9 +29,10 @@ compiler:
       disabled: false
       port: 7687
     gremlin_connector:
-      disabled: true
+      disabled: false
       port: 8182
   query_timeout: 40000
+  gremlin_script_language_name: antlr_gremlin_calcite
 http_service:
   default_listen_address: localhost
   admin_port: 7777

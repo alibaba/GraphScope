@@ -27,7 +27,7 @@ paths:
       parameters:
       - explode: true
         in: query
-        name: type
+        name: alert_type
         required: false
         schema:
           type: string
@@ -73,6 +73,34 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - message_id: ALERT-MESSAGE-QWERTYUIOP-1
+                alert_name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: unsolved
+                message: "Disk usage node1 85.12%, exceeds threshold"
+              - message_id: ALERT-MESSAGE-QWERTYUIOP-2
+                alert_name: HighDiskUtilization
+                severity: emergency
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: solved
+                message: "Disk usage node1 85.12%, exceeds threshold"
+              - message_id: ALERT-MESSAGE-QWERTYUIOP-3
+                alert_name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: dealing
+                message: "Disk usage node1 85.12%, exceeds threshold"
               schema:
                 items:
                   $ref: '#/components/schemas/AlertMessage'
@@ -108,6 +136,24 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - type: webhook
+                receiver_id: RECEIVER-QWERTYUIOP-1
+                webhook_url: http://webhook.com
+                is_at_all: false
+                at_user_ids:
+                - 111111
+                - 222222
+                enable: false
+              - type: webhook
+                receiver_id: RECEIVER-QWERTYUIOP-2
+                webhook_url: http://webhook.com
+                is_at_all: false
+                at_user_ids:
+                - 111111
+                - 222222
+                enable: true
+                message: error message
               schema:
                 items:
                   $ref: '#/components/schemas/AlertReceiver'
@@ -191,6 +237,17 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                conditions_description: disk usage >= 85
+                enable: true
+              - name: GremlinServiceAvailable
+                severity: emergency
+                metric_type: node
+                conditions_description: g.V().limit(1) failed
+                enable: false
               schema:
                 items:
                   $ref: '#/components/schemas/AlertRule'
@@ -286,6 +343,18 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                cluster_type: HOSTS
+                creation_time: 2024-02-07 14:21:28
+                graphs_info:
+                  demo:
+                    creation_time: 2024-02-07 14:21:28
+                    last_dataloading_time: 2024-02-08 14:21:28
+                    name: demo
+                    update_time: 2024-02-07 14:21:28
+                name: demo
+                solution: INTERACTIVE
+                version: 0.27.0
               schema:
                 $ref: '#/components/schemas/DeploymentInfo'
           description: successful operation
@@ -379,6 +448,66 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - name: demo
+                store_type: mutable_csr
+                stored_procedures:
+                  directory: plugins
+                schema:
+                  vertex_types:
+                  - type_id: 0
+                    type_name: person
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        primitive_type: DT_STRING
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        primitive_type: DT_STRING
+                    primary_keys:
+                    - id
+                  - type_id: 1
+                    type_name: software
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        primitive_type: DT_STRING
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        primitive_type: DT_STRING
+                    primary_keys:
+                    - id
+                  edge_types:
+                  - type_id: 0
+                    type_name: knows
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: person
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_STRING
+                  - type_id: 1
+                    type_name: created
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: software
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_STRING
               schema:
                 items:
                   $ref: '#/components/schemas/Graph'
@@ -455,6 +584,402 @@ paths:
       tags:
       - job
       x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+  /api/v1/graph/{graph_name}/dataloading/config:
+    get:
+      description: get dataloading configuration
+      operationId: get_dataloading_config
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                graph: demo
+                loading_config: overwrite
+                format:
+                  type: csv
+                  metadata:
+                    delimiter: '|'
+                vertex_mappings:
+                - type_name: person
+                  inputs:
+                  - /home/graphscope/path/to/person.csv
+                  column_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  - column:
+                      index: 1
+                      name: name
+                    property: name
+                - type_name: software
+                  inputs:
+                  - /home/graphscope/path/to/software.csv
+                  column_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  - column:
+                      index: 1
+                      name: name
+                    property: name
+                edge_mappings:
+                - type_triplet:
+                    edge: knows
+                    source_vertex: person
+                    destination_vertex: person
+                    inputs:
+                    - /home/graphscope/path/to/person_knows_person.csv
+                    source_vertex_mappings:
+                    - column:
+                        index: 0
+                        name: id
+                    destination_vertex_mappings:
+                    - column:
+                        index: 1
+                        name: id
+                    column_mappings:
+                    - column:
+                        index: 2
+                        name: weight
+                      property: weight
+                - type_triplet:
+                    edge: created
+                    source_vertex: person
+                    destination_vertex: software
+                    inputs:
+                    - /home/graphscope/path/to/person_created_software.csv
+                    source_vertex_mappings:
+                    - column:
+                        index: 0
+                        name: id
+                    destination_vertex_mappings:
+                    - column:
+                        index: 1
+                        name: id
+                    column_mappings:
+                    - column:
+                        index: 2
+                        name: weight
+                      property: weight
+              schema:
+                $ref: '#/components/schemas/SchemaMapping'
+          description: Successful operation
+      tags:
+      - job
+      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+  /api/v1/graph/{graph_name}/datasource:
+    get:
+      description: List data source on graph
+      operationId: get_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                vertices_datasource:
+                - data_source: FILE
+                  type_name: person
+                  location: /home/graphscope/path/to/person.csv
+                  property_mapping:
+                    "0": id
+                    "1": name
+                - data_source: FILE
+                  type_name: software
+                  location: /home/graphscope/path/to/software.csv
+                  property_mapping:
+                    "0": id
+                    "1": name
+                edges_datasource:
+                - data_source: FILE
+                  type_name: knows
+                  source_vertex: person
+                  destination_vertex: person
+                  location: /home/graphscope/path/to/person_knows_person.csv
+                  source_pk_column_map:
+                    "0": id
+                  destination_pk_column_map:
+                    "1": id
+                  property_mapping:
+                    "2": weight
+                - data_source: FILE
+                  type_name: created
+                  source_vertex: person
+                  destination_vertex: software
+                  location: /home/graphscope/path/to/person_created_software.csv
+                  source_pk_column_map:
+                    "0": id
+                  destination_pk_column_map:
+                    "1": id
+                  property_mapping:
+                    "2": weight
+              schema:
+                $ref: '#/components/schemas/DataSource'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+    post:
+      description: Import data source in batch
+      operationId: import_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSource'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+  /api/v1/graph/{graph_name}/datasource/edge_datasource:
+    post:
+      description: Bind data source on edge type
+      operationId: bind_edge_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EdgeDataSource'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+  /api/v1/graph/{graph_name}/datasource/edge_datasource/{type_name}:
+    delete:
+      description: Unbind datasource on an edge type
+      operationId: unbind_edge_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: source_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: destination_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+    get:
+      description: Get edge data source
+      operationId: get_edge_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: source_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: destination_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data_source: FILE
+                type_name: created
+                source_vertex: person
+                destination_vertex: software
+                location: /home/graphscope/path/to/person_created_software.csv
+                source_pk_column_map:
+                  "0": id
+                destination_pk_column_map:
+                  "1": id
+                property_mapping:
+                  "2": weight
+              schema:
+                $ref: '#/components/schemas/EdgeDataSource'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+  /api/v1/graph/{graph_name}/datasource/vertex_datasource:
+    post:
+      description: Bind data source on vertex type
+      operationId: bind_vertex_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VertexDataSource'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+  /api/v1/graph/{graph_name}/datasource/vertex_datasource/{type_name}:
+    delete:
+      description: Unbind datasource on a vertex type
+      operationId: unbind_vertex_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+    get:
+      description: Get vertex data source
+      operationId: get_vertex_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data_source: FILE
+                type_name: person
+                location: /home/graphscope/path/to/person.csv
+                property_mapping:
+                  "0": id
+                  "1": name
+              schema:
+                $ref: '#/components/schemas/VertexDataSource'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
   /api/v1/graph/{graph_name}/procedure:
     get:
       description: List stored procedures on a certain graph
@@ -471,6 +996,20 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - bound_graph: demo
+                description: stored procedure 1
+                enable: true
+                runnable: true
+                name: procedure-1
+                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                type: cypher
+                params:
+                - name: id
+                  type: DT_STRING
+                returns:
+                - name: name
+                  type: DT_STRING
               schema:
                 items:
                   $ref: '#/components/schemas/Procedure'
@@ -535,6 +1074,48 @@ paths:
       tags:
       - procedure
       x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
+    get:
+      description: Get a procedure by name
+      operationId: get_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: procedure_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                bound_graph: demo
+                description: stored procedure 1
+                enable: true
+                runnable: true
+                name: procedure-1
+                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                type: cypher
+                params:
+                - name: id
+                  type: DT_STRING
+                returns:
+                - name: name
+                  type: DT_STRING
+              schema:
+                $ref: '#/components/schemas/Procedure'
+          description: successful operation
+      tags:
+      - procedure
+      x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
     put:
       description: Update stored procedure on a certain graph
       operationId: update_procedure
@@ -584,6 +1165,61 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                vertex_types:
+                - type_id: 0
+                  type_name: person
+                  properties:
+                  - property_id: 0
+                    property_name: id
+                    property_type:
+                      primitive_type: DT_STRING
+                  - property_id: 1
+                    property_name: name
+                    property_type:
+                      primitive_type: DT_STRING
+                  primary_keys:
+                  - id
+                - type_id: 1
+                  type_name: software
+                  properties:
+                  - property_id: 0
+                    property_name: id
+                    property_type:
+                      primitive_type: DT_STRING
+                  - property_id: 1
+                    property_name: name
+                    property_type:
+                      primitive_type: DT_STRING
+                  primary_keys:
+                  - id
+                edge_types:
+                - type_id: 0
+                  type_name: knows
+                  vertex_type_pair_relations:
+                  - source_vertex: person
+                    destination_vertex: person
+                    relation: MANY_TO_MANY
+                    x_csr_params:
+                      edge_storage_strategy: ONLY_IN
+                  properties:
+                  - property_id: 0
+                    property_name: weight
+                    property_type:
+                      primitive_type: DT_STRING
+                - type_id: 1
+                  type_name: created
+                  vertex_type_pair_relations:
+                  - source_vertex: person
+                    destination_vertex: software
+                    relation: MANY_TO_MANY
+                    x_csr_params:
+                      edge_storage_strategy: ONLY_IN
+                  properties:
+                  - property_id: 0
+                    property_name: weight
+                    property_type:
+                      primitive_type: DT_STRING
               schema:
                 $ref: '#/components/schemas/Schema'
           description: Successful operation
@@ -726,11 +1362,84 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - name: demo
+                type: GrootGraph
+                directed: true
+                creation_time: 2024-04-01 12:00:00
+                schema:
+                  vertices:
+                  - label: person
+                    properties:
+                    - id: 0
+                      name: id
+                      type: STRING
+                      is_primary_key: true
+                    - id: 1
+                      name: name
+                      type: STRING
+                      is_primary_key: false
+                  - label: software
+                    properties:
+                    - id: 0
+                      name: id
+                      type: STRING
+                      is_primary_key: true
+                    - id: 1
+                      name: name
+                      type: STRING
+                      is_primary_key: false
+                  edges:
+                  - label: knows
+                    relations:
+                    - src_label: person
+                      dst_label: person
+                    properties:
+                    - id: 0
+                      name: weight
+                      type: DOUBLE
+                      is_primary_key: false
+                  - label: created
+                    relations:
+                    - src_label: person
+                      dst_label: software
+                    properties:
+                    - id: 0
+                      name: weight
+                      type: DOUBLE
+                      is_primary_key: false
               schema:
                 items:
                   $ref: '#/components/schemas/GrootGraph'
                 type: array
           description: Successful operation
+      tags:
+      - legacy
+      x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
+  /api/v1/groot/graph/{graph_name}/dataloading:
+    post:
+      operationId: create_groot_dataloading_job
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrootDataloadingJobConfig'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
       tags:
       - legacy
       x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
@@ -750,6 +1459,47 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                vertices:
+                - label: person
+                  properties:
+                  - id: 0
+                    name: id
+                    type: STRING
+                    is_primary_key: true
+                  - id: 1
+                    name: name
+                    type: STRING
+                    is_primary_key: false
+                - label: software
+                  properties:
+                  - id: 0
+                    name: id
+                    type: STRING
+                    is_primary_key: true
+                  - id: 1
+                    name: name
+                    type: STRING
+                    is_primary_key: false
+                edges:
+                - label: knows
+                  relations:
+                  - src_label: person
+                    dst_label: person
+                  properties:
+                  - id: 0
+                    name: weight
+                    type: DOUBLE
+                    is_primary_key: false
+                - label: created
+                  relations:
+                  - src_label: person
+                    dst_label: software
+                  properties:
+                  - id: 0
+                    name: weight
+                    type: DOUBLE
+                    is_primary_key: false
               schema:
                 $ref: '#/components/schemas/GrootSchema'
           description: Successful operation
@@ -758,7 +1508,7 @@ paths:
       x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
     post:
       description: Import schema to groot graph
-      operationId: import_schema
+      operationId: import_groot_schema
       parameters:
       - explode: false
         in: path
@@ -790,6 +1540,46 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - job_id: JOB-QWERTYUIOPASDFGH-1
+                type: DATA IMPORT
+                status: RUNNING
+                start_time: 2024-02-24 00:00:00
+                end_time: null
+                log: logging...
+                detail:
+                  graph_name: demo
+              - job_id: JOB-QWERTYUIOPASDFGH-2
+                type: DATA IMPORT
+                status: CANCELLED
+                start_time: 2024-02-24 00:00:00
+                end_time: null
+                log: logging...
+                detail:
+                  graph_name: demo
+              - job_id: JOB-QWERTYUIOPASDFGH-3
+                type: DATA IMPORT
+                status: SUCCESS
+                start_time: 2024-02-24 00:00:00
+                end_time: 2024-02-24 12:00:00
+                log: logging...
+                detail:
+                  graph_name: demo
+              - job_id: JOB-QWERTYUIOPASDFGH-4
+                type: DATA IMPORT
+                status: FAILED
+                start_time: 2024-02-24 00:00:00
+                end_time: 2024-02-24 12:00:00
+                log: logging...
+                detail:
+                  graph_name: demo
+              - job_id: JOB-QWERTYUIOPASDFGH-5
+                type: DATA IMPORT
+                status: WAITING
+                start_time: null
+                end_time: null
+                detail:
+                  graph_name: demo
               schema:
                 items:
                   $ref: '#/components/schemas/JobStatus'
@@ -833,6 +1623,13 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                job_id: JOB-QWERTYUIOPASDFGH-1
+                type: DATA IMPORT
+                status: RUNNING
+                start_time: 2024-02-24 00:00:00
+                end_time: null
+                log: logging...
               schema:
                 $ref: '#/components/schemas/JobStatus'
           description: successful operation
@@ -847,6 +1644,11 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - node: hostname-1
+                cpu_usage: 80
+                memory_usage: 40
+                disk_usage: 85
               schema:
                 items:
                   $ref: '#/components/schemas/NodeStatus'
@@ -863,6 +1665,20 @@ paths:
         "200":
           content:
             application/json:
+              example:
+              - bound_graph: demo
+                description: stored procedure 1
+                enable: true
+                runnable: true
+                name: procedure-1
+                query: "MATCH (u: person) Return u.id, u.name LIMIT 5;"
+                type: cypher
+                params:
+                - name: id
+                  type: DT_STRING
+                returns:
+                - name: name
+                  type: DT_STRING
               schema:
                 items:
                   $ref: '#/components/schemas/Procedure'
@@ -912,6 +1728,14 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                status: running
+                graph_name: demo
+                sdk_endpoints:
+                  cypher: neo4j://mock.api.cypher:7676
+                  gremlin: ws://mock.api.gremlin/gremlin
+                  hqps: http://mock.api.hqps:10000
+                  grpc: http://mock.api.grpc:10000
               schema:
                 $ref: '#/components/schemas/ServiceStatus'
           description: successful operation
@@ -935,6 +1759,7 @@ paths:
 components:
   schemas:
     ApiResponse:
+      example: operation successful
       type: string
     Connection:
       example:
@@ -1312,6 +2137,7 @@ components:
       x-body-name: procedure
     DeploymentInfo:
       example:
+        creation_time: creation_time
         graphs_info:
           key:
             creation_time: creation_time
@@ -1340,6 +2166,9 @@ components:
           - INTERACTIVE
           - GRAPHSCOPE_INSIGHT
           title: solution
+          type: string
+        creation_time:
+          title: creation_time
           type: string
         graphs_info:
           additionalProperties:
@@ -1863,6 +2692,130 @@ components:
       title: JobStatus
       type: object
       x-body-name: job_status
+    VertexDataSource:
+      example:
+        type_name: type_name
+        property_mapping:
+          key: ""
+        location: location
+        data_source: ODPS
+      properties:
+        data_source:
+          enum:
+          - ODPS
+          - FILE
+          title: data_source
+          type: string
+        type_name:
+          title: type_name
+          type: string
+        location:
+          title: location
+          type: string
+        property_mapping:
+          additionalProperties: true
+          title: property_mapping
+          type: object
+      title: VertexDataSource
+      type: object
+      x-body-name: vertex_data_source
+    EdgeDataSource:
+      example:
+        source_pk_column_map:
+          key: ""
+        type_name: type_name
+        destination_pk_column_map:
+          key: ""
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+        property_mapping:
+          key: ""
+        location: location
+        data_source: ODPS
+      properties:
+        data_source:
+          enum:
+          - ODPS
+          - FILE
+          title: data_source
+          type: string
+        type_name:
+          title: type_name
+          type: string
+        source_vertex:
+          title: source_vertex
+          type: string
+        destination_vertex:
+          title: destination_vertex
+          type: string
+        location:
+          title: location
+          type: string
+        source_pk_column_map:
+          additionalProperties: true
+          title: source_pk_column_map
+          type: object
+        destination_pk_column_map:
+          additionalProperties: true
+          title: destination_pk_column_map
+          type: object
+        property_mapping:
+          additionalProperties: true
+          title: property_mapping
+          type: object
+      title: EdgeDataSource
+      type: object
+      x-body-name: edge_data_source
+    DataSource:
+      example:
+        edges_datasource:
+        - source_pk_column_map:
+            key: ""
+          type_name: type_name
+          destination_pk_column_map:
+            key: ""
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          property_mapping:
+            key: ""
+          location: location
+          data_source: ODPS
+        - source_pk_column_map:
+            key: ""
+          type_name: type_name
+          destination_pk_column_map:
+            key: ""
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          property_mapping:
+            key: ""
+          location: location
+          data_source: ODPS
+        vertices_datasource:
+        - type_name: type_name
+          property_mapping:
+            key: ""
+          location: location
+          data_source: ODPS
+        - type_name: type_name
+          property_mapping:
+            key: ""
+          location: location
+          data_source: ODPS
+      properties:
+        vertices_datasource:
+          items:
+            $ref: '#/components/schemas/VertexDataSource'
+          title: vertices_datasource
+          type: array
+        edges_datasource:
+          items:
+            $ref: '#/components/schemas/EdgeDataSource'
+          title: edges_datasource
+          type: array
+      title: DataSource
+      type: object
+      x-body-name: data_source
     GrootGraph:
       example:
         creation_time: creation_time
@@ -1873,21 +2826,21 @@ components:
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
           - label: label
             properties:
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
           edges:
           - label: label
             relations:
@@ -1899,11 +2852,11 @@ components:
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
           - label: label
             relations:
             - src_label: src_label
@@ -1914,11 +2867,11 @@ components:
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
             - is_primary_key: true
               name: name
               id: 0
-              type: STRING
+              type: DT_STRING
         directed: true
         gremlin_interface:
           grpc_endpoint: grpc_endpoint
@@ -1926,9 +2879,15 @@ components:
           gremlin_endpoint: gremlin_endpoint
           username: username
         name: name
+        type: GrootGraph
       properties:
         name:
           title: name
+          type: string
+        type:
+          enum:
+          - GrootGraph
+          title: type
           type: string
         directed:
           title: directed
@@ -1951,21 +2910,21 @@ components:
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
         - label: label
           properties:
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
         edges:
         - label: label
           relations:
@@ -1977,11 +2936,11 @@ components:
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
         - label: label
           relations:
           - src_label: src_label
@@ -1992,11 +2951,11 @@ components:
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
           - is_primary_key: true
             name: name
             id: 0
-            type: STRING
+            type: DT_STRING
       properties:
         vertices:
           items:
@@ -2018,11 +2977,11 @@ components:
         - is_primary_key: true
           name: name
           id: 0
-          type: STRING
+          type: DT_STRING
         - is_primary_key: true
           name: name
           id: 0
-          type: STRING
+          type: DT_STRING
       properties:
         label:
           title: label
@@ -2047,11 +3006,11 @@ components:
         - is_primary_key: true
           name: name
           id: 0
-          type: STRING
+          type: DT_STRING
         - is_primary_key: true
           name: name
           id: 0
-          type: STRING
+          type: DT_STRING
       properties:
         label:
           title: label
@@ -2074,7 +3033,7 @@ components:
         is_primary_key: true
         name: name
         id: 0
-        type: STRING
+        type: DT_STRING
       properties:
         id:
           format: int32
@@ -2085,9 +3044,9 @@ components:
           type: string
         type:
           enum:
-          - STRING
-          - LONG
-          - DOUBLE
+          - DT_STRING
+          - DT_SIGNED_INT64
+          - DT_DOUBLE
           title: type
           type: string
         is_primary_key:
@@ -2096,6 +3055,45 @@ components:
       title: GrootProperty
       type: object
       x-body-name: groot_property
+    GrootDataloadingJobConfig:
+      example:
+        schedule: schedule
+        vertices:
+        - vertices
+        - vertices
+        repeat: once
+        edges:
+        - type_name: type_name
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+        - type_name: type_name
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+      properties:
+        vertices:
+          items:
+            type: string
+          title: vertices
+          type: array
+        edges:
+          items:
+            $ref: '#/components/schemas/GrootDataloadingJobConfig_edges_inner'
+          title: edges
+          type: array
+        schedule:
+          description: format with '2023-02-21 11:56:30'
+          title: schedule
+          type: string
+        repeat:
+          enum:
+          - once
+          - day
+          - week
+          title: repeat
+          type: string
+      title: GrootDataloadingJobConfig
+      type: object
+      x-body-name: groot_dataloading_job_config
     start_service_request:
       properties:
         graph_name:
@@ -2387,4 +3385,21 @@ components:
           title: dst_label
           type: string
       title: GrootEdgeType_relations_inner
+      type: object
+    GrootDataloadingJobConfig_edges_inner:
+      example:
+        type_name: type_name
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        source_vertex:
+          title: source_vertex
+          type: string
+        destination_vertex:
+          title: destination_vertex
+          type: string
+      title: GrootDataloadingJobConfig_edges_inner
       type: object

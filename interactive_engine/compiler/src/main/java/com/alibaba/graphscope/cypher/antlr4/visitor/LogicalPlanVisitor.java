@@ -16,17 +16,16 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
@@ -40,6 +39,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
@@ -62,8 +62,7 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
             GraphBuilderVisitor builderVisitor = new GraphBuilderVisitor(this.builder);
             RelNode regularQuery =
                     builderVisitor.visitOC_RegularQuery(ctx.oC_RegularQuery()).build();
-            ImmutableMap<Integer, String> map =
-                    builderVisitor.getExpressionVisitor().getDynamicParams();
+            Map<Integer, String> map = builderVisitor.getExpressionVisitor().getDynamicParams();
             return new LogicalPlan(regularQuery, getParameters(regularQuery, map));
         } else {
             RexNode procedureCall =
@@ -74,7 +73,7 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
     }
 
     private List<StoredProcedureMeta.Parameter> getParameters(
-            RelNode relNode, ImmutableMap<Integer, String> paramsIdToName) {
+            RelNode relNode, Map<Integer, String> paramsIdToName) {
         List<StoredProcedureMeta.Parameter> params = Lists.newArrayList();
         RexVisitor parameterCollector =
                 new RexVisitorImpl(true) {

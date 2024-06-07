@@ -66,3 +66,17 @@ def list_jobs():  # noqa: E501
     :rtype: Union[List[JobStatus], Tuple[List[JobStatus], int], Tuple[List[JobStatus], int, Dict[str, str]]
     """
     return client_wrapper.list_jobs()
+
+
+@handle_api_exception()
+def get_dataloading_config(graph_name):  # noqa: E501
+    """get_dataloading_config
+
+    get dataloading configuration # noqa: E501
+
+    :param graph_name:
+    :type graph_name: str
+
+    :rtype: Union[List[SchemaMapping], Tuple[List[SchemaMapping], int], Tuple[List[SchemaMapping], int, Dict[str, str]]
+    """
+    return client_wrapper.get_dataloading_config(graph_name)

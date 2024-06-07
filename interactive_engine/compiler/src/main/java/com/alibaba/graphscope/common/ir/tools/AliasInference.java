@@ -44,15 +44,18 @@ import java.util.regex.Pattern;
  * infer a new alias name from the query given one, and validate if the query given alias is duplicated.
  */
 public abstract class AliasInference {
-    public static final String DEFAULT_NAME = "~DEFAULT";
+    public static final String DEFAULT_NAME = "_";
     public static final int DEFAULT_ID = -1;
+
+    // denote all columns, to support count star
+    public static final String STAR = "*";
 
     public static final int DEFAULT_COLUMN_ID = 100;
 
     public static final String DELIMITER = ".";
 
     public static final String SIMPLE_NAME(String alias) {
-        return alias == DEFAULT_NAME ? "DEFAULT" : alias;
+        return alias == DEFAULT_NAME ? "_" : alias;
     }
 
     /**
@@ -65,7 +68,7 @@ public abstract class AliasInference {
      */
     public static final String inferDefault(@Nullable String fieldName, Set<String> uniqueNameList)
             throws IllegalArgumentException {
-        if (fieldName == null || fieldName == DEFAULT_NAME) return DEFAULT_NAME;
+        if (isDefaultAlias(fieldName)) return DEFAULT_NAME;
         if (uniqueNameList.contains(fieldName)) {
             throw new IllegalArgumentException(
                     "alias=" + fieldName + " exists in " + uniqueNameList);
@@ -94,8 +97,9 @@ public abstract class AliasInference {
             fieldNameList.add(null);
         }
         for (int i = 0; i < fieldNameList.size(); ++i) {
-            if (fieldNameList.get(i) == null) {
-                fieldNameList.set(i, innerInfer(exprList, exprList.get(i), i));
+            if (AliasInference.isDefaultAlias(fieldNameList.get(i))) {
+                String inferred = innerInfer(exprList, exprList.get(i), i);
+                fieldNameList.set(i, isDefaultAlias(inferred) ? null : inferred);
             } else {
                 String field = fieldNameList.get(i);
                 if (fieldNameList.lastIndexOf(field) != i || uniqueNameList.contains(field)) {
@@ -176,7 +180,7 @@ public abstract class AliasInference {
         while (!inputsQueue.isEmpty()) {
             RelNode cur = inputsQueue.remove(0);
             for (RelDataTypeField field : cur.getRowType().getFieldList()) {
-                if (field.getName() != null && field.getName() != DEFAULT_NAME) {
+                if (!isDefaultAlias(field.getName())) {
                     uniqueNames.add(field.getName());
                 }
             }
@@ -198,5 +202,19 @@ public abstract class AliasInference {
         return (node instanceof Aggregate)
                 || (node instanceof GraphLogicalProject)
                         && ((GraphLogicalProject) node).isAppend() == false;
+    }
+
+    public static final boolean isDefaultAlias(@Nullable String alias) {
+        return alias == null || alias.equals(DEFAULT_NAME);
+    }
+
+    public static final String inferAliasWithPrefix(String prefix, Set<String> uniqueNameList) {
+        int j = 0;
+        String name;
+        do {
+            name = prefix + j;
+            ++j;
+        } while (uniqueNameList.contains(name));
+        return name;
     }
 }

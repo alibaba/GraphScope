@@ -256,7 +256,10 @@ DATABASE_COMPILER_PLANNER_IS_ON="true"
 DATABASE_COMPILER_PLANNER_OPT="RBO"
 DATABASE_COMPILER_PLANNER_RULES="FilterIntoJoinRule,FilterMatchRule,NotMatchToAntiJoinRule"
 DATABASE_COMPILER_ENDPOINT_ADDRESS="localhost"
+DATABASE_COMPILER_BOLT_DISABLED="false"
 DATABASE_COMPILER_BOLT_PORT="7687"
+DATABASE_COMPILER_GREMLIN_DISABLED="true"
+DATABASE_COMPILER_GREMLIN_PORT="8182"
 DATABASE_COMPILER_QUERY_TIMEOUT="20000"
 
 ## hiactor related default configuration
@@ -401,7 +404,12 @@ function update_init_config_from_yaml(){
     x=$((x + 1))
   done
   # append compiler port and engine port to DATABASE_PORTS
-  DATABASE_PORTS="${DATABASE_COMPILER_BOLT_PORT}:${DATABASE_COMPILER_BOLT_PORT}"
+  if [ "${DATABASE_COMPILER_BOLT_DISABLED}" == "false" ]; then
+    DATABASE_PORTS="${DATABASE_COMPILER_BOLT_PORT}:${DATABASE_COMPILER_BOLT_PORT}"
+  fi
+  if [ "${DATABASE_COMPILER_GREMLIN_DISABLED}" == "false" ]; then
+    DATABASE_PORTS="${DATABASE_PORTS},${DATABASE_COMPILER_GREMLIN_PORT}:${DATABASE_COMPILER_GREMLIN_PORT}"
+  fi
   DATABASE_PORTS="${DATABASE_PORTS},${DATABASE_COMPUTE_ENGINE_PORT}:${DATABASE_COMPUTE_ENGINE_PORT}"
   DATABASE_PORTS="${DATABASE_PORTS},${DATABASE_ADMIN_PORT}:${DATABASE_ADMIN_PORT}"
 }
@@ -458,6 +466,15 @@ function update_engine_config_from_yaml(){
   fi
   if [[ -n "${compiler_endpoint_bolt_connector_port}" ]]; then
     DATABASE_COMPILER_BOLT_PORT="${compiler_endpoint_bolt_connector_port}"
+  fi
+  if [[ -n "${compiler_endpoint_bolt_connector_disabled}" ]]; then
+    DATABASE_COMPILER_BOLT_DISABLED="${compiler_endpoint_bolt_connector_disabled}"
+  fi
+  if [[ -n "${compiler_endpoint_gremlin_connector_port}" ]]; then
+    DATABASE_COMPILER_GREMLIN_PORT="${compiler_endpoint_gremlin_connector_port}"
+  fi
+  if [[ -n "${compiler_endpoint_gremlin_connector_disabled}" ]]; then
+    DATABASE_COMPILER_GREMLIN_DISABLED="${compiler_endpoint_gremlin_connector_disabled}"
   fi
   if [[ -n "${compiler_query_timeout}" ]]; then
     DATABASE_COMPILER_QUERY_TIMEOUT="${compiler_query_timeout}"
@@ -745,11 +762,11 @@ function do_gen_conf(){
   echo "  endpoint:"  >> ${output_config_file}
   echo "    default_listen_address: ${DATABASE_COMPILER_ENDPOINT_ADDRESS}" >> ${output_config_file}
   echo "    bolt_connector:" >> ${output_config_file}
-  echo "      disabled: false" >> ${output_config_file}
+  echo "      disabled: ${DATABASE_COMPILER_BOLT_DISABLED}" >> ${output_config_file}
   echo "      port: ${DATABASE_COMPILER_BOLT_PORT}" >> ${output_config_file}
   echo "    gremlin_connector:" >> ${output_config_file}
-  echo "      disabled: true" >> ${output_config_file}
-  echo "      port: 8182" >> ${output_config_file}
+  echo "      disabled: ${DATABASE_COMPILER_GREMLIN_DISABLED}" >> ${output_config_file}
+  echo "      port: ${DATABASE_COMPILER_GREMLIN_PORT}" >> ${output_config_file}
   echo "  query_timeout: ${DATABASE_COMPILER_QUERY_TIMEOUT}" >> ${output_config_file}
 
   #echo http_service
@@ -964,10 +981,10 @@ function do_init(){
   local username=$(id -un)
 
   GIE_DB_IMAGE_NAME_TAG="${GIE_DB_IMAGE_NAME}:${DATABASE_VERSION}"
-  cmd="docker run -it -d --privileged --name ${GIE_DB_CONTAINER_NAME}"
+  cmd="docker run --entrypoint bash -it -d --privileged --name ${GIE_DB_CONTAINER_NAME}"
 
   # create user in container
-  cmd="${cmd} ${port_cmd} ${mount_cmd} ${GIE_DB_IMAGE_NAME_TAG} bash"
+  cmd="${cmd} ${port_cmd} ${mount_cmd} ${GIE_DB_IMAGE_NAME_TAG}"
   
   info "Running cmd: ${cmd}"
   # eval $cmd, exit if failed
@@ -1439,8 +1456,18 @@ function do_start(){
   check_process_running_in_container ${GIE_DB_CONTAINER_NAME} ${DOCKER_DB_COMPILER_BIN} ", use gs_interactive service get_log -o [dir] to see more details"
   info "Successfully start compiler"
   # get cypher port from engine config file
-  # bolt_connector_port=$(parse_yaml "${engine_config_file}" | grep "compiler_endpoint_bolt_connector_port" | awk -F "=" '{print $2}')
-  emph "DataBase service is running, port is open on :${DATABASE_COMPILER_BOLT_PORT}"
+  eval $(parse_yaml "${real_engine_config_file}")
+
+  if [ "${compiler_endpoint_bolt_connector_disabled}" = "false" ]; then
+    emph "Cypher port is open on :${compiler_endpoint_bolt_connector_port}"
+  else
+    emph "Bolt connector is disabled, no bolt endpoint is available"
+  fi
+  if [ "${compiler_endpoint_gremlin_connector_disabled}" = "false" ]; then
+    emph "Gremlin port is running, port is open on :${compiler_endpoint_gremlin_connector_port}"
+  else
+    emph "Gremlin connector is disabled, no gremlin endpoint is available"
+  fi
 
   # if do_start success, we should write current args to ${HOST_DB_RUNNING_FILE}
   echo "GRAPH_NAME=${graph_name}" > ${HOST_DB_RUNNING_FILE}
@@ -1497,7 +1524,16 @@ function do_status() {
   # copy the engine config file to host's tmp directory
   docker cp "${GIE_DB_CONTAINER_NAME}:${docker_engine_config_file}" "${HOST_DB_TMP_DIR}/engine_config.yaml" || exit 1
   eval $(parse_yaml "${HOST_DB_TMP_DIR}/engine_config.yaml")
-  emph "Database service is running, port is open on :${compiler_endpoint_bolt_connector_port}"
+  if [ "${compiler_endpoint_bolt_connector_disabled}" = "false" ]; then
+    emph "Cypher port is open on :${compiler_endpoint_bolt_connector_port}"
+  else
+    emph "Bolt connector is disabled, no bolt endpoint is available"
+  fi
+  if [ "${compiler_endpoint_gremlin_connector_disabled}" = "false" ]; then
+    emph "Gremlin port is open on :${compiler_endpoint_gremlin_connector_port}"
+  else
+    emph "Gremlin connector is disabled, no gremlin endpoint is available"
+  fi
   # print current running graph name
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
     local graph_name=$(sed -n '1p' ${HOST_DB_RUNNING_FILE} | cut -d '=' -f 2)
