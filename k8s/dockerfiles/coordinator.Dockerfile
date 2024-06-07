@@ -24,7 +24,11 @@ RUN cd /home/graphscope/GraphScope/ && \
         cp wheelhouse/*.whl /home/graphscope/install/ && \
         cd ../coordinator && \
         python3 setup.py bdist_wheel && \
-        cp dist/*.whl /home/graphscope/install/; \
+        cp dist/*.whl /home/graphscope/install/ && \
+        cd ../analytical_engine/java/ && \
+        mvn clean package -DskipTests -Dmaven.antrun.skip=true && \
+        cp grape-runtime/target/grape-runtime-*-shaded.jar /home/graphscope/install/lib/ && \
+        cp grape-giraph/target/grape-giraph-*-shaded.jar /home/graphscope/install/lib/; \
     fi
 
 ############### RUNTIME: Coordinator #######################
@@ -34,7 +38,7 @@ FROM ubuntu:22.04 AS coordinator
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && \
-    apt-get install -y sudo python3-pip openmpi-bin curl tzdata && \
+    apt-get install -y sudo python3-pip openmpi-bin curl tzdata default-jdk && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

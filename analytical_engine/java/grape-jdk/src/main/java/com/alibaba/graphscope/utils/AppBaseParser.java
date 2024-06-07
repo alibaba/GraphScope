@@ -183,11 +183,11 @@ public class AppBaseParser {
     }
 
     private static String writableToJava(String typeName) {
-        if (typeName.contains("org.apache.hadoop.io.DoubleWritable")) {
+        if (typeName.equals("org.apache.hadoop.io.DoubleWritable")) {
             return "java.lang.Double";
-        } else if (typeName.contains("org.apache.hadoop.io.IntWritable")) {
+        } else if (typeName.equals("org.apache.hadoop.io.IntWritable")) {
             return "java.lang.Integer";
-        } else if (typeName.contains("org.apache.hadoop.io.LongWritable")) {
+        } else if (typeName.equals("org.apache.hadoop.io.LongWritable")) {
             return "java.lang.Long";
         } else {
             return "com.alibaba.graphscope.ds.StringView";

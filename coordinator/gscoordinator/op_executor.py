@@ -416,9 +416,10 @@ class OperationExecutor:
             **kwargs,
         )
         # for java app compilation, we need to distribute the jar and ffi generated
-        if app_type == "java_pie":
-            self._launcher.distribute_file(java_jar_path)
-            self._launcher.distribute_file(java_ffi_path)
+        # if app_type == "java_pie":
+            # self._launcher.distribute_file(java_jar_path)
+            # currently no ffi path is generated.
+            # self._launcher.distribute_file(java_ffi_path) 
         self._launcher.distribute_file(lib_path)
         return lib_path
 
