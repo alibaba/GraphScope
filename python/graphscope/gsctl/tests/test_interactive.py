@@ -392,7 +392,6 @@ class TestE2EInteractive(object):
                 assert s.status == "Running"
             else:
                 assert s.status == "Stopped"
-        delete_graph_by_id(graph_id)
 
     def teardown_class(self):
         disconnect_coordinator()
