@@ -16,7 +16,9 @@
 
 package com.alibaba.graphscope.gremlin.integration.suite.standard;
 
+import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
@@ -169,6 +171,21 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Object>
             get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
 
+    public abstract Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age();
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_path_expand_until_age_gt_30_values_age() {
+        // the until condition follows a sql-like expression syntax, which can only be opened when
+        // language type is antlr_gremlin_calcite
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal =
+                get_g_V_path_expand_until_age_gt_30_values_age();
+        printTraversalForm(traversal);
+        Assert.assertEquals(32, traversal.next());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_select_expr_power_age_by_2() {
@@ -228,6 +245,60 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long> get_g_V_where_values_age_count();
 
     public abstract Traversal<Vertex, Long> get_g_V_where_not_values_age_count();
+
+    public abstract Traversal<Vertex, Map<String, Object>>
+            get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_outXknowsX_bX();
+
+    public abstract Traversal<Vertex, Map<String, Object>>
+            get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX();
+
+    @Test
+    @LoadGraphWith(MODERN)
+    public void g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_outXknowsX_bX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        final Traversal<Vertex, Map<String, Object>> traversal =
+                get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_outXknowsX_bX();
+        printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            counter++;
+            final Map<String, Object> map = traversal.next();
+            assertEquals(2, map.size());
+            assertTrue(map.containsKey("a"));
+            assertTrue(map.containsKey("b"));
+            assertEquals(convertToVertexId("marko"), ((Vertex) map.get("a")).id());
+            assertEquals(convertToVertexId("josh"), ((Vertex) map.get("b")).id());
+        }
+        assertEquals(1, counter);
+        assertFalse(traversal.hasNext());
+    }
+
+    @Test
+    @LoadGraphWith(MODERN)
+    public void g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        final Traversal<Vertex, Map<String, Object>> traversal =
+                get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX();
+        printTraversalForm(traversal);
+        int counter = 0;
+        int markoCounter = 0;
+        while (traversal.hasNext()) {
+            counter++;
+            final Map<String, Object> map = traversal.next();
+            assertEquals(2, map.size());
+            assertTrue(map.containsKey("a"));
+            assertTrue(map.containsKey("b"));
+            assertEquals(convertToVertexId("marko"), ((Vertex) map.get("b")).id());
+            if (((Vertex) map.get("a")).id().equals(convertToVertexId("marko"))) markoCounter++;
+            else
+                assertTrue(
+                        ((Vertex) map.get("a")).id().equals(convertToVertexId("josh"))
+                                || ((Vertex) map.get("a")).id().equals(convertToVertexId("peter")));
+        }
+        assertEquals(3, markoCounter);
+        assertEquals(5, counter);
+        assertFalse(traversal.hasNext());
+    }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
@@ -1158,6 +1229,18 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         }
 
         @Override
+        public Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age() {
+            return ((IrCustomizedTraversal)
+                            g.V().out("1..100", "knows")
+                                    .with(
+                                            "UNTIL",
+                                            com.alibaba.graphscope.gremlin.integration.suite.utils
+                                                    .__.expr("_.age > 30", ExprStep.Type.FILTER)))
+                    .endV()
+                    .values("age");
+        }
+
+        @Override
         public Traversal<Vertex, Long> get_g_V_where_out_out_count() {
             return g.V().where(__.out().out()).count();
         }
@@ -1462,6 +1545,32 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Edge, Edge> get_g_E_hasLabelXknowsX() {
             return g.E().hasLabel("knows");
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>>
+                get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_outXknowsX_bX() {
+            return g.V().has("age")
+                    .as("a")
+                    .out()
+                    .in()
+                    .has("age")
+                    .as("b")
+                    .select("a", "b")
+                    .where(as("a").out("knows").as("b"));
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>>
+                get_g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX() {
+            return g.V().has("age")
+                    .as("a")
+                    .out()
+                    .in()
+                    .has("age")
+                    .as("b")
+                    .select("a", "b")
+                    .where(as("b").has("name", "marko"));
         }
     }
 }

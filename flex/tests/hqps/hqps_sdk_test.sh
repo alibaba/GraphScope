@@ -83,7 +83,7 @@ start_engine_service(){
 
     echo "Start engine service with command: ${cmd}"
     eval ${cmd} 
-    sleep 5
+    sleep 10
     #check interactive_server is running, if not, exit
     ps -ef | grep "interactive_server" | grep -v grep
 
@@ -103,8 +103,6 @@ run_java_sdk_test(){
 run_python_sdk_test(){
   echo "run python sdk test"
   pushd ${FLEX_HOME}/interactive/sdk/python/
-  pip3 install -r requirements.txt 
-  pip3 install -r test-requirements.txt
   cmd="python3 -m pytest -s test/test_driver.py"
   echo "Start python sdk test: ${cmd}"
   eval ${cmd} || (err "java python test failed" &&  exit 1)

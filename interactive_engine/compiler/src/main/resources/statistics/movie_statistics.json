@@ -1,0 +1,89 @@
+{
+    "total_vertex_count": 175,
+    "total_edge_count": 265,
+    "vertex_type_statistics": [
+        {
+            "type_id": 0,
+            "type_name": "movie",
+            "count": 38
+        },
+        {
+            "type_id": 1,
+            "type_name": "person",
+            "count": 130
+        },
+        {
+            "type_id": 2,
+            "type_name": "user",
+            "count": 7
+        }
+    ],
+    "edge_type_statistics": [
+        {
+            "type_id": 0,
+            "type_name": "acted_in",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "movie",
+                    "count": 172
+                }
+            ]
+        },
+        {
+            "type_id": 1,
+            "type_name": "directed",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "movie",
+                    "count": 44
+                }
+            ]
+        },
+        {
+            "type_id": 2,
+            "type_name": "review",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "user",
+                    "destination_vertex": "movie",
+                    "count": 16
+                }
+            ]
+        },
+        {
+            "type_id": 3,
+            "type_name": "follows",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "user",
+                    "destination_vertex": "person",
+                    "count": 8
+                }
+            ]
+        },
+        {
+            "type_id": 4,
+            "type_name": "wrote",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "movie",
+                    "count": 10
+                }
+            ]
+        },
+        {
+            "type_id": 5,
+            "type_name": "produced",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "person",
+                    "destination_vertex": "movie",
+                    "count": 15
+                }
+            ]
+        }
+    ]
+}

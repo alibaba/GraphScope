@@ -36,10 +36,26 @@ USER root
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 COPY --from=builder /home/graphscope/install /opt/graphscope/
 RUN mkdir -p /tmp/gs && (mv /opt/graphscope/builtin /tmp/gs/builtin || true) && chown -R graphscope:graphscope /tmp/gs
-RUN chmod +x /opt/graphscope/bin/grape_engine
+RUN chmod +x /opt/graphscope/bin/*
+
+# RUN apt-get update -y && apt-get install openssh-server dnsutils -y && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /var/run/sshd
+
+RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
+    echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
+    echo "StrictModes no" > /etc/ssh/sshd_config && \
+    echo "PidFile /tmp/sshd.pid" >> /etc/ssh/sshd_config && \
+    echo "HostKey ~/.ssh/id_rsa" >> /etc/ssh/sshd_config && \
+    echo "Port 2222" >> /etc/ssh/sshd_config && \
+    echo "ListenAddress 0.0.0.0" >> /etc/ssh/sshd_config && \
+    sed -i 's/.*Port 22.*/   Port 2222/g' /etc/ssh/ssh_config
 
 USER graphscope
 WORKDIR /home/graphscope
+
+COPY ./k8s/dockerfiles/entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 ############### BUILDER: ANALYTICAL-JAVA #######################
 FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder-java
@@ -57,7 +73,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         strip ${INSTALL_DIR}/bin/grape_engine; \
         strip ${INSTALL_DIR}/lib/*.so; \
         sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/; \
-        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin; \
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin --enable_java_sdk ON; \
         strip ${INSTALL_DIR}/builtin/*/*.so || true; \
     fi
 

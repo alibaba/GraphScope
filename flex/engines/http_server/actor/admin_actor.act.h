@@ -38,6 +38,8 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) run_get_graph_schema(query_param&& param);
 
+  seastar::future<admin_query_result> ANNOTATION(actor:method) run_get_graph_meta(query_param&& param);
+
   seastar::future<admin_query_result> ANNOTATION(actor:method) run_list_graphs(query_param&& param);
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) run_delete_graph(query_param&& param);
@@ -67,6 +69,8 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
   seastar::future<admin_query_result> ANNOTATION(actor:method) list_jobs(query_param&& param);
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) cancel_job(query_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) run_get_graph_statistic(query_param&& param);
 
   // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.

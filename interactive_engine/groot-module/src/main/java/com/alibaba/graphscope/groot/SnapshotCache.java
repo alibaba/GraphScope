@@ -89,7 +89,8 @@ public class SnapshotCache {
         GraphDef oldGraphDef = snapshotWithSchema.getGraphDef();
         if (graphDef != null
                 && (oldGraphDef == null
-                        || graphDef.getSchemaVersion() > oldGraphDef.getVersion())) {
+                        || graphDef.getSchemaVersion()
+                                > Long.parseLong(oldGraphDef.getVersion()))) {
             newSnapshotInfoBuilder.setGraphDef(graphDef);
             logger.info("schema updated. schema version [" + graphDef.getVersion() + "]");
             logger.debug(graphDef.toProto().toString());

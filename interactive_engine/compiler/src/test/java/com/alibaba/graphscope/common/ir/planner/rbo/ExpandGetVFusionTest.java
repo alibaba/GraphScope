@@ -332,11 +332,93 @@ public class ExpandGetVFusionTest {
                 after.explain().trim());
     }
 
+    // g.V().hasLabel("person").outE("likes").inV().hasLabel("comment"), can not be fused into a
+    // single GraphPhysicalExpand since we actually have person-likes-comment and person-likes-post.
+    @Test
+    public void expand_getv_fusion_7_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder("schema/ldbc.json");
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("PERSON")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("LIKES")))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("COMMENT")))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[COMMENT]}],"
+                        + " alias=[_], opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}],"
+                        + " alias=[_], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                        + " alias=[_], opt=[VERTEX])",
+                before.explain().trim());
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[COMMENT]}], alias=[_],"
+                        + " opt=[END], physicalOpt=[ITSELF])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}],"
+                        + " alias=[_], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                        + " alias=[_], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
+    // g.V().hasLabel("person").outE("likes").inV(), can be fused into a single GraphPhysicalExpand
+    // even without type infer for GetV
+    @Test
+    public void expand_getv_fusion_8_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder("schema/ldbc.json");
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("PERSON")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("LIKES")))
+                        .getV(new GetVConfig(GraphOpt.GetV.END, new LabelConfig(true)))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=true, tables=[PERSON, POST, TAG,"
+                    + " ORGANISATION, PLACE, TAGCLASS, COMMENT, FORUM]}], alias=[_], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}], alias=[_],"
+                    + " opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[_], opt=[VERTEX])",
+                before.explain().trim());
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}], alias=[_],"
+                        + " opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                        + " alias=[_], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
     // path expand: g.V().hasLabel("person").out('1..3', "knows").with('PATH_OPT',
     // SIMPLE).with('RESULT_OPT', ALL_V)
     @Test
     public void path_expand_getv_fusion_0_test() {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -351,7 +433,7 @@ public class ExpandGetVFusionTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode before =
                 builder.source(
                                 new SourceConfig(
@@ -388,7 +470,12 @@ public class ExpandGetVFusionTest {
     // eq(10)).with('PATH_OPT', SIMPLE).with('RESULT_OPT', ALL_V)
     @Test
     public void path_expand_getv_fusion_1_test() {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -408,7 +495,7 @@ public class ExpandGetVFusionTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode before =
                 builder.source(
                                 new SourceConfig(
@@ -447,7 +534,12 @@ public class ExpandGetVFusionTest {
     // path expand with edge filters
     @Test
     public void path_expand_getv_fusion_2_test() {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -467,7 +559,7 @@ public class ExpandGetVFusionTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode before =
                 builder.source(
                                 new SourceConfig(

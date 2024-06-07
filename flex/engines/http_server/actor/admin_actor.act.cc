@@ -29,6 +29,53 @@
 
 namespace server {
 
+gs::GraphStatistics get_graph_statistics(const gs::GraphDBSession& sess) {
+  gs::GraphStatistics stat;
+  const auto& graph = sess.graph();
+  const auto& schema = sess.graph().schema();
+  auto vertex_label_num = graph.schema().vertex_label_num();
+  auto edge_label_num = graph.schema().edge_label_num();
+  for (auto i = 0; i < vertex_label_num; ++i) {
+    stat.total_vertex_count += graph.vertex_num(i);
+    stat.vertex_type_statistics.emplace_back(
+        std::tuple{i, schema.get_vertex_label_name(i), graph.vertex_num(i)});
+  }
+  for (auto edge_label_id = 0; edge_label_id < edge_label_num;
+       ++edge_label_id) {
+    auto edge_label_name = schema.get_edge_label_name(edge_label_id);
+    std::vector<std::tuple<std::string, std::string, int32_t>>
+        vertex_type_pair_statistics;
+    for (auto src_label_id = 0; src_label_id < vertex_label_num;
+         ++src_label_id) {
+      auto src_label_name = schema.get_vertex_label_name(src_label_id);
+      for (auto dst_label_id = 0; dst_label_id < vertex_label_num;
+           ++dst_label_id) {
+        auto dst_label_name = schema.get_vertex_label_name(dst_label_id);
+        if (schema.exist(src_label_id, dst_label_id, edge_label_id)) {
+          auto oe_csr =
+              graph.get_oe_csr(src_label_id, dst_label_id, edge_label_id);
+          auto ie_csr =
+              graph.get_ie_csr(dst_label_id, src_label_id, edge_label_id);
+          size_t cur_edge_cnt = 0;
+          if (oe_csr) {
+            cur_edge_cnt += oe_csr->size();
+          } else if (ie_csr) {
+            cur_edge_cnt += ie_csr->size();
+          }
+          stat.total_edge_count += cur_edge_cnt;
+          vertex_type_pair_statistics.emplace_back(
+              std::tuple{src_label_name, dst_label_name, cur_edge_cnt});
+        }
+      }
+    }
+    if (!vertex_type_pair_statistics.empty()) {
+      stat.edge_type_statistics.emplace_back(std::tuple{
+          edge_label_id, edge_label_name, vertex_type_pair_statistics});
+    }
+  }
+  return stat;
+}
+
 std::string merge_graph_and_plugin_meta(
     std::shared_ptr<gs::IGraphMetaStore> metadata_store,
     const std::vector<gs::GraphMeta>& graph_metas) {
@@ -48,6 +95,20 @@ std::string merge_graph_and_plugin_meta(
     res.push_back(nlohmann::json::parse(graph_meta.ToJson()));
   }
   return res.empty() ? "{}" : res.dump();
+}
+
+gs::Result<YAML::Node> preprocess_vertex_schema(YAML::Node root,
+                                                const std::string& type_name) {
+  // 1. To support open a empty graph, we should check if the x_csr_params is
+  // set for each vertex type, if not set, we set it to a rather small max_vnum,
+  // to avoid to much memory usage.
+  auto types = root[type_name];
+  for (auto type : types) {
+    if (!type["x_csr_params"]) {
+      type["x_csr_params"]["max_vertex_num"] = 8192;
+    }
+  }
+  return types;
 }
 
 gs::Result<YAML::Node> preprocess_vertex_edge_types(
@@ -94,13 +155,16 @@ gs::Result<YAML::Node> preprocess_vertex_edge_types(
 // vertex/edge types should all set.
 // 2. If property_id or type_id is not set, then set them according to the order
 gs::Result<YAML::Node> preprocess_graph_schema(YAML::Node&& node) {
-  if (node["schema"] && node["schema"]["vertex_types"] &&
-      node["schema"]["edge_types"]) {
+  if (node["schema"] && node["schema"]["vertex_types"]) {
     // First check whether property_id or type_id is set in the schema
     RETURN_IF_NOT_OK(
         preprocess_vertex_edge_types(node["schema"], "vertex_types"));
-    RETURN_IF_NOT_OK(
-        preprocess_vertex_edge_types(node["schema"], "edge_types"));
+    RETURN_IF_NOT_OK(preprocess_vertex_schema(node["schema"], "vertex_types"));
+    if (node["schema"]["edge_types"]) {
+      // edge_type could be optional.
+      RETURN_IF_NOT_OK(
+          preprocess_vertex_edge_types(node["schema"], "edge_types"));
+    }
     return node;
   } else {
     return gs::Status(gs::StatusCode::InvalidSchema, "Invalid graph schema: ");
@@ -404,6 +468,41 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_schema(
   }
 }
 
+// Get the metadata of a graph.
+seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
+    query_param&& query_param) {
+  LOG(INFO) << "Get Graph meta for graph_id: " << query_param.content;
+  auto meta_res = metadata_store_->GetGraphMeta(query_param.content);
+
+  if (meta_res.ok()) {
+    auto get_all_procedure_res =
+        metadata_store_->GetAllPluginMeta(query_param.content);
+    if (get_all_procedure_res.ok()) {
+      VLOG(10) << "Successfully get all procedures: "
+               << get_all_procedure_res.value().size();
+      auto& all_plugin_metas = get_all_procedure_res.value();
+      for (auto& plugin_meta : all_plugin_metas) {
+        add_runnable_info(plugin_meta);
+      }
+      auto& graph_meta = meta_res.value();
+      graph_meta.plugin_metas = all_plugin_metas;
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(std::move(graph_meta.ToJson())));
+    } else {
+      LOG(ERROR) << "Fail to get all procedures: "
+                 << get_all_procedure_res.status().error_message() << " for "
+                 << query_param.content;
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(get_all_procedure_res.status()));
+    }
+  } else {
+    LOG(ERROR) << "Fail to get graph schema: "
+               << meta_res.status().error_message();
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(meta_res.status()));
+  }
+}
+
 // list all graphs
 seastar::future<admin_query_result> admin_actor::run_list_graphs(
     query_param&& query_param) {
@@ -428,6 +527,20 @@ seastar::future<admin_query_result> admin_actor::run_list_graphs(
 seastar::future<admin_query_result> admin_actor::run_delete_graph(
     query_param&& query_param) {
   LOG(INFO) << "Delete graph: " << query_param.content;
+
+  auto lock_info = metadata_store_->GetGraphIndicesLocked(query_param.content);
+  if (!lock_info.ok()) {
+    LOG(ERROR) << "Fail to get lock info for graph: " << query_param.content;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(lock_info.status()));
+  }
+  if (lock_info.value()) {
+    LOG(ERROR) << "Graph is running, cannot delete: " << query_param.content;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::AlreadyLocked,
+            "Graph is running, cannot delete: " + query_param.content)));
+  }
 
   auto get_res = metadata_store_->GetGraphMeta(query_param.content);
   if (!get_res.ok()) {
@@ -762,10 +875,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
 
   auto cur_running_graph_res = metadata_store_->GetRunningGraph();
   if (!cur_running_graph_res.ok()) {
-    LOG(ERROR) << "Fail to get running graph: "
-               << cur_running_graph_res.status().error_message();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(cur_running_graph_res.status()));
+    LOG(INFO) << "No running graph, will start on the graph in request";
   }
   auto cur_running_graph = cur_running_graph_res.value();
   LOG(INFO) << "Current running graph: " << cur_running_graph;
@@ -872,8 +982,8 @@ seastar::future<admin_query_result> admin_actor::start_service(
   if (!data_dir.ok()) {
     LOG(ERROR) << "Fail to get data directory: "
                << data_dir.status().error_message();
-    if (!prev_lock) {  // If the graph is not locked before, and we fail at some
-                       // steps after locking, we should unlock it.
+    if (!prev_lock) {  // If the graph is not locked before, and we fail at
+                       // some steps after locking, we should unlock it.
       metadata_store_->UnlockGraphIndices(graph_name);
     }
     return seastar::make_ready_future<admin_query_result>(
@@ -897,12 +1007,13 @@ seastar::future<admin_query_result> admin_actor::start_service(
       // use the previous thread num
       auto thread_num = db.SessionNum();
       db.Close();
+      VLOG(10) << "Closed the previous graph db";
       if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
         LOG(ERROR) << "Fail to load graph from data directory: "
                    << data_dir_value;
-        if (!prev_lock) {  // If the graph is not locked before, and we fail at
-                           // some
-                           // steps after locking, we should unlock it.
+        if (!prev_lock) {  // If the graph is not locked before, and we
+                           // fail at some steps after locking, we should
+                           // unlock it.
           metadata_store_->UnlockGraphIndices(graph_name);
         }
         return seastar::make_ready_future<admin_query_result>(
@@ -910,6 +1021,8 @@ seastar::future<admin_query_result> admin_actor::start_service(
                 gs::StatusCode::InternalError,
                 "Fail to load graph from data directory: " + data_dir_value)));
       }
+      LOG(INFO) << "Successfully load graph from data directory: "
+                << data_dir_value;
       // unlock the previous graph
       if (graph_name != cur_running_graph) {
         auto unlock_res =
@@ -923,6 +1036,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
               gs::Result<seastar::sstring>(unlock_res.status()));
         }
       }
+      LOG(INFO) << "Update running graph to: " << graph_name;
       auto set_res = metadata_store_->SetRunningGraph(graph_name);
       if (!set_res.ok()) {
         LOG(ERROR) << "Fail to set running graph: " << graph_name;
@@ -945,6 +1059,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
                                                   "Fail to start compiler")));
     }
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
+    hqps_service.reset_start_time();
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>("Successfully start service"));
   });
@@ -956,17 +1071,41 @@ seastar::future<admin_query_result> admin_actor::start_service(
 seastar::future<admin_query_result> admin_actor::stop_service(
     query_param&& query_param) {
   auto& hqps_service = HQPSService::get();
-  return hqps_service.stop_query_actors().then([&hqps_service] {
+  return hqps_service.stop_query_actors().then([this, &hqps_service] {
     LOG(INFO) << "Successfully stopped query handler";
-    if (hqps_service.stop_compiler_subprocess()) {
-      LOG(INFO) << "Successfully stop compiler";
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>("Successfully stop service"));
-    } else {
-      LOG(ERROR) << "Fail to stop compiler";
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(gs::Status(gs::StatusCode::InternalError,
-                                                  "Fail to stop compiler")));
+    // Add also remove current running graph
+    {
+      std::lock_guard<std::mutex> lock(mtx_);
+      // unlock the graph
+      auto cur_running_graph_res = metadata_store_->GetRunningGraph();
+      if (cur_running_graph_res.ok()) {
+        auto unlock_res =
+            metadata_store_->UnlockGraphIndices(cur_running_graph_res.value());
+        if (!unlock_res.ok()) {
+          LOG(ERROR) << "Fail to unlock graph: "
+                     << cur_running_graph_res.value();
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(unlock_res.status()));
+        }
+        if (!metadata_store_->ClearRunningGraph().ok()) {
+          LOG(ERROR) << "Fail to clear running graph";
+          return seastar::make_ready_future<admin_query_result>(
+              gs::Result<seastar::sstring>(
+                  gs::Status(gs::StatusCode::InternalError,
+                             "Fail to clear running graph")));
+        }
+      }
+
+      if (hqps_service.stop_compiler_subprocess()) {
+        LOG(INFO) << "Successfully stop compiler";
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>("Successfully stop service"));
+      } else {
+        LOG(ERROR) << "Fail to stop compiler";
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>(gs::Status(
+                gs::StatusCode::InternalError, "Fail to stop compiler")));
+      }
     }
   });
 }
@@ -984,10 +1123,15 @@ seastar::future<admin_query_result> admin_actor::service_status(
     res["bolt_port"] = hqps_service.get_service_config().bolt_port;
     res["gremlin_port"] = hqps_service.get_service_config().gremlin_port;
     if (running_graph_res.ok()) {
-      res["graph_id"] = running_graph_res.value();
+      auto graph_meta =
+          metadata_store_->GetGraphMeta(running_graph_res.value());
+      if (graph_meta.ok()) {
+        res["graph"] = nlohmann::json::parse(graph_meta.value().ToJson());
+      }
     } else {
-      res["graph_id"] = "UNKNOWN";
+      res["graph"] = {};
     }
+    res["start_time"] = hqps_service.get_start_time();
   } else {
     LOG(INFO) << "Query service has not been inited!";
     res["status"] = "Query service has not been inited!";
@@ -1116,6 +1260,32 @@ seastar::future<admin_query_result> admin_actor::cancel_job(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(cancel_meta_res.status()));
   }
+}
+
+// Get the statistics of the current running graph, if no graph is running,
+// return empty.
+seastar::future<admin_query_result> admin_actor::run_get_graph_statistic(
+    query_param&& query_param) {
+  std::string queried_graph = query_param.content.c_str();
+  auto cur_running_graph_res = metadata_store_->GetRunningGraph();
+  if (!cur_running_graph_res.ok()) {
+    // no graph is running
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::NotFound, "No graph is running currently")));
+  }
+  auto& graph_id = cur_running_graph_res.value();
+  if (graph_id != queried_graph) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::Status(gs::StatusCode::NotFound,
+                       "The queried graph is not running: " + graph_id +
+                           ", current running graph is: " + queried_graph)));
+  }
+  auto statistics = get_graph_statistics(
+      gs::GraphDB::get().GetSession(hiactor::local_shard_id()));
+  return seastar::make_ready_future<admin_query_result>(
+      gs::Result<seastar::sstring>(statistics.ToJson()));
 }
 
 }  // namespace server

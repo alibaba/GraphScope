@@ -515,21 +515,23 @@ static bool parse_property_type(YAML::Node node, PropertyType& type) {
   }
 }
 
-static bool parse_vertex_properties(YAML::Node node,
-                                    const std::string& label_name,
-                                    std::vector<PropertyType>& types,
-                                    std::vector<std::string>& names,
-                                    std::vector<StorageStrategy>& strategies,
-                                    const std::string& version) {
+static Status parse_vertex_properties(YAML::Node node,
+                                      const std::string& label_name,
+                                      std::vector<PropertyType>& types,
+                                      std::vector<std::string>& names,
+                                      std::vector<StorageStrategy>& strategies,
+                                      const std::string& version) {
   if (!node || !node.IsSequence()) {
     LOG(ERROR) << "Expect properties for " << label_name << " to be a sequence";
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "Expect properties for " + label_name + " to be a sequence");
   }
 
   int prop_num = node.size();
   if (prop_num == 0) {
     LOG(ERROR) << "At least one property is needed for " << label_name;
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "At least one property is needed for " + label_name);
   }
 
   for (int i = 0; i < prop_num; ++i) {
@@ -537,19 +539,25 @@ static bool parse_vertex_properties(YAML::Node node,
     if (!get_scalar(node[i], "property_name", prop_name_str)) {
       LOG(ERROR) << "Name of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "Name of vertex-" + label_name + " prop-" +
+                        std::to_string(i - 1) + " is not specified...");
     }
     if (!node[i]["property_type"]) {
       LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "type of vertex-" + label_name + " prop-" +
+                        std::to_string(i - 1) + " is not specified...");
     }
     auto prop_type_node = node[i]["property_type"];
     PropertyType prop_type;
     if (!parse_property_type(prop_type_node, prop_type)) {
       LOG(ERROR) << "Fail to parse property type of vertex-" << label_name
                  << " prop-" << i - 1;
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "Fail to parse property type of vertex-" + label_name +
+                        " prop-" + std::to_string(i - 1));
     }
     {
       if (node[i]["x_csr_params"]) {
@@ -563,22 +571,24 @@ static bool parse_vertex_properties(YAML::Node node,
     names.push_back(prop_name_str);
   }
 
-  return true;
+  return Status::OK();
 }
 
-static bool parse_edge_properties(YAML::Node node,
-                                  const std::string& label_name,
-                                  std::vector<PropertyType>& types,
-                                  std::vector<std::string>& names,
-                                  const std::string& version) {
+static Status parse_edge_properties(YAML::Node node,
+                                    const std::string& label_name,
+                                    std::vector<PropertyType>& types,
+                                    std::vector<std::string>& names,
+                                    const std::string& version) {
   if (!node) {
     VLOG(10) << "Found no edge properties specified for edge: " << label_name;
-    return true;
+    return Status::OK();
   }
   if (!node.IsSequence()) {
     LOG(ERROR) << "properties of edge -" << label_name
                << " not set properly, should be a sequence...";
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "properties of edge -" + label_name +
+                      " not set properly, should be a sequence...");
   }
 
   int prop_num = node.size();
@@ -588,37 +598,44 @@ static bool parse_edge_properties(YAML::Node node,
     if (!node[i]["property_type"]) {
       LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "type of edge-" + label_name + " prop-" +
+                        std::to_string(i - 1) + " is not specified...");
     }
     auto prop_type_node = node[i]["property_type"];
     PropertyType prop_type;
     if (!parse_property_type(prop_type_node, prop_type)) {
       LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "type of edge-" + label_name + " prop-" +
+                        std::to_string(i - 1) + " is not specified...");
     }
     if (!get_scalar(node[i], "property_name", prop_name_str)) {
       LOG(ERROR) << "name of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "name of edge-" + label_name + " prop-" +
+                        std::to_string(i - 1) + " is not specified...");
     }
 
     types.push_back(prop_type);
     names.push_back(prop_name_str);
   }
 
-  return true;
+  return Status::OK();
 }
 
-static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
+static Status parse_vertex_schema(YAML::Node node, Schema& schema) {
   std::string label_name;
   if (!get_scalar(node, "type_name", label_name)) {
-    return false;
+    return Status(StatusCode::InvalidSchema, "vertex type_name is not set");
   }
   // Cannot add two vertex label with same name
   if (schema.has_vertex_label(label_name)) {
     LOG(ERROR) << "Vertex label " << label_name << " already exists";
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "Vertex label " + label_name + " already exists");
   }
 
   size_t max_num = ((size_t) 1) << 32;
@@ -637,27 +654,28 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
 
   if (node["nullable"]) {
     LOG(ERROR) << "nullable is not supported yet";
-    return false;
+    return Status(StatusCode::Unimplemented, "nullable is not supported yet");
   }
 
   if (node["default_value"]) {
     LOG(ERROR) << "default_value is not supported yet";
-    return false;
+    return Status(StatusCode::Unimplemented,
+                  "default_value is not supported yet");
   }
 
-  if (!parse_vertex_properties(node["properties"], label_name, property_types,
-                               property_names, strategies,
-                               schema.GetVersion())) {
-    return false;
-  }
+  RETURN_IF_NOT_OK(parse_vertex_properties(node["properties"], label_name,
+                                           property_types, property_names,
+                                           strategies, schema.GetVersion()));
   if (!node["primary_keys"]) {
     LOG(ERROR) << "Expect field primary_keys for " << label_name;
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "Expect field primary_keys for " + label_name);
   }
   auto primary_key_node = node["primary_keys"];
   if (!primary_key_node.IsSequence()) {
     LOG(ERROR) << "[Primary_keys] should be sequence";
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "[Primary_keys] should be sequence");
   }
   // remove primary key from properties.
 
@@ -675,16 +693,22 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
     if (primary_key_inds[i] == -1) {
       LOG(ERROR) << "Primary key " << primary_key_name
                  << " is not found in properties";
-      return false;
+      return Status(
+          StatusCode::InvalidSchema,
+          "Primary key " + primary_key_name + " is not found in properties");
     }
     if (property_types[primary_key_inds[i]] != PropertyType::kInt64 &&
         property_types[primary_key_inds[i]] != PropertyType::kString &&
         property_types[primary_key_inds[i]] != PropertyType::kUInt64 &&
         property_types[primary_key_inds[i]] != PropertyType::kInt32 &&
-        property_types[primary_key_inds[i]] != PropertyType::kUInt32) {
+        property_types[primary_key_inds[i]] != PropertyType::kUInt32 &&
+        !property_types[primary_key_inds[i]].IsVarchar()) {
       LOG(ERROR) << "Primary key " << primary_key_name
-                 << " should be int64 or string";
-      return false;
+                 << " should be int64/int32/uint64/uint32 or string/varchar";
+      return Status(StatusCode::InvalidSchema,
+                    "Primary key " + primary_key_name +
+                        " should be int64/int32/uint64/"
+                        "uint32 or string/varchar");
     }
     primary_keys.emplace_back(property_types[primary_key_inds[i]],
                               property_names[primary_key_inds[i]],
@@ -701,56 +725,57 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   int32_t type_id;
   if (!get_scalar(node, "type_id", type_id)) {
     LOG(ERROR) << "type_id is not set properly for type: " << label_name;
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "type_id is not set properly for type: " + label_name);
   }
   auto label_id = schema.get_vertex_label_id(label_name);
   if (label_id != type_id) {
     LOG(ERROR) << "type_id is not equal to label_id for type: " << label_name;
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "type_id is not equal to label_id for type: " + label_name);
   }
-  return true;
+  return Status::OK();
 }
 
-static bool parse_vertices_schema(YAML::Node node, Schema& schema) {
+static Status parse_vertices_schema(YAML::Node node, Schema& schema) {
   if (!node.IsSequence()) {
     LOG(ERROR) << "vertex is not set properly";
-    return false;
+    return Status(StatusCode::InvalidSchema, "vertex is not set properly");
   }
   int num = node.size();
   for (int i = 0; i < num; ++i) {
-    if (!parse_vertex_schema(node[i], schema)) {
-      return false;
-    }
+    RETURN_IF_NOT_OK(parse_vertex_schema(node[i], schema));
   }
-  return true;
+  return Status::OK();
 }
 
-static bool parse_edge_schema(YAML::Node node, Schema& schema) {
+static Status parse_edge_schema(YAML::Node node, Schema& schema) {
   std::string edge_label_name;
   if (!node["type_name"]) {
     LOG(ERROR) << "edge type_name is not set properly";
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "edge type_name is not set properly");
   }
   edge_label_name = node["type_name"].as<std::string>();
 
   std::vector<PropertyType> property_types;
   std::vector<std::string> prop_names;
   std::string description;  // default is empty string
-  if (!parse_edge_properties(node["properties"], edge_label_name,
-                             property_types, prop_names, schema.GetVersion())) {
-    return false;
-  }
+  RETURN_IF_NOT_OK(parse_edge_properties(node["properties"], edge_label_name,
+                                         property_types, prop_names,
+                                         schema.GetVersion()));
   if (node["description"]) {
     description = node["description"].as<std::string>();
   }
   if (node["nullable"]) {
     LOG(ERROR) << "nullable is not supported yet";
-    return false;
+    return Status(StatusCode::Unimplemented, "nullable is not supported yet");
   }
 
   if (node["default_value"]) {
     LOG(ERROR) << "default_value is not supported yet";
-    return false;
+    return Status(StatusCode::Unimplemented,
+                  "default_value is not supported yet");
   }
 
   EdgeStrategy default_ie = EdgeStrategy::kMultiple;
@@ -762,11 +787,13 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
   // vertex_type_pair_node can be a list or a map
   if (!vertex_type_pair_node) {
     LOG(ERROR) << "edge [vertex_type_pair_relations] is not set";
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "edge [vertex_type_pair_relations] is not set");
   }
   if (!vertex_type_pair_node.IsSequence()) {
     LOG(ERROR) << "edge [vertex_type_pair_relations] should be a sequence";
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "edge [vertex_type_pair_relations] should be a sequence");
   }
   for (size_t i = 0; i < vertex_type_pair_node.size(); ++i) {
     std::string src_label_name, dst_label_name;
@@ -777,19 +804,25 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
     if (!get_scalar(cur_node, "source_vertex", src_label_name)) {
       LOG(ERROR) << "Expect field source_vertex for edge [" << edge_label_name
                  << "] in vertex_type_pair_relations";
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "Expect field source_vertex for edge [" + edge_label_name +
+                        "] in vertex_type_pair_relations");
     }
     if (!get_scalar(cur_node, "destination_vertex", dst_label_name)) {
       LOG(ERROR) << "Expect field destination_vertex for edge ["
                  << edge_label_name << "] in vertex_type_pair_relations";
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "Expect field destination_vertex for edge [" +
+                        edge_label_name + "] in vertex_type_pair_relations");
     }
     // check whether edge triplet exists in current schema
     if (schema.has_edge_label(src_label_name, dst_label_name,
                               edge_label_name)) {
       LOG(ERROR) << "Edge [" << edge_label_name << "] from [" << src_label_name
                  << "] to [" << dst_label_name << "] already exists";
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "Edge [" + edge_label_name + "] from [" + src_label_name +
+                        "] to [" + dst_label_name + "] already exists");
     }
 
     std::string relation_str;
@@ -824,7 +857,11 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
             LOG(ERROR) << "edge_storage_strategy is not set properly for edge: "
                        << src_label_name << "-[" << edge_label_name << "]->"
                        << dst_label_name;
-            return false;
+            return Status(
+                StatusCode::InvalidSchema,
+                "edge_storage_strategy is not set properly for edge: " +
+                    src_label_name + "-[" + edge_label_name + "]->" +
+                    dst_label_name);
           }
         }
       }
@@ -847,7 +884,10 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
             LOG(ERROR) << "sort_on_compaction is not set properly for edge: "
                        << src_label_name << "-[" << edge_label_name << "]->"
                        << dst_label_name << "expect TRUE/FALSE";
-            return false;
+            return Status(StatusCode::InvalidSchema,
+                          "sort_on_compaction is not set properly for edge: " +
+                              src_label_name + "-[" + edge_label_name + "]->" +
+                              dst_label_name + "expect TRUE/FALSE");
           }
         }
       } else {
@@ -870,7 +910,10 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
                        << src_label_name << "-[" << edge_label_name << "]->"
                        << dst_label_name
                        << ", expect IMMUTABLE/MUTABLE, got:" << mutability_str;
-            return false;
+            return Status(StatusCode::InvalidSchema,
+                          "oe_mutability is not set properly for edge: " +
+                              src_label_name + "-[" + edge_label_name + "]->" +
+                              dst_label_name + ", expect IMMUTABLE/MUTABLE");
           }
         }
       }
@@ -889,7 +932,10 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
                        << src_label_name << "-[" << edge_label_name << "]->"
                        << dst_label_name
                        << ", expect IMMUTABLE/MUTABLE, got:" << mutability_str;
-            return false;
+            return Status(StatusCode::InvalidSchema,
+                          "ie_mutability is not set properly for edge: " +
+                              src_label_name + "-[" + edge_label_name + "]->" +
+                              dst_label_name + ", expect IMMUTABLE/MUTABLE");
           }
         }
       }
@@ -908,35 +954,36 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
   int32_t type_id;
   if (!get_scalar(node, "type_id", type_id)) {
     LOG(ERROR) << "type_id is not set properly for type: " << edge_label_name;
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "type_id is not set properly for type: " + edge_label_name);
   }
   auto label_id = schema.get_edge_label_id(edge_label_name);
   if (label_id != type_id) {
     LOG(ERROR) << "type_id is not equal to label_id for type: "
                << edge_label_name;
-    return false;
+    return Status(
+        StatusCode::InvalidSchema,
+        "type_id is not equal to label_id for type: " + edge_label_name);
   }
-  return true;
+  return Status::OK();
 }
 
-static bool parse_edges_schema(YAML::Node node, Schema& schema) {
+static Status parse_edges_schema(YAML::Node node, Schema& schema) {
   if (!node.IsSequence()) {
     LOG(ERROR) << "edge is not set properly";
-    return false;
+    return Status(StatusCode::InvalidSchema, "edge is not set properly");
   }
   int num = node.size();
   VLOG(10) << "Try to parse " << num << "edge configuration";
   for (int i = 0; i < num; ++i) {
-    if (!parse_edge_schema(node[i], schema)) {
-      return false;
-    }
+    RETURN_IF_NOT_OK(parse_edge_schema(node[i], schema));
   }
-  return true;
+  return Status::OK();
 }
 
-static bool parse_stored_procedures_v00(const YAML::Node& stored_procedure_node,
-                                        const std::string& parent_dir,
-                                        Schema& schema) {
+static Status parse_stored_procedures_v00(
+    const YAML::Node& stored_procedure_node, const std::string& parent_dir,
+    Schema& schema) {
   std::string directory = "plugins";  // default plugin directory
   if (stored_procedure_node["directory"]) {
     directory = stored_procedure_node["directory"].as<std::string>();
@@ -952,56 +999,73 @@ static bool parse_stored_procedures_v00(const YAML::Node& stored_procedure_node,
     }
   }
   schema.SetPluginDir(directory);
-  std::vector<std::pair<std::string, std::string>> plugin_name_or_path;
+  std::vector<std::pair<std::string, std::string>> plugin_name_or_paths;
   {
     std::vector<std::string> plugin_names;
     if (!get_sequence(stored_procedure_node, "enable_lists", plugin_names)) {
       LOG(ERROR) << "stored_procedures is not set properly";
-      return false;
     }
-    for (auto& plugin_name : plugin_names) {
-      plugin_name_or_path.emplace_back(plugin_name, "");
+    size_t plugin_cnt = 0;
+    for (auto& plugin_name_or_path : plugin_names) {
+      // The plugins names specified in enable_lists can be either the name of
+      // the plugin or the path to the plugin.
+      auto real_path = directory + "/" + plugin_name_or_path;
+      if (std::filesystem::exists(real_path)) {
+        plugin_name_or_paths.emplace_back(
+            std::string("plugin_") + std::to_string(plugin_cnt++), real_path);
+      } else if (std::filesystem::exists(plugin_name_or_path)) {
+        plugin_name_or_paths.emplace_back(
+            std::string("plugin_") + std::to_string(plugin_cnt++),
+            plugin_name_or_path);
+      } else {
+        LOG(WARNING) << "plugin " << plugin_name_or_path << " not found";
+      }
     }
   }
 
   // plugin_name_or_path contains the plugin name or path.
   // for path, we just use it as the plugin name, and emplace into the map,
   // for name, we try to find the plugin in the directory
-  if (!schema.EmplacePlugins(plugin_name_or_path)) {
+  if (!schema.EmplacePlugins(plugin_name_or_paths)) {
     LOG(ERROR) << "Fail to emplace all plugins";
-    return false;
+    return Status(StatusCode::InvalidSchema, "Fail to emplace all plugins");
   }
-  return true;
+  return Status::OK();
 }
 
-static bool parse_stored_procedures_v01(const YAML::Node& stored_procedure_node,
-                                        Schema& schema) {
+static Status parse_stored_procedures_v01(
+    const YAML::Node& stored_procedure_node, Schema& schema) {
   if (!stored_procedure_node.IsSequence()) {
     LOG(ERROR) << "stored_procedures is not set properly";
-    return false;
+    return Status(StatusCode::InvalidSchema,
+                  "stored_procedures is not set properly");
   }
   std::vector<std::pair<std::string, std::string>> plugin_name_and_path;
   for (auto& cur_node : stored_procedure_node) {
     if (cur_node["name"] && cur_node["library"]) {
+      VLOG(10) << "Parse stored procedure: "
+               << cur_node["name"].as<std::string>()
+               << " with library: " << cur_node["library"].as<std::string>();
       plugin_name_and_path.push_back(
           std::make_pair(cur_node["name"].as<std::string>(),
                          cur_node["library"].as<std::string>()));
     } else {
-      LOG(ERROR) << "Library or name set properly for stored procedure";
-      return false;
+      LOG(WARNING) << "Library or name set properly for stored procedure";
+      return Status(StatusCode::InvalidSchema,
+                    "Library or name set properly for stored procedure");
     }
   }
   // emplace all the plugins
   if (!schema.EmplacePlugins(plugin_name_and_path)) {
     LOG(ERROR) << "Fail to emplace all plugins";
-    return false;
+    return Status(StatusCode::InvalidSchema, "Fail to emplace all plugins");
   }
-  return true;
+  return Status::OK();
 }
 
-static bool parse_stored_procedures(const YAML::Node& stored_procedure_node,
-                                    const std::string& parent_dir,
-                                    Schema& schema) {
+static Status parse_stored_procedures(const YAML::Node& stored_procedure_node,
+                                      const std::string& parent_dir,
+                                      Schema& schema) {
   auto version = schema.GetVersion();
   if (version == "v0.0") {
     return parse_stored_procedures_v00(stored_procedure_node, parent_dir,
@@ -1010,16 +1074,19 @@ static bool parse_stored_procedures(const YAML::Node& stored_procedure_node,
     return parse_stored_procedures_v01(stored_procedure_node, schema);
   } else {
     LOG(ERROR) << "Unrecognized version: " << version;
-    return false;
+    return Status(
+        StatusCode::InvalidSchema,
+        "Unsupported version when parsing stored procedures: " + version);
   }
 }
 
-static bool parse_schema_from_yaml_node(const YAML::Node& graph_node,
-                                        Schema& schema,
-                                        const std::string& parent_dir = "") {
+static Status parse_schema_from_yaml_node(const YAML::Node& graph_node,
+                                          Schema& schema,
+                                          const std::string& parent_dir = "") {
   if (!graph_node || !graph_node.IsMap()) {
-    LOG(ERROR) << "graph is not set properly";
-    return false;
+    LOG(ERROR) << "graph schema is not set properly";
+    return Status(StatusCode::InvalidSchema,
+                  "graph schema is not set properly");
   }
   if (!expect_config(graph_node, "store_type", std::string("mutable_csr"))) {
     LOG(WARNING) << "store_type is not set properly, use default value: "
@@ -1039,7 +1106,8 @@ static bool parse_schema_from_yaml_node(const YAML::Node& graph_node,
     if (std::find(supported_versions.begin(), supported_versions.end(),
                   version) == supported_versions.end()) {
       LOG(ERROR) << "Unsupported schema version: " << version;
-      return false;
+      return Status(StatusCode::InvalidSchema,
+                    "Unsupported schema version: " + version);
     }
     schema.SetVersion(version);
   } else {
@@ -1050,31 +1118,27 @@ static bool parse_schema_from_yaml_node(const YAML::Node& graph_node,
   auto schema_node = graph_node["schema"];
 
   if (!graph_node["schema"]) {
-    LOG(ERROR) << "schema is not set in scheme yaml file";
-    return false;
+    LOG(ERROR) << "expect schema field, but not found";
+    return Status(StatusCode::InvalidSchema,
+                  "expect schema field, but not found");
   }
 
-  if (!parse_vertices_schema(schema_node["vertex_types"], schema)) {
-    return false;
-  }
+  RETURN_IF_NOT_OK(parse_vertices_schema(schema_node["vertex_types"], schema));
 
   if (schema_node["edge_types"]) {
-    if (!parse_edges_schema(schema_node["edge_types"], schema)) {
-      return false;
-    }
+    RETURN_IF_NOT_OK(parse_edges_schema(schema_node["edge_types"], schema));
   }
   LOG(INFO) << "Parse stored_procedures";
 
   if (graph_node["stored_procedures"]) {
-    if (!parse_stored_procedures(graph_node["stored_procedures"], parent_dir,
-                                 schema)) {
-      LOG(ERROR) << "Fail to parse stored procedures";
-    }
+    RETURN_IF_NOT_OK(parse_stored_procedures(graph_node["stored_procedures"],
+                                             parent_dir, schema));
   }
-  return true;
+  return Status::OK();
 }
 
-static bool parse_schema_config_file(const std::string& path, Schema& schema) {
+static Status parse_schema_config_file(const std::string& path,
+                                       Schema& schema) {
   YAML::Node graph_node = YAML::LoadFile(path);
   // get the directory of path
   auto parent_dir = std::filesystem::path(path).parent_path().string();
@@ -1123,7 +1187,7 @@ bool Schema::EmplacePlugins(
                       "find the plugin in the directory...";
         // it seems that f is not the filename, but the plugin name, try to
         // find the plugin in the directory
-        LOG(ERROR) << "plugin - " << name_path.first << "not found...";
+        LOG(ERROR) << "plugin - " << name_path.first << " not found...";
       } else {
         plugin_name_to_path_and_id_.emplace(
             name_path.first, std::make_pair(real_file, cur_plugin_id++));
@@ -1260,22 +1324,27 @@ bool Schema::has_edge_label(const std::string& src_label,
 Result<Schema> Schema::LoadFromYaml(const std::string& schema_config) {
   Schema schema;
   if (!schema_config.empty() && std::filesystem::exists(schema_config)) {
-    if (!config_parsing::parse_schema_config_file(schema_config, schema)) {
-      LOG(ERROR) << "Failed to parse schema config file: " << schema_config;
-      return Result<Schema>(
-          Status(StatusCode::InvalidSchema, "Failed to parse schema"), schema);
+    auto status =
+        config_parsing::parse_schema_config_file(schema_config, schema);
+    if (status.ok()) {
+      return schema;
+    } else {
+      return Result<Schema>(status);
     }
   }
-  return schema;
+  return Result<Schema>(
+      Status(StatusCode::InvalidSchema, "Schema config file not found"));
 }
 
 Result<Schema> Schema::LoadFromYamlNode(const YAML::Node& schema_yaml_node) {
   Schema schema;
-  if (!config_parsing::parse_schema_from_yaml_node(schema_yaml_node, schema)) {
-    return Result<Schema>(
-        Status(StatusCode::InvalidSchema, "Failed to parse schema"), schema);
+  auto status =
+      config_parsing::parse_schema_from_yaml_node(schema_yaml_node, schema);
+  if (status.ok()) {
+    return schema;
+  } else {
+    return Result<Schema>(status);
   }
-  return schema;
 }
 
 const std::vector<std::string>& Schema::GetCompatibleVersions() {

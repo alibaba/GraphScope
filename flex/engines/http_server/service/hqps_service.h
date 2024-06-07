@@ -47,12 +47,15 @@ struct ServiceConfig {
   uint32_t admin_port;
   uint32_t query_port;
   uint32_t shard_num;
+  uint32_t memory_level;
   bool dpdk_mode;
   bool enable_thread_resource_pool;
   unsigned external_thread_num;
   bool start_admin_service;  // Whether to start the admin service or only
                              // start the query service.
   bool start_compiler;
+  bool enable_gremlin;
+  bool enable_bolt;
   gs::MetadataStoreType metadata_store_type_;
 
   // Those has not default value
@@ -81,6 +84,10 @@ class HQPSService {
 
   uint16_t get_query_port() const;
 
+  uint64_t get_start_time() const;
+
+  void reset_start_time();
+
   std::shared_ptr<gs::IGraphMetaStore> get_metadata_store() const;
 
   gs::Result<seastar::sstring> service_status();
@@ -103,6 +110,8 @@ class HQPSService {
 
   bool stop_compiler_subprocess();
 
+  bool check_compiler_ready() const;
+
  private:
   HQPSService() = default;
 
@@ -118,6 +127,7 @@ class HQPSService {
   std::unique_ptr<hqps_http_handler> query_hdl_;
   std::atomic<bool> running_{false};
   std::atomic<bool> initialized_{false};
+  std::atomic<uint64_t> start_time_{0};
   std::mutex mtx_;
 
   ServiceConfig service_config_;
@@ -203,15 +213,23 @@ struct convert<server::ServiceConfig> {
       auto endpoint_node = compiler_node["endpoint"];
       if (endpoint_node) {
         auto bolt_node = endpoint_node["bolt_connector"];
-        if (bolt_node && bolt_node["port"] &&
-            bolt_node["disabled"].as<bool>() == false) {
+        if (bolt_node && bolt_node["disabled"]) {
+          service_config.enable_bolt = !bolt_node["disabled"].as<bool>();
+        } else {
+          service_config.enable_bolt = true;
+        }
+        if (bolt_node && bolt_node["port"]) {
           service_config.bolt_port = bolt_node["port"].as<uint32_t>();
         } else {
           LOG(INFO) << "bolt_port not found, or disabled";
         }
         auto gremlin_node = endpoint_node["gremlin_connector"];
-        if (gremlin_node && gremlin_node["port"] &&
-            gremlin_node["disabled"].as<bool>() == false) {
+        if (gremlin_node && gremlin_node["disabled"]) {
+          service_config.enable_gremlin = !gremlin_node["disabled"].as<bool>();
+        } else {
+          service_config.enable_gremlin = true;
+        }
+        if (gremlin_node && gremlin_node["port"]) {
           service_config.gremlin_port = gremlin_node["port"].as<uint32_t>();
         } else {
           LOG(INFO) << "gremlin_port not found, use default value "

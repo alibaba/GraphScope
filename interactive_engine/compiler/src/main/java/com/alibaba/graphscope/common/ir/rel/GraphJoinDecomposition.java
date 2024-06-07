@@ -35,6 +35,7 @@ import java.util.Map;
 public class GraphJoinDecomposition extends BiRel {
     private final List<JoinVertexPair> joinVertexPairs;
     private final OrderMappings orderMappings;
+    private final Pattern parentPatten;
     private final Pattern probePattern;
     private final Pattern buildPattern;
     private final JoinRelType joinType;
@@ -42,6 +43,7 @@ public class GraphJoinDecomposition extends BiRel {
     public GraphJoinDecomposition(
             RelOptCluster cluster,
             RelTraitSet traitSet,
+            Pattern parentPattern,
             Pattern probePattern,
             Pattern buildPattern,
             List<JoinVertexPair> joinVertexPairs,
@@ -49,6 +51,7 @@ public class GraphJoinDecomposition extends BiRel {
         this(
                 cluster,
                 traitSet,
+                parentPattern,
                 probePattern,
                 buildPattern,
                 joinVertexPairs,
@@ -59,6 +62,7 @@ public class GraphJoinDecomposition extends BiRel {
     public GraphJoinDecomposition(
             RelOptCluster cluster,
             RelTraitSet traitSet,
+            Pattern parentPattern,
             Pattern probePattern,
             Pattern buildPattern,
             List<JoinVertexPair> joinVertexPairs,
@@ -67,6 +71,7 @@ public class GraphJoinDecomposition extends BiRel {
         this(
                 cluster,
                 traitSet,
+                parentPattern,
                 new GraphPattern(cluster, traitSet, probePattern),
                 probePattern,
                 new GraphPattern(cluster, traitSet, buildPattern),
@@ -79,6 +84,7 @@ public class GraphJoinDecomposition extends BiRel {
     protected GraphJoinDecomposition(
             RelOptCluster cluster,
             RelTraitSet traitSet,
+            Pattern parentPattern,
             RelNode left,
             Pattern leftPattern,
             RelNode right,
@@ -87,6 +93,7 @@ public class GraphJoinDecomposition extends BiRel {
             OrderMappings orderMappings,
             JoinRelType joinType) {
         super(cluster, traitSet, left, right);
+        this.parentPatten = parentPattern;
         this.joinVertexPairs = joinVertexPairs;
         this.orderMappings = orderMappings;
         this.probePattern = leftPattern;
@@ -100,6 +107,10 @@ public class GraphJoinDecomposition extends BiRel {
 
     public OrderMappings getOrderMappings() {
         return orderMappings;
+    }
+
+    public Pattern getParentPatten() {
+        return parentPatten;
     }
 
     public Pattern getProbePattern() {
@@ -182,6 +193,7 @@ public class GraphJoinDecomposition extends BiRel {
         return new GraphJoinDecomposition(
                 getCluster(),
                 traitSet,
+                parentPatten,
                 inputs.get(0),
                 this.probePattern,
                 inputs.get(1),

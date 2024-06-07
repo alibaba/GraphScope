@@ -199,8 +199,9 @@ class mmap_array {
                        << strerror(errno);
           }
         } else {
-          LOG(FATAL) << "allocating hugepage failed, " << strerror(errno)
+          LOG(ERROR) << "allocating hugepage failed, " << strerror(errno)
                      << ", try with normal pages";
+          data_ = NULL;
           open(filename, false);
         }
       } else {
@@ -290,7 +291,7 @@ class mmap_array {
         if (hugepage_prefered_) {
           new_data = reinterpret_cast<T*>(allocate_hugepages(new_mmap_size));
           if (new_data == MAP_FAILED) {
-            LOG(FATAL) << "mmap with hugepage failed, " << strerror(errno)
+            LOG(ERROR) << "mmap with hugepage failed, " << strerror(errno)
                        << ", try with normal pages";
             new_data = NULL;
           } else {

@@ -631,11 +631,15 @@ std::string WorkDirManipulator::GetCompilerLogFile() {
   return log_path;
 }
 
-std::string WorkDirManipulator::CommitTempIndices(const std::string& graph_id) {
+gs::Result<std::string> WorkDirManipulator::CommitTempIndices(
+    const std::string& graph_id) {
   auto temp_indices_dir = GetTempIndicesDir(graph_id);
   auto indices_dir = GetGraphIndicesDir(graph_id);
   if (std::filesystem::exists(indices_dir)) {
     std::filesystem::remove_all(indices_dir);
+  }
+  if (!std::filesystem::exists(temp_indices_dir)) {
+    return {gs::Status(gs::StatusCode::NotFound, "Temp indices dir not found")};
   }
   std::filesystem::rename(temp_indices_dir, indices_dir);
   return indices_dir;
@@ -732,7 +736,9 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
   auto bulk_loading_job_log = get_tmp_bulk_loading_job_log_path(graph_id);
   VLOG(10) << "Bulk loading job log: " << bulk_loading_job_log;
   std::stringstream ss;
-  ss << GRAPH_LOADER_BIN << " -g " << schema_file << " -l " << config_file_path
+  std::string graph_loader_bin;
+  ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(graph_loader_bin, GetGraphLoaderBin());
+  ss << graph_loader_bin << " -g " << schema_file << " -l " << config_file_path
      << " -d " << dst_indices_dir << " -p "
      << std::to_string(loading_thread_num);
   auto cmd_string = ss.str();
@@ -772,7 +778,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
             VLOG(10) << "Graph loader finished, job_id: " << internal_job_id
                      << ", res: " << res;
 
-            LOG(INFO) << "Updating graph meta";
+            LOG(INFO) << "Updating job meta and graph meta";
             auto exit_request = gs::UpdateJobMetaRequest::NewFinished(res);
             auto update_exit_res =
                 metadata_store->UpdateJobMeta(internal_job_id, exit_request);
@@ -798,7 +804,13 @@ gs::Result<seastar::sstring> WorkDirManipulator::load_graph_impl(
 
             LOG(INFO) << "Committing temp indices for graph: "
                       << copied_graph_id;
-            WorkDirManipulator::CommitTempIndices(copied_graph_id);
+            auto commit_res =
+                WorkDirManipulator::CommitTempIndices(copied_graph_id);
+            if (!commit_res.ok()) {
+              LOG(ERROR) << "Fail to commit temp indices for graph: "
+                         << copied_graph_id;
+              return gs::Result<seastar::sstring>(commit_res.status());
+            }
             return gs::Result<seastar::sstring>(
                 "Finish Loading and commit temp "
                 "indices");
@@ -834,8 +846,6 @@ gs::Result<seastar::sstring> WorkDirManipulator::create_procedure_sanity_check(
     LOG(INFO) << "Cypher procedure, name: " << json["name"].get<std::string>()
               << ", enable: " << json["enable"].get<bool>();
   } else if (type == "CPP" || type == "cpp") {
-    CHECK_JSON_FIELD(json, "params");
-    CHECK_JSON_FIELD(json, "returns");
     LOG(INFO) << "Native procedure, name: " << json["name"].get<std::string>()
               << ", enable: " << json["enable"].get<bool>();
   } else {
@@ -873,7 +883,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
   if (type == "cypher" || type == "CYPHER") {
     query_file = temp_codegen_directory + "/" + plugin_id + ".cypher";
   } else if (type == "CPP" || type == "cpp") {
-    query_file = temp_codegen_directory + "/" + plugin_id + ".cpp";
+    query_file = temp_codegen_directory + "/" + plugin_id + ".cc";
   } else {
     return seastar::make_exception_future<seastar::sstring>(
         "Procedure type is not supported: " + type);
@@ -1196,6 +1206,26 @@ gs::Result<seastar::sstring> WorkDirManipulator::dump_yaml_to_file(
   }
   LOG(INFO) << "Successfully dump yaml to file: " << procedure_yaml_file;
   return gs::Result<seastar::sstring>(gs::Status::OK(), "Success");
+}
+
+gs::Result<seastar::sstring> WorkDirManipulator::GetGraphLoaderBin() {
+  // first via relative path
+  std::string graph_loader_bin_path =
+      (gs::get_current_binary_directory() / std::string(GRAPH_LOADER_BIN))
+          .string();
+  if (std::filesystem::exists(graph_loader_bin_path)) {
+    return gs::Result<seastar::sstring>(graph_loader_bin_path);
+  }
+  // test whether executable
+  std::string which_cmd =
+      std::string("which ") + GRAPH_LOADER_BIN + " > /dev/null";
+  if (std::system(which_cmd.c_str()) == 0) {
+    return gs::Result<seastar::sstring>(graph_loader_bin_path);
+  } else {
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Fail to find graph loader binary: " + GRAPH_LOADER_BIN));
+  }
 }
 
 // define LOCK_FILE

@@ -27,10 +27,11 @@ const uint32_t ic_query_group_id = 2;
 const uint32_t ic_update_group_id = 3;
 const uint32_t ic_adhoc_group_id = 4;
 const uint32_t codegen_group_id = 5;
+const uint32_t proc_query_group_id = 6;
 
 const uint32_t max_group_id = std::numeric_limits<uint32_t>::max();
 const uint32_t group_inc_step =
-    4;  // should equal to number of non-admin groups.
+    5;  // should equal to number of non-admin groups.
 // Each time we cancel a scope, we will increase the group id by this step.
 
 extern uint32_t shard_query_concurrency;

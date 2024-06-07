@@ -5,7 +5,7 @@
 使用GraphScope中的GAE、GIE、GLE引擎来完成图分析任务、交互式查询和图神经网络模型的训练。
 
 我们用jupyter notebook来组织这些教程，用户可以在任何一个jupyter notebook服务中尝试执行。我们还提供了已经准备好的Jupyter Lab
-环境 `GraphScope Playground <https://try.graphscope.app>`_ 以便于用户更快地上手GraphScope。
+环境 `GraphScope Playground <https://try.graphscope.io>`_ 以便于用户更快地上手GraphScope。
 
 入门教程包括如下这些内容：
 

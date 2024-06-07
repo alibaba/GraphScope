@@ -55,8 +55,10 @@ import java.util.concurrent.TimeUnit;
 public class HttpExecutionClient extends ExecutionClient<URI> {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutionClient.class);
     private static final String CONTENT_TYPE = "Content-Type";
+    private static final String INTERACTIVE_REQUEST_FORMAT = "X-Interactive-Request-Format";
     private static final String TEXT_PLAIN = "text/plain;charset=UTF-8";
-    private static final String INTERACTIVE_QUERY_PATH = "/interactive/query";
+    private static final String PROTOCOL_FORMAT = "proto";
+    private static final String INTERACTIVE_QUERY_PATH = "/v1/graph/current/query";
     private static final String INTERACTIVE_ADHOC_QUERY_PATH = "/interactive/adhoc_query";
     private final HttpClient httpClient;
 
@@ -96,6 +98,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                         HttpRequest.newBuilder()
                                 .uri(uri)
                                 .headers(CONTENT_TYPE, TEXT_PLAIN)
+                                .headers(INTERACTIVE_REQUEST_FORMAT, PROTOCOL_FORMAT)
                                 .POST(
                                         HttpRequest.BodyPublishers.ofByteArray(
                                                 (byte[])

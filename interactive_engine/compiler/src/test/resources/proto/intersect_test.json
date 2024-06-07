@@ -172,13 +172,6 @@
     }
   }, {
     "opr": {
-      "unfold": {
-        "tag": 2,
-        "alias": 2
-      }
-    }
-  }, {
-    "opr": {
       "groupBy": {
         "functions": [{
           "vars": [{

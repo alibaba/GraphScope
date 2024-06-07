@@ -40,7 +40,12 @@ public class FfiLogicalPlanTest {
     // Return count(*)
     @Test
     public void logical_plan_1_test() throws Exception {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         GetVConfig getVConfig =
                 new GetVConfig(GraphOpt.GetV.END, new LabelConfig(false).addLabel("person"));
@@ -54,7 +59,7 @@ public class FfiLogicalPlanTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode aggregate =
                 builder.source(
                                 new SourceConfig(
@@ -153,7 +158,7 @@ public class FfiLogicalPlanTest {
     public void logical_plan_4_test() throws Exception {
         LogicalPlan logicalPlan =
                 com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
-                        "Call ldbc_ic2(10l, 20120112l)");
+                        "Call ldbc_ic2(10l, 20120112l)", "config/modern/graph.yaml");
         try (PhysicalBuilder ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
             PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(

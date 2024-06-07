@@ -54,6 +54,15 @@ std::string parse_codegen_dir(const bpo::variables_map& vm) {
   return codegen_dir;
 }
 
+void blockSignal(int sig) {
+  sigset_t set;
+  sigemptyset(&set);
+  sigaddset(&set, sig);
+  if (pthread_sigmask(SIG_BLOCK, &set, NULL) != 0) {
+    perror("pthread_sigmask");
+  }
+}
+
 // When graph_schema is not specified, codegen proxy will use the running graph
 // schema in hqps_service
 void init_codegen_proxy(const bpo::variables_map& vm,
@@ -76,7 +85,7 @@ void init_codegen_proxy(const bpo::variables_map& vm,
 }
 
 void openDefaultGraph(const std::string workspace, int32_t thread_num,
-                      const std::string& default_graph) {
+                      const std::string& default_graph, uint32_t memory_level) {
   if (!std::filesystem::exists(workspace)) {
     LOG(ERROR) << "Workspace directory not exists: " << workspace;
   }
@@ -117,7 +126,12 @@ void openDefaultGraph(const std::string workspace, int32_t thread_num,
                << ", for graph: " << default_graph;
   }
   db.Close();
-  if (!db.Open(schema_res.value(), data_dir, thread_num).ok()) {
+  gs::GraphDBConfig config(schema_res.value(), data_dir, thread_num);
+  config.memory_level = memory_level;
+  if (config.memory_level >= 2) {
+    config.enable_auto_compaction = true;
+  }
+  if (!db.Open(config).ok()) {
     LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
   }
   LOG(INFO) << "Successfully init graph db for default graph: "
@@ -130,6 +144,10 @@ void openDefaultGraph(const std::string workspace, int32_t thread_num,
  * The main entrance for InteractiveServer.
  */
 int main(int argc, char** argv) {
+  // block sigint and sigterm in main thread, let seastar handle it
+  gs::blockSignal(SIGINT);
+  gs::blockSignal(SIGTERM);
+
   bpo::options_description desc("Usage:");
   desc.add_options()("help,h", "Display help messages")(
       "enable-admin-service,e", bpo::value<bool>()->default_value(false),
@@ -151,7 +169,9 @@ int main(int argc, char** argv) {
       "enable-trace", bpo::value<bool>()->default_value(false),
       "whether to enable opentelemetry tracing")(
       "start-compiler", bpo::value<bool>()->default_value(false),
-      "whether or not to start compiler");
+      "whether or not to start compiler")(
+      "memory-level,m", bpo::value<unsigned>()->default_value(1),
+      "memory allocation strategy");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -182,6 +202,7 @@ int main(int argc, char** argv) {
   service_config.engine_config_path = engine_config_file;
   service_config.start_admin_service = vm["enable-admin-service"].as<bool>();
   service_config.start_compiler = vm["start-compiler"].as<bool>();
+  service_config.memory_level = vm["memory-level"].as<unsigned>();
 
   auto& db = gs::GraphDB::get();
 
@@ -205,7 +226,8 @@ int main(int argc, char** argv) {
     }
 
     gs::openDefaultGraph(workspace, service_config.shard_num,
-                         service_config.default_graph);
+                         service_config.default_graph,
+                         service_config.memory_level);
     // Suppose the default_graph is already loaded.
     LOG(INFO) << "Finish init workspace";
     auto schema_file = server::WorkDirManipulator::GetGraphSchemaPath(
@@ -246,6 +268,10 @@ int main(int argc, char** argv) {
 
   server::HQPSService::get().init(service_config);
   server::HQPSService::get().run_and_wait_for_exit();
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+  otel::cleanUpTracer();
+#endif
 
   return 0;
 }

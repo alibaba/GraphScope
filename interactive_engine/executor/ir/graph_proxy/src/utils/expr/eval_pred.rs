@@ -342,6 +342,7 @@ impl EvalPred for Operand {
                 }
                 Ok(true)
             }
+            Operand::Concat(_) => Err(ExprEvalError::Unsupported("Concat".to_string())),
         }
     }
 }

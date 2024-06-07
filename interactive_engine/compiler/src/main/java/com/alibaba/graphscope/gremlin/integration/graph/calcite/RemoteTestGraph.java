@@ -1453,6 +1453,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 // "g_V_matchXa_knows_b__b_created_c__a_created_cX_dedupXa_b_cX_selectXaX_byXnameX",
 ////        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
 ////        reason = "unsupported")
+@Graph.OptOut(
+        method = "g_V_matchXa_created_b__b_0created_aX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "multi-edge pattern unsupported")
 
 // need grateful graph
 @Graph.OptOut(

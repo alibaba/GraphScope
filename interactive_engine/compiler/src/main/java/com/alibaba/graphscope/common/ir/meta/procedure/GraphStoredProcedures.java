@@ -16,32 +16,75 @@
 
 package com.alibaba.graphscope.common.ir.meta.procedure;
 
-import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 import com.google.common.collect.Maps;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-public class GraphStoredProcedures implements StoredProcedures {
-    private static Logger logger = LoggerFactory.getLogger(GraphStoredProcedures.class);
+public class GraphStoredProcedures {
+    private static final Logger logger = LoggerFactory.getLogger(GraphStoredProcedures.class);
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
+    private final IrMetaReader metaReader;
 
-    public GraphStoredProcedures(MetaDataReader reader) throws Exception {
-        this.storedProcedureMetaMap = Maps.newLinkedHashMap();
-        for (InputStream inputStream : reader.getStoredProcedures()) {
-            StoredProcedureMeta createdMeta = StoredProcedureMeta.Deserializer.perform(inputStream);
-            this.storedProcedureMetaMap.put(createdMeta.getName(), createdMeta);
-            logger.debug("Got stored procedure: {} from reader", createdMeta.getName());
-            inputStream.close();
+    public GraphStoredProcedures(InputStream metaStream, IrMetaReader metaReader) {
+        Yaml yaml = new Yaml();
+        Map<String, Object> yamlAsMap = yaml.load(metaStream);
+        List<Object> procedureList = (List<Object>) yamlAsMap.get("stored_procedures");
+        if (ObjectUtils.isEmpty(procedureList)) {
+            this.storedProcedureMetaMap = Maps.newLinkedHashMap();
+        } else {
+            this.storedProcedureMetaMap =
+                    procedureList.stream()
+                            .map(
+                                    k -> {
+                                        try {
+                                            String procedureYaml = yaml.dump(k);
+                                            return StoredProcedureMeta.Deserializer.perform(
+                                                    new ByteArrayInputStream(
+                                                            procedureYaml.getBytes()));
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    })
+                            .collect(Collectors.toMap(StoredProcedureMeta::getName, k -> k));
         }
+        this.metaReader = metaReader;
     }
 
-    @Override
     public @Nullable StoredProcedureMeta getStoredProcedure(String procedureName) {
-        return this.storedProcedureMetaMap.get(procedureName);
+        return getStoredProcedure(procedureName, true);
+    }
+
+    /**
+     *
+     * @param procedureName
+     * @param update determine whether a remote update request should be sent to the admin service when the procedure is not found in the local cache
+     * @return
+     */
+    private @Nullable StoredProcedureMeta getStoredProcedure(String procedureName, boolean update) {
+        StoredProcedureMeta cachedProcedure = this.storedProcedureMetaMap.get(procedureName);
+        if (cachedProcedure == null && update) {
+            try {
+                IrMeta meta = this.metaReader.readMeta();
+                if (meta != null && meta.getStoredProcedures() != null) {
+                    return meta.getStoredProcedures().getStoredProcedure(procedureName, false);
+                }
+            } catch (Exception e) {
+                logger.warn("failed to read meta data, error is {}", e);
+            }
+        }
+        return cachedProcedure;
     }
 }

@@ -53,6 +53,8 @@ namespace trace_sdk = opentelemetry::sdk::trace;
 
 namespace metrics_api = opentelemetry::metrics;
 namespace metrics_sdk = opentelemetry::sdk::metrics;
+namespace trace_exporter = opentelemetry::exporter::trace;
+namespace metrics_exporter = opentelemetry::exporter::metrics;
 
 namespace logs_api = opentelemetry::logs;
 namespace logs_sdk = opentelemetry::sdk::logs;
@@ -127,6 +129,13 @@ void initLogger() {
   logs_api::Provider::SetLoggerProvider(provider);
 }
 
+// ===== CLEANUP =====
+
+void cleanUpTracer() {
+  std::shared_ptr<opentelemetry::trace::TracerProvider> none;
+  trace_api::Provider::SetTracerProvider(none);
+}
+
 nostd::shared_ptr<logs_api::Logger> get_logger(std::string scope) {
   auto provider = logs_api::Provider::GetLoggerProvider();
   return provider->GetLogger(name + "_logger", name, OPENTELEMETRY_SDK_VERSION);
@@ -138,7 +147,7 @@ opentelemetry::nostd::shared_ptr<trace_api::Tracer> get_tracer(
   return provider->GetTracer(tracer_name);
 }
 
-nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
+nostd::unique_ptr<metrics_api::Counter<uint64_t>> create_int_counter(
     std::string name, std::string version) {
   std::string counter_name = name + "_counter";
   auto provider = metrics_api::Provider::GetMeterProvider();
@@ -146,6 +155,31 @@ nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
       provider->GetMeter(name, version);
   auto int_counter = meter->CreateUInt64Counter(counter_name);
   return int_counter;
+}
+
+nostd::unique_ptr<metrics_api::Histogram<double>> create_double_histogram(
+    std::string name, std::string version) {
+  std::string histogram_name = name + "_histogram";
+  auto provider = metrics_api::Provider::GetMeterProvider();
+  nostd::shared_ptr<metrics_api::Meter> meter =
+      provider->GetMeter(name, version);
+  auto histogram = meter->CreateDoubleHistogram(histogram_name);
+  return histogram;
+}
+
+opentelemetry::trace::StartSpanOptions get_parent_ctx(
+    opentelemetry::context::Context& context,
+    std::map<std::string, std::string>& headers) {
+  auto propagator = opentelemetry::context::propagation::
+      GlobalTextMapPropagator::GetGlobalPropagator();
+  otel::HttpTextMapCarrier<decltype(headers)> carrier(headers);
+  auto new_context = propagator->Extract(carrier, context);
+
+  opentelemetry::trace::StartSpanOptions options;
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+  auto parent_ctx = opentelemetry::trace::GetSpan(new_context)->GetContext();
+  options.parent = opentelemetry::trace::GetSpan(new_context)->GetContext();
+  return options;
 }
 }  // namespace otel
 #endif  // HAVE_OPENTELEMETRY_CPP

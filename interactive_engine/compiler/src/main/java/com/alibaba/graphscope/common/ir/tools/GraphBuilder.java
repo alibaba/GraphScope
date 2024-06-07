@@ -59,10 +59,8 @@ import org.apache.calcite.sql.type.GraphInferTypes;
 import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
-import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Pair;
-import org.apache.calcite.util.Sarg;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -219,6 +217,7 @@ public class GraphBuilder extends RelBuilder {
                         fetchNode,
                         pxdConfig.getResultOpt(),
                         pxdConfig.getPathOpt(),
+                        pxdConfig.getUntilCondition(),
                         pxdConfig.getAlias(),
                         getAliasNameWithId(
                                 pxdConfig.getStartAlias(),
@@ -816,7 +815,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.BIT_XOR
                 || (sqlKind == SqlKind.OTHER
                         && (operator.getName().equals("IN")
-                                || operator.getName().equals("DATETIME_MINUS")));
+                                || operator.getName().equals("DATETIME_MINUS")))
+                || sqlKind == SqlKind.ARRAY_CONCAT;
     }
 
     @Override
@@ -931,10 +931,11 @@ public class GraphBuilder extends RelBuilder {
 
     private AbstractBindableTableScan fuseFilters(
             AbstractBindableTableScan tableScan, RexNode condition, GraphBuilder builder) {
-        List<Comparable> labelValues = Lists.newArrayList();
-        List<RexNode> uniqueKeyFilters = Lists.newArrayList();
-        List<RexNode> extraFilters = Lists.newArrayList();
-        classifyFilters(tableScan, condition, labelValues, uniqueKeyFilters, extraFilters);
+        RexFilterClassifier classifier = new RexFilterClassifier(builder, tableScan);
+        ClassifiedFilter filterResult = classifier.classify(condition);
+        List<Comparable> labelValues = filterResult.getLabelValues();
+        List<RexNode> uniqueKeyFilters = Lists.newArrayList(filterResult.getUniqueKeyFilters());
+        List<RexNode> extraFilters = Lists.newArrayList(filterResult.getExtraFilters());
         if (!labelValues.isEmpty()) {
             GraphLabelType labelType =
                     ((GraphSchemaType) tableScan.getRowType().getFieldList().get(0).getType())
@@ -982,6 +983,10 @@ public class GraphBuilder extends RelBuilder {
                             originalUniqueKeyFilters.accept(propertyChecker);
                             builder.filter(originalUniqueKeyFilters);
                         }
+                        if (!uniqueKeyFilters.isEmpty()) {
+                            builder.filter(uniqueKeyFilters);
+                            uniqueKeyFilters.clear();
+                        }
                     }
                     ImmutableList originalFilters = tableScan.getFilters();
                     if (ObjectUtils.isNotEmpty(originalFilters)) {
@@ -990,6 +995,8 @@ public class GraphBuilder extends RelBuilder {
                     }
                     if (!extraFilters.isEmpty()) {
                         extraFilters.forEach(k -> k.accept(propertyChecker));
+                        builder.filter(extraFilters);
+                        extraFilters.clear();
                     }
                     tableScan = (AbstractBindableTableScan) builder.build();
                 }
@@ -997,11 +1004,11 @@ public class GraphBuilder extends RelBuilder {
         }
         if (tableScan instanceof GraphLogicalSource && !uniqueKeyFilters.isEmpty()) {
             GraphLogicalSource source = (GraphLogicalSource) tableScan;
-            Preconditions.checkArgument(
-                    source.getUniqueKeyFilters() == null,
-                    "can not add unique key filters if original is not empty");
-            source.setUniqueKeyFilters(
-                    RexUtil.composeDisjunction(this.getRexBuilder(), uniqueKeyFilters));
+            if (source.getUniqueKeyFilters() != null || uniqueKeyFilters.size() > 1) {
+                extraFilters.addAll(uniqueKeyFilters);
+            } else {
+                source.setUniqueKeyFilters(uniqueKeyFilters.get(0));
+            }
         }
         if (!extraFilters.isEmpty()) {
             ImmutableList originalFilters = tableScan.getFilters();
@@ -1030,14 +1037,10 @@ public class GraphBuilder extends RelBuilder {
             RexNode condition,
             List<RexNode> extraFilters,
             GraphBuilder builder) {
-        List<RexNode> labelFilters = Lists.newArrayList();
-        for (RexNode conjunction : RelOptUtil.conjunctions(condition)) {
-            if (isLabelEqualFilter(conjunction) != null) {
-                labelFilters.add(conjunction);
-            } else {
-                extraFilters.add(conjunction);
-            }
-        }
+        RexFilterClassifier classifier = new RexFilterClassifier(builder, null);
+        ClassifiedFilter filter = classifier.classify(condition);
+        List<RexNode> labelFilters = filter.getLabelFilters();
+        extraFilters.addAll(filter.getExtraFilters());
         for (RexNode labelFilter : labelFilters) {
             PushFilterVisitor visitor = new PushFilterVisitor(builder, labelFilter);
             match = (AbstractLogicalMatch) match.accept(visitor);
@@ -1046,161 +1049,6 @@ public class GraphBuilder extends RelBuilder {
             }
         }
         return match;
-    }
-
-    private void classifyFilters(
-            AbstractBindableTableScan tableScan,
-            RexNode condition,
-            List<Comparable> labelValues,
-            List<RexNode> uniqueKeyFilters, // unique key filters int the list are composed by 'OR'
-            List<RexNode> filters) {
-        List<RexNode> conjunctions = RelOptUtil.conjunctions(condition);
-        List<RexNode> filtersToRemove = Lists.newArrayList();
-        for (RexNode conjunction : conjunctions) {
-            RexLiteral labelLiteral = isLabelEqualFilter(conjunction);
-            if (labelLiteral != null) {
-                filtersToRemove.add(conjunction);
-                labelValues.addAll(
-                        com.alibaba.graphscope.common.ir.tools.Utils.getValuesAsList(
-                                labelLiteral.getValueAs(Comparable.class)));
-                break;
-            }
-        }
-        if (tableScan instanceof GraphLogicalSource
-                && ((GraphLogicalSource) tableScan).getUniqueKeyFilters() == null) {
-            // try to extract unique key filters from the original condition
-            List<RexNode> disjunctions = RelOptUtil.disjunctions(condition);
-            for (RexNode disjunction : disjunctions) {
-                if (isUniqueKeyEqualFilter(disjunction, tableScan)) {
-                    filtersToRemove.add(disjunction);
-                    uniqueKeyFilters.add(disjunction);
-                }
-            }
-        }
-        if (!filtersToRemove.isEmpty()) {
-            conjunctions.removeAll(filtersToRemove);
-        }
-        filters.addAll(conjunctions);
-    }
-
-    // check the condition if it is the pattern of label equal filter, i.e. ~label = 'person' or
-    // ~label within ['person', 'software']
-    // if it is then return the literal containing label values, otherwise null
-    private @Nullable RexLiteral isLabelEqualFilter(RexNode condition) {
-        if (condition instanceof RexCall) {
-            RexCall rexCall = (RexCall) condition;
-            SqlOperator operator = rexCall.getOperator();
-            switch (operator.getKind()) {
-                case EQUALS:
-                case SEARCH:
-                    RexNode left = rexCall.getOperands().get(0);
-                    RexNode right = rexCall.getOperands().get(1);
-                    if (left.getType() instanceof GraphLabelType && right instanceof RexLiteral) {
-                        Comparable value = ((RexLiteral) right).getValue();
-                        // if Sarg is a continuous range then the filter is not the 'equal', i.e.
-                        // ~label SEARCH [[1, 10]] which means ~label >= 1 and ~label <= 10
-                        if (value instanceof Sarg && !((Sarg) value).isPoints()) {
-                            return null;
-                        }
-                        return (RexLiteral) right;
-                    } else if (right.getType() instanceof GraphLabelType
-                            && left instanceof RexLiteral) {
-                        Comparable value = ((RexLiteral) left).getValue();
-                        if (value instanceof Sarg && !((Sarg) value).isPoints()) {
-                            return null;
-                        }
-                        return (RexLiteral) left;
-                    }
-                default:
-                    return null;
-            }
-        } else {
-            return null;
-        }
-    }
-
-    // check the condition if it is the pattern of unique key equal filter, i.e. ~id = 1 or ~id
-    // within [1, 2]
-    private boolean isUniqueKeyEqualFilter(RexNode condition, RelNode tableScan) {
-        if (condition instanceof RexCall) {
-            RexCall rexCall = (RexCall) condition;
-            SqlOperator operator = rexCall.getOperator();
-            switch (operator.getKind()) {
-                case EQUALS:
-                case SEARCH:
-                    RexNode left = rexCall.getOperands().get(0);
-                    RexNode right = rexCall.getOperands().get(1);
-                    if (isUniqueKey(left, tableScan) && isLiteralOrDynamicParams(right)) {
-                        if (right instanceof RexLiteral) {
-                            Comparable value = ((RexLiteral) right).getValue();
-                            // if Sarg is a continuous range then the filter is not the 'equal',
-                            // i.e. ~id SEARCH [[1, 10]] which means ~id >= 1 and ~id <= 10
-                            if (value instanceof Sarg && !((Sarg) value).isPoints()) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    } else if (isUniqueKey(right, tableScan) && isLiteralOrDynamicParams(left)) {
-                        if (left instanceof RexLiteral) {
-                            Comparable value = ((RexLiteral) left).getValue();
-                            if (value instanceof Sarg && !((Sarg) value).isPoints()) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                default:
-                    return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    private boolean isUniqueKey(RexNode rexNode, RelNode tableScan) {
-        if (rexNode instanceof RexGraphVariable) {
-            return isUniqueKey((RexGraphVariable) rexNode, tableScan);
-        }
-        return false;
-    }
-
-    private boolean isUniqueKey(RexGraphVariable var, RelNode tableScan) {
-        if (var.getProperty() == null) return false;
-        switch (var.getProperty().getOpt()) {
-            case ID:
-                return true;
-            case KEY:
-                GraphSchemaType schemaType =
-                        (GraphSchemaType) tableScan.getRowType().getFieldList().get(0).getType();
-                ImmutableBitSet propertyIds = getPropertyIds(var.getProperty(), schemaType);
-                if (!propertyIds.isEmpty() && tableScan.getTable().isKey(propertyIds)) {
-                    return true;
-                }
-            case LABEL:
-            case ALL:
-            case LEN:
-            default:
-                return false;
-        }
-    }
-
-    private ImmutableBitSet getPropertyIds(GraphProperty property, GraphSchemaType schemaType) {
-        if (property.getOpt() != GraphProperty.Opt.KEY) return ImmutableBitSet.of();
-        GraphNameOrId key = property.getKey();
-        if (key.getOpt() == GraphNameOrId.Opt.ID) {
-            return ImmutableBitSet.of(key.getId());
-        }
-        for (int i = 0; i < schemaType.getFieldList().size(); ++i) {
-            RelDataTypeField field = schemaType.getFieldList().get(i);
-            if (field.getName().equals(key.getName())) {
-                return ImmutableBitSet.of(i);
-            }
-        }
-        return ImmutableBitSet.of();
-    }
-
-    private boolean isLiteralOrDynamicParams(RexNode node) {
-        return node instanceof RexLiteral || node instanceof RexDynamicParam;
     }
 
     // return the top node if its type is Filter, otherwise null
@@ -1970,7 +1818,7 @@ public class GraphBuilder extends RelBuilder {
                                 fetch == null ? -1 : ((RexLiteral) fetch).getValueAs(Integer.class))
                         .startAlias(pxdExpand.getStartAlias().getAliasName())
                         .alias(alias);
-                pathExpand(pxdBuilder.build());
+                pathExpand(pxdBuilder.buildConfig());
             } else if (top instanceof GraphLogicalProject) {
                 GraphLogicalProject project = (GraphLogicalProject) top;
                 project(project.getProjects(), Lists.newArrayList(alias), project.isAppend());

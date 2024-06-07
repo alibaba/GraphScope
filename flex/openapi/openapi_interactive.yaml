@@ -170,6 +170,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetGraphSchemaResponse'
+  /v1/graph/{graph_id}/statistics:
+    get:
+      tags:
+        - AdminService/GraphManagement
+      description: Get the statics info of a graph, including number of vertices for each label, number of edges for each label.
+      operationId: get_graph_statistic
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+          description: The id of graph to get statistics
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGraphStatisticsResponse'
+        '500':
+          description: Server Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example: "Internal error"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example: "Graph not running or graph not exists"
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example: "Service unavailable, try again later"
 
   /v1/graph/{graph_id}/dataloading:
     post:
@@ -904,41 +945,57 @@ paths:
           required: true
           schema:
             type: string
+        - name: X-Interactive-Request-Format
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [proto, encoder, json]
       requestBody:
         content:
-          application/json:
+          text/plain:
             schema:
-              $ref: '#/components/schemas/QueryRequest'
-          # application/json:
-          #   schema:
-          #     type: string
-          #   examples:
-          #     example1:
-          #       value:
-          #         type: "native/proc_call/adhoc"
-          #         payload: |
-          #           binary bytes
-          #     example2:
-          #       value:
-          #         type: "native"
-          #         payload: "0,123,david(encoded in binary)"
-          #     example3:
-          #       value:
-          #         type: "adhoc"
-          #         payload:
-          #           "json[scan{}, edge_expand{}]"
-          #     example4:
-          #       value:
-          #         type: "proc_call"
-          #         payload:
-          #           "json{proc_name: procA, params: []}"
+              type: string
+              format: byte
       responses:
         '200':
           description: Successfully runned. Empty if failed?
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: '#/components/schemas/CollectiveResults'
+                type: string
+                format: byte
+        '500':
+          description: Server internal error
+  /v1/graph/current/query:
+    post:
+      tags:
+        - QueryService
+      summary: run queries on the running graph
+      operationId: proc_call_current
+      description: |
+        Submit a query to the running graph.
+      parameters:
+        - name: X-Interactive-Request-Format
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [proto, encoder, json]
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned. Empty if failed?
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
         '500':
           description: Server internal error
 components:
@@ -955,46 +1012,6 @@ components:
           $ref: '#/components/schemas/GSDataType'
         value:
           $ref: '#/components/schemas/AnyValue'
-        # for query output
-    Element:
-      oneOf:
-        - $ref: '#/components/schemas/TypedValue'
-    Collection:
-      type: object
-      properties:
-        values:
-          type: array
-          items:
-            $ref: '#/components/schemas/Element'
-    KeyValue:
-      type: object
-      required:
-        - key
-        - value
-      properties:
-        key:
-          $ref: '#/components/schemas/TypedValue'
-        value:
-          $ref: '#/components/schemas/Element'
-    Column:
-      oneOf:
-        - $ref: '#/components/schemas/Element'
-        - $ref: '#/components/schemas/Collection'
-        - $ref: '#/components/schemas/KeyValue'
-    Record:
-      type: object
-      properties:
-        columns:
-          type: array
-          items:
-            $ref: '#/components/schemas/Column'
-    CollectiveResults:
-      type: object
-      properties:
-        records:
-          type: array
-          items:
-            $ref: '#/components/schemas/Record'
     PrimitiveType:
       x-body-name: primitive_type
       type: object
@@ -1004,7 +1021,8 @@ components:
         primitive_type:
           type: string
           enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
-                 DT_BOOL, DT_FLOAT, DT_DOUBLE]
+                 DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
+                 # The DT_STRING is added for backward compatibility, it should be replaced by StringType
           example: DT_SIGNED_INT32
     LongText:
       x-body-name: long_text
@@ -1060,11 +1078,24 @@ components:
       properties:
         timestamp:
           type: string
+    DateType:
+      x-body-name: date_type
+      type: object
+      required:
+       - date32
+      properties:
+        date32:
+          type: string
     TemporalType:
       x-body-name: temporal_type
       type: object
-      oneOf:
-        - $ref: '#/components/schemas/TimeStampType'
+      required:
+        - temporal
+      properties:
+        temporal:
+          oneOf:
+            - $ref: '#/components/schemas/TimeStampType'
+            - $ref: '#/components/schemas/DateType'
     GSDataType:
       x-body-name: gs_data_type
       oneOf:
@@ -1301,6 +1332,61 @@ components:
       x-body-name: api_response
       type: string
       example: "Response string"
+    VertexStatistics:
+      x-body-name: vertex_statistics
+      type: object
+      properties:
+        type_id:
+          type: integer
+        type_name:
+          type: string
+        count:
+          type: integer
+    VertexTypePairStatistics:
+      type: object
+      x-body-name: vertex_type_pair_statistics
+      required:
+        - source_vertex
+        - destination_vertex
+        - count
+      properties:
+        source_vertex: 
+          type: string
+        destination_vertex:
+          type: string
+        count:
+          type: integer
+    EdgeStatistics:
+      x-body-name: edge_statistics
+      type: object
+      properties:
+        type_id:
+          type: integer
+        type_name:
+          type: string
+        vertex_type_pair_statistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/VertexTypePairStatistics'
+    GetGraphStatisticsResponse:
+      x-body-name: graph_statistics_response
+      type: object
+      required:
+        - total_vertex_count
+        - total_edge_count
+      properties:
+        total_vertex_count:
+          type: integer
+        total_edge_count:
+          type: integer
+        vertex_type_statistics:
+          type: array
+          items: 
+            $ref: '#/components/schemas/VertexStatistics'
+        edge_type_statistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeStatistics'
     GetGraphResponse:
       x-body-name: get_graph_response
       type: object
@@ -1426,6 +1512,10 @@ components:
                       - BOTH_OUT_IN
                   sort_on_compaction:
                     type: boolean
+                  oe_mutability:
+                    type: string
+                  ie_mutability:
+                    type: string
     CreateEdgeType:
       x-body-name: create_edge_type
       allOf:
@@ -1475,8 +1565,6 @@ components:
       x-body-name: schema_mapping
       type: object
       properties:
-        graph:
-          type: string
         loading_config:
           type: object
           properties:
@@ -1598,8 +1686,8 @@ components:
       properties:
         status:
           type: string
-        graph_id:
-          type: string
+        graph:
+          $ref: '#/components/schemas/GetGraphResponse'
         bolt_port:
           type: integer
           format: int32
@@ -1607,6 +1695,9 @@ components:
           type: integer
           format: int32
         gremlin_port:
+          type: integer
+          format: int32
+        start_time:
           type: integer
           format: int32
     JobResponse:

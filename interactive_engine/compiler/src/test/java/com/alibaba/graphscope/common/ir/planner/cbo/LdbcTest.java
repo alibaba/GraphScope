@@ -2,10 +2,10 @@ package com.alibaba.graphscope.common.ir.planner.cbo;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -29,11 +29,13 @@ public class LdbcTest {
                                 "CBO",
                                 "graph.planner.rules",
                                 "NotMatchToAntiJoinRule, FilterIntoJoinRule, FilterMatchRule,"
-                                        + " ExtendIntersectRule, ExpandGetVFusionRule",
-                                "graph.planner.cbo.glogue.schema",
-                                "target/test-classes/statistics/ldbc30_statistics.txt"));
+                                        + " ExtendIntersectRule, ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockSchemaMeta("schema/ldbc.json");
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc.json",
+                        "statistics/ldbc30_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     @Test
@@ -136,9 +138,11 @@ public class LdbcTest {
                     + " tables=[PERSON]}], alias=[f], fusedFilter=[[=(_.firstName, ?1)]],"
                     + " opt=[END])\n"
                     + "                             "
-                    + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
-                    + "], offset=[1], fetch=[3], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[KNOWS]}], alias=[_], opt=[BOTH])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[_], opt=[OTHER])\n"
+                    + "], offset=[1], fetch=[3], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
                     + " alias=[k], start_alias=[p])\n"
                     + "                               "
                     + " GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[p],"
@@ -332,13 +336,15 @@ public class LdbcTest {
                     + " post]}], values=[[]])\n"
                     + "            GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, POST,"
                     + " TAG)]], alias=[tag], startAlias=[post], opt=[OUT], physicalOpt=[VERTEX])\n"
-                    + "              GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST,"
-                    + " PERSON)]], alias=[post], startAlias=[friend], opt=[IN],"
+                    + "              GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}],"
+                    + " alias=[post], opt=[START], physicalOpt=[ITSELF])\n"
+                    + "                GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR,"
+                    + " POST, PERSON)]], alias=[_], startAlias=[friend], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "                GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + "                  GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[KNOWS]}], alias=[friend], startAlias=[person], opt=[BOTH],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "                  GraphLogicalSource(tableConfig=[{isAll=false,"
+                    + "                    GraphLogicalSource(tableConfig=[{isAll=false,"
                     + " tables=[PERSON]}], alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
                     + " ?0)])",
                 after.explain().trim());
@@ -386,10 +392,12 @@ public class LdbcTest {
                     + " tables=[CONTAINEROF]}], alias=[post], startAlias=[forum], opt=[OUT],"
                     + " physicalOpt=[VERTEX], optional=[true])\n"
                     + "            CommonTableScan(table=[[common#391831169]])\n"
-                    + "          GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST,"
-                    + " PERSON)]], alias=[post], startAlias=[friend], opt=[IN],"
-                    + " physicalOpt=[VERTEX], optional=[true])\n"
-                    + "            CommonTableScan(table=[[common#391831169]])\n"
+                    + "          GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}],"
+                    + " alias=[post], opt=[START], physicalOpt=[ITSELF])\n"
+                    + "            GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST,"
+                    + " PERSON)]], alias=[_], startAlias=[friend], opt=[IN], physicalOpt=[VERTEX],"
+                    + " optional=[true])\n"
+                    + "              CommonTableScan(table=[[common#391831169]])\n"
                     + "common#391831169:\n"
                     + "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[FORUM]}], alias=[forum],"
                     + " opt=[START])\n"
@@ -438,17 +446,18 @@ public class LdbcTest {
                     + " opt=[END], physicalOpt=[ITSELF])\n"
                     + "          GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, POST, TAG)]],"
                     + " alias=[_], startAlias=[post], opt=[OUT], physicalOpt=[VERTEX])\n"
-                    + "            GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST,"
-                    + " PERSON)]], alias=[post], startAlias=[other], opt=[IN],"
-                    + " physicalOpt=[VERTEX])\n"
-                    + "              GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
-                    + " alias=[other], opt=[END])\n"
-                    + "               "
+                    + "            GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}],"
+                    + " alias=[post], opt=[START], physicalOpt=[ITSELF])\n"
+                    + "              GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST,"
+                    + " PERSON)]], alias=[_], startAlias=[other], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "                GraphLogicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[PERSON]}], alias=[other], opt=[END])\n"
+                    + "                 "
                     + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
                     + " alias=[_], start_alias=[person])\n"
-                    + "                  GraphLogicalSource(tableConfig=[{isAll=false,"
+                    + "                    GraphLogicalSource(tableConfig=[{isAll=false,"
                     + " tables=[PERSON]}], alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
                     + " 2199023382370)])",
                 after.explain().trim());
@@ -685,37 +694,43 @@ public class LdbcTest {
                     + "              MultiJoin(joinFilter=[=(post1, post1)],"
                     + " isFullOuterJoin=[false], joinTypes=[[INNER, INNER]],"
                     + " outerJoinConditions=[[NULL, NULL]], projFields=[[ALL, ALL]])\n"
-                    + "                GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR,"
-                    + " POST, PERSON)]], alias=[post1], startAlias=[friend], opt=[IN],"
+                    + "                GraphPhysicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[POST]}], alias=[post1], opt=[START], physicalOpt=[ITSELF])\n"
+                    + "                  GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR,"
+                    + " POST, PERSON)]], alias=[_], startAlias=[friend], opt=[IN],"
                     + " physicalOpt=[VERTEX], optional=[true])\n"
-                    + "                  CommonTableScan(table=[[common#-1774131414]])\n"
-                    + "                GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, POST,"
-                    + " TAG)]], alias=[post1], startAlias=[tag], opt=[IN], physicalOpt=[VERTEX],"
+                    + "                    CommonTableScan(table=[[common#-1626533514]])\n"
+                    + "                GraphPhysicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[POST]}], alias=[post1], opt=[START], physicalOpt=[ITSELF])\n"
+                    + "                  GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, POST,"
+                    + " TAG)]], alias=[_], startAlias=[tag], opt=[IN], physicalOpt=[VERTEX],"
                     + " optional=[true])\n"
-                    + "                  CommonTableScan(table=[[common#-1774131414]])\n"
+                    + "                    CommonTableScan(table=[[common#-1626533514]])\n"
                     + "            GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
                     + " alias=[friend], startAlias=[person], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "              GraphLogicalSource(tableConfig=[{isAll=false,"
                     + " tables=[PERSON]}], alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id,"
                     + " ?0)])\n"
-                    + "common#-1774131414:\n"
-                    + "GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST, PERSON)]],"
-                    + " alias=[post], startAlias=[friend], opt=[IN], physicalOpt=[VERTEX],"
+                    + "common#-1626533514:\n"
+                    + "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}], alias=[post],"
+                    + " opt=[START], physicalOpt=[ITSELF])\n"
+                    + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR, POST, PERSON)]],"
+                    + " alias=[_], startAlias=[friend], opt=[IN], physicalOpt=[VERTEX],"
                     + " optional=[true])\n"
-                    + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
                     + " alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX],"
                     + " optional=[true])\n"
-                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISLOCATEDIN, PERSON,"
+                    + "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISLOCATEDIN, PERSON,"
                     + " PLACE)]], alias=[city], startAlias=[friend], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "      GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + "        GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
                     + " alias=[friend], opt=[END])\n"
-                    + "       "
+                    + "         "
                     + " GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[KNOWS]}], alias=[_], opt=[BOTH], physicalOpt=[VERTEX])\n"
                     + "], offset=[2], fetch=[1], path_opt=[ARBITRARY], result_opt=[END_V],"
                     + " alias=[_], start_alias=[person])\n"
-                    + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + "            GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
                     + " alias=[person], opt=[VERTEX], uniqueKeyFilters=[=(_.id, ?0)])",
                 com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
@@ -824,16 +839,20 @@ public class LdbcTest {
                     + "          GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, POST, TAG)]],"
                     + " alias=[tag], startAlias=[PATTERN_VERTEX$5], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "            GraphPhysicalExpand(tableConfig=[[EdgeLabel(REPLYOF, COMMENT,"
-                    + " POST)]], alias=[PATTERN_VERTEX$5], startAlias=[comment], opt=[OUT],"
+                    + "            GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST]}],"
+                    + " alias=[PATTERN_VERTEX$5], opt=[END], physicalOpt=[ITSELF])\n"
+                    + "              GraphPhysicalExpand(tableConfig=[[EdgeLabel(REPLYOF, COMMENT,"
+                    + " POST)]], alias=[_], startAlias=[comment], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "              GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR,"
-                    + " COMMENT, PERSON)]], alias=[comment], startAlias=[friend], opt=[IN],"
+                    + "                GraphPhysicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[COMMENT]}], alias=[comment], opt=[START], physicalOpt=[ITSELF])\n"
+                    + "                  GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASCREATOR,"
+                    + " COMMENT, PERSON)]], alias=[_], startAlias=[friend], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "                GraphPhysicalExpand(tableConfig=[{isAll=false,"
+                    + "                    GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[KNOWS]}], alias=[friend], startAlias=[PATTERN_VERTEX$0],"
                     + " opt=[BOTH], physicalOpt=[VERTEX])\n"
-                    + "                  GraphLogicalSource(tableConfig=[{isAll=false,"
+                    + "                      GraphLogicalSource(tableConfig=[{isAll=false,"
                     + " tables=[PERSON]}], alias=[PATTERN_VERTEX$0], opt=[VERTEX],"
                     + " uniqueKeyFilters=[=(_.id, 2199023382370)])",
                 after.explain().trim());

@@ -3,13 +3,20 @@ version: v0.1
 store_type: mutable_csr  # v6d, groot, gart
 description: A graph with 2 vertex types and 2 edge types
 stored_procedures:
-  - name: query1
-    description: A stored procedure that does something
-    library: /tmp/interactive_workspace/data/modern_graph/plugins/libget_person_name.so
-    type: cpp
-  - name: query2
+  - name: count_vertex_num
     description: A stored procedure that does something else
-    library: /tmp/interactive_workspace/data/modern_graph/plugins/libcount_vertex_num.so
+    library: /tmp/temp_workspace/data/modern_graph/plugins/libcount_vertex_num.so
+    type: cypher
+    returns:
+      - name: count
+        type: {primitive_type: DT_SIGNED_INT64}
+  - name: plus_one
+    description: A sample application
+    library: /tmp/temp_workspace/data/modern_graph/plugins/libplus_one.so
+    type: cpp
+  - name: sample_app
+    description: A sample application
+    library: /tmp/temp_workspace/data/modern_graph/plugins/libsample_app.so
     type: cpp
 schema:
   vertex_types:

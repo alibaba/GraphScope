@@ -77,14 +77,25 @@ impl RocksDB {
         let old_db_shared = self
             .db
             .swap(new_db_shared, Ordering::Release, &guard);
+
+        let default = "".to_string();
+        let path = self
+            .options
+            .get("store.data.path")
+            .unwrap_or(&default);
         // Use Crossbeam's 'defer' mechanism to safely drop the old Arc
         unsafe {
             // Convert 'Shared' back to 'Arc' for deferred dropping
-            // let old_db_arc = old_db_shared.into_owned();
-            guard.defer_destroy(old_db_shared)
-            // guard.defer(|| drop(old_db_arc))
+            // guard.defer_destroy(old_db_shared)
+            guard.defer_unchecked(move || {
+                info!("Dropped RocksDB {:}", path);
+                drop(old_db_shared.into_owned())
+            })
         }
-        info!("RocksDB replaced");
+        // To force any deferred work to run, we need the epoch to move forward two times.
+        epoch::pin().flush();
+        epoch::pin().flush();
+        info!("RocksDB {:} replaced", path);
     }
 
     pub fn get(&self, key: &[u8]) -> GraphResult<Option<StorageRes>> {
@@ -215,6 +226,7 @@ impl RocksDB {
     }
 
     pub fn compact(&self) -> GraphResult<()> {
+        info!("begin to compact rocksdb");
         if self.is_secondary {
             info!("Cannot compact in secondary instance");
             return Ok(());

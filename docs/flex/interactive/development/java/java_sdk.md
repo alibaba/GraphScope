@@ -34,7 +34,7 @@ Add this dependency to your project's POM:
 ```xml
 <dependency>
   <groupId>com.alibaba.graphscope</groupId>
-  <artifactId>interactive-java-sdk</artifactId>
+  <artifactId>interactive-sdk</artifactId>
   <version>0.0.3</version>
   <scope>compile</scope>
 </dependency>
@@ -50,7 +50,7 @@ mvn clean package
 
 Then manually install the following JARs:
 
-* `target/interactive-java-sdk-0.0.3.jar`
+* `target/interactive-sdk-0.0.3.jar`
 * `target/lib/*.jar`
 
 ## Getting Started

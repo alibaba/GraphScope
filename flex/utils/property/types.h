@@ -29,7 +29,6 @@ limitations under the License.
 #include "grape/serialization/out_archive.h"
 
 #include <yaml-cpp/yaml.h>
-#include "nlohmann/json.hpp"
 
 namespace grape {
 
@@ -149,11 +148,6 @@ namespace config_parsing {
 std::string PrimitivePropertyTypeToString(PropertyType type);
 PropertyType StringToPrimitivePropertyType(const std::string& str);
 }  // namespace config_parsing
-
-// With the help of the following functions, we can serialize and deserialize
-// by json.get<PropertyType>() and operator <</operator =;
-void to_json(nlohmann::json& json, const PropertyType& type);
-void from_json(const nlohmann::json& json, PropertyType& type);
 
 // encoded with label_id and vid_t.
 struct GlobalId {
@@ -1237,7 +1231,7 @@ struct convert<gs::PropertyType> {
     // compatibility with old config files
     else if (config["day"]) {
       property_type = gs::config_parsing::StringToPrimitivePropertyType(
-          config["type"].as<std::string>());
+          config["day"].as<std::string>());
     } else if (config["varchar"]) {
       if (config["varchar"]["max_length"]) {
         property_type = gs::PropertyType::Varchar(

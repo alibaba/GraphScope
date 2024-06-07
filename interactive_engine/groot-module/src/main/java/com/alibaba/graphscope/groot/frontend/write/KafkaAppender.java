@@ -15,6 +15,9 @@ import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.wal.*;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.metrics.Meter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,13 +59,14 @@ public class KafkaAppender {
         this.partitionCount = metaService.getPartitionCount();
         this.bufferSize = FrontendConfig.WRITE_QUEUE_BUFFER_MAX_COUNT.get(configs);
         this.ingestSnapshotId = new AtomicLong(-1);
+        this.ingestBuffer = new ArrayBlockingQueue<>(this.bufferSize);
+        initMetrics();
     }
 
     public void start() {
         logger.info("staring KafkaAppender queue#[{}]", queue);
-        this.ingestBuffer = new ArrayBlockingQueue<>(this.bufferSize);
-
         this.shouldStop = false;
+        this.ingestBuffer.clear();
         this.ingestThread =
                 new Thread(
                         () -> {
@@ -227,7 +231,8 @@ public class KafkaAppender {
         types.add(OperationType.DELETE_EDGE);
         types.add(OperationType.CLEAR_VERTEX_PROPERTIES);
         types.add(OperationType.CLEAR_EDGE_PROPERTIES);
-
+        types.add(OperationType.ADD_VERTEX_TYPE_PROPERTIES);
+        types.add(OperationType.ADD_EDGE_TYPE_PROPERTIES);
         logger.info("replay DML records of from offset [{}], ts [{}]", offset, timestamp);
 
         long batchSnapshotId = 0;
@@ -301,5 +306,12 @@ public class KafkaAppender {
             logger.warn("ingest marker failed. snapshotId {}", snapshotId, e);
             callback.onError(e);
         }
+    }
+
+    public void initMetrics() {
+        Meter meter = GlobalOpenTelemetry.getMeter("default");
+        meter.upDownCounterBuilder("groot.frontend.writer.queue.size")
+                .setDescription("The buffer queue size of writer agent within the frontend node.")
+                .buildWithCallback(measurement -> measurement.record(ingestBuffer.size()));
     }
 }

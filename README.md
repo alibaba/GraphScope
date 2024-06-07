@@ -7,7 +7,7 @@
 
 [![GraphScope CI](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml/badge.svg)](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml)
 [![Coverage](https://codecov.io/gh/alibaba/GraphScope/branch/main/graph/badge.svg)](https://codecov.io/gh/alibaba/GraphScope)
-[![Playground](https://shields.io/badge/JupyterLab-Try%20GraphScope%20Now!-F37626?logo=jupyter)](https://try.graphscope.app)
+[![Playground](https://shields.io/badge/JupyterLab-Try%20GraphScope%20Now!-F37626?logo=jupyter)](https://try.graphscope.io)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alibaba/GraphScope)
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/graphscope)](https://artifacthub.io/packages/helm/graphscope/graphscope)
 [![Docs-en](https://shields.io/badge/Docs-English-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs)
@@ -24,6 +24,7 @@ GraphScope is a unified distributed graph computing platform that provides a one
 Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
 ## Latest News
+- [30/05/2024] 🏅 GraphScope Flex set new record-breaking [SNB Interactive audit results](https://ldbcouncil.org/benchmarks/snb-interactive/), as announced by LDBC on [X (Twitter)](https://twitter.com/LDBCouncil/status/1795886732950294630)!
 - [25/03/2024] 🙌🏻 We donated the graph file format [GraphAr](https://graphar.apache.org/) to [Apache Software Foundation](https://www.apache.org/) as an Incubating Project. 
 - [05/02/2024] 🎉 GraphScope Flex [paper](https://arxiv.org/abs/2312.12107) was accepted by [SIGMOD 2024](https://2024.sigmod.org/) Industry Track. See you in 🇨🇱!
 - [19/12/2023] 📑 A paper introducing GraphScope Flex released on [arXiv.org](https://arxiv.org/abs/2312.12107).
@@ -55,7 +56,7 @@ Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
 ## Getting Started
 
-We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!
+We provide a [Playground](https://try.graphscope.io) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.io) straight away in your browser!
 
 GraphScope supports running in standalone mode or on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started,
 let's begin with the standalone mode.
@@ -310,7 +311,7 @@ g = load_ogbn_mag(sess, "/dataset/ogbn_mag_small/")
 Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
 
 Next, we can conduct graph queries with Gremlin, invoke various graph algorithms, or run graph-based neural network tasks like we did in the standalone mode.
-We do not repeat code here, but a `.ipynb` processing the classification task on k8s is available on the [Playground](https://try.graphscope.app/).
+We do not repeat code here, but a `.ipynb` processing the classification task on k8s is available on the [Playground](https://try.graphscope.io/).
 
 ### Closing the session
 

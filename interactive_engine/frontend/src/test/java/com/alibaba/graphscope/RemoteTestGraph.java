@@ -1309,7 +1309,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 // @Graph.OptOut(method="g_VX1X_asXaX_out_hasXageX_whereXgtXaXX_byXageX_name" ,
 // test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest", reason = "existence
 // of property is unsupported")
-
+@Graph.OptOut(
+        method = "g_V_matchXa_created_b__b_0created_aX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "multi-edge pattern unsupported")
 // complex steps nested in match is unsupported yet, i.e. where(eq)/count/order/match
 @Graph.OptOut(
         method =

@@ -19,7 +19,7 @@ mod path_end;
 mod path_start;
 mod project;
 
-pub use expand_intersect::IntersectionEntry;
+pub use expand_intersect::{GeneralIntersectionEntry, IntersectionEntry};
 use pegasus::api::function::{FilterMapFunction, MapFunction};
 
 use crate::error::FnGenResult;

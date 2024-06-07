@@ -21,6 +21,7 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 
 from pydantic import Field, StrictStr
 
+from interactive_sdk.client.status import Status
 from interactive_sdk.openapi.api.admin_service_graph_management_api import (
     AdminServiceGraphManagementApi,
 )
@@ -56,6 +57,7 @@ from interactive_sdk.openapi.models.get_graph_response import GetGraphResponse
 from interactive_sdk.openapi.models.get_graph_schema_response import (
     GetGraphSchemaResponse,
 )
+from interactive_sdk.openapi.models.get_graph_statistics_response import GetGraphStatisticsResponse
 from interactive_sdk.openapi.models.get_procedure_response import GetProcedureResponse
 from interactive_sdk.openapi.models.job_response import JobResponse
 from interactive_sdk.openapi.models.job_status import JobStatus
@@ -65,7 +67,9 @@ from interactive_sdk.openapi.models.start_service_request import StartServiceReq
 from interactive_sdk.openapi.models.update_procedure_request import (
     UpdateProcedureRequest,
 )
+from interactive_sdk.openapi.models.query_request import QueryRequest
 from interactive_sdk.openapi.models.vertex_request import VertexRequest
+from interactive_sdk.client.generated.results_pb2 import CollectiveResults
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -160,17 +164,33 @@ class GraphInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_schema(
+    def get_graph_schema(
         graph_id: Annotated[
-            StrictStr, Field(description="The name of graph to delete")
+            StrictStr, Field(description="The id of graph to get")
         ],
     ) -> Result[GetGraphSchemaResponse]:
         raise NotImplementedError
 
     @abstractmethod
+    def get_graph_meta(
+        graph_id: Annotated[
+            StrictStr, Field(description="The id of graph to get")
+        ],
+    ) -> Result[GetGraphResponse]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_graph_statistics(
+        graph_id: Annotated[
+            StrictStr, Field(description="The id of graph to get")
+        ],
+    ) -> Result[GetGraphStatisticsResponse]:
+        raise NotImplementedError
+
+    @abstractmethod
     def delete_graph(
         graph_id: Annotated[
-            StrictStr, Field(description="The name of graph to delete")
+            StrictStr, Field(description="The id of graph to delete")
         ],
     ) -> Result[str]:
         raise NotImplementedError
@@ -221,10 +241,23 @@ class ProcedureInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def call_procedure(
-        self, graph_id: StrictStr, procedure_id: StrictStr, params: Dict[str, Any]
-    ) -> Result[str]:
+        self, graph_id: StrictStr, params: QueryRequest
+    ) -> Result[CollectiveResults]:
         raise NotImplementedError
 
+    @abstractmethod
+    def call_procedure_current(
+        self, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def call_procedure_current_raw(self, params: str) -> Result[str]:
+        raise NotImplementedError
 
 class QueryServiceInterface:
     @abstractmethod
@@ -276,6 +309,9 @@ class Session(
 
 
 class DefaultSession(Session):
+    PROTOCOL_FORMAT = "proto"
+    JSON_FORMAT = "json"
+    ENCODER_FORMAT = "encoder"
     def __init__(self, uri: str):
         self._client = ApiClient(Configuration(host=uri))
 
@@ -285,7 +321,19 @@ class DefaultSession(Session):
         self._service_api = AdminServiceServiceManagementApi(self._client)
         self._edge_api = GraphServiceEdgeManagementApi(self._client)
         self._vertex_api = GraphServiceVertexManagementApi(self._client)
-        self._query_api = QueryServiceApi(self._client)
+        # TODO(zhanglei): Get endpoint from service, current implementation is adhoc.
+        # get service port
+        service_status = self.get_service_status()
+        if not service_status.is_ok():
+            raise Exception("Failed to get service status")
+        service_port = service_status.get_value().hqps_port
+        # replace the port in uri
+        uri = uri.split(":")
+        uri[-1] = str(service_port)
+        uri = ":".join(uri)
+        self._query_client = ApiClient(Configuration(host=uri))
+
+        self._query_api = QueryServiceApi(self._query_client)
 
     def __enter__(self):
         self._client.__enter__()
@@ -379,9 +427,9 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def get_schema(
+    def get_graph_schema(
         self,
-        graph_id: Annotated[StrictStr, Field(description="The name of graph to get")],
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphSchemaResponse]:
         try:
             response = self._graph_api.get_schema_with_http_info(graph_id)
@@ -389,10 +437,30 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
+    def get_graph_meta(
+        self,
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
+    ) -> Result[GetGraphResponse]:
+        try:
+            response = self._graph_api.get_graph_with_http_info(graph_id)
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+    
+    def get_graph_statistics(
+        self,
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
+    ) -> Result[GetGraphStatisticsResponse]:
+        try:
+            response = self._graph_api.get_graph_statistic_with_http_info(graph_id)
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
     def delete_graph(
         self,
         graph_id: Annotated[
-            StrictStr, Field(description="The name of graph to delete")
+            StrictStr, Field(description="The id of graph to delete")
         ],
     ) -> Result[str]:
         try:
@@ -476,9 +544,68 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def call_procedure(
-        self, graph_id: StrictStr, procedure_id: StrictStr, params: Dict[str, Any]
-    ) -> Result[str]:
-        raise NotImplementedError
+        self, graph_id: StrictStr, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in json format
+            response = self._query_api.proc_call_with_http_info(
+                graph_id = graph_id, 
+                x_interactive_request_format = self.JSON_FORMAT,
+                body=params.to_json()
+            )
+            result = CollectiveResults()
+            if response.status_code == 200:
+                result.ParseFromString(response.data)
+                return Result.ok(result)
+            else:
+                return Result(Status.from_response(response), result)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def call_procedure_current(
+        self, params: QueryRequest
+    ) -> Result[CollectiveResults]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in json format
+            response = self._query_api.proc_call_current_with_http_info(
+                x_interactive_request_format = self.JSON_FORMAT,
+                body = params.to_json()
+            )
+            result = CollectiveResults()
+            if response.status_code == 200:
+                result.ParseFromString(response.data)
+                return Result.ok(result)
+            else:
+                return Result(Status.from_response(response), result)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in encoder/decoder format
+            response = self._query_api.proc_call_with_http_info(
+                graph_id = graph_id, 
+                x_interactive_request_format = self.ENCODER_FORMAT, 
+                body = params
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+        
+    def call_procedure_current_raw(self, params: str) -> Result[str]:
+        try:
+            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # Here we add byte of value 1 to denote the input format is in encoder/decoder format
+            response = self._query_api.proc_call_current_with_http_info(
+                x_interactive_request_format = self.ENCODER_FORMAT, 
+                body = params
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     ################ QueryService Interfaces ##########
     def get_service_status(self) -> Result[ServiceStatus]:

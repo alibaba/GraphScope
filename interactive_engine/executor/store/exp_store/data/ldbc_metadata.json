@@ -120,7 +120,7 @@
       "src_vertex_type": "TAG",
       "dst_vertex_type": "TAGCLASS"
     },
-    "tagclass_isSubClassOf_tagclass_0_0.csv": {
+    "tagclass_isSubclassOf_tagclass_0_0.csv": {
       "etype": "ISSUBCLASSOF",
       "src_vertex_type": "TAGCLASS",
       "dst_vertex_type": "TAGCLASS"

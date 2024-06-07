@@ -87,6 +87,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                     new GraphJoinDecomposition(
                             pattern.getCluster(),
                             pattern.getTraitSet(),
+                            pattern.getPattern(),
                             probePattern,
                             buildPattern,
                             Lists.newArrayList(
@@ -268,6 +269,7 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
         return new GraphJoinDecomposition(
                 parent.getCluster(),
                 parent.getTraitSet(),
+                parent.getParentPatten(),
                 probeClone,
                 buildClone,
                 newJointVertices,
@@ -372,22 +374,29 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
             PatternVertex newSrc,
             PatternVertex newDst,
             PathExpandRange newRange) {
-        int randomId = UUID.randomUUID().hashCode();
+        // Here, by setting the ID of the split edge to the same as the original edge,
+        // the intention is to enable finding the details info of the previous edge.
+        // This way, the final <GraphLogicalPathExpand> operator can include alias and filter
+        // details.
+        int newEdgeId = oldEdge.getId();
         ElementDetails newDetails =
-                new ElementDetails(oldEdge.getElementDetails().getSelectivity(), newRange);
+                new ElementDetails(
+                        oldEdge.getElementDetails().getSelectivity(),
+                        newRange,
+                        oldEdge.getElementDetails().getPxdInnerGetVTypes());
         return (oldEdge instanceof SinglePatternEdge)
                 ? new SinglePatternEdge(
                         newSrc,
                         newDst,
                         oldEdge.getEdgeTypeIds().get(0),
-                        randomId,
+                        newEdgeId,
                         oldEdge.isBoth(),
                         newDetails)
                 : new FuzzyPatternEdge(
                         newSrc,
                         newDst,
                         oldEdge.getEdgeTypeIds(),
-                        randomId,
+                        newEdgeId,
                         oldEdge.isBoth(),
                         newDetails);
     }

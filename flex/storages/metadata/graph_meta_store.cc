@@ -73,6 +73,7 @@ std::string GraphMeta::ToJson() const {
     json["stored_procedures"].push_back(
         nlohmann::json::parse(plugin_meta.ToJson()));
   }
+  json["store_type"] = store_type;
   return json.dump();
 }
 
@@ -98,6 +99,8 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
 
   if (json.contains("data_update_time")) {
     meta.data_update_time = json["data_update_time"].get<int64_t>();
+  } else {
+    meta.data_update_time = 0;
   }
   if (json.contains("data_import_config")) {
     meta.data_import_config = json["data_import_config"].dump();
@@ -106,6 +109,11 @@ GraphMeta GraphMeta::FromJson(const nlohmann::json& json) {
     for (auto& plugin : json["stored_procedures"]) {
       meta.plugin_metas.push_back(PluginMeta::FromJson(plugin));
     }
+  }
+  if (json.contains("store_type")) {
+    meta.store_type = json["store_type"].get<std::string>();
+  } else {
+    meta.store_type = "mutable_csr";
   }
   return meta;
 }
@@ -300,6 +308,7 @@ JobMeta JobMeta::FromJson(const nlohmann::json& json) {
 
 CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
     const std::string& json_str) {
+  LOG(INFO) << "CreateGraphMetaRequest::FromJson: " << json_str;
   CreateGraphMetaRequest request;
   nlohmann::json json;
   try {
@@ -320,9 +329,13 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
   }
   if (json.contains("data_update_time")) {
     request.data_update_time = json["data_update_time"].get<int64_t>();
+  } else {
+    request.data_update_time = 0;
   }
   if (json.contains("creation_time")) {
     request.creation_time = json["creation_time"].get<int64_t>();
+  } else {
+    request.creation_time = GetCurrentTimeStamp();
   }
   return request;
 }
@@ -334,6 +347,8 @@ std::string CreateGraphMetaRequest::ToString() const {
   json["schema"] = nlohmann::json::parse(schema);
   if (data_update_time.has_value()) {
     json["data_update_time"] = data_update_time.value();
+  } else {
+    json["data_update_time"] = 0;
   }
   json["creation_time"] = creation_time;
   return json.dump();
@@ -435,6 +450,8 @@ CreatePluginMetaRequest CreatePluginMetaRequest::FromJson(
   }
   if (j.contains("creation_time")) {
     request.creation_time = j["creation_time"].get<int64_t>();
+  } else {
+    request.creation_time = GetCurrentTimeStamp();
   }
   if (j.contains("description")) {
     request.description = j["description"].get<std::string>();
@@ -636,8 +653,8 @@ CreateJobMetaRequest CreateJobMetaRequest::NewRunning(
 
 std::string CreateJobMetaRequest::ToString() const {
   nlohmann::json json;
-  json["graph_id"] = graph_id;
-  json["process_id"] = process_id;
+  json["detail"]["graph_id"] = graph_id;
+  json["detail"]["process_id"] = process_id;
   json["start_time"] = start_time;
   json["status"] = std::to_string(status);
   json["log_path"] = log_path;
@@ -676,6 +693,68 @@ JobStatus parseFromString(const std::string& status_string) {
     LOG(ERROR) << "Unknown job status: " << status_string;
     return JobStatus::kUnknown;
   }
+}
+
+std::string GraphStatistics::ToJson() const {
+  nlohmann::json json;
+  json["total_vertex_count"] = total_vertex_count;
+  json["total_edge_count"] = total_edge_count;
+  json["vertex_type_statistics"] = nlohmann::json::array();
+  for (auto& type_stat : vertex_type_statistics) {
+    nlohmann::json type_stat_json;
+    type_stat_json["type_id"] = std::get<0>(type_stat);
+    type_stat_json["type_name"] = std::get<1>(type_stat);
+    type_stat_json["count"] = std::get<2>(type_stat);
+    json["vertex_type_statistics"].push_back(type_stat_json);
+  }
+  json["edge_type_statistics"] = nlohmann::json::array();
+  for (auto& type_stat : edge_type_statistics) {
+    nlohmann::json type_stat_json;
+    type_stat_json["type_id"] = std::get<0>(type_stat);
+    type_stat_json["type_name"] = std::get<1>(type_stat);
+    type_stat_json["vertex_type_pair_statistics"] = nlohmann::json::array();
+    for (auto& pair_stat : std::get<2>(type_stat)) {
+      nlohmann::json pair_stat_json;
+      pair_stat_json["source_vertex"] = std::get<0>(pair_stat);
+      pair_stat_json["destination_vertex"] = std::get<1>(pair_stat);
+      pair_stat_json["count"] = std::get<2>(pair_stat);
+      type_stat_json["vertex_type_pair_statistics"].push_back(pair_stat_json);
+    }
+    json["edge_type_statistics"].push_back(type_stat_json);
+  }
+  return json.dump();
+}
+
+Result<GraphStatistics> GraphStatistics::FromJson(const std::string& json_str) {
+  auto j = nlohmann::json::parse(json_str);
+  return GraphStatistics::FromJson(j);
+}
+
+Result<GraphStatistics> GraphStatistics::FromJson(const nlohmann::json& json) {
+  GraphStatistics stat;
+  stat.total_vertex_count = json["total_vertex_count"].get<int64_t>();
+  stat.total_edge_count = json["total_edge_count"].get<int64_t>();
+  for (auto& type_stat : json["vertex_type_statistics"]) {
+    stat.vertex_type_statistics.push_back(
+        {type_stat["type_id"].get<int32_t>(),
+         type_stat["type_name"].get<std::string>(),
+         type_stat["count"].get<int64_t>()});
+  }
+  for (auto& type_stat : json["edge_type_statistics"]) {
+    std::vector<typename GraphStatistics::vertex_type_pair_statistic>
+        vertex_type_pair_statistics;
+    for (auto& pair : type_stat["vertex_type_pair_statistics"]) {
+      vertex_type_pair_statistics.push_back(
+          {pair["source_vertex"].get<std::string>(),
+           pair["destination_vertex"].get<std::string>(),
+           pair["count"].get<int64_t>()});
+    }
+    stat.edge_type_statistics.push_back(
+        {type_stat["type_id"].get<int32_t>(),
+         type_stat["type_name"].get<std::string>(),
+         vertex_type_pair_statistics});
+  }
+  return stat;
 }
 
 }  // namespace gs

@@ -27,15 +27,21 @@ use std::time::Duration;
 use futures::Stream;
 use hyper::server::accept::Accept;
 use hyper::server::conn::{AddrIncoming, AddrStream};
-use opentelemetry::trace::TraceContextExt;
+use opentelemetry::trace::{TraceContextExt, TraceError};
 use opentelemetry::{
     global,
     propagation::Extractor,
     trace::{Span, SpanKind, Tracer},
     KeyValue,
 };
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{ExportConfig, Protocol, TonicExporterBuilder, WithExportConfig};
+use opentelemetry_sdk::metrics::SdkMeterProvider;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
+use opentelemetry_sdk::resource::{
+    EnvResourceDetector, SdkProvidedResourceDetector, TelemetryResourceDetector,
+};
+use opentelemetry_sdk::trace::BatchConfigBuilder;
+use opentelemetry_sdk::Resource;
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::errors::{ErrorKind, JobExecError};
@@ -188,10 +194,11 @@ where
     type SubmitStream = UnboundedReceiverStream<Result<pb::JobResponse, Status>>;
 
     async fn cancel(&self, req: Request<pb::CancelRequest>) -> Result<Response<Empty>, Status> {
-        let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
+        let parent_ctx =
+            global::get_text_map_propagator(|prop| prop.extract(&MyMetadataMap(req.metadata())));
         let tracer = global::tracer("executor");
         let _span = tracer
-            .span_builder("/JobServiceImpl/cancel")
+            .span_builder("JobService/cancel")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);
         let pb::CancelRequest { job_id } = req.into_inner();
@@ -201,8 +208,10 @@ where
 
     async fn submit(&self, req: Request<pb::JobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
-        let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
+        let parent_ctx =
+            global::get_text_map_propagator(|prop| prop.extract(&MyMetadataMap(req.metadata())));
         let tracer = global::tracer("executor");
+
         let pb::JobRequest { conf, source, plan, resource } = req.into_inner();
         if conf.is_none() {
             return Err(Status::new(Code::InvalidArgument, "job configuration not found"));
@@ -219,7 +228,7 @@ where
         let job = JobDesc { input: source, plan, resource };
 
         let mut span = tracer
-            .span_builder("/JobServiceImpl/submit")
+            .span_builder("JobService/submit")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);
         span.set_attributes(vec![
@@ -291,9 +300,7 @@ where
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
-    if server_config.enable_tracing.unwrap_or(false) {
-        let _tracer = init_tracer().expect("Failed to initialize tracer.");
-    }
+    init_otel().expect("Failed to initialize open telemetry");
     let server_id = server_config.server_id();
     if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
         listener.on_server_start(server_id, server_addr)?;
@@ -377,24 +384,86 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
     }
 }
 
-fn init_tracer() -> Result<opentelemetry_sdk::trace::Tracer, opentelemetry::trace::TraceError> {
+fn init_otel() -> Result<bool, Box<dyn std::error::Error>> {
+    let otel_disable = std::env::var("OTEL_SDK_DISABLED").unwrap_or("true".to_string());
+    info!("otel_disable: {}", otel_disable);
+    if otel_disable.trim().parse().unwrap() {
+        info!("OTEL is disabled");
+        return Ok(true);
+    }
+
+    // let mut metadata = tonic::metadata::MetadataMap::with_capacity(1);
+    // let dsn = std::env::var("UPTRACE_DSN").unwrap_or_default();
+    // if !dsn.is_empty() {
+    //     metadata.insert("uptrace-dsn", dsn.parse().unwrap());
+    //     info!("using DSN: {}", dsn);
+    // } else {
+    //     warn!("Error: UPTRACE_DSN not found.");
+    // }
+
+    let default_endpoint = "http://localhost:4317".to_string();
+    let endpoint = std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT").unwrap_or(default_endpoint);
+
+    let resource = Resource::from_detectors(
+        Duration::from_secs(0),
+        vec![
+            Box::new(SdkProvidedResourceDetector),
+            Box::new(EnvResourceDetector::new()),
+            Box::new(TelemetryResourceDetector),
+        ],
+    );
+
+    let exporter = opentelemetry_otlp::new_exporter()
+        .tonic()
+        .with_timeout(Duration::from_secs(5))
+        .with_endpoint(endpoint.clone());
+    // .with_metadata(metadata.clone());
+    let _tracer = init_tracer(resource.clone(), exporter)?;
+
+    let exporter = opentelemetry_otlp::new_exporter()
+        .tonic()
+        .with_timeout(Duration::from_secs(5))
+        .with_endpoint(endpoint);
+    // .with_metadata(metadata);
+
+    let _meter = init_meter_provider(resource, exporter)?;
+    global::set_meter_provider(_meter);
+    return Ok(true);
+}
+
+fn init_tracer(
+    resource: Resource, exporter: TonicExporterBuilder,
+) -> Result<opentelemetry_sdk::trace::Tracer, TraceError> {
     global::set_text_map_propagator(TraceContextPropagator::new());
+    let batch_config = opentelemetry_sdk::trace::BatchConfigBuilder::default()
+        .with_max_queue_size(2048)
+        .with_max_export_batch_size(512)
+        .with_scheduled_delay(Duration::from_millis(5000))
+        .build();
+    let trace_config = opentelemetry_sdk::trace::config().with_resource(resource);
     opentelemetry_otlp::new_pipeline()
         .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint("http://localhost:4317"),
-        )
-        .with_trace_config(opentelemetry_sdk::trace::config().with_resource(
-            opentelemetry_sdk::Resource::new(vec![KeyValue::new("service.name", "pegasus")]),
-        ))
+        .with_exporter(exporter)
+        .with_batch_config(batch_config)
+        .with_trace_config(trace_config)
         .install_batch(opentelemetry_sdk::runtime::Tokio)
 }
 
-struct MetadataMap<'a>(&'a tonic::metadata::MetadataMap);
+fn init_meter_provider(
+    resource: Resource, exporter: TonicExporterBuilder,
+) -> opentelemetry::metrics::Result<SdkMeterProvider> {
+    opentelemetry_otlp::new_pipeline()
+        .metrics(opentelemetry_sdk::runtime::Tokio)
+        .with_exporter(exporter)
+        .with_period(Duration::from_secs(15))
+        .with_timeout(Duration::from_secs(5))
+        .with_resource(resource)
+        .build()
+}
 
-impl<'a> Extractor for MetadataMap<'a> {
+struct MyMetadataMap<'a>(&'a tonic::metadata::MetadataMap);
+
+impl<'a> Extractor for MyMetadataMap<'a> {
     fn get(&self, key: &str) -> Option<&str> {
         self.0
             .get(key)

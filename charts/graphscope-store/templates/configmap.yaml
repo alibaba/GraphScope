@@ -20,11 +20,13 @@ data:
     discovery.mode={{ .Values.discoveryMode }}
     role.name=ROLE
     node.idx=INDEX
+    release.full.name={{ include "graphscope-store.fullname" . }}
 {{- else }}
     rpc.port=0
     discovery.mode=zookeeper
     role.name=""
     node.idx=0
+    release.full.name=localhost
 {{- end }}
 
     store.node.count={{ .Values.store.replicaCount }}
@@ -58,12 +60,12 @@ data:
     neo4j.bolt.server.disabled=true
 
     log4rs.config=LOG4RS_CONFIG
-    release.full.name={{ include "graphscope-store.fullname" . }}
     ## Auth config
     auth.username={{ .Values.auth.username }}
     auth.password={{ .Values.auth.password }}
 
     # Pegasus config
+    pegasus.hosts=PEGASUS_HOSTS  # this is used by ir server to compute the server size
     pegasus.worker.num={{ .Values.pegasus.worker.num }}
     pegasus.timeout={{ .Values.pegasus.timeout }}
     pegasus.batch.size=1024
@@ -71,6 +73,7 @@ data:
 
     gaia.rpc.port=60000
     gaia.engine.port=60001
+    gaia.write.timeout.ms={{ .Values.pegasus.timeout }}
 
     ## Secondary config
     secondary.instance.enabled={{ .Values.secondary.enabled }}
@@ -78,7 +81,6 @@ data:
     store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
 
     write.ha.enabled={{ .Values.backup.enabled }}
-    tracing.enabled={{ .Values.otel.enabled }}
 
     ## Coordinator Config
     rpc.max.bytes.mb={{ .Values.rpcMaxBytesMb }}
@@ -103,20 +105,48 @@ data:
     [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
     ordinal=${BASH_REMATCH[1]}
 
+    pegasus_hosts=""
+    i=0
+    while [ $i -ne $STORE_COUNT ]; do
+      pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
+      # 60001 is fixed gaia engine port
+      pegasus_hosts="${pegasus_hosts},${pod}:60001"
+      i=$(($i+1))
+    done
+    pegasus_hosts=${pegasus_hosts:1}
+
     sudo sed  -e "s/ROLE/${ROLE}/g" \
               -e "s/INDEX/${ordinal}/g" \
+              -e "s/PEGASUS_HOSTS/${pegasus_hosts}/g" \
               -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
     /etc/groot/groot.config.tpl | sudo tee -a /etc/groot/groot.config
 
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
 
+    export OTEL_SDK_DISABLED={{ not .Values.otel.enabled }}
+
     {{- if .Values.otel.enabled }}
-    export JAVA_TOOL_OPTIONS="-javaagent:/home/graphscope/opentelemetry-javaagent.jar"
-    export OTEL_SERVICE_NAME="compiler"
     export OTEL_TRACES_SAMPLER={{ .Values.otel.traces.sampler.name }}
     export OTEL_TRACES_SAMPLER_ARG={{ .Values.otel.traces.sampler.arg }}
+
+    export OTEL_SERVICE_NAME=groot
+    export OTEL_RESOURCE_ATTRIBUTES=service.name=groot,service.version=1.0.0
+    export OTEL_TRACES_EXPORTER=otlp
+    export OTEL_METRICS_EXPORTER=otlp
+    export OTEL_LOGS_EXPORTER=otlp
+
+    export OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=DELTA
+    export OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION=BASE2_EXPONENTIAL_BUCKET_HISTOGRAM
+    # export OTEL_EXPORTER_OTLP_COMPRESSION=gzip
     {{- end }}
+
+    {{- if .Values.uptrace.enabled }}
+    export UPTRACE_DSN=http://{{ .Values.uptrace.token }}@${{ .Values.uptrace.service }}:14318?grpc=14317
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://{{ .Values.uptrace.service }}:14317
+    export OTEL_EXPORTER_OTLP_HEADERS=uptrace-dsn=${UPTRACE_DSN}
+    {{- end }}
+
 
     # For core and heap profiling
     # ulimit -c unlimited

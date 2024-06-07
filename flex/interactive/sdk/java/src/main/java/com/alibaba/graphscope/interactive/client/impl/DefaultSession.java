@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.interactive.client.impl;
 
+import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.openapi.ApiClient;
@@ -22,6 +23,7 @@ import com.alibaba.graphscope.interactive.openapi.ApiException;
 import com.alibaba.graphscope.interactive.openapi.ApiResponse;
 import com.alibaba.graphscope.interactive.openapi.api.*;
 import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.Closeable;
 import java.util.List;
@@ -41,8 +43,11 @@ public class DefaultSession implements Session {
 
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_WRITE_TIMEOUT = 30000;
+    private static String JSON_FORMAT_STRING = "json";
+    private static String PROTO_FORMAT_STRING = "proto";
+    private static String ENCODER_FORMAT_STRING = "encoder";
 
-    private final ApiClient client;
+    private final ApiClient client, queryClient;
 
     public static DefaultSession newInstance(String uri) {
         return new DefaultSession(uri);
@@ -69,7 +74,23 @@ public class DefaultSession implements Session {
         serviceApi = new AdminServiceServiceManagementApi(client);
         vertexApi = new GraphServiceVertexManagementApi(client);
         edgeApi = new GraphServiceEdgeManagementApi(client);
-        queryApi = new QueryServiceApi(client);
+
+        Result<ServiceStatus> status = getServiceStatus();
+        if (!status.isOk()) {
+            throw new RuntimeException(
+                    "Failed to connect to the server: " + status.getStatusMessage());
+        }
+        // TODO: should construct queryService from a endpoint, not a port
+        Integer queryPort = status.getValue().getHqpsPort();
+
+        // Replace the port with the query port, http:://host:port -> http:://host:queryPort
+        String queryUri = uri.replaceFirst(":[0-9]+", ":" + queryPort);
+        System.out.println("Query URI: " + queryUri);
+        queryClient = new ApiClient();
+        queryClient.setBasePath(queryUri);
+        queryClient.setReadTimeout(DEFAULT_READ_TIMEOUT);
+        queryClient.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
+        queryApi = new QueryServiceApi(queryClient);
     }
 
     @Override
@@ -174,6 +195,29 @@ public class DefaultSession implements Session {
     public Result<GetGraphSchemaResponse> getGraphSchema(String graphId) {
         try {
             ApiResponse<GetGraphSchemaResponse> response = graphApi.getSchemaWithHttpInfo(graphId);
+            return Result.fromResponse(response);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        }
+    }
+
+    @Override
+    public Result<GetGraphStatisticsResponse> getGraphStatistics(String graphId) {
+        try {
+            ApiResponse<GetGraphStatisticsResponse> response =
+                    graphApi.getGraphStatisticWithHttpInfo(graphId);
+            return Result.fromResponse(response);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        }
+    }
+
+    @Override
+    public Result<GetGraphResponse> getGraphMeta(String graphId) {
+        try {
+            ApiResponse<GetGraphResponse> response = graphApi.getGraphWithHttpInfo(graphId);
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -288,11 +332,90 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<CollectiveResults> callProcedure(String graphName, QueryRequest request) {
+    public Result<IrResult.CollectiveResults> callProcedure(
+            String graphName, QueryRequest request) {
         try {
-            ApiResponse<CollectiveResults> response =
-                    queryApi.procCallWithHttpInfo(graphName, request);
-            return Result.fromResponse(response);
+            // Interactive currently support four type of inputformat, see
+            // flex/engines/graph_db/graph_db_session.h
+            // Here we add byte of value 1 to denote the input format is in JSON format.
+            ApiResponse<byte[]> response =
+                    queryApi.procCallWithHttpInfo(
+                            graphName, JSON_FORMAT_STRING, request.toJson().getBytes());
+            if (response.getStatusCode() != 200) {
+                return Result.fromException(
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            }
+            IrResult.CollectiveResults results =
+                    IrResult.CollectiveResults.parseFrom(response.getData());
+            return new Result<>(results);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<IrResult.CollectiveResults> callProcedure(QueryRequest request) {
+        try {
+            // Interactive currently support four type of inputformat, see
+            // flex/engines/graph_db/graph_db_session.h
+            // Here we add byte of value 1 to denote the input format is in JSON format.
+            ApiResponse<byte[]> response =
+                    queryApi.procCallCurrentWithHttpInfo(
+                            JSON_FORMAT_STRING, request.toJson().getBytes());
+            if (response.getStatusCode() != 200) {
+                return Result.fromException(
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            }
+            IrResult.CollectiveResults results =
+                    IrResult.CollectiveResults.parseFrom(response.getData());
+            return new Result<>(results);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<byte[]> callProcedureRaw(String graphName, byte[] request) {
+        try {
+            // Interactive currently support four type of inputformat, see
+            // flex/engines/graph_db/graph_db_session.h
+            // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
+            // format.
+            ApiResponse<byte[]> response =
+                    queryApi.procCallWithHttpInfo(graphName, ENCODER_FORMAT_STRING, request);
+            if (response.getStatusCode() != 200) {
+                return Result.fromException(
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            }
+            return new Result<byte[]>(response.getData());
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        }
+    }
+
+    @Override
+    public Result<byte[]> callProcedureRaw(byte[] request) {
+        try {
+            // Interactive currently support four type of inputformat, see
+            // flex/engines/graph_db/graph_db_session.h
+            // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
+            // format.
+            ApiResponse<byte[]> response =
+                    queryApi.procCallCurrentWithHttpInfo(ENCODER_FORMAT_STRING, request);
+            if (response.getStatusCode() != 200) {
+                return Result.fromException(
+                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            }
+            return new Result<byte[]>(response.getData());
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);

@@ -35,7 +35,6 @@ To start the Interactive service, provide the raw graph data and meta info. For 
 bin/gs_interactive service start
 ```
 You should be able to see a message telling you what the `Gremlin/Cypher` endpoint that you should connect to.
-
 ### Stop the Service
 To stop the Interactive service, simple type in the following command:
 

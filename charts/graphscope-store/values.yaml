@@ -515,10 +515,19 @@ otel:
       registry: docker.io
       repository: jaegertracing/all-in-one
       tag: "latest"
+  # https://opentelemetry.io/docs/languages/sdk-configuration/general/#otel_traces_sampler
   traces:
     sampler:
       name: "traceidratio"
       arg: "0.1"
+
+uptrace:
+  enabled: false
+  # uptrace service endpoint, could be DNS name of uptrace service
+  # for example: "service-name.namespace", "my-uptrace.uptrace"
+  service: "uptrace"
+  # token is set within uptrace config
+  token: "project2_secret_token"
 
 distributed:
   enabled: false

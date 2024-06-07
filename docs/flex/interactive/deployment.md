@@ -1,4 +1,4 @@
-# GraphScope Interactive Deployment
+# Deployment
 
 ## Deploy with docker
 

@@ -198,7 +198,7 @@ public class WithTest {
                     + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[_], opt=[END])\n"
-                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
                     + " alias=[k])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
