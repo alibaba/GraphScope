@@ -18,39 +18,39 @@
 import time
 import argparse
 import os
-from interactive_sdk.openapi.models.long_text import LongText
-from interactive_sdk.openapi.models.edge_mapping_type_triplet import (
+from interactive.models.long_text import LongText
+from interactive.models.edge_mapping_type_triplet import (
     EdgeMappingTypeTriplet,
 )
-from interactive_sdk.client.driver import Driver
-from interactive_sdk.client.session import Session
-from interactive_sdk.openapi.models.base_edge_type_vertex_type_pair_relations_inner import (
+from interactive.client.driver import Driver
+from interactive.client.session import Session
+from interactive.models.base_edge_type_vertex_type_pair_relations_inner import (
     BaseEdgeTypeVertexTypePairRelationsInner,
 )
-from interactive_sdk.openapi.models.create_edge_type import CreateEdgeType
-from interactive_sdk.openapi.models.create_graph_request import CreateGraphRequest
-from interactive_sdk.openapi.models.create_graph_schema_request import (
+from interactive.models.create_edge_type import CreateEdgeType
+from interactive.models.create_graph_request import CreateGraphRequest
+from interactive.models.create_graph_schema_request import (
     CreateGraphSchemaRequest,
 )
-from interactive_sdk.openapi.models.create_procedure_request import (
+from interactive.models.create_procedure_request import (
     CreateProcedureRequest,
 )
-from interactive_sdk.openapi.models.create_property_meta import CreatePropertyMeta
-from interactive_sdk.openapi.models.create_vertex_type import CreateVertexType
-from interactive_sdk.openapi.models.edge_mapping import EdgeMapping
-from interactive_sdk.openapi.models.gs_data_type import GSDataType
-from interactive_sdk.openapi.models.start_service_request import StartServiceRequest
-from interactive_sdk.openapi.models.primitive_type import PrimitiveType
-from interactive_sdk.openapi.models.schema_mapping import SchemaMapping
-from interactive_sdk.openapi.models.schema_mapping_loading_config import (
+from interactive.models.create_property_meta import CreatePropertyMeta
+from interactive.models.create_vertex_type import CreateVertexType
+from interactive.models.edge_mapping import EdgeMapping
+from interactive.models.gs_data_type import GSDataType
+from interactive.models.start_service_request import StartServiceRequest
+from interactive.models.primitive_type import PrimitiveType
+from interactive.models.schema_mapping import SchemaMapping
+from interactive.models.schema_mapping_loading_config import (
     SchemaMappingLoadingConfig,
 )
-from interactive_sdk.openapi.models.schema_mapping_loading_config_format import (
+from interactive.models.schema_mapping_loading_config_format import (
     SchemaMappingLoadingConfigFormat,
 )
-from interactive_sdk.openapi.models.string_type import StringType
-from interactive_sdk.openapi.models.string_type_string import StringTypeString
-from interactive_sdk.openapi.models.vertex_mapping import VertexMapping
+from interactive.models.string_type import StringType
+from interactive.models.string_type_string import StringTypeString
+from interactive.models.vertex_mapping import VertexMapping
 
 
 def createGraph(sess: Session):

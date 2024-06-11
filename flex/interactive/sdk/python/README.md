@@ -27,7 +27,7 @@ python setup.py install --user
 
 Then import the package:
 ```python
-import interactive_sdk
+import interactive
 ```
 
 ### Tests
@@ -46,7 +46,7 @@ Then, connect to the interactive endpoint, and try to run a simple query with fo
 
 ```python
 
-from interactive_sdk.client.driver import Driver
+from interactive.client.driver import Driver
 
 # replace endpoint with the actual interactive endpoint, this is mock server just for testing.
 interactive_endpoint='https://virtserver.swaggerhub.com/GRAPHSCOPE/interactive/1.0.0/'

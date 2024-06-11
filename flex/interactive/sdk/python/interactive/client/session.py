@@ -21,55 +21,55 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 
 from pydantic import Field, StrictStr
 
-from interactive_sdk.client.status import Status
-from interactive_sdk.openapi.api.admin_service_graph_management_api import (
+from interactive.client.status import Status
+from interactive.api.admin_service_graph_management_api import (
     AdminServiceGraphManagementApi,
 )
-from interactive_sdk.openapi.api.admin_service_job_management_api import (
+from interactive.api.admin_service_job_management_api import (
     AdminServiceJobManagementApi,
 )
-from interactive_sdk.openapi.api.admin_service_procedure_management_api import (
+from interactive.api.admin_service_procedure_management_api import (
     AdminServiceProcedureManagementApi,
 )
-from interactive_sdk.openapi.api.admin_service_service_management_api import (
+from interactive.api.admin_service_service_management_api import (
     AdminServiceServiceManagementApi,
 )
-from interactive_sdk.openapi.api.graph_service_edge_management_api import (
+from interactive.api.graph_service_edge_management_api import (
     GraphServiceEdgeManagementApi,
 )
-from interactive_sdk.openapi.api.graph_service_vertex_management_api import (
+from interactive.api.graph_service_vertex_management_api import (
     GraphServiceVertexManagementApi,
 )
-from interactive_sdk.openapi.api.query_service_api import QueryServiceApi
-from interactive_sdk.openapi.api_client import ApiClient
-from interactive_sdk.client.result import Result
-from interactive_sdk.openapi.configuration import Configuration
-from interactive_sdk.openapi.models.create_graph_request import CreateGraphRequest
-from interactive_sdk.openapi.models.create_graph_response import CreateGraphResponse
-from interactive_sdk.openapi.models.create_procedure_request import (
+from interactive.api.query_service_api import QueryServiceApi
+from interactive.api_client import ApiClient
+from interactive.client.result import Result
+from interactive.configuration import Configuration
+from interactive.models.create_graph_request import CreateGraphRequest
+from interactive.models.create_graph_response import CreateGraphResponse
+from interactive.models.create_procedure_request import (
     CreateProcedureRequest,
 )
-from interactive_sdk.openapi.models.create_procedure_response import (
+from interactive.models.create_procedure_response import (
     CreateProcedureResponse,
 )
-from interactive_sdk.openapi.models.edge_request import EdgeRequest
-from interactive_sdk.openapi.models.get_graph_response import GetGraphResponse
-from interactive_sdk.openapi.models.get_graph_schema_response import (
+from interactive.models.edge_request import EdgeRequest
+from interactive.models.get_graph_response import GetGraphResponse
+from interactive.models.get_graph_schema_response import (
     GetGraphSchemaResponse,
 )
-from interactive_sdk.openapi.models.get_graph_statistics_response import GetGraphStatisticsResponse
-from interactive_sdk.openapi.models.get_procedure_response import GetProcedureResponse
-from interactive_sdk.openapi.models.job_response import JobResponse
-from interactive_sdk.openapi.models.job_status import JobStatus
-from interactive_sdk.openapi.models.schema_mapping import SchemaMapping
-from interactive_sdk.openapi.models.service_status import ServiceStatus
-from interactive_sdk.openapi.models.start_service_request import StartServiceRequest
-from interactive_sdk.openapi.models.update_procedure_request import (
+from interactive.models.get_graph_statistics_response import GetGraphStatisticsResponse
+from interactive.models.get_procedure_response import GetProcedureResponse
+from interactive.models.job_response import JobResponse
+from interactive.models.job_status import JobStatus
+from interactive.models.schema_mapping import SchemaMapping
+from interactive.models.service_status import ServiceStatus
+from interactive.models.start_service_request import StartServiceRequest
+from interactive.models.update_procedure_request import (
     UpdateProcedureRequest,
 )
-from interactive_sdk.openapi.models.query_request import QueryRequest
-from interactive_sdk.openapi.models.vertex_request import VertexRequest
-from interactive_sdk.client.generated.results_pb2 import CollectiveResults
+from interactive.models.query_request import QueryRequest
+from interactive.models.vertex_request import VertexRequest
+from interactive.client.generated.results_pb2 import CollectiveResults
 
 
 class EdgeInterface(metaclass=ABCMeta):

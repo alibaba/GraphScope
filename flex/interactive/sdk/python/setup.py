@@ -21,7 +21,7 @@ from setuptools import find_packages, setup  # noqa: H301
 #
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
-NAME = "interactive_sdk"
+NAME = "interactive"
 VERSION = "0.3"
 PYTHON_REQUIRES = ">=3.7"
 REQUIRES = [
@@ -53,7 +53,7 @@ class BuildProto(Command):
     def run(self):
         proto_path = "../../../../interactive_engine/executor/ir/proto/"
         proto_files = glob.glob(os.path.join(proto_path, '*.proto'))
-        output_dir = "./interactive_sdk/client/generated/"
+        output_dir = "./interactive/client/generated/"
         os.makedirs(output_dir, exist_ok=True)
         for proto_file in proto_files:
             cmd = [
@@ -87,6 +87,6 @@ setup(
     long_description="""\
     This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query. 
     """,  # noqa: E501
-    package_data={"interactive_sdk": ["py.typed"]},
+    package_data={"interactive": ["py.typed"]},
     cmdclass={"build_proto": BuildProto}, 
 )

@@ -2,9 +2,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.alibaba.graphscope</groupId>
-    <artifactId>interactive-sdk</artifactId>
+    <artifactId>interactive</artifactId>
     <packaging>jar</packaging>
-    <name>interactive-sdk</name>
+    <name>interactive</name>
     <version>0.3</version>
     <url>https://github.com/alibaba/GraphScope/tree/main/flex/interactive</url>
     <description>GraphScope Interactive Java SDK</description>
