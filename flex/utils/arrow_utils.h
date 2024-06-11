@@ -58,8 +58,13 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
       return false;
 
     seconds_type seconds_since_epoch;
+#if defined(ARROW_VERSION) && ARROW_VERSION < 15000000
     if (ARROW_PREDICT_FALSE(!arrow::internal::detail::ParseYYYY_MM_DD(
             s, &seconds_since_epoch))) {
+#else
+    if (ARROW_PREDICT_FALSE(
+            !arrow::internal::ParseYYYY_MM_DD(s, &seconds_since_epoch))) {
+#endif
       return false;
     }
 
