@@ -80,7 +80,7 @@ public class P2PVertexMultipleLongInputFormat
         @Override
         protected Iterable<Edge<LongWritable, LongWritable>> getEdges(String[] tokens)
                 throws IOException {
-            List<Edge<LongWritable, MultipleLongWritable>> edges =
+            List<Edge<LongWritable, LongWritable>> edges =
                     Lists.newArrayListWithCapacity(0);
             return edges;
         }

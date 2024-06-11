@@ -136,7 +136,7 @@ public class AppBaseParser {
 //        }
         logger.info("TypeParams: " + String.join(",", typeParamNames));
         logger.info("ContextType:vertex_data");
-        logger.info("VertexData: " + typeParamNames[1]);
+        logger.info("VertexData: " + typeParamNames[2]);
         return true;
     }
 
