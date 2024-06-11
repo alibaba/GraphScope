@@ -5,7 +5,7 @@
     <artifactId>interactive-sdk</artifactId>
     <packaging>jar</packaging>
     <name>interactive-sdk</name>
-    <version>0.0.3</version>
+    <version>0.3</version>
     <url>https://github.com/alibaba/GraphScope/tree/main/flex/interactive</url>
     <description>GraphScope Interactive Java SDK</description>
     <organization>
