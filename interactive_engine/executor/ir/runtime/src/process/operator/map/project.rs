@@ -15,6 +15,7 @@
 
 use std::convert::TryFrom;
 
+use common_pb::path_concat::Endpoint;
 use dyn_type::Object;
 use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
@@ -50,8 +51,8 @@ pub enum Projector {
     /// If the key is given, it is a collection of PairEntry with user-given key, and value of projected graph elements (computed via TagKey);
     /// If the key is None, it is a collection of projected graph elements (computed via TagKey).
     MultiGraphElementProjector(Vec<(Option<Object>, TagKey)>),
-    /// A simple concatenation of multiple entries.
-    ConcatProjector(Vec<TagKey>),
+    /// A simple concatenation of two paths.
+    PathConcatProjector((TagKey, Endpoint), (TagKey, Endpoint)),
 }
 
 // TODO:
@@ -81,33 +82,72 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
             }
             DynEntry::new(CollectionEntry { inner: collection })
         }
-        Projector::ConcatProjector(concat_vars) => {
-            if concat_vars.len() != 2 {
-                Err(FnExecError::unsupported_error("Only support concatenated 2 entries now"))?
-            } else {
-                let left_path = concat_vars[0]
-                    .get_arc_entry(input)?
-                    .as_graph_path()
-                    .cloned();
-                let right_path = concat_vars[1]
-                    .get_arc_entry(input)?
-                    .as_graph_path()
-                    .cloned();
-                if left_path.is_none() || right_path.is_none() {
-                    Err(FnExecError::unsupported_error("Concatenated entries are not Path"))?
-                } else {
-                    let mut left_path = left_path.unwrap();
-                    let right_path = right_path.unwrap().take_path();
-                    if let Some(mut right_path) = right_path {
-                        // specifically, we pop the last entry of right_path, which is already in left_path
-                        right_path.pop();
-                        right_path.reverse();
-                        for entry in right_path {
-                            left_path.append(entry);
-                        }
+        Projector::PathConcatProjector((left, left_endpoint), (right, right_endpoint)) => {
+            let mut left_path = left
+                .get_arc_entry(input)?
+                .as_graph_path()
+                .ok_or_else(|| FnExecError::unsupported_error("Left entry is not Path in PathConcat"))?
+                .clone();
+            let mut right_path = right
+                .get_arc_entry(input)?
+                .as_graph_path()
+                .ok_or_else(|| FnExecError::unsupported_error("Right entry is not Path in PathConcat"))?
+                .clone();
+
+            let mut invalid = false;
+            match (left_endpoint, right_endpoint) {
+                // e.g., concat [3,2,1], [3,4,5] => [1,2,3,4,5]
+                (Endpoint::Start, Endpoint::Start) => {
+                    if left_path.get_path_start() != right_path.get_path_start() {
+                        invalid = true;
+                    } else {
+                        left_path.reverse();
+                        left_path.pop();
+                        left_path.append_path(right_path);
                     }
-                    DynEntry::new(left_path)
                 }
+                (Endpoint::Start, Endpoint::End) => {
+                    // e.g., concat [3,2,1], [5,4,3]
+                    if left_path.get_path_start().is_none()
+                        || (left_path.get_path_start().unwrap() != right_path.get_path_end())
+                    {
+                        invalid = true;
+                    } else {
+                        left_path.reverse();
+                        left_path.pop();
+                        right_path.reverse();
+                        left_path.append_path(right_path);
+                    }
+                }
+                (Endpoint::End, Endpoint::Start) => {
+                    // e.g., concat [1,2,3], [3,4,5]
+                    if right_path.get_path_start().is_none()
+                        || (right_path.get_path_start().unwrap() != left_path.get_path_end())
+                    {
+                        invalid = true;
+                    } else {
+                        left_path.pop();
+                        left_path.append_path(right_path);
+                    }
+                }
+                (Endpoint::End, Endpoint::End) => {
+                    // e.g., concat [1,2,3], [5,4,3]
+                    if left_path.get_path_end() != right_path.get_path_end() {
+                        invalid = true;
+                    } else {
+                        left_path.pop();
+                        right_path.reverse();
+                        left_path.append_path(right_path);
+                    }
+                }
+            }
+
+            if invalid {
+                Err(FnExecError::unexpected_data_error(&format!(
+                    "Concat vertices are not the same in PathConcat"
+                )))?
+            } else {
+                DynEntry::new(left_path)
             }
         }
     };
@@ -205,15 +245,42 @@ impl FilterMapFuncGen for pb::Project {
                         Projector::MultiGraphElementProjector(key_value_vec)
                     }
                     common_pb::ExprOpr {
-                        item: Some(common_pb::expr_opr::Item::Concat(concat_vars)),
+                        item: Some(common_pb::expr_opr::Item::PathConcat(concat_vars)),
                         ..
                     } => {
-                        let tag_keys = concat_vars
-                            .vars
-                            .iter()
-                            .map(|var| TagKey::try_from(var.clone()))
-                            .collect::<Result<Vec<TagKey>, _>>()?;
-                        Projector::ConcatProjector(tag_keys)
+                        let left = concat_vars.left.as_ref().ok_or_else(|| {
+                            ParsePbError::EmptyFieldError(format!(
+                                "left in PathConcat Expr {:?}",
+                                concat_vars
+                            ))
+                        })?;
+                        let left_path_tag = left.path_tag.clone().ok_or_else(|| {
+                            ParsePbError::EmptyFieldError(format!(
+                                "path_tag in PathConcat Expr {:?}",
+                                concat_vars
+                            ))
+                        })?;
+                        let left_endpoint: common_pb::path_concat::Endpoint =
+                            unsafe { std::mem::transmute(left.endpoint) };
+                        let right = concat_vars.right.as_ref().ok_or_else(|| {
+                            ParsePbError::EmptyFieldError(format!(
+                                "right in PathConcat Expr {:?}",
+                                concat_vars
+                            ))
+                        })?;
+
+                        let right_path_tag = right.path_tag.clone().ok_or_else(|| {
+                            ParsePbError::EmptyFieldError(format!(
+                                "path_tag in PathConcat Expr {:?}",
+                                concat_vars
+                            ))
+                        })?;
+                        let right_endpoint: common_pb::path_concat::Endpoint =
+                            unsafe { std::mem::transmute(right.endpoint) };
+                        Projector::PathConcatProjector(
+                            (TagKey::try_from(left_path_tag)?, left_endpoint),
+                            (TagKey::try_from(right_path_tag)?, right_endpoint),
+                        )
                     }
                     _ => {
                         let evaluator = Evaluator::try_from(expr)?;
@@ -236,6 +303,8 @@ impl FilterMapFuncGen for pb::Project {
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use ahash::HashMap;
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, Edge, GraphElement, GraphPath, Vertex};
@@ -1154,54 +1223,52 @@ mod tests {
         assert_eq!(results, expected_results);
     }
 
-    #[test]
-    fn project_concat_allv_path_test() {
+    fn build_path(vids: Vec<i64>) -> GraphPath {
         let details = DynDetails::default();
-        // sub_path1: [1,2]
-        let mut sub_path1 = GraphPath::new(
-            Vertex::new(1, None, details.clone()),
+        let mut path = GraphPath::new(
+            Vertex::new(vids[0], None, details.clone()),
             pb::path_expand::PathOpt::Arbitrary,
             pb::path_expand::ResultOpt::AllV,
         );
-        sub_path1.append(Vertex::new(2, None, details.clone()));
-        // sub_path2: [3,2]
-        let mut sub_path2 = GraphPath::new(
-            Vertex::new(3, None, details.clone()),
-            pb::path_expand::PathOpt::Arbitrary,
-            pb::path_expand::ResultOpt::AllV,
-        );
-        sub_path2.append(Vertex::new(2, None, details.clone()));
-        // concat path: [1,2,3]
-        let mut concat_path = GraphPath::new(
-            Vertex::new(1, None, details.clone()),
-            pb::path_expand::PathOpt::Arbitrary,
-            pb::path_expand::ResultOpt::AllV,
-        );
-        concat_path.append(Vertex::new(2, None, details.clone()));
-        concat_path.append(Vertex::new(3, None, details.clone()));
+        for i in 1..vids.len() {
+            path.append(Vertex::new(vids[i], None, details.clone()));
+        }
+        path
+    }
 
-        let mut r1 = Record::new(sub_path1, Some(TAG_A.into()));
-        r1.append(sub_path2, Some(TAG_B.into()));
-
-        let source = vec![r1];
-        let project_opr_pb = pb::Project {
+    fn build_project_path_concat(
+        left_endpoint: common_pb::path_concat::Endpoint, right_endpoint: common_pb::path_concat::Endpoint,
+    ) -> pb::Project {
+        let path_concat = common_pb::PathConcat {
+            left: Some(common_pb::path_concat::ConcatPathInfo {
+                path_tag: Some(to_var_pb(Some(TAG_A.into()), None)),
+                endpoint: left_endpoint as i32,
+            }),
+            right: Some(common_pb::path_concat::ConcatPathInfo {
+                path_tag: Some(to_var_pb(Some(TAG_B.into()), None)),
+                endpoint: right_endpoint as i32,
+            }),
+        };
+        pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: Some(common_pb::Expression {
                     operators: vec![common_pb::ExprOpr {
-                        item: Some(common_pb::expr_opr::Item::Concat(common_pb::Concat {
-                            vars: vec![
-                                to_var_pb(Some(TAG_A.into()), None),
-                                to_var_pb(Some(TAG_B.into()), None),
-                            ],
-                        })),
+                        item: Some(common_pb::expr_opr::Item::PathConcat(path_concat)),
                         node_type: None,
                     }],
                 }),
                 alias: Some(TAG_C.into()),
             }],
             is_append: false,
-        };
-        let mut result = project_test(source, project_opr_pb);
+        }
+    }
+
+    fn project_concat_allv_path_test(
+        left_path: GraphPath, right_path: GraphPath, project_opr_pb: pb::Project, concat_path: GraphPath,
+    ) {
+        let mut r1 = Record::new(left_path, Some(TAG_A.into()));
+        r1.append(right_path, Some(TAG_B.into()));
+        let mut result = project_test(vec![r1], project_opr_pb);
         let mut results = vec![];
         while let Some(Ok(res)) = result.next() {
             let path = res
@@ -1213,6 +1280,70 @@ mod tests {
             results.push(path.clone());
         }
         assert_eq!(results, vec![concat_path]);
+    }
+
+    #[test]
+    fn project_concat_allv_path_test_01() {
+        // sub_path1: [1,2]
+        let sub_path1 = build_path(vec![1, 2]);
+        // sub_path2: [3,2]
+        let sub_path2 = build_path(vec![3, 2]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::End,
+            common_pb::path_concat::Endpoint::End,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
+    }
+
+    #[test]
+    fn project_concat_allv_path_test_02() {
+        // sub_path1: [1,2]
+        let sub_path1 = build_path(vec![1, 2]);
+        // sub_path2: [2,3]
+        let sub_path2 = build_path(vec![2, 3]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::End,
+            common_pb::path_concat::Endpoint::Start,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
+    }
+
+    #[test]
+    fn project_concat_allv_path_test_03() {
+        // sub_path1: [2,1]
+        let sub_path1 = build_path(vec![2, 1]);
+        // sub_path2: [3,2]
+        let sub_path2 = build_path(vec![3, 2]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::Start,
+            common_pb::path_concat::Endpoint::End,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
+    }
+
+    #[test]
+    fn project_concat_allv_path_test_04() {
+        // sub_path1: [2,1]
+        let sub_path1 = build_path(vec![2, 1]);
+        // sub_path2: [2,3]
+        let sub_path2 = build_path(vec![2, 3]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::Start,
+            common_pb::path_concat::Endpoint::Start,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
     }
 
     #[test]
@@ -1249,23 +1380,10 @@ mod tests {
         r1.append(sub_path2, Some(TAG_B.into()));
 
         let source = vec![r1];
-        let project_opr_pb = pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(common_pb::Expression {
-                    operators: vec![common_pb::ExprOpr {
-                        item: Some(common_pb::expr_opr::Item::Concat(common_pb::Concat {
-                            vars: vec![
-                                to_var_pb(Some(TAG_A.into()), None),
-                                to_var_pb(Some(TAG_B.into()), None),
-                            ],
-                        })),
-                        node_type: None,
-                    }],
-                }),
-                alias: Some(TAG_C.into()),
-            }],
-            is_append: false,
-        };
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::End,
+            common_pb::path_concat::Endpoint::End,
+        );
         let mut result = project_test(source, project_opr_pb);
         let mut results = vec![];
         while let Some(Ok(res)) = result.next() {
@@ -1278,5 +1396,26 @@ mod tests {
             results.push(path.clone());
         }
         assert_eq!(results, vec![concat_path]);
+    }
+
+    // a fail test case
+    #[test]
+    fn project_concat_allv_path_error_test() {
+        // sub_path1: [1,2]
+        let sub_path1 = build_path(vec![1, 2]);
+        // sub_path2: [2,3]
+        let sub_path2 = build_path(vec![2, 3]);
+        // concat project, if concat sub_path1.start and sub_path2.start, it will fail
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::Start,
+            common_pb::path_concat::Endpoint::Start,
+        );
+
+        let mut r1 = Record::new(sub_path1, Some(TAG_A.into()));
+        r1.append(sub_path2, Some(TAG_B.into()));
+        let mut result = project_test(vec![r1], project_opr_pb);
+        if let Some(res) = result.next() {
+            assert!(res.is_err());
+        }
     }
 }

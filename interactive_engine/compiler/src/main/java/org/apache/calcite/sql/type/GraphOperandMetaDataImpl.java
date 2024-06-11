@@ -18,6 +18,7 @@ package org.apache.calcite.sql.type;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.linq4j.function.Functions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -81,10 +82,12 @@ public class GraphOperandMetaDataImpl extends GraphFamilyOperandTypeChecker
     @Override
     public String getAllowedSignatures(SqlOperator op, String opName) {
         List<RelDataType> paramTypes = paramTypes(null);
-        List<?> signatureTypes = ObjectUtils.isEmpty(paramTypes) ? this.expectedFamilies : paramTypes.stream().map(k -> k.getSqlTypeName()).collect(Collectors.toList());
-        return SqlUtil.getAliasedSignature(
-                op,
-                opName,
-                signatureTypes);
+        List<?> signatureTypes =
+                ObjectUtils.isEmpty(paramTypes)
+                        ? this.expectedFamilies
+                        : paramTypes.stream()
+                                .map(k -> k.getSqlTypeName())
+                                .collect(Collectors.toList());
+        return SqlUtil.getAliasedSignature(op, opName, signatureTypes);
     }
 }

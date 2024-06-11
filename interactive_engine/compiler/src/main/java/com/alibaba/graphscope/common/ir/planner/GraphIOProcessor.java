@@ -46,6 +46,7 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -650,9 +651,17 @@ public class GraphIOProcessor {
                                         builder.call(
                                                 GraphStdOperatorTable.PATH_CONCAT,
                                                 builder.variable(probeAlias),
-                                                builder.getRexBuilder().makeFlag(getConcatDirection(probeJointVertex, joinLeft)),
+                                                builder.getRexBuilder()
+                                                        .makeFlag(
+                                                                getConcatDirection(
+                                                                        probeJointVertex,
+                                                                        joinLeft)),
                                                 builder.variable(buildAlias),
-                                                builder.getRexBuilder().makeFlag(getConcatDirection(buildJointVertex, joinRight))));
+                                                builder.getRexBuilder()
+                                                        .makeFlag(
+                                                                getConcatDirection(
+                                                                        buildJointVertex,
+                                                                        joinRight))));
                                 concatAliases.add(probeValue.getParentAlias());
                             }
                         }
@@ -666,8 +675,7 @@ public class GraphIOProcessor {
             return builder.build();
         }
 
-        private GraphOpt.GetV getConcatDirection(
-                PatternVertex concatVertex, RelNode splitPattern) {
+        private GraphOpt.GetV getConcatDirection(PatternVertex concatVertex, RelNode splitPattern) {
             ConcatDirectionVisitor visitor = new ConcatDirectionVisitor(concatVertex);
             visitor.go(splitPattern);
             return visitor.direction;

@@ -27,6 +27,8 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.validate.implicit.TypeCoercion;
 import org.apache.calcite.util.Litmus;
 
@@ -51,7 +53,9 @@ public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
     public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
         if (expectedFamilies.size() != callBinding.getOperandCount()) {
             Litmus.THROW.fail(
-                    "wrong operand count {} for {}", callBinding.getOperandCount(), expectedFamilies);
+                    "wrong operand count {} for {}",
+                    callBinding.getOperandCount(),
+                    expectedFamilies);
         }
         if (!(callBinding instanceof RexCallBinding)) {
             throw new IllegalArgumentException(
@@ -127,6 +131,11 @@ public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
                         + " type");
     }
 
+    @Override
+    public String getAllowedSignatures(SqlOperator op, String opName) {
+        return SqlUtil.getAliasedSignature(op, opName, this.expectedFamilies);
+    }
+
     protected boolean checkSingleOperandType(
             SqlCallBinding callBinding, RexNode node, int iFormalOperand, boolean throwOnFailure) {
         RelDataTypeFamily expectedFamily = expectedFamilies.get(iFormalOperand);
@@ -154,7 +163,8 @@ public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
                 if (callBinding.isTypeCoercionEnabled()) {
                     return true;
                 } else if (throwOnFailure) {
-                    throw new IllegalArgumentException("node " + node + " should not be of null value");
+                    throw new IllegalArgumentException(
+                            "node " + node + " should not be of null value");
                 } else {
                     return false;
                 }
@@ -167,14 +177,16 @@ public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
                 return true;
             }
 
-            if (!getAllowedTypeNames(callBinding.getTypeFactory(), sqlTypeFamily, iFormalOperand).contains(typeName)) {
+            if (!getAllowedTypeNames(callBinding.getTypeFactory(), sqlTypeFamily, iFormalOperand)
+                    .contains(typeName)) {
                 if (throwOnFailure) {
                     throw callBinding.newValidationSignatureError();
                 }
                 return false;
             }
         } else {
-            if (type.getFamily() == SqlTypeFamily.ANY || expectedFamily == SqlTypeFamily.ANY) return true;
+            if (type.getFamily() == SqlTypeFamily.ANY || expectedFamily == SqlTypeFamily.ANY)
+                return true;
             if (type.getFamily() != expectedFamily) {
                 if (throwOnFailure) {
                     throw callBinding.newValidationSignatureError();

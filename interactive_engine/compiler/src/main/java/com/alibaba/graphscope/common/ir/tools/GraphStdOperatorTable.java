@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.rex.operator.SqlArrayValueConstructor;
 import com.alibaba.graphscope.common.ir.rex.operator.SqlMapValueConstructor;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFamily;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.ExtSqlPosixRegexOperator;
 import org.apache.calcite.sql.fun.SqlMonotonicBinaryOperator;
@@ -301,10 +302,23 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
     public static final SqlOperator PATH_CONCAT =
             new SqlFunction(
                     "PATH_CONCAT",
-                    SqlKind.OTHER, ReturnTypes.ARG0, null,
+                    SqlKind.OTHER,
+                    ReturnTypes.ARG0,
+                    null,
                     GraphOperandTypes.operandMetadata(
-                    ImmutableList.of(GraphTypeFamily.PATH, SqlTypeFamily.IGNORE, GraphTypeFamily.PATH, SqlTypeFamily.IGNORE),
-                    typeFactory -> ImmutableList.of(),
-                    i -> ImmutableList.of("LeftPath", "LeftDirection", "RightPath", "RightDirection").get(i),
-                    i -> false), SqlFunctionCategory.SYSTEM);
+                            ImmutableList.of(
+                                    GraphTypeFamily.PATH,
+                                    SqlTypeFamily.IGNORE,
+                                    GraphTypeFamily.PATH,
+                                    SqlTypeFamily.IGNORE),
+                            typeFactory -> ImmutableList.of(),
+                            i ->
+                                    ImmutableList.of(
+                                                    "LeftPath",
+                                                    "LeftDirection",
+                                                    "RightPath",
+                                                    "RightDirection")
+                                            .get(i),
+                            i -> false),
+                    SqlFunctionCategory.SYSTEM);
 }

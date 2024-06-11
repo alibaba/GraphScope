@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -58,8 +59,9 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitArrayValueConstructor(call);
         } else if (operator.getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR) {
             return visitMapValueConstructor(call);
-        } else if (operator.getKind() == SqlKind.ARRAY_CONCAT) {
-            return visitArrayConcat(call);
+        } else if (operator.getKind() == SqlKind.OTHER
+                && operator.getName().equals("PATH_CONCAT")) {
+            return visitPathConcat(call);
         } else if (operator.getKind() == SqlKind.EXTRACT) {
             return visitExtract(call);
         } else if (operator.getKind() == SqlKind.OTHER
@@ -69,6 +71,48 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitUnaryOperator(call);
         } else {
             return visitBinaryOperator(call);
+        }
+    }
+
+    private OuterExpression.Expression visitPathConcat(RexCall call) {
+        List<RexNode> operands = call.getOperands();
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setPathConcat(
+                                        OuterExpression.PathConcat.newBuilder()
+                                                .setLeft(convertPathInfo(operands))
+                                                .setRight(
+                                                        convertPathInfo(
+                                                                operands.subList(
+                                                                        2, operands.size())))))
+                .build();
+    }
+
+    private OuterExpression.PathConcat.ConcatPathInfo convertPathInfo(List<RexNode> operands) {
+        Preconditions.checkArgument(
+                operands.size() >= 2
+                        && operands.get(0) instanceof RexGraphVariable
+                        && operands.get(1) instanceof RexLiteral);
+        OuterExpression.Variable variable = operands.get(0).accept(this).getOperators(0).getVar();
+        GraphOpt.GetV direction = ((RexLiteral) operands.get(1)).getValueAs(GraphOpt.GetV.class);
+        return OuterExpression.PathConcat.ConcatPathInfo.newBuilder()
+                .setPathTag(variable)
+                .setEndpoint(convertPathDirection(direction))
+                .build();
+    }
+
+    private OuterExpression.PathConcat.Endpoint convertPathDirection(GraphOpt.GetV direction) {
+        switch (direction) {
+            case START:
+                return OuterExpression.PathConcat.Endpoint.START;
+            case END:
+                return OuterExpression.PathConcat.Endpoint.END;
+            default:
+                throw new IllegalArgumentException(
+                        "invalid path concat direction ["
+                                + direction.name()
+                                + "], cannot convert to any physical expression");
         }
     }
 
@@ -120,25 +164,6 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .addOperators(
                         OuterExpression.ExprOpr.newBuilder()
                                 .setCase(caseBuilder)
-                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
-                .build();
-    }
-
-    private OuterExpression.Expression visitArrayConcat(RexCall call) {
-        OuterExpression.Concat.Builder concatBuilder = OuterExpression.Concat.newBuilder();
-        call.getOperands()
-                .forEach(
-                        operand -> {
-                            Preconditions.checkArgument(
-                                    operand instanceof RexGraphVariable,
-                                    "parameters of 'CONCAT' should be"
-                                            + " 'variable' in ir core structure");
-                            concatBuilder.addVars(operand.accept(this).getOperators(0).getVar());
-                        });
-        return OuterExpression.Expression.newBuilder()
-                .addOperators(
-                        OuterExpression.ExprOpr.newBuilder()
-                                .setConcat(concatBuilder)
                                 .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
                 .build();
     }
