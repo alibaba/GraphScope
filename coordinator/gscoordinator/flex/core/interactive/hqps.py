@@ -24,13 +24,12 @@ import time
 from typing import List
 from typing import Union
 
-import interactive.openapi
 import requests
-from interactive.openapi import CreateGraphRequest
-from interactive.openapi import CreateProcedureRequest
-from interactive.openapi import SchemaMapping
-from interactive.openapi import StartServiceRequest
-from interactive.openapi import UpdateProcedureRequest
+from interactive.models.create_graph_request import CreateGraphRequest
+from interactive.models.create_procedure_request import CreateProcedureRequest
+from interactive.models.schema_mapping import SchemaMapping
+from interactive.models.start_service_request import StartServiceRequest
+from interactive.models.update_procedure_request import UpdateProcedureRequest
 
 from gscoordinator.flex.core.config import CLUSTER_TYPE
 from gscoordinator.flex.core.config import HQPS_ADMIN_SERVICE_PORT
