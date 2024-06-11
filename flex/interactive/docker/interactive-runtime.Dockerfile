@@ -13,7 +13,7 @@ SHELL ["/bin/bash", "-c"]
 RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget libcurl4-openssl-dev && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
-    sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
+    sudo apt-get update && sudo apt-get install -y libarrow-dev=15.0.2-1
 
 RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   sh -s -- -y --profile minimal --default-toolchain=1.70.0 && \
@@ -32,7 +32,7 @@ cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_
 
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
-    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF && make -j && make install && \
+    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF && make -j && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
     cp target/libs/*.jar /opt/flex/lib/ && \
@@ -41,7 +41,7 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
 
 # build coordinator
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
-        cd ${HOME}/GraphScope/flex/coordinator && \
+        cd ${HOME}/GraphScope/coordinator && \
         python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
     fi
@@ -134,6 +134,7 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 RUN chmod +x /opt/flex/bin/*
 
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      pip3 install --upgrade pip && \
       pip3 install /opt/flex/wheel/*.whl; \
     fi
 

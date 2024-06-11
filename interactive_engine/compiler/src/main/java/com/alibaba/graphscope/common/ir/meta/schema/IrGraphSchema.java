@@ -16,13 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
-import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
-import com.alibaba.graphscope.common.ir.meta.reader.SchemaInputStream;
 import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -35,9 +34,8 @@ public class IrGraphSchema implements GraphSchema {
     private final String schemeJson;
     private final boolean isColumnId;
 
-    public IrGraphSchema(MetaDataReader dataReader) throws Exception {
+    public IrGraphSchema(SchemaInputStream schemaInputStream) throws IOException {
         this.isColumnId = false;
-        SchemaInputStream schemaInputStream = dataReader.getGraphSchema();
         String content =
                 new String(
                         schemaInputStream.getInputStream().readAllBytes(), StandardCharsets.UTF_8);

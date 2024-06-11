@@ -1,5 +1,3 @@
-find_package(Hiactor)
-
 if(Hiactor_FOUND)
         add_executable(rt_server rt_server.cc)
         target_link_libraries(rt_server flex_utils flex_rt_mutable_graph flex_graph_db flex_server)

@@ -115,18 +115,33 @@ else ()
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 endif ()
 
+# find yaml-cpp-----------------------------------------------------------------
+find_package(yaml-cpp REQUIRED)
+include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
+if (NOT yaml-cpp_FOUND)
+    message(FATAL_ERROR "yaml-cpp not found, please install the yaml-cpp library")
+endif ()
+
 #find boost----------------------------------------------------------------------
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
              context program_options regex thread date_time)
 add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 
+#find hiactor----------------------------------------------------------------------
+find_package(Hiactor)
+if (NOT Hiactor_FOUND)
+    message(STATUS "hiactor not found, please install the hiactor library")
+else ()
+    include_directories(SYSTEM ${Hiactor_INCLUDE_DIRS})
+endif()
+
 #find arrow----------------------------------------------------------------------
-include("cmake/FindArrow.cmake")
-if (NOT ARROW_FOUND)
+find_package(Arrow REQUIRED)
+if (NOT Arrow_FOUND)
     message(FATAL_ERROR "arrow not found, please install the arrow library")
 else ()
-    include_directories(SYSTEM ${ARROW_INCLUDE_DIRS})
+    include_directories(SYSTEM ${ARROW_INCLUDE_DIR})
     if (TARGET arrow_shared)
         set(ARROW_SHARED_LIB arrow_shared)
     endif()
@@ -250,6 +265,8 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
+#install header-only nlohmann-json.hpp to include/
+install(FILES ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp DESTINATION include/nlohmann)
 
 if(USE_PTHASH)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash

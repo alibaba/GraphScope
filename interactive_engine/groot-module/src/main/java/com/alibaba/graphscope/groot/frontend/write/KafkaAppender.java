@@ -231,7 +231,8 @@ public class KafkaAppender {
         types.add(OperationType.DELETE_EDGE);
         types.add(OperationType.CLEAR_VERTEX_PROPERTIES);
         types.add(OperationType.CLEAR_EDGE_PROPERTIES);
-
+        types.add(OperationType.ADD_VERTEX_TYPE_PROPERTIES);
+        types.add(OperationType.ADD_EDGE_TYPE_PROPERTIES);
         logger.info("replay DML records of from offset [{}], ts [{}]", offset, timestamp);
 
         long batchSnapshotId = 0;

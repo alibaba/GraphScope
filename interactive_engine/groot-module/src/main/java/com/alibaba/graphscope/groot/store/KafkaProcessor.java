@@ -278,6 +278,8 @@ public class KafkaProcessor {
         types.add(OperationType.REMOVE_EDGE_KIND);
         types.add(OperationType.PREPARE_DATA_LOAD);
         types.add(OperationType.COMMIT_DATA_LOAD);
+        types.add(OperationType.ADD_VERTEX_TYPE_PROPERTIES);
+        types.add(OperationType.ADD_EDGE_TYPE_PROPERTIES);
         types.add(OperationType.MARKER); // For advance ID
         return types;
     }

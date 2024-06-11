@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.planner;
 
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.type.DataKey;
@@ -39,7 +40,6 @@ import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
@@ -48,7 +48,6 @@ import com.google.common.collect.*;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -214,6 +213,10 @@ public class GraphIOProcessor {
                                         parent instanceof GraphLogicalGetV,
                                         "there should be a getV operator after path expand since"
                                                 + " edge in patten should have two endpoints");
+                                Preconditions.checkArgument(
+                                        ((GraphLogicalPathExpand) node).getUntilCondition() == null,
+                                        "cannot apply optimization if path expand has until"
+                                                + " conditions");
                                 PatternVertex vertex = visitAndAddVertex((GraphLogicalGetV) parent);
                                 visitAndAddPxdEdge(
                                         (GraphLogicalPathExpand) node, lastVisited, vertex);
@@ -267,15 +270,20 @@ public class GraphIOProcessor {
                                 vertexOrEdgeDetails.put(existVertex, new DataValue(alias, filters));
                             } else if (filters != null) {
                                 DataValue value = vertexOrEdgeDetails.get(existVertex);
-                                if (value.getFilter() == null
-                                        || !RelOptUtil.conjunctions(value.getFilter())
-                                                .containsAll(RelOptUtil.conjunctions(filters))) {
-                                    throw new IllegalArgumentException(
-                                            "filters "
-                                                    + filters
-                                                    + " not exist in the previous vertex filters "
-                                                    + value.getFilter());
-                                }
+                                // reset condition
+                                RexNode newCondition =
+                                        (value.getFilter() == null)
+                                                ? filters
+                                                : RexUtil.composeConjunction(
+                                                        builder.getRexBuilder(),
+                                                        ImmutableList.of(
+                                                                filters, value.getFilter()));
+                                vertexOrEdgeDetails.put(
+                                        existVertex,
+                                        new DataValue(
+                                                value.getAlias(),
+                                                newCondition,
+                                                value.getParentAlias()));
                             }
                             return existVertex;
                         }
@@ -756,11 +764,10 @@ public class GraphIOProcessor {
             if (srcInTargetOrderId == null) {
                 srcInTargetOrderId = -1;
             }
+            PatternVertex src =
+                    glogueEdge.getSrcPattern().getVertexByOrder(edge.getSrcVertexOrder());
             DataValue srcValue =
-                    getVertexValue(
-                            new VertexDataKey(srcInTargetOrderId),
-                            edgeDetails,
-                            glogueEdge.getSrcPattern().getVertexByOrder(edge.getSrcVertexOrder()));
+                    getVertexValue(new VertexDataKey(srcInTargetOrderId), edgeDetails, src);
             PatternVertex target =
                     glogueEdge.getDstPattern().getVertexByOrder(extendStep.getTargetVertexOrder());
             DataValue targetValue =
@@ -793,7 +800,12 @@ public class GraphIOProcessor {
                 GetVConfig innerGetVConfig =
                         new GetVConfig(
                                 getVConfig.getOpt(),
-                                createLabels(edge.getElementDetails().getPxdInnerGetVTypes(), true),
+                                createLabels(
+                                        createInnerGetVTypes(
+                                                src.getVertexTypeIds(),
+                                                target.getVertexTypeIds(),
+                                                edge.getElementDetails()),
+                                        true),
                                 getVConfig.getAlias());
                 pxdBuilder
                         .getV(innerGetVConfig)
@@ -805,7 +817,8 @@ public class GraphIOProcessor {
                                 edge.getElementDetails().getRange().getOffset(),
                                 edge.getElementDetails().getRange().getFetch());
                 GraphLogicalPathExpand pxd =
-                        (GraphLogicalPathExpand) builder.pathExpand(pxdBuilder.build()).build();
+                        (GraphLogicalPathExpand)
+                                builder.pathExpand(pxdBuilder.buildConfig()).build();
                 GraphLogicalExpand expand = (GraphLogicalExpand) pxd.getExpand();
                 GraphSchemaType edgeType =
                         (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
@@ -819,9 +832,6 @@ public class GraphIOProcessor {
                                         getVConfig.getLabels(),
                                         getVConfig.getAlias(),
                                         getVConfig.getStartAlias()));
-                if (targetValue.getFilter() != null) {
-                    builder.filter(targetValue.getFilter());
-                }
             } else {
                 GraphLogicalExpand expand =
                         createExpandWithOptional(
@@ -835,11 +845,32 @@ public class GraphIOProcessor {
                     builder.filter(edgeValue.getFilter());
                 }
                 builder.getV(getVConfig);
-                if (targetValue.getFilter() != null) {
-                    builder.filter(targetValue.getFilter());
-                }
+            }
+            if (targetValue.getFilter() != null) {
+                builder.filter(targetValue.getFilter());
             }
             return builder.build();
+        }
+
+        // Handle a special case for path expand: re-infer the type of inner getV in path expand.
+        // Before optimization, the type of path expand is inferred based on the user's query order,
+        // resulting in the type of inner endV being bound to this order.
+        // However, if the optimizer reverses the order of the path expand, the type of inner endV
+        // also needs to be reversed accordingly.
+        private List<Integer> createInnerGetVTypes(
+                List<Integer> startVTypes, List<Integer> endVTypes, ElementDetails details) {
+            List<Integer> originalInnerVTypes = details.getPxdInnerGetVTypes();
+            if (!originalInnerVTypes.isEmpty()) {
+                if (!endVTypes.isEmpty() && originalInnerVTypes.containsAll(endVTypes)) {
+                    return originalInnerVTypes;
+                } else if (!startVTypes.isEmpty() && originalInnerVTypes.containsAll(startVTypes)) {
+                    List<Integer> reverseTypes = Lists.newArrayList(originalInnerVTypes);
+                    reverseTypes.removeAll(startVTypes);
+                    reverseTypes.addAll(endVTypes);
+                    return reverseTypes.stream().distinct().collect(Collectors.toList());
+                }
+            }
+            return endVTypes;
         }
 
         private GraphLogicalPathExpand createPathExpandWithOptional(
@@ -854,6 +885,7 @@ public class GraphIOProcessor {
                         pxd.getFetch(),
                         pxd.getResultOpt(),
                         pxd.getPathOpt(),
+                        pxd.getUntilCondition(),
                         pxd.getAliasName(),
                         pxd.getStartAlias(),
                         optional);
@@ -868,6 +900,7 @@ public class GraphIOProcessor {
                         pxd.getFetch(),
                         pxd.getResultOpt(),
                         pxd.getPathOpt(),
+                        pxd.getUntilCondition(),
                         pxd.getAliasName(),
                         pxd.getStartAlias(),
                         optional);

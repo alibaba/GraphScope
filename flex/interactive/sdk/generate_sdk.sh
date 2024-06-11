@@ -19,7 +19,7 @@
 PACKAGE_NAME="com.alibaba.graphscope.interactive.openapi"
 PYTHON_PACKAGE_NAME="openapi"
 GROUP_ID="com.alibaba.graphscope"
-ARTIFACT_ID="interactive-java-sdk"
+ARTIFACT_ID="interactive-sdk"
 ARTIFACT_URL="https://github.com/alibaba/GraphScope/tree/main/flex/interactive"
 VERSION="0.0.3"
 EMAIL="graphscope@alibaba-inc.com"

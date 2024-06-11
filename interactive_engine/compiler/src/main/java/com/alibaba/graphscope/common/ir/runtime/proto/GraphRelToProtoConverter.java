@@ -260,6 +260,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         pathExpandBuilder.setResultOpt(Utils.protoPathResultOpt(pxd.getResultOpt()));
         GraphAlgebra.Range range = buildRange(pxd.getOffset(), pxd.getFetch());
         pathExpandBuilder.setHopRange(range);
+        if (pxd.getUntilCondition() != null) {
+            OuterExpression.Expression untilCondition =
+                    pxd.getUntilCondition()
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
+            pathExpandBuilder.setCondition(untilCondition);
+        }
         if (pxd.getAliasId() != AliasInference.DEFAULT_ID) {
             pathExpandBuilder.setAlias(Utils.asAliasId(pxd.getAliasId()));
         }

@@ -701,12 +701,14 @@ static Status parse_vertex_schema(YAML::Node node, Schema& schema) {
         property_types[primary_key_inds[i]] != PropertyType::kString &&
         property_types[primary_key_inds[i]] != PropertyType::kUInt64 &&
         property_types[primary_key_inds[i]] != PropertyType::kInt32 &&
-        property_types[primary_key_inds[i]] != PropertyType::kUInt32) {
+        property_types[primary_key_inds[i]] != PropertyType::kUInt32 &&
+        !property_types[primary_key_inds[i]].IsVarchar()) {
       LOG(ERROR) << "Primary key " << primary_key_name
-                 << " should be int64 or string";
-      return Status(
-          StatusCode::InvalidSchema,
-          "Primary key " + primary_key_name + " should be int64 or string");
+                 << " should be int64/int32/uint64/uint32 or string/varchar";
+      return Status(StatusCode::InvalidSchema,
+                    "Primary key " + primary_key_name +
+                        " should be int64/int32/uint64/"
+                        "uint32 or string/varchar");
     }
     primary_keys.emplace_back(property_types[primary_key_inds[i]],
                               property_names[primary_key_inds[i]],

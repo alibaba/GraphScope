@@ -1,7 +1,5 @@
 
 # find yaml-cpp
-find_package(yaml-cpp REQUIRED)
-include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
 
 file(GLOB_RECURSE RT_MUTABLE_GRAPH_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
 if (NOT BUILD_ODPS_FRAGMENT_LOADER)
