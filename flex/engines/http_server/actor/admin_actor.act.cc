@@ -29,6 +29,53 @@
 
 namespace server {
 
+gs::GraphStatistics get_graph_statistics(const gs::GraphDBSession& sess) {
+  gs::GraphStatistics stat;
+  const auto& graph = sess.graph();
+  const auto& schema = sess.graph().schema();
+  auto vertex_label_num = graph.schema().vertex_label_num();
+  auto edge_label_num = graph.schema().edge_label_num();
+  for (auto i = 0; i < vertex_label_num; ++i) {
+    stat.total_vertex_count += graph.vertex_num(i);
+    stat.vertex_type_statistics.emplace_back(
+        std::tuple{i, schema.get_vertex_label_name(i), graph.vertex_num(i)});
+  }
+  for (auto edge_label_id = 0; edge_label_id < edge_label_num;
+       ++edge_label_id) {
+    auto edge_label_name = schema.get_edge_label_name(edge_label_id);
+    std::vector<std::tuple<std::string, std::string, int32_t>>
+        vertex_type_pair_statistics;
+    for (auto src_label_id = 0; src_label_id < vertex_label_num;
+         ++src_label_id) {
+      auto src_label_name = schema.get_vertex_label_name(src_label_id);
+      for (auto dst_label_id = 0; dst_label_id < vertex_label_num;
+           ++dst_label_id) {
+        auto dst_label_name = schema.get_vertex_label_name(dst_label_id);
+        if (schema.exist(src_label_id, dst_label_id, edge_label_id)) {
+          auto oe_csr =
+              graph.get_oe_csr(src_label_id, dst_label_id, edge_label_id);
+          auto ie_csr =
+              graph.get_ie_csr(dst_label_id, src_label_id, edge_label_id);
+          size_t cur_edge_cnt = 0;
+          if (oe_csr) {
+            cur_edge_cnt += oe_csr->size();
+          } else if (ie_csr) {
+            cur_edge_cnt += ie_csr->size();
+          }
+          stat.total_edge_count += cur_edge_cnt;
+          vertex_type_pair_statistics.emplace_back(
+              std::tuple{src_label_name, dst_label_name, cur_edge_cnt});
+        }
+      }
+    }
+    if (!vertex_type_pair_statistics.empty()) {
+      stat.edge_type_statistics.emplace_back(std::tuple{
+          edge_label_id, edge_label_name, vertex_type_pair_statistics});
+    }
+  }
+  return stat;
+}
+
 std::string merge_graph_and_plugin_meta(
     std::shared_ptr<gs::IGraphMetaStore> metadata_store,
     const std::vector<gs::GraphMeta>& graph_metas) {
@@ -1213,6 +1260,32 @@ seastar::future<admin_query_result> admin_actor::cancel_job(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(cancel_meta_res.status()));
   }
+}
+
+// Get the statistics of the current running graph, if no graph is running,
+// return empty.
+seastar::future<admin_query_result> admin_actor::run_get_graph_statistic(
+    query_param&& query_param) {
+  std::string queried_graph = query_param.content.c_str();
+  auto cur_running_graph_res = metadata_store_->GetRunningGraph();
+  if (!cur_running_graph_res.ok()) {
+    // no graph is running
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(gs::Status(
+            gs::StatusCode::NotFound, "No graph is running currently")));
+  }
+  auto& graph_id = cur_running_graph_res.value();
+  if (graph_id != queried_graph) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::Status(gs::StatusCode::NotFound,
+                       "The queried graph is not running: " + graph_id +
+                           ", current running graph is: " + queried_graph)));
+  }
+  auto statistics = get_graph_statistics(
+      gs::GraphDB::get().GetSession(hiactor::local_shard_id()));
+  return seastar::make_ready_future<admin_query_result>(
+      gs::Result<seastar::sstring>(statistics.ToJson()));
 }
 
 }  // namespace server

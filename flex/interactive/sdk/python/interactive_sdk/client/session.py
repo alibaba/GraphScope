@@ -57,6 +57,7 @@ from interactive_sdk.openapi.models.get_graph_response import GetGraphResponse
 from interactive_sdk.openapi.models.get_graph_schema_response import (
     GetGraphSchemaResponse,
 )
+from interactive_sdk.openapi.models.get_graph_statistics_response import GetGraphStatisticsResponse
 from interactive_sdk.openapi.models.get_procedure_response import GetProcedureResponse
 from interactive_sdk.openapi.models.job_response import JobResponse
 from interactive_sdk.openapi.models.job_status import JobStatus
@@ -176,6 +177,14 @@ class GraphInterface(metaclass=ABCMeta):
             StrictStr, Field(description="The id of graph to get")
         ],
     ) -> Result[GetGraphResponse]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_graph_statistics(
+        graph_id: Annotated[
+            StrictStr, Field(description="The id of graph to get")
+        ],
+    ) -> Result[GetGraphStatisticsResponse]:
         raise NotImplementedError
 
     @abstractmethod
@@ -434,6 +443,16 @@ class DefaultSession(Session):
     ) -> Result[GetGraphResponse]:
         try:
             response = self._graph_api.get_graph_with_http_info(graph_id)
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+    
+    def get_graph_statistics(
+        self,
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
+    ) -> Result[GetGraphStatisticsResponse]:
+        try:
+            response = self._graph_api.get_graph_statistic_with_http_info(graph_id)
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)

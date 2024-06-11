@@ -140,9 +140,9 @@ impl RecordSinkEncoder {
                     let val_pb: common_pb::Value = val.clone().into();
                     key_values.push(result_pb::key_values::KeyValue {
                         key: Some(key_pb),
-                        value: Some(result_pb::Element {
+                        value: Some(result_pb::key_values::key_value::Value::Element(result_pb::Element {
                             inner: Some(result_pb::element::Inner::Object(val_pb)),
-                        }),
+                        })),
                     })
                 }
                 return Some(result_pb::KeyValues { key_values });
@@ -161,8 +161,24 @@ impl RecordSinkEncoder {
                 .unwrap();
             if let Some(key_obj) = pair.get_left().as_object() {
                 let key_pb: common_pb::Value = key_obj.clone().into();
-                let val_pb = self.element_to_pb(pair.get_right());
-                key_values.push(result_pb::key_values::KeyValue { key: Some(key_pb), value: Some(val_pb) })
+                let val = pair.get_right();
+                if val.get_type() == EntryType::Collection {
+                    let inner_collection = val
+                        .as_any_ref()
+                        .downcast_ref::<CollectionEntry>()
+                        .unwrap();
+                    let inner_collection_pb = self.collection_map_to_pb(inner_collection.clone())?;
+                    key_values.push(result_pb::key_values::KeyValue {
+                        key: Some(key_pb),
+                        value: Some(result_pb::key_values::key_value::Value::Nested(inner_collection_pb)),
+                    })
+                } else {
+                    let val_pb = self.element_to_pb(pair.get_right());
+                    key_values.push(result_pb::key_values::KeyValue {
+                        key: Some(key_pb),
+                        value: Some(result_pb::key_values::key_value::Value::Element(val_pb)),
+                    })
+                }
             } else {
                 Err(FnExecError::unsupported_error(&format!(
                     "only support map result with object key, while it is {:?}",
