@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.type.*;
 import org.apache.commons.lang3.ObjectUtils;
@@ -191,7 +190,7 @@ public class GraphSchemaType extends RelRecordType {
 
     @Override
     public RelDataTypeFamily getFamily() {
-        return scanOpt;
+        return scanOpt == GraphOpt.Source.VERTEX ? GraphTypeFamily.VERTEX : GraphTypeFamily.EDGE;
     }
 
     public List<GraphSchemaType> getSchemaTypeAsList() {

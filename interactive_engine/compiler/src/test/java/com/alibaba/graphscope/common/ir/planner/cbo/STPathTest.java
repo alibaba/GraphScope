@@ -89,7 +89,26 @@ public class STPathTest {
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
-        System.out.println(after.explain());
+        Assert.assertEquals("GraphLogicalProject(c=[c], isAppend=[false])\n" +
+                "  GraphLogicalProject(c=[PATH_CONCAT(c$p_0, FLAG(END), c$p_1, FLAG(END))], isAppend=[true])\n" +
+                "    LogicalJoin(condition=[=(PATTERN_VERTEX$1807732742, PATTERN_VERTEX$1807732742)], joinType=[inner])\n" +
+                "      GraphLogicalProject(c$p_0=[PATH_CONCAT(c$p_0$p_0, FLAG(END), c$p_0$p_1, FLAG(START))], isAppend=[true])\n" +
+                "        LogicalJoin(condition=[=(PATTERN_VERTEX$1526257503, PATTERN_VERTEX$1526257503)], joinType=[inner])\n" +
+                "          GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[PATTERN_VERTEX$1526257503], opt=[END])\n" +
+                "            GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}], alias=[_], fusedFilter=[[=(_.creationDate, 2012)]], opt=[OUT])\n" +
+                "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[_], opt=[END])\n" +
+                "], offset=[4], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E], alias=[c$p_0$p_0], start_alias=[a])\n" +
+                "              GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[a], opt=[VERTEX], uniqueKeyFilters=[=(_.id, 1)])\n" +
+                "          GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[PATTERN_VERTEX$1807732742], opt=[END])\n" +
+                "            GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}], alias=[_], fusedFilter=[[=(_.creationDate, 2012)]], opt=[OUT])\n" +
+                "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[_], opt=[END])\n" +
+                "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E], alias=[c$p_0$p_1], start_alias=[PATTERN_VERTEX$1526257503])\n" +
+                "              GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[PATTERN_VERTEX$1526257503], opt=[VERTEX])\n" +
+                "      GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[PATTERN_VERTEX$1807732742], opt=[END])\n" +
+                "        GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}], alias=[_], fusedFilter=[[=(_.creationDate, 2012)]], opt=[IN])\n" +
+                "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[_], opt=[START])\n" +
+                "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E], alias=[c$p_1], start_alias=[b])\n" +
+                "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[b], opt=[VERTEX])", after.explain().trim());
     }
 
     @Test

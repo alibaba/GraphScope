@@ -35,18 +35,17 @@ import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
-import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -60,7 +59,6 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.rex.RexVariable;
-import org.apache.calcite.sql.fun.SqlLibraryOperators;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -650,17 +648,11 @@ public class GraphIOProcessor {
                                 String buildAlias = buildValue.getAlias();
                                 concatExprs.add(
                                         builder.call(
-                                                SqlLibraryOperators.ARRAY_CONCAT,
-                                                builder.variable(
-                                                        probeAlias,
-                                                        getConcatDirection(
-                                                                        probeJointVertex, joinLeft)
-                                                                .name()),
-                                                builder.variable(
-                                                        buildAlias,
-                                                        getConcatDirection(
-                                                                        buildJointVertex, joinRight)
-                                                                .name())));
+                                                GraphStdOperatorTable.PATH_CONCAT,
+                                                builder.variable(probeAlias),
+                                                builder.getRexBuilder().makeFlag(getConcatDirection(probeJointVertex, joinLeft)),
+                                                builder.variable(buildAlias),
+                                                builder.getRexBuilder().makeFlag(getConcatDirection(buildJointVertex, joinRight))));
                                 concatAliases.add(probeValue.getParentAlias());
                             }
                         }
@@ -674,7 +666,7 @@ public class GraphIOProcessor {
             return builder.build();
         }
 
-        private GraphProperty.Opt getConcatDirection(
+        private GraphOpt.GetV getConcatDirection(
                 PatternVertex concatVertex, RelNode splitPattern) {
             ConcatDirectionVisitor visitor = new ConcatDirectionVisitor(concatVertex);
             visitor.go(splitPattern);
@@ -1155,7 +1147,7 @@ public class GraphIOProcessor {
 
         // given a concat vertex, help to determine its direction in the split path expand
         private class ConcatDirectionVisitor extends RelVisitor {
-            private GraphProperty.Opt direction;
+            private GraphOpt.GetV direction;
             private final PatternVertex concatVertex;
 
             public ConcatDirectionVisitor(PatternVertex concatVertex) {
@@ -1175,7 +1167,7 @@ public class GraphIOProcessor {
                                     .getDstPattern()
                                     .getVertexByOrder(extendStep.getTargetVertexOrder());
                     if (dstVertex.equals(concatVertex)) {
-                        direction = GraphProperty.Opt.END_V;
+                        direction = GraphOpt.GetV.END;
                         return;
                     }
                     for (ExtendEdge edge : extendStep.getExtendEdges()) {
@@ -1184,7 +1176,7 @@ public class GraphIOProcessor {
                                         .getSrcPattern()
                                         .getVertexByOrder(edge.getSrcVertexOrder());
                         if (srcVertex.equals(concatVertex)) {
-                            direction = GraphProperty.Opt.START_V;
+                            direction = GraphOpt.GetV.START;
                             return;
                         }
                     }
@@ -1192,7 +1184,7 @@ public class GraphIOProcessor {
                     PatternVertex vertex =
                             ((GraphPattern) node).getPattern().getVertexSet().iterator().next();
                     if (vertex.equals(concatVertex)) {
-                        direction = GraphProperty.Opt.START_V;
+                        direction = GraphOpt.GetV.START;
                         return;
                     }
                 }
