@@ -7,6 +7,8 @@ on:
     paths:
       - '**'
       - '!flex/**'
+      - '!coordinator/gscoordinator/flex/**'
+      - '!python/graphscope/gsctl/**'
       - '!.github/workflows/flex-interactive.yml'
 
 concurrency:
