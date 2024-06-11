@@ -122,14 +122,18 @@ public class AppBaseParser {
         }
         // The type params are: I, V, E, M, C, we need to return uint64_t for vid.
         String typeParamNames[] = new String[types.length];
-        for (int i = 0; i < types.length; ++i) {
-            if (i == 1) {
-                typeParamNames[1] = "java.lang.Long";
-            }
-            else {
-                typeParamNames[i] = writableToJava(types[i].getTypeName());
-            }
-        }
+        typeParamNames[0] = writableToJava(types[0].getTypeName());
+        typeParamNames[1] = "java.lang.Long";
+        typeParamNames[2] = writableToJava(types[1].getTypeName());
+        typeParamNames[3] = writableToJava(types[2].getTypeName());
+//        for (int i = 0; i < types.length; ++i) {
+//            if (i == 1) {
+//                typeParamNames[1] = "java.lang.Long";
+//            }
+//            else {
+//                typeParamNames[i] = writableToJava(types[i].getTypeName());
+//            }
+//        }
         logger.info("TypeParams: " + String.join(",", typeParamNames));
         logger.info("ContextType:vertex_data");
         logger.info("VertexData: " + typeParamNames[1]);
