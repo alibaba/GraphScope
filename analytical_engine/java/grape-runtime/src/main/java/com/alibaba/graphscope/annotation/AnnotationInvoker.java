@@ -1185,6 +1185,25 @@ import com.alibaba.fastffi.FFIGenBatch;
                                             + ">",
                                     STD_STRING
                                 }),
+                        @CXXTemplate(
+                                cxx = {
+                                        CPP_ARROW_PROJECTED_FRAGMENT
+                                                + "<int64_t,uint64_t,std::string,int64_t>",
+                                        "std::string"
+                                },
+                                java = {
+                                        JAVA_ARROW_PROJECTED_FRAGMENT
+                                                + "<"
+                                                + LONG
+                                                + ","
+                                                + LONG
+                                                + ","
+                                                + STRING_VIEW
+                                                + ","
+                                                + LONG
+                                                + ">",
+                                        STD_STRING
+                                }),
                     }),
             @FFIGen(
                     type = "com.alibaba.graphscope.parallel.DefaultMessageManager",
