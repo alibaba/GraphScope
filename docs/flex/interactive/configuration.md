@@ -77,11 +77,11 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.FilterMatchRule | N/A | An optimization rule that pushes filter (`Where`) conditions into the `Match` clause | 0.0.1 |
 | compiler.planner.rules.FilterIntoJoinRule | N/A | A native Calcite optimization rule that pushes filter conditions to the Join participants before performing the join | 0.0.1 |
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
-| compiler.endpoint.default_listen_address | localhost | The address for compiler endpoint to bind | 0.3 |
-| compiler.endpoint.bolt_connector.disabled | false | Whether to disable the cypher endpoint| 0.3 |
-| compiler.endpoint.bolt_connector.port | 7687 | The port for compiler's cypher endpoint.| 0.3 |
-| compiler.endpoint.gremlin_connector.disabled | true | Whether to disable the gremlin endpoint| 0.3 |
-| compiler.endpoint.gremlin_connector.port | 8182 | The port for compiler's cypher endpoint.| 0.3 |
+| compiler.endpoint.default_listen_address | localhost | The address for compiler endpoint to bind | 0.0.3 |
+| compiler.endpoint.bolt_connector.disabled | false | Whether to disable the cypher endpoint| 0.0.3 |
+| compiler.endpoint.bolt_connector.port | 7687 | The port for compiler's cypher endpoint.| 0.0.3 |
+| compiler.endpoint.gremlin_connector.disabled | true | Whether to disable the gremlin endpoint| 0.0.3 |
+| compiler.endpoint.gremlin_connector.port | 8182 | The port for compiler's cypher endpoint.| 0.0.3 |
 | http_service.default_listen_address | localhost | The address for http service to bind | 0.0.2 |
 | http_service.admin_port | 7777 | The port for admin service to listen on | 0.0.2 |
 | http_service.query_port | 10000 | The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved | 0.0.2 |
