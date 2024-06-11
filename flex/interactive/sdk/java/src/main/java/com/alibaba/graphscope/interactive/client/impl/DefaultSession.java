@@ -16,12 +16,12 @@
 package com.alibaba.graphscope.interactive.client.impl;
 
 import com.alibaba.graphscope.gaia.proto.IrResult;
-import com.alibaba.graphscope.interactive.client.Session;
-import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.ApiClient;
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
 import com.alibaba.graphscope.interactive.api.*;
+import com.alibaba.graphscope.interactive.client.Session;
+import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.models.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 
