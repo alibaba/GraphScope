@@ -33,7 +33,7 @@ import java.util.Objects;
  */
 public class MessageAppWithUserWritable
         extends BasicComputation<
-                LongWritable, MultipleLongWritable, MultipleLongWritable, MultipleLongWritable> {
+                LongWritable, MultipleLongWritable, LongWritable, MultipleLongWritable> {
 
     public static LongConfOption MAX_SUPER_STEP;
     private static Logger logger = LoggerFactory.getLogger(MessageAppWithUserWritable.class);
@@ -58,7 +58,7 @@ public class MessageAppWithUserWritable
      */
     @Override
     public void compute(
-            Vertex<LongWritable, MultipleLongWritable, MultipleLongWritable> vertex,
+            Vertex<LongWritable, MultipleLongWritable, LongWritable> vertex,
             Iterable<MultipleLongWritable> messages)
             throws IOException {
         if (getSuperstep() == 0) {
