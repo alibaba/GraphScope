@@ -35,7 +35,7 @@ endif ()
 
 #find arrow----------------------------------------------------------------------
 find_package(Arrow REQUIRED)
-if (NOT ARROW_FOUND)
+if (NOT Arrow_FOUND)
     message(FATAL_ERROR "arrow not found, please install the arrow library")
 else ()
     include_directories(SYSTEM ${ARROW_INCLUDE_DIR})
