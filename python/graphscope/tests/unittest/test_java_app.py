@@ -58,6 +58,9 @@ def demo_jar():
 def projected_graph_sssp_class():
     return "com.alibaba.graphscope.example.sssp.SSSP"
 
+@pytest.fixture(scope="module")
+def projected_graph_giraph_app_class():
+    return "com.alibaba.graphscope.example.giraph.MessageAppWithUserWritable"
 
 @pytest.fixture(scope="module")
 def non_exist_java_class():
@@ -174,4 +177,21 @@ def test_giraph_app(
 
     giraph_sssp = load_app(algo="giraph:com.alibaba.graphscope.example.giraph.SSSP")
     giraph_sssp(g, sourceId=6)
+    del g
+
+@pytest.mark.timeout(3600)
+def test_giraph_app_user_writable(
+    demo_jar,
+    graphscope_session,
+    projected_graph_giraph_app_class,
+):
+    graphscope_session.add_lib(demo_jar)
+    vformat = "giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexMultipleLongInputFormat"
+    eformat = "giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeMultipleLongInputFormat"
+    g = projected_p2p_graph_loaded_by_giraph(
+        graphscope_session, demo_jar, vformat, eformat
+    )
+
+    user_app = load_app(algo="giraph:com.alibaba.graphscope.example.giraph.MessageAppWithUserWritable")
+    user_app(g)
     del g

@@ -90,6 +90,7 @@ ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 
 USER root
+RUN apt-get update && apt-get install -y default-jdk
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 COPY --from=builder-java /home/graphscope/install /opt/graphscope/
 RUN mkdir -p /tmp/gs && (mv /opt/graphscope/builtin /tmp/gs/builtin || true) && chown -R graphscope:graphscope /tmp/gs
