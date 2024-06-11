@@ -27,6 +27,7 @@ if "site-packages" not in os.path.dirname(os.path.realpath(__file__)):
     )
 
 try:
+    import graphscope
     from graphscope.gsctl.commands import get_command_collection
     from graphscope.gsctl.config import get_current_context
 except ModuleNotFoundError:
