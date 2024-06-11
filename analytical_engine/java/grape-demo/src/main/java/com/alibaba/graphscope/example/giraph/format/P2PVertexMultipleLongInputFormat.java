@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class P2PVertexMultipleLongInputFormat
-        extends TextVertexInputFormat<LongWritable, MultipleLongWritable, MultipleLongWritable> {
+        extends TextVertexInputFormat<LongWritable, MultipleLongWritable, LongWritable> {
 
     /**
      * The factory method which produces the {@link TextVertexReader} used by this input format.
@@ -40,7 +40,7 @@ public class P2PVertexMultipleLongInputFormat
      * @return the text vertex reader to be used
      */
     @Override
-    public TextVertexInputFormat<LongWritable, MultipleLongWritable, MultipleLongWritable>
+    public TextVertexInputFormat<LongWritable, MultipleLongWritable, LongWritable>
                     .TextVertexReader
             createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
         return new P2PVertexReader();
@@ -78,7 +78,7 @@ public class P2PVertexMultipleLongInputFormat
         }
 
         @Override
-        protected Iterable<Edge<LongWritable, MultipleLongWritable>> getEdges(String[] tokens)
+        protected Iterable<Edge<LongWritable, LongWritable>> getEdges(String[] tokens)
                 throws IOException {
             List<Edge<LongWritable, MultipleLongWritable>> edges =
                     Lists.newArrayListWithCapacity(0);
