@@ -24,8 +24,8 @@ import time
 from typing import List
 from typing import Union
 
-import requests
 import gs_interactive
+import requests
 from gs_interactive.models.create_graph_request import CreateGraphRequest
 from gs_interactive.models.create_procedure_request import CreateProcedureRequest
 from gs_interactive.models.schema_mapping import SchemaMapping
