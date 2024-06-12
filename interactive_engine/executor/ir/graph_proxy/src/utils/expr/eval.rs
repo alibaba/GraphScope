@@ -157,6 +157,12 @@ impl From<&Operand> for OperatorDesc {
     }
 }
 
+impl From<&PropKey> for OperatorDesc {
+    fn from(prop: &PropKey) -> Self {
+        Self(format!("{:?}", prop))
+    }
+}
+
 /// A `Context` gives the behavior of obtaining a certain tag from the runtime
 /// for evaluating variables in an expression.
 pub trait Context<E: Element> {
@@ -598,6 +604,7 @@ impl TryFrom<common_pb::VariableKeyValues> for Operand {
                 match value {
                     common_pb::variable_key_value::Value::Val(val) => Operand::try_from(val)?,
                     common_pb::variable_key_value::Value::Nested(nested) => Operand::try_from(nested)?,
+                    common_pb::variable_key_value::Value::PathFunc(_path_func) => todo!(),
                 }
             } else {
                 return Err(ParsePbError::from("empty value provided in Map"));
@@ -676,45 +683,7 @@ impl Evaluate for Operand {
                 if let Some(ctxt) = context {
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         let result = if let Some(property) = prop_key {
-                            if let PropKey::Len = property {
-                                element.len().into()
-                            } else {
-                                let graph_element = element
-                                    .as_graph_element()
-                                    .ok_or_else(|| ExprEvalError::UnexpectedDataType(self.into()))?;
-                                match property {
-                                    PropKey::Id => graph_element.id().into(),
-                                    PropKey::Label => graph_element
-                                        .label()
-                                        .map(|label| label.into())
-                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
-                                    PropKey::Len => unreachable!(),
-                                    PropKey::All => graph_element
-                                        .get_all_properties()
-                                        .map(|obj| {
-                                            obj.into_iter()
-                                                .map(|(key, value)| {
-                                                    let obj_key: Object = match key {
-                                                        NameOrId::Str(str) => str.into(),
-                                                        NameOrId::Id(id) => id.into(),
-                                                    };
-                                                    (obj_key, value)
-                                                })
-                                                .collect::<Vec<(Object, Object)>>()
-                                                .into()
-                                        })
-                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
-                                    PropKey::Key(key) => graph_element
-                                        .get_property(key)
-                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
-                                        .try_to_owned()
-                                        .ok_or_else(|| {
-                                            ExprEvalError::OtherErr(
-                                                "cannot get `Object` from `BorrowObject`".to_string(),
-                                            )
-                                        })?,
-                                }
-                            }
+                            property.get_key(element)?
                         } else {
                             element
                                 .as_borrow_object()
@@ -1062,6 +1031,7 @@ mod tests {
             "{@0.name, @0.age}",                           // {"name": "John", "age": 31}
             "@0.~all", // {age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]}
             "{@0.~all}", // {~all, {age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]}}
+            "@0.not_exist", // Object::None
         ];
 
         let expected: Vec<Object> = vec![
@@ -1112,6 +1082,7 @@ mod tests {
                 .into_iter()
                 .collect(),
             ),
+            Object::None,
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
@@ -1122,17 +1093,8 @@ mod tests {
 
     #[test]
     fn test_eval_errors() {
-        let cases: Vec<&str> = vec![
-            "@2",
-            "+",
-            "1 + ",
-            "1 1",
-            "1 1 2",
-            "1 1 + 2",
-            "1 + @1.age * 1 1 - 1 - 5",
-            "@2",
-            "@0.not_exist",
-        ];
+        let cases: Vec<&str> =
+            vec!["@2", "+", "1 + ", "1 1", "1 1 2", "1 1 + 2", "1 + @1.age * 1 1 - 1 - 5", "@2"];
         let ctxt = prepare_context();
 
         let expected: Vec<ExprEvalError> = vec![
@@ -1147,7 +1109,6 @@ mod tests {
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
-            ExprEvalError::GetNoneFromContext,
             ExprEvalError::GetNoneFromContext,
         ];
 
