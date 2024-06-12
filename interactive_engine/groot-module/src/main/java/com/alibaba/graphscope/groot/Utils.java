@@ -175,4 +175,16 @@ public class Utils {
         }
         return true;
     }
+
+    public static boolean isMetaFreshEnough(Configs configs, long delta) {
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
+        File metaDir = Paths.get(dataRoot, "meta").toAbsolutePath().toFile();
+        if (metaDir.exists()) {
+            long lastModified = metaDir.lastModified();
+            long ts = System.currentTimeMillis();
+            return ts - lastModified < delta;
+        }
+        // not exists also means fresh enough
+        return true;
+    }
 }

@@ -60,8 +60,9 @@ public class KafkaLogService implements LogService {
         AdminClient admin = getAdmin();
         NewTopic newTopic = new NewTopic(this.topic, this.storeCount, this.replicationFactor);
         Map<String, String> configs = new HashMap<>();
-        configs.put("retention.ms", "-1");
-        configs.put("retention.bytes", "-1");
+        // Respect the global settings is enough for us
+        //        configs.put("retention.ms", "-1");
+        //        configs.put("retention.bytes", "-1");
         configs.put("max.message.bytes", String.valueOf(this.maxMessageMb * 1024 * 1024));
         newTopic.configs(configs);
         try {
