@@ -54,7 +54,7 @@ info() {
 kill_service(){
     info "Kill Service first"
     ps -ef | grep "interactive_server" |  awk '{print $2}' | xargs kill -9  || true
-    ps -ef | grep "compiler" |  awk '{print $2}' | xargs kill -9  || true
+    ps -ef | grep "GraphServer" |  awk '{print $2}' | xargs kill -9  || true
     sleep 3
     # check if service is killed
     info "Kill Service success"
@@ -75,7 +75,7 @@ start_engine_service(){
     cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} --start-compiler true"
 
     echo "Start engine service with command: ${cmd}"
-    eval ${cmd} 
+    ${cmd} &
     sleep 10
     #check interactive_server is running, if not, exit
     ps -ef | grep "interactive_server" | grep -v grep
@@ -85,7 +85,7 @@ start_engine_service(){
 
 run_cypher_test() {
   # run a simple cypher query: MATCH (n) RETURN count(n)
-  python3 ./test_count_vertices.py --endpoint localhost:7687
+  python3 ./test_count_vertices.py --endpoint neo4j://localhost:7687
 }
 
 kill_service

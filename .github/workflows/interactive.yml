@@ -189,7 +189,7 @@ jobs:
         sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
         sed -i 's/mode: local/mode: http/g' ./engine_config_test.yaml
         pip3 install argparse
-        pip3 install neo4j >= 4.4.19
+        pip3 install neo4j
         bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
         sed -i 's/mode: http/mode: local/g' ./engine_config_test.yaml
         sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
