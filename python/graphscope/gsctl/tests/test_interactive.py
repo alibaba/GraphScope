@@ -97,6 +97,34 @@ modern_graph = {
     },
 }
 
+modern_graph_vertex_only = {
+    "name": "modern_graph",
+    "description": "This is a test graph, only contains vertex",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [],
+    },
+}
+
 
 modern_graph_datasource = {
     "vertex_mappings": [
@@ -354,6 +382,16 @@ class TestE2EInteractive(object):
         stored_procedure_id = create_stored_procedure(graph_id_2, stored_procedure_dict)
         assert stored_procedure_id == "procedure_name"
         delete_graph_by_id(graph_id_2)
+
+    def test_start_service_on_vertex_only_graph(self):
+        graph_id = create_graph(modern_graph_vertex_only)
+        start_service(graph_id)
+        status = list_service_status()
+        for s in status:
+            if s.graph_id == graph_id:
+                assert s.status == "Running"
+            else:
+                assert s.status == "Stopped"
 
     def teardown_class(self):
         disconnect_coordinator()
