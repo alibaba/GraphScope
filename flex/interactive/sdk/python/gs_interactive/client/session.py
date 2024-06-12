@@ -551,7 +551,7 @@ class DefaultSession(Session):
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_with_http_info(
                 graph_id = graph_id, 
-                x_gs_interactive_request_format = self.JSON_FORMAT,
+                x_interactive_request_format = self.JSON_FORMAT,
                 body=params.to_json()
             )
             result = CollectiveResults()
@@ -570,7 +570,7 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_current_with_http_info(
-                x_gs_interactive_request_format = self.JSON_FORMAT,
+                x_interactive_request_format = self.JSON_FORMAT,
                 body = params.to_json()
             )
             result = CollectiveResults()
@@ -588,7 +588,7 @@ class DefaultSession(Session):
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_with_http_info(
                 graph_id = graph_id, 
-                x_gs_interactive_request_format = self.ENCODER_FORMAT, 
+                x_interactive_request_format = self.ENCODER_FORMAT, 
                 body = params
             )
             return Result.from_response(response)
@@ -600,7 +600,7 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_current_with_http_info(
-                x_gs_interactive_request_format = self.ENCODER_FORMAT, 
+                x_interactive_request_format = self.ENCODER_FORMAT, 
                 body = params
             )
             return Result.from_response(response)

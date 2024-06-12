@@ -18,39 +18,39 @@
 import time
 import argparse
 import os
-from interactive.models.long_text import LongText
-from interactive.models.edge_mapping_type_triplet import (
+from gs_interactive.models.long_text import LongText
+from gs_interactive.models.edge_mapping_type_triplet import (
     EdgeMappingTypeTriplet,
 )
-from interactive.client.driver import Driver
-from interactive.client.session import Session
-from interactive.models.base_edge_type_vertex_type_pair_relations_inner import (
+from gs_interactive.client.driver import Driver
+from gs_interactive.client.session import Session
+from gs_interactive.models.base_edge_type_vertex_type_pair_relations_inner import (
     BaseEdgeTypeVertexTypePairRelationsInner,
 )
-from interactive.models.create_edge_type import CreateEdgeType
-from interactive.models.create_graph_request import CreateGraphRequest
-from interactive.models.create_graph_schema_request import (
+from gs_interactive.models.create_edge_type import CreateEdgeType
+from gs_interactive.models.create_graph_request import CreateGraphRequest
+from gs_interactive.models.create_graph_schema_request import (
     CreateGraphSchemaRequest,
 )
-from interactive.models.create_procedure_request import (
+from gs_interactive.models.create_procedure_request import (
     CreateProcedureRequest,
 )
-from interactive.models.create_property_meta import CreatePropertyMeta
-from interactive.models.create_vertex_type import CreateVertexType
-from interactive.models.edge_mapping import EdgeMapping
-from interactive.models.gs_data_type import GSDataType
-from interactive.models.start_service_request import StartServiceRequest
-from interactive.models.primitive_type import PrimitiveType
-from interactive.models.schema_mapping import SchemaMapping
-from interactive.models.schema_mapping_loading_config import (
+from gs_interactive.models.create_property_meta import CreatePropertyMeta
+from gs_interactive.models.create_vertex_type import CreateVertexType
+from gs_interactive.models.edge_mapping import EdgeMapping
+from gs_interactive.models.gs_data_type import GSDataType
+from gs_interactive.models.start_service_request import StartServiceRequest
+from gs_interactive.models.primitive_type import PrimitiveType
+from gs_interactive.models.schema_mapping import SchemaMapping
+from gs_interactive.models.schema_mapping_loading_config import (
     SchemaMappingLoadingConfig,
 )
-from interactive.models.schema_mapping_loading_config_format import (
+from gs_interactive.models.schema_mapping_loading_config_format import (
     SchemaMappingLoadingConfigFormat,
 )
-from interactive.models.string_type import StringType
-from interactive.models.string_type_string import StringTypeString
-from interactive.models.vertex_mapping import VertexMapping
+from gs_interactive.models.string_type import StringType
+from gs_interactive.models.string_type_string import StringTypeString
+from gs_interactive.models.vertex_mapping import VertexMapping
 
 
 def createGraph(sess: Session):
