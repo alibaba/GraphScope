@@ -17,7 +17,7 @@
 # It uses the Swagger Codegen tool to generate the SDK
 
 PACKAGE_NAME="com.alibaba.graphscope.interactive"
-PYTHON_PACKAGE_NAME="openapi"
+PYTHON_PACKAGE_NAME="gs_interactive"
 GROUP_ID="com.alibaba.graphscope"
 ARTIFACT_ID="interactive"
 ARTIFACT_URL="https://github.com/alibaba/GraphScope/tree/main/flex/interactive"
@@ -72,8 +72,7 @@ function do_gen_python() {
     echo "Generating Python SDK"
     OUTPUT_PATH="${CUR_DIR}/python"
     cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g python -o ${OUTPUT_PATH}"
-    # cmd=" ${cmd} --invoker-package ${PYTHON_PACKAGE_NAME}"
-    cmd=" ${cmd} --package-name interactive"
+    cmd=" ${cmd} --package-name ${PYTHON_PACKAGE_NAME}"
     cmd=" ${cmd} --additional-properties=packageVersion=${VERSION},pythonVersion=3"
     echo "Running command: ${cmd}"
     eval $cmd

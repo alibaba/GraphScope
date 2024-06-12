@@ -21,55 +21,55 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 
 from pydantic import Field, StrictStr
 
-from interactive.client.status import Status
-from interactive.api.admin_service_graph_management_api import (
+from gs_interactive.client.status import Status
+from gs_interactive.api.admin_service_graph_management_api import (
     AdminServiceGraphManagementApi,
 )
-from interactive.api.admin_service_job_management_api import (
+from gs_interactive.api.admin_service_job_management_api import (
     AdminServiceJobManagementApi,
 )
-from interactive.api.admin_service_procedure_management_api import (
+from gs_interactive.api.admin_service_procedure_management_api import (
     AdminServiceProcedureManagementApi,
 )
-from interactive.api.admin_service_service_management_api import (
+from gs_interactive.api.admin_service_service_management_api import (
     AdminServiceServiceManagementApi,
 )
-from interactive.api.graph_service_edge_management_api import (
+from gs_interactive.api.graph_service_edge_management_api import (
     GraphServiceEdgeManagementApi,
 )
-from interactive.api.graph_service_vertex_management_api import (
+from gs_interactive.api.graph_service_vertex_management_api import (
     GraphServiceVertexManagementApi,
 )
-from interactive.api.query_service_api import QueryServiceApi
-from interactive.api_client import ApiClient
-from interactive.client.result import Result
-from interactive.configuration import Configuration
-from interactive.models.create_graph_request import CreateGraphRequest
-from interactive.models.create_graph_response import CreateGraphResponse
-from interactive.models.create_procedure_request import (
+from gs_interactive.api.query_service_api import QueryServiceApi
+from gs_interactive.api_client import ApiClient
+from gs_interactive.client.result import Result
+from gs_interactive.configuration import Configuration
+from gs_interactive.models.create_graph_request import CreateGraphRequest
+from gs_interactive.models.create_graph_response import CreateGraphResponse
+from gs_interactive.models.create_procedure_request import (
     CreateProcedureRequest,
 )
-from interactive.models.create_procedure_response import (
+from gs_interactive.models.create_procedure_response import (
     CreateProcedureResponse,
 )
-from interactive.models.edge_request import EdgeRequest
-from interactive.models.get_graph_response import GetGraphResponse
-from interactive.models.get_graph_schema_response import (
+from gs_interactive.models.edge_request import EdgeRequest
+from gs_interactive.models.get_graph_response import GetGraphResponse
+from gs_interactive.models.get_graph_schema_response import (
     GetGraphSchemaResponse,
 )
-from interactive.models.get_graph_statistics_response import GetGraphStatisticsResponse
-from interactive.models.get_procedure_response import GetProcedureResponse
-from interactive.models.job_response import JobResponse
-from interactive.models.job_status import JobStatus
-from interactive.models.schema_mapping import SchemaMapping
-from interactive.models.service_status import ServiceStatus
-from interactive.models.start_service_request import StartServiceRequest
-from interactive.models.update_procedure_request import (
+from gs_interactive.models.get_graph_statistics_response import GetGraphStatisticsResponse
+from gs_interactive.models.get_procedure_response import GetProcedureResponse
+from gs_interactive.models.job_response import JobResponse
+from gs_interactive.models.job_status import JobStatus
+from gs_interactive.models.schema_mapping import SchemaMapping
+from gs_interactive.models.service_status import ServiceStatus
+from gs_interactive.models.start_service_request import StartServiceRequest
+from gs_interactive.models.update_procedure_request import (
     UpdateProcedureRequest,
 )
-from interactive.models.query_request import QueryRequest
-from interactive.models.vertex_request import VertexRequest
-from interactive.client.generated.results_pb2 import CollectiveResults
+from gs_interactive.models.query_request import QueryRequest
+from gs_interactive.models.vertex_request import VertexRequest
+from gs_interactive.client.generated.results_pb2 import CollectiveResults
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -547,11 +547,11 @@ class DefaultSession(Session):
         self, graph_id: StrictStr, params: QueryRequest
     ) -> Result[CollectiveResults]:
         try:
-            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_with_http_info(
                 graph_id = graph_id, 
-                x_interactive_request_format = self.JSON_FORMAT,
+                x_gs_interactive_request_format = self.JSON_FORMAT,
                 body=params.to_json()
             )
             result = CollectiveResults()
@@ -567,10 +567,10 @@ class DefaultSession(Session):
         self, params: QueryRequest
     ) -> Result[CollectiveResults]:
         try:
-            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_current_with_http_info(
-                x_interactive_request_format = self.JSON_FORMAT,
+                x_gs_interactive_request_format = self.JSON_FORMAT,
                 body = params.to_json()
             )
             result = CollectiveResults()
@@ -584,11 +584,11 @@ class DefaultSession(Session):
 
     def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
         try:
-            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_with_http_info(
                 graph_id = graph_id, 
-                x_interactive_request_format = self.ENCODER_FORMAT, 
+                x_gs_interactive_request_format = self.ENCODER_FORMAT, 
                 body = params
             )
             return Result.from_response(response)
@@ -597,10 +597,10 @@ class DefaultSession(Session):
         
     def call_procedure_current_raw(self, params: str) -> Result[str]:
         try:
-            # Interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
+            # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_current_with_http_info(
-                x_interactive_request_format = self.ENCODER_FORMAT, 
+                x_gs_interactive_request_format = self.ENCODER_FORMAT, 
                 body = params
             )
             return Result.from_response(response)

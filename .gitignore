@@ -137,16 +137,16 @@ flex/interactive/sdk/python/dist/
 flex/interactive/sdk/python/.travis.yml
 flex/interactive/sdk/python/tox.ini
 flex/interactive/sdk/python/pyproject.toml
-flex/interactive/sdk/python/interactive/models/
-flex/interactive/sdk/python/interactive/api/
-flex/interactive/sdk/python/interactive/__init__.py
-flex/interactive/sdk/python/interactive/api_client.py
-flex/interactive/sdk/python/interactive/api_response.py
-flex/interactive/sdk/python/interactive/configuration.py
-flex/interactive/sdk/python/interactive/exceptions.py
-flex/interactive/sdk/python/interactive/py.typed
-flex/interactive/sdk/python/interactive/rest.py
-!flex/interactive/sdk/python/interactive/client/generated/__init__.py
+flex/interactive/sdk/python/gs_interactive/models/
+flex/interactive/sdk/python/gs_interactive/api/
+flex/interactive/sdk/python/gs_interactive/__init__.py
+flex/interactive/sdk/python/gs_interactive/api_client.py
+flex/interactive/sdk/python/gs_interactive/api_response.py
+flex/interactive/sdk/python/gs_interactive/configuration.py
+flex/interactive/sdk/python/gs_interactive/exceptions.py
+flex/interactive/sdk/python/gs_interactive/py.typed
+flex/interactive/sdk/python/gs_interactive/rest.py
+!flex/interactive/sdk/python/gs_interactive/client/generated/__init__.py
 
 
 **/.cache/

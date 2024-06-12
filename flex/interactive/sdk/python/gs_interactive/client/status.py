@@ -19,8 +19,8 @@
 
 from enum import Enum
 
-from interactive.api_response import ApiResponse
-from interactive.exceptions import (
+from gs_interactive.api_response import ApiResponse
+from gs_interactive.exceptions import (
     ApiException,
     BadRequestException,
     ForbiddenException,
