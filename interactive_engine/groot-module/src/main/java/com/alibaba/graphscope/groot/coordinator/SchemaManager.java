@@ -64,7 +64,6 @@ public class SchemaManager {
     private ScheduledExecutorService syncSchemaScheduler;
 
     private ScheduledExecutorService fetchStatisticsScheduler;
-    private ScheduledExecutorService sendStatisticsScheduler;
 
     public SchemaManager(
             Configs configs,
@@ -115,12 +114,6 @@ public class SchemaManager {
                                     "fetch-statistics", logger));
             this.fetchStatisticsScheduler.scheduleWithFixedDelay(
                     this::syncStatistics, 5, 60, TimeUnit.MINUTES);
-            this.sendStatisticsScheduler =
-                    Executors.newSingleThreadScheduledExecutor(
-                            ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
-                                    "send-statistics", logger));
-            this.sendStatisticsScheduler.scheduleWithFixedDelay(
-                    this::sendStatisticsToFrontend, 5, 1, TimeUnit.MINUTES);
         }
     }
 
@@ -132,6 +125,7 @@ public class SchemaManager {
         } catch (Exception e) {
             logger.error("Fetch statistics failed", e);
         }
+        sendStatisticsToFrontend();
     }
 
     private void sendStatisticsToFrontend() {
