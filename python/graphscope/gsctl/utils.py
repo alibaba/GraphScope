@@ -483,7 +483,5 @@ class TreeDisplay(object):
                 f"{graph_identifier}_stored_procedure"
             )
             click.secho(stored_procedure_tree.show(stdout=False, sorting=False))
-            job_tree = self.tree.subtree(f"{graph_identifier}_job")
-            click.secho(job_tree.show(stdout=False, sorting=False))
         else:
             click.secho(self.tree.show(stdout=stdout, sorting=sorting))
