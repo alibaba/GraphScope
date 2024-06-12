@@ -28,6 +28,9 @@ public class CoordinatorConfig {
     public static final Config<Long> LOG_RECYCLE_INTERVAL_SECOND =
             Config.longConfig("log.recycle.interval.second", 3600L);
 
+    public static final Config<Long> LOG_RECYCLE_OFFSET_RESERVE =
+            Config.longConfig("log.recycle.offset.reserve", 86400);
+
     public static final Config<String> FILE_META_STORE_PATH =
             Config.stringConfig("file.meta.store.path", "./meta");
 }

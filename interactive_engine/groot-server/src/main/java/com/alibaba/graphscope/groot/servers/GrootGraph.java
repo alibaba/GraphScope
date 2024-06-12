@@ -78,15 +78,17 @@ public class GrootGraph {
                                 latch.getLeader(),
                                 latch.getState());
                         latch.await();
-                        // Sleep 5s before check the lock to prevent the leader has not
+                        // Sleep 10s before check the lock to prevent the leader has not
                         // released the resource yet.
-                        Thread.sleep(5000);
-                        if (Utils.isLockAvailable(conf)) {
-                            logger.info("LOCK is available, node starting");
+                        Thread.sleep(10000);
+                        if (Utils.isLockAvailable(conf) && !Utils.isMetaFreshEnough(conf, 9000)) {
+                            logger.info("LOCK is available and meta stop updating, node starting");
                             break;
                         }
                         latch.close();
-                        logger.info("LOCK is unavailable, the leader may still exists");
+                        logger.info(
+                                "LOCK is unavailable or the meta is still updating, the leader may"
+                                    + " still exists");
                         // The leader has lost connection but still alive,
                         // give it another chance
                         Thread.sleep(60000);
@@ -95,7 +97,7 @@ public class GrootGraph {
                     logger.error("Exception while leader election", e);
                     throw e;
                 }
-                //                curator.close();
+                // curator.close();
             }
         }
         NodeLauncher launcher = new NodeLauncher(node);
