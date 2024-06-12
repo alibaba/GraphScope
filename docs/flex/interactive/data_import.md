@@ -6,6 +6,28 @@ In our guide on [using custom graph data](./custom_graph_data.md), we introduced
 
 Currently we only support import data to graph from local `csv` files or `odps` table. See configuration `loading_config.data_source.scheme`.
 
+## Column mapping
+
+When importing vertex and edge data into a graph, users must define how the raw data maps to the graph's schema. 
+This can be done using a YAML configuration, as shown:
+
+```yaml
+- column:
+    index: 0  # Column index in the data source
+    name: col_name # If a column name is present
+  property: property_name  # The mapped property name
+```
+
+The column mapping requirements differ based on the data source:
+
+#### Import from CSV 
+
+You can provide either `index`, `name`, or both.
+
+#### Import from ODPS Table
+
+You just need to specify the name of the `column`, since the name is guaranteed to be unique in a odps table. The `index` is disregarded.
+
 ## Sample Configuration for loading "Modern" Graph from csv files
 
 To illustrate, let's examine the `examples/modern_import_full.yaml` file. This configuration is designed for importing the "modern" graph and showcases the full range of configuration possibilities. We'll dissect each configuration item in the sections that follow.
@@ -67,11 +89,13 @@ edge_mappings:
     source_vertex_mappings:
       - column:  
           index: 0  
-          name: id
+          name: src_id
+        property: id
     destination_vertex_mappings:
       - column:  
           index: 1  
-          name: id
+          name: dst_id
+        property: id
     column_mappings:
       - column:
           index: 2
