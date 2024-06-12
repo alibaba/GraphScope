@@ -88,7 +88,7 @@ public class GrootGraph {
                         latch.close();
                         logger.info(
                                 "LOCK is unavailable or the meta is still updating, the leader may"
-                                    + " still exists");
+                                        + " still exists");
                         // The leader has lost connection but still alive,
                         // give it another chance
                         Thread.sleep(60000);
