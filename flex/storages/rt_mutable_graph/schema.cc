@@ -764,6 +764,17 @@ static Status parse_edge_schema(YAML::Node node, Schema& schema) {
   RETURN_IF_NOT_OK(parse_edge_properties(node["properties"], edge_label_name,
                                          property_types, prop_names,
                                          schema.GetVersion()));
+
+  // TODO(zhanglei): Remove this check after multiple edge properties are
+  // supported.
+  if (property_types.size() > 1) {
+    LOG(ERROR) << "Currently edge can not have "
+                  "more than one property";
+    return Status(StatusCode::InvalidSchema,
+                  "Currently edge can not have "
+                  "more than one property");
+  }
+
   if (node["description"]) {
     description = node["description"].as<std::string>();
   }
@@ -969,7 +980,7 @@ static Status parse_edge_schema(YAML::Node node, Schema& schema) {
 }
 
 static Status parse_edges_schema(YAML::Node node, Schema& schema) {
-  if (node.IsNull()){
+  if (node.IsNull()) {
     LOG(INFO) << "No edge is set";
     return Status::OK();
   }
