@@ -18,7 +18,8 @@
 
 package com.alibaba.graphscope.common.ir.meta.reader;
 
-import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.SnapshotId;
@@ -41,25 +42,25 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 
 // read ir meta from a remote http service
 public class HttpIrMetaReader implements IrMetaReader {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json; utf-8";
-    private final ChannelFetcher<URI> fetcher;
     private final HttpClient httpClient;
+    private final Configs configs;
 
-    public HttpIrMetaReader(ChannelFetcher<URI> fetcher) {
-        this.fetcher = fetcher;
+    public HttpIrMetaReader(Configs configs) {
+        this.configs = configs;
         this.httpClient = HttpClient.newBuilder().build();
     }
 
     @Override
     public IrMeta readMeta() throws IOException {
         try {
-            HttpResponse<String> response = sendRequest("/v1/service/status");
+            HttpResponse<String> response =
+                    sendRequest(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
             String res = response.body();
             Preconditions.checkArgument(
                     response.statusCode() == 200,
@@ -90,7 +91,10 @@ public class HttpIrMetaReader implements IrMetaReader {
             Preconditions.checkArgument(
                     graphId.getId() != null, "graph id should not be null in http meta reader");
             HttpResponse<String> response =
-                    sendRequest(String.format("/v1/graph/%s/statistics", graphId.getId()));
+                    sendRequest(
+                            String.format(
+                                    GraphConfig.GRAPH_META_STATISTICS_URI.get(configs),
+                                    graphId.getId()));
             String res = response.body();
             Preconditions.checkArgument(
                     response.statusCode() == 200,
@@ -106,12 +110,9 @@ public class HttpIrMetaReader implements IrMetaReader {
 
     private HttpResponse<String> sendRequest(String requestUri)
             throws IOException, InterruptedException {
-        List<URI> metaServiceHost = fetcher.fetch();
-        Preconditions.checkArgument(!metaServiceHost.isEmpty(), "can not get meta service host");
-        URI getMetaUri = metaServiceHost.get(0).resolve(requestUri);
         HttpRequest request =
                 HttpRequest.newBuilder()
-                        .uri(getMetaUri)
+                        .uri(URI.create(requestUri))
                         .headers(CONTENT_TYPE, APPLICATION_JSON)
                         .GET()
                         .build();

@@ -25,7 +25,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.Map;
 
 public class YamlConfigs extends Configs {
@@ -48,23 +47,31 @@ public class YamlConfigs extends Configs {
                             return rules;
                         })
                 .put(
-                        "graph.schema",
+                        "graph.meta.schema.uri",
                         (Configs configs) -> {
                             // if System.properties contains graph.schema, use it
-                            String schema = System.getProperty("graph.schema");
+                            String schema = System.getProperty("graph.meta.schema.uri");
                             if (schema != null) {
                                 return schema;
                             }
-                            String workspace = configs.get("directories.workspace");
-                            String subdir = configs.get("directories.subdirs.data");
-                            String graphName = configs.get("default_graph");
-                            if (workspace != null && subdir != null && graphName != null) {
-                                return Path.of(workspace, subdir, graphName, "graph.yaml")
-                                        .toString();
-                            } else {
-                                return null;
-                            }
+                            return configs.get("compiler.meta.reader.schema.uri");
                         })
+                .put(
+                        "graph.meta.statistics.uri",
+                        (Configs configs) -> {
+                            String statistics = System.getProperty("graph.meta.statistics.uri");
+                            if (statistics != null) {
+                                return statistics;
+                            }
+                            return configs.get("compiler.meta.reader.statistics.uri");
+                        })
+                .put(
+                        "graph.meta.schema.fetch.interval.ms",
+                        (Configs configs) -> configs.get("compiler.meta.reader.schema.interval"))
+                .put(
+                        "graph.meta.statistics.fetch.interval.ms",
+                        (Configs configs) ->
+                                configs.get("compiler.meta.reader.statistics.interval"))
                 .put(
                         "graph.store",
                         (Configs configs) -> {

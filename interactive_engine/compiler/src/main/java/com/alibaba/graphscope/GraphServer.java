@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
-import com.alibaba.graphscope.common.client.channel.MetaServiceChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
@@ -51,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -190,18 +190,14 @@ public class GraphServer {
 
     private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
             throws IOException {
-        String readerMode = FrontendConfig.IR_META_READER_MODE.get(configs);
-        switch (readerMode) {
-            case "local":
-                return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
-            case "http":
-                return new DynamicIrMetaFetcher(
-                        configs,
-                        new HttpIrMetaReader(new MetaServiceChannelFetcher(configs)),
-                        tracker);
-            default:
-                throw new IllegalArgumentException("unknown ir meta reader mode: " + readerMode);
+        URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+        if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
+            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+        } else if (schemaUri.getScheme().equals("http")) {
+            return new DynamicIrMetaFetcher(configs, new HttpIrMetaReader(configs), tracker);
         }
+        throw new IllegalArgumentException(
+                "unknown graph meta reader mode: " + schemaUri.getScheme());
     }
 
     private static GraphProperties getTestGraph(Configs configs) {

@@ -25,11 +25,12 @@ compiler:
       - NotMatchToAntiJoinRule
   meta:
     reader:
-      mode: local
-      endpoint: localhost:7777 # only for http mode
-      interval:
-        graph_meta: 1000 # ms
-        statistics: 86400000 # ms
+      schema:
+        uri: http://localhost:7777/v1/service/status
+        interval: 1000 # ms
+      statistics:
+        uri: http://localhost:7777/v1/graph/%s/statistics
+        interval: 86400000 # ms
   endpoint:
     default_listen_address: localhost
     bolt_connector:

@@ -19,7 +19,7 @@
 package com.alibaba.graphscope.common.ir.meta.fetcher;
 
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
 import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
@@ -49,12 +49,12 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
         this.scheduler.scheduleAtFixedRate(
                 () -> syncMeta(),
                 0,
-                FrontendConfig.IR_META_FETCH_INTERVAL_MS.get(configs),
+                GraphConfig.GRAPH_META_SCHEMA_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
         this.scheduler.scheduleAtFixedRate(
                 () -> syncStats(),
                 0,
-                FrontendConfig.IR_STATISTICS_FETCH_INTERVAL_MS.get(configs),
+                GraphConfig.GRAPH_META_STATISTICS_FETCH_INTERVAL_MS.get(configs),
                 TimeUnit.MILLISECONDS);
     }
 

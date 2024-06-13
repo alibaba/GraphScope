@@ -17,8 +17,17 @@
 package com.alibaba.graphscope.common.config;
 
 public class GraphConfig {
-    public static final Config<String> GRAPH_SCHEMA = Config.stringConfig("graph.schema", ".");
-    public static final Config<String> GRAPH_STATISTICS =
-            Config.stringConfig("graph.statistics", "");
+    public static final Config<String> GRAPH_META_SCHEMA_URI =
+            Config.stringConfig("graph.meta.schema.uri", ".");
+
+    public static final Config<String> GRAPH_META_STATISTICS_URI =
+            Config.stringConfig("graph.meta.statistics.uri", "");
+
     public static final Config<String> GRAPH_STORE = Config.stringConfig("graph.store", "exp");
+
+    public static final Config<Long> GRAPH_META_SCHEMA_FETCH_INTERVAL_MS =
+            Config.longConfig("graph.meta.schema.fetch.interval.ms", 1000);
+
+    public static final Config<Long> GRAPH_META_STATISTICS_FETCH_INTERVAL_MS =
+            Config.longConfig("graph.meta.statistics.fetch.interval.ms", 24 * 3600 * 1000l);
 }
