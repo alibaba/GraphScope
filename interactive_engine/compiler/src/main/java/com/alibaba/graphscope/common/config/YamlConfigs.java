@@ -47,10 +47,10 @@ public class YamlConfigs extends Configs {
                             return rules;
                         })
                 .put(
-                        "graph.meta.schema.uri",
+                        "graph.schema",
                         (Configs configs) -> {
                             // if System.properties contains graph.schema, use it
-                            String schema = System.getProperty("graph.meta.schema.uri");
+                            String schema = System.getProperty("graph.schema");
                             if (schema != null) {
                                 return schema;
                             }

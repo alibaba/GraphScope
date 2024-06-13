@@ -18,7 +18,7 @@ package com.alibaba.graphscope.common.config;
 
 public class GraphConfig {
     public static final Config<String> GRAPH_META_SCHEMA_URI =
-            Config.stringConfig("graph.meta.schema.uri", ".");
+            Config.stringConfig("graph.schema", ".");
 
     public static final Config<String> GRAPH_META_STATISTICS_URI =
             Config.stringConfig("graph.meta.statistics.uri", "");
