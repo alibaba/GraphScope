@@ -1701,4 +1701,15 @@ public class GraphBuilderTest {
                     + " person]}], alias=[_], opt=[VERTEX])",
                 node.explain().trim());
     }
+
+    @Test
+    public void g_V_has_label_person_limit_10_as_a() {
+        RelNode node = eval("g.V().hasLabel('person').limit(10).as('a')");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[_], isAppend=[false])\n"
+                    + "  GraphLogicalSort(fetch=[10])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+    }
 }
