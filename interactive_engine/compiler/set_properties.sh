@@ -16,7 +16,7 @@
 
 worker_num="pegasus.worker.num: $WORKER_NUM";
 
-timeout="pegasus.timeout: $TIMEOUT"
+query_timeout="query.execution.timeout.ms: $QUERY_TIMEOUT"
 
 batch_size="pegasus.batch.size: $BATCH_SIZE";
 
@@ -47,6 +47,6 @@ done
 
 graph_schema="graph.schema: $GRAPH_SCHEMA"
 
-properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port\n$frontend_query_per_second_limit\n$gremlin_script_language_name\n$physical_opt_config"
+properties="$worker_num\n$query_timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port\n$frontend_query_per_second_limit\n$gremlin_script_language_name\n$physical_opt_config"
 
 echo -e $properties > ./conf/ir.compiler.properties

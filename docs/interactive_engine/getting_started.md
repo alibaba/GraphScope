@@ -98,8 +98,8 @@ The number 6 is printed, which is the number of vertices in modern graph.
 You could pass additional key-value pairs to customize the startup configuration of GIE, for example:
 
 ```python
-# Set the timeout value to 10 min
-g = gs.interactive(graph, params={'query.execution.timeout.ms': 600000})
+# set total execution time for a query to 3000s
+g = gs.interactive(graph, params={'query.execution.timeout.ms': 3000000})
 ```
 
 ## What's the Next
