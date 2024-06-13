@@ -9,12 +9,16 @@ on:
       - main
     paths:
       - 'flex/**'
+      - 'coordinator/gscoordinator/flex/**'
+      - 'python/graphscope/gsctl/**'
       - '.github/workflows/flex-interactive.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'flex/**'
+      - 'coordinator/gscoordinator/flex/**'
+      - 'python/graphscope/gsctl/**'
       - '.github/workflows/flex-interactive.yml'
 
 concurrency:
