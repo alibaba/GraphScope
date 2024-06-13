@@ -502,7 +502,7 @@ secondary:
       - ReadWriteOnce # read and write by a single node.
     ## Persistent Volume size
     ##
-    size: 8Gi
+    size: 200Gi
     ## selector can be used to match an existing PersistentVolume
     ## selector:
     ##   matchLabels:
