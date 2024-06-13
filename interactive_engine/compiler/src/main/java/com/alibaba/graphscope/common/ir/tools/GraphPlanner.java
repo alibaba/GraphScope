@@ -19,9 +19,8 @@ package com.alibaba.graphscope.common.ir.tools;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
-import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
-import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
@@ -200,9 +199,7 @@ public class GraphPlanner {
         }
         Configs configs = Configs.Factory.create(args[0]);
         GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
-        StaticIrMetaFetcher metaFetcher =
-                new StaticIrMetaFetcher(
-                        new LocalIrMetaReader(configs), optimizer.getGlogueHolder());
+        IrMetaFetcher metaFetcher = Utils.createIrMetaFetcher(configs, optimizer.getGlogueHolder());
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
         GraphPlanner planner =
                 new GraphPlanner(
