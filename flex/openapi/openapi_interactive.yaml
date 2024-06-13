@@ -20,7 +20,7 @@ info:
     
     QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
   version: "1.0.0"
-  title: GraphScope Interactive API v0.0.3
+  title: GraphScope Interactive API v0.3
   contact:
     email: graphscope@alibaba-inc.com
   license:

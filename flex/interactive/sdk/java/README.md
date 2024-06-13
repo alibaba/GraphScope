@@ -34,8 +34,8 @@ Add this dependency to your project's POM:
 ```xml
 <dependency>
   <groupId>com.alibaba.graphscope</groupId>
-  <artifactId>interactive-sdk</artifactId>
-  <version>0.0.3</version>
+  <artifactId>interactive</artifactId>
+  <version>0.3</version>
   <scope>compile</scope>
 </dependency>
 ```
@@ -50,7 +50,7 @@ mvn clean package
 
 Then manually install the following JARs:
 
-* `target/interactive-sdk-0.0.3.jar`
+* `target/interactive-0.3.jar`
 * `target/lib/*.jar`
 
 ## Getting Started
@@ -91,6 +91,6 @@ public class GettingStarted {
 }
 ```
 
-For more a more detailed example, please refer to [Java SDK Example](https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/java/interactive-sdk-example/)
+For more a more detailed example, please refer to [Java SDK Example](https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/java/interactive-example/)
 
 
