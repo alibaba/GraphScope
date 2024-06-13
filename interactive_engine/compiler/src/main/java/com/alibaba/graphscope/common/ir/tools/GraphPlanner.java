@@ -18,9 +18,14 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
@@ -48,6 +53,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
@@ -186,6 +193,18 @@ public class GraphPlanner {
         return new Configs(keyValueMap);
     }
 
+    private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
+            throws IOException {
+        URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+        if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
+            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+        } else if (schemaUri.getScheme().equals("http")) {
+            return new StaticIrMetaFetcher(new HttpIrMetaReader(configs), tracker);
+        }
+        throw new IllegalArgumentException(
+                "unknown graph meta reader mode: " + schemaUri.getScheme());
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length < 4
                 || args[0].isEmpty()
@@ -199,7 +218,7 @@ public class GraphPlanner {
         }
         Configs configs = Configs.Factory.create(args[0]);
         GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
-        IrMetaFetcher metaFetcher = Utils.createIrMetaFetcher(configs, optimizer.getGlogueHolder());
+        IrMetaFetcher metaFetcher = createIrMetaFetcher(configs, optimizer.getGlogueHolder());
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
         GraphPlanner planner =
                 new GraphPlanner(

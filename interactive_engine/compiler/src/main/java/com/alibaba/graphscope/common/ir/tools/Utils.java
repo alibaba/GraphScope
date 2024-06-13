@@ -16,14 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
-import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
-import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
@@ -42,8 +34,6 @@ import org.apache.calcite.rel.type.StructKind;
 import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Sarg;
 
-import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
@@ -137,17 +127,5 @@ public class Utils {
             inputs.addAll(input.getInputs());
         }
         return builder.toString();
-    }
-
-    public static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
-            throws IOException {
-        URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
-        if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
-            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
-        } else if (schemaUri.getScheme().equals("http")) {
-            return new DynamicIrMetaFetcher(configs, new HttpIrMetaReader(configs), tracker);
-        }
-        throw new IllegalArgumentException(
-                "unknown graph meta reader mode: " + schemaUri.getScheme());
     }
 }
