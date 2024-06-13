@@ -193,11 +193,14 @@ pub(crate) mod tests {
         vec![r1]
     }
 
+    pub fn to_prop_pb(key: NameOrId) -> common_pb::Property {
+        common_pb::Property { item: Some(common_pb::property::Item::Key(key.into())) }
+    }
+
     pub fn to_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Variable {
         common_pb::Variable {
             tag: tag.map(|t| t.into()),
-            property: key
-                .map(|k| common_pb::Property { item: Some(common_pb::property::Item::Key(k.into())) }),
+            property: key.map(|k| to_prop_pb(k)),
             node_type: None,
         }
     }

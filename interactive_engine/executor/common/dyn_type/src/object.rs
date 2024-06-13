@@ -926,6 +926,20 @@ impl Object {
         }
     }
 
+    pub fn take_vector(self) -> Result<Vec<Object>, CastError> {
+        match self {
+            Object::Vector(vec) => Ok(vec),
+            Object::DynOwned(mut x) => {
+                if let Some(v) = x.try_downcast_mut::<Vec<Object>>() {
+                    Ok(std::mem::replace(v, Vec::new()))
+                } else {
+                    Err(CastError::new::<Vec<Object>>(RawType::Unknown))
+                }
+            }
+            _ => Err(CastError::new::<Vec<Object>>(self.raw_type())),
+        }
+    }
+
     fn contains_single(&self, single: &Object) -> bool {
         contains_single!(self, single, Object)
     }
