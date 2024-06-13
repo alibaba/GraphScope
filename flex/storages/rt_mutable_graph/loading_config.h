@@ -130,7 +130,7 @@ class LoadingConfig {
   GetEdgeLoadingMeta() const;
 
   // Get vertex column mappings. Each element in the vector is a pair of
-  // <column_index, property_name>.
+  // <column_index, column_name, property_name>.
   const std::vector<std::tuple<size_t, std::string, std::string>>&
   GetVertexColumnMappings(label_t label_id) const;
 
