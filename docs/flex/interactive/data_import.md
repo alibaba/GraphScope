@@ -22,7 +22,7 @@ The column mapping requirements differ based on the data source:
 
 #### Import from CSV 
 
-You can provide either `index`, `name`, or both.
+You can provide either `index`, `name`, or both. If both `index` and `name` are specified, we will check whether they matches.
 
 #### Import from ODPS Table
 
