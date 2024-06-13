@@ -23,6 +23,7 @@ from graphscope.gsctl.config import get_current_context
 from graphscope.gsctl.impl import create_stored_procedure
 from graphscope.gsctl.impl import delete_stored_procedure_by_id
 from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import get_graph_name_by_id
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_service_status
 from graphscope.gsctl.impl import list_stored_procedures
@@ -199,6 +200,7 @@ def status():  # noqa: F811
     def _construct_and_display_data(status):
         current_context = get_current_context()
         graph_identifier = current_context.context
+        graph_name = current_context.graph_name
 
         head = [
             "STATUS",
@@ -211,12 +213,14 @@ def status():  # noqa: F811
         for s in status:
             if s.graph_id == graph_identifier:
                 if s.status == "Stopped":
-                    data.append([s.status, s.graph_id, "-", "-", "-"])
+                    data.append(
+                        [s.status, f"{graph_name}({s.graph_id})", "-", "-", "-"]
+                    )
                 else:
                     data.append(
                         [
                             s.status,
-                            s.graph_id,
+                            f"{graph_name}({s.graph_id})",
                             s.sdk_endpoints.cypher,
                             s.sdk_endpoints.hqps,
                             s.sdk_endpoints.gremlin,

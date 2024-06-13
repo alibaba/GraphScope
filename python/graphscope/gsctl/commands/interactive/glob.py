@@ -25,6 +25,7 @@ from graphscope.gsctl.impl import delete_graph_by_id
 from graphscope.gsctl.impl import delete_job_by_id
 from graphscope.gsctl.impl import get_datasource_by_id
 from graphscope.gsctl.impl import get_graph_id_by_name
+from graphscope.gsctl.impl import get_graph_name_by_id
 from graphscope.gsctl.impl import get_job_by_id
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_jobs
@@ -76,16 +77,17 @@ def use(context, graph_identifier):
     """Switch to GRAPH context, see identifier with `ls` command"""
     try:
         graph_identifier = get_graph_id_by_name(graph_identifier)
+        graph_name = get_graph_name_by_id(graph_identifier)
         status = list_service_status()
         for s in status:
             if s.graph_id == graph_identifier and s.status != "Running":
                 info(f"Starting service on graph {graph_identifier}...")
                 start_service(graph_identifier)
-        switch_context(graph_identifier)
+        switch_context(graph_identifier, graph_name)
     except Exception as e:
         err(f"Failed to switch context: {str(e)}")
     else:
-        click.secho(f"Using GRAPH {graph_identifier}", fg="green")
+        click.secho(f"Using GRAPH {graph_name}", fg="green")
 
 
 @cli.command()
