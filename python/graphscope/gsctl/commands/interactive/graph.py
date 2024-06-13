@@ -27,6 +27,7 @@ from graphscope.gsctl.impl import get_graph_name_by_id
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_service_status
 from graphscope.gsctl.impl import list_stored_procedures
+from graphscope.gsctl.impl import restart_service
 from graphscope.gsctl.impl import start_service
 from graphscope.gsctl.impl import stop_service
 from graphscope.gsctl.impl import switch_context
@@ -131,11 +132,11 @@ def storedproc(identifier):  # noqa: F811
     current_context = get_current_context()
     graph_identifier = current_context.context
     try:
-        delete_stored_procedure_by_id(graph_identifier, identifier)
+        if click.confirm("Do you want to continue?"):
+            delete_stored_procedure_by_id(graph_identifier, identifier)
+            succ(f"Delete stored procedure {identifier} successfully.")
     except Exception as e:
         err(f"Failed to delete stored procedure: {str(e)}")
-    else:
-        succ(f"Delete stored procedure {identifier} successfully.")
 
 
 @desc.command()
@@ -194,6 +195,17 @@ def start():  # noqa: F811
 
 
 @service.command
+def restart():  # noqa: F811
+    """Start current database service"""
+    try:
+        restart_service()
+    except Exception as e:
+        err(f"Failed to restart service: {str(e)}")
+    else:
+        succ("Service restarted.")
+
+
+@service.command
 def status():  # noqa: F811
     """Display current service status"""
 
@@ -214,13 +226,13 @@ def status():  # noqa: F811
             if s.graph_id == graph_identifier:
                 if s.status == "Stopped":
                     data.append(
-                        [s.status, f"{graph_name}({s.graph_id})", "-", "-", "-"]
+                        [s.status, f"{graph_name}(id={s.graph_id})", "-", "-", "-"]
                     )
                 else:
                     data.append(
                         [
                             s.status,
-                            f"{graph_name}({s.graph_id})",
+                            f"{graph_name}(id={s.graph_id})",
                             s.sdk_endpoints.cypher,
                             s.sdk_endpoints.hqps,
                             s.sdk_endpoints.gremlin,

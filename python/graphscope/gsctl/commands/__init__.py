@@ -108,7 +108,11 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
             commands = click.CommandCollection(sources=[common, interactive])
         else:
             if len(sys.argv) < 2 or sys.argv[1] != "use":
-                info(f"Using GRAPH {context.graph_name}.", fg="green", bold=True)
+                info(
+                    f"Using GRAPH {context.graph_name}(id={context.context}).",
+                    fg="green",
+                    bold=True,
+                )
                 info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
             commands = click.CommandCollection(sources=[common, interactive_graph])
     elif is_insight_mode(context.flex):

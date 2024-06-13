@@ -81,13 +81,15 @@ def use(context, graph_identifier):
         status = list_service_status()
         for s in status:
             if s.graph_id == graph_identifier and s.status != "Running":
-                info(f"Starting service on graph {graph_identifier}...")
+                info(
+                    f"Starting service on graph {graph_name}(id={graph_identifier})..."
+                )
                 start_service(graph_identifier)
         switch_context(graph_identifier, graph_name)
     except Exception as e:
         err(f"Failed to switch context: {str(e)}")
     else:
-        click.secho(f"Using GRAPH {graph_name}", fg="green")
+        click.secho(f"Using GRAPH {graph_name}(id={graph_identifier})", fg="green")
 
 
 @cli.command()
@@ -144,11 +146,11 @@ def graph(filename):  # noqa: F811
 def graph(graph_identifier):  # noqa: F811
     """Delete a graph, see graph identifier with `ls` command"""
     try:
-        delete_graph_by_id(get_graph_id_by_name(graph_identifier))
+        if click.confirm("Do you want to continue?"):
+            delete_graph_by_id(get_graph_id_by_name(graph_identifier))
+            succ(f"Delete graph {graph_identifier} successfully.")
     except Exception as e:
         err(f"Failed to delete graph {graph_identifier}: {str(e)}")
-    else:
-        succ(f"Delete graph {graph_identifier} successfully.")
 
 
 @create.command
@@ -255,11 +257,11 @@ def loaderjob(graph_identifier, filename):  # noqa: F811
 def job(identifier):  # noqa: F811
     """Cancel a job, see identifier with `ls` command"""
     try:
-        delete_job_by_id(identifier)
+        if click.confirm("Do you want to continue?"):
+            delete_job_by_id(identifier)
+            succ(f"Delete job {identifier} successfully.")
     except Exception as e:
         err(f"Failed to delete job {identifier}: {str(e)}")
-    else:
-        succ(f"Delete job {identifier} successfully.")
 
 
 @desc.command()
