@@ -18,7 +18,7 @@ package com.alibaba.graphscope;
 import com.alibaba.graphscope.interactive.client.Driver;
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.alibaba.graphscope.interactive.models.*;
 
 import org.apache.tinkerpop.gremlin.driver.Client;
 
