@@ -17,7 +17,7 @@ package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.alibaba.graphscope.interactive.models.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;

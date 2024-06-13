@@ -20,4 +20,4 @@ typing-extensions >= 4.7.1
 click >= 8.1.7
 psutil
 schedule
-interactive-sdk == 0.0.3
+gs_interactive == 0.3
