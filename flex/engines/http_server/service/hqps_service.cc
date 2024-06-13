@@ -252,7 +252,8 @@ bool HQPSService::start_compiler_subprocess(
   std::stringstream ss;
   ss << "java -cp " << interactive_class_path;
   if (!graph_schema_path.empty()) {
-    ss << " -Dgraph.schema=" << graph_schema_path;
+    ss << " -Dgraph.schema=http://localhost:" << service_config_.admin_port
+       << "/v1/service/status";
   }
   ss << " " << COMPILER_SERVER_CLASS_NAME;
   ss << " " << service_config_.engine_config_path;

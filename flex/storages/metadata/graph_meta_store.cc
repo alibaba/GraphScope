@@ -337,6 +337,11 @@ CreateGraphMetaRequest CreateGraphMetaRequest::FromJson(
   } else {
     request.creation_time = GetCurrentTimeStamp();
   }
+  if (json.contains("stored_procedures")) {
+    for (auto& plugin : json["stored_procedures"]) {
+      request.plugin_metas.push_back(PluginMeta::FromJson(plugin));
+    }
+  }
   return request;
 }
 
@@ -351,6 +356,11 @@ std::string CreateGraphMetaRequest::ToString() const {
     json["data_update_time"] = 0;
   }
   json["creation_time"] = creation_time;
+  json["stored_procedures"] = nlohmann::json::array();
+  for (auto& plugin_meta : plugin_metas) {
+    json["stored_procedures"].push_back(
+        nlohmann::json::parse(plugin_meta.ToJson()));
+  }
   return json.dump();
 }
 
