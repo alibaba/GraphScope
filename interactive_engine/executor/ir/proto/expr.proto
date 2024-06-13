@@ -127,7 +127,7 @@ message PathFunction {
   // rechieve properties from a path to a map
   message PathElementKeyValues {
     message PathElementKeyValue {
-      common.NameOrId key = 1;
+      common.Value key = 1;
       Property val = 2;
     }
     repeated PathElementKeyValue key_vals = 1;
