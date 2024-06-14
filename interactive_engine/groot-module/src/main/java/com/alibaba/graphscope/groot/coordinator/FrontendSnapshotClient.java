@@ -17,9 +17,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotRequest;
-import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotResponse;
-import com.alibaba.graphscope.proto.groot.FrontendSnapshotGrpc;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
@@ -62,6 +60,24 @@ public class FrontendSnapshotClient extends RpcClient {
                             @Override
                             public void onError(Throwable throwable) {
                                 callback.onError(throwable);
+                            }
+
+                            @Override
+                            public void onCompleted() {}
+                        });
+    }
+
+    public void syncStatistics(Statistics statistics) {
+        getStub()
+                .syncStatistics(
+                        SyncStatisticsRequest.newBuilder().setStatistics(statistics).build(),
+                        new StreamObserver<SyncStatisticsResponse>() {
+                            @Override
+                            public void onNext(SyncStatisticsResponse value) {}
+
+                            @Override
+                            public void onError(Throwable t) {
+                                logger.error("Failed sync statistics to frontend", t);
                             }
 
                             @Override

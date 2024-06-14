@@ -44,7 +44,7 @@ public class CoordinatorRpcTest {
         StoreSchemaClient client = mock(StoreSchemaClient.class);
         when(clients.getClient(0)).thenReturn(client);
 
-        GraphDefFetcher graphDefFetcher = new GraphDefFetcher(clients);
+        GraphDefFetcher graphDefFetcher = new GraphDefFetcher(clients, 1);
         graphDefFetcher.fetchGraphDef();
         verify(client).fetchSchema();
     }

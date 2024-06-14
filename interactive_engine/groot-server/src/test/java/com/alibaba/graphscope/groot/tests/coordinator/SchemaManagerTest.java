@@ -21,18 +21,17 @@ import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotListener;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeEnum;
-import com.alibaba.graphscope.groot.coordinator.DdlWriter;
-import com.alibaba.graphscope.groot.coordinator.GraphDefFetcher;
-import com.alibaba.graphscope.groot.coordinator.SchemaManager;
-import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.BatchId;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.request.CreateVertexTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
@@ -69,13 +68,17 @@ public class SchemaManagerTest {
         GraphDef initialGraphDef = GraphDef.newBuilder().build();
         when(mockGraphDefFetcher.fetchGraphDef()).thenReturn(initialGraphDef);
 
+        RoleClients<FrontendSnapshotClient> frontendSnapshotClients = mock(RoleClients.class);
+        Configs configs = Configs.newBuilder().put("frontend.node.count", "1").build();
         SchemaManager schemaManager =
                 new SchemaManager(
+                        configs,
                         mockSnapshotManager,
                         ddlExecutors,
                         mockDdlWriter,
                         mockMetaService,
-                        mockGraphDefFetcher);
+                        mockGraphDefFetcher,
+                        frontendSnapshotClients);
         schemaManager.start();
         assertEquals(initialGraphDef, schemaManager.getGraphDef());
 
