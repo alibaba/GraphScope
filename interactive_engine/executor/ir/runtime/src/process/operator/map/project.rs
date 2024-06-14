@@ -125,6 +125,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                 .clone();
 
             let mut invalid = false;
+            let mut concat_success = false;
             match (left_endpoint, right_endpoint) {
                 // e.g., concat [3,2,1], [3,4,5] => [1,2,3,4,5]
                 (Endpoint::Start, Endpoint::Start) => {
@@ -133,7 +134,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                     } else {
                         left_path.reverse();
                         left_path.pop();
-                        left_path.append_path(right_path);
+                        concat_success = left_path.append_path(right_path);
                     }
                 }
                 (Endpoint::Start, Endpoint::End) => {
@@ -146,7 +147,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                         left_path.reverse();
                         left_path.pop();
                         right_path.reverse();
-                        left_path.append_path(right_path);
+                        concat_success = left_path.append_path(right_path);
                     }
                 }
                 (Endpoint::End, Endpoint::Start) => {
@@ -157,7 +158,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                         invalid = true;
                     } else {
                         left_path.pop();
-                        left_path.append_path(right_path);
+                        concat_success = left_path.append_path(right_path);
                     }
                 }
                 (Endpoint::End, Endpoint::End) => {
@@ -167,7 +168,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                     } else {
                         left_path.pop();
                         right_path.reverse();
-                        left_path.append_path(right_path);
+                        concat_success = left_path.append_path(right_path);
                     }
                 }
             }
@@ -176,6 +177,8 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                 Err(FnExecError::unexpected_data_error(&format!(
                     "Concat vertices are not the same in PathConcat"
                 )))?
+            } else if !concat_success {
+                Err(FnExecError::unexpected_data_error(&format!("Failed to concat paths in PathConcat")))?
             } else {
                 DynEntry::new(left_path)
             }
