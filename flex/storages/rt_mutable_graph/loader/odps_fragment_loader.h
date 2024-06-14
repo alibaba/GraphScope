@@ -120,7 +120,8 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   ODPSStreamRecordBatchSupplier(label_t label_id, const std::string& file_path,
                                 const ODPSReadClient& odps_table_reader,
                                 const std::string& session_id, int split_count,
-                                TableIdentifier table_identifier);
+                                TableIdentifier table_identifier,
+                                int worker_num);
 
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
@@ -129,6 +130,7 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   const ODPSReadClient& odps_read_client_;
   std::string session_id_;
   int split_count_;
+  int worker_num_;
   TableIdentifier table_identifier_;
 
   int32_t cur_split_index_;
@@ -168,13 +170,15 @@ class ODPSTableRecordBatchSupplier : public IRecordBatchSupplier {
 class ODPSFragmentLoader : public AbstractArrowFragmentLoader {
  public:
   ODPSFragmentLoader(const std::string& work_dir, const Schema& schema,
-                     const LoadingConfig& loading_config, int32_t thread_num)
+                     const LoadingConfig& loading_config, int32_t thread_num,
+                     bool batch_init_in_memory)
       : AbstractArrowFragmentLoader(work_dir, schema, loading_config,
-                                    thread_num) {}
+                                    thread_num, batch_init_in_memory) {}
 
   static std::shared_ptr<IFragmentLoader> Make(
       const std::string& work_dir, const Schema& schema,
-      const LoadingConfig& loading_config, int32_t thread_num);
+      const LoadingConfig& loading_config, int32_t thread_num,
+      bool batch_init_in_memory, bool);
 
   ~ODPSFragmentLoader() {}
 

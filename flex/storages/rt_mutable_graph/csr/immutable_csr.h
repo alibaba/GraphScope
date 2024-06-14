@@ -56,10 +56,10 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   using slice_t = ImmutableNbrSlice<EDATA_T>;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree,
-                    double reserve_ratio) override {
+                    const std::vector<int>& degree, double reserve_ratio,
+                    bool batch_init_in_memory) override {
     size_t vnum = degree.size();
-    adj_lists_.open(work_dir + "/" + name + ".adj", true);
+    adj_lists_.open(work_dir + "/" + name + ".adj", !batch_init_in_memory);
     adj_lists_.resize(vnum);
 
     size_t edge_num = 0;
@@ -67,10 +67,10 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
       edge_num += d;
     }
 
-    nbr_list_.open(work_dir + "/" + name + ".nbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".nbr", !batch_init_in_memory);
     nbr_list_.resize(edge_num);
 
-    degree_list_.open(work_dir + "/" + name + ".deg", true);
+    degree_list_.open(work_dir + "/" + name + ".deg", !batch_init_in_memory);
     degree_list_.resize(vnum);
 
     nbr_t* ptr = nbr_list_.data();
@@ -247,6 +247,12 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     return ret;
   }
 
+  void close() override {
+    adj_lists_.close();
+    degree_list_.reset();
+    nbr_list_.close();
+  }
+
  private:
   void load_meta(const std::string& prefix) {
     std::string meta_file_path = prefix + ".meta";
@@ -284,10 +290,10 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree,
-                    double reserve_ratio) override {
+                    const std::vector<int>& degree, double reserve_ratio,
+                    bool batch_init_in_memory) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
@@ -345,10 +351,16 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
-    assert(!nbr_list_.filename().empty() &&
-           std::filesystem::exists(nbr_list_.filename()));
-    std::filesystem::create_hard_link(nbr_list_.filename(),
-                                      new_snapshot_dir + "/" + name + ".snbr");
+    if (!nbr_list_.filename().empty() &&
+        std::filesystem::exists(nbr_list_.filename())) {
+      std::filesystem::create_hard_link(
+          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+    } else {
+      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
+      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
+      fflush(fp);
+      fclose(fp);
+    }
   }
 
   void warmup(int thread_num) const override {
@@ -427,6 +439,8 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
+  void close() override { nbr_list_.reset(); }
+
  private:
   mmap_array<nbr_t> nbr_list_;
 };
@@ -442,10 +456,10 @@ class SingleImmutableCsr<std::string_view>
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree,
-                    double reserve_ratio) override {
+                    const std::vector<int>& degree, double reserve_ratio,
+                    bool batch_init_in_memory) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
@@ -503,10 +517,16 @@ class SingleImmutableCsr<std::string_view>
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
-    assert(!nbr_list_.filename().empty() &&
-           std::filesystem::exists(nbr_list_.filename()));
-    std::filesystem::create_hard_link(nbr_list_.filename(),
-                                      new_snapshot_dir + "/" + name + ".snbr");
+    if (!nbr_list_.filename().empty() &&
+        std::filesystem::exists(nbr_list_.filename())) {
+      std::filesystem::create_hard_link(
+          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+    } else {
+      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
+      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
+      fflush(fp);
+      fclose(fp);
+    }
   }
 
   void warmup(int thread_num) const override {
@@ -590,6 +610,7 @@ class SingleImmutableCsr<std::string_view>
     nbr.data = column_.get_view(nbr_list_[i].data);
     return nbr;
   }
+  void close() override { nbr_list_.reset(); }
 
  private:
   StringColumn& column_;
