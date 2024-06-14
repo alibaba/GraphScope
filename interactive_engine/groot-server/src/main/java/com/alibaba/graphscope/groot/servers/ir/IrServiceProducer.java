@@ -140,7 +140,7 @@ public class IrServiceProducer {
         addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_OPT.getKey(), configMap);
         addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_RULES.getKey(), configMap);
         addToConfigMapIfExist(FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.getKey(), configMap);
-        addToConfigMapIfExist(FrontendConfig.PHYSICAL_OPT_CONFIG.getKey(), configMap);
+        addToConfigMapIfExist(FrontendConfig.GRAPH_PHYSICAL_OPT.getKey(), configMap);
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 
