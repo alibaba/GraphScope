@@ -1789,7 +1789,9 @@ public class GraphBuilder extends RelBuilder {
         RelNode top = requireNonNull(peek(), "frame stack is empty");
         // skip intermediate operations which make no changes to the row type, i.e.
         // filter/limit/dedup...
+        RelNode parent = null;
         while (!top.getInputs().isEmpty() && top.getInput(0).getRowType() == top.getRowType()) {
+            parent = top;
             top = top.getInput(0);
         }
         if (top instanceof AbstractBindableTableScan
@@ -1871,6 +1873,10 @@ public class GraphBuilder extends RelBuilder {
                     GraphAggCall aggCall = aggregate.getAggCalls().get(0);
                     aggregate(aggregate.getGroupKey(), ImmutableList.of(aggCall.as(alias)));
                 }
+            }
+            if (parent != null && peek() != top) {
+                parent.replaceInput(0, build());
+                push(parent);
             }
         }
         return this;

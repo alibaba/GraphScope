@@ -19,7 +19,9 @@
 import datetime
 import functools
 import logging
+import os
 import random
+import re
 import socket
 import string
 from typing import Union
@@ -81,6 +83,28 @@ def get_internal_ip() -> str:
     hostname = socket.gethostname()
     internal_ip = socket.gethostbyname(hostname)
     return internal_ip
+
+
+def parse_file_metadata(location: str) -> dict:
+    """
+    Args:
+        location: optional values:
+            odps://path/to/file, hdfs://path/to/file, file:///path/to/file
+            /home/graphscope/path/to/file
+    """
+    metadata = {"datasource": "file"}
+    path = location
+    pattern = r"^(odps|hdfs|file|oss|s3)?://([\w/.-]+)$"
+    match = re.match(pattern, location)
+    if match:
+        datasource = match.group(1)
+        metadata["datasource"] = datasource
+        if datasource == "file":
+            path = match.group(2)
+    if metadata["datasource"] == "file":
+        _, file_extension = os.path.splitext(path)
+        metadata["file_type"] = file_extension[1:]
+    return metadata
 
 
 def get_public_ip() -> Union[str, None]:
