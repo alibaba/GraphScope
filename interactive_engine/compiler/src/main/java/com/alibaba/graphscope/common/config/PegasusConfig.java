@@ -31,7 +31,4 @@ public class PegasusConfig {
 
     public static final Config<String> PEGASUS_HOSTS =
             Config.stringConfig("pegasus.hosts", "localhost:8080");
-
-    public static final Config<Long> PEGASUS_GRPC_TIMEOUT =
-            Config.longConfig("pegasus.grpc.timeout", 6000000L);
 }
