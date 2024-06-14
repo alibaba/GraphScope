@@ -293,7 +293,8 @@ bool HQPSService::stop_compiler_subprocess() {
   if (compiler_process_.running()) {
     LOG(INFO) << "Terminate previous compiler process with pid: "
               << compiler_process_.id();
-    compiler_process_.terminate();
+    auto pid = compiler_process_.id();
+    ::kill(pid, SIGINT);
   }
   return true;
 }
