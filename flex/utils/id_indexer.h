@@ -1011,7 +1011,6 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
   LOG(INFO) << "residuals size: " << residuals.size() << "\n";
   for (const auto& lid : residuals) {
     auto oid = input.keys_[lid];
-    std::cout << lid << " " << oid << "\n";
     size_t index = input.hash_policy_.index_for_hash(
         input.hasher_(oid), input.num_slots_minus_one_);
     while (true) {

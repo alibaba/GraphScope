@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
       "memory-batch-init,m", bpo::value<bool>(), "batch init in memory")(
-      "use-mmap-vector,v", bpo::value<bool>(), "use mmap vector");
+      "use-mmap-vector", bpo::value<bool>(), "use mmap vector");
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -95,11 +95,14 @@ int main(int argc, char** argv) {
   bool batch_init_in_memory = false;
   if (vm.count("memory-batch-init")) {
     batch_init_in_memory = vm["memory-batch-init"].as<bool>();
+    LOG(INFO) << "batch init in memory: "
+              << static_cast<int>(batch_init_in_memory);
   }
 
   bool use_mmap_vector = false;
   if (vm.count("use-mmap-vector")) {
     use_mmap_vector = vm["use-mmap-vector"].as<bool>();
+    LOG(INFO) << "use mmap vector: " << static_cast<int>(use_mmap_vector);
   }
 
   setenv("TZ", "Asia/Shanghai", 1);

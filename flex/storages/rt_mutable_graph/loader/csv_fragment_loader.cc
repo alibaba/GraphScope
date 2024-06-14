@@ -232,8 +232,9 @@ std::shared_ptr<IFragmentLoader> CSVFragmentLoader::Make(
     const std::string& work_dir, const Schema& schema,
     const LoadingConfig& loading_config, int32_t thread_num,
     bool batch_init_in_memory, bool use_mmap_vector) {
-  return std::shared_ptr<IFragmentLoader>(new CSVFragmentLoader(
-      work_dir, schema, loading_config, thread_num, batch_init_in_memory));
+  return std::shared_ptr<IFragmentLoader>(
+      new CSVFragmentLoader(work_dir, schema, loading_config, thread_num,
+                            batch_init_in_memory, use_mmap_vector));
 }
 
 void CSVFragmentLoader::addVertices(label_t v_label_id,

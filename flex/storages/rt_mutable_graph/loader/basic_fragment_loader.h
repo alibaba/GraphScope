@@ -139,13 +139,12 @@ class BasicFragmentLoader {
         tmp_dir(work_dir_), {}, {}, false);
   }
 
-  template <typename EDATA_T>
-  void PutEdges(
-      label_t src_label_id, label_t dst_label_id, label_t edge_label_id,
-      const std::vector<std::vector<std::tuple<vid_t, vid_t, EDATA_T>>>&
-          edges_vec,
-      const std::vector<int32_t>& ie_degree,
-      const std::vector<int32_t>& oe_degree, bool batch_init_in_memory) {
+  template <typename EDATA_T, typename VECTOR_T>
+  void PutEdges(label_t src_label_id, label_t dst_label_id,
+                label_t edge_label_id, const std::vector<VECTOR_T>& edges_vec,
+                const std::vector<int32_t>& ie_degree,
+                const std::vector<int32_t>& oe_degree,
+                bool batch_init_in_memory) {
     size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
                    dst_label_id * edge_label_num_ + edge_label_id;
     auto& src_indexer = lf_indexers_[src_label_id];

@@ -22,6 +22,7 @@
 #include "flex/storages/rt_mutable_graph/loader/load_utils.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
+#include "flex/utils/mmap_vector.h"
 
 #include <arrow/api.h>
 #include <arrow/io/api.h>
@@ -190,10 +191,9 @@ struct _add_vertex {
 #endif
 };
 
-template <typename PK_T, typename EDATA_T>
+template <typename PK_T, typename EDATA_T, typename VECTOR_T>
 void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
-             const IndexerType& indexer,
-             std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
+             const IndexerType& indexer, VECTOR_T& parsed_edges,
              std::vector<std::atomic<int32_t>>& degree) {
   static constexpr auto invalid_vid = std::numeric_limits<vid_t>::max();
   if constexpr (std::is_same_v<PK_T, std::string_view>) {
@@ -246,16 +246,16 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
   }
 }
 
-template <typename SRC_PK_T, typename DST_PK_T, typename EDATA_T>
-static void append_edges(
-    std::shared_ptr<arrow::Array> src_col,
-    std::shared_ptr<arrow::Array> dst_col, const IndexerType& src_indexer,
-    const IndexerType& dst_indexer,
-    std::vector<std::shared_ptr<arrow::Array>>& edata_cols,
-    const PropertyType& edge_prop,
-    std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
-    std::vector<std::atomic<int32_t>>& ie_degree,
-    std::vector<std::atomic<int32_t>>& oe_degree) {
+template <typename SRC_PK_T, typename DST_PK_T, typename EDATA_T,
+          typename VECTOR_T>
+static void append_edges(std::shared_ptr<arrow::Array> src_col,
+                         std::shared_ptr<arrow::Array> dst_col,
+                         const IndexerType& src_indexer,
+                         const IndexerType& dst_indexer,
+                         std::vector<std::shared_ptr<arrow::Array>>& edata_cols,
+                         const PropertyType& edge_prop, VECTOR_T& parsed_edges,
+                         std::vector<std::atomic<int32_t>>& ie_degree,
+                         std::vector<std::atomic<int32_t>>& oe_degree) {
   CHECK(src_col->length() == dst_col->length());
   auto indexer_check_lambda = [](const IndexerType& cur_indexer,
                                  const std::shared_ptr<arrow::Array>& cur_col) {
@@ -333,11 +333,13 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
  public:
   AbstractArrowFragmentLoader(const std::string& work_dir, const Schema& schema,
                               const LoadingConfig& loading_config,
-                              int32_t thread_num, bool batch_init_in_memory)
+                              int32_t thread_num, bool batch_init_in_memory,
+                              bool use_mmap_vector)
       : loading_config_(loading_config),
         schema_(schema),
         thread_num_(thread_num),
         batch_init_in_memory_(batch_init_in_memory),
+        use_mmap_vector_(use_mmap_vector),
         basic_fragment_loader_(schema_, work_dir) {
     vertex_label_num_ = schema_.vertex_label_num();
     edge_label_num_ = schema_.edge_label_num();
@@ -358,6 +360,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
   // Add edges in record batch to output_parsed_edges, output_ie_degrees and
   // output_oe_degrees.
+
   void AddEdgesRecordBatch(
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id,
       const std::vector<std::string>& input_paths,
@@ -664,16 +667,15 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   }
 #endif
 
-  template <typename SRC_PK_T, typename EDATA_T>
-  void _append_edges(
-      std::shared_ptr<arrow::Array> src_col,
-      std::shared_ptr<arrow::Array> dst_col, const IndexerType& src_indexer,
-      const IndexerType& dst_indexer,
-      std::vector<std::shared_ptr<arrow::Array>>& property_cols,
-      const PropertyType& edge_property,
-      std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
-      std::vector<std::atomic<int32_t>>& ie_degree,
-      std::vector<std::atomic<int32_t>>& oe_degree) {
+  template <typename SRC_PK_T, typename EDATA_T, typename VECTOR_T>
+  void _append_edges(std::shared_ptr<arrow::Array> src_col,
+                     std::shared_ptr<arrow::Array> dst_col,
+                     const IndexerType& src_indexer,
+                     const IndexerType& dst_indexer,
+                     std::vector<std::shared_ptr<arrow::Array>>& property_cols,
+                     const PropertyType& edge_property, VECTOR_T& parsed_edges,
+                     std::vector<std::atomic<int32_t>>& ie_degree,
+                     std::vector<std::atomic<int32_t>>& oe_degree) {
     auto dst_col_type = dst_col->type();
     if (dst_col_type->Equals(arrow::int64())) {
       append_edges<SRC_PK_T, int64_t, EDATA_T>(
@@ -706,6 +708,25 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
           label_t, label_t, label_t, const std::string&, const LoadingConfig&,
           int)>
           supplier_creator) {
+    if (use_mmap_vector_) {
+      addEdgesRecordBatchImplHelper<
+          EDATA_T, mmap_vector<std::tuple<vid_t, vid_t, EDATA_T>>>(
+          src_label_id, dst_label_id, e_label_id, e_files, supplier_creator);
+    } else {
+      addEdgesRecordBatchImplHelper<
+          EDATA_T, std::vector<std::tuple<vid_t, vid_t, EDATA_T>>>(
+          src_label_id, dst_label_id, e_label_id, e_files, supplier_creator);
+    }
+  }
+
+  template <typename EDATA_T, typename VECTOR_T>
+  void addEdgesRecordBatchImplHelper(
+      label_t src_label_id, label_t dst_label_id, label_t e_label_id,
+      const std::vector<std::string>& e_files,
+      std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+          label_t, label_t, label_t, const std::string&, const LoadingConfig&,
+          int)>
+          supplier_creator) {
     auto src_label_name = schema_.get_vertex_label_name(src_label_id);
     auto dst_label_name = schema_.get_vertex_label_name(dst_label_id);
     auto edge_label_name = schema_.get_edge_label_name(e_label_id);
@@ -727,8 +748,21 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
     const auto& src_indexer = basic_fragment_loader_.GetLFIndexer(src_label_id);
     const auto& dst_indexer = basic_fragment_loader_.GetLFIndexer(dst_label_id);
-    std::vector<std::vector<std::tuple<vid_t, vid_t, EDATA_T>>>
-        parsed_edges_vec(std::thread::hardware_concurrency());
+    std::vector<VECTOR_T> parsed_edges_vec;
+    if constexpr (std::is_same_v<
+                      VECTOR_T,
+                      mmap_vector<std::tuple<vid_t, vid_t, EDATA_T>>>) {
+      const auto& work_dir = basic_fragment_loader_.work_dir();
+      for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
+        parsed_edges_vec.emplace_back(
+            runtime_dir(work_dir), src_label_name + "_" + dst_label_name + "_" +
+                                       edge_label_name + "_" +
+                                       std::to_string(i) + ".tmp");
+      }
+    } else {
+      parsed_edges_vec.resize(std::thread::hardware_concurrency());
+    }
+
     std::vector<std::atomic<int32_t>> ie_degree(dst_indexer.size()),
         oe_degree(src_indexer.size());
     for (size_t idx = 0; idx < ie_degree.size(); ++idx) {
@@ -841,24 +875,24 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                 // add edges to vector
                 CHECK(src_col->length() == dst_col->length());
                 if (src_col_type->Equals(arrow::int64())) {
-                  _append_edges<int64_t, EDATA_T>(
+                  _append_edges<int64_t, EDATA_T, VECTOR_T>(
                       src_col, dst_col, src_indexer, dst_indexer, property_cols,
                       edge_property, parsed_edges, ie_degree, oe_degree);
                 } else if (src_col_type->Equals(arrow::uint64())) {
-                  _append_edges<uint64_t, EDATA_T>(
+                  _append_edges<uint64_t, EDATA_T, VECTOR_T>(
                       src_col, dst_col, src_indexer, dst_indexer, property_cols,
                       edge_property, parsed_edges, ie_degree, oe_degree);
                 } else if (src_col_type->Equals(arrow::int32())) {
-                  _append_edges<int32_t, EDATA_T>(
+                  _append_edges<int32_t, EDATA_T, VECTOR_T>(
                       src_col, dst_col, src_indexer, dst_indexer, property_cols,
                       edge_property, parsed_edges, ie_degree, oe_degree);
                 } else if (src_col_type->Equals(arrow::uint32())) {
-                  _append_edges<uint32_t, EDATA_T>(
+                  _append_edges<uint32_t, EDATA_T, VECTOR_T>(
                       src_col, dst_col, src_indexer, dst_indexer, property_cols,
                       edge_property, parsed_edges, ie_degree, oe_degree);
                 } else {
                   // must be string
-                  _append_edges<std::string_view, EDATA_T>(
+                  _append_edges<std::string_view, EDATA_T, VECTOR_T>(
                       src_col, dst_col, src_indexer, dst_indexer, property_cols,
                       edge_property, parsed_edges, ie_degree, oe_degree);
                 }
@@ -886,9 +920,9 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
       oe_deg[idx] = oe_degree[idx];
     }
 
-    basic_fragment_loader_.PutEdges(src_label_id, dst_label_id, e_label_id,
-                                    parsed_edges_vec, ie_deg, oe_deg,
-                                    batch_init_in_memory_);
+    basic_fragment_loader_.PutEdges<EDATA_T, VECTOR_T>(
+        src_label_id, dst_label_id, e_label_id, parsed_edges_vec, ie_deg,
+        oe_deg, batch_init_in_memory_);
     string_columns.clear();
     size_t sum = 0;
     for (const auto& edges : parsed_edges_vec) {
@@ -904,6 +938,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   int32_t thread_num_;
   std::mutex* mtxs_;
   bool batch_init_in_memory_;
+  bool use_mmap_vector_;
   mutable BasicFragmentLoader basic_fragment_loader_;
 };
 
