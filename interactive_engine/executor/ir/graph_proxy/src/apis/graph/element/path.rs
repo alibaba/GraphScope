@@ -183,14 +183,17 @@ impl GraphPath {
     // append another path to the current path, and return the flag of whether the path has been appended or not.
     // notice that, if the path is a simple path, we simply concatenate the two paths, without checking the duplication (this may not be as expected)
     // e.g., [1,2,3] + [4,5] = [1,2,3,4,5]
-    pub fn append_path(&mut self, other: GraphPath) {
+    pub fn append_path(&mut self, other: GraphPath) -> bool {
         match self {
             GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => {
                 if let Some(other_path) = other.take_path() {
                     p.extend(other_path);
+                    true
+                } else {
+                    false
                 }
             }
-            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => {}
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => false,
         }
     }
 
