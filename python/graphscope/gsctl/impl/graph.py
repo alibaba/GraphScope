@@ -70,3 +70,11 @@ def get_graph_id_by_name(name_or_id: str):
             f"Found multiple id candidates {id_candidate} for graph {name_or_id}, please choose one."
         )
     return id_candidate[0]
+
+
+def get_graph_name_by_id(graph_identifier: str):
+    graphs = list_graphs()
+    for g in graphs:
+        if g.id == graph_identifier:
+            return g.name
+    return graph_identifier
