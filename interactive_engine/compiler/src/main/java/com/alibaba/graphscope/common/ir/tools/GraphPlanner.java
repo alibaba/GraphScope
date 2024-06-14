@@ -137,7 +137,7 @@ public class GraphPlanner {
             if (logicalPlan.isReturnEmpty()) {
                 return PhysicalPlan.createEmpty();
             } else if (logicalPlan.getRegularQuery() != null) {
-                String physicalOpt = FrontendConfig.PHYSICAL_OPT_CONFIG.get(graphConfig);
+                String physicalOpt = FrontendConfig.GRAPH_PHYSICAL_OPT.get(graphConfig);
                 if ("proto".equals(physicalOpt.toLowerCase())) {
                     logger.debug("physical type is proto");
                     try (GraphRelProtoPhysicalBuilder physicalBuilder =
