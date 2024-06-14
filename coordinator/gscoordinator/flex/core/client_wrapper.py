@@ -37,6 +37,7 @@ from gscoordinator.flex.core.datasource import DataSourceManager
 from gscoordinator.flex.core.insight import init_groot_client
 from gscoordinator.flex.core.interactive import init_hqps_client
 from gscoordinator.flex.core.utils import encode_datetime
+from gscoordinator.flex.core.utils import parse_file_metadata
 from gscoordinator.flex.models import CreateDataloadingJobResponse
 from gscoordinator.flex.models import CreateEdgeType
 from gscoordinator.flex.models import CreateGraphRequest
@@ -289,7 +290,8 @@ class ClientWrapper(object):
         if CLUSTER_TYPE == "HOSTS":
             filepath = os.path.join(DATASET_WORKSPACE, filestorage.filename)
             filestorage.save(filepath)
-            return UploadFileResponse.from_dict({"file_path": filepath})
+            metadata = parse_file_metadata(filepath)
+            return UploadFileResponse.from_dict({"file_path": filepath, "metadata": metadata})
 
     def bind_datasource_in_batch(
         self, graph_id: str, schema_mapping: SchemaMapping
@@ -301,9 +303,10 @@ class ClientWrapper(object):
             schema_mapping_dict["vertex_mappings"],
             schema_mapping_dict["edge_mappings"],
         ):
-            for column_mapping in mapping["column_mappings"]:
-                if "_property" in column_mapping:
-                    column_mapping["property"] = column_mapping.pop("_property")
+            if "column_mappings" in mapping and mapping["column_mappings"] is not None:
+                for column_mapping in mapping["column_mappings"]:
+                    if "_property" in column_mapping:
+                        column_mapping["property"] = column_mapping.pop("_property")
             if (
                 "source_vertex_mappings" in mapping
                 and "destination_vertex_mappings" in mapping
