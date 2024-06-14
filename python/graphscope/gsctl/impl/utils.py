@@ -30,8 +30,9 @@ def upload_file(location: str) -> str:
         return api_instance.upload_file(location).file_path
 
 
-def switch_context(context: str):
+def switch_context(context: str, graph_name=None):
     config = load_gs_config()
     current_context = get_current_context()
     current_context.switch_context(context)
+    current_context.set_graph_name(graph_name)
     config.update_and_write(current_context)

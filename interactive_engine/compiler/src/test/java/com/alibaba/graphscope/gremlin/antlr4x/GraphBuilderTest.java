@@ -1711,5 +1711,18 @@ public class GraphBuilderTest {
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 node.explain().trim());
+
+    @Test
+    public void g_V_select_a_b_valueMap() {
+        RelNode rel =
+                eval(
+                        "g.V().hasLabel('person').as('a').out('knows').as('b').select('a',"
+                                + " 'b').by(valueMap())");
+        Assert.assertEquals(
+                "([CHAR(1), CHAR(1)], [([CHAR(2), CHAR(4), CHAR(3)], [BIGINT, CHAR(1), INTEGER])"
+                        + " MAP, ([CHAR(2), CHAR(4), CHAR(4), CHAR(12), CHAR(3)], [BIGINT, CHAR(1),"
+                        + " CHAR(1), DATE, INTEGER]) MAP]) MAP",
+                rel.getRowType().getFieldList().get(0).getType().toString());
+
     }
 }
