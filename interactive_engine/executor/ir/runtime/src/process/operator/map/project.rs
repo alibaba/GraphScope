@@ -101,14 +101,16 @@ enum PathKey {
 }
 
 impl PathKey {
-    fn get_key(&self, entry: &DynEntry) -> FnExecResult<DynEntry> {
+    // get the properties of the elements in path according to the path key.
+    // The properties are returned as a Object::Vector, e.g., project a.name where a is a path, the result is a vector of names.
+    fn get_key(&self, entry: &DynEntry) -> FnExecResult<Object> {
         match self {
-            PathKey::Property(prop_key) => Ok(prop_key.get_key(entry)?.into()),
+            PathKey::Property(prop_key) => Ok(prop_key.get_key(entry)?),
             PathKey::Vec(vec) => {
                 let prop_num = vec.len();
                 if prop_num == 0 {
                     warn!("Empty Path Properties in PathKey::Vec");
-                    return Ok(DynEntry::new(Object::Vector(vec![])));
+                    return Ok(Object::Vector(vec![]));
                 }
                 let prob_props = self.get_path_props(entry, &vec[0])?;
                 let mut prop_collection: Vec<Vec<Object>> = prob_props
@@ -126,18 +128,18 @@ impl PathKey {
                         prop_collection[path_idx][prop_idx] = prop;
                     }
                 }
-                Ok(DynEntry::new(Object::Vector(
+                Ok(Object::Vector(
                     prop_collection
                         .into_iter()
                         .map(|vec| Object::Vector(vec))
                         .collect(),
-                )))
+                ))
             }
             PathKey::Map(map) => {
                 let prop_num = map.len();
                 if prop_num == 0 {
                     warn!("Empty Path Properties in PathKey::Vec");
-                    return Ok(DynEntry::new(Object::Vector(vec![])));
+                    return Ok(Object::Vector(vec![]));
                 }
                 let prob_key = &map[0].0;
                 let prob_props = self.get_path_props(entry, &map[0].1)?;
@@ -153,12 +155,12 @@ impl PathKey {
                         prop_collection[path_idx].insert(key_name.clone(), prop);
                     }
                 }
-                Ok(DynEntry::new(Object::Vector(
+                Ok(Object::Vector(
                     prop_collection
                         .into_iter()
                         .map(|map| Object::KV(map))
                         .collect(),
-                )))
+                ))
             }
         }
     }
@@ -186,8 +188,8 @@ impl PathTagKeyValues {
             if EntryType::Path != entry.get_type() {
                 Err(FnExecError::unexpected_data_error("Apply PathTagKeyValues on a non-Path entry"))
             } else {
-                let projected_properties = self.val.get_key(&entry)?;
-                Ok(projected_properties)
+                let projected_properties_obj = self.val.get_key(&entry)?;
+                Ok(projected_properties_obj.into())
             }
         } else {
             Ok(DynEntry::new(Object::Vector(vec![])))
