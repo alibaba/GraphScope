@@ -13,10 +13,7 @@
  */
 package com.alibaba.graphscope.groot.store;
 
-import com.alibaba.graphscope.proto.groot.FetchSchemaRequest;
-import com.alibaba.graphscope.proto.groot.FetchSchemaResponse;
-import com.alibaba.graphscope.proto.groot.GraphDefPb;
-import com.alibaba.graphscope.proto.groot.StoreSchemaGrpc;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.stub.StreamObserver;
 
@@ -24,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class StoreSchemaService extends StoreSchemaGrpc.StoreSchemaImplBase {
     private static final Logger logger = LoggerFactory.getLogger(StoreSchemaService.class);
@@ -44,6 +42,24 @@ public class StoreSchemaService extends StoreSchemaGrpc.StoreSchemaImplBase {
             responseObserver.onCompleted();
         } catch (IOException e) {
             logger.error("fetch schema failed", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void fetchStatistics(
+            FetchStatisticsRequest request,
+            StreamObserver<FetchStatisticsResponse> responseObserver) {
+        try {
+            Map<Integer, Statistics> map =
+                    this.storeService.getGraphStatisticsBlob(request.getSnapshotId());
+            logger.debug("Collected statistics :{}", map.size());
+            FetchStatisticsResponse response =
+                    FetchStatisticsResponse.newBuilder().putAllStatisticsMap(map).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (IOException e) {
+            logger.error("get statistics failed", e);
             responseObserver.onError(e);
         }
     }

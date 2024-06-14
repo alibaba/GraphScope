@@ -59,7 +59,7 @@ run:
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
 	  -Dgremlin.script.language.name=${gremlin.script.language.name} \
-	  -Dphysical.opt.config=${physical.opt.config} \
+	  -Dgraph.physical.opt=${graph.physical.opt} \
 	  -Dgraph.planner.rules=${graph.planner.rules} \
 	  -Dgraph.planner.opt=${graph.planner.opt} \
 	  -Dgraph.statistics=${graph.statistics} \

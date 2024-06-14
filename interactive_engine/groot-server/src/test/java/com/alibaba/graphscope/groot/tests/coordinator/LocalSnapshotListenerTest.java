@@ -15,10 +15,10 @@ package com.alibaba.graphscope.groot.tests.coordinator;
 
 import static org.mockito.Mockito.*;
 
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
 import com.alibaba.graphscope.groot.coordinator.backup.LocalSnapshotListener;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 
 import org.junit.jupiter.api.Test;
 
