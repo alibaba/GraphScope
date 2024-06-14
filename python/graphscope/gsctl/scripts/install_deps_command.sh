@@ -141,8 +141,9 @@ _install_apache_arrow_ubuntu() {
       -P /tmp/
     ${SUDO} apt-get install -y -V /tmp/apache-arrow-apt-source-latest-"$(lsb_release --codename --short)".deb
     ${SUDO} apt-get update -y
-    #TODO(weibin): Remove the arrow version constrait after issue is resolved: https://github.com/apache/incubator-graphar/issues/515
     ${SUDO} apt-get install -y libarrow-dev=15.0.2-1 libarrow-dataset-dev=15.0.2-1 libarrow-acero-dev=15.0.2-1 libparquet-dev=15.0.2-1
+    #TODO(zhanglei): Remove the arrow version constrait after new version of vineyard is release. see https://github.com/v6d-io/v6d/pull/1911 and https://github.com/apache/incubator-graphar/issues/515
+    #${SUDO} apt-get install -y libarrow-dev libarrow-dataset-dev libarrow-acero-dev libparquet-dev
     rm /tmp/apache-arrow-apt-source-latest-*.deb
   else
     log "apache-arrow (libarrow-dev) already installed, skip."
@@ -323,7 +324,7 @@ install_dependencies_analytical_universal() {
 }
 
 install_interactive_deps() {
-  install_hiactor
+  install_hiactor "${install_prefix}"
 }
 
 write_env_config() {
@@ -335,7 +336,7 @@ write_env_config() {
 
   {
     echo "export GRAPHSCOPE_HOME=${install_prefix}"
-    echo "export CMAKE_PREFIX_PATH=/opt/vineyard"
+    echo "export CMAKE_PREFIX_PATH=/opt/vineyard:/opt/graphscope/"
     echo "export PATH=${install_prefix}/bin:\$HOME/.local/bin:\$HOME/.cargo/bin:\$PATH"
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
     echo "export LIBRARY_PATH=${install_prefix}/lib:${install_prefix}/lib64"
