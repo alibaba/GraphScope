@@ -63,7 +63,7 @@ public class STPathTest {
     }
 
     @Test
-    public void st_path_test() {
+    public void st_path_person_id_knows_person_id() {
         GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
         RelNode before =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
