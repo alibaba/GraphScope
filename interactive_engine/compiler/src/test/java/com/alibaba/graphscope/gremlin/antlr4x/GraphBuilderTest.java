@@ -1711,6 +1711,7 @@ public class GraphBuilderTest {
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 node.explain().trim());
+    }
 
     @Test
     public void g_V_select_a_b_valueMap() {
@@ -1723,6 +1724,5 @@ public class GraphBuilderTest {
                         + " MAP, ([CHAR(2), CHAR(4), CHAR(4), CHAR(12), CHAR(3)], [BIGINT, CHAR(1),"
                         + " CHAR(1), DATE, INTEGER]) MAP]) MAP",
                 rel.getRowType().getFieldList().get(0).getType().toString());
-
     }
 }
