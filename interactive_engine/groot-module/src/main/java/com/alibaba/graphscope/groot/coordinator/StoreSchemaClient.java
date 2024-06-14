@@ -13,14 +13,14 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
+import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.graphscope.proto.groot.FetchSchemaRequest;
-import com.alibaba.graphscope.proto.groot.FetchSchemaResponse;
-import com.alibaba.graphscope.proto.groot.StoreSchemaGrpc;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
+import io.grpc.stub.StreamObserver;
 
 public class StoreSchemaClient extends RpcClient {
     public StoreSchemaClient(RpcChannel channel) {
@@ -35,9 +35,36 @@ public class StoreSchemaClient extends RpcClient {
         return StoreSchemaGrpc.newBlockingStub(rpcChannel.getChannel());
     }
 
+    private StoreSchemaGrpc.StoreSchemaStub getAsyncStub() {
+        return StoreSchemaGrpc.newStub(rpcChannel.getChannel());
+    }
+
     public GraphDef fetchSchema() {
         StoreSchemaGrpc.StoreSchemaBlockingStub stub = getStub();
         FetchSchemaResponse response = stub.fetchSchema(FetchSchemaRequest.newBuilder().build());
         return GraphDef.parseProto(response.getGraphDef());
+    }
+
+    public void fetchStatistics(CompletionCallback<FetchStatisticsResponse> callback) {
+        long snapshotId = Long.MAX_VALUE - 1;
+        FetchStatisticsRequest request =
+                FetchStatisticsRequest.newBuilder().setSnapshotId(snapshotId).build();
+        getAsyncStub()
+                .fetchStatistics(
+                        request,
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(FetchStatisticsResponse value) {
+                                callback.onCompleted(value);
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
+
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

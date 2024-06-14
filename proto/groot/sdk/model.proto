@@ -155,6 +155,23 @@ message StorePropertyListPb {
   repeated StorePropertyPb properties = 1;
 }
 
+
+message Statistics {
+  message VertexTypeStatistics {
+    gs.rpc.graph.LabelIdPb labelId = 1;
+    uint64 numVertices = 2;
+  }
+  message EdgeTypeStatistics {
+    gs.rpc.graph.EdgeKindPb edgeKind = 1;
+    uint64 numEdges = 2;
+  }
+  int64 snapshotId = 1;
+  uint64 numVertices = 2;
+  uint64 numEdges = 3;
+  repeated VertexTypeStatistics vertexTypeStatistics = 4;
+  repeated EdgeTypeStatistics edgeTypeStatistics = 5;
+}
+
 message ConfigPb {
   map<string, string> configs = 1;
 }

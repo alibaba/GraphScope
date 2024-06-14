@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.coordinator.backup;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.common.config.BackupConfig;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
@@ -26,6 +25,7 @@ import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.coordinator.QuerySnapshotListener;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
 import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;

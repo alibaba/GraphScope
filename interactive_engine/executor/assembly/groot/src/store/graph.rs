@@ -127,6 +127,29 @@ pub extern "C" fn writeBatch(
     return ret;
 }
 
+#[no_mangle]
+pub extern "C" fn getGraphStatistics(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
+    trace!("getGraphStatistics");
+    unsafe {
+        let graph_store_ptr = &*(ptr as *const GraphStore);
+        match graph_store_ptr.get_graph_statistics_blob(snapshot_id) {
+            Ok(blob) => {
+                let mut response = JnaResponse::new_success();
+                if let Err(e) = response.data(blob) {
+                    response.success(false);
+                    let msg = format!("{:?}", e);
+                    response.err_msg(&msg);
+                }
+                response
+            }
+            Err(e) => {
+                let msg = format!("{:?}", e);
+                JnaResponse::new_error(&msg)
+            }
+        }
+    }
+}
+
 fn do_write_batch<G: MultiVersionGraph>(
     graph: &G, snapshot_id: SnapshotId, buf: &[u8],
 ) -> GraphResult<bool> {

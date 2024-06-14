@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.groot.CuratorUtils;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
@@ -26,6 +25,7 @@ import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
 import com.alibaba.graphscope.groot.frontend.*;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;

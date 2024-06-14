@@ -23,7 +23,7 @@ use crate::db::api::GraphErrorCode::{InvalidData, TypeNotFound};
 use crate::db::api::*;
 use crate::db::common::bytes::transform;
 use crate::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
-use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
+use crate::db::graph::iter::{EdgeKindScan, EdgeTypeScan, VertexTypeScan};
 use crate::db::graph::table_manager::Table;
 use crate::db::storage::rocksdb::{RocksDB, RocksDBBackupEngine};
 use crate::db::storage::RawBytes;
@@ -1075,6 +1075,71 @@ impl GraphStore {
             }
             Err(err) => Err(err),
         }
+    }
+
+    pub fn get_graph_statistics_blob(&self, si: SnapshotId) -> GraphResult<Vec<u8>> {
+        let statistics = self.get_statistics(si)?;
+        let pb = statistics.to_proto()?;
+        pb.write_to_bytes()
+            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
+    }
+
+    pub fn get_statistics(&self, si: SnapshotId) -> GraphResult<GraphPartitionStatistics> {
+        let vertex_labels_statistics = self.get_vertex_statistics(si)?;
+        let edge_labels_statistics = self.get_edge_statistics(si)?;
+        let vertex_count = vertex_labels_statistics.values().sum();
+        let edge_count = edge_labels_statistics.values().sum();
+        Ok(GraphPartitionStatistics::new(
+            si,
+            vertex_count,
+            edge_count,
+            vertex_labels_statistics,
+            edge_labels_statistics,
+        ))
+    }
+
+    fn get_vertex_statistics(&self, si: SnapshotId) -> GraphResult<HashMap<LabelId, u64>> {
+        let guard = epoch::pin();
+        let map = self.vertex_manager.get_map(&guard);
+        let map_ref = unsafe { map.deref() };
+        let vertex_label_ids = map_ref
+            .keys()
+            .cloned()
+            .collect::<Vec<LabelId>>();
+        let mut vertex_label_counts = HashMap::new();
+        for label_id in vertex_label_ids {
+            let label_count = self
+                .scan_vertex(si, Some(label_id), None, None)?
+                .count();
+            vertex_label_counts.insert(label_id, label_count as u64);
+        }
+
+        Ok(vertex_label_counts)
+    }
+
+    fn get_edge_statistics(&self, si: SnapshotId) -> GraphResult<HashMap<EdgeKind, u64>> {
+        let guard = epoch::pin();
+        let inner = self.edge_manager.get_inner(&guard);
+        let edge_mgr = unsafe { inner.deref() };
+        let edge_kinds = edge_mgr.get_edge_kinds();
+        let mut edge_kind_counts = HashMap::new();
+        for edge_kind in edge_kinds {
+            let edge_kind_info = self
+                .edge_manager
+                .get_edge_kind(si, &edge_kind)?;
+            let kind_iter = EdgeKindScan::new(
+                self.storage.clone(),
+                si,
+                edge_kind_info,
+                None,
+                EdgeDirection::Both,
+                false,
+            )
+            .into_iter();
+            let edge_count = kind_iter.count();
+            edge_kind_counts.insert(edge_kind.clone(), edge_count as u64);
+        }
+        Ok(edge_kind_counts)
     }
 }
 
