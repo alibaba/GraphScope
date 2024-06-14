@@ -76,4 +76,7 @@ public class CommonConfig {
     // Only available in multi pod mode.
     public static final Config<Boolean> WRITE_HA_ENABLED =
             Config.boolConfig("write.ha.enabled", false);
+
+    public static final Config<Boolean> COLLECT_STATISTICS =
+            Config.boolConfig("collect.statistics", false);
 }
