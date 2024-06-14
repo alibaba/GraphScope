@@ -1703,6 +1703,16 @@ public class GraphBuilderTest {
     }
 
     @Test
+    public void g_V_has_label_person_limit_10_as_a() {
+        RelNode node = eval("g.V().hasLabel('person').limit(10).as('a')");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[_], isAppend=[false])\n"
+                        + "  GraphLogicalSort(fetch=[10])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+
+    @Test
     public void g_V_select_a_b_valueMap() {
         RelNode rel =
                 eval(
@@ -1713,5 +1723,6 @@ public class GraphBuilderTest {
                         + " MAP, ([CHAR(2), CHAR(4), CHAR(4), CHAR(12), CHAR(3)], [BIGINT, CHAR(1),"
                         + " CHAR(1), DATE, INTEGER]) MAP]) MAP",
                 rel.getRowType().getFieldList().get(0).getType().toString());
+
     }
 }
