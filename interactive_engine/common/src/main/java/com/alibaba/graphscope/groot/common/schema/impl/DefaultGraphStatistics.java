@@ -18,11 +18,13 @@ package com.alibaba.graphscope.groot.common.schema.impl;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
+import com.alibaba.graphscope.proto.groot.Statistics;
 import com.google.common.collect.Maps;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -93,5 +95,33 @@ public class DefaultGraphStatistics implements GraphStatistics {
                         .collect(Collectors.summingLong(Map.Entry::getValue));
 
         return count == null ? 0L : count;
+    }
+
+    public static DefaultGraphStatistics parseProto(Statistics statistics) {
+        long vcount = statistics.getNumVertices();
+        long ecount = statistics.getNumEdges();
+        Map<LabelId, Long> vertexTypeCounts = new HashMap<>();
+        Map<EdgeKind, Long> edgeTypeCounts = new HashMap<>();
+        for (Statistics.VertexTypeStatistics sts : statistics.getVertexTypeStatisticsList()) {
+            vertexTypeCounts.put(LabelId.parseProto(sts.getLabelId()), sts.getNumVertices());
+        }
+        for (Statistics.EdgeTypeStatistics sts : statistics.getEdgeTypeStatisticsList()) {
+            edgeTypeCounts.put(EdgeKind.parseProto(sts.getEdgeKind()), sts.getNumEdges());
+        }
+        return new DefaultGraphStatistics(vertexTypeCounts, edgeTypeCounts, vcount, ecount);
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultGraphStatistics{"
+                + "vertexTypeCounts="
+                + vertexTypeCounts
+                + ", edgeTypeCounts="
+                + edgeTypeCounts
+                + ", totalVertexCount="
+                + totalVertexCount
+                + ", totalEdgeCount="
+                + totalEdgeCount
+                + '}';
     }
 }

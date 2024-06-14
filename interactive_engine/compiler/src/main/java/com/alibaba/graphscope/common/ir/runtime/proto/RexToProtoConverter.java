@@ -199,15 +199,24 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                     key instanceof RexLiteral,
                     "key type of 'MAP_VALUE_CONSTRUCTOR' should be 'literal', but is "
                             + key.getClass());
-            Preconditions.checkArgument(
-                    value instanceof RexGraphVariable,
-                    "value type of 'MAP_VALUE_CONSTRUCTOR' should be 'variable', but is "
-                            + value.getClass());
-            varMapBuilder.addKeyVals(
+            OuterExpression.ExprOpr valueOpr = value.accept(this).getOperators(0);
+            OuterExpression.VariableKeyValue.Builder keyValueBuilder =
                     OuterExpression.VariableKeyValue.newBuilder()
-                            .setKey(key.accept(this).getOperators(0).getConst())
-                            .setValue(value.accept(this).getOperators(0).getVar())
-                            .build());
+                            .setKey(key.accept(this).getOperators(0).getConst());
+            switch (valueOpr.getItemCase()) {
+                case VAR:
+                    keyValueBuilder.setVal(valueOpr.getVar());
+                    break;
+                case MAP:
+                    keyValueBuilder.setNested(valueOpr.getMap());
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "can not convert value ["
+                                    + value
+                                    + "] of 'MAP_VALUE_CONSTRUCTOR' to physical plan");
+            }
+            varMapBuilder.addKeyVals(keyValueBuilder);
         }
         return OuterExpression.Expression.newBuilder()
                 .addOperators(

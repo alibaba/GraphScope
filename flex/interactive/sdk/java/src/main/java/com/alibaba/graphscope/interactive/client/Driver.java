@@ -17,7 +17,7 @@ package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.impl.DefaultSession;
-import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.alibaba.graphscope.interactive.models.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
@@ -151,6 +151,9 @@ public class Driver {
         } else {
             ServiceStatus status = serviceStatus.getValue();
             Integer boltPort = status.getBoltPort();
+            if (!status.getStatus().equals("Running")) {
+                throw new RuntimeException("Interactive Query Service is not running");
+            }
             // Currently, we assume the host is the same as the gs server
             return Pair.of(host, boltPort);
         }

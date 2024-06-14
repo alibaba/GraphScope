@@ -20,7 +20,7 @@ To create a new graph, you will need the original data of the graph. We currentl
 To begin, ensure you've adjusted the settings in the `{INTERACTIVE_HOME}/conf/interactive.yaml` file. By utilizing Docker's volume mount feature, you can map an external folder containing the CSV files of `movies` to the internal directory at `/home/graphscope/movies`. It's crucial that the internal data path starts with `/home/graphscope` and concludes with `movies`, reflecting the name of your graph. If you're looking to import custom data, you can do volume mapping in a similar way.
 
 ```yaml
-version: v0.0.3
+version: v0.3
 volume:
   # replace INTERACTIVE_HOME with actual path.
   - {INTERACTIVE_HOME}/examples/movies:/home/graphscope/movies 

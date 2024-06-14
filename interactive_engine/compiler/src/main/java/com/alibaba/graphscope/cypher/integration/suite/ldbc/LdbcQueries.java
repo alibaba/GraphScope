@@ -145,6 +145,38 @@ public class LdbcQueries {
         return new QueryContext(query, expected);
     }
 
+    // minor diff with get_ldbc_4_test since in experiment store the date is in a different format
+    // (e.g., 20120629020000000)
+    public static QueryContext get_ldbc_4_test_exp() {
+        String query =
+                "MATCH (person:PERSON {id:"
+                    + " 10995116278874})-[:KNOWS]-(friend:PERSON)<-[:HASCREATOR]-(post:POST)-[:HASTAG]->(tag:"
+                    + " TAG)\n"
+                    + "WITH DISTINCT tag, post\n"
+                    + "WITH tag,\n"
+                    + "     CASE\n"
+                    + "       WHEN post.creationDate < 20120629020000000  AND post.creationDate >="
+                    + " 20120601000000000 THEN 1\n"
+                    + "       ELSE 0\n"
+                    + "     END AS valid,\n"
+                    + "     CASE\n"
+                    + "       WHEN 20120601000000000 > post.creationDate THEN 1\n"
+                    + "       ELSE 0\n"
+                    + "     END AS inValid\n"
+                    + "WITH tag, sum(valid) AS postCount, sum(inValid) AS inValidPostCount\n"
+                    + "WHERE postCount>0 AND inValidPostCount=0\n"
+                    + "\n"
+                    + "RETURN tag.name AS tagName, postCount\n"
+                    + "ORDER BY postCount DESC, tagName ASC\n"
+                    + "LIMIT 10;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{tagName: \"Norodom_Sihanouk\", postCount: 3}>",
+                        "Record<{tagName: \"George_Clooney\", postCount: 1}>",
+                        "Record<{tagName: \"Louis_Philippe_I\", postCount: 1}>");
+        return new QueryContext(query, expected);
+    }
+
     public static QueryContext get_ldbc_6_test() {
         String query =
                 "MATCH (person:PERSON"

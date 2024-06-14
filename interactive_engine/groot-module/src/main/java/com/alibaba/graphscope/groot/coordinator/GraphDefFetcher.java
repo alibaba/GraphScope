@@ -13,18 +13,72 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
+import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.graphscope.proto.groot.FetchStatisticsResponse;
+import com.alibaba.graphscope.proto.groot.Statistics;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 public class GraphDefFetcher {
+    private static final Logger logger = LoggerFactory.getLogger(GraphDefFetcher.class);
 
-    private RoleClients<StoreSchemaClient> storeSchemaClients;
+    private final RoleClients<StoreSchemaClient> storeSchemaClients;
+    int storeCount;
 
-    public GraphDefFetcher(RoleClients<StoreSchemaClient> storeSchemaClients) {
+    public GraphDefFetcher(RoleClients<StoreSchemaClient> storeSchemaClients, int storeCount) {
         this.storeSchemaClients = storeSchemaClients;
+        this.storeCount = storeCount;
     }
 
     public GraphDef fetchGraphDef() {
         return storeSchemaClients.getClient(0).fetchSchema();
+    }
+
+    public Map<Integer, Statistics> fetchStatistics() {
+        Map<Integer, Statistics> statisticsMap = new ConcurrentHashMap<>();
+        CountDownLatch countDownLatch = new CountDownLatch(storeCount);
+
+        for (int i = 0; i < storeCount; ++i) {
+            storeSchemaClients
+                    .getClient(i)
+                    .fetchStatistics(
+                            new CompletionCallback<FetchStatisticsResponse>() {
+                                @Override
+                                public void onCompleted(FetchStatisticsResponse res) {
+                                    statisticsMap.putAll(res.getStatisticsMapMap());
+                                    finish(null);
+                                }
+
+                                @Override
+                                public void onError(Throwable t) {
+                                    logger.error("failed to fetch statistics", t);
+                                    finish(t);
+                                }
+
+                                private void finish(Throwable t) {
+                                    countDownLatch.countDown();
+                                }
+                            });
+        }
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            logger.error("fetch statistics has been interrupted", e);
+        }
+        if (statisticsMap.size() != storeCount) {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+        }
+        return statisticsMap;
     }
 }

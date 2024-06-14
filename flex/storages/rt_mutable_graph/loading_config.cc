@@ -148,15 +148,25 @@ static bool parse_column_mappings(
       LOG(ERROR) << "column_mappings should have field [column]";
       return false;
     }
-    int32_t column_id;
+    int32_t column_id = -1;
     if (!get_scalar(column_mapping, "index", column_id)) {
-      LOG(ERROR) << "Expect column index for column mapping";
-      return false;
+      VLOG(10) << "Column index for column mapping is not set, skip";
     }
-    std::string column_name;
+    else {
+      if (column_id < 0) {
+        LOG(ERROR) << "Column index for column mapping should be non-negative";
+        return false;
+      }
+    }
+    std::string column_name = "";
     if (!get_scalar(column_mapping, "name", column_name)) {
       VLOG(10) << "Column name for col_id: " << column_id
                << " is not set, make it empty";
+    }
+    // At least one need to be specified.
+    if (column_id == -1 && column_name.empty()) {
+      LOG(ERROR) << "Expect column index or name for column mapping";
+      return false;
     }
 
     std::string property_name;  // property name is optional.
