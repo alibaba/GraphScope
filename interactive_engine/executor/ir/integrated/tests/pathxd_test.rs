@@ -24,8 +24,9 @@ mod test {
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_physical_client::physical_builder::*;
+    use pegasus_common::downcast::AsAny;
     use pegasus_server::JobRequest;
-    use runtime::process::entry::Entry;
+    use runtime::process::entry::{CollectionEntry, Entry};
 
     use crate::common::test::*;
 
@@ -954,8 +955,16 @@ mod test {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
-                    if let Some(properties) = entry.get(None).unwrap().as_object() {
-                        result_collection.push(properties.clone());
+                    if let Some(e) = entry.get(None) {
+                        let collection = e
+                            .as_any_ref()
+                            .downcast_ref::<CollectionEntry>()
+                            .unwrap();
+                        let mut path_values_collection = vec![];
+                        for v in collection.inner.iter() {
+                            path_values_collection.push(v.as_object().unwrap().clone());
+                        }
+                        result_collection.push(Object::Vector(path_values_collection));
                     }
                 }
                 Err(e) => {
