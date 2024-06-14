@@ -137,7 +137,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                     }
                 }
                 (Endpoint::Start, Endpoint::End) => {
-                    // e.g., concat [3,2,1], [5,4,3]
+                    // e.g., concat [3,2,1], [5,4,3] => [1,2,3,4,5]
                     if left_path.get_path_start().is_none()
                         || (left_path.get_path_start().unwrap() != right_path.get_path_end())
                     {
@@ -150,7 +150,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                     }
                 }
                 (Endpoint::End, Endpoint::Start) => {
-                    // e.g., concat [1,2,3], [3,4,5]
+                    // e.g., concat [1,2,3], [3,4,5] => [1,2,3,4,5]
                     if right_path.get_path_start().is_none()
                         || (right_path.get_path_start().unwrap() != left_path.get_path_end())
                     {
@@ -161,7 +161,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
                     }
                 }
                 (Endpoint::End, Endpoint::End) => {
-                    // e.g., concat [1,2,3], [5,4,3]
+                    // e.g., concat [1,2,3], [5,4,3] => [1,2,3,4,5]
                     if left_path.get_path_end() != right_path.get_path_end() {
                         invalid = true;
                     } else {
