@@ -21,6 +21,7 @@ import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.backup.GraphPartitionBackup;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
+import com.alibaba.graphscope.proto.groot.Statistics;
 import com.sun.jna.Pointer;
 
 import org.apache.commons.io.FileUtils;
@@ -116,6 +117,17 @@ public class JnaGraphStore implements GraphPartition {
                 throw new IOException(errMsg);
             }
             return GraphDefPb.parseFrom(jnaResponse.getData());
+        }
+    }
+
+    @Override
+    public Statistics getGraphStatisticsBlob(long si) throws IOException {
+        try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.getGraphStatistics(this.pointer, si)) {
+            if (!jnaResponse.success()) {
+                String errMsg = jnaResponse.getErrMsg();
+                throw new IOException(errMsg);
+            }
+            return Statistics.parseFrom(jnaResponse.getData());
         }
     }
 

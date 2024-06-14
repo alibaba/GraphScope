@@ -356,7 +356,6 @@ void CSVFragmentLoader::fillVertexReaderMeta(
   // parse all column_names
 
   std::vector<std::string> included_col_names;
-  std::vector<size_t> included_col_indices;
   std::vector<std::string> mapped_property_names;
 
   auto cur_label_col_mapping = loading_config_.GetVertexColumnMappings(v_label);
@@ -383,7 +382,6 @@ void CSVFragmentLoader::fillVertexReaderMeta(
 
     for (size_t i = 0; i < read_options.column_names.size(); ++i) {
       included_col_names.emplace_back(read_options.column_names[i]);
-      included_col_indices.emplace_back(i);
       // We assume the order of the columns in the file is the same as the
       // order of the properties in the schema, except for primary key.
       mapped_property_names.emplace_back(property_names[i]);
@@ -391,12 +389,22 @@ void CSVFragmentLoader::fillVertexReaderMeta(
   } else {
     for (size_t i = 0; i < cur_label_col_mapping.size(); ++i) {
       auto& [col_id, col_name, property_name] = cur_label_col_mapping[i];
-      if (col_name.empty()) {
-        // use default mapping
+      if (col_name.empty()){
+        if (col_id >= read_options.column_names.size() || col_id < 0) {
+          LOG(FATAL) << "The specified column index: " << col_id
+                     << " is out of range, please check your configuration";
+        }
         col_name = read_options.column_names[col_id];
       }
+            // check whether index match to the name if col_id is valid
+      if (col_id >= 0 && col_id < read_options.column_names.size()) {
+       if (col_name != read_options.column_names[col_id]) {
+         LOG(FATAL) << "The specified column name: " << col_name
+                    << " does not match the column name in the file: "
+                    << read_options.column_names[col_id];
+       }
+      }
       included_col_names.emplace_back(col_name);
-      included_col_indices.emplace_back(col_id);
       mapped_property_names.emplace_back(property_name);
     }
   }
@@ -521,9 +529,20 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
     for (size_t i = 0; i < cur_label_col_mapping.size(); ++i) {
       // TODO: make the property column's names are in same order with schema.
       auto& [col_id, col_name, property_name] = cur_label_col_mapping[i];
-      if (col_name.empty()) {
-        // use default mapping
+      if (col_name.empty()){
+        if (col_id >= read_options.column_names.size() || col_id < 0) {
+          LOG(FATAL) << "The specified column index: " << col_id
+                     << " is out of range, please check your configuration";
+        }
         col_name = read_options.column_names[col_id];
+      }
+      // check whether index match to the name if col_id is valid
+      if (col_id >= 0 && col_id < read_options.column_names.size()) {
+       if (col_name != read_options.column_names[col_id]) {
+         LOG(FATAL) << "The specified column name: " << col_name
+                    << " does not match the column name in the file: "
+                    << read_options.column_names[col_id];
+       }
       }
       included_col_names.emplace_back(col_name);
       mapped_property_names.emplace_back(property_name);
