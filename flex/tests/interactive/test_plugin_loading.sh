@@ -30,13 +30,22 @@ kill_service(){
 trap kill_service EXIT
 
 start_engine_service(){
+    # expect one args 
+    if [ $# -lt 1 ]; then
+        echo "Receives: $# args, need 1 args"
+        echo "Usage: $0 <ENABLE_COMPILER>"
+        exit 1
+    fi
+    enable_compiler=$1
     #check SERVER_BIN exists
     if [ ! -f ${SERVER_BIN} ]; then
         err "SERVER_BIN not found"
         exit 1
     fi
     cmd="${SERVER_BIN} -w ${WORKSPACE} -c ${ENGINE_CONFIG_PATH} --enable-admin-service true"
-    cmd="${cmd} --start-compiler true"
+    if [ "${enable_compiler}" == "true" ]; then
+        cmd="${cmd} --start-compiler true"
+    fi
     
     echo "Start engine service with command: ${cmd}"
     ${cmd} &
@@ -93,7 +102,7 @@ check_procedure_loading_and_calling_via_encoder() {
     exit 1
   fi
   cp $1 ${WORKSPACE}/data/${GRAPH_NAME}/graph.yaml
-  start_engine_service
+  start_engine_service false
 
   python3 test_call_proc.py --endpoint http://localhost:7777 --input-format encoder
 
@@ -108,16 +117,19 @@ check_procedure_loading_and_calling_via_cypher_json() {
     exit 1
   fi
   cp $1 ${WORKSPACE}/data/${GRAPH_NAME}/graph.yaml
-  start_engine_service
+  start_engine_service true
 
+  sleep 5
   python3 test_call_proc.py --endpoint http://localhost:7777 --input-format json
 
   kill_service
 }
 
 echo "Testing for schema file: ${SCHEMA_VERSION_00}"
+rm -rf ${WORKSPACE}/METADATA/
 check_procedure_loading_and_calling_via_encoder ${SCHEMA_VERSION_00}
 echo "Testing for schema file: ${SCHEMA_VERSION_01}"
+rm -rf ${WORKSPACE}/METADATA/
 check_procedure_loading_and_calling_via_cypher_json ${SCHEMA_VERSION_01}
 
 echo "Test passed for plugin loading and calling"

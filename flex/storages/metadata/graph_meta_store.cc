@@ -134,6 +134,9 @@ PluginMeta PluginMeta::FromJson(const nlohmann::json& json) {
   }
   if (json.contains("name")) {
     meta.name = json["name"].get<std::string>();
+    if (meta.id.empty()) {
+      meta.id = meta.name;
+    }
   }
   if (json.contains("bound_graph")) {
     meta.bound_graph = json["bound_graph"].get<GraphId>();
@@ -155,6 +158,8 @@ PluginMeta PluginMeta::FromJson(const nlohmann::json& json) {
   }
   if (json.contains("type")) {
     meta.type = json["type"].get<std::string>();
+  } else {
+    meta.type = "cpp";  // default is cpp
   }
   if (json.contains("option")) {
     meta.setOptionFromJsonString(json["option"].dump());

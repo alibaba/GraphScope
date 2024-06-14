@@ -325,7 +325,7 @@ class DefaultSession(Session):
         # get service port
         service_status = self.get_service_status()
         if not service_status.is_ok():
-            raise Exception("Failed to get service status")
+            raise Exception("Failed to get service status: ", service_status.get_status_message())
         service_port = service_status.get_value().hqps_port
         # replace the port in uri
         uri = uri.split(":")
