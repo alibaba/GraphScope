@@ -57,9 +57,9 @@ public class YamlConfigs extends Configs {
                             return configs.get("compiler.meta.reader.schema.uri");
                         })
                 .put(
-                        "graph.meta.statistics.uri",
+                        "graph.statistics",
                         (Configs configs) -> {
-                            String statistics = System.getProperty("graph.meta.statistics.uri");
+                            String statistics = System.getProperty("graph.statistics");
                             if (statistics != null) {
                                 return statistics;
                             }

@@ -21,7 +21,7 @@ public class GraphConfig {
             Config.stringConfig("graph.schema", ".");
 
     public static final Config<String> GRAPH_META_STATISTICS_URI =
-            Config.stringConfig("graph.meta.statistics.uri", "");
+            Config.stringConfig("graph.statistics", "");
 
     public static final Config<String> GRAPH_STORE = Config.stringConfig("graph.store", "exp");
 
