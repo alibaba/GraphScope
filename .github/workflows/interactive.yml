@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
@@ -352,7 +352,7 @@ jobs:
   test-cmake-options:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     strategy:
       matrix:
         BUILD_HQPS: [ON, OFF]
@@ -373,7 +373,7 @@ jobs:
   test-AOCC-compilation:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
@@ -402,7 +402,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
