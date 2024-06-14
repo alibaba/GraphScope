@@ -321,4 +321,18 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                                             .get(i),
                             i -> false),
                     SqlFunctionCategory.SYSTEM);
+
+    public static final SqlOperator PATH_FUNCTION =
+            new SqlFunction(
+                    "PATH_FUNCTION",
+                    SqlKind.OTHER,
+                    ReturnTypes.ARG2.andThen(SqlTypeTransforms.TO_ARRAY),
+                    null,
+                    GraphOperandTypes.operandMetadata(
+                            ImmutableList.of(
+                                    GraphTypeFamily.PATH, SqlTypeFamily.IGNORE, SqlTypeFamily.ANY),
+                            typeFactory -> ImmutableList.of(),
+                            i -> ImmutableList.of("Path", "FuncOpt", "PropertyProjection").get(i),
+                            i -> false),
+                    SqlFunctionCategory.SYSTEM);
 }

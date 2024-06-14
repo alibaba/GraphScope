@@ -427,7 +427,7 @@ public class GraphBuilderTest {
                     + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[_], opt=[END])\n"
-                    + "], offset=[1], fetch=[1], path_opt=[SIMPLE], result_opt=[ALL_V_E],"
+                    + "], offset=[1], fetch=[1], path_opt=[SIMPLE], result_opt=[ALL_V],"
                     + " alias=[b])\n"
                     + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[a], opt=[VERTEX])",
