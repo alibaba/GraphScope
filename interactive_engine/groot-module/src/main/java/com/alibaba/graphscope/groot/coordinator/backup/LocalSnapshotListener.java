@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.coordinator.backup;
 
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.coordinator.QuerySnapshotListener;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

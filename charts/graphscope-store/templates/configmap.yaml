@@ -58,6 +58,14 @@ data:
     gremlin.server.port=12312
     ## disable neo4j when launching groot server by default
     neo4j.bolt.server.disabled=true
+  
+    ## GOpt config
+    graph.planner.is.on={{ .Values.graphPlannerIsOn }}
+    graph.planner.opt={{ .Values.graphPlannerOpt }}
+    graph.planner.rules={{ .Values.graphPlannerRules }}
+    graph.physical.opt={{ .Values.graphPhysicalOpt }}
+    gremlin.script.language.name={{ .Values.gremlinScriptLanguageName }}
+    query.execution.timeout.ms={{ .Values.queryExecutionTimeoutMs }}
 
     log4rs.config=LOG4RS_CONFIG
     ## Auth config
@@ -88,6 +96,8 @@ data:
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
     log.recycle.enable={{ .Values.logRecycleEnable }}
+    collect.statistics={{ .Values.collectStatistics }}
+    log.recycle.offset.reserve={{ .Values.logRecycleOffsetReserve }}
 
     ## Extra Config
     {{- if .Values.extraConfig }}

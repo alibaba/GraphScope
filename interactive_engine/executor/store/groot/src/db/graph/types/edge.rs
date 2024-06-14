@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use std::collections::hash_map::Keys;
 use std::collections::hash_map::Values;
 use std::collections::HashMap;
 use std::sync::atomic::Ordering;
@@ -525,5 +526,10 @@ impl EdgeManagerInner {
     pub(crate) fn get_all_edges(&self) -> Values<LabelId, Arc<EdgeInfo>> {
         debug!("EdgeManagerInner::get_all_edges");
         self.info_map.values()
+    }
+
+    pub(crate) fn get_edge_kinds(&self) -> Keys<EdgeKind, Vec<Arc<EdgeKindInfo>>> {
+        debug!("EdgeManagerInner::get_all_edges");
+        self.type_map.keys()
     }
 }

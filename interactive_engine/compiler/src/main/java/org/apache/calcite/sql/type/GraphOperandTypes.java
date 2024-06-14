@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeFamily;
 
 import java.util.List;
 import java.util.function.Function;
@@ -96,7 +97,7 @@ public abstract class GraphOperandTypes {
             OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_NUMERIC);
 
     public static SqlOperandMetadata operandMetadata(
-            List<SqlTypeFamily> families,
+            List<RelDataTypeFamily> families,
             Function<RelDataTypeFactory, List<RelDataType>> typesFactory,
             IntFunction<String> operandName,
             Predicate<Integer> optional) {

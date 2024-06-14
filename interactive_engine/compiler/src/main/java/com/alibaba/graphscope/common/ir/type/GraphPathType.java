@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.type;
 
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFamily;
 import org.apache.calcite.sql.type.AbstractSqlType;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -77,5 +78,10 @@ public class GraphPathType extends ArraySqlType {
             generateTypeString(sb, true);
             return sb.toString();
         }
+    }
+
+    @Override
+    public RelDataTypeFamily getFamily() {
+        return GraphTypeFamily.PATH;
     }
 }
