@@ -169,9 +169,13 @@ components:
     UploadFileResponse:
       required:
         - file_path
+        - metadata
       properties:
         file_path:
           type: string
+        metadata:
+          type: object
+          additionalProperties: true
 
     LongText:
       required:
@@ -2297,5 +2301,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UploadFileResponse'
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+                metadata:
+                  datasource: file
+                  file_type: csv
         500:
           $ref: "#/components/responses/500"

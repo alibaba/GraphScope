@@ -79,9 +79,7 @@ clean:
 
 gsctl:
 	cd $(CLIENT_DIR) && \
-	python3 setup_gsctl.py bdist_wheel && \
-	python3 -m pip install dist/gsctl*.whl --force-reinstall && \
-	rm -fr build
+	python3 ./setup_gsctl.py develop --user
 
 
 client: learning

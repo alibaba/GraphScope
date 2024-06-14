@@ -459,18 +459,19 @@ class TreeDisplay(object):
                         parent=specific_edge_mapping_identifier,
                     )
                 # property mapping
-                for property_column_mapping in mapping.column_mappings:
-                    tag = "Property(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
-                        property_column_mapping.var_property,
-                        property_column_mapping.column.index,
-                        property_column_mapping.column.name,
-                    )
-                    p_mapping_identifier = f"{specific_edge_mapping_identifier}_{property_column_mapping.var_property}"
-                    self.tree.create_node(
-                        tag=tag,
-                        identifier=p_mapping_identifier,
-                        parent=specific_edge_mapping_identifier,
-                    )
+                if mapping.column_mappings is not None:
+                    for property_column_mapping in mapping.column_mappings:
+                        tag = "Property(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
+                            property_column_mapping.var_property,
+                            property_column_mapping.column.index,
+                            property_column_mapping.column.name,
+                        )
+                        p_mapping_identifier = f"{specific_edge_mapping_identifier}_{property_column_mapping.var_property}"
+                        self.tree.create_node(
+                            tag=tag,
+                            identifier=p_mapping_identifier,
+                            parent=specific_edge_mapping_identifier,
+                        )
 
     def show(self, graph_identifier=None, stdout=False, sorting=False):
         if graph_identifier is not None:
@@ -483,7 +484,5 @@ class TreeDisplay(object):
                 f"{graph_identifier}_stored_procedure"
             )
             click.secho(stored_procedure_tree.show(stdout=False, sorting=False))
-            job_tree = self.tree.subtree(f"{graph_identifier}_job")
-            click.secho(job_tree.show(stdout=False, sorting=False))
         else:
             click.secho(self.tree.show(stdout=stdout, sorting=sorting))

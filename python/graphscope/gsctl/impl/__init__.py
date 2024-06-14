@@ -25,6 +25,7 @@ from graphscope.gsctl.impl.datasource import unbind_vertex_datasource
 from graphscope.gsctl.impl.graph import create_graph
 from graphscope.gsctl.impl.graph import delete_graph_by_id
 from graphscope.gsctl.impl.graph import get_graph_id_by_name
+from graphscope.gsctl.impl.graph import get_graph_name_by_id
 from graphscope.gsctl.impl.graph import list_graphs
 from graphscope.gsctl.impl.job import delete_job_by_id
 from graphscope.gsctl.impl.job import get_job_by_id

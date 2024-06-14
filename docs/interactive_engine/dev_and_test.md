@@ -105,7 +105,6 @@ $GIE_TEST_HOME/bin/gaia_executor $GIE_TEST_HOME/conf/log4rs.yml $GIE_TEST_HOME/c
 ## Pegasus service config
 # a.k.a. thread num
 pegasus.worker.num = 1
-pegasus.timeout = 240000
 pegasus.batch.size = 1024
 pegasus.output.capacity = 16
 
@@ -126,6 +125,9 @@ neo4j.bolt.server.port = 7687
 # disable authentication if username or password is not set
 # auth.username = default
 # auth.password = default
+
+# set total execution time for a query
+query.execution.timeout.ms: 3000000
 ```
 
 6. Start the `frontend`:
