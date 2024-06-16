@@ -139,11 +139,11 @@ int main(int argc, char** argv) {
 
   // Register handlers for SIGKILL, SIGINT, SIGTERM, SIGSEGV, SIGABRT
   // LOG(FATAL) cause SIGABRT
-  // std::signal(SIGINT, signal_handler);
-  // std::signal(SIGTERM, signal_handler);
-  // std::signal(SIGKILL, signal_handler);
-  // std::signal(SIGSEGV, signal_handler);
-  // std::signal(SIGABRT, signal_handler);
+  std::signal(SIGINT, signal_handler);
+  std::signal(SIGTERM, signal_handler);
+  std::signal(SIGKILL, signal_handler);
+  std::signal(SIGSEGV, signal_handler);
+  std::signal(SIGABRT, signal_handler);
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
       data_dir_path.string(), schema_res.value(), loading_config_res.value(),

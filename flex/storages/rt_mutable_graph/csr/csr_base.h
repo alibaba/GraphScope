@@ -65,8 +65,8 @@ class CsrBase {
   virtual size_t batch_init(const std::string& name,
                             const std::string& work_dir,
                             const std::vector<int>& degree,
-                            double reserve_ratio = 1.2,
-                            bool batch_init_in_memory = false) = 0;
+                            bool batch_init_in_memory = false,
+                            double reserve_ratio = 1.2) = 0;
   virtual void batch_sort_by_edge_data(timestamp_t ts) {
     LOG(FATAL) << "not supported...";
   }

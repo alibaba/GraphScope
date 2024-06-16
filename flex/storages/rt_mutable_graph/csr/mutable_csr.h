@@ -149,8 +149,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   }
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     reserve_ratio = std::max(reserve_ratio, 1.0);
     size_t vnum = degree.size();
     adj_lists_.open(work_dir + "/" + name + ".adj", !batch_init_in_memory);
@@ -474,8 +474,8 @@ class MutableCsr<std::string_view>
   }
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     size_t vnum = degree.size();
     adj_lists_.open(work_dir + "/" + name + ".adj", !batch_init_in_memory);
     adj_lists_.resize(vnum);
@@ -686,8 +686,8 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
   ~SingleMutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     size_t vnum = degree.size();
     nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
     nbr_list_.resize(vnum);
@@ -868,8 +868,8 @@ class SingleMutableCsr<std::string_view>
   ~SingleMutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     size_t vnum = degree.size();
     nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
     nbr_list_.resize(vnum);
@@ -1040,8 +1040,8 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   ~EmptyCsr() = default;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     return 0;
   }
 
@@ -1100,8 +1100,8 @@ class EmptyCsr<std::string_view>
   ~EmptyCsr() = default;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     return 0;
   }
 

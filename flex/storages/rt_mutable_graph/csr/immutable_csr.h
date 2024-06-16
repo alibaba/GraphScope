@@ -56,8 +56,8 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   using slice_t = ImmutableNbrSlice<EDATA_T>;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     size_t vnum = degree.size();
     adj_lists_.open(work_dir + "/" + name + ".adj", !batch_init_in_memory);
     adj_lists_.resize(vnum);
@@ -290,8 +290,8 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     size_t vnum = degree.size();
     nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
     nbr_list_.resize(vnum);
@@ -456,8 +456,8 @@ class SingleImmutableCsr<std::string_view>
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, double reserve_ratio,
-                    bool batch_init_in_memory) override {
+                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    double reserve_ratio) override {
     size_t vnum = degree.size();
     nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
     nbr_list_.resize(vnum);

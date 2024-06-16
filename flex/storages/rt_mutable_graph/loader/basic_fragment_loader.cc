@@ -141,6 +141,7 @@ void BasicFragmentLoader::LoadFragment() {
   io_adaptor->Close();
 
   set_snapshot_version(work_dir_, 0);
+  clear_tmp(work_dir_);
 }
 
 void BasicFragmentLoader::AddVertexBatch(

@@ -521,7 +521,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     for (auto& v_file : v_files) {
       VLOG(10) << "Parsing vertex file:" << v_file << " for label "
                << v_label_name;
-      auto record_batch_supplier =
+      auto record_batch_supplier_vec =
           supplier_creator(v_label_id, v_file, loading_config_,
                            std::thread::hardware_concurrency());
       std::atomic<int> finish_reads(0);
@@ -593,8 +593,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     basic_fragment_loader_.FinishAddingVertex(v_label_id, indexer_builder);
     const auto& indexer = basic_fragment_loader_.GetLFIndexer(v_label_id);
 
-    std::vector<std::thread> work_threads;
-    std::atomic<size_t> cur_batch_id(0);
+        std::atomic<size_t> cur_batch_id(0);
     for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
       work_threads.emplace_back(
           [&](int idx) {
