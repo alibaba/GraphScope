@@ -81,7 +81,7 @@ data:
 
     gaia.rpc.port=60000
     gaia.engine.port=60001
-    gaia.write.timeout.ms={{ .Values.pegasus.timeout }}
+    gaia.write.timeout.ms=5000
 
     ## Secondary config
     secondary.instance.enabled={{ .Values.secondary.enabled }}
