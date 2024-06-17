@@ -1,0 +1,4 @@
+vertex_id,vertex_name,status,credit_code,license_number
+1,alibaba,open,1234,12345
+2,tecent,open,2345,23456
+3,bytedance,open,3456,34567

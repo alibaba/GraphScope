@@ -86,26 +86,20 @@ class HuoYan : public WriteAppBase {
           if (cur_path.size() != cur_rel_type.size() + 1) {
             throw std::runtime_error("Error Internal state");
           }
-          VLOG(10) << "put path of size: " << cur_rel_type.size();
+	  VLOG(10) << "put path of size: " << cur_rel_type.size();
           for (auto k = 0; k < cur_rel_type.size(); ++k) {
             // output.put_long(
             //     txn.GetVertexId(comp_label_id_, cur_path[k]).AsInt64());
             output.put_long(get_oid_from_encoded_vid(txn, cur_path[k]));
             output.put_long(get_oid_from_encoded_vid(txn, cur_path[k + 1]));
-            VLOG(10) << "put src id "
-                     << get_oid_from_encoded_vid(txn, cur_path[k])
-                     << ", dst id "
-                     << get_oid_from_encoded_vid(txn, cur_path[k + 1]);
+	    VLOG(10) << "put src id " << get_oid_from_encoded_vid(txn, cur_path[k]) << ", dst id " <<  get_oid_from_encoded_vid(txn, cur_path[k + 1]);
             // output.put_long(
             // txn.GetVertexId(comp_label_id_, cur_path[k + 1]).AsInt64());
             output.put_string_view(
                 get_vertex_name_from_encoded_vid(cur_path[k]));
             output.put_string_view(
                 get_vertex_name_from_encoded_vid(cur_path[k + 1]));
-            VLOG(10) << "put name: "
-                     << get_vertex_name_from_encoded_vid(cur_path[k])
-                     << ", dst name "
-                     << get_vertex_name_from_encoded_vid(cur_path[k + 1]);
+	    VLOG(10) << "put name: " << get_vertex_name_from_encoded_vid(cur_path[k]) << ", dst name " <<  get_vertex_name_from_encoded_vid(cur_path[k + 1]);
             // output.put_string_view(typed_comp_named_col->get_view(cur_path[k]));
             // output.put_string_view(
             // typed_comp_named_col->get_view(cur_path[k + 1]));
@@ -342,7 +336,7 @@ class HuoYan : public WriteAppBase {
       next_rel_types.clear();
     }
 
-    LOG(INFO) << "result size: " << result_size;
+    LOG(INFO) << "result size: " <<result_size; 
     output.put_int_at(begin_loc, result_size);
     txn.Commit();
     for (auto& vid : vid_vec) {
