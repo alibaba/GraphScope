@@ -295,6 +295,29 @@ bool HQPSService::stop_compiler_subprocess() {
               << compiler_process_.id();
     auto pid = compiler_process_.id();
     ::kill(pid, SIGINT);
+    int32_t sleep_time = 0;
+    int32_t max_sleep_time = 10;
+    int32_t sleep_interval = 2;
+    bool sub_process_exited = false;
+    // sleep for a maximum 10 seconds to wait for the compiler process to stop
+    while (sleep_time < max_sleep_time) {
+      std::this_thread::sleep_for(std::chrono::seconds(sleep_interval));
+      // check if the compiler process is still running
+      if (compiler_process_.running() == false) {
+        sub_process_exited = true;
+        break;
+      }
+      sleep_time += sleep_interval;
+    }
+    // if the compiler process is still running, force to kill it with SIGKILL
+    if (sub_process_exited == false) {
+      LOG(ERROR) << "Fail to stop compiler process! Force to kill it!";
+      ::kill(pid, SIGKILL);
+      std::this_thread::sleep_for(std::chrono::seconds(sleep_interval));
+    } else {
+      LOG(INFO) << "Compiler process stopped successfully in " << sleep_time
+                << " seconds.";
+    }
   }
   return true;
 }
