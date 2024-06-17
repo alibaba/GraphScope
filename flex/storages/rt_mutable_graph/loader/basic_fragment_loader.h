@@ -100,6 +100,11 @@ class BasicFragmentLoader {
                            snapshot_dir(work_dir_, 0), lf_indexers_[v_label]);
     append_vertex_loading_progress(schema_.get_vertex_label_name(v_label),
                                    LoadingStatus::kLoaded);
+    auto& v_data = vertex_data_[v_label];
+    auto label_name = schema_.get_vertex_label_name(v_label);
+    v_data.resize(lf_indexers_[v_label].size());
+    v_data.dump(vertex_table_prefix(label_name), snapshot_dir(work_dir_, 0));
+    append_vertex_loading_progress(label_name, LoadingStatus::kCommited);
   }
 #endif
 
