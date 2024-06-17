@@ -41,6 +41,10 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
 
 # build coordinator
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+        cd ${HOME}/GraphScope/coordinator/flex/interactive/sdk && \
+        ./generate_sdk.sh -g python && cd python && \
+        python3 setup.py build_proto && python3 setup.py bdist_wheel && \
+        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
         python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
