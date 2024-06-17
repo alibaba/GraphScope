@@ -28,7 +28,8 @@ class UploadFileResponse(BaseModel):
     UploadFileResponse
     """ # noqa: E501
     file_path: StrictStr
-    __properties: ClassVar[List[str]] = ["file_path"]
+    metadata: Dict[str, Any]
+    __properties: ClassVar[List[str]] = ["file_path", "metadata"]
 
     model_config = {
         "populate_by_name": True,
@@ -81,7 +82,8 @@ class UploadFileResponse(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "file_path": obj.get("file_path")
+            "file_path": obj.get("file_path"),
+            "metadata": obj.get("metadata")
         })
         return _obj
 

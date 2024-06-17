@@ -42,6 +42,7 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
         super("MAP", SqlKind.MAP_VALUE_CONSTRUCTOR);
     }
 
+    @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         List<RelDataType> argTypes = opBinding.collectOperandTypes();

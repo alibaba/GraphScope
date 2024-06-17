@@ -473,6 +473,11 @@ paths:
         "200":
           content:
             application/json:
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+                metadata:
+                  datasource: file
+                  file_type: csv
               schema:
                 $ref: '#/components/schemas/UploadFileResponse'
           description: successful operation
@@ -2008,12 +2013,19 @@ components:
     UploadFileResponse:
       example:
         file_path: file_path
+        metadata:
+          key: ""
       properties:
         file_path:
           title: file_path
           type: string
+        metadata:
+          additionalProperties: true
+          title: metadata
+          type: object
       required:
       - file_path
+      - metadata
       title: UploadFileResponse
     LongText:
       properties:

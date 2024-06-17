@@ -585,22 +585,27 @@
         "mappings": [{
           "expr": {
             "operators": [{
-              "nodeType": {
-              },
-              "concat": {
-                "vars": [{
-                  "tag": {
-                    "id": 3
+              "pathConcat": {
+                "left": {
+                  "pathTag": {
+                    "tag": {
+                      "id": 3
+                    },
+                    "nodeType": {
+                    }
                   },
-                  "nodeType": {
-                  }
-                }, {
-                  "tag": {
-                    "id": 5
+                  "endpoint": "END"
+                },
+                "right": {
+                  "pathTag": {
+                    "tag": {
+                      "id": 5
+                    },
+                    "nodeType": {
+                    }
                   },
-                  "nodeType": {
-                  }
-                }]
+                  "endpoint": "END"
+                }
               }
             }]
           },

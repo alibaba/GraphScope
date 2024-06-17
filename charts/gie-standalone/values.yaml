@@ -36,8 +36,6 @@ htapLoaderConfig: "v6d_modern_loader.json"
 ## Pegasus Config
 pegasusWorkerNum: 2
 
-pegasusTimeout: 240000
-
 pegasusBatchSize: 1024
 
 pegasusOutputCapacity: 16
@@ -45,6 +43,8 @@ pegasusOutputCapacity: 16
 frontendQueryPerSecondLimit: 2147483647
 
 gremlinScriptLanguageName: "antlr_gremlin_traversal"
+
+queryExecutionTimeoutMS: 3000000
 
 ## need by vineyard in distributed env
 etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
