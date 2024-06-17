@@ -440,10 +440,10 @@ install_hiactor() {
   pushd /tmp
   git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --single-branch
   cd hiactor && git submodule update --init --recursive
-  sudo bash ./seastar/seastar/install-dependencies.sh
+  bash ./seastar/seastar/install-dependencies.sh
   mkdir build && cd build
   cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
         -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" ..
-  make -j ${parallelism} && sudo make install
+  make -j ${parallelism} && make install
   popd && rm -rf /tmp/hiactor
 }
