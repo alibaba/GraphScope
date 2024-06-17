@@ -3,6 +3,11 @@
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 #include "grape/util.h"
 
+/**
+ *@brief Return the investigation path from the given company to the target.
+ The input is 1 start company/person and a list of target companies.
+
+ */
 namespace gs {
 class HuoYan : public WriteAppBase {
  public:
@@ -86,20 +91,26 @@ class HuoYan : public WriteAppBase {
           if (cur_path.size() != cur_rel_type.size() + 1) {
             throw std::runtime_error("Error Internal state");
           }
-	  VLOG(10) << "put path of size: " << cur_rel_type.size();
+          VLOG(10) << "put path of size: " << cur_rel_type.size();
           for (auto k = 0; k < cur_rel_type.size(); ++k) {
             // output.put_long(
             //     txn.GetVertexId(comp_label_id_, cur_path[k]).AsInt64());
             output.put_long(get_oid_from_encoded_vid(txn, cur_path[k]));
             output.put_long(get_oid_from_encoded_vid(txn, cur_path[k + 1]));
-	    VLOG(10) << "put src id " << get_oid_from_encoded_vid(txn, cur_path[k]) << ", dst id " <<  get_oid_from_encoded_vid(txn, cur_path[k + 1]);
+            VLOG(10) << "put src id "
+                     << get_oid_from_encoded_vid(txn, cur_path[k])
+                     << ", dst id "
+                     << get_oid_from_encoded_vid(txn, cur_path[k + 1]);
             // output.put_long(
             // txn.GetVertexId(comp_label_id_, cur_path[k + 1]).AsInt64());
             output.put_string_view(
                 get_vertex_name_from_encoded_vid(cur_path[k]));
             output.put_string_view(
                 get_vertex_name_from_encoded_vid(cur_path[k + 1]));
-	    VLOG(10) << "put name: " << get_vertex_name_from_encoded_vid(cur_path[k]) << ", dst name " <<  get_vertex_name_from_encoded_vid(cur_path[k + 1]);
+            VLOG(10) << "put name: "
+                     << get_vertex_name_from_encoded_vid(cur_path[k])
+                     << ", dst name "
+                     << get_vertex_name_from_encoded_vid(cur_path[k + 1]);
             // output.put_string_view(typed_comp_named_col->get_view(cur_path[k]));
             // output.put_string_view(
             // typed_comp_named_col->get_view(cur_path[k + 1]));
@@ -176,6 +187,14 @@ class HuoYan : public WriteAppBase {
       }
       valid_rel_type_ids[rel_type] = true;
     }
+    // Get the start node id.
+    auto start_oid = input.get_long();
+    LOG(INFO) << "Got start oid: " << start_oid;
+    vid_t start_vid;
+    if (!txn.GetVertexIndex(comp_label_id_, Any::From(start_oid), start_vid)) {
+      LOG(ERROR) << "Start oid: " << start_oid << ", not found";
+      return false;
+    }
 
     int32_t vec_size = input.get_int();
     LOG(INFO) << "Group Query: hop limit " << hop_limit << ", result limit "
@@ -225,7 +244,7 @@ class HuoYan : public WriteAppBase {
     // init cur_paths
     for (auto& vid : vid_vec) {
       cur_paths.emplace_back(
-          std::vector<vid_t>{encode_vid(comp_label_id_, vid)});
+          std::vector<vid_t>{encode_vid(comp_label_id_, start_vid)});
       cur_rel_types.emplace_back(std::vector<int32_t>{});
     }
     size_t begin_loc = output.skip_int();
@@ -336,7 +355,7 @@ class HuoYan : public WriteAppBase {
       next_rel_types.clear();
     }
 
-    LOG(INFO) << "result size: " <<result_size; 
+    LOG(INFO) << "result size: " << result_size;
     output.put_int_at(begin_loc, result_size);
     txn.Commit();
     for (auto& vid : vid_vec) {
