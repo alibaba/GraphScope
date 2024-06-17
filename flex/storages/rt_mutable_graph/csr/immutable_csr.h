@@ -247,6 +247,12 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     return ret;
   }
 
+  void close() override {
+    adj_lists_.reset();
+    degree_list_.reset();
+    nbr_list_.reset();
+  }
+
  private:
   void load_meta(const std::string& prefix) {
     std::string meta_file_path = prefix + ".meta";
@@ -425,6 +431,8 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     return ret;
   }
 
+  void close() { nbr_list_.reset(); }
+
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
  private:
@@ -590,6 +598,8 @@ class SingleImmutableCsr<std::string_view>
     nbr.data = column_.get_view(nbr_list_[i].data);
     return nbr;
   }
+
+  void close() { nbr_list_.reset(); }
 
  private:
   StringColumn& column_;
