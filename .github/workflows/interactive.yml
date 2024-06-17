@@ -68,6 +68,7 @@ jobs:
         GIE_HOME: ${{ github.workspace }}/interactive_engine/
         HOME: /home/graphscope/
       run: |
+        . /home/graphscope/.graphscope_env
         cd ${GITHUB_WORKSPACE}/
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
