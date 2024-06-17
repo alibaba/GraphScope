@@ -46,6 +46,23 @@ void signal_handler(int signal) {
 
 int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
+  /**
+   * When reading the edges of a graph, there are two stages involved.
+   *
+   * The first stage involves reading the edges into a temporary vector and
+   * acquiring information on the degrees of the vertices,
+   * Then constructs the CSR using the degree information.
+   *
+   * During the first stage, the edges are stored in the form of triplets, which
+   * can lead to a certain amount of memory expansion, so the `use_mmap_vector`
+   * option is provided, mmap_vector utilizes mmap to map files, supporting
+   * runtime memory swapping to disk.
+   *
+   * Constructing the CSR involves random reads and writes,we offer the
+   * `batch_init_in_memory` option, which allows CSR to be built in-memory to
+   * avoid extensive disk random read and write operations
+   *
+   */
   desc.add_options()("help", "Display help message")(
       "version,v", "Display version")("parallelism,p",
                                       bpo::value<uint32_t>()->default_value(1),
@@ -55,6 +72,7 @@ int main(int argc, char** argv) {
       "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
       "memory-batch-init,m", bpo::value<bool>(), "batch init in memory")(
       "use-mmap-vector", bpo::value<bool>(), "use mmap vector");
+
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
