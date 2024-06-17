@@ -346,6 +346,7 @@ class mmap_array {
     std::swap(size_, rhs.size_);
     std::swap(mmap_size_, rhs.mmap_size_);
     std::swap(hugepage_prefered_, rhs.hugepage_prefered_);
+    std::swap(sync_to_file_, rhs.sync_to_file_);
   }
 
   const std::string& filename() const { return filename_; }
