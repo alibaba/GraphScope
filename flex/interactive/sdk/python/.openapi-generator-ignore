@@ -25,7 +25,6 @@
 
 README.md
 setup.py
-gs_interactive/__init__.py
 gs_interactive/client
 requirements.txt
 test-requirements.txt
