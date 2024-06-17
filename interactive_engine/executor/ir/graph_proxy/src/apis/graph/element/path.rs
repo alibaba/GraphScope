@@ -166,6 +166,13 @@ impl GraphPath {
         }
     }
 
+    pub fn get_path_end_mut(&mut self) -> &mut VertexOrEdge {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => p.last_mut().unwrap(),
+            GraphPath::EndV((ref mut e, _)) | GraphPath::SimpleEndV((ref mut e, _, _)) => e,
+        }
+    }
+
     pub fn get_path(&self) -> Option<&Vec<VertexOrEdge>> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),

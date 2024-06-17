@@ -220,12 +220,15 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         .ok_or_else(|| FnExecError::Unreachable)?;
                     let path_end = graph_path.get_path_end();
                     let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
-                    let id = path_end.id();
-                    if graph
-                        .get_vertex(&[id], &self.query_params)?
+                    if let Some(v) = graph
+                        .get_vertex(&[path_end.id()], &self.query_params)?
                         .next()
-                        .is_none()
                     {
+                        let mut graph_path = graph_path.clone();
+                        let path_end = graph_path.get_path_end_mut();
+                        *path_end = v.into();
+                        input.append(graph_path, self.alias.clone());
+                    } else {
                         return Ok(None);
                     }
                 }
