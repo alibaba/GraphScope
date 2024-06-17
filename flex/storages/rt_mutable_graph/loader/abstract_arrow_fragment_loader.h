@@ -430,7 +430,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
             queue.finish();
             break;
           }
-          std::this_thread::sleep_for(std::chrono::seconds(5));
+          std::this_thread::sleep_for(std::chrono::seconds(1));
         }
       });
 
@@ -533,7 +533,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
             queue.finish();
             break;
           }
-          std::this_thread::sleep_for(std::chrono::seconds(5));
+          std::this_thread::sleep_for(std::chrono::seconds(1));
         }
       });
 
@@ -593,7 +593,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     basic_fragment_loader_.FinishAddingVertex(v_label_id, indexer_builder);
     const auto& indexer = basic_fragment_loader_.GetLFIndexer(v_label_id);
 
-        std::atomic<size_t> cur_batch_id(0);
+    std::atomic<size_t> cur_batch_id(0);
     for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
       work_threads.emplace_back(
           [&](int idx) {
@@ -797,7 +797,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
             queue.finish();
             break;
           }
-          std::this_thread::sleep_for(std::chrono::seconds(5));
+          std::this_thread::sleep_for(std::chrono::seconds(1));
         }
       });
 
