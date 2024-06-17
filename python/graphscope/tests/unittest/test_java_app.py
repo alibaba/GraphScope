@@ -163,7 +163,7 @@ def projected_p2p_graph_loaded_by_giraph(
     reason="Java SDK is disabled, skip this test.",
 )
 @pytest.mark.timeout(3600)
-def test_giraph_app(
+def test_giraph_app_sssp(
     demo_jar,
     graphscope_session,
     projected_graph_sssp_class,
@@ -176,9 +176,15 @@ def test_giraph_app(
     )
 
     giraph_sssp = load_app(algo="giraph:com.alibaba.graphscope.example.giraph.SSSP")
-    giraph_sssp(g, sourceId=6)
+    ctx = giraph_sssp(g, sourceId=6)
+    dataframe = ctx.to_dataframe({"node": "v.id", "r": "r"})
+    print (dataframe)
     del g
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_JAVA_TESTS") != "ON",
+    reason="Java SDK is disabled, skip this test.",
+)
 @pytest.mark.timeout(3600)
 def test_giraph_app_user_writable(
     demo_jar,
@@ -193,5 +199,7 @@ def test_giraph_app_user_writable(
     )
 
     user_app = load_app(algo="giraph:com.alibaba.graphscope.example.giraph.MessageAppWithUserWritable")
-    user_app(g)
+    ctx = user_app(g)
+    dataframe = ctx.to_dataframe({"node": "v.id", "r": "r"})
+    print (dataframe)
     del g

@@ -171,9 +171,11 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
         {
             long previous = 0;
             try {
-                if (conf.getGrapeVdataClass().equals(String.class)) {
+                if (conf.getGrapeVdataClass().equals(String.class) || conf.getGrapeVdataClass().equals(StringView.class)) {
                     for (long lid = 0; lid < innerVerticesNum; ++lid) {
-                        vertexDataManager.getVertexData(lid).write(outputStream);
+                        // vertexDataManager.getVertexData(lid).write(outputStream);
+                        // Write the output of toString().
+                        outputStream.writeBytes(vertexDataManager.getVertexData(lid).toString());
                         long cur = outputStream.bytesWriten();
                         offsets[(int) lid] = cur - previous;
                         maxOffset = Math.max(offsets[(int) lid], maxOffset);
@@ -264,7 +266,8 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                     // This string is not readable.
                     StdString value = (StdString) vertexArray.get(grapeVertex);
                     // TODO: can be optimized without creating a java string
-                    value.fromJavaString(new String(bytes));
+                    String javaStr = new String(bytes);
+                    value.fromJavaString(javaStr);
                 }
             } else {
                 throw new IllegalStateException(
