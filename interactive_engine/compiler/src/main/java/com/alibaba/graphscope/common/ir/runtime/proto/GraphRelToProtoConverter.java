@@ -218,18 +218,21 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.PathExpand.ExpandBase.Builder expandBaseBuilder =
                 GraphAlgebraPhysical.PathExpand.ExpandBase.newBuilder();
         RelNode fused = pxd.getFused();
+        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpandBuilder;
+        GraphAlgebraPhysical.GetV.Builder getVBuilder = null;
+        // preserve the original fused logical getv to cache properties if necessary
+        GraphLogicalGetV originalGetV;
         RelDataType rowType;
         if (fused != null) {
             // the case that expand base is fused
             if (fused instanceof GraphPhysicalGetV) {
                 // fused into expand + auxilia
                 GraphPhysicalGetV fusedGetV = (GraphPhysicalGetV) fused;
-                GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(fusedGetV);
-                expandBaseBuilder.setGetV(auxilia);
+                getVBuilder = buildAuxilia(fusedGetV);
+                originalGetV = fusedGetV.getFusedGetV();
                 if (fusedGetV.getInput() instanceof GraphPhysicalExpand) {
                     GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fusedGetV.getInput();
-                    GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
-                    expandBaseBuilder.setEdgeExpand(expand);
+                    edgeExpandBuilder = buildEdgeExpand(fusedExpand);
                     rowType = fusedExpand.getRowType();
                 } else {
                     throw new UnsupportedOperationException(
@@ -239,8 +242,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             } else if (fused instanceof GraphPhysicalExpand) {
                 // fused into expand
                 GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fused;
-                GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
-                expandBaseBuilder.setEdgeExpand(expand);
+                edgeExpandBuilder = buildEdgeExpand(fusedExpand);
+                originalGetV = fusedExpand.getFusedGetV();
                 rowType = fusedExpand.getFusedExpand().getRowType();
             } else {
                 throw new UnsupportedOperationException(
@@ -248,12 +251,47 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             }
         } else {
             // the case that expand base is not fused
-            GraphAlgebraPhysical.EdgeExpand.Builder expand =
-                    buildEdgeExpand((GraphLogicalExpand) pxd.getExpand());
-            GraphAlgebraPhysical.GetV.Builder getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
-            expandBaseBuilder.setEdgeExpand(expand);
-            expandBaseBuilder.setGetV(getV);
+            edgeExpandBuilder = buildEdgeExpand((GraphLogicalExpand) pxd.getExpand());
+            originalGetV = (GraphLogicalGetV) pxd.getGetV();
+            getVBuilder = buildGetV(originalGetV);
             rowType = pxd.getExpand().getRowType();
+        }
+        expandBaseBuilder.setEdgeExpand(edgeExpandBuilder);
+        // specifically, for path expand, we need to cache properties for the
+        // expanded vertices if necessary, instead of fetch them lazily
+        Set<GraphNameOrId> vertexColumns =
+                Utils.extractColumnsFromRelDataType(originalGetV.getRowType(), isColumnId);
+        if (isPartitioned && !vertexColumns.isEmpty()) {
+            // 1. build an auxilia to cache necessary properties for the start vertex of the path
+            GraphAlgebraPhysical.GetV.Builder startAuxiliaBuilder =
+                    buildVertex(originalGetV, PhysicalGetVOpt.ITSELF);
+            GraphAlgebra.QueryParams.Builder startParamsBuilder =
+                    startAuxiliaBuilder.getParamsBuilder();
+            addQueryColumns(startParamsBuilder, vertexColumns);
+            startAuxiliaBuilder.setParams(startParamsBuilder);
+            GraphAlgebraPhysical.PhysicalOpr.Builder startAuxiliaOprBuilder =
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+            startAuxiliaOprBuilder.setOpr(
+                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                            .setVertex(startAuxiliaBuilder));
+            startAuxiliaOprBuilder.addAllMetaData(
+                    Utils.physicalProtoRowType(originalGetV.getRowType(), isColumnId));
+            addRepartitionToAnother(pxd.getStartAlias().getAliasId());
+            physicalBuilder.addPlan(startAuxiliaOprBuilder.build());
+            // 2. build an auxilia to cache necessary properties for the expanded vertices during
+            // the path, in expand base
+            if (getVBuilder != null) {
+                GraphAlgebra.QueryParams.Builder paramsBuilder = getVBuilder.getParamsBuilder();
+                addQueryColumns(paramsBuilder, vertexColumns);
+                getVBuilder.setParams(paramsBuilder);
+            } else {
+                getVBuilder = startAuxiliaBuilder;
+            }
+            expandBaseBuilder.setGetV(getVBuilder);
+        } else {
+            if (getVBuilder != null) {
+                expandBaseBuilder.setGetV(getVBuilder);
+            }
         }
         pathExpandBuilder.setBase(expandBaseBuilder);
         pathExpandBuilder.setPathOpt(Utils.protoPathOpt(pxd.getPathOpt()));
@@ -1061,22 +1099,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         auxiliaOprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(vertexBuilder));
         physicalBuilder.addPlan(auxiliaOprBuilder.build());
-    }
-
-    private void addAuxilia(
-            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
-            GraphPhysicalGetV physicalGetV) {
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
-                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(physicalGetV);
-        oprBuilder.setOpr(
-                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(auxilia));
-        oprBuilder.addAllMetaData(
-                Utils.physicalProtoRowType(physicalGetV.getRowType(), isColumnId));
-        if (isPartitioned) {
-            addRepartitionToAnother(physicalGetV.getStartAlias().getAliasId());
-        }
-        physicalBuilder.addPlan(oprBuilder.build());
     }
 
     private void lazyPropertyFetching(Map<Integer, Set<GraphNameOrId>> columns) {
