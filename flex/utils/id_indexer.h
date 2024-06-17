@@ -422,7 +422,6 @@ class LFIndexer {
     keys_->dump(snapshot_dir + "/" + name + ".keys");
     indices_.dump(snapshot_dir + "/" + name + ".indices");
     dump_meta(snapshot_dir + "/" + name + ".meta");
-    close();
   }
 
   void close() {
@@ -1008,7 +1007,6 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
       residuals.push_back(input.indices_[idx]);
     }
   }
-  LOG(INFO) << "residuals size: " << residuals.size() << "\n";
   for (const auto& lid : residuals) {
     auto oid = input.keys_[lid];
     size_t index = input.hash_policy_.index_for_hash(
