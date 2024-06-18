@@ -18,9 +18,12 @@ runtime = {path = "../../ir/runtime"}
 graph_proxy = {path = "../../ir/graph_proxy", features = ["with_global_query"]}
 log4rs = "1.2"
 tokio = { version = "1.24", features = ["macros", "sync"] }
-tikv-jemallocator = {version = "0.5", default_features=false, features = ["profiling", "disable_initial_exec_tls"] }
+tikv-jemallocator = {version = "0.5", default_features=false, features = ["profiling", "disable_initial_exec_tls"]}
+# from https://github.com/lemonhx/mimalloc-rust
+mimalloc-rust = {version = "0.2.1", optional = true}
 
 [features]
+mimalloc = ["mimalloc-rust"]
 column_filter_push_down = []
 
 [profile.dev]
