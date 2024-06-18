@@ -55,7 +55,7 @@ setup(
         "parse": parse_version,
     },
     install_requires=REQUIRES,
-    packages=find_packages(include=["graphscope.gsctl", "graphscope.gsctl.*"]),
+    packages=find_packages(include=["graphscope.gsctl", "graphscope.gsctl.*", "VERSION"]),
     include_package_data=True,
     license="Apache 2.0",
     long_description_content_type="text/markdown",
