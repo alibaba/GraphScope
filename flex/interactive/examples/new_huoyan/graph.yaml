@@ -32,7 +32,9 @@ schema:
         - property_id: 3
           property_name: credit_code
           property_type:
-            primitive_type: DT_SIGNED_INT64
+            string:
+              var_char:
+                max_length: 64
         - property_id: 4
           property_name: license_number
           property_type:
