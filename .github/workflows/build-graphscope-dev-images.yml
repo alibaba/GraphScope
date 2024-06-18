@@ -33,7 +33,7 @@ on:
     branches:
       - main
     paths:
-      - 'python/graphscope/gsctl/**'
+      - 'python/graphscope/gsctl/scripts/**'
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
@@ -45,7 +45,7 @@ env:
 jobs:
   build-wheel-image-x86-64:
     runs-on: ubuntu-20.04
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.pull_request == 'pull_request')
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.event_name == 'pull_request')
 
     steps:
     - uses: actions/checkout@v3
@@ -82,7 +82,7 @@ jobs:
 
   build-wheel-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
-    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.pull_request == 'pull_request')
+    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.event_name == 'pull_request')
     if: false
 
     steps:
@@ -151,7 +151,7 @@ jobs:
 
   build-graphscope-dev-image-x86-64:
     runs-on: ubuntu-20.04
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.pull_request == 'pull_request')
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.event_name == 'pull_request')
 
     steps:
     - uses: actions/checkout@v3
@@ -188,7 +188,7 @@ jobs:
 
   build-graphscope-dev-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
-    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.pull_request == 'pull_request')
+    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.event_name == 'pull_request')
     if: false
 
     steps:
@@ -257,7 +257,7 @@ jobs:
 
   build-vineyard-dev-image-x86-64:
     runs-on: ubuntu-20.04
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.pull_request == 'pull_request')
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.event_name == 'pull_request')
 
     steps:
     - uses: actions/checkout@v3
@@ -294,7 +294,7 @@ jobs:
 
   build-vineyard-dev-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
-    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.pull_request == 'pull_request')
+    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.event_name == 'pull_request')
     if: false
 
     steps:
