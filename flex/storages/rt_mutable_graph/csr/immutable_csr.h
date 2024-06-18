@@ -248,9 +248,9 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   }
 
   void close() override {
-    adj_lists_.close();
+    adj_lists_.reset();
     degree_list_.reset();
-    nbr_list_.close();
+    nbr_list_.reset();
   }
 
  private:
@@ -437,6 +437,8 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     return ret;
   }
 
+  void close() override { nbr_list_.reset(); }
+
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
   void close() override { nbr_list_.reset(); }
@@ -610,6 +612,8 @@ class SingleImmutableCsr<std::string_view>
     nbr.data = column_.get_view(nbr_list_[i].data);
     return nbr;
   }
+  void close() override { nbr_list_.reset(); }
+
   void close() override { nbr_list_.reset(); }
 
  private:
