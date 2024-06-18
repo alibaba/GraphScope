@@ -38,5 +38,5 @@ red_underlined() { print_in_color "\e[4;31m" "$*"; }
 green_underlined() { print_in_color "\e[4;32m" "$*"; }
 yellow_underlined() { print_in_color "\e[4;33m" "$*"; }
 blue_underlined() { print_in_color "\e[4;34m" "$*"; }
-magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
 cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
+magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
