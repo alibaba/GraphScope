@@ -312,6 +312,7 @@ jobs:
     - name: Run Gremlin test on modern graph
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
         LD_LIBRARY_PATH: /usr/local/lib
       run: |
@@ -382,7 +383,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex
         wget https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0_1_amd64.deb
-        sudo apt-get update && sudo apt-get install libncurses-dev libncurses5-dev
+        sudo apt-get update && sudo apt-get install -y libncurses-dev libncurses5-dev
         sudo dpkg -i aocc-compiler-4.1.0_1_amd64.deb
     
     - name: Test AOCC compiler
