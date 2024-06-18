@@ -134,9 +134,11 @@ struct _add_vertex {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+            VLOG(2) << "Duplicate vertex id: " << str_view << "..";
+            vids.emplace_back(std::numeric_limits<vid_t>::max());
+          } else {
+            vids.emplace_back(vid);
           }
-          vids.emplace_back(vid);
         }
       } else {
         LOG(FATAL) << "Not support type: " << col->type()->ToString();
