@@ -120,7 +120,8 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   ODPSStreamRecordBatchSupplier(label_t label_id, const std::string& file_path,
                                 const ODPSReadClient& odps_table_reader,
                                 const std::string& session_id, int split_count,
-                                TableIdentifier table_identifier);
+                                TableIdentifier table_identifier, int worker_id,
+                                int worker_num);
 
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
@@ -130,6 +131,7 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   std::string session_id_;
   int split_count_;
   TableIdentifier table_identifier_;
+  int worker_num_;
 
   int32_t cur_split_index_;
   ReadRowsReq read_rows_req_;

@@ -168,8 +168,8 @@ void check_edge_invariant(
 
 void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
     label_t v_label_id, const std::vector<std::string>& v_files,
-    std::function<std::shared_ptr<IRecordBatchSupplier>(
-        label_t, const std::string&, const LoadingConfig&)>
+    std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+        label_t, const std::string&, const LoadingConfig&, int)>
         supplier_creator) {
   auto primary_keys = schema_.get_vertex_primary_key(v_label_id);
 
@@ -206,8 +206,9 @@ void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
 void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
     label_t src_label_i, label_t dst_label_i, label_t edge_label_i,
     const std::vector<std::string>& filenames,
-    std::function<std::shared_ptr<IRecordBatchSupplier>(
-        label_t, label_t, label_t, const std::string&, const LoadingConfig&)>
+    std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+        label_t, label_t, label_t, const std::string&, const LoadingConfig&,
+        int)>
         supplier_creator) {
   auto src_label_name = schema_.get_vertex_label_name(src_label_i);
   auto dst_label_name = schema_.get_vertex_label_name(dst_label_i);
