@@ -95,6 +95,14 @@ impl VertexIndex {
             None
         }
     }
+
+    pub fn len(&self) -> usize {
+        if self.index_map.is_some() {
+            self.index_map.as_ref().unwrap().len()
+        } else {
+            self.index_array.as_ref().unwrap().len()
+        }
+    }
 }
 
 unsafe impl Send for VertexIndex {}
@@ -166,6 +174,14 @@ impl EdgeIndex {
 
     pub fn get_index_batch(&self) -> ColumnDataRef<'_> {
         self.index_array.as_ref().unwrap().get_data()
+    }
+
+    pub fn len(&self) -> usize {
+        if self.index_map.is_some() {
+            self.index_map.as_ref().unwrap().len()
+        } else {
+            self.index_array.as_ref().unwrap().len()
+        }
     }
 }
 

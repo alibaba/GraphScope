@@ -4,22 +4,20 @@ use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::time::Instant;
 
-use lazy_static::lazy_static;
-use log::info;
-use serde::Deserialize;
-use structopt::StructOpt;
-
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::{DeleteGenerator, GraphModifier};
 use bmcsr::schema::InputSchema;
 use bmcsr::traverse::traverse;
 use graph_index::GraphIndex;
+use lazy_static::lazy_static;
+use log::info;
+#[cfg(feature = "use_mimalloc")]
+use mimalloc::MiMalloc;
 use pegasus::{Configuration, JobConf, ServerConf};
 use rpc_server::queries::register::QueryRegister;
 use rpc_server::queries::rpc::RPCServerConfig;
-
-#[cfg(feature = "use_mimalloc")]
-use mimalloc::MiMalloc;
+use serde::Deserialize;
+use structopt::StructOpt;
 
 #[cfg(feature = "use_mimalloc")]
 #[global_allocator]

@@ -930,7 +930,10 @@ impl GraphModifier {
             I: Send + Sync + IndexType,
     {
         let mut input_resp = self.take_csr(graph, src_label, dst_label, edge_label);
-        let input_header: Vec<(String, DataType)> = vec![];
+        let mut input_header: Vec<(String, DataType)> = vec![];
+        input_header.resize(std::cmp::max(src_id_col as usize, dst_id_col as usize) + 1, ("".to_string(), DataType::NULL));
+        input_header[src_id_col as usize] = ("start_id".to_string(), DataType::ID);
+        input_header[dst_id_col as usize] = ("end_id".to_string(), DataType::ID);
         let delete_sets = vec![HashSet::new(); graph.vertex_label_num as usize];
         self.parallel_delete_rep(
             &mut input_resp,

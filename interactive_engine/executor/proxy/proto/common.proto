@@ -1,0 +1,109 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package common;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "Common";
+
+message None { }
+
+message I32Array {
+  repeated int32 item = 1;
+}
+
+message I64Array {
+  repeated int64  item = 1;
+}
+
+message DoubleArray {
+  repeated double item = 1;
+}
+
+message StringArray {
+  repeated string item = 1;
+}
+
+message Pair {
+  Value key = 1;
+  Value val = 2;
+}
+
+message PairArray {
+  repeated Pair item = 1;
+}
+
+// A indicator of an attribute or further its properties, which may present as a string-type name
+// or be encoded as a name identifier
+message NameOrId {
+  oneof item {
+    string name = 1;
+    int32 id = 2;
+  }
+}
+
+message Date32 {
+  // int32 days since 1970-01-01
+  int32 item = 1;
+}
+
+message Time32 {
+  // int32 milliseconds past midnight
+  int32 item = 1;
+}
+
+message Timestamp {
+  // int64 milliseconds since 1970-01-01 00:00:00.000000 (in an unspecified timezone)
+  int64 item = 1;
+}
+
+message Value {
+  oneof item {
+    bool  boolean     = 2;
+    int32 i32         = 3;
+    int64 i64         = 4;
+    double f64        = 5;
+    string str        = 6;
+    bytes blob        = 7;
+    I32Array i32_array       = 8;
+    I64Array i64_array       = 9;
+    DoubleArray f64_array    = 10;
+    StringArray str_array    = 11;
+    PairArray pair_array     = 12;
+    None  none               = 13;
+    Date32 date              = 14;
+    Time32 time              = 15;
+    Timestamp timestamp      = 16;
+  }
+}
+
+enum DataType {
+  BOOLEAN = 0;
+  INT32 = 1;
+  INT64 = 2 ;
+  DOUBLE = 3;
+  STRING = 4;
+  BYTES = 5;
+  INT32_ARRAY = 6;
+  INT64_ARRAY = 7;
+  DOUBLE_ARRAY = 8;
+  STRING_ARRAY = 9;
+  PAIR_ARRAY = 10;
+  NONE = 11;
+  DATE32 = 12;
+  TIME32 = 13;
+  TIMESTAMP = 14;
+}

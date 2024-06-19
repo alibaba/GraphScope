@@ -219,11 +219,6 @@
     },
     {
       "src_label": "FORUM",
-      "dst_label": "PERSON",
-      "label": "HASMODERATOR"
-    },
-    {
-      "src_label": "FORUM",
       "dst_label": "TAG",
       "label": "HASTAG"
     },

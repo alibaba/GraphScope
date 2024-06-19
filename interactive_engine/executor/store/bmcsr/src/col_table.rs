@@ -469,9 +469,9 @@ pub fn parse_properties(
 pub fn parse_properties_by_mappings(
     record: &StringRecord, header: &[(String, DataType)], mappings: &Vec<i32>,
 ) -> GDBResult<Vec<Item>> {
-    let mut properties = vec![Item::Null; mappings.len()];
+    let mut properties = vec![];
     for (index, val) in record.iter().enumerate() {
-        if mappings[index] >= 0 {
+        if index < mappings.len() && mappings[index] >= 0 {
             match header[mappings[index] as usize].1 {
                 DataType::Int32 => {
                     properties.push(Item::Int32(val.parse::<i32>()?));

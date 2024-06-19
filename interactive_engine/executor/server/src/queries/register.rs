@@ -112,9 +112,26 @@ pub struct QueriesSetting {
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Param {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub data_type: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct QueryConfig {
+    pub name: String,
+    pub description: String,
+    pub mode: String,
+    pub extension: String,
+    pub library: String,
+    pub params: Option<Vec<Param>>,
+    pub returns: Option<Vec<Param>>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct QueriesConfig {
-    precompute: Option<Vec<PrecomputeSetting>>,
-    read_queries: Option<Vec<QueriesSetting>>,
+    pub queries: Option<Vec<QueryConfig>>,
 }
 
 pub struct QueryRegister {
@@ -249,33 +266,20 @@ impl QueryRegister {
 
     pub fn load(&mut self, config_path: &PathBuf) {
         let file = File::open(config_path).expect("Failed to open config file");
-        let config: QueriesConfig = serde_yaml::from_reader(file).expect("Could not read values");
-        if let Some(precomputes) = config.precompute {
-            for precompute in precomputes {
-                let lib_path = precompute.path.clone();
-                if precompute.precompute_type == "vertex" {
-                    let libc: Container<PrecomputeVertexApi> =
-                        unsafe { Container::load(lib_path) }.unwrap();
-                    self.register_vertex_precompute2(
-                        precompute.precompute_name.clone(),
-                        precompute.clone(),
-                        libc,
-                    );
-                } else {
-                    let libc: Container<PrecomputeEdgeApi> = unsafe { Container::load(lib_path) }.unwrap();
-                    self.register_edge_precompute2(
-                        precompute.precompute_name.clone(),
-                        precompute.clone(),
-                        libc,
-                    );
+        let queries_config: QueriesConfig = serde_yaml::from_reader(file).expect("Could not read values");
+        if let Some(queries) = queries_config.queries {
+            for query in queries {
+                let query_name = query.name;
+                let description = query.description;
+                let lib_path = query.library;
+                let mut inputs = vec![];
+                if let Some(params) = query.params {
+                    for param in params {
+                        inputs.push((param.name, param.data_type));
+                    }
                 }
-            }
-        }
-        if let Some(read_queries) = config.read_queries {
-            for query in read_queries {
-                let lib_path = query.path.clone();
-                let libc: Container<ReadQueryApi> = unsafe { Container::load(lib_path) }.unwrap();
-                self.register_read_query(query.queries_name, libc, vec![], HashMap::new(), "".to_string());
+                let libc: Vec<Container<QueryApi>> = vec![unsafe { Container::load(lib_path) }.unwrap()];
+                self.register_new_query(query_name, libc, inputs, description);
             }
         }
     }
@@ -562,17 +566,9 @@ impl QueryRegister {
             }
             let result = {
                 pegasus::run(conf.clone(), || {
-                    libc.Precompute(
-                        conf.clone(),
-                        graph,
-                        graph_index,
-                        true,
-                        label,
-                        src_label,
-                        dst_label,
-                    )
+                    libc.Precompute(conf.clone(), graph, graph_index, true, label, src_label, dst_label)
                 })
-                    .expect("submit precompute failure")
+                .expect("submit precompute failure")
             };
             let mut result_vec = vec![];
             for x in result {
@@ -654,17 +650,9 @@ impl QueryRegister {
             }
             let result = {
                 pegasus::run(conf.clone(), || {
-                    libc.Precompute(
-                        conf.clone(),
-                        graph,
-                        graph_index,
-                        true,
-                        label,
-                        src_label,
-                        dst_label,
-                    )
+                    libc.Precompute(conf.clone(), graph, graph_index, true, label, src_label, dst_label)
                 })
-                    .expect("submit precompute failure")
+                .expect("submit precompute failure")
             };
             let mut result_vec = vec![];
             for x in result {

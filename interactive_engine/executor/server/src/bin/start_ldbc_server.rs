@@ -3,15 +3,14 @@ use std::sync::{Arc, RwLock};
 
 use bmcsr::graph_db::GraphDB;
 use graph_index::GraphIndex;
+#[cfg(feature = "use_mimalloc")]
+use mimalloc::MiMalloc;
 use pegasus::{Configuration, ServerConf};
 use rpc_server::queries;
 use rpc_server::queries::register::QueryRegister;
 use rpc_server::queries::rpc::RPCServerConfig;
 use serde::Deserialize;
 use structopt::StructOpt;
-
-#[cfg(feature = "use_mimalloc")]
-use mimalloc::MiMalloc;
 
 #[cfg(feature = "use_mimalloc")]
 #[global_allocator]
@@ -79,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut query_register = QueryRegister::new();
     println!("Start load lib");
-    //query_register.load(&PathBuf::from(config.queries_config));
+    query_register.load(&PathBuf::from(config.queries_config));
     println!("Finished load libs");
 
     let rpc_config = servers_conf

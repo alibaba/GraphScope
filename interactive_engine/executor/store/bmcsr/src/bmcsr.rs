@@ -451,8 +451,8 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
 
         let mut chunk_offset = vec![0_usize; chunk_num];
         let safe_chunk_offset_ptr = SafeMutPtr::new(&mut chunk_offset);
-        let mut new_offsets = ArrayType::with_capacity(vertex_num + 1);
-        new_offsets.resize(vertex_num + 1, 0);
+        let mut new_offsets = ArrayType::with_capacity(vertex_num);
+        new_offsets.resize(vertex_num, 0);
         let safe_new_offsets_ptr = SafeMutPtr::new(&mut new_offsets);
         let safe_new_degree_ptr = SafeMutPtr::new(&mut new_degree);
         let safe_degree_ptr = SafePtr::new(&self.degree);
@@ -620,8 +620,8 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
 
         let mut chunk_offset = vec![0_usize; chunk_num];
         let safe_chunk_offset_ptr = SafeMutPtr::new(&mut chunk_offset);
-        let mut new_offsets = ArrayType::with_capacity(vertex_num + 1);
-        new_offsets.resize(vertex_num + 1, 0);
+        let mut new_offsets = ArrayType::with_capacity(vertex_num);
+        new_offsets.resize(vertex_num, 0);
         let safe_new_offsets_ptr = SafeMutPtr::new(&mut new_offsets);
         let safe_new_degree_ptr = SafeMutPtr::new(&mut new_degree);
         let safe_degree_ptr = SafePtr::new(&self.degree);

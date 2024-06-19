@@ -145,6 +145,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut graph_modifier = GraphModifier::new(&graph_raw);
         graph_modifier.skip_header();
+        graph_modifier.parallel(worker_num);
         let insert_schema =
             InputSchema::from_json_file(insert_schema_file_path, &graph.graph_schema).unwrap();
         graph_modifier

@@ -15,6 +15,7 @@ use bmcsr::schema::{CsrGraphSchema, InputSchema, Schema};
 use bmcsr::types::{DefaultId, LabelId};
 use graph_index::types::{ColumnData, ColumnDataRef, ColumnMappings, DataSource, Input};
 use graph_index::GraphIndex;
+use itertools::max;
 use num::complex::ComplexFloat;
 
 fn properties_to_items<G, I>(properties: Vec<ColumnData>) -> Vec<Vec<Item>>
@@ -42,7 +43,12 @@ pub fn delete_vertices_by_ids<G, I>(
 {
     let mut lids = HashSet::new();
     for v in global_ids.iter() {
-        lids.insert(graph.get_internal_id(*v));
+        if v.index() as u64 == u64::MAX {
+            continue;
+        }
+        if let Some(internal_id) = graph.vertex_map.get_internal_id(*v) {
+            lids.insert(internal_id.1);
+        }
     }
     let vertex_label_num = graph.vertex_label_num;
     let edge_label_num = graph.edge_label_num;
@@ -185,12 +191,16 @@ pub fn insert_vertices<G, I>(
     G: FromStr + Send + Sync + IndexType + Eq,
 {
     let mut column_map = HashMap::new();
+    let mut max_col = 0;
     for column_mapping in column_mappings {
         let column = column_mapping.column();
         let column_index = column.index();
         let data_type = column.data_type();
         let property_name = column_mapping.property_name();
         column_map.insert(property_name.clone(), (column_index, data_type));
+        if column_index >= max_col {
+            max_col = column_index + 1;
+        }
     }
     let mut id_col = -1;
     if let Some((column_index, _)) = column_map.get("id") {
@@ -219,7 +229,7 @@ pub fn insert_vertices<G, I>(
                     modifier.skip_header();
                 }
                 modifier.parallel(parallel);
-                let mut mappings = vec![-1; column_mappings.len()];
+                let mut mappings = vec![-1; max_col as usize];
                 if let Some(vertex_header) = graph
                     .graph_schema
                     .get_vertex_header(vertex_label)
@@ -254,13 +264,17 @@ pub fn insert_edges<G, I>(
     G: FromStr + Send + Sync + IndexType + Eq,
 {
     let mut column_map = HashMap::new();
+    let mut max_col = 0;
     for column_mapping in src_vertex_mappings {
         let column = column_mapping.column();
         let column_index = column.index();
         let data_type = column.data_type();
         let property_name = column_mapping.property_name();
-        if property_name == "src_id" {
-            column_map.insert(property_name.clone(), (column_index, data_type));
+        if property_name == "id" {
+            column_map.insert("src_id".to_string(), (column_index, data_type));
+        }
+        if column_index >= max_col {
+            max_col = column_index + 1;
         }
     }
     for column_mapping in dst_vertex_mappings {
@@ -268,8 +282,11 @@ pub fn insert_edges<G, I>(
         let column_index = column.index();
         let data_type = column.data_type();
         let property_name = column_mapping.property_name();
-        if property_name == "dst_id" {
-            column_map.insert(property_name.clone(), (column_index, data_type));
+        if property_name == "id" {
+            column_map.insert("dst_id".to_string(), (column_index, data_type));
+        }
+        if column_index >= max_col {
+            max_col = column_index + 1;
         }
     }
     for column_mapping in column_mappings {
@@ -278,6 +295,9 @@ pub fn insert_edges<G, I>(
         let data_type = column.data_type();
         let property_name = column_mapping.property_name();
         column_map.insert(property_name.clone(), (column_index, data_type));
+        if column_index >= max_col {
+            max_col = column_index + 1;
+        }
     }
     let mut src_id_col = -1;
     let mut dst_id_col = -1;
@@ -310,7 +330,7 @@ pub fn insert_edges<G, I>(
                     modifier.skip_header();
                 }
                 modifier.parallel(parallel);
-                let mut mappings = vec![-1; column_mappings.len()];
+                let mut mappings = vec![-1; max_col as usize];
                 if let Some(edge_header) = graph
                     .graph_schema
                     .get_edge_header(src_label, edge_label, dst_label)
@@ -389,8 +409,9 @@ pub fn delete_vertices(
                 let vertex_id_column = data
                     .get(id_col as usize)
                     .expect("Failed to get id column");
-                if let ColumnDataRef::VertexIdArray(data) = vertex_id_column.data().as_ref() {
-                    delete_vertices_by_ids(graph, vertex_label, data, parallel);
+                if let ColumnDataRef::UInt64Array(data) = vertex_id_column.data().as_ref() {
+                    let data = data.iter().map(|&x| x as usize).collect();
+                    delete_vertices_by_ids(graph, vertex_label, &data, parallel);
                 }
             }
         }
@@ -408,8 +429,8 @@ pub fn delete_edges(
         let column_index = column.index();
         let data_type = column.data_type();
         let property_name = column_mapping.property_name();
-        if property_name == "src_id" {
-            column_map.insert(property_name.clone(), (column_index, data_type));
+        if property_name == "id" {
+            column_map.insert("src_id".to_string(), (column_index, data_type));
         }
     }
     for column_mapping in dst_vertex_mappings {
@@ -417,8 +438,8 @@ pub fn delete_edges(
         let column_index = column.index();
         let data_type = column.data_type();
         let property_name = column_mapping.property_name();
-        if property_name == "dst_id" {
-            column_map.insert(property_name.clone(), (column_index, data_type));
+        if property_name == "id" {
+            column_map.insert("dst_id".to_string(), (column_index, data_type));
         }
     }
     for column_mapping in column_mappings {
@@ -460,23 +481,9 @@ pub fn delete_edges(
                 }
                 modifier.parallel(parallel);
 
-                let mut mappings = vec![-1; column_mappings.len()];
-                if let Some(edge_header) = graph
-                    .graph_schema
-                    .get_edge_header(src_label, edge_label, dst_label)
-                {
-                    for (i, (property_name, _)) in edge_header.iter().enumerate() {
-                        if let Some((column_index, _)) = column_map.get(property_name) {
-                            mappings[*column_index as usize] = i as i32;
-                        }
-                    }
-                } else {
-                    panic!("edge label {}_{}_{} not found", src_label, edge_label, dst_label)
-                }
                 modifier
-                    .apply_edges_insert_with_filename(
+                    .apply_edges_delete_with_filename(
                         graph, src_label, edge_label, dst_label, &filenames, src_id_col, dst_id_col,
-                        &mappings,
                     )
                     .unwrap();
             }
@@ -540,8 +547,8 @@ pub fn delete_edges_by_schema<G, I>(
 }
 
 pub fn set_vertices(
-    graph: &mut GraphDB<usize, usize>, graph_index: &mut GraphIndex, vertex_label: LabelId, input: &Input,
-    column_mappings: &Vec<ColumnMappings>, parallel: u32,
+    graph: &mut GraphDB<usize, usize>, graph_index: &mut GraphIndex, vertex_label: LabelId,
+    mut input: Input, column_mappings: &Vec<ColumnMappings>, parallel: u32,
 ) {
     let property_size = graph.get_vertices_num(vertex_label);
     let mut column_map = HashMap::new();
@@ -561,15 +568,21 @@ pub fn set_vertices(
             todo!()
         }
         DataSource::Memory => {
-            if let Some(memory_data) = input.memory_data() {
-                let column_data = memory_data.columns();
+            if let Some(mut memory_data) = input.take_memory_data() {
+                let mut column_data = memory_data.take_columns();
                 let id_column = column_data
-                    .get(id_col as usize)
+                    .get_mut(id_col as usize)
                     .expect("Failed to find id column");
-                let global_ids = if let ColumnDataRef::VertexIdArray(data) = id_column.data().as_ref() {
-                    data
-                } else {
-                    panic!("DataType of id col is not VertexId")
+                let global_ids = match id_column.take_data() {
+                    ColumnData::VertexIdArray(data) => data,
+                    ColumnData::UInt64Array(mut data) => {
+                        let mut lid = vec![];
+                        for i in data.drain(..) {
+                            lid.push(graph.get_internal_id(i as usize));
+                        }
+                        lid
+                    }
+                    _ => panic!("DataType of id col is not VertexId"),
                 };
                 for (k, v) in column_map.iter() {
                     if k == "id" {
@@ -577,19 +590,150 @@ pub fn set_vertices(
                     }
                     let column_index = v.0;
                     let column_data_type = v.1;
-                    graph_index.init_vertex_index(
-                        k.clone(),
-                        vertex_label,
-                        column_data_type,
-                        Some(property_size),
-                        None,
-                    );
+                    if !graph_index.has_vertex_index(k.clone(), vertex_label, property_size) {
+                        graph_index.init_vertex_index(
+                            k.clone(),
+                            vertex_label,
+                            column_data_type,
+                            Some(property_size),
+                            Some(graph_index::types::Item::Int32(0)),
+                        );
+                    }
                     let column = column_data
                         .get(column_index as usize)
                         .expect("Failed to find column");
                     graph_index
-                        .add_vertex_index_batch(vertex_label, k, global_ids, column.data().as_ref())
+                        .add_vertex_index_batch(vertex_label, k, &global_ids, column.data().as_ref())
                         .unwrap();
+                }
+            }
+        }
+    }
+}
+
+pub fn set_edges(
+    graph: &mut GraphDB<usize, usize>, graph_index: &mut GraphIndex, src_label: LabelId,
+    edge_label: LabelId, dst_label: LabelId, mut input: Input, src_vertex_mappings: &Vec<ColumnMappings>,
+    dst_vertex_mappings: &Vec<ColumnMappings>, column_mappings: &Vec<ColumnMappings>, parallel: u32,
+) {
+    let mut column_map = HashMap::new();
+    for column_mapping in column_mappings {
+        let column = column_mapping.column();
+        let column_index = column.index();
+        let data_type = column.data_type();
+        let property_name = column_mapping.property_name();
+        column_map.insert(property_name.clone(), (column_index, data_type));
+    }
+    match input.data_source() {
+        DataSource::File => {
+            todo!()
+        }
+        DataSource::Memory => {
+            if let Some(mut memory_data) = input.take_memory_data() {
+                let mut column_data = memory_data.take_columns();
+                if !src_vertex_mappings.is_empty() {
+                    let offset_col_id = src_vertex_mappings[0].column().index();
+                    let offset_column = column_data
+                        .get_mut(offset_col_id as usize)
+                        .expect("Failed to find id column");
+                    let offsets = match offset_column.take_data() {
+                        ColumnData::VertexIdArray(mut data) => data,
+                        _ => panic!("DataType of id col is not VertexId"),
+                    };
+                    for (k, v) in column_map.iter() {
+                        let column_index = v.0;
+                        let column_data_type = v.1;
+                        let oe_property_size = graph.get_max_edge_offset(
+                            src_label,
+                            edge_label,
+                            dst_label,
+                            Direction::Outgoing,
+                        );
+                        if !graph_index.has_outgoing_edge_index(
+                            k.clone(),
+                            src_label,
+                            edge_label,
+                            dst_label,
+                            oe_property_size,
+                        ) {
+                            graph_index
+                                .init_outgoing_edge_index(
+                                    k.clone(),
+                                    src_label,
+                                    dst_label,
+                                    edge_label,
+                                    column_data_type,
+                                    Some(oe_property_size),
+                                    Some(graph_index::types::Item::Int32(0)),
+                                )
+                                .unwrap();
+                        }
+                        let column = column_data
+                            .get(column_index as usize)
+                            .expect("Failed to find column");
+                        graph_index
+                            .add_outgoing_edge_index_batch(
+                                src_label,
+                                edge_label,
+                                dst_label,
+                                k,
+                                &offsets,
+                                column.data().as_ref(),
+                            )
+                            .unwrap();
+                    }
+                }
+                if !dst_vertex_mappings.is_empty() {
+                    let offset_col_id = dst_vertex_mappings[0].column().index();
+                    let offset_column = column_data
+                        .get_mut(offset_col_id as usize)
+                        .expect("Failed to find id column");
+                    let offsets = match offset_column.take_data() {
+                        ColumnData::VertexIdArray(mut data) => data,
+                        _ => panic!("DataType of id col is not VertexId"),
+                    };
+                    for (k, v) in column_map.iter() {
+                        let column_index = v.0;
+                        let column_data_type = v.1;
+                        let ie_property_size = graph.get_max_edge_offset(
+                            src_label,
+                            edge_label,
+                            dst_label,
+                            Direction::Incoming,
+                        );
+                        if !graph_index.has_incoming_edge_index(
+                            k.clone(),
+                            src_label,
+                            edge_label,
+                            dst_label,
+                            ie_property_size,
+                        ) {
+                            graph_index
+                                .init_incoming_edge_index(
+                                    k.clone(),
+                                    src_label,
+                                    dst_label,
+                                    edge_label,
+                                    column_data_type,
+                                    Some(ie_property_size),
+                                    Some(graph_index::types::Item::Int32(0)),
+                                )
+                                .unwrap();
+                        }
+                        let column = column_data
+                            .get(column_index as usize)
+                            .expect("Failed to find column");
+                        graph_index
+                            .add_incoming_edge_index_batch(
+                                src_label,
+                                edge_label,
+                                dst_label,
+                                k,
+                                &offsets,
+                                column.data().as_ref(),
+                            )
+                            .unwrap();
+                    }
                 }
             }
         }

@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex, RwLock};
 
 use bmcsr::graph_db::GraphDB;
+use bmcsr::traverse::traverse;
 use dlopen::wrapper::{Container, WrapperApi};
 use dlopen_derive::WrapperApi;
 use graph_index::types::WriteType;
@@ -20,7 +21,7 @@ use pegasus::{Configuration, ServerConf};
 use rpc_server::queries;
 use rpc_server::queries::rpc::RPCServerConfig;
 use rpc_server::queries::{register, write_graph};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
 
 #[cfg(feature = "use_mimalloc")]
@@ -29,6 +30,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 #[cfg(feature = "use_mimalloc_rust")]
 use mimalloc_rust::*;
+use rpc_server::queries::register::QueryApi;
 
 #[cfg(feature = "use_mimalloc_rust")]
 #[global_allocator]
@@ -44,6 +46,8 @@ pub struct Config {
     lib_path: String,
     #[structopt(short = "q", long = "query")]
     query_path: String,
+    #[structopt(short = "o", long = "output_dir")]
+    output_dir: PathBuf,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -56,6 +60,29 @@ pub struct ServerConfig {
     pub network_config: Option<Configuration>,
     pub rpc_server: Option<RPCServerConfig>,
     pub pegasus_config: Option<PegasusConfig>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Param {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub data_type: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct QueryConfig {
+    pub name: String,
+    pub description: String,
+    pub mode: String,
+    pub extension: String,
+    pub library: String,
+    pub params: Option<Vec<Param>>,
+    pub returns: Option<Vec<Param>>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct QueriesConfig {
+    pub queries: Option<Vec<QueryConfig>>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -90,30 +117,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let lib_config_path = config.lib_path;
     let lib_config_file = File::open(lib_config_path).unwrap();
-    let lines = io::BufReader::new(lib_config_file).lines();
-    for line in lines {
-        let line = line.unwrap();
-        let mut split = line.trim().split("|").collect::<Vec<&str>>();
-        let lib_name = split[0].to_string();
-        let lib_path = split[1].to_string();
-        let libc: Container<register::QueryApi> = unsafe { Container::load(lib_path) }.unwrap();
-        register.register_new_query(lib_name, vec![libc], vec![], "".to_string());
+
+    let queries_config: QueriesConfig =
+        serde_yaml::from_reader(lib_config_file).expect("Could not read values");
+
+    if let Some(queries) = queries_config.queries {
+        for query in queries {
+            let query_name = query.name;
+            let description = query.description;
+            let lib_path = query.library;
+            let mut inputs = vec![];
+            if let Some(params) = query.params {
+                for param in params {
+                    inputs.push((param.name, param.data_type));
+                }
+            }
+            let libc: Vec<Container<QueryApi>> = vec![unsafe { Container::load(lib_path) }.unwrap()];
+            register.register_new_query(query_name, libc, inputs, description);
+        }
     }
 
     let query_path = config.query_path;
     let mut queries = vec![];
     let file = File::open(query_path).unwrap();
     let lines = io::BufReader::new(file).lines();
-    let mut header = vec![];
     for (i, line) in lines.enumerate() {
-        if i == 0 {
-            let line = line.unwrap();
-            let mut split = line.trim().split("|").collect::<Vec<&str>>();
-            for head in split.drain(1..) {
-                header.push(head.to_string());
-            }
-            continue;
-        }
         queries.push(line.unwrap());
     }
 
@@ -122,8 +150,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut params = HashMap::new();
         let mut split = query.trim().split("|").collect::<Vec<&str>>();
         let query_name = split[0].to_string();
-        for (i, param) in split.drain(1..).enumerate() {
-            params.insert(header[i].clone(), param.to_string());
+        if let Some(inputs_info) = register.get_query_inputs_info(&query_name) {
+            for (index, (name, _)) in inputs_info.iter().enumerate() {
+                params.insert(name.clone(), split[index + 1].to_string());
+            }
         }
         let mut conf = JobConf::new(query_name.clone() + "-" + &index.to_string());
         conf.set_workers(workers);
@@ -142,7 +172,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let graph_index = shared_graph_index.read().unwrap();
                 let results = {
                     pegasus::run_with_resource_map(conf.clone(), Some(resource_maps.clone()), || {
-                        query.Query(conf.clone(), &graph, &graph_index, HashMap::new(), None)
+                        query.Query(conf.clone(), &graph, &graph_index, params.clone(), None)
                     })
                     .expect("submit query failure")
                 };
@@ -157,9 +187,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
                 drop(graph);
+                drop(graph_index);
                 let mut graph = shared_graph.write().unwrap();
                 let mut graph_index = shared_graph_index.write().unwrap();
-                for write_op in write_operations.drain(..) {
+                for mut write_op in write_operations.drain(..) {
                     match write_op.write_type() {
                         WriteType::Insert => {
                             if let Some(vertex_mappings) = write_op.vertex_mappings() {
@@ -175,6 +206,65 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         8,
                                     );
                                 }
+                            } else if let Some(edge_mappings) = write_op.edge_mappings() {
+                                let src_label = edge_mappings.src_label();
+                                let edge_label = edge_mappings.edge_label();
+                                let dst_label = edge_mappings.dst_label();
+                                let inputs = edge_mappings.inputs();
+                                let src_vertex_mappings = edge_mappings.src_column_mappings();
+                                let dst_vertex_mappings = edge_mappings.dst_column_mappings();
+                                let column_mappings = edge_mappings.column_mappings();
+                                for input in inputs.iter() {
+                                    write_graph::insert_edges(
+                                        &mut graph,
+                                        src_label,
+                                        edge_label,
+                                        dst_label,
+                                        input,
+                                        src_vertex_mappings,
+                                        dst_vertex_mappings,
+                                        column_mappings,
+                                        8,
+                                    );
+                                }
+                            }
+                        }
+                        WriteType::Delete => {
+                            if let Some(vertex_mappings) = write_op.take_vertex_mappings() {
+                                let vertex_label = vertex_mappings.vertex_label();
+                                let inputs = vertex_mappings.inputs();
+                                let column_mappings = vertex_mappings.column_mappings();
+                                for input in inputs.iter() {
+                                    write_graph::delete_vertices(
+                                        &mut graph,
+                                        vertex_label,
+                                        input,
+                                        column_mappings,
+                                        8,
+                                    );
+                                }
+                            }
+                            if let Some(edge_mappings) = write_op.take_edge_mappings() {
+                                let src_label = edge_mappings.src_label();
+                                let edge_label = edge_mappings.edge_label();
+                                let dst_label = edge_mappings.dst_label();
+                                let inputs = edge_mappings.inputs();
+                                let src_column_mappings = edge_mappings.src_column_mappings();
+                                let dst_column_mappings = edge_mappings.dst_column_mappings();
+                                let column_mappings = edge_mappings.column_mappings();
+                                for input in inputs.iter() {
+                                    write_graph::delete_edges(
+                                        &mut graph,
+                                        src_label,
+                                        edge_label,
+                                        dst_label,
+                                        input,
+                                        src_column_mappings,
+                                        dst_column_mappings,
+                                        column_mappings,
+                                        8,
+                                    );
+                                }
                             }
                         }
                         _ => todo!(),
@@ -183,5 +273,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
+    println!("Start traverse");
+    let mut graph = shared_graph.read().unwrap();
+    let output_dir = config.output_dir;
+    std::fs::create_dir_all(&output_dir).unwrap();
+    traverse(&graph, output_dir.to_str().unwrap());
     Ok(())
 }

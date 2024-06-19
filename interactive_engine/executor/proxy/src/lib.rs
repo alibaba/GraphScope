@@ -1,15 +1,7 @@
-extern crate dlopen;
-#[macro_use]
-extern crate dlopen_derive;
-#[macro_use]
-extern crate log;
+pub mod request;
+
 #[macro_use]
 extern crate lazy_static;
-
-extern crate core;
-extern crate rand;
-
-pub mod queries;
 
 #[cfg(not(feature = "gcip"))]
 mod generated {
@@ -38,6 +30,3 @@ mod generated {
     #[path = "procedure.rs"]
     pub mod procedure;
 }
-
-pub use generated::procedure;
-pub use generated::protocol as pb;
