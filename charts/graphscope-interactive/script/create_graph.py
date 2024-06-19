@@ -410,7 +410,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--endpoint", type=str, default="http://localhost:7777")
     parser.add_argument("--proc-name", type=str, default="huoyan")
-    parser.add_arguement("--remove-old-graph", type=bool, default=False)
+    parser.add_argument("--remove-old-graph", type=bool, default=False)
 
     # get the date string of yesterday, yyyymmdd
     import datetime
