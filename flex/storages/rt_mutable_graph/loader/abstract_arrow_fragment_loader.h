@@ -190,10 +190,11 @@ struct _add_vertex {
 #endif
 };
 
-template <typename PK_T, typename EDATA_T, typename VECTOR_T>
+template <typename PK_T, typename EDATA_T>
 void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
-             const IndexerType& indexer, VECTOR_T& parsed_edges,
-             std::vector<std::atomic<int32_t>>& degree) {
+             const IndexerType& indexer,
+             std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
+             std::vector<int32_t>& degree) {
   static constexpr auto invalid_vid = std::numeric_limits<vid_t>::max();
   if constexpr (std::is_same_v<PK_T, std::string_view>) {
     if (col->type()->Equals(arrow::utf8())) {
