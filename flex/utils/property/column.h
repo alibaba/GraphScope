@@ -440,7 +440,6 @@ class StringMapColumn : public ColumnBase {
     meta_map_ = new LFIndexer<INDEX_T>();
     meta_map_->init(
         PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH));
-    lock_ = new grape::SpinLock();
   }
 
   ~StringMapColumn() {
@@ -506,7 +505,7 @@ class StringMapColumn : public ColumnBase {
  private:
   TypedColumn<INDEX_T> index_col_;
   LFIndexer<INDEX_T>* meta_map_;
-  grape::SpinLock* lock_;
+  grape::SpinLock lock_;
 };
 
 template <typename INDEX_T>
@@ -550,11 +549,11 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
                                          const std::string_view& val) {
   INDEX_T lid;
   if (!meta_map_->get_index(val, lid)) {
-    lock_->lock();
+    lock_.lock();
     if (!meta_map_->get_index(val, lid)) {
       lid = meta_map_->insert(val);
     }
-    lock_->unlock();
+    lock_.unlock();
   }
   index_col_.set_value(idx, lid);
 }
