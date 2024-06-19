@@ -18,6 +18,8 @@
 
 package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
+import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
+import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
@@ -33,6 +35,9 @@ import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 
@@ -55,7 +60,7 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
                 "variable [" + variable + "] can not denote a path expand");
         this.parentBuilder = parentBuilder;
         this.variable = variable;
-        this.pathExpand = getPathExpand(variable);
+        this.pathExpand = getPathExpand(parentBuilder.peek(), variable);
         this.innerExpand =
                 Objects.requireNonNull(
                         this.pathExpand.getExpand(), "expand in path expand can not be null");
@@ -64,22 +69,37 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
                         this.pathExpand.getGetV(), "getV in path expand can not be null");
     }
 
-    private GraphLogicalPathExpand getPathExpand(RexNode variable) {
+    private GraphLogicalPathExpand getPathExpand(RelNode top, RexNode variable) {
         int expectedAlias = ((RexGraphVariable) variable).getAliasId();
-        for (int inputOrdinal = 0; inputOrdinal < parentBuilder.size(); ++inputOrdinal) {
-            List<RelNode> inputQueue = Lists.newArrayList(parentBuilder.peek(inputOrdinal));
-            while (!inputQueue.isEmpty()) {
-                RelNode cur = inputQueue.remove(0);
-                if (cur instanceof GraphLogicalPathExpand
-                        && (expectedAlias == AliasInference.DEFAULT_ID
-                                || ((GraphLogicalPathExpand) cur).getAliasId() == expectedAlias)) {
-                    return (GraphLogicalPathExpand) cur;
-                }
-                if (AliasInference.removeAlias(cur)) {
-                    break;
-                }
-                inputQueue.addAll(cur.getInputs());
+        List<RelNode> inputQueue = Lists.newArrayList(top);
+        while (!inputQueue.isEmpty()) {
+            RelNode cur = inputQueue.remove(0);
+            if (cur instanceof GraphLogicalPathExpand
+                    && (expectedAlias == AliasInference.DEFAULT_ID
+                            || ((GraphLogicalPathExpand) cur).getAliasId() == expectedAlias)) {
+                return (GraphLogicalPathExpand) cur;
             }
+            if (cur instanceof Project) {
+                Project project = (Project) cur;
+                RelDataType projectType = project.getRowType();
+                for (int i = 0; i < projectType.getFieldList().size(); ++i) {
+                    RelDataTypeField field = projectType.getFieldList().get(i);
+                    if (field.getIndex() == expectedAlias) {
+                        if (i < project.getProjects().size()
+                                && project.getProjects().get(i) instanceof RexGraphVariable) {
+                            return getPathExpand(project.getInput(), project.getProjects().get(i));
+                        }
+                        break;
+                    }
+                }
+            } else if (cur instanceof CommonTableScan) {
+                CommonOptTable optTable = (CommonOptTable) ((CommonTableScan) cur).getTable();
+                return getPathExpand(optTable.getCommon(), variable);
+            }
+            if (AliasInference.removeAlias(cur)) {
+                break;
+            }
+            inputQueue.addAll(cur.getInputs());
         }
         throw new IllegalArgumentException("can not find path expand by variable " + variable);
     }

@@ -27,6 +27,7 @@ import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.TraversalEnumParser;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
@@ -53,60 +54,63 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalMethod_valueMap(
             GremlinGSParser.TraversalMethod_valueMapContext ctx) {
-        if (propertyKey.getType() instanceof GraphPathType) {
+        List<String> properties =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        if (isPathFunction(properties)) {
             return (new PathFunctionVisitor(builder, propertyKey))
                     .visitTraversalMethod_valueMap(ctx);
         }
+        String tag = getPropertyTag();
         return builder.call(
                 GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                getProperties(ctx, null).stream()
-                        .flatMap(k -> Stream.of(builder.literal(k), builder.variable(null, k)))
+                getValueMapProperties(properties, tag).stream()
+                        .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
                         .collect(Collectors.toList()));
     }
 
     @Override
     public RexNode visitTraversalMethod_values(GremlinGSParser.TraversalMethod_valuesContext ctx) {
-        if (propertyKey.getType() instanceof GraphPathType) {
+        List<String> properties =
+                ImmutableList.of((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
+        if (isPathFunction(properties)) {
             return (new PathFunctionVisitor(builder, propertyKey)).visitTraversalMethod_values(ctx);
         }
-        return builder.variable(null, (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
+        return builder.variable(getPropertyTag(), properties.get(0));
     }
 
     @Override
     public RexNode visitTraversalMethod_elementMap(
             GremlinGSParser.TraversalMethod_elementMapContext ctx) {
-        if (propertyKey.getType() instanceof GraphPathType) {
+        List<String> properties =
+                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+        if (isPathFunction(properties)) {
             return (new PathFunctionVisitor(builder, propertyKey))
                     .visitTraversalMethod_elementMap(ctx);
         }
+        String tag = getPropertyTag();
         return builder.call(
                 GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                getProperties(ctx, null).stream()
-                        .flatMap(k -> Stream.of(builder.literal(k), builder.variable(null, k)))
+                getElementMapProperties(properties, tag).stream()
+                        .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
                         .collect(Collectors.toList()));
     }
 
     @Override
     public RexNode visitTraversalMethod_selectby(
             GremlinGSParser.TraversalMethod_selectbyContext byCtx) {
-        Preconditions.checkArgument(
-                propertyKey instanceof RexGraphVariable
-                        && ((RexGraphVariable) propertyKey).getProperty() == null,
-                "variable ["
-                        + propertyKey
-                        + "] cannot denote a start tag of the select by context");
-        String tag = ((RexGraphVariable) propertyKey).getName();
         int byChildCount = byCtx.getChildCount();
         if (byChildCount == 3) { // select(..).by()
-            return builder.variable(tag);
+            return propertyKey;
         }
-        if (propertyKey.getType() instanceof GraphPathType) {
-            return (new PathFunctionVisitor(builder, propertyKey))
-                    .visitTraversalMethod_selectby(byCtx);
-        }
+        String tag = getPropertyTag();
         if (byChildCount == 4 && byCtx.StringLiteral() != null) { // select(..).by('name')
-            return builder.variable(
-                    tag, (String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
+            List<String> properties =
+                    ImmutableList.of((String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
+            if (isPathFunction(properties)) {
+                return (new PathFunctionVisitor(builder, propertyKey))
+                        .visitTraversalMethod_selectby(byCtx);
+            }
+            return builder.variable(tag, properties.get(0));
         } else if (byChildCount == 4
                 && byCtx.traversalToken() != null) { // select(..).by(T.label/T.id)
             T token =
@@ -114,18 +118,12 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
                             T.class, byCtx.traversalToken());
             return builder.variable(tag, token.getAccessor());
         } else if (byCtx.traversalMethod_valueMap() != null) { // select(..).by(valueMap('name'))
-            return builder.call(
-                    GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                    getProperties(byCtx.traversalMethod_valueMap(), tag).stream()
-                            .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
-                            .collect(Collectors.toList()));
+            return new ExpressionVisitor(builder, propertyKey)
+                    .visitTraversalMethod_valueMap(byCtx.traversalMethod_valueMap());
         } else if (byCtx.traversalMethod_elementMap()
                 != null) { // select(..).by(elementMap('name'))
-            return builder.call(
-                    GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                    getProperties(byCtx.traversalMethod_elementMap(), tag).stream()
-                            .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
-                            .collect(Collectors.toList()));
+            return new ExpressionVisitor(builder, propertyKey)
+                    .visitTraversalMethod_elementMap(byCtx.traversalMethod_elementMap());
         } else if (byCtx.nestedTraversal() != null) {
             return Utils.convertExprToPair(
                             (new NestedTraversalRexVisitor(this.builder, tag, byCtx))
@@ -137,17 +135,16 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
                 byCtx.getText() + " is unsupported yet in select");
     }
 
-    private List<String> getProperties(
-            GremlinGSParser.TraversalMethod_valueMapContext ctx, @Nullable String tag) {
-        List<String> properties =
-                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+    private boolean isPathFunction(List<String> properties) {
+        return (propertyKey.getType() instanceof GraphPathType)
+                && properties.stream().allMatch(k -> !k.equals(GraphProperty.LEN_KEY));
+    }
+
+    private List<String> getValueMapProperties(List<String> properties, @Nullable String tag) {
         return properties.isEmpty() ? getAllProperties(tag) : properties;
     }
 
-    private List<String> getProperties(
-            GremlinGSParser.TraversalMethod_elementMapContext ctx, @Nullable String tag) {
-        List<String> properties =
-                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
+    private List<String> getElementMapProperties(List<String> properties, @Nullable String tag) {
         if (properties.isEmpty()) {
             properties.addAll(getAllProperties(tag));
         }
@@ -162,6 +159,15 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         Preconditions.checkArgument(
                 dataType instanceof GraphSchemaType, "can not get property from type=", dataType);
         return dataType.getFieldList().stream().map(k -> k.getName()).collect(Collectors.toList());
+    }
+
+    private String getPropertyTag() {
+        Preconditions.checkArgument(
+                propertyKey instanceof RexGraphVariable
+                        && ((RexGraphVariable) propertyKey).getProperty() == null,
+                "variable: [%s] cannot denote a start tag",
+                propertyKey);
+        return ((RexGraphVariable) propertyKey).getName();
     }
 
     @Override
