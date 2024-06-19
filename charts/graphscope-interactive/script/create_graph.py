@@ -205,15 +205,21 @@ huoyan_graph = {
 # }
 
 
-def create_graph(sess: Session):
-    graph_id = sess.create_graph(CreateGraphRequest.from_dict(huoyan_graph))
-    assert graph_id.is_ok()
-    graph_id = graph_id.get_value()
-    print(f"create graph {graph_id} successfully")
-    return graph_id.graph_id
+def create_graph(sess: Session, ds: str):
+    copied_huoyan_graph = huoyan_graph.copy()
+    copied_huoyan_graph["name"] = f"onecompany_{ds}"
+    create_graph_res = sess.create_graph(
+        CreateGraphRequest.from_dict(copied_huoyan_graph)
+    )
+    assert create_graph_res.is_ok()
+    create_graph_resp = create_graph_res.get_value()
+    print(
+        f"create graph {create_graph_resp.graph_id} successfully with name {copied_huoyan_graph['name']}"
+    )
+    return create_graph_resp.graph_id
 
 
-def loading_graph(sess: Session, graph_id: str):
+def loading_graph(sess: Session, graph_id: str, ds: str):
     schema_mapping = SchemaMapping(
         loading_config=SchemaMappingLoadingConfig(
             data_source=SchemaMappingLoadingConfigDataSource(scheme="odps"),
@@ -226,7 +232,7 @@ def loading_graph(sess: Session, graph_id: str):
         vertex_mappings=[
             VertexMapping(
                 type_name="company",
-                inputs=["grape_dev/lei_huoyan_company/ds=20240613"],
+                inputs=[f"grape_dev/lei_huoyan_company/ds={ds}"],
                 column_mappings=[
                     ColumnMapping(
                         var_property="vertex_id",
@@ -244,7 +250,7 @@ def loading_graph(sess: Session, graph_id: str):
             ),
             VertexMapping(
                 type_name="person",
-                inputs=["grape_dev/lei_huoyan_person/ds=20240613"],
+                inputs=[f"grape_dev/lei_huoyan_person/ds={ds}"],
                 column_mappings=[
                     ColumnMapping(
                         var_property="vertex_id",
@@ -268,7 +274,7 @@ def loading_graph(sess: Session, graph_id: str):
                     source_vertex="company",
                     destination_vertex="company",
                 ),
-                inputs=["grape_dev/lei_huoyan_company_invest/ds=20240613"],
+                inputs=[f"grape_dev/lei_huoyan_company_invest/ds={ds}"],
                 column_mappings=[
                     ColumnMapping(
                         var_property="rel_type",
@@ -300,7 +306,7 @@ def loading_graph(sess: Session, graph_id: str):
                     source_vertex="person",
                     destination_vertex="company",
                 ),
-                inputs=["grape_dev/lei_huoyan_person_invest/ds=20240613"],
+                inputs=[f"grape_dev/lei_huoyan_person_invest/ds={ds}"],
                 column_mappings=[
                     ColumnMapping(
                         var_property="rel_type",
@@ -389,6 +395,14 @@ def get_current_running_graph(sess: Session):
     return status.graph.id
 
 
+def list_graph(sess: Session):
+    resp = sess.list_graphs()
+    assert resp.is_ok()
+    res = resp.get_value()
+    graph_id_arr = [graph.id for graph in res]
+    print("list graph: ", graph_id_arr)
+
+
 if __name__ == "__main__":
     # parse command line args
     import argparse
@@ -397,6 +411,14 @@ if __name__ == "__main__":
     parser.add_argument("--endpoint", type=str, default="http://localhost:7777")
     parser.add_argument("--proc-name", type=str, default="huoyan")
     parser.add_arguement("--remove-old-graph", type=bool, default=False)
+
+    # get the date string of yesterday, yyyymmdd
+    import datetime
+
+    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+    ds = yesterday.strftime("%Y%m%d")
+    print("ds: ", ds)
+
     # finish
     args = parser.parse_args()
     print(args)
@@ -408,11 +430,11 @@ if __name__ == "__main__":
     print("-----------------Finish getting current running graph-----------------")
     print("old graph: ", old_graph)
 
-    graph_id = create_graph(sess)
+    graph_id = create_graph(sess, ds)
     print("-----------------Finish creating graph-----------------")
     print("graph_id: ", graph_id)
 
-    job_id = loading_graph(sess, graph_id)
+    job_id = loading_graph(sess, graph_id, ds)
     wait_job_finish(sess, job_id)
     print("-----------------Finish loading graph-----------------")
 
@@ -428,6 +450,8 @@ if __name__ == "__main__":
     if args.remove_old_graph:
         print("remove old graph")
         delete_graph = sess.delete_graph(old_graph)
-        print("delete graph: ", delete_graph)
+        print("delete graph res: ", delete_graph)
     else:
         print("keep old graph", old_graph)
+
+    list_graph(sess)
