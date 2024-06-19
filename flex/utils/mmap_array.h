@@ -439,6 +439,10 @@ class mmap_array<std::string_view> {
     items_.swap(rhs.items_);
     data_.swap(rhs.data_);
   }
+  void unlink() {
+    items_.unlink();
+    data_.unlink();
+  }
 
  private:
   mmap_array<string_item> items_;
