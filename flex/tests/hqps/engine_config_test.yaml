@@ -1,11 +1,11 @@
 directories:
-  workspace: /tmp/temp_workspace
+  workspace: /tmp/interactive_workspace
   subdirs:
     data: data
     logs: logs
     conf: conf
 log_level: INFO
-default_graph: modern_graph
+default_graph: ldbc
 compute_engine:
   type: hiactor
   workers:
