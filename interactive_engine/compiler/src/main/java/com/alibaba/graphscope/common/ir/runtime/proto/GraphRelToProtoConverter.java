@@ -269,8 +269,10 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     startAuxiliaBuilder.getParamsBuilder();
             addQueryColumns(startParamsBuilder, vertexColumns);
             startAuxiliaBuilder.setParams(startParamsBuilder);
-            startAuxiliaBuilder.setTag(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
-            startAuxiliaBuilder.setAlias(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
+            if (pxd.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+                startAuxiliaBuilder.setTag(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
+                startAuxiliaBuilder.setAlias(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
+            }
             GraphAlgebraPhysical.PhysicalOpr.Builder startAuxiliaOprBuilder =
                     GraphAlgebraPhysical.PhysicalOpr.newBuilder();
             startAuxiliaOprBuilder.setOpr(
