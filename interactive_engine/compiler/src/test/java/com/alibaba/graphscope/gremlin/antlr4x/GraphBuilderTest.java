@@ -1725,4 +1725,42 @@ public class GraphBuilderTest {
                         + " CHAR(1), DATE, INTEGER]) MAP]) MAP",
                 rel.getRowType().getFieldList().get(0).getType().toString());
     }
+
+    @Test
+    public void g_V_path_as_a_select_a_valueMap() {
+        RelNode rel =
+                eval(
+                        "g.V().out('2..3').with('RESULT_OPT',"
+                            + " 'ALL_V_E').as('a').select('a').valueMap('~len')");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                    + "  GraphLogicalProject($f0=[MAP(_UTF-8'~len', a.~len)], isAppend=[true])\n"
+                    + "    GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
+                    + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[END])\n"
+                    + "], offset=[2], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
+                    + " alias=[a])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[VERTEX])",
+                rel.explain().trim());
+
+        rel =
+                eval(
+                        "g.V().out('2..3').with('RESULT_OPT',"
+                            + " 'ALL_V_E').as('a').select('a').valueMap('name', 'weight')");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                    + "  GraphLogicalProject($f0=[PATH_FUNCTION(a, FLAG(VERTEX_EDGE),"
+                    + " MAP(_UTF-8'weight', a.weight, _UTF-8'name', a.name))], isAppend=[true])\n"
+                    + "    GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=true,"
+                    + " tables=[created, knows]}], alias=[_], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[END])\n"
+                    + "], offset=[2], fetch=[1], path_opt=[ARBITRARY], result_opt=[ALL_V_E],"
+                    + " alias=[a])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[_], opt=[VERTEX])",
+                rel.explain().trim());
+    }
 }

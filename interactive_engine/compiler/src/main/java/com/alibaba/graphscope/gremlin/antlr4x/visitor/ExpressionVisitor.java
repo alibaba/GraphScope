@@ -43,6 +43,7 @@ import java.util.stream.Stream;
 public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     protected final RexNode propertyKey;
     protected final GraphBuilder builder;
+    // indicate whether to throw exception when property not found in the input expand or getV
     protected final boolean throwsOnPropertyNotFound;
 
     public static final int SIMPLE_PREDICATE_CHILD_COUNT = 1, CONNECTIVE_PREDICATE_CHILD_COUNT = 6;

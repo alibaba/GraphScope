@@ -47,6 +47,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * visit the antlr tree and generate the corresponding {@code RexNode} for path function
+ */
 public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
     private final GraphBuilder parentBuilder;
     private final RexNode variable;
@@ -126,6 +129,11 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
                         (GraphOptCluster) parentBuilder.getCluster(),
                         parentBuilder.getRelOptSchema());
         GraphOpt.PathExpandFunction funcOpt = getFuncOpt();
+        // avoid to throw exception if the function opt is VERTEX_EDGE, to support the semantics
+        // like
+        // g.V().out('2..3').with('RESULT_OPT', 'ALL_V_E').valueMap('name', 'weight'),
+        // in nested path collection, each edge will return the property of 'weight' while each
+        // vertex will return the property of 'name'
         boolean throwsOnPropertyNotFound =
                 (funcOpt == GraphOpt.PathExpandFunction.VERTEX_EDGE) ? false : true;
         RexNode propertyProjection =
