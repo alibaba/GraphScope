@@ -132,6 +132,7 @@ modern_graph_with_empty_edge_property = {
                         "relation": "MANY_TO_MANY",
                     }
                 ],
+                "properties": [],
                 "primary_keys": [],
             }
         ],
