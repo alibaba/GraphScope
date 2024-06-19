@@ -45,7 +45,7 @@ void set_vertex_column_from_string_array(
         std::string_view sw;
         if (casted->IsNull(k)) {
           VLOG(1) << "Found null string in vertex property.";
-          sw = " ";
+          sw = "";
         } else {
           sw = std::string_view(str.data(), str.size());
         }

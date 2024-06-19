@@ -16,6 +16,7 @@
 #ifndef GRAPHSCOPE_PROPERTY_COLUMN_H_
 #define GRAPHSCOPE_PROPERTY_COLUMN_H_
 
+#include <mutex>
 #include <string>
 #include <string_view>
 
@@ -504,6 +505,7 @@ class StringMapColumn : public ColumnBase {
  private:
   TypedColumn<INDEX_T> index_col_;
   LFIndexer<INDEX_T>* meta_map_;
+  std::mutex mtx_;
 };
 
 template <typename INDEX_T>
@@ -547,6 +549,7 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
                                          const std::string_view& val) {
   INDEX_T lid;
   if (!meta_map_->get_index(val, lid)) {
+    std::unique_lock<std::mutex> lock(mtx_);
     lid = meta_map_->insert(val);
   }
   index_col_.set_value(idx, lid);
