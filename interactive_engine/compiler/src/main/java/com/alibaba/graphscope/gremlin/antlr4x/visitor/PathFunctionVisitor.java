@@ -21,6 +21,8 @@ package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
+import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
@@ -95,6 +97,17 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
             } else if (cur instanceof CommonTableScan) {
                 CommonOptTable optTable = (CommonOptTable) ((CommonTableScan) cur).getTable();
                 return getPathExpand(optTable.getCommon(), variable);
+            } else if (cur instanceof GraphLogicalSingleMatch) {
+                return getPathExpand(((GraphLogicalSingleMatch) cur).getSentence(), variable);
+            } else if (cur instanceof GraphLogicalMultiMatch) {
+                List<RelNode> sentences = ((GraphLogicalMultiMatch) cur).getSentences();
+                for (RelNode sentence : sentences) {
+                    try {
+                        return getPathExpand(sentence, variable);
+                    } catch (IllegalArgumentException e) {
+                        // ignore
+                    }
+                }
             }
             if (AliasInference.removeAlias(cur)) {
                 break;
