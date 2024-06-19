@@ -73,6 +73,11 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && make test
 
+    - name: Ir Runtime With Features Test
+      run: |
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/integrated
+        cargo test --features=mimalloc
+
     - name: CommonType Unit Test
       run: |
         cd ${GITHUB_WORKSPACE}/interactive_engine/executor/common/dyn_type && cargo test
