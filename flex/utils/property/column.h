@@ -16,9 +16,9 @@
 #ifndef GRAPHSCOPE_PROPERTY_COLUMN_H_
 #define GRAPHSCOPE_PROPERTY_COLUMN_H_
 
-#include <mutex>
 #include <string>
 #include <string_view>
+#include "grape/utils/concurrent_queue.h"
 
 #include "flex/utils/mmap_array.h"
 #include "flex/utils/property/types.h"
@@ -440,6 +440,7 @@ class StringMapColumn : public ColumnBase {
     meta_map_ = new LFIndexer<INDEX_T>();
     meta_map_->init(
         PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH));
+    lock_ = new grape::SpinLock();
   }
 
   ~StringMapColumn() {
@@ -505,7 +506,7 @@ class StringMapColumn : public ColumnBase {
  private:
   TypedColumn<INDEX_T> index_col_;
   LFIndexer<INDEX_T>* meta_map_;
-  std::mutex mtx_;
+  grape::SpinLock* lock_;
 };
 
 template <typename INDEX_T>
@@ -549,8 +550,10 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
                                          const std::string_view& val) {
   INDEX_T lid;
   if (!meta_map_->get_index(val, lid)) {
-    std::unique_lock<std::mutex> lock(mtx_);
-    lid = meta_map_->insert(val);
+    lock_->lock();
+    if (!meta_map_->get_index(val, lid)) {
+      lid = meta_map_->insert(val);
+    }
   }
   index_col_.set_value(idx, lid);
 }
