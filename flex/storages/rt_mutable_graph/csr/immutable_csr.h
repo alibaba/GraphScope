@@ -613,9 +613,6 @@ class SingleImmutableCsr<std::string_view>
     return nbr;
   }
   void close() override { nbr_list_.reset(); }
-
-  void close() override { nbr_list_.reset(); }
-
  private:
   StringColumn& column_;
   mmap_array<nbr_t> nbr_list_;
