@@ -15,26 +15,30 @@
 
 #ifndef GRAPHSCOPE_UTILS_MMAP_VECTOR_H_
 #define GRAPHSCOPE_UTILS_MMAP_VECTOR_H_
-#include "flex/utils/property/column.h"
+#include "flex/utils/mmap_array.h"
 
 namespace gs {
-template <typename EDATA_T>
+template <typename T>
 class mmap_vector {
  public:
-  mmap_vector(const std::string& work_dir, const std::string& file_name) {
-    array_.open(work_dir + "/" + file_name, true);
-    array_.resize(4096);
-    size_ = 0;
+  mmap_vector() : size_(0) {}
+
+  void open(const std::string& filename, bool sync_to_file = true) {
+    array_.open(filename, sync_to_file);
   }
 
-  ~mmap_vector() { array_.unlink(); }
+  void reserve(size_t size) { array_.resize(size); }
+
+  void unlink() { array_.unlink(); }
+
+  ~mmap_vector() { unlink(); }
 
   mmap_vector(mmap_vector&& other) {
     array_.swap(other.array_);
     size_ = other.size_;
   }
 
-  void push_back(const EDATA_T& val) {
+  void push_back(const T& val) {
     size_t cap = array_.size();
     if (size_ == cap) {
       array_.resize(cap * 2);
@@ -43,7 +47,7 @@ class mmap_vector {
     ++size_;
   }
 
-  void emplace_back(EDATA_T&& val) {
+  void emplace_back(T&& val) {
     size_t cap = array_.size();
     if (size_ == cap) {
       array_.resize(cap * 2);
@@ -63,15 +67,15 @@ class mmap_vector {
 
   size_t size() const { return size_; }
 
-  const EDATA_T& operator[](size_t index) const { return array_[index]; }
-  EDATA_T& operator[](size_t index) { return array_[index]; }
-  const EDATA_T* begin() const { return array_.data(); }
-  const EDATA_T* end() const { return array_.data() + size_; }
+  const T& operator[](size_t index) const { return array_[index]; }
+  T& operator[](size_t index) { return array_[index]; }
+  const T* begin() const { return array_.data(); }
+  const T* end() const { return array_.data() + size_; }
 
   void clear() { size_ = 0; }
 
  private:
-  mmap_array<EDATA_T> array_;
+  mmap_array<T> array_;
   size_t size_;
 };
 };  // namespace gs

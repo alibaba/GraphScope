@@ -730,19 +730,17 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
     const auto& src_indexer = basic_fragment_loader_.GetLFIndexer(src_label_id);
     const auto& dst_indexer = basic_fragment_loader_.GetLFIndexer(dst_label_id);
-    std::vector<VECTOR_T> parsed_edges_vec;
+    std::vector<VECTOR_T> parsed_edges_vec(std::thread::hardware_concurrency());
     if constexpr (std::is_same_v<
                       VECTOR_T,
                       mmap_vector<std::tuple<vid_t, vid_t, EDATA_T>>>) {
       const auto& work_dir = basic_fragment_loader_.work_dir();
       for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
-        parsed_edges_vec.emplace_back(
-            runtime_dir(work_dir), src_label_name + "_" + dst_label_name + "_" +
-                                       edge_label_name + "_" +
-                                       std::to_string(i) + ".tmp");
+        parsed_edges_vec[i].open(runtime_dir(work_dir) + "/" + src_label_name +
+                                 "_" + dst_label_name + "_" + edge_label_name +
+                                 "_" + std::to_string(i) + ".tmp");
+        parsed_edges_vec[i].reserve(4096);
       }
-    } else {
-      parsed_edges_vec.resize(std::thread::hardware_concurrency());
     }
     std::vector<std::atomic<int32_t>> ie_degree(dst_indexer.size()),
         oe_degree(src_indexer.size());
