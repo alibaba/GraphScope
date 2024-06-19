@@ -554,6 +554,7 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
     if (!meta_map_->get_index(val, lid)) {
       lid = meta_map_->insert(val);
     }
+    lock_->unlock();
   }
   index_col_.set_value(idx, lid);
 }
