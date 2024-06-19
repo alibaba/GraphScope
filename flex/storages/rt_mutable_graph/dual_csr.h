@@ -33,8 +33,13 @@ class DualCsrBase {
                          const std::string& edata_name,
                          const std::string& work_dir,
                          const std::vector<int>& oe_degree,
-                         const std::vector<int>& ie_degree,
-                         bool batch_init_in_memory) = 0;
+                         const std::vector<int>& ie_degree) = 0;
+
+  virtual void BatchInitInMemory(const std::string& edata_name,
+                                 const std::string& work_dir,
+                                 const std::vector<int>& oe_degree,
+                                 const std::vector<int>& ie_degree) = 0;
+
   virtual void Open(const std::string& oe_name, const std::string& ie_name,
                     const std::string& edata_name,
                     const std::string& snapshot_dir,
@@ -119,10 +124,17 @@ class DualCsr : public DualCsrBase {
   void BatchInit(const std::string& oe_name, const std::string& ie_name,
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
-                 const std::vector<int>& ie_degree,
-                 bool batch_init_in_memory) override {
-    in_csr_->batch_init(ie_name, work_dir, ie_degree, batch_init_in_memory);
-    out_csr_->batch_init(oe_name, work_dir, oe_degree, batch_init_in_memory);
+                 const std::vector<int>& ie_degree) override {
+    in_csr_->batch_init(ie_name, work_dir, ie_degree);
+    out_csr_->batch_init(oe_name, work_dir, oe_degree);
+  }
+
+  void BatchInitInMemory(const std::string& edata_name,
+                         const std::string& work_dir,
+                         const std::vector<int>& oe_degree,
+                         const std::vector<int>& ie_degree) override {
+    in_csr_->batch_init_in_memory(ie_degree);
+    out_csr_->batch_init_in_memory(oe_degree);
   }
 
   void Open(const std::string& oe_name, const std::string& ie_name,
@@ -251,12 +263,20 @@ class DualCsr<std::string_view> : public DualCsrBase {
   void BatchInit(const std::string& oe_name, const std::string& ie_name,
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
-                 const std::vector<int>& ie_degree,
-                 bool batch_init_in_memory) override {
-    size_t ie_num =
-        in_csr_->batch_init(ie_name, work_dir, ie_degree, batch_init_in_memory);
-    size_t oe_num = out_csr_->batch_init(oe_name, work_dir, oe_degree,
-                                         batch_init_in_memory);
+                 const std::vector<int>& ie_degree) override {
+    size_t ie_num = in_csr_->batch_init(ie_name, work_dir, ie_degree);
+    size_t oe_num = out_csr_->batch_init(oe_name, work_dir, oe_degree);
+    column_.open(edata_name, "", work_dir);
+    column_.resize(std::max(ie_num, oe_num));
+    column_idx_.store(0);
+  }
+
+  void BatchInitInMemory(const std::string& edata_name,
+                         const std::string& work_dir,
+                         const std::vector<int>& oe_degree,
+                         const std::vector<int>& ie_degree) {
+    size_t ie_num = in_csr_->batch_init_in_memory(ie_degree);
+    size_t oe_num = out_csr_->batch_init_in_memory(oe_degree);
     column_.open(edata_name, "", work_dir);
     column_.resize(std::max(ie_num, oe_num));
     column_idx_.store(0);

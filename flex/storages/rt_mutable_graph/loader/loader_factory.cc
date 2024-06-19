@@ -46,8 +46,8 @@ void LoaderFactory::Finalize() {}
 
 std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
     const std::string& work_dir, const Schema& schema,
-    const LoadingConfig& loading_config, int thread_num,
-    bool batch_init_in_memory, bool use_mmap_vector) {
+    const LoadingConfig& loading_config, int thread_num, bool build_csr_in_mem,
+    bool use_mmap_vector) {
   auto scheme = loading_config.GetScheme();
   auto format = loading_config.GetFormat();
   auto key = scheme + format;
@@ -55,7 +55,7 @@ std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
   auto iter = known_loaders_.find(key);
   if (iter != known_loaders_.end()) {
     return iter->second(work_dir, schema, loading_config, thread_num,
-                        batch_init_in_memory, use_mmap_vector);
+                        build_csr_in_mem, use_mmap_vector);
   } else {
     LOG(FATAL) << "Unsupported format: " << format;
   }

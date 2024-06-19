@@ -149,11 +149,11 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   }
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
     reserve_ratio = std::max(reserve_ratio, 1.0);
     size_t vnum = degree.size();
-    adj_lists_.open(work_dir + "/" + name + ".adj", !batch_init_in_memory);
+    adj_lists_.open(work_dir + "/" + name + ".adj", true);
     adj_lists_.resize(vnum);
 
     locks_ = new grape::SpinLock[vnum];
@@ -162,7 +162,35 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     for (auto d : degree) {
       edge_num += (std::ceil(d * reserve_ratio));
     }
-    nbr_list_.open(work_dir + "/" + name + ".nbr", !batch_init_in_memory);
+    nbr_list_.open(work_dir + "/" + name + ".nbr", true);
+    nbr_list_.resize(edge_num);
+
+    nbr_t* ptr = nbr_list_.data();
+    for (vid_t i = 0; i < vnum; ++i) {
+      int deg = degree[i];
+      int cap = std::ceil(deg * reserve_ratio);
+      adj_lists_[i].init(ptr, cap, 0);
+      ptr += cap;
+    }
+
+    unsorted_since_ = 0;
+    return edge_num;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    reserve_ratio = std::max(reserve_ratio, 1.0);
+    size_t vnum = degree.size();
+    adj_lists_.reset();
+    adj_lists_.resize(vnum);
+
+    locks_ = new grape::SpinLock[vnum];
+
+    size_t edge_num = 0;
+    for (auto d : degree) {
+      edge_num += (std::ceil(d * reserve_ratio));
+    }
+    nbr_list_.reset();
     nbr_list_.resize(edge_num);
 
     nbr_t* ptr = nbr_list_.data();
@@ -474,10 +502,10 @@ class MutableCsr<std::string_view>
   }
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    adj_lists_.open(work_dir + "/" + name + ".adj", !batch_init_in_memory);
+    adj_lists_.open(work_dir + "/" + name + ".adj", true);
     adj_lists_.resize(vnum);
 
     locks_ = new grape::SpinLock[vnum];
@@ -486,7 +514,31 @@ class MutableCsr<std::string_view>
     for (auto d : degree) {
       edge_num += d;
     }
-    nbr_list_.open(work_dir + "/" + name + ".nbr", !batch_init_in_memory);
+    nbr_list_.open(work_dir + "/" + name + ".nbr", true);
+    nbr_list_.resize(edge_num);
+
+    nbr_t* ptr = nbr_list_.data();
+    for (vid_t i = 0; i < vnum; ++i) {
+      int deg = degree[i];
+      adj_lists_[i].init(ptr, deg, 0);
+      ptr += deg;
+    }
+    return edge_num;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve) override {
+    size_t vnum = degree.size();
+    adj_lists_.reset();
+    adj_lists_.resize(vnum);
+
+    locks_ = new grape::SpinLock[vnum];
+
+    size_t edge_num = 0;
+    for (auto d : degree) {
+      edge_num += d;
+    }
+    nbr_list_.reset();
     nbr_list_.resize(edge_num);
 
     nbr_t* ptr = nbr_list_.data();
@@ -686,10 +738,21 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
   ~SingleMutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.resize(vnum);
+    for (size_t k = 0; k != vnum; ++k) {
+      nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
+    }
+    return vnum;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    nbr_list_.reset();
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
@@ -868,10 +931,21 @@ class SingleMutableCsr<std::string_view>
   ~SingleMutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.resize(vnum);
+    for (size_t k = 0; k != vnum; ++k) {
+      nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
+    }
+    return vnum;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    nbr_list_.reset();
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
@@ -1040,8 +1114,13 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   ~EmptyCsr() = default;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
+    return 0;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
     return 0;
   }
 
@@ -1100,8 +1179,12 @@ class EmptyCsr<std::string_view>
   ~EmptyCsr() = default;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
+    return 0;
+  }
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
     return 0;
   }
 

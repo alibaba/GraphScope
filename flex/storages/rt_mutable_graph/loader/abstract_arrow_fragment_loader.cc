@@ -82,10 +82,6 @@ void set_vertex_properties(gs::ColumnBase* col,
   // TODO(zhanglei): reduce the dummy code here with a template function.
   if (col_type == PropertyType::kBool) {
     set_single_vertex_column<bool>(col, array, vids);
-  } else if (col_type == PropertyType::kUInt8) {
-    set_single_vertex_column<uint8_t>(col, array, vids);
-  } else if (col_type == PropertyType::kUInt16) {
-    set_single_vertex_column<uint16_t>(col, array, vids);
   } else if (col_type == PropertyType::kInt64) {
     set_single_vertex_column<int64_t>(col, array, vids);
   } else if (col_type == PropertyType::kInt32) {

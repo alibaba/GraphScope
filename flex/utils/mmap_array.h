@@ -98,8 +98,16 @@ class mmap_array {
       }
       fd_ = -1;
     }
-    filename_ = "";
     sync_to_file_ = false;
+  }
+
+  void unlink() {
+    if (filename_ != "" && std::filesystem::exists(filename_)) {
+      if (std::filesystem::remove(filename_) == 0) {
+        LOG(FATAL) << "Failed to remove file [ " << filename_ << " ] "
+                   << strerror(errno);
+      }
+    }
   }
 
   void set_hugepage_prefered(bool val) {

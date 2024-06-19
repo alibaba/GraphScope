@@ -21,49 +21,45 @@ namespace gs {
 template <typename EDATA_T>
 class mmap_vector {
  public:
-  mmap_vector(const std::string& work_dir, const std::string& file_name)
-      : work_dir_(work_dir), file_name_(file_name) {
-    array_.open(work_dir + "/" + file_name_, true);
+  mmap_vector(const std::string& work_dir, const std::string& file_name) {
+    array_.open(work_dir + "/" + file_name, true);
     array_.resize(4096);
     size_ = 0;
-    cap_ = 4096;
   }
 
   ~mmap_vector() {
     array_.reset();
-    unlink((work_dir_ + "/" + file_name_).c_str());
+    array_.unlink();
   }
 
   mmap_vector(mmap_vector&& other) {
     array_.swap(other.array_);
     size_ = other.size_;
-    cap_ = other.cap_;
-    file_name_.swap(other.file_name_);
-    work_dir_.swap(other.work_dir_);
   }
 
   void push_back(const EDATA_T& val) {
-    if (size_ == cap_) {
-      array_.resize(cap_ * 2);
-      cap_ = cap_ * 2;
+    size_t cap = array_.size();
+    if (size_ == cap) {
+      array_.resize(cap * 2);
     }
     array_.set(size_, val);
     ++size_;
   }
 
   void emplace_back(EDATA_T&& val) {
-    if (size_ == cap_) {
-      array_.resize(cap_ * 2);
-      cap_ = cap_ * 2;
+    size_t cap = array_.size();
+    if (size_ == cap) {
+      array_.resize(cap * 2);
     }
     array_.set(size_, val);
     ++size_;
   }
 
   void resize(size_t size) {
-    while (size > cap_) {
-      cap_ *= 2;
-      array_.resize(cap_);
+    size_t cap = array_.size();
+    while (size > cap) {
+      cap *= 2;
+      array_.resize(cap);
     }
     size_ = size;
   }
@@ -75,17 +71,11 @@ class mmap_vector {
   const EDATA_T* begin() const { return array_.data(); }
   const EDATA_T* end() const { return array_.data() + size_; }
 
-  void clear() {
-    size_ = 0;
-    cap_ = 0;
-  }
+  void clear() { size_ = 0; }
 
  private:
   mmap_array<EDATA_T> array_;
-  std::string work_dir_;
-  std::string file_name_;
   size_t size_;
-  size_t cap_;
 };
 };  // namespace gs
 #endif  // GRAPHSCOPE_UTILS_MMAP_VECTOR_H_

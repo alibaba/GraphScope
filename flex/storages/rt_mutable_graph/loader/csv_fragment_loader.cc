@@ -231,10 +231,10 @@ static void put_column_names_option(const LoadingConfig& loading_config,
 std::shared_ptr<IFragmentLoader> CSVFragmentLoader::Make(
     const std::string& work_dir, const Schema& schema,
     const LoadingConfig& loading_config, int32_t thread_num,
-    bool batch_init_in_memory, bool use_mmap_vector) {
+    bool build_csr_in_mem, bool use_mmap_vector) {
   return std::shared_ptr<IFragmentLoader>(
       new CSVFragmentLoader(work_dir, schema, loading_config, thread_num,
-                            batch_init_in_memory, use_mmap_vector));
+                            build_csr_in_mem, use_mmap_vector));
 }
 
 void CSVFragmentLoader::addVertices(label_t v_label_id,

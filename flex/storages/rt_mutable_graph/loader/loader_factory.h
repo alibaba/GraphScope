@@ -31,7 +31,7 @@ class LoaderFactory {
   using loader_initializer_t = std::shared_ptr<IFragmentLoader> (*)(
       const std::string& work_dir, const Schema& schema,
       const LoadingConfig& loading_config, int thread_num,
-      bool batch_init_in_memory, bool use_mmap_vector);
+      bool build_csr_in_mem, bool use_mmap_vector);
 
   static void Init();
 
@@ -40,7 +40,7 @@ class LoaderFactory {
   static std::shared_ptr<IFragmentLoader> CreateFragmentLoader(
       const std::string& work_dir, const Schema& schema,
       const LoadingConfig& loading_config, int thread_num,
-      bool batch_init_in_memory, bool use_mmap_vector);
+      bool build_csr_in_mem, bool use_mmap_vector);
 
   static bool Register(const std::string& scheme_type,
                        const std::string& format_type,

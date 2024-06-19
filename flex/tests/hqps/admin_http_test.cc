@@ -238,36 +238,6 @@ gs::GraphId run_graph_tests(httplib::Client& cli,
     LOG(FATAL) << "Empty response: ";
   }
   LOG(INFO) << "load graph response: " << body;
-  //---4. wait until loading done-----------------------
-  nlohmann::json job_id_resp = nlohmann::json::parse(body);
-  if (!job_id_resp.contains("job_id")) {
-    LOG(FATAL) << "load graph response does not contain job_id: " << body;
-  }
-  auto job_id = job_id_resp["job_id"].get<std::string>();
-  while (true) {
-    res = cli.Get("/v1/job/" + job_id);
-    if (res->status != 200) {
-      LOG(FATAL) << "get job status failed: " << res->body;
-    }
-    body = res->body;
-    if (body.empty()) {
-      LOG(FATAL) << "Empty response: ";
-    }
-    LOG(INFO) << "get job status response: " << body;
-    nlohmann::json job_resp = nlohmann::json::parse(body);
-    if (!job_resp.contains("status")) {
-      LOG(FATAL) << "get job status response does not contain status: " << body;
-    }
-    auto job_status = job_resp["status"].get<std::string>();
-    if (job_status == "SUCCESS") {
-      break;
-    } else if (job_status == "RUNNING") {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    } else {
-      LOG(FATAL) << "job status is not FINISHED or RUNNING: " << body;
-    }
-  }
-  LOG(INFO) << "Bulk loading done";
   return graph_id;
 }
 

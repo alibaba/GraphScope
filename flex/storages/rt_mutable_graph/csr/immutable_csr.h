@@ -56,10 +56,10 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   using slice_t = ImmutableNbrSlice<EDATA_T>;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree, bool build_csr_in_mem,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    adj_lists_.open(work_dir + "/" + name + ".adj", !batch_init_in_memory);
+    adj_lists_.open(work_dir + "/" + name + ".adj", true);
     adj_lists_.resize(vnum);
 
     size_t edge_num = 0;
@@ -67,10 +67,44 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
       edge_num += d;
     }
 
-    nbr_list_.open(work_dir + "/" + name + ".nbr", !batch_init_in_memory);
+    nbr_list_.open(work_dir + "/" + name + ".nbr", true);
     nbr_list_.resize(edge_num);
 
-    degree_list_.open(work_dir + "/" + name + ".deg", !batch_init_in_memory);
+    degree_list_.open(work_dir + "/" + name + ".deg", true);
+    degree_list_.resize(vnum);
+
+    nbr_t* ptr = nbr_list_.data();
+    for (vid_t i = 0; i < vnum; ++i) {
+      int deg = degree[i];
+      if (deg != 0) {
+        adj_lists_[i] = ptr;
+      } else {
+        adj_lists_[i] = NULL;
+      }
+      ptr += deg;
+
+      degree_list_[i] = 0;
+    }
+
+    unsorted_since_ = 0;
+    return edge_num;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    adj_lists_.reset();
+    adj_lists_.resize(vnum);
+
+    size_t edge_num = 0;
+    for (auto d : degree) {
+      edge_num += d;
+    }
+
+    nbr_list_.reset();
+    nbr_list_.resize(edge_num);
+
+    degree_list_.reset();
     degree_list_.resize(vnum);
 
     nbr_t* ptr = nbr_list_.data();
@@ -290,10 +324,21 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.resize(vnum);
+    for (size_t k = 0; k != vnum; ++k) {
+      nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
+    }
+    return vnum;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    nbr_list_.reset();
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
@@ -441,8 +486,6 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
-  void close() override { nbr_list_.reset(); }
-
  private:
   mmap_array<nbr_t> nbr_list_;
 };
@@ -458,10 +501,21 @@ class SingleImmutableCsr<std::string_view>
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool batch_init_in_memory,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.resize(vnum);
+    for (size_t k = 0; k != vnum; ++k) {
+      nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
+    }
+    return vnum;
+  }
+
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    nbr_list_.reset();
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
@@ -613,6 +667,7 @@ class SingleImmutableCsr<std::string_view>
     return nbr;
   }
   void close() override { nbr_list_.reset(); }
+
  private:
   StringColumn& column_;
   mmap_array<nbr_t> nbr_list_;
