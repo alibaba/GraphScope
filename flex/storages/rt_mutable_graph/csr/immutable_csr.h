@@ -93,7 +93,7 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   size_t batch_init_in_memory(const std::vector<int>& degree,
                               double reserve_ratio) override {
     size_t vnum = degree.size();
-    adj_lists_.reset();
+    adj_lists_.open("", false);
     adj_lists_.resize(vnum);
 
     size_t edge_num = 0;
@@ -101,10 +101,10 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
       edge_num += d;
     }
 
-    nbr_list_.reset();
+    nbr_list_.open("", false);
     nbr_list_.resize(edge_num);
 
-    degree_list_.reset();
+    degree_list_.open("", false);
     degree_list_.resize(vnum);
 
     nbr_t* ptr = nbr_list_.data();
@@ -338,7 +338,7 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   size_t batch_init_in_memory(const std::vector<int>& degree,
                               double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.reset();
+    nbr_list_.open("", false);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
@@ -515,7 +515,7 @@ class SingleImmutableCsr<std::string_view>
   size_t batch_init_in_memory(const std::vector<int>& degree,
                               double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.reset();
+    nbr_list_.open("", false);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
