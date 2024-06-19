@@ -269,6 +269,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     startAuxiliaBuilder.getParamsBuilder();
             addQueryColumns(startParamsBuilder, vertexColumns);
             startAuxiliaBuilder.setParams(startParamsBuilder);
+            startAuxiliaBuilder.setTag(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
+            startAuxiliaBuilder.setAlias(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
             GraphAlgebraPhysical.PhysicalOpr.Builder startAuxiliaOprBuilder =
                     GraphAlgebraPhysical.PhysicalOpr.newBuilder();
             startAuxiliaOprBuilder.setOpr(
@@ -280,13 +282,14 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             physicalBuilder.addPlan(startAuxiliaOprBuilder.build());
             // 2. build an auxilia to cache necessary properties for the expanded vertices during
             // the path, in expand base
-            if (getVBuilder != null) {
-                GraphAlgebra.QueryParams.Builder paramsBuilder = getVBuilder.getParamsBuilder();
-                addQueryColumns(paramsBuilder, vertexColumns);
-                getVBuilder.setParams(paramsBuilder);
-            } else {
-                getVBuilder = startAuxiliaBuilder;
+            if (getVBuilder == null) {
+                // getVBuilder can be null if the expand base is ExpandV
+                // then create a new GetV to cache properties
+                getVBuilder = buildVertex(originalGetV, PhysicalGetVOpt.ITSELF);
             }
+            GraphAlgebra.QueryParams.Builder paramsBuilder = getVBuilder.getParamsBuilder();
+            addQueryColumns(paramsBuilder, vertexColumns);
+            getVBuilder.setParams(paramsBuilder);
             expandBaseBuilder.setGetV(getVBuilder);
         } else {
             if (getVBuilder != null) {
