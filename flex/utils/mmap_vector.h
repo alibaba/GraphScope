@@ -27,10 +27,7 @@ class mmap_vector {
     size_ = 0;
   }
 
-  ~mmap_vector() {
-    array_.reset();
-    array_.unlink();
-  }
+  ~mmap_vector() { array_.unlink(); }
 
   mmap_vector(mmap_vector&& other) {
     array_.swap(other.array_);

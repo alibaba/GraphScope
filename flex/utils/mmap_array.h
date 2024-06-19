@@ -102,6 +102,7 @@ class mmap_array {
   }
 
   void unlink() {
+    reset();
     if (filename_ != "" && std::filesystem::exists(filename_)) {
       if (std::filesystem::remove(filename_) == 0) {
         LOG(FATAL) << "Failed to remove file [ " << filename_ << " ] "
