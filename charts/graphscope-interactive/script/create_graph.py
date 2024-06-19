@@ -374,6 +374,21 @@ def restart_service(sess: Session, graph_id: str):
     print("restart service successfully")
 
 
+def get_service_status(sess: Session):
+    resp = sess.get_service_status()
+    assert resp.is_ok()
+    print("service status: ", resp.get_value())
+    status = resp.get_value()
+    print("service running is now running on graph", status.graph.id)
+
+
+def get_current_running_graph(sess: Session):
+    resp = sess.get_service_status()
+    assert resp.is_ok()
+    status = resp.get_value()
+    return status.graph.id
+
+
 if __name__ == "__main__":
     # parse command line args
     import argparse
@@ -381,12 +396,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--endpoint", type=str, default="http://localhost:7777")
     parser.add_argument("--proc-name", type=str, default="huoyan")
+    parser.add_arguement("--remove-old-graph", type=bool, default=False)
     # finish
     args = parser.parse_args()
     print(args)
     print("connecting to ", args.endpoint)
     driver = Driver(args.endpoint)
     sess = driver.session()
+    # get current running graph
+    old_graph = get_current_running_graph(sess)
+    print("-----------------Finish getting current running graph-----------------")
+    print("old graph: ", old_graph)
+
     graph_id = create_graph(sess)
     print("-----------------Finish creating graph-----------------")
     print("graph_id: ", graph_id)
@@ -399,3 +420,14 @@ if __name__ == "__main__":
     print("-----------------Finish creating procedure-----------------")
 
     restart_service(sess, graph_id)
+    print("-----------------Finish restarting service-----------------")
+
+    get_service_status(sess)
+    print("-----------------Finish getting service status-----------------")
+
+    if args.remove_old_graph:
+        print("remove old graph")
+        delete_graph = sess.delete_graph(old_graph)
+        print("delete graph: ", delete_graph)
+    else:
+        print("keep old graph", old_graph)

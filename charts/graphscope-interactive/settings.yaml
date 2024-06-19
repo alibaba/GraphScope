@@ -76,3 +76,6 @@ secondary:
 
 frontend:
   <<: *nokata
+
+cronjob:
+  <<: *nokata

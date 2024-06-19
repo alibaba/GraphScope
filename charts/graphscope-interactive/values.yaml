@@ -97,6 +97,21 @@ ingress:
   paths:
     - path: /
 
+cronjob:
+  enabled: true
+  schedule: "* * * * *"
+  image:
+    registry: reg.docker.alibaba-inc.com
+    repository: "7brs/busybox"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  command: |
+    echo "Current date: $(date +%Y-%m-%d)" > /tmp/current_date.sh
+    /bin/sh /tmp/current_date.sh
+  tolerations: []
+  podAnnotations: {}
+  podLabels: {}
+
 ## GraphScope Interactive parameters
 ##
 primary:

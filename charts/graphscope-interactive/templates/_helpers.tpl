@@ -39,6 +39,9 @@ If release name contains chart name it will be used as a full name.
 {{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "ingress" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "graphscope-interactive.cronjob.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "cronjob" | trunc 63 | trimSuffix "-" -}}{{- end -}}
+
 
 {{/*
 Create chart name and version as used by the chart label.
@@ -107,6 +110,23 @@ Return the proper graphscope-interactive secondary image name
 {{- define "graphscope-interactive.secondary.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
 {{- with .Values.secondary.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the proper graphscope-interactive cron job image name
+*/}}
+{{- define "graphscope-interactive.cronjob.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.cronjob.image -}}
 {{- if .tag -}}
 {{- $tag = .tag | toString -}}
 {{- end -}}
