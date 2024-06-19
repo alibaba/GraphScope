@@ -108,6 +108,7 @@ class mmap_array {
                    << strerror(errno);
       }
     }
+    filename_ = "";
   }
 
   void set_hugepage_prefered(bool val) {
