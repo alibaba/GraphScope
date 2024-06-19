@@ -56,7 +56,7 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   using slice_t = ImmutableNbrSlice<EDATA_T>;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree, bool build_csr_in_mem,
+                    const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
     adj_lists_.open(work_dir + "/" + name + ".adj", true);
