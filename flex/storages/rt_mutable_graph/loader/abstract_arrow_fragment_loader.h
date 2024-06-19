@@ -103,10 +103,11 @@ struct _add_vertex {
       auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
       for (size_t i = 0; i < row_num; ++i) {
         if (!indexer.add(casted_array->Value(i), vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i)
-                     << "..";
+          VLOG(2) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
+          vids.emplace_back(std::numeric_limits<vid_t>::max());
+        } else {
+          vids.emplace_back(vid);
         }
-        vids.emplace_back(vid);
       }
     } else {
       if (col->type()->Equals(arrow::utf8())) {
@@ -115,9 +116,11 @@ struct _add_vertex {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+            VLOG(2) << "Duplicate vertex id: " << str_view << "..";
+            vids.emplace_back(std::numeric_limits<vid_t>::max());
+          } else {
+            vids.emplace_back(vid);
           }
-          vids.emplace_back(vid);
         }
       } else if (col->type()->Equals(arrow::large_utf8())) {
         auto casted_array =
@@ -126,9 +129,11 @@ struct _add_vertex {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+            VLOG(2) << "Duplicate vertex id: " << str_view << "..";
+            vids.emplace_back(std::numeric_limits<vid_t>::max());
+          } else {
+            vids.emplace_back(vid);
           }
-          vids.emplace_back(vid);
         }
       } else {
         LOG(FATAL) << "Not support type: " << col->type()->ToString();
@@ -182,6 +187,7 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
              const IndexerType& indexer,
              std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
              std::vector<int32_t>& degree) {
+  static constexpr auto invalid_vid = std::numeric_limits<vid_t>::max();
   if constexpr (std::is_same_v<PK_T, std::string_view>) {
     if (col->type()->Equals(arrow::utf8())) {
       auto casted = std::static_pointer_cast<arrow::StringArray>(col);
@@ -194,7 +200,9 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
         } else {
           std::get<0>(parsed_edges[cur_ind++]) = vid;
         }
-        degree[vid]++;
+        if (vid != invalid_vid) {
+          degree[vid]++;
+        }
       }
     } else {
       // must be large utf8
@@ -208,7 +216,9 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
         } else {
           std::get<0>(parsed_edges[cur_ind++]) = vid;
         }
-        degree[vid]++;
+        if (vid != invalid_vid) {
+          degree[vid]++;
+        }
       }
     }
   } else {
@@ -221,7 +231,9 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
       } else {
         std::get<0>(parsed_edges[cur_ind++]) = vid;
       }
-      degree[vid]++;
+      if (vid != invalid_vid) {
+        degree[vid]++;
+      }
     }
   }
 }
