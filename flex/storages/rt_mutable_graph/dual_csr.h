@@ -274,7 +274,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
   void BatchInitInMemory(const std::string& edata_name,
                          const std::string& work_dir,
                          const std::vector<int>& oe_degree,
-                         const std::vector<int>& ie_degree) {
+                         const std::vector<int>& ie_degree) override {
     size_t ie_num = in_csr_->batch_init_in_memory(ie_degree);
     size_t oe_num = out_csr_->batch_init_in_memory(oe_degree);
     column_.open(edata_name, "", work_dir);
