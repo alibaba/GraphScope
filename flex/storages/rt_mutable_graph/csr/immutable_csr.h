@@ -441,8 +441,6 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
-  void close() override { nbr_list_.reset(); }
-
  private:
   mmap_array<nbr_t> nbr_list_;
 };
@@ -613,6 +611,7 @@ class SingleImmutableCsr<std::string_view>
     return nbr;
   }
   void close() override { nbr_list_.reset(); }
+
  private:
   StringColumn& column_;
   mmap_array<nbr_t> nbr_list_;
