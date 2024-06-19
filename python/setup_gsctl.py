@@ -41,7 +41,7 @@ def parse_version(root, **kwargs):
 
 NAME = "gsctl"
 PYTHON_REQUIRES = ">=3.7"
-REQUIRES = ["click >= 8.1.6", "graphscope-flex >= 0.27.0"]
+REQUIRES = ["click >= 8.1.6", "graphscope-flex >= 0.27.0", "treelib"]
 
 setup(
     name=NAME,
@@ -55,7 +55,9 @@ setup(
         "parse": parse_version,
     },
     install_requires=REQUIRES,
-    packages=find_packages(include=["graphscope.gsctl", "graphscope.gsctl.*"]),
+    packages=find_packages(
+        include=["graphscope.gsctl", "graphscope.gsctl.*", "VERSION"]
+    ),
     include_package_data=True,
     license="Apache 2.0",
     long_description_content_type="text/markdown",
