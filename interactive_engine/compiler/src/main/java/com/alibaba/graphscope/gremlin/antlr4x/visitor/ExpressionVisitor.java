@@ -27,7 +27,7 @@ import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.TraversalEnumParser;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
@@ -43,54 +43,63 @@ import java.util.stream.Stream;
 public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     protected final RexNode propertyKey;
     protected final GraphBuilder builder;
+    protected final boolean throwsOnPropertyNotFound;
 
     public static final int SIMPLE_PREDICATE_CHILD_COUNT = 1, CONNECTIVE_PREDICATE_CHILD_COUNT = 6;
 
     public ExpressionVisitor(GraphBuilder builder, RexNode propertyKey) {
+        this(builder, propertyKey, true);
+    }
+
+    public ExpressionVisitor(
+            GraphBuilder builder, RexNode propertyKey, boolean throwsOnPropertyNotFound) {
         this.builder = Objects.requireNonNull(builder);
         this.propertyKey = Objects.requireNonNull(propertyKey);
+        this.throwsOnPropertyNotFound = throwsOnPropertyNotFound;
     }
 
     @Override
     public RexNode visitTraversalMethod_valueMap(
             GremlinGSParser.TraversalMethod_valueMapContext ctx) {
-        List<String> properties =
+        List<String> ctxProperties =
                 new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
-        if (isPathFunction(properties)) {
+        if (isPathFunction(ctxProperties)) {
             return (new PathFunctionVisitor(builder, propertyKey))
                     .visitTraversalMethod_valueMap(ctx);
         }
         String tag = getPropertyTag();
         return builder.call(
                 GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                getValueMapProperties(properties, tag).stream()
+                getProperties(ctxProperties, tag).stream()
                         .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
                         .collect(Collectors.toList()));
     }
 
     @Override
     public RexNode visitTraversalMethod_values(GremlinGSParser.TraversalMethod_valuesContext ctx) {
-        List<String> properties =
-                ImmutableList.of((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
-        if (isPathFunction(properties)) {
+        List<String> ctxProperties =
+                Lists.newArrayList((String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
+        if (isPathFunction(ctxProperties)) {
             return (new PathFunctionVisitor(builder, propertyKey)).visitTraversalMethod_values(ctx);
         }
-        return builder.variable(getPropertyTag(), properties.get(0));
+        String tag = getPropertyTag();
+        List<String> properties = getProperties(ctxProperties, tag);
+        return properties.isEmpty() ? null : builder.variable(tag, properties.get(0));
     }
 
     @Override
     public RexNode visitTraversalMethod_elementMap(
             GremlinGSParser.TraversalMethod_elementMapContext ctx) {
-        List<String> properties =
+        List<String> ctxProperties =
                 new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
-        if (isPathFunction(properties)) {
+        if (isPathFunction(ctxProperties)) {
             return (new PathFunctionVisitor(builder, propertyKey))
                     .visitTraversalMethod_elementMap(ctx);
         }
         String tag = getPropertyTag();
         return builder.call(
                 GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                getElementMapProperties(properties, tag).stream()
+                getElementMapProperties(getProperties(ctxProperties, tag)).stream()
                         .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
                         .collect(Collectors.toList()));
     }
@@ -104,13 +113,15 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
         }
         String tag = getPropertyTag();
         if (byChildCount == 4 && byCtx.StringLiteral() != null) { // select(..).by('name')
-            List<String> properties =
-                    ImmutableList.of((String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
-            if (isPathFunction(properties)) {
+            List<String> ctxProperties =
+                    Lists.newArrayList(
+                            (String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
+            if (isPathFunction(ctxProperties)) {
                 return (new PathFunctionVisitor(builder, propertyKey))
                         .visitTraversalMethod_selectby(byCtx);
             }
-            return builder.variable(tag, properties.get(0));
+            List<String> properties = getProperties(ctxProperties, tag);
+            return properties.isEmpty() ? null : builder.variable(tag, properties.get(0));
         } else if (byChildCount == 4
                 && byCtx.traversalToken() != null) { // select(..).by(T.label/T.id)
             T token =
@@ -135,19 +146,20 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
                 byCtx.getText() + " is unsupported yet in select");
     }
 
-    private boolean isPathFunction(List<String> properties) {
+    private boolean isPathFunction(List<String> ctxProperties) {
         return (propertyKey.getType() instanceof GraphPathType)
-                && properties.stream().allMatch(k -> !k.equals(GraphProperty.LEN_KEY));
+                && ctxProperties.stream().allMatch(k -> !k.equals(GraphProperty.LEN_KEY));
     }
 
-    private List<String> getValueMapProperties(List<String> properties, @Nullable String tag) {
-        return properties.isEmpty() ? getAllProperties(tag) : properties;
-    }
-
-    private List<String> getElementMapProperties(List<String> properties, @Nullable String tag) {
-        if (properties.isEmpty()) {
-            properties.addAll(getAllProperties(tag));
+    private List<String> getProperties(List<String> ctxProperties, @Nullable String tag) {
+        if (throwsOnPropertyNotFound || ctxProperties.isEmpty()) {
+            return ctxProperties.isEmpty() ? getAllProperties(tag) : ctxProperties;
         }
+        ctxProperties.retainAll(getAllProperties(tag));
+        return ctxProperties;
+    }
+
+    private List<String> getElementMapProperties(List<String> properties) {
         properties.add(0, GraphProperty.LABEL_KEY);
         properties.add(1, GraphProperty.ID_KEY);
         return properties;

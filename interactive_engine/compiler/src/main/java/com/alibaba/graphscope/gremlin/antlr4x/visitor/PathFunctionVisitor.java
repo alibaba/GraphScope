@@ -125,23 +125,28 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
                         parentBuilder.getContext(),
                         (GraphOptCluster) parentBuilder.getCluster(),
                         parentBuilder.getRelOptSchema());
+        GraphOpt.PathExpandFunction funcOpt = getFuncOpt();
+        boolean throwsOnPropertyNotFound =
+                (funcOpt == GraphOpt.PathExpandFunction.VERTEX_EDGE) ? false : true;
         RexNode propertyProjection =
                 propertyProjection(
                         () ->
                                 (new ExpressionVisitor(
                                                 builder.push(innerExpand),
-                                                builder.variable((String) null)))
+                                                builder.variable((String) null),
+                                                throwsOnPropertyNotFound))
                                         .visitTraversalMethod_valueMap(ctx),
                         () ->
                                 (new ExpressionVisitor(
                                                 builder.push(innerGetV),
-                                                builder.variable((String) null)))
+                                                builder.variable((String) null),
+                                                throwsOnPropertyNotFound))
                                         .visitTraversalMethod_valueMap(ctx),
                         builder);
         return builder.call(
                 GraphStdOperatorTable.PATH_FUNCTION,
                 variable,
-                builder.getRexBuilder().makeFlag(getFuncOpt()),
+                builder.getRexBuilder().makeFlag(funcOpt),
                 propertyProjection);
     }
 
@@ -152,23 +157,28 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
                         parentBuilder.getContext(),
                         (GraphOptCluster) parentBuilder.getCluster(),
                         parentBuilder.getRelOptSchema());
+        GraphOpt.PathExpandFunction funcOpt = getFuncOpt();
+        boolean throwsOnPropertyNotFound =
+                (funcOpt == GraphOpt.PathExpandFunction.VERTEX_EDGE) ? false : true;
         RexNode propertyProjection =
                 propertyProjection(
                         () ->
                                 (new ExpressionVisitor(
                                                 builder.push(innerExpand),
-                                                builder.variable((String) null)))
+                                                builder.variable((String) null),
+                                                throwsOnPropertyNotFound))
                                         .visitTraversalMethod_values(ctx),
                         () ->
                                 (new ExpressionVisitor(
                                                 builder.push(innerGetV),
-                                                builder.variable((String) null)))
+                                                builder.variable((String) null),
+                                                throwsOnPropertyNotFound))
                                         .visitTraversalMethod_values(ctx),
                         builder);
         return builder.call(
                 GraphStdOperatorTable.PATH_FUNCTION,
                 variable,
-                builder.getRexBuilder().makeFlag(getFuncOpt()),
+                builder.getRexBuilder().makeFlag(funcOpt),
                 propertyProjection);
     }
 
@@ -180,23 +190,28 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
                         parentBuilder.getContext(),
                         (GraphOptCluster) parentBuilder.getCluster(),
                         parentBuilder.getRelOptSchema());
+        GraphOpt.PathExpandFunction funcOpt = getFuncOpt();
+        boolean throwsOnPropertyNotFound =
+                (funcOpt == GraphOpt.PathExpandFunction.VERTEX_EDGE) ? false : true;
         RexNode propertyProjection =
                 propertyProjection(
                         () ->
                                 (new ExpressionVisitor(
                                                 builder.push(innerExpand),
-                                                builder.variable((String) null)))
+                                                builder.variable((String) null),
+                                                throwsOnPropertyNotFound))
                                         .visitTraversalMethod_elementMap(ctx),
                         () ->
                                 (new ExpressionVisitor(
                                                 builder.push(innerGetV),
-                                                builder.variable((String) null)))
+                                                builder.variable((String) null),
+                                                throwsOnPropertyNotFound))
                                         .visitTraversalMethod_elementMap(ctx),
                         builder);
         return builder.call(
                 GraphStdOperatorTable.PATH_FUNCTION,
                 variable,
-                builder.getRexBuilder().makeFlag(getFuncOpt()),
+                builder.getRexBuilder().makeFlag(funcOpt),
                 propertyProjection);
     }
 
@@ -208,23 +223,28 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
                         parentBuilder.getContext(),
                         (GraphOptCluster) parentBuilder.getCluster(),
                         parentBuilder.getRelOptSchema());
+        GraphOpt.PathExpandFunction funcOpt = getFuncOpt();
+        boolean throwsOnPropertyNotFound =
+                (funcOpt == GraphOpt.PathExpandFunction.VERTEX_EDGE) ? false : true;
         RexNode propertyProjection =
                 propertyProjection(
                         () ->
                                 (new ExpressionVisitor(
                                                 builder.push(innerExpand),
-                                                builder.variable((String) null)))
+                                                builder.variable((String) null),
+                                                throwsOnPropertyNotFound))
                                         .visitTraversalMethod_selectby(ctx),
                         () ->
                                 (new ExpressionVisitor(
                                                 builder.push(innerGetV),
-                                                builder.variable((String) null)))
+                                                builder.variable((String) null),
+                                                throwsOnPropertyNotFound))
                                         .visitTraversalMethod_selectby(ctx),
                         builder);
         return builder.call(
                 GraphStdOperatorTable.PATH_FUNCTION,
                 variable,
-                builder.getRexBuilder().makeFlag(getFuncOpt()),
+                builder.getRexBuilder().makeFlag(funcOpt),
                 propertyProjection);
     }
 
@@ -248,6 +268,12 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
 
     private RexNode unionProjection(
             RexNode expandProjection, RexNode getVProjection, GraphBuilder builder) {
+        if (expandProjection == null || getVProjection == null) {
+            Preconditions.checkArgument(
+                    expandProjection != null || getVProjection != null,
+                    "invalid query given properties, not found in path expand");
+            return expandProjection != null ? expandProjection : getVProjection;
+        }
         Preconditions.checkArgument(
                 expandProjection.getKind() == getVProjection.getKind(),
                 "expand projection ["
@@ -260,6 +286,9 @@ public class PathFunctionVisitor extends GremlinGSBaseVisitor<RexNode> {
             RexCall getVCall = (RexCall) getVProjection;
             List<RexNode> newOperands = Lists.newArrayList(expandCall.getOperands());
             newOperands.addAll(getVCall.getOperands());
+            Preconditions.checkArgument(
+                    !newOperands.isEmpty(),
+                    "invalid query given properties, not found in path expand");
             return builder.call(
                     expandCall.getOperator(),
                     newOperands.stream().distinct().collect(Collectors.toList()));
