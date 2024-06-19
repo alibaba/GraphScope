@@ -128,6 +128,17 @@ class TypedMutableCsrBase : public TypedCsrBase<EDATA_T> {
   virtual slice_t get_edges(vid_t v) const = 0;
 };
 
+class MultipPropCsrBase : public CsrBase {
+ public:
+  using slice_t = MultipPropMutableNbrSlice;
+
+  virtual void batch_put_edge_with_index(vid_t src, vid_t dst, size_t index,
+                                         timestamp_t ts = 0) = 0;
+  virtual void put_edge_with_index(vid_t src, vid_t dst, size_t index,
+                                   timestamp_t ts, Allocator& alloc) = 0;
+  virtual slice_t get_edges(vid_t v) const = 0;
+};
+
 }  // namespace gs
 
 #endif  // STORAGES_RT_MUTABLE_GRAPH_CSR_CSR_BASE_H_

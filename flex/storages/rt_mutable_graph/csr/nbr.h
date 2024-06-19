@@ -20,6 +20,7 @@
 
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/column.h"
+#include "flex/utils/property/table.h"
 #include "flex/utils/property/types.h"
 
 namespace gs {
@@ -354,6 +355,90 @@ class MutableNbrSlice<std::string_view> {
   const StringColumn& column_;
 };
 
+class MultipPropMutableNbrSlice {
+ public:
+  struct Record {
+    Record(size_t offset, const Table& table) : offset(offset), table(table) {}
+
+    template <typename EDATA_T>
+    EDATA_T get_data(size_t idx) const {
+      auto types = table.column_types();
+      assert(ConvertAny<EDATA_T>::type == types[idx]);
+      auto data = table.get_column_by_id(idx)->get(offset);
+      return AnyConverter<EDATA_T>::from_any(data);
+    }
+    size_t offset;
+    const Table& table;
+  };
+  struct MutableTableNbr {
+    using const_nbr_t = const MutableNbr<size_t>;
+    using const_nbr_ptr_t = const MutableNbr<size_t>*;
+
+    MutableTableNbr(const_nbr_ptr_t ptr, const Table& table)
+        : ptr_(ptr), table_(table) {}
+    vid_t get_neighbor() const { return ptr_->neighbor; }
+    Record get_data() const { return Record(ptr_->data, table_); }
+    timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
+
+    const MutableTableNbr& operator*() const { return *this; }
+    const MutableTableNbr* operator->() const { return this; }
+    const MutableTableNbr& operator=(const MutableTableNbr& nbr) const {
+      ptr_ = nbr.ptr_;
+      return *this;
+    }
+    bool operator==(const MutableTableNbr& nbr) const {
+      return ptr_ == nbr.ptr_;
+    }
+    bool operator!=(const MutableTableNbr& nbr) const {
+      return ptr_ != nbr.ptr_;
+    }
+    const MutableTableNbr& operator++() const {
+      ++ptr_;
+      return *this;
+    }
+
+    const MutableTableNbr& operator+=(size_t n) const {
+      ptr_ += n;
+      return *this;
+    }
+
+    size_t operator-(const MutableTableNbr& nbr) const {
+      return ptr_ - nbr.ptr_;
+    }
+
+    bool operator<(const MutableTableNbr& nbr) const { return ptr_ < nbr.ptr_; }
+
+    mutable const_nbr_ptr_t ptr_;
+    const Table& table_;
+  };
+
+  MultipPropMutableNbrSlice(const Table& table) : slice_(), table_(table) {}
+  MultipPropMutableNbrSlice(const MultipPropMutableNbrSlice& rhs)
+      : slice_(rhs.slice_), table_(rhs.table_) {}
+  ~MultipPropMutableNbrSlice() = default;
+  void set_size(int size) { slice_.set_size(size); }
+  int size() const { return slice_.size(); }
+
+  void set_begin(const MutableNbr<size_t>* ptr) { slice_.set_begin(ptr); }
+
+  const MutableTableNbr begin() const {
+    return MutableTableNbr(slice_.begin(), table_);
+  }
+
+  const MutableTableNbr end() const {
+    return MutableTableNbr(slice_.end(), table_);
+  }
+  static MultipPropMutableNbrSlice empty(const Table& table) {
+    MultipPropMutableNbrSlice ret(table);
+    ret.set_begin(nullptr);
+    ret.set_size(0);
+    return ret;
+  }
+
+ private:
+  MutableNbrSlice<size_t> slice_;
+  const Table& table_;
+};
 template <typename EDATA_T>
 class MutableNbrSliceMut {
  public:
@@ -455,6 +540,93 @@ class MutableNbrSliceMut<std::string_view> {
  private:
   MutableNbrSliceMut<size_t> slice_;
   StringColumn& column_;
+};
+
+class MultipPropMutableNbrSliceMut {
+ public:
+  struct Record {
+    Record(size_t offset, const Table& table) : offset(offset), table(table) {}
+
+    template <typename EDATA_T>
+    EDATA_T get_data(size_t idx) const {
+      auto types = table.column_types();
+      assert(AnyConverter<EDATA_T>::type() == types[idx]);
+      auto data = table.get_column_by_id(idx)->get(offset);
+      EDATA_T val;
+      ConvertAny<EDATA_T>::to(data, val);
+      return val;
+    }
+    size_t offset;
+    const Table& table;
+  };
+  struct MutableTableNbr {
+    using nbr_t = MutableNbr<size_t>;
+
+    MutableTableNbr(nbr_t* ptr, Table& table) : ptr_(ptr), table_(table) {}
+    vid_t neighbor() const { return ptr_->neighbor; }
+    Record data() { return Record(ptr_->data, table_); }
+    vid_t get_neighbor() const { return ptr_->neighbor; }
+    const Record get_data() const { return Record(ptr_->data, table_); }
+    timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
+    size_t get_index() const { return ptr_->data; }
+    /**
+    void set_data(const std::string_view& sw, timestamp_t ts) {
+      column_.set_value(ptr_->data, sw);
+      ptr_->timestamp.store(ts);
+    }*/
+    void set_neighbor(vid_t neighbor) { ptr_->neighbor = neighbor; }
+
+    void set_timestamp(timestamp_t ts) { ptr_->timestamp.store(ts); }
+
+    const MutableTableNbr& operator*() const { return *this; }
+    MutableTableNbr& operator*() { return *this; }
+    MutableTableNbr& operator=(const MutableTableNbr& nbr) {
+      ptr_ = nbr.ptr_;
+      return *this;
+    }
+    bool operator==(const MutableTableNbr& nbr) const {
+      return ptr_ == nbr.ptr_;
+    }
+    bool operator!=(const MutableTableNbr& nbr) const {
+      return ptr_ != nbr.ptr_;
+    }
+
+    MutableTableNbr& operator++() {
+      ptr_++;
+      return *this;
+    }
+    MutableTableNbr& operator+=(size_t n) {
+      ptr_ += n;
+      return *this;
+    }
+
+    bool operator<(const MutableTableNbr& nbr) { return ptr_ < nbr.ptr_; }
+
+    nbr_t* ptr_;
+    Table& table_;
+  };
+  using nbr_ptr_t = MutableTableNbr;
+
+  MultipPropMutableNbrSliceMut(Table& table) : table_(table) {}
+  ~MultipPropMutableNbrSliceMut() = default;
+  void set_size(int size) { slice_.set_size(size); }
+  int size() const { return slice_.size(); }
+
+  void set_begin(MutableNbr<size_t>* ptr) { slice_.set_begin(ptr); }
+
+  nbr_ptr_t begin() { return MutableTableNbr(slice_.begin(), table_); }
+  nbr_ptr_t end() { return MutableTableNbr(slice_.end(), table_); }
+
+  static MultipPropMutableNbrSliceMut empty(Table& table) {
+    MultipPropMutableNbrSliceMut ret(table);
+    ret.set_begin(nullptr);
+    ret.set_size(0);
+    return ret;
+  }
+
+ private:
+  MutableNbrSliceMut<size_t> slice_;
+  Table& table_;
 };
 
 }  // namespace gs

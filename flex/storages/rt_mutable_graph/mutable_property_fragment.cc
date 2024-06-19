@@ -77,7 +77,8 @@ void MutablePropertyFragment::DumpSchema(const std::string& schema_path) {
 
 inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
                                const std::vector<PropertyType>& properties,
-                               bool oe_mutable, bool ie_mutable) {
+                               bool oe_mutable, bool ie_mutable,
+                               const std::vector<std::string>& prop_names) {
   if (properties.empty()) {
     return new DualCsr<grape::EmptyType>(oes, ies, oe_mutable, ie_mutable);
   } else if (properties.size() == 1) {
@@ -103,6 +104,12 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
     } else if (properties[0] == PropertyType::kString) {
       return new DualCsr<std::string_view>(oes, ies, 256);
     }
+  } else {
+    // TODO: fix me
+    std::vector<StorageStrategy> storage_strategies(properties.size(),
+                                                    StorageStrategy::kMem);
+    return new MultipPropDualCsr(oes, ies, prop_names, properties,
+                                 storage_strategies);
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;
@@ -229,8 +236,12 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
             schema_.outgoing_edge_mutable(src_label, dst_label, edge_label);
         bool ie_mutable =
             schema_.incoming_edge_mutable(src_label, dst_label, edge_label);
+
+        auto& prop_names =
+            schema_.get_edge_property_names(src_label, dst_label, edge_label);
+
         dual_csr_list_[index] = create_csr(oe_strategy, ie_strategy, properties,
-                                           oe_mutable, ie_mutable);
+                                           oe_mutable, ie_mutable, prop_names);
         ie_[index] = dual_csr_list_[index]->GetInCsr();
         oe_[index] = dual_csr_list_[index]->GetOutCsr();
         if (memory_level == 0) {
