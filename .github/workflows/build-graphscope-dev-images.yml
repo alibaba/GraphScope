@@ -365,7 +365,7 @@ jobs:
     runs-on: ubuntu-20.04
     # only trigger this step in 'workflow_dispatch' event,
     # since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
-    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }} || (github.event_name == 'pull_request')
 
     needs: [build-vineyard-dev-image-x86-64]
     steps:
@@ -387,6 +387,7 @@ jobs:
         fi
 
     - name: Release Image
+      if: ${{ github.event_name == 'workflow_dispatch' }}
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
@@ -404,7 +405,7 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64]
     # only trigger this step in 'workflow_dispatch' event,
     # since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
-    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
+    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }} || (github.event_name == 'pull_request')
     if: false
 
     needs: [manifest-push-vineyard-dev-image]
