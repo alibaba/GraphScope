@@ -257,11 +257,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             rowType = pxd.getExpand().getRowType();
         }
         expandBaseBuilder.setEdgeExpand(edgeExpandBuilder);
-        // specifically, for path expand, we need to cache properties for the
-        // expanded vertices if necessary, instead of fetch them lazily
+        // specifically, for path expand (except that it has PathExpandResult as END_V), we need to
+        // cache properties for the expanded vertices if necessary, instead of fetch them lazily
         Set<GraphNameOrId> vertexColumns =
                 Utils.extractColumnsFromRelDataType(originalGetV.getRowType(), isColumnId);
-        if (isPartitioned && !vertexColumns.isEmpty()) {
+        if (isPartitioned
+                && !vertexColumns.isEmpty()
+                && pxd.getResultOpt() != GraphOpt.PathExpandResult.END_V) {
             // 1. build an auxilia to cache necessary properties for the start vertex of the path
             GraphAlgebraPhysical.GetV.Builder startAuxiliaBuilder =
                     buildVertex(originalGetV, PhysicalGetVOpt.ITSELF);
