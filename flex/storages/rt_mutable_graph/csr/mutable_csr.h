@@ -421,6 +421,15 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   mut_slice_t get_edges_mut(vid_t i) { return adj_lists_[i].get_edges_mut(); }
 
+  void close() override {
+    if (locks_ != nullptr) {
+      delete[] locks_;
+      locks_ = nullptr;
+    }
+    adj_lists_.reset();
+    nbr_list_.reset();
+  }
+
  private:
   void load_meta(const std::string& prefix) {
     std::string meta_file_path = prefix + ".meta";
@@ -651,6 +660,14 @@ class MutableCsr<std::string_view>
     return adj_lists_[i].get_edges_mut(column_);
   }
 
+  void close() override {
+    if (locks_ != nullptr) {
+      delete[] locks_;
+    }
+    adj_lists_.reset();
+    nbr_list_.reset();
+  }
+
  private:
   StringColumn& column_;
   grape::SpinLock* locks_;
@@ -827,6 +844,8 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
+  void close() override { nbr_list_.reset(); }
+
  private:
   mmap_array<nbr_t> nbr_list_;
 };
@@ -993,6 +1012,8 @@ class SingleMutableCsr<std::string_view>
     return nbr;
   }
 
+  void close() override { nbr_list_.reset(); }
+
  private:
   StringColumn& column_;
   mmap_array<nbr_t> nbr_list_;
@@ -1053,6 +1074,8 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   }
 
   slice_t get_edges(vid_t v) const override { return slice_t::empty(); }
+
+  void close() override {}
 };
 
 template <>
@@ -1102,6 +1125,8 @@ class EmptyCsr<std::string_view>
   }
 
   slice_t get_edges(vid_t v) const override { return slice_t::empty(column_); }
+
+  void close() override {}
 
   StringColumn& column_;
 };
