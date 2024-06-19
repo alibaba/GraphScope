@@ -42,8 +42,18 @@ void set_vertex_column_from_string_array(
           std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
         auto str = casted->GetView(k);
-        std::string_view sw(str.data(), str.size());
-        col->set_any(vids[cur_ind++], std::move(sw));
+        std::string_view sw;
+        if (casted->IsNull(k)) {
+          VLOG(1) << "Found null string in vertex property.";
+          sw = "";
+        } else {
+          sw = std::string_view(str.data(), str.size());
+        }
+        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+          cur_ind++;
+        } else {
+          col->set_any(vids[cur_ind++], std::move(sw));
+        }
       }
     }
   } else {
@@ -53,7 +63,11 @@ void set_vertex_column_from_string_array(
       for (auto k = 0; k < casted->length(); ++k) {
         auto str = casted->GetView(k);
         std::string_view sw(str.data(), str.size());
-        col->set_any(vids[cur_ind++], std::move(sw));
+        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+          cur_ind++;
+        } else {
+          col->set_any(vids[cur_ind++], std::move(sw));
+        }
       }
     }
   }
@@ -104,8 +118,12 @@ void set_vertex_column_from_timestamp_array(
       auto casted =
           std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+          cur_ind++;
+        } else {
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+        }
       }
     }
   } else {
@@ -125,8 +143,12 @@ void set_vertex_column_from_timestamp_array_to_day(
       auto casted =
           std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<Day>::to_any(casted->Value(k))));
+        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+          cur_ind++;
+        } else {
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<Day>::to_any(casted->Value(k))));
+        }
       }
     }
   } else {
