@@ -239,7 +239,7 @@ Gremlin service is listening on {gremlin_port} port, you can connect to gremlin 
     ws://127.0.0.1:{gremlin_port}/gremlin
 
             """
-            click.secho(message, bold=False)
+        click.secho(message, bold=False)
     else:
         click.secho("[FAILED] ", nl=False, fg="red", bold=True)
         click.secho(result.stderr, bold=False)
