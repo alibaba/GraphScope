@@ -34,6 +34,12 @@ class DualCsrBase {
                          const std::string& work_dir,
                          const std::vector<int>& oe_degree,
                          const std::vector<int>& ie_degree) = 0;
+
+  virtual void BatchInitInMemory(const std::string& edata_name,
+                                 const std::string& work_dir,
+                                 const std::vector<int>& oe_degree,
+                                 const std::vector<int>& ie_degree) = 0;
+
   virtual void Open(const std::string& oe_name, const std::string& ie_name,
                     const std::string& edata_name,
                     const std::string& snapshot_dir,
@@ -75,6 +81,7 @@ class DualCsrBase {
   virtual CsrBase* GetOutCsr() = 0;
   virtual const CsrBase* GetInCsr() const = 0;
   virtual const CsrBase* GetOutCsr() const = 0;
+  virtual void Close() = 0;
 };
 
 template <typename EDATA_T>
@@ -122,6 +129,14 @@ class DualCsr : public DualCsrBase {
     out_csr_->batch_init(oe_name, work_dir, oe_degree);
   }
 
+  void BatchInitInMemory(const std::string& edata_name,
+                         const std::string& work_dir,
+                         const std::vector<int>& oe_degree,
+                         const std::vector<int>& ie_degree) override {
+    in_csr_->batch_init_in_memory(ie_degree);
+    out_csr_->batch_init_in_memory(oe_degree);
+  }
+
   void Open(const std::string& oe_name, const std::string& ie_name,
             const std::string& edata_name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
@@ -150,6 +165,7 @@ class DualCsr : public DualCsrBase {
             const std::string& new_snapshot_dir) override {
     in_csr_->dump(ie_name, new_snapshot_dir);
     out_csr_->dump(oe_name, new_snapshot_dir);
+    Close();
   }
 
   CsrBase* GetInCsr() override { return in_csr_; }
@@ -204,6 +220,11 @@ class DualCsr : public DualCsrBase {
     out_csr_->batch_put_edge(src, dst, data);
   }
 
+  void Close() override {
+    in_csr_->close();
+    out_csr_->close();
+  }
+
  private:
   TypedCsrBase<EDATA_T>* in_csr_;
   TypedCsrBase<EDATA_T>* out_csr_;
@@ -250,6 +271,17 @@ class DualCsr<std::string_view> : public DualCsrBase {
     column_idx_.store(0);
   }
 
+  void BatchInitInMemory(const std::string& edata_name,
+                         const std::string& work_dir,
+                         const std::vector<int>& oe_degree,
+                         const std::vector<int>& ie_degree) override {
+    size_t ie_num = in_csr_->batch_init_in_memory(ie_degree);
+    size_t oe_num = out_csr_->batch_init_in_memory(oe_degree);
+    column_.open(edata_name, "", work_dir);
+    column_.resize(std::max(ie_num, oe_num));
+    column_idx_.store(0);
+  }
+
   void Open(const std::string& oe_name, const std::string& ie_name,
             const std::string& edata_name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
@@ -285,6 +317,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
     out_csr_->dump(oe_name, new_snapshot_dir);
     column_.resize(column_idx_.load());
     column_.dump(new_snapshot_dir + "/" + edata_name);
+    Close();
   }
 
   CsrBase* GetInCsr() override { return in_csr_; }
@@ -353,6 +386,12 @@ class DualCsr<std::string_view> : public DualCsrBase {
 
     in_csr_->batch_put_edge_with_index(dst, src, row_id);
     out_csr_->batch_put_edge_with_index(src, dst, row_id);
+  }
+
+  void Close() override {
+    in_csr_->close();
+    out_csr_->close();
+    column_.close();
   }
 
  private:
