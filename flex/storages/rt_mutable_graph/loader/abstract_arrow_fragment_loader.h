@@ -895,10 +895,16 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     basic_fragment_loader_.PutEdges<EDATA_T, VECTOR_T>(
         src_label_id, dst_label_id, e_label_id, parsed_edges_vec, ie_deg,
         oe_deg, build_csr_in_mem_);
+
     string_columns.clear();
     size_t sum = 0;
-    for (const auto& edges : parsed_edges_vec) {
+    for (auto& edges : parsed_edges_vec) {
       sum += edges.size();
+      if constexpr (std::is_same<VECTOR_T,
+                                 mmap_vector<std::tuple<vid_t, vid_t,
+                                                        EDATA_T>>>::value) {
+        edges.unlink();
+      }
     }
 
     VLOG(10) << "Finish putting: " << sum << " edges";

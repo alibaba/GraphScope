@@ -31,7 +31,7 @@ class mmap_vector {
 
   void unlink() { array_.unlink(); }
 
-  ~mmap_vector() { unlink(); }
+  ~mmap_vector() {}
 
   mmap_vector(mmap_vector&& other) {
     array_.swap(other.array_);
@@ -41,7 +41,7 @@ class mmap_vector {
   void push_back(const T& val) {
     size_t cap = array_.size();
     if (size_ == cap) {
-      array_.resize(cap * 2);
+      array_.resize(std::max(cap * 2, 1ul));
     }
     array_.set(size_, val);
     ++size_;
@@ -50,18 +50,18 @@ class mmap_vector {
   void emplace_back(T&& val) {
     size_t cap = array_.size();
     if (size_ == cap) {
-      array_.resize(cap * 2);
+      array_.resize(std::max(cap * 2, 1ul));
     }
     array_.set(size_, val);
     ++size_;
   }
 
   void resize(size_t size) {
-    size_t cap = array_.size();
+    size_t cap = std::max(array_.size(), 1ul);
     while (size > cap) {
       cap *= 2;
-      array_.resize(cap);
     }
+    array_.resize(cap);
     size_ = size;
   }
 
