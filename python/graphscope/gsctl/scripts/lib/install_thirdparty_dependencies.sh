@@ -444,6 +444,6 @@ install_hiactor() {
   mkdir build && cd build
   cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
         -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" ..
-  make -j ${parallelism} && make install
+  make -j 4 && make install
   popd && rm -rf /tmp/hiactor
 }
