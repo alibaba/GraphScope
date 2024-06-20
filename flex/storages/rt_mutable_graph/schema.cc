@@ -521,7 +521,12 @@ static Status parse_vertex_properties(YAML::Node node,
                                       std::vector<std::string>& names,
                                       std::vector<StorageStrategy>& strategies,
                                       const std::string& version) {
-  if (!node || !node.IsSequence()) {
+  if (!node || node.IsNull()) {
+    VLOG(10) << "Found no vertex properties specified for vertex: "
+             << label_name;
+    return Status::OK();
+  }
+  if (!node.IsSequence()) {
     LOG(ERROR) << "Expect properties for " << label_name << " to be a sequence";
     return Status(StatusCode::InvalidSchema,
                   "Expect properties for " + label_name + " to be a sequence");
@@ -579,7 +584,7 @@ static Status parse_edge_properties(YAML::Node node,
                                     std::vector<PropertyType>& types,
                                     std::vector<std::string>& names,
                                     const std::string& version) {
-  if (!node) {
+  if (!node || node.IsNull()) {
     VLOG(10) << "Found no edge properties specified for edge: " << label_name;
     return Status::OK();
   }
