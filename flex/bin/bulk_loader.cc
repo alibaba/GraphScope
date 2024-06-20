@@ -46,13 +46,33 @@ void signal_handler(int signal) {
 
 int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
+  /**
+   * When loading the edges of a graph, there are two stages involved.
+   *
+   * The first stage involves reading the edges into a temporary vector and
+   * acquiring information on the degrees of the vertices,
+   * Then constructs the CSR using the degree information.
+   *
+   * During the first stage, the edges are stored in the form of triplets, which
+   * can lead to a certain amount of memory expansion, so the `use-mmap-vector`
+   * option is provided, mmap_vector utilizes mmap to map files, supporting
+   * runtime memory swapping to disk.
+   *
+   * Constructing the CSR involves random reads and writes, we offer the
+   * `build-csr-in-mem` option, which allows CSR to be built in-memory to
+   * avoid extensive disk random read and write operations
+   *
+   */
   desc.add_options()("help", "Display help message")(
       "version,v", "Display version")("parallelism,p",
                                       bpo::value<uint32_t>()->default_value(1),
                                       "parallelism of bulk loader")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file");
+      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
+      "build-csr-in-mem,m", bpo::value<bool>(), "build csr in memory")(
+      "use-mmap-vector", bpo::value<bool>(), "use mmap vector");
+
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -90,6 +110,17 @@ int main(int argc, char** argv) {
     return -1;
   }
   bulk_load_config_path = vm["bulk-load"].as<std::string>();
+  bool build_csr_in_mem = false;
+  if (vm.count("build-csr-in-mem")) {
+    build_csr_in_mem = vm["build-csr-in-mem"].as<bool>();
+    LOG(INFO) << "batch init in memory: " << static_cast<int>(build_csr_in_mem);
+  }
+
+  bool use_mmap_vector = false;
+  if (vm.count("use-mmap-vector")) {
+    use_mmap_vector = vm["use-mmap-vector"].as<bool>();
+    LOG(INFO) << "use mmap vector: " << static_cast<int>(use_mmap_vector);
+  }
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -133,7 +164,7 @@ int main(int argc, char** argv) {
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
       data_dir_path.string(), schema_res.value(), loading_config_res.value(),
-      parallelism);
+      parallelism, build_csr_in_mem, use_mmap_vector);
   loader->LoadFragment();
 
   t += grape::GetCurrentTime();

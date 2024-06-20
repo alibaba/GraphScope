@@ -23,6 +23,7 @@ option java_multiple_files = true;
 
 service StoreSchema {
   rpc fetchSchema(FetchSchemaRequest) returns (FetchSchemaResponse);
+  rpc fetchStatistics(FetchStatisticsRequest) returns (FetchStatisticsResponse);
 }
 
 message FetchSchemaRequest {
@@ -31,3 +32,12 @@ message FetchSchemaRequest {
 message FetchSchemaResponse {
   GraphDefPb graphDef = 1;
 }
+
+message FetchStatisticsRequest {
+   int64 snapshotId = 1;
+}
+
+message FetchStatisticsResponse {
+  map<int32, Statistics> statistics_map = 1;
+}
+

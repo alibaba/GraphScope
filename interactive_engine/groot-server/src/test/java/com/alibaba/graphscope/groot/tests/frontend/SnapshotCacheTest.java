@@ -16,9 +16,9 @@ package com.alibaba.graphscope.groot.tests.frontend;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotListener;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 
 import org.junit.jupiter.api.Test;
 

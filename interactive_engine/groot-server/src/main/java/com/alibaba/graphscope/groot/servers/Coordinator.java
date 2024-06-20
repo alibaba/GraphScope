@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.groot.CuratorUtils;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
@@ -27,6 +26,7 @@ import com.alibaba.graphscope.groot.coordinator.backup.BackupService;
 import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupClient;
 import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupTaskSender;
 import com.alibaba.graphscope.groot.discovery.*;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -92,16 +92,20 @@ public class Coordinator extends NodeBase {
                 new RoleClients<>(this.channelManager, RoleType.FRONTEND, IngestorWriteClient::new);
         DdlWriter ddlWriter = new DdlWriter(ingestorWriteClients);
         this.metaService = new DefaultMetaService(configs);
+        int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
+        int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
         RoleClients<StoreSchemaClient> storeSchemaClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreSchemaClient::new);
-        GraphDefFetcher graphDefFetcher = new GraphDefFetcher(storeSchemaClients);
+        GraphDefFetcher graphDefFetcher = new GraphDefFetcher(storeSchemaClients, storeCount);
         this.schemaManager =
                 new SchemaManager(
+                        configs,
                         this.snapshotManager,
                         ddlExecutors,
                         ddlWriter,
                         this.metaService,
-                        graphDefFetcher);
+                        graphDefFetcher,
+                        frontendSnapshotClients);
         this.snapshotNotifier =
                 new SnapshotNotifier(
                         this.discovery,

@@ -547,6 +547,45 @@ public class GraphBuilder extends RelBuilder {
                     columnField.left,
                     varName,
                     getTypeFactory().createSqlType(SqlTypeName.ANY));
+        } else if (property.equals(GraphProperty.START_V_KEY)) {
+            if (!(aliasField.getType() instanceof GraphPathType)) {
+                throw new ClassCastException(
+                        "cannot get property='start_v' from type class ["
+                                + aliasField.getType().getClass()
+                                + "], should be ["
+                                + GraphPathType.class
+                                + "]");
+            } else {
+                Preconditions.checkArgument(size() > 0, "frame stack is empty");
+                RelNode peek = peek();
+                Preconditions.checkArgument(
+                        peek != null && !peek.getInputs().isEmpty(),
+                        "path expand should have start vertex");
+                RelNode input = peek.getInput(0);
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        new GraphProperty(GraphProperty.Opt.START_V),
+                        columnField.left,
+                        varName,
+                        input.getRowType().getFieldList().get(0).getType());
+            }
+        } else if (property.equals(GraphProperty.END_V_KEY)) {
+            if (!(aliasField.getType() instanceof GraphPathType)) {
+                throw new ClassCastException(
+                        "cannot get property='end_v' from type class ["
+                                + aliasField.getType().getClass()
+                                + "], should be ["
+                                + GraphPathType.class
+                                + "]");
+            } else {
+                GraphPathType pathType = (GraphPathType) aliasField.getType();
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        new GraphProperty(GraphProperty.Opt.END_V),
+                        columnField.left,
+                        varName,
+                        pathType.getComponentType().getGetVType());
+            }
         }
         GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
         List<String> properties = new ArrayList<>();
@@ -815,7 +854,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.BIT_XOR
                 || (sqlKind == SqlKind.OTHER
                         && (operator.getName().equals("IN")
-                                || operator.getName().equals("DATETIME_MINUS")))
+                                || operator.getName().equals("DATETIME_MINUS")
+                                || operator.getName().equals("PATH_CONCAT")))
                 || sqlKind == SqlKind.ARRAY_CONCAT;
     }
 
@@ -1749,7 +1789,9 @@ public class GraphBuilder extends RelBuilder {
         RelNode top = requireNonNull(peek(), "frame stack is empty");
         // skip intermediate operations which make no changes to the row type, i.e.
         // filter/limit/dedup...
+        RelNode parent = null;
         while (!top.getInputs().isEmpty() && top.getInput(0).getRowType() == top.getRowType()) {
+            parent = top;
             top = top.getInput(0);
         }
         if (top instanceof AbstractBindableTableScan
@@ -1831,6 +1873,10 @@ public class GraphBuilder extends RelBuilder {
                     GraphAggCall aggCall = aggregate.getAggCalls().get(0);
                     aggregate(aggregate.getGroupKey(), ImmutableList.of(aggCall.as(alias)));
                 }
+            }
+            if (parent != null && peek() != top) {
+                parent.replaceInput(0, build());
+                push(parent);
             }
         }
         return this;
