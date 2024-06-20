@@ -61,6 +61,8 @@ class Context(object):
 
     def switch_context(self, context: str):
         self.context = context
+        if self.context == "global":
+            self.graph_name = None
 
     def set_graph_name(self, graph_name: str):
         self.graph_name = graph_name
@@ -117,6 +119,13 @@ class GSConfig(object):
                 context.coordinator_endpoint == v.coordinator_endpoint
                 and context.flex == v.flex
             ):
+                # reset to global context
+                v.switch_context("global")
+                contexts = [v.to_dict() for _, v in self._contexts.items()]
+                write_yaml_file(
+                    {"contexts": contexts, "current-context": self._current_context},
+                    GS_CONFIG_DEFAULT_LOCATION,
+                )
                 return
 
         # set
