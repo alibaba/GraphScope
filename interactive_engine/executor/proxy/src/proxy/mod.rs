@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::sync::atomic::AtomicU32;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Mutex;
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use serde::{Deserialize, Serialize};
-use tokio::sync::Mutex;
 
 use crate::request::JobClient;
 
@@ -37,18 +37,41 @@ struct ServiceStatus {
 
 #[post("/v1/graph/{graph_id}/query")]
 async fn submit_query(
-    path: web::Path<(u32, )>, query: web::Json<Query>, index: web::Data<AtomicU32>,
-    data: web::Data<Mutex<JobClient>>,
+    path: web::Path<(String,)>, bytes: web::Bytes, index: web::Data<AtomicU64>,
+    client: web::Data<Mutex<JobClient>>,
 ) -> impl Responder {
-    let graph_id = path.into_inner().0;
-    let query_name = query.query_name.clone();
-    let mut arguments = HashMap::<String, String>::new();
-    HttpResponse::Ok().body(format!("graph_id: {}", graph_id))
+    let byte_slice: &[u8] = &bytes;
+    let arguments: Vec<String> = serde_json::from_slice(byte_slice).unwrap();
+    let job_id = index.fetch_add(1, Ordering::SeqCst);
+    let query_name = arguments[0].clone();
+    let mut client_lock = client.lock().unwrap();
+    let queries_config = client_lock.get_input_info().await;
+    let mut args = HashMap::<String, String>::new();
+    if let Some(params) = queries_config.get(&query_name) {
+        for (index, param_name) in params.iter().enumerate() {
+            args.insert(param_name.clone(), arguments[index + 1].clone());
+        }
+    }
+    drop(queries_config);
+    let result = client_lock
+        .submitProcedure(job_id, query_name, args)
+        .await
+        .unwrap()
+        .unwrap();
+    HttpResponse::Ok().body(web::Bytes::from(result))
 }
 
 #[get("/v1/service/status")]
 async fn get_status(data: web::Data<Mutex<JobClient>>) -> impl Responder {
-    let status = "Running";
-    let port = data.lock().expect("JobClient poisoned").get_port();
-    HttpResponse::Ok().body(format!("graph_idc"))
+    let status = "Running".to_string();
+    let port = data.lock().unwrap().get_port().await;
+    let service_status = ServiceStatus {
+        status,
+        graph: None,
+        bolt_port: port,
+        hqps_port: port,
+        gremlin_port: port,
+        start_time: 0,
+    };
+    HttpResponse::Ok().json(service_status)
 }

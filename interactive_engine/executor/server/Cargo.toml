@@ -43,6 +43,3 @@ default = []
 gcip = []
 use_mimalloc = ["dep:mimalloc"]
 use_mimalloc_rust = ["dep:mimalloc-rust"]
-
-[profile.release]
-debug = true

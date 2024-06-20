@@ -13,15 +13,182 @@ use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::GraphModifier;
 use bmcsr::schema::{CsrGraphSchema, InputSchema, Schema};
 use bmcsr::types::{DefaultId, LabelId};
-use graph_index::types::{ColumnData, ColumnDataRef, ColumnMappings, DataSource, Input};
+use graph_index::types::*;
+use graph_index::types::DataType as IndexDataType;
 use graph_index::GraphIndex;
 use itertools::max;
 use num::complex::ComplexFloat;
 
+pub fn apply_write_operations(graph: &mut GraphDB<usize, usize>, graph_index: &mut GraphIndex, mut write_operations: Vec<WriteOperation>, parallel: u32) {
+    let mut merged_delete_vertices_data: HashMap<LabelId, Vec<u64>> = HashMap::new();
+    for mut write_op in write_operations.drain(..) {
+        match write_op.write_type() {
+            WriteType::Insert => {
+                if let Some(mut vertex_mappings) = write_op.take_vertex_mappings() {
+                    let vertex_label = vertex_mappings.vertex_label();
+                    let inputs = vertex_mappings.inputs();
+                    let column_mappings = vertex_mappings.column_mappings();
+                    for input in inputs.iter() {
+                        insert_vertices(
+                            graph,
+                            vertex_label,
+                            input,
+                            column_mappings,
+                            parallel,
+                        );
+                    }
+                }
+                if let Some(edge_mappings) = write_op.take_edge_mappings() {
+                    let src_label = edge_mappings.src_label();
+                    let edge_label = edge_mappings.edge_label();
+                    let dst_label = edge_mappings.dst_label();
+                    let inputs = edge_mappings.inputs();
+                    let src_column_mappings = edge_mappings.src_column_mappings();
+                    let dst_column_mappings = edge_mappings.dst_column_mappings();
+                    let column_mappings = edge_mappings.column_mappings();
+                    for input in inputs.iter() {
+                        insert_edges(
+                            graph,
+                            src_label,
+                            edge_label,
+                            dst_label,
+                            input,
+                            src_column_mappings,
+                            dst_column_mappings,
+                            column_mappings,
+                            parallel,
+                        );
+                    }
+                }
+            }
+            WriteType::Delete => {
+                if let Some(mut vertex_mappings) = write_op.take_vertex_mappings() {
+                    let vertex_label = vertex_mappings.vertex_label();
+                    let inputs = vertex_mappings.take_inputs();
+                    let column_mappings = vertex_mappings.column_mappings();
+                    for mut input in inputs.into_iter() {
+                        match input.data_source() {
+                            DataSource::Memory => {
+                                let mut id_col = -1;
+                                for column_mapping in column_mappings {
+                                    let column = column_mapping.column();
+                                    let column_index = column.index();
+                                    let property_name = column_mapping.property_name();
+                                    if property_name == "id" {
+                                        id_col = column_index;
+                                        break;
+                                    }
+                                }
+                                if input.data_source() == DataSource::Memory {
+                                    let mut memory_data = input.take_memory_data().unwrap();
+                                    let mut data = memory_data.take_columns();
+                                    let mut vertex_id_column = data
+                                        .get_mut(id_col as usize)
+                                        .expect("Failed to get id column");
+
+                                    if let ColumnData::UInt64Array(mut data) = vertex_id_column.take_data() {
+                                        if let Some(mut combined_data) = merged_delete_vertices_data.get_mut(&vertex_label) {
+                                            combined_data.append(&mut data)
+                                        } else {
+                                            merged_delete_vertices_data.insert(vertex_label, data);
+                                        }
+                                    }
+                                }
+                                continue;
+                            }
+                            _ => {}
+                        }
+                        delete_vertices(
+                            graph,
+                            vertex_label,
+                            &input,
+                            column_mappings,
+                            parallel,
+                        );
+                    }
+                }
+                if let Some(edge_mappings) = write_op.take_edge_mappings() {
+                    let src_label = edge_mappings.src_label();
+                    let edge_label = edge_mappings.edge_label();
+                    let dst_label = edge_mappings.dst_label();
+                    let inputs = edge_mappings.inputs();
+                    let src_column_mappings = edge_mappings.src_column_mappings();
+                    let dst_column_mappings = edge_mappings.dst_column_mappings();
+                    let column_mappings = edge_mappings.column_mappings();
+                    for input in inputs.iter() {
+                        delete_edges(
+                            graph,
+                            src_label,
+                            edge_label,
+                            dst_label,
+                            input,
+                            src_column_mappings,
+                            dst_column_mappings,
+                            column_mappings,
+                            parallel,
+                        );
+                    }
+                }
+            }
+            WriteType::Set => {
+                if let Some(mut vertex_mappings) = write_op.take_vertex_mappings() {
+                    let vertex_label = vertex_mappings.vertex_label();
+                    let mut inputs = vertex_mappings.take_inputs();
+                    let column_mappings = vertex_mappings.column_mappings();
+                    for mut input in inputs.drain(..) {
+                        set_vertices(
+                            graph,
+                            graph_index,
+                            vertex_label,
+                            input,
+                            column_mappings,
+                            parallel,
+                        );
+                    }
+                }
+                if let Some(mut edge_mappings) = write_op.take_edge_mappings() {
+                    let src_label = edge_mappings.src_label();
+                    let edge_label = edge_mappings.edge_label();
+                    let dst_label = edge_mappings.dst_label();
+                    let mut inputs = edge_mappings.take_inputs();
+                    let src_column_mappings = edge_mappings.src_column_mappings();
+                    let dst_column_mappings = edge_mappings.dst_column_mappings();
+                    let column_mappings = edge_mappings.column_mappings();
+                    for mut input in inputs.drain(..) {
+                        set_edges(
+                            graph,
+                            graph_index,
+                            src_label,
+                            edge_label,
+                            dst_label,
+                            input,
+                            src_column_mappings,
+                            dst_column_mappings,
+                            column_mappings,
+                            parallel,
+                        );
+                    }
+                }
+            }
+        };
+    }
+    for (vertex_label, vertex_ids) in merged_delete_vertices_data.into_iter() {
+        let column_mappings = vec![ColumnMappings::new(0, "id".to_string(), IndexDataType::VertexId, "id".to_string())];
+        let input = Input::memory(DataFrame::new_vertices_ids(vertex_ids));
+        delete_vertices(
+            graph,
+            vertex_label,
+            &input,
+            &column_mappings,
+            parallel,
+        );
+    }
+}
+
 fn properties_to_items<G, I>(properties: Vec<ColumnData>) -> Vec<Vec<Item>>
-where
-    I: Send + Sync + IndexType,
-    G: FromStr + Send + Sync + IndexType + Eq,
+    where
+        I: Send + Sync + IndexType,
+        G: FromStr + Send + Sync + IndexType + Eq,
 {
     let properties_len = if properties.len() > 0 { properties[0].len() } else { 0 };
     let mut properties_items = Vec::with_capacity(properties_len);

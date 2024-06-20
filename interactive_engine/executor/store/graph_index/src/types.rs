@@ -83,7 +83,7 @@ impl ColumnMappings {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum DataSource {
     File,
     Memory,
@@ -820,7 +820,7 @@ pub enum ColumnData {
     StringArray(Vec<String>),
     DateArray(Vec<i32>),
     TimestampArray(Vec<i64>),
-    NullArray
+    NullArray,
 }
 
 impl Debug for ColumnData {
@@ -1133,6 +1133,62 @@ impl ColumnData {
             ColumnData::StringArray(data) => {
                 if let GraphItem::String(item) = item {
                     data.push(item);
+                }
+            }
+            _ => todo!(),
+        }
+    }
+
+    pub fn append_data(&mut self, append_data: ColumnData, item: GraphItem) {
+        match self {
+            ColumnData::BooleanArray(data) => {
+                if let ColumnData::BooleanArray(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::Int32Array(data) => {
+                if let ColumnData::Int32Array(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::UInt32Array(data) => {
+                if let ColumnData::UInt32Array(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::Int64Array(data) => {
+                if let ColumnData::Int64Array(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::UInt64Array(data) => {
+                if let ColumnData::UInt64Array(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::Float32Array(data) => {
+                if let ColumnData::Float32Array(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::Float64Array(data) => {
+                if let ColumnData::Float64Array(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::VertexIdArray(data) => {
+                if let ColumnData::VertexIdArray(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::EdgeIdArray(data) => {
+                if let ColumnData::EdgeIdArray(mut append_data) = append_data {
+                    data.append(&mut append_data);
+                }
+            }
+            ColumnData::StringArray(data) => {
+                if let ColumnData::StringArray(mut append_data) = append_data {
+                    data.append(&mut append_data);
                 }
             }
             _ => todo!(),

@@ -1,3 +1,4 @@
+pub mod proxy;
 pub mod request;
 
 #[macro_use]

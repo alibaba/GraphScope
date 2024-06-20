@@ -83,7 +83,7 @@
             "id": 0,
             "name": "name"
           },
-          "data_type": 2,
+          "data_type": 4,
           "is_primary_key": false
         },
         {
@@ -274,6 +274,14 @@
         {
           "key": {
             "id": 9,
+            "name": "popularityScore"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 10,
             "name": "id"
           },
           "data_type": 4,
@@ -668,6 +676,26 @@
           "src": {
             "id": 4,
             "name": "FORUM"
+          },
+          "dst": {
+            "id": 7,
+            "name": "TAG"
+          }
+        },
+        {
+          "src": {
+            "id": 3,
+            "name": "POST"
+          },
+          "dst": {
+            "id": 7,
+            "name": "TAG"
+          }
+        },
+        {
+          "src": {
+            "id": 2,
+            "name": "COMMENT"
           },
           "dst": {
             "id": 7,

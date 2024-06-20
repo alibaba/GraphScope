@@ -21,30 +21,9 @@ pub struct Config {
     input_dir: String,
 }
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
-pub struct Param {
-    pub name: String,
-    #[serde(rename = "type")]
-    pub data_type: String,
-}
-
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
-pub struct QueryConfig {
-    pub name: String,
-    pub description: String,
-    pub mode: String,
-    pub extension: String,
-    pub library: String,
-    pub params: Option<Vec<Param>>,
-    pub returns: Option<Vec<Param>>,
-}
-
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
-pub struct QueriesConfig {
-    pub queries: Option<Vec<QueryConfig>>,
-}
-
-async fn run_batch_update(client: &mut JobClient, start_index: &mut u64, raw_data_path: &String, batch_id: String) {
+async fn run_batch_update(
+    client: &mut JobClient, start_index: &mut u64, raw_data_path: &String, batch_id: String,
+) {
     let write_queries = [
         ("insert_comment", "Comment"),
         ("insert_forum", "Forum"),
@@ -86,7 +65,7 @@ async fn run_batch_update(client: &mut JobClient, start_index: &mut u64, raw_dat
         ("delete_person_likes_comment", "Person_likes_Comment"),
         ("delete_person_likes_post", "Person_likes_Post"),
         ("delete_post_hasCreator_person", "Post_hasCreator_Person"),
-        ("delete_post_isLocatedIn_country", "Post_isLocatedIn_Country")
+        ("delete_post_isLocatedIn_country", "Post_isLocatedIn_Country"),
     ];
     for (query_name, dir_name) in write_queries {
         let query_name = query_name.to_string();
@@ -97,7 +76,9 @@ async fn run_batch_update(client: &mut JobClient, start_index: &mut u64, raw_dat
         };
         let mut params = HashMap::new();
         params.insert("csv_path".to_string(), csv_path);
-        let status = client.submitProcedure(*start_index, query_name, params).await;
+        let status = client
+            .submitProcedure(*start_index, query_name, params)
+            .await;
         if !status.is_ok() {
             break;
         }
@@ -106,22 +87,22 @@ async fn run_batch_update(client: &mut JobClient, start_index: &mut u64, raw_dat
 }
 
 async fn run_precompute(client: &mut JobClient, start_index: &mut u64) {
-    let precompute_queries = [
-        "bi4_precompute",
-        "bi6_precompute",
-        "bi14_precompute",
-        "bi19_precompute",
-        "bi20_precompute"
-    ];
+    let precompute_queries =
+        ["bi4_precompute", "bi6_precompute", "bi14_precompute", "bi19_precompute", "bi20_precompute"];
     for query_name in precompute_queries {
         let query_name = query_name.to_string();
         let mut params = HashMap::new();
-        client.submitProcedure(*start_index, query_name, params).await;
+        client
+            .submitProcedure(*start_index, query_name, params)
+            .await;
         *start_index += 1;
     }
 }
 
-async fn run_queries(client: &mut JobClient, start_index: &mut u64, input_dir: &String, inputs_info: &HashMap<String, Vec<String>>) {
+async fn run_queries(
+    client: &mut JobClient, start_index: &mut u64, input_dir: &String,
+    inputs_info: &HashMap<String, Vec<String>>,
+) {
     let precompute_queries = [
         ("bi1", "bi-1"),
         ("bi2", "bi-2a"),
@@ -160,7 +141,7 @@ async fn run_queries(client: &mut JobClient, start_index: &mut u64, input_dir: &
         let mut count = 0;
         for line in lines {
             if count == 0 {
-                count +=1;
+                count += 1;
                 continue;
             }
             let line = line.unwrap();
@@ -171,9 +152,11 @@ async fn run_queries(client: &mut JobClient, start_index: &mut u64, input_dir: &
                     params.insert(name.clone(), split[index].to_string());
                 }
             }
-            client.submitProcedure(*start_index, query_name.clone(), params).await;
+            client
+                .submitProcedure(*start_index, query_name.clone(), params)
+                .await;
             *start_index += 1;
-            count+=1;
+            count += 1;
             if count > 30 {
                 break;
             }
@@ -185,12 +168,12 @@ async fn run_queries(client: &mut JobClient, start_index: &mut u64, input_dir: &
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config: Config = Config::from_args();
     let endpoint = config.endpoint;
-    let mut rpc_client = JobClient::new(endpoint, config.workers).await?;
 
     let mut input_info = HashMap::<String, Vec<String>>::new();
     let query_config = config.query_config;
     let file = File::open(query_config).unwrap();
-    let queries_config: QueriesConfig = serde_yaml::from_reader(file).expect("Could not read values");
+    let queries_config: rpc_proxy::request::QueriesConfig =
+        serde_yaml::from_reader(file).expect("Could not read values");
     if let Some(queries) = queries_config.queries {
         for query in queries {
             let query_name = query.name;
@@ -203,7 +186,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-
+    let mut rpc_client =
+        JobClient::new(endpoint.clone(), endpoint, input_info.clone(), config.workers).await?;
 
     let batches = [
         "2012-11-29",
