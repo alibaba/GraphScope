@@ -23,6 +23,21 @@ import os
 import subprocess
 
 import click
+from packaging import version
+
+version_file_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "VERSION"
+)
+
+with open(version_file_path, "r", encoding="utf-8") as fp:
+    sv = version.parse(fp.read().strip())
+    __is_prerelease__ = sv.is_prerelease
+    __version__ = str(sv)
+
+
+# Interactive docker container name
+INTERACTIVE_DOCKER_CONTAINER_NAME = "gs-interactive-instance"
+
 
 scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "scripts")
 install_deps_script = os.path.join(scripts_dir, "install_deps_command.sh")
@@ -57,6 +72,12 @@ def cli():
 @cli.group()
 def flexbuild():
     """Build docker image for Interactive, Insight product."""
+    pass
+
+
+@cli.group()
+def instance():
+    """Deploy, destroy Interactive instance."""
     pass
 
 
@@ -116,6 +137,167 @@ def interactive(app, graphscope_repo):
         return
     cmd = ["make", "interactive-runtime", "ENABLE_COORDINATOR=true"]
     run_shell_cmd(cmd, os.path.join(graphscope_repo, interactive_build_dir))
+
+
+@instance.command
+@click.option(
+    "--type",
+    type=click.Choice(["interactive"], case_sensitive=False),
+    help="Instance type, e.g. Interactive",
+    required=True,
+)
+@click.option(
+    "--coordinator-port",
+    help="Mapping port of Coordinator [docker only]",
+    default=8080,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--cypher-port",
+    help="Mapping port of cypher query [docker only]",
+    default=7687,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--storedproc-port",
+    help="Mapping port of stored procedure query [docker only]",
+    default=10000,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--gremlin-port",
+    help="Mapping port of gremlin query, -1 means disable mapping [docker only]",
+    default=-1,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--image-registry",
+    help="Docker image registry used to launch instance",
+    default="registry.cn-hongkong.aliyuncs.com/graphscope",
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--image-tag",
+    help="Docker image tag used to launch instance",
+    default=__version__,
+    show_default=True,
+    required=False,
+)
+def deploy(
+    type,
+    coordinator_port,
+    cypher_port,
+    storedproc_port,
+    gremlin_port,
+    image_registry,
+    image_tag,
+):  # noqa: F811
+    """Deploy Flex Interactive instance"""
+    cmd = []
+    if type == "interactive":
+        cmd = [
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            INTERACTIVE_DOCKER_CONTAINER_NAME,
+            "-p",
+            f"{coordinator_port}:8080",
+            "-p",
+            f"{cypher_port}:7687",
+            "-p",
+            f"{storedproc_port}:10000",
+        ]
+        if gremlin_port != -1:
+            cmd.extend(["-p", f"{gremlin_port}:8182"])
+        image = f"{image_registry}/{type}:{image_tag}"
+        cmd.extend([image, "--enable-coordinator"])
+    click.secho("Run command: {0}".format(" ".join(cmd)))
+    result = subprocess.run(" ".join(cmd), shell=True, capture_output=True, text=True)
+    if result.returncode == 0:
+        click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
+        click.secho(result.stdout, bold=False)
+
+        message = f"""
+Coordinator is listening on {coordinator_port} port, you can connect to coordinator by:
+    gsctl connect --coordinator-endpoint http://127.0.0.1:{coordinator_port}
+
+Cypher service is listening on {cypher_port} port, you can connect to cypher service with:
+    neo4j://127.0.0.1:{cypher_port}
+
+Stored procedure service is listening on {storedproc_port} port , you can connect to stored procedure service with:
+    http://127.0.0.1:{storedproc_port}
+        """
+        if gremlin_port != -1:
+            message += f"""
+Gremlin service is listening on {gremlin_port} port, you can connect to gremlin service with:
+    ws://127.0.0.1:{gremlin_port}/gremlin
+
+            """
+            click.secho(message, bold=False)
+    else:
+        click.secho("[FAILED] ", nl=False, fg="red", bold=True)
+        click.secho(result.stderr, bold=False)
+
+
+@instance.command
+@click.option(
+    "--type",
+    type=click.Choice(["interactive"], case_sensitive=False),
+    help="Instance type, e.g. Interactive",
+    required=True,
+)
+def destroy(type):
+    """Destroy Flex Interactive instance"""
+    if click.confirm(f"Do you want to destroy {type} instance?"):
+        cmd = []
+        if type == "interactive":
+            cmd = [
+                "docker",
+                "rm",
+                "-f",
+                INTERACTIVE_DOCKER_CONTAINER_NAME,
+            ]
+        click.secho("Run command: {0}".format(" ".join(cmd)))
+        result = subprocess.run(
+            " ".join(cmd), shell=True, capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
+            click.secho(result.stdout, bold=False)
+        else:
+            click.secho("[FAILED] ", nl=False, fg="red", bold=True)
+            click.secho(result.stderr, bold=False)
+
+
+@instance.command
+@click.option(
+    "--type",
+    type=click.Choice(["interactive"], case_sensitive=False),
+    help="Instance type, e.g. Interactive",
+    required=True,
+)
+def status(type):
+    """Display instance status"""
+    cmd = []
+    if type == "interactive":
+        cmd = ["docker", "ps", "-a"]
+    result = subprocess.run(" ".join(cmd), shell=True, capture_output=True, text=True)
+    if result.returncode == 0:
+        click.secho("[SUCCESS]\n", fg="green", bold=True)
+        rlt = result.stdout.split("\n")
+        click.secho(rlt[0], bold=False)
+        for line in rlt[1:]:
+            if INTERACTIVE_DOCKER_CONTAINER_NAME in line:
+                print(line)
+    else:
+        click.secho("[FAILED] ", nl=False, fg="red", bold=True)
+        click.secho(result.stderr, bold=False)
 
 
 @click.command()
