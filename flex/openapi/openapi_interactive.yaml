@@ -998,6 +998,38 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+  /api/v1/file/uploading:
+    post:
+      tags: [Utils]
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filestorage:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+                metadata:
+                  datasource: file
+                  file_type: csv
+        500:
+          description: Server Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
 components:
   schemas:
     AnyValue: {}
@@ -1742,5 +1774,15 @@ components:
           type: string
           description: URL or log string
         detail:
+          type: object
+          additionalProperties: true
+    UploadFileResponse:
+      required:
+        - file_path
+        - metadata
+      properties:
+        file_path:
+          type: string
+        metadata:
           type: object
           additionalProperties: true
