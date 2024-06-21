@@ -50,8 +50,8 @@ Then, connect to the interactive endpoint, and try to run a simple query with fo
 
 from interactive_sdk.client.driver import Driver
 
-# replace endpoint with the actual interactive endpoint, this is mock server just for testing.
-interactive_endpoint='https://virtserver.swaggerhub.com/GRAPHSCOPE/interactive/1.0.0/'
+# Replace {INTERACTIVE_ENDPOINT} with the actual endpoint of the Interactive service.
+interactive_endpoint='{INTERACTIVE_ENDPOINT}'
 driver = Driver(endpoint=interactive_endpoint)
 
 # Interactive will initially start on a builtin modern graph. You can run a simple cypher query
@@ -62,7 +62,7 @@ with driver.getNeo4jSession() as session:
         # record:  <Record $f0=6>
 ```
 
-For a more detailed example, please refer to [Python SDK Example](https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/python/basic_example.py).
+For a more detailed example, please refer to [Python SDK Example](https://github.com/alibaba/GraphScope/blob/main/flex/interactive/sdk/examples/python/basic_example.py).
 
 
 ## Documentation for Service APIs
