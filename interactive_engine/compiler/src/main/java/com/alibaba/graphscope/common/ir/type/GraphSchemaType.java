@@ -191,7 +191,7 @@ public class GraphSchemaType extends RelRecordType {
 
     @Override
     public RelDataTypeFamily getFamily() {
-        return scanOpt;
+        return scanOpt == GraphOpt.Source.VERTEX ? GraphTypeFamily.VERTEX : GraphTypeFamily.EDGE;
     }
 
     public List<GraphSchemaType> getSchemaTypeAsList() {
