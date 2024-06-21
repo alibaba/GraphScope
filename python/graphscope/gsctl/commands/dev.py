@@ -35,8 +35,9 @@ with open(version_file_path, "r", encoding="utf-8") as fp:
     __version__ = str(sv)
 
 
-# Interactive docker container name
+# Interactive docker container config
 INTERACTIVE_DOCKER_CONTAINER_NAME = "gs-interactive-instance"
+INTERACTIVE_DOCKER_CONTAINER_LABEL = "flex=interactive"
 
 
 scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "scripts")
@@ -175,6 +176,13 @@ def interactive(app, graphscope_repo):
     required=False,
 )
 @click.option(
+    "--container-name",
+    help="Docker container name [docker only]",
+    default=INTERACTIVE_DOCKER_CONTAINER_NAME,
+    show_default=True,
+    required=False,
+)
+@click.option(
     "--image-registry",
     help="Docker image registry used to launch instance",
     default="registry.cn-hongkong.aliyuncs.com/graphscope",
@@ -194,6 +202,7 @@ def deploy(
     cypher_port,
     storedproc_port,
     gremlin_port,
+    container_name,
     image_registry,
     image_tag,
 ):  # noqa: F811
@@ -205,7 +214,9 @@ def deploy(
             "run",
             "-d",
             "--name",
-            INTERACTIVE_DOCKER_CONTAINER_NAME,
+            container_name,
+            "--label",
+            INTERACTIVE_DOCKER_CONTAINER_LABEL,
             "-p",
             f"{coordinator_port}:8080",
             "-p",
@@ -218,7 +229,7 @@ def deploy(
         image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
     click.secho("Run command: {0}".format(" ".join(cmd)))
-    result = subprocess.run(" ".join(cmd), shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode == 0:
         click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
         click.secho(result.stdout, bold=False)
@@ -252,21 +263,26 @@ Gremlin service is listening on {gremlin_port} port, you can connect to gremlin 
     help="Instance type, e.g. Interactive",
     required=True,
 )
-def destroy(type):
+@click.option(
+    "--container-name",
+    help="Docker container name [docker only]",
+    default=INTERACTIVE_DOCKER_CONTAINER_NAME,
+    show_default=True,
+    required=False,
+)
+def destroy(type, container_name):
     """Destroy Flex Interactive instance"""
-    if click.confirm(f"Do you want to destroy {type} instance?"):
+    if click.confirm(f"Do you want to destroy {container_name} instance?"):
         cmd = []
         if type == "interactive":
             cmd = [
                 "docker",
                 "rm",
                 "-f",
-                INTERACTIVE_DOCKER_CONTAINER_NAME,
+                container_name,
             ]
         click.secho("Run command: {0}".format(" ".join(cmd)))
-        result = subprocess.run(
-            " ".join(cmd), shell=True, capture_output=True, text=True
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0:
             click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
             click.secho(result.stdout, bold=False)
@@ -286,15 +302,17 @@ def status(type):
     """Display instance status"""
     cmd = []
     if type == "interactive":
-        cmd = ["docker", "ps", "-a"]
-    result = subprocess.run(" ".join(cmd), shell=True, capture_output=True, text=True)
+        cmd = [
+            "docker",
+            "ps",
+            "-a",
+            "--filter",
+            f"label={INTERACTIVE_DOCKER_CONTAINER_LABEL}",
+        ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode == 0:
         click.secho("[SUCCESS]\n", fg="green", bold=True)
-        rlt = result.stdout.split("\n")
-        click.secho(rlt[0], bold=False)
-        for line in rlt[1:]:
-            if INTERACTIVE_DOCKER_CONTAINER_NAME in line:
-                print(line)
+        click.secho(result.stdout, bold=False)
     else:
         click.secho("[FAILED] ", nl=False, fg="red", bold=True)
         click.secho(result.stderr, bold=False)
