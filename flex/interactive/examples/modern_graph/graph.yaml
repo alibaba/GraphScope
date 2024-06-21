@@ -74,3 +74,9 @@ schema:
           property_name: weight
           property_type:
             primitive_type: DT_DOUBLE
+        - property_id: 1
+          property_name: name
+          property_type:
+            string:
+              long_text:
+              

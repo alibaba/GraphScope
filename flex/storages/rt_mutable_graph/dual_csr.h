@@ -438,17 +438,30 @@ class MultipPropDualCsr : public DualCsrBase {
     }
   }
 
+  void InitTable(const std::string& edata_name, const std::string& work_dir) {
+    table_.init(edata_name, work_dir, col_name_, property_types_,
+                storage_strategies_);
+  }
+
   void BatchInit(const std::string& oe_name, const std::string& ie_name,
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
                  const std::vector<int>& ie_degree) override {
     size_t ie_num = in_csr_->batch_init(ie_name, work_dir, ie_degree);
     size_t oe_num = out_csr_->batch_init(oe_name, work_dir, oe_degree);
-    table_.init(edata_name, work_dir, col_name_, property_types_,
-                storage_strategies_);
     table_.resize(std::max(ie_num, oe_num));
 
-    table_idx_.store(0);
+    table_idx_.store(std::max(ie_num, oe_num));
+  }
+
+  void BatchInitInMemory(const std::string& edata_name,
+                         const std::string& work_dir,
+                         const std::vector<int>& oe_degree,
+                         const std::vector<int>& ie_degree) override {
+    size_t ie_num = in_csr_->batch_init_in_memory(ie_degree);
+    size_t oe_num = out_csr_->batch_init_in_memory(oe_degree);
+    table_.resize(std::max(ie_num, oe_num));
+    table_idx_.store(std::max(ie_num, oe_num));
   }
 
   void Open(const std::string& oe_name, const std::string& ie_name,
@@ -497,15 +510,14 @@ class MultipPropDualCsr : public DualCsrBase {
   const CsrBase* GetInCsr() const override { return in_csr_; }
   const CsrBase* GetOutCsr() const override { return out_csr_; }
 
-  void BatchPutEdge(vid_t src, vid_t dst, Any&& data, int prop_id) {
-    size_t row_id = table_idx_.fetch_add(1);
-    table_.get_column_by_id(prop_id)->set_any(row_id, data);
-    if (prop_id == 0) {
-      in_csr_->batch_put_edge_with_index(dst, src, row_id);
-      out_csr_->batch_put_edge_with_index(src, dst, row_id);
-    }
+  void BatchPutEdge(vid_t src, vid_t dst, size_t row_id) {
+    in_csr_->batch_put_edge_with_index(dst, src, row_id);
+    out_csr_->batch_put_edge_with_index(src, dst, row_id);
   }
 
+  Table& GetTable() { return table_; }
+
+  const Table& GetTable() const { return table_; }
   void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
                   Allocator& alloc) override {
     size_t row_id = table_idx_.fetch_add(1);
@@ -521,6 +533,12 @@ class MultipPropDualCsr : public DualCsrBase {
   void UpdateEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
                   Allocator& alloc) override {
     LOG(FATAL) << "Not implemented";
+  }
+
+  void Close() override {
+    in_csr_->close();
+    out_csr_->close();
+    table_.close();
   }
 
  private:

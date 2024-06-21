@@ -765,8 +765,32 @@ class MultipPropMutableCsr : public MultipPropCsrBase {
     return edge_num;
   }
 
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio = 1.2) override {
+    size_t vnum = degree.size();
+    adj_lists_.open("", false);
+    adj_lists_.resize(vnum);
+
+    locks_ = new grape::SpinLock[vnum];
+
+    size_t edge_num = 0;
+    for (auto d : degree) {
+      edge_num += d;
+    }
+    nbr_list_.open("", false);
+    nbr_list_.resize(edge_num);
+
+    nbr_t* ptr = nbr_list_.data();
+    for (vid_t i = 0; i < vnum; ++i) {
+      int deg = degree[i];
+      adj_lists_[i].init(ptr, deg, 0);
+      ptr += deg;
+    }
+    return edge_num;
+  }
+
   void batch_put_edge_with_index(vid_t src, vid_t dst, size_t data,
-                                 timestamp_t ts = 0) {
+                                 timestamp_t ts = 0) override {
     adj_lists_[src].batch_put_edge(dst, data, ts);
   }
 
@@ -918,14 +942,24 @@ class MultipPropMutableCsr : public MultipPropCsrBase {
   }
 
   void put_edge_with_index(vid_t src, vid_t dst, size_t index, timestamp_t ts,
-                           Allocator& alloc) {
+                           Allocator& alloc) override {
     put_edge(src, dst, index, ts, alloc);
   }
 
-  slice_t get_edges(vid_t i) const { return adj_lists_[i].get_edges(table_); }
+  slice_t get_edges(vid_t i) const override {
+    return adj_lists_[i].get_edges(table_);
+  }
 
   mut_slice_t get_edges_mut(vid_t i) {
     return adj_lists_[i].get_edges_mut(table_);
+  }
+
+  void close() override {
+    if (locks_ != nullptr) {
+      delete[] locks_;
+    }
+    adj_lists_.reset();
+    nbr_list_.reset();
   }
 
  private:
@@ -1334,6 +1368,17 @@ class SingleMultipPropMutableCsr : public MultipPropCsrBase {
     return vnum;
   }
 
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    size_t vnum = degree.size();
+    nbr_list_.open("", false);
+    nbr_list_.resize(vnum);
+    for (size_t k = 0; k != vnum; ++k) {
+      nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
+    }
+    return vnum;
+  }
+
   void batch_put_edge_with_index(vid_t src, vid_t dst, size_t data,
                                  timestamp_t ts) override {
     nbr_list_[src].neighbor = dst;
@@ -1462,14 +1507,12 @@ class SingleMultipPropMutableCsr : public MultipPropCsrBase {
     }
     return ret;
   }
-  /**
-  ? get_edge(vid_t i) const {
-    MutableNbr<std::string_view> nbr;
-    nbr.neighbor = nbr_list_[i].neighbor;
-    nbr.timestamp.store(nbr_list_[i].timestamp.load());
-    nbr.data = table_.get_view(nbr_list_[i].data);
-    return nbr;
-  }*/
+
+  UnTypedMutableNbr get_edge(vid_t i) const {
+    return UnTypedMutableNbr(&nbr_list_[i], table_);
+  }
+
+  void close() override { nbr_list_.reset(); }
 
  private:
   Table& table_;
@@ -1610,6 +1653,11 @@ class MultipPropEmptyCsr : public MultipPropCsrBase {
     return 0;
   }
 
+  size_t batch_init_in_memory(const std::vector<int>& degree,
+                              double reserve_ratio) override {
+    return 0;
+  }
+
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
 
@@ -1625,9 +1673,9 @@ class MultipPropEmptyCsr : public MultipPropCsrBase {
   size_t size() const override { return 0; }
 
   void put_edge_with_index(vid_t src, vid_t dst, size_t index, timestamp_t ts,
-                           Allocator& alloc) {}
+                           Allocator& alloc) override {}
   void batch_put_edge_with_index(vid_t src, vid_t dst, size_t data,
-                                 timestamp_t ts = 0) {}
+                                 timestamp_t ts = 0) override {}
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return nullptr;
   }
@@ -1639,6 +1687,8 @@ class MultipPropEmptyCsr : public MultipPropCsrBase {
   }
 
   slice_t get_edges(vid_t v) const override { return slice_t::empty(table_); }
+
+  void close() override {}
 
  private:
   Table& table_;

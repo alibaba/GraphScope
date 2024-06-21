@@ -29,10 +29,11 @@ bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type) {
   }
 }
 
-void set_vertex_column_from_string_array(
-    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
-    const std::vector<vid_t>& vids) {
+void set_column_from_string_array(gs::ColumnBase* col,
+                                  std::shared_ptr<arrow::ChunkedArray> array,
+                                  const std::vector<size_t>& offset) {
   auto type = array->type();
+  auto size = col->size();
   CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
       << "Inconsistent data type, expect string, but got " << type->ToString();
   size_t cur_ind = 0;
@@ -49,10 +50,10 @@ void set_vertex_column_from_string_array(
         } else {
           sw = std::string_view(str.data(), str.size());
         }
-        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+        if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(vids[cur_ind++], std::move(sw));
+          col->set_any(offset[cur_ind++], std::move(sw));
         }
       }
     }
@@ -63,65 +64,66 @@ void set_vertex_column_from_string_array(
       for (auto k = 0; k < casted->length(); ++k) {
         auto str = casted->GetView(k);
         std::string_view sw(str.data(), str.size());
-        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+        if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(vids[cur_ind++], std::move(sw));
+          col->set_any(offset[cur_ind++], std::move(sw));
         }
       }
     }
   }
 }
 
-void set_vertex_properties(gs::ColumnBase* col,
+void set_properties_column(gs::ColumnBase* col,
                            std::shared_ptr<arrow::ChunkedArray> array,
-                           const std::vector<vid_t>& vids) {
+                           const std::vector<size_t>& offset) {
   auto type = array->type();
   auto col_type = col->type();
 
   // TODO(zhanglei): reduce the dummy code here with a template function.
   if (col_type == PropertyType::kBool) {
-    set_single_vertex_column<bool>(col, array, vids);
+    set_column<bool>(col, array, offset);
   } else if (col_type == PropertyType::kInt64) {
-    set_single_vertex_column<int64_t>(col, array, vids);
+    set_column<int64_t>(col, array, offset);
   } else if (col_type == PropertyType::kInt32) {
-    set_single_vertex_column<int32_t>(col, array, vids);
+    set_column<int32_t>(col, array, offset);
   } else if (col_type == PropertyType::kUInt64) {
-    set_single_vertex_column<uint64_t>(col, array, vids);
+    set_column<uint64_t>(col, array, offset);
   } else if (col_type == PropertyType::kUInt32) {
-    set_single_vertex_column<uint32_t>(col, array, vids);
+    set_column<uint32_t>(col, array, offset);
   } else if (col_type == PropertyType::kDouble) {
-    set_single_vertex_column<double>(col, array, vids);
+    set_column<double>(col, array, offset);
   } else if (col_type == PropertyType::kFloat) {
-    set_single_vertex_column<float>(col, array, vids);
+    set_column<float>(col, array, offset);
   } else if (col_type == PropertyType::kStringMap) {
-    set_vertex_column_from_string_array(col, array, vids);
+    set_column_from_string_array(col, array, offset);
   } else if (col_type == PropertyType::kDate) {
-    set_vertex_column_from_timestamp_array(col, array, vids);
+    set_column_from_timestamp_array(col, array, offset);
   } else if (col_type == PropertyType::kDay) {
-    set_vertex_column_from_timestamp_array_to_day(col, array, vids);
+    set_column_from_timestamp_array_to_day(col, array, offset);
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
-    set_vertex_column_from_string_array(col, array, vids);
+    set_column_from_string_array(col, array, offset);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }
 }
 
-void set_vertex_column_from_timestamp_array(
-    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
-    const std::vector<vid_t>& vids) {
+void set_column_from_timestamp_array(gs::ColumnBase* col,
+                                     std::shared_ptr<arrow::ChunkedArray> array,
+                                     const std::vector<size_t>& offset) {
   auto type = array->type();
   auto col_type = col->type();
+  auto size = col->size();
   size_t cur_ind = 0;
   if (type->Equals(arrow::timestamp(arrow::TimeUnit::type::MILLI))) {
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
           std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
-        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+        if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(vids[cur_ind++],
+          col->set_any(offset[cur_ind++],
                        std::move(AnyConverter<Date>::to_any(casted->Value(k))));
         }
       }
@@ -132,21 +134,22 @@ void set_vertex_column_from_timestamp_array(
   }
 }
 
-void set_vertex_column_from_timestamp_array_to_day(
+void set_column_from_timestamp_array_to_day(
     gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
-    const std::vector<vid_t>& vids) {
+    const std::vector<size_t>& offset) {
   auto type = array->type();
   auto col_type = col->type();
+  auto size = col->size();
   size_t cur_ind = 0;
   if (type->Equals(arrow::timestamp(arrow::TimeUnit::type::MILLI))) {
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
           std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
-        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+        if (offset[cur_ind] >= size) {
           cur_ind++;
         } else {
-          col->set_any(vids[cur_ind++],
+          col->set_any(offset[cur_ind++],
                        std::move(AnyConverter<Day>::to_any(casted->Value(k))));
         }
       }
@@ -253,8 +256,19 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       src_label_name, dst_label_name, edge_label_name);
   size_t col_num = property_types.size();
   CHECK_LE(col_num, 1) << "Only single or no property is supported for edge.";
-
+  EdgeStrategy oe_strategy = schema_.get_outgoing_edge_strategy(
+      src_label_name, dst_label_name, edge_label_name);
+  EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
+      src_label_name, dst_label_name, edge_label_name);
+  bool oe_mutable = schema_.outgoing_edge_mutable(
+      src_label_name, dst_label_name, edge_label_name);
+  bool ie_mutable = schema_.incoming_edge_mutable(
+      src_label_name, dst_label_name, edge_label_name);
   if (col_num == 0) {
+    auto dual_csr = new DualCsr<grape::EmptyType>(oe_strategy, ie_strategy,
+                                                  oe_mutable, ie_mutable);
+    basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                   dual_csr);
     if (filenames.empty()) {
       basic_fragment_loader_.AddNoPropEdgeBatch<grape::EmptyType>(
           src_label_i, dst_label_i, edge_label_i);
@@ -262,80 +276,147 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       addEdgesRecordBatchImpl<grape::EmptyType>(
           src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
     }
-  } else if (property_types[0] == PropertyType::kBool) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<bool>(src_label_i, dst_label_i,
-                                                      edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<bool>(src_label_i, dst_label_i, edge_label_i,
-                                    filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kDate) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<Date>(src_label_i, dst_label_i,
-                                                      edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<Date>(src_label_i, dst_label_i, edge_label_i,
-                                    filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kInt32) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<int32_t>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<int32_t>(src_label_i, dst_label_i, edge_label_i,
-                                       filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kUInt32) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<uint32_t>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<uint32_t>(src_label_i, dst_label_i, edge_label_i,
-                                        filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kInt64) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<int64_t>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<int64_t>(src_label_i, dst_label_i, edge_label_i,
-                                       filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kUInt64) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<uint64_t>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<uint64_t>(src_label_i, dst_label_i, edge_label_i,
-                                        filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kDouble) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<double>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<double>(src_label_i, dst_label_i, edge_label_i,
+  } else if (col_num == 1) {
+    if (property_types[0] == PropertyType::kBool) {
+      auto dual_csr =
+          new DualCsr<bool>(oe_strategy, ie_strategy, oe_mutable, ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<bool>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<bool>(src_label_i, dst_label_i, edge_label_i,
                                       filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kFloat) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<float>(src_label_i, dst_label_i,
-                                                       edge_label_i);
+      }
+    } else if (property_types[0] == PropertyType::kDate) {
+      auto dual_csr =
+          new DualCsr<Date>(oe_strategy, ie_strategy, oe_mutable, ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<Date>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<Date>(src_label_i, dst_label_i, edge_label_i,
+                                      filenames, supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kInt32) {
+      auto dual_csr = new DualCsr<int32_t>(oe_strategy, ie_strategy, oe_mutable,
+                                           ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<int32_t>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<int32_t>(src_label_i, dst_label_i, edge_label_i,
+                                         filenames, supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kUInt32) {
+      auto dual_csr = new DualCsr<uint32_t>(oe_strategy, ie_strategy,
+                                            oe_mutable, ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<uint32_t>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<uint32_t>(src_label_i, dst_label_i,
+                                          edge_label_i, filenames,
+                                          supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kInt64) {
+      auto dual_csr = new DualCsr<int64_t>(oe_strategy, ie_strategy, oe_mutable,
+                                           ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<int64_t>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<int64_t>(src_label_i, dst_label_i, edge_label_i,
+                                         filenames, supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kUInt64) {
+      auto dual_csr = new DualCsr<uint64_t>(oe_strategy, ie_strategy,
+                                            oe_mutable, ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<uint64_t>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<uint64_t>(src_label_i, dst_label_i,
+                                          edge_label_i, filenames,
+                                          supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kDouble) {
+      auto dual_csr =
+          new DualCsr<double>(oe_strategy, ie_strategy, oe_mutable, ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<double>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<double>(src_label_i, dst_label_i, edge_label_i,
+                                        filenames, supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kFloat) {
+      auto dual_csr =
+          new DualCsr<float>(oe_strategy, ie_strategy, oe_mutable, ie_mutable);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<float>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<float>(src_label_i, dst_label_i, edge_label_i,
+                                       filenames, supplier_creator);
+      }
+    } else if (property_types[0].type_enum ==
+               impl::PropertyTypeImpl::kVarChar) {
+      const auto& prop =
+          schema_.get_edge_property(src_label_i, dst_label_i, edge_label_i);
+      auto dual_csr = new DualCsr<std::string_view>(
+          oe_strategy, ie_strategy, prop.additional_type_info.max_length);
+      basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                     dual_csr);
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<std::string_view>(src_label_i, dst_label_i,
+                                                  edge_label_i, filenames,
+                                                  supplier_creator);
+      }
     } else {
-      addEdgesRecordBatchImpl<float>(src_label_i, dst_label_i, edge_label_i,
-                                     filenames, supplier_creator);
-    }
-  } else if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
+      LOG(FATAL) << "Unsupported edge property type." << property_types[0];
     }
   } else {
-    LOG(FATAL) << "Unsupported edge property type." << property_types[0];
+    const auto& props = schema_.get_edge_properties(
+        src_label_name, dst_label_name, edge_label_name);
+    const auto& prop_names = schema_.get_edge_property_names(
+        src_label_name, dst_label_name, edge_label_name);
+    auto dual_csr =
+        new MultipPropDualCsr(oe_strategy, ie_strategy, prop_names, props, {});
+    basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
+                                   dual_csr);
+    if (filenames.empty()) {
+      LOG(FATAL) << "No edge files found for src label: " << src_label_name
+                 << " dst label: " << dst_label_name
+                 << " edge label: " << edge_label_name;
+    } else {
+      addEdgesRecordBatchImpl<Any>(src_label_i, dst_label_i, edge_label_i,
+                                   filenames, supplier_creator);
+    }
   }
 }
 

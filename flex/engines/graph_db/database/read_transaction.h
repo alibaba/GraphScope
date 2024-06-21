@@ -27,11 +27,12 @@ namespace gs {
 
 class MutablePropertyFragment;
 class VersionManager;
-template <typename EDATA_T>
+
+template <typename... PROPS>
 class AdjListView {
   class nbr_iterator {
-    using const_nbr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_t;
-    using const_nbr_ptr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_ptr_t;
+    using const_nbr_t = typename MutableNbrSlice<PROPS...>::const_nbr_t;
+    using const_nbr_ptr_t = typename MutableNbrSlice<PROPS...>::const_nbr_ptr_t;
 
    public:
     nbr_iterator(const_nbr_ptr_t ptr, const_nbr_ptr_t end,
@@ -69,7 +70,7 @@ class AdjListView {
   };
 
  public:
-  using slice_t = MutableNbrSlice<EDATA_T>;
+  using slice_t = MutableNbrSlice<PROPS...>;
 
   AdjListView(const slice_t& slice, timestamp_t timestamp)
       : edges_(slice), timestamp_(timestamp) {}
@@ -88,8 +89,23 @@ class AdjListView {
   timestamp_t timestamp_;
 };
 
-template <typename EDATA_T>
+template <typename... PROPS>
 class GraphView {
+ public:
+  GraphView(const MultipPropMutableCsr& csr, timestamp_t timestamp)
+      : csr_(csr), timestamp_(timestamp) {}
+
+  AdjListView<PROPS...> get_edges(vid_t v) const {
+    return AdjListView<PROPS...>(csr_.get_edges(v), timestamp_);
+  }
+
+ private:
+  const MultipPropMutableCsr& csr_;
+  timestamp_t timestamp_;
+};
+
+template <typename EDATA_T>
+class GraphView<EDATA_T> {
  public:
   GraphView(const MutableCsr<EDATA_T>& csr, timestamp_t timestamp)
       : csr_(csr),
@@ -199,8 +215,26 @@ class GraphView {
   timestamp_t unsorted_since_;
 };
 
-template <typename EDATA_T>
+template <typename... PROPS>
 class SingleGraphView {
+ public:
+  SingleGraphView(const SingleMultipPropMutableCsr& csr, timestamp_t timestamp)
+      : csr_(csr), timestamp_(timestamp) {}
+
+  bool exist(vid_t v) const {
+    return (csr_.get_edge(v).get_timestamp() <= timestamp_);
+  }
+
+  const MutableNbr<PROPS...>& get_edge(vid_t v) const {
+    return csr_.get_edge(v);
+  }
+
+ private:
+  const SingleMultipPropMutableCsr& csr_;
+  timestamp_t timestamp_;
+};
+template <typename EDATA_T>
+class SingleGraphView<EDATA_T> {
  public:
   SingleGraphView(const SingleMutableCsr<EDATA_T>& csr, timestamp_t timestamp)
       : csr_(csr), timestamp_(timestamp) {}
@@ -352,58 +386,94 @@ class ReadTransaction {
                                   label_t neighbor_label,
                                   label_t edge_label) const;
 
-  template <typename EDATA_T>
-  AdjListView<EDATA_T> GetOutgoingEdges(label_t v_label, vid_t v,
-                                        label_t neighbor_label,
-                                        label_t edge_label) const {
-    auto csr = dynamic_cast<const TypedMutableCsrBase<EDATA_T>*>(
-        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
-    return AdjListView<EDATA_T>(csr->get_edges(v), timestamp_);
+  template <typename... PROPS>
+  AdjListView<PROPS...> GetOutgoingEdges(label_t v_label, vid_t v,
+                                         label_t neighbor_label,
+                                         label_t edge_label) const {
+    if constexpr (sizeof...(PROPS) == 1) {
+      auto csr = dynamic_cast<const TypedMutableCsrBase<PROPS...>*>(
+          graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+      return AdjListView<PROPS...>(csr->get_edges(v), timestamp_);
+    } else {
+      auto csr = dynamic_cast<const MultipPropCsrBase*>(
+          graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+      return AdjListView<PROPS...>(csr->get_edges(v), timestamp_);
+    }
   }
 
-  template <typename EDATA_T>
-  AdjListView<EDATA_T> GetIncomingEdges(label_t v_label, vid_t v,
-                                        label_t neighbor_label,
-                                        label_t edge_label) const {
-    auto csr = dynamic_cast<const TypedMutableCsrBase<EDATA_T>*>(
-        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
-    return AdjListView<EDATA_T>(csr->get_edges(v), timestamp_);
+  template <typename... PROPS>
+  AdjListView<PROPS...> GetIncomingEdges(label_t v_label, vid_t v,
+                                         label_t neighbor_label,
+                                         label_t edge_label) const {
+    if constexpr (sizeof...(PROPS) == 1) {
+      auto csr = dynamic_cast<const TypedMutableCsrBase<PROPS...>*>(
+          graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+      return AdjListView<PROPS...>(csr->get_edges(v), timestamp_);
+    } else {
+      auto csr = dynamic_cast<const MultipPropCsrBase*>(
+          graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+      return AdjListView<PROPS...>(csr->get_edges(v), timestamp_);
+    }
   }
 
   const Schema& schema() const;
 
-  template <typename EDATA_T>
-  GraphView<EDATA_T> GetOutgoingGraphView(label_t v_label,
-                                          label_t neighbor_label,
-                                          label_t edge_label) const {
-    auto csr = dynamic_cast<const MutableCsr<EDATA_T>*>(
-        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
-    return GraphView<EDATA_T>(*csr, timestamp_);
+  template <typename... PROPS>
+  GraphView<PROPS...> GetOutgoingGraphView(label_t v_label,
+                                           label_t neighbor_label,
+                                           label_t edge_label) const {
+    if constexpr (sizeof...(PROPS) == 1) {
+      auto csr = dynamic_cast<const MutableCsr<PROPS...>*>(
+          graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+      return GraphView<PROPS...>(*csr, timestamp_);
+    } else {
+      auto csr = dynamic_cast<const MultipPropMutableCsr*>(
+          graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+      return GraphView<PROPS...>(*csr, timestamp_);
+    }
   }
 
-  template <typename EDATA_T>
-  GraphView<EDATA_T> GetIncomingGraphView(label_t v_label,
-                                          label_t neighbor_label,
-                                          label_t edge_label) const {
-    auto csr = dynamic_cast<const MutableCsr<EDATA_T>*>(
-        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
-    return GraphView<EDATA_T>(*csr, timestamp_);
+  template <typename... PROPS>
+  GraphView<PROPS...> GetIncomingGraphView(label_t v_label,
+                                           label_t neighbor_label,
+                                           label_t edge_label) const {
+    if constexpr (sizeof...(PROPS) == 1) {
+      auto csr = dynamic_cast<const MutableCsr<PROPS...>*>(
+          graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+      return GraphView<PROPS...>(*csr, timestamp_);
+    } else {
+      auto csr = dynamic_cast<const MultipPropMutableCsr*>(
+          graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+      return GraphView<PROPS...>(*csr, timestamp_);
+    }
   }
 
-  template <typename EDATA_T>
-  SingleGraphView<EDATA_T> GetOutgoingSingleGraphView(
+  template <typename... PROPS>
+  SingleGraphView<PROPS...> GetOutgoingSingleGraphView(
       label_t v_label, label_t neighbor_label, label_t edge_label) const {
-    auto csr = dynamic_cast<const SingleMutableCsr<EDATA_T>*>(
-        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
-    return SingleGraphView<EDATA_T>(*csr, timestamp_);
+    if constexpr (sizeof...(PROPS) == 1) {
+      auto csr = dynamic_cast<const SingleMutableCsr<PROPS...>*>(
+          graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+      return SingleGraphView<PROPS...>(*csr, timestamp_);
+    } else {
+      auto csr = dynamic_cast<const SingleMultipPropMutableCsr*>(
+          graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+      return SingleGraphView<PROPS...>(*csr, timestamp_);
+    }
   }
 
-  template <typename EDATA_T>
-  SingleGraphView<EDATA_T> GetIncomingSingleGraphView(
+  template <typename... PROPS>
+  SingleGraphView<PROPS...> GetIncomingSingleGraphView(
       label_t v_label, label_t neighbor_label, label_t edge_label) const {
-    auto csr = dynamic_cast<const SingleMutableCsr<EDATA_T>*>(
-        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
-    return SingleGraphView<EDATA_T>(*csr, timestamp_);
+    if constexpr (sizeof...(PROPS) == 1) {
+      auto csr = dynamic_cast<const SingleMutableCsr<PROPS...>*>(
+          graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+      return SingleGraphView<PROPS...>(*csr, timestamp_);
+    } else {
+      auto csr = dynamic_cast<const SingleMultipPropMutableCsr*>(
+          graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+      return SingleGraphView<PROPS...>(*csr, timestamp_);
+    }
   }
 
   template <typename EDATA_T>

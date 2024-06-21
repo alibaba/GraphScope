@@ -1,5 +1,5 @@
-person.id|software.id|weight
-1|3|0.4
-4|3|0.4
-6|3|0.2
-4|5|1.0
+person.id|software.id|weight|name
+1|3|0.4|"i1"
+4|3|0.4|"i2"
+6|3|0.2|"i3"
+4|5|1.0|"i4"

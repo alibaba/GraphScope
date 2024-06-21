@@ -89,3 +89,7 @@ edge_mappings:
           index: 2
           name: weight
         property: weight
+      - column:
+          index: 3
+          name: name
+        property: name
