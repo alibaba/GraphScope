@@ -868,9 +868,21 @@ class MutableCSRInterface {
     if (type == PropertyType::kBool) {
       return std::make_shared<TypedRefColumn<bool>>(
           *std::dynamic_pointer_cast<TypedColumn<bool>>(column));
+    } else if (type == PropertyType::kDay) {
+      return std::make_shared<TypedRefColumn<Day>>(
+          *std::dynamic_pointer_cast<TypedColumn<Day>>(column));
+    } else if (type == PropertyType::kDate) {
+      return std::make_shared<TypedRefColumn<Date>>(
+          *std::dynamic_pointer_cast<TypedColumn<Date>>(column));
+    } else if (type == PropertyType::kUInt8) {
+      return std::make_shared<TypedRefColumn<uint8_t>>(
+          *std::dynamic_pointer_cast<TypedColumn<uint8_t>>(column));
+    } else if (type == PropertyType::kUInt16) {
+      return std::make_shared<TypedRefColumn<uint16_t>>(
+          *std::dynamic_pointer_cast<TypedColumn<uint16_t>>(column));
     } else if (type == PropertyType::kInt32) {
-      return std::make_shared<TypedRefColumn<int>>(
-          *std::dynamic_pointer_cast<TypedColumn<int>>(column));
+      return std::make_shared<TypedRefColumn<int32_t>>(
+          *std::dynamic_pointer_cast<TypedColumn<int32_t>>(column));
     } else if (type == PropertyType::kInt64) {
       return std::make_shared<TypedRefColumn<int64_t>>(
           *std::dynamic_pointer_cast<TypedColumn<int64_t>>(column));
@@ -880,15 +892,15 @@ class MutableCSRInterface {
     } else if (type == PropertyType::kUInt64) {
       return std::make_shared<TypedRefColumn<uint64_t>>(
           *std::dynamic_pointer_cast<TypedColumn<uint64_t>>(column));
-    } else if (type == PropertyType::kDate) {
-      return std::make_shared<TypedRefColumn<Date>>(
-          *std::dynamic_pointer_cast<TypedColumn<Date>>(column));
-    } else if (type == PropertyType::kString) {
+    } else if (type == PropertyType::kString || type.IsVarChar()) {
       return std::make_shared<TypedRefColumn<std::string_view>>(
           *std::dynamic_pointer_cast<TypedColumn<std::string_view>>(column));
     } else if (type == PropertyType::kFloat) {
       return std::make_shared<TypedRefColumn<float>>(
           *std::dynamic_pointer_cast<TypedColumn<float>>(column));
+    } else if (type == PropertyType::kDouble) {
+      return std::make_shared<TypedRefColumn<double>>(
+          *std::dynamic_pointer_cast<TypedColumn<double>>(column));
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type.type_enum);

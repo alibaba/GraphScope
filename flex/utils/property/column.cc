@@ -160,7 +160,7 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
     } else if (type == PropertyType::kDay) {
       return std::make_shared<DayColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
-      return std::make_shared<StringMapColumn<uint8_t>>(strategy);
+      return std::make_shared<DefaultStringMapColumn>(strategy);
     } else if (type == PropertyType::kString) {
       return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
