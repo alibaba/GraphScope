@@ -77,6 +77,10 @@
       <artifactId>scala-library</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

@@ -42,6 +42,8 @@ import static org.apache.giraph.utils.ReflectionUtils.getTypeArguments;
 public abstract class AbstractLoader implements LoaderBase {
     private static Logger logger = LoggerFactory.getLogger(AbstractLoader.class);
 
+    private static int BATCH_SIZE = 1024;
+
     protected int loaderId;
     protected int threadNum;
     protected int workerId;
@@ -163,7 +165,7 @@ public abstract class AbstractLoader implements LoaderBase {
      */
     @Override
     public int loadVertices(String inputPath, String vformatClass)
-            throws ExecutionException, InterruptedException, ClassNotFoundException {
+            throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
         logger.info("vertex input path {}, vformat class{}", inputPath, vformatClass.toString());
         giraphConfiguration.setVertexInputFormatClass(
                 (Class<? extends VertexInputFormat>) this.classLoader.loadClass(vformatClass));
@@ -194,7 +196,7 @@ public abstract class AbstractLoader implements LoaderBase {
 
     @Override
     public void loadEdges(String inputPath, String eformatClass)
-            throws ExecutionException, InterruptedException, ClassNotFoundException {
+            throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
         logger.debug("edge input path {}", inputPath);
         giraphConfiguration.setEdgeInputFormatClass(
                 (Class<? extends EdgeInputFormat>) this.classLoader.loadClass(eformatClass));
@@ -233,7 +235,7 @@ public abstract class AbstractLoader implements LoaderBase {
                 giraphEDataClass.getName());
     }
 
-    protected void loadVerticesImpl(String inputPath) throws ExecutionException, InterruptedException {
+    protected void loadVerticesImpl(String inputPath) throws ExecutionException, InterruptedException, IOException {
         // Try to get number of lines
         long numOfLines = getNumLinesOfFile(inputPath);
         logger.info(
@@ -364,7 +366,7 @@ public abstract class AbstractLoader implements LoaderBase {
         }
     }
 
-    protected void loadEdgesImpl(String filePath) throws ExecutionException, InterruptedException {
+    protected void loadEdgesImpl(String filePath) throws ExecutionException, InterruptedException, IOException {
         // Try to get number of lines
         long numOfLines = getNumLinesOfFile(filePath);
         long linesPerWorker = (numOfLines + (workerNum - 1)) / workerNum;

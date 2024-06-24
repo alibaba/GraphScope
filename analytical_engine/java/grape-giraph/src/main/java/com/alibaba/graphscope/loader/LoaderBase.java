@@ -18,6 +18,7 @@ package com.alibaba.graphscope.loader;
 import com.alibaba.graphscope.stdcxx.FFIByteVecVector;
 import com.alibaba.graphscope.stdcxx.FFIIntVecVector;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -46,9 +47,9 @@ public interface LoaderBase {
      * @return Return an integer contains type params info.
      */
     int loadVertices(String inputPath, String vformatClass)
-            throws ExecutionException, InterruptedException, ClassNotFoundException;
+            throws ExecutionException, InterruptedException, ClassNotFoundException, IOException;
 
-    void loadEdges(String inputPath, String eformatClass)throws ExecutionException, InterruptedException, ClassNotFoundException;
+    void loadEdges(String inputPath, String eformatClass) throws ExecutionException, InterruptedException, ClassNotFoundException, IOException;
 
     LoaderBase.TYPE loaderType();
 
