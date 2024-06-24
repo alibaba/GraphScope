@@ -35,7 +35,7 @@ jobs:
         python3 setup_gsctl.py bdist_wheel
         # move wheels into one folder to upload to PyPI
         mkdir ${GITHUB_WORKSPACE}/upload_pypi
-        mv ${GITHUB_WORKSPACE}/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+        mv ${GITHUB_WORKSPACE}/python/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
 
     - name: Publish distribution to PyPI
       uses: pypa/gh-action-pypi-publish@v1.4.2
