@@ -892,7 +892,9 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                   }
                   if (row_num > table.row_num()) {
                     std::unique_lock<std::shared_mutex> lock(rw_mutex);
-                    table.resize(row_num);
+                    if (row_num > table.row_num()) {
+                      table.resize(row_num);
+                    }
                   }
 
                   {
