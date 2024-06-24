@@ -81,6 +81,7 @@ enum class PropertyTypeImpl {
   kVarChar,
   kVertexGlobalId,
   kLabel,
+  kRecord,
 };
 
 // Stores additional type information for PropertyTypeImpl
@@ -122,6 +123,7 @@ struct PropertyType {
   static PropertyType Varchar(uint16_t max_length);
   static PropertyType VertexGlobalId();
   static PropertyType Label();
+  static PropertyType Record();
 
   static const PropertyType kEmpty;
   static const PropertyType kBool;
@@ -139,6 +141,7 @@ struct PropertyType {
   static const PropertyType kStringMap;
   static const PropertyType kVertexGlobalId;
   static const PropertyType kLabel;
+  static const PropertyType kRecord;
 
   bool operator==(const PropertyType& other) const;
   bool operator!=(const PropertyType& other) const;
@@ -270,6 +273,18 @@ struct LabelKey {
   LabelKey(label_data_type id) : label_id(id) {}
 };
 
+class Table;
+struct Record {
+  Record() : offset(0), table(nullptr) {}
+  Record(size_t offset, const Table* table) : offset(offset), table(table) {}
+
+  template <typename T>
+  T get_field(int col_id) const;
+  int field_num() const;
+  size_t offset;
+  const Table* table;
+};
+
 union AnyValue {
   AnyValue() {}
   ~AnyValue() {}
@@ -289,6 +304,7 @@ union AnyValue {
   double db;
   uint8_t u8;
   uint16_t u16;
+  Record r;
 };
 
 template <typename T>
@@ -385,6 +401,11 @@ struct Any {
   void set_u16(uint16_t v) {
     type = PropertyType::kUInt16;
     value.u16 = v;
+  }
+
+  void set_record(Record v) {
+    type = PropertyType::kRecord;
+    value.r = v;
   }
 
   std::string to_string() const {
@@ -489,6 +510,11 @@ struct Any {
   const LabelKey& AsLabelKey() const {
     assert(type == PropertyType::kLabel);
     return value.label_key;
+  }
+
+  const Record& AsRecord() const {
+    assert(type == PropertyType::kRecord);
+    return value.r;
   }
 
   template <typename T>
@@ -694,6 +720,15 @@ struct ConvertAny<double> {
   static void to(const Any& value, double& out) {
     CHECK(value.type == PropertyType::kDouble);
     out = value.value.db;
+  }
+};
+
+template <>
+struct ConvertAny<Record> {
+  static void to(const Any& value, Record& out) {
+    CHECK(value.type == PropertyType::kRecord);
+    out.offset = value.value.r.offset;
+    out.table = value.value.r.table;
   }
 };
 
@@ -1095,6 +1130,40 @@ struct AnyConverter<LabelKey> {
     return value.label_key;
   }
 };
+
+template <>
+struct AnyConverter<Record> {
+  static PropertyType type() { return PropertyType::kRecord; }
+
+  static Any to_any(const Record& value) {
+    Any ret;
+    ret.set_record(value);
+    return ret;
+  }
+
+  static AnyValue to_any_value(const Record& value) {
+    AnyValue ret;
+    ret.r = value;
+    return ret;
+  }
+
+  static const Record& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kRecord);
+    return value.value.r;
+  }
+
+  static const Record& from_any_value(const AnyValue& value) { return value.r; }
+};
+
+Any get_field_from_record(const Record& record, int col_id);
+
+template <typename T>
+T Record::get_field(int col_id) const {
+  auto val = gs::get_field_from_record(*this, col_id);
+  T ret{};
+  ConvertAny<T>::to(val, ret);
+  return ret;
+}
 
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value);

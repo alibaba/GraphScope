@@ -171,19 +171,19 @@ class MutableAdjlist<std::string_view> {
   int capacity_;
 };
 
-class MultipPropMutableAdjlist {
+template <>
+class MutableAdjlist<Record> {
  public:
   using nbr_t = MutableNbr<size_t>;
-  using slice_t = MultipPropMutableNbrSlice;
-  using mut_slice_t = MultipPropMutableNbrSliceMut;
-  MultipPropMutableAdjlist(Table& table)
-      : buffer_(NULL), size_(0), capacity_(0) {}
-  MultipPropMutableAdjlist(const MultipPropMutableAdjlist& rhs)
+  using slice_t = MutableNbrSlice<Record>;
+  using mut_slice_t = MutableNbrSliceMut<Record>;
+  MutableAdjlist(Table& table) : buffer_(NULL), size_(0), capacity_(0) {}
+  MutableAdjlist(const MutableAdjlist& rhs)
       : buffer_(rhs.buffer_),
         size_(rhs.size_.load(std::memory_order_acquire)),
         capacity_(rhs.capacity_) {}
 
-  ~MultipPropMutableAdjlist() {}
+  ~MutableAdjlist() {}
 
   void init(nbr_t* ptr, int cap, int size) {
     buffer_ = ptr;

@@ -402,34 +402,35 @@ class DualCsr<std::string_view> : public DualCsrBase {
   StringColumn column_;
 };
 
-class MultipPropDualCsr : public DualCsrBase {
+template <>
+class DualCsr<Record> : public DualCsrBase {
  public:
-  MultipPropDualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy,
-                    const std::vector<std::string>& col_name,
-                    const std::vector<PropertyType>& property_types,
-                    const std::vector<StorageStrategy>& storage_strategies)
+  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy,
+          const std::vector<std::string>& col_name,
+          const std::vector<PropertyType>& property_types,
+          const std::vector<StorageStrategy>& storage_strategies)
       : col_name_(col_name),
         property_types_(property_types),
         storage_strategies_(storage_strategies),
         in_csr_(nullptr),
         out_csr_(nullptr) {
     if (ie_strategy == EdgeStrategy::kNone) {
-      in_csr_ = new MultipPropEmptyCsr(table_);
+      in_csr_ = new EmptyCsr<Record>(table_);
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
-      in_csr_ = new MultipPropMutableCsr(table_);
+      in_csr_ = new MutableCsr<Record>(table_);
     } else {
-      in_csr_ = new SingleMultipPropMutableCsr(table_);
+      in_csr_ = new SingleMutableCsr<Record>(table_);
     }
     if (oe_strategy == EdgeStrategy::kNone) {
-      out_csr_ = new MultipPropEmptyCsr(table_);
+      out_csr_ = new EmptyCsr<Record>(table_);
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
-      out_csr_ = new MultipPropMutableCsr(table_);
+      out_csr_ = new MutableCsr<Record>(table_);
     } else {
-      out_csr_ = new SingleMultipPropMutableCsr(table_);
+      out_csr_ = new SingleMutableCsr<Record>(table_);
     }
   }
 
-  ~MultipPropDualCsr() {
+  ~DualCsr() {
     if (in_csr_ != nullptr) {
       delete in_csr_;
     }
@@ -547,8 +548,8 @@ class MultipPropDualCsr : public DualCsrBase {
   const std::vector<std::string>& col_name_;
   const std::vector<PropertyType>& property_types_;
   const std::vector<StorageStrategy>& storage_strategies_;
-  MultipPropCsrBase* in_csr_;
-  MultipPropCsrBase* out_csr_;
+  TypedMutableCsrBase<Record>* in_csr_;
+  TypedMutableCsrBase<Record>* out_csr_;
   std::atomic<size_t> table_idx_;
   Table table_;
 };

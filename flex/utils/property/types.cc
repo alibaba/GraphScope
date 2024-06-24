@@ -14,7 +14,7 @@
  */
 
 #include "flex/utils/property/types.h"
-
+#include "flex/utils/property/table.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
@@ -84,6 +84,11 @@ PropertyType StringToPrimitivePropertyType(const std::string& str) {
 }
 }  // namespace config_parsing
 
+int Record::field_num() const { return table->col_num(); }
+Any get_field_from_record(const Record& r, int col_id) {
+  return r.table->get_column_by_id(col_id)->get(r.offset);
+}
+
 const PropertyType PropertyType::kEmpty =
     PropertyType(impl::PropertyTypeImpl::kEmpty);
 const PropertyType PropertyType::kBool =
@@ -116,6 +121,8 @@ const PropertyType PropertyType::kVertexGlobalId =
     PropertyType(impl::PropertyTypeImpl::kVertexGlobalId);
 const PropertyType PropertyType::kLabel =
     PropertyType(impl::PropertyTypeImpl::kLabel);
+const PropertyType PropertyType::kRecord =
+    PropertyType(impl::PropertyTypeImpl::kRecord);
 
 bool PropertyType::operator==(const PropertyType& other) const {
   if (type_enum == impl::PropertyTypeImpl::kVarChar &&
@@ -194,6 +201,10 @@ PropertyType PropertyType::VertexGlobalId() {
 
 PropertyType PropertyType::Label() {
   return PropertyType(impl::PropertyTypeImpl::kLabel);
+}
+
+PropertyType PropertyType::Record() {
+  return PropertyType(impl::PropertyTypeImpl::kRecord);
 }
 
 grape::InArchive& operator<<(grape::InArchive& in_archive,

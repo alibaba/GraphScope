@@ -31,8 +31,6 @@ class CsrConstEdgeIterBase {
 
   virtual vid_t get_neighbor() const = 0;
   virtual Any get_data() const = 0;
-  virtual Any get_field(int col_id) const = 0;
-  virtual int field_num() const { return 1; }
   virtual timestamp_t get_timestamp() const = 0;
   virtual size_t size() const = 0;
 
@@ -49,8 +47,6 @@ class CsrEdgeIterBase {
 
   virtual vid_t get_neighbor() const = 0;
   virtual Any get_data() const = 0;
-  virtual Any get_field(int col_id) const = 0;
-  virtual int field_num() const { return 1; }
   virtual timestamp_t get_timestamp() const = 0;
   virtual size_t size() const = 0;
 
@@ -138,9 +134,10 @@ class TypedMutableCsrBase : public TypedCsrBase<EDATA_T> {
   virtual slice_t get_edges(vid_t v) const = 0;
 };
 
-class MultipPropCsrBase : public CsrBase {
+template <>
+class TypedCsrBase<Record> : public CsrBase {
  public:
-  using slice_t = MultipPropMutableNbrSlice;
+  using slice_t = MutableNbrSlice<Record>;
 
   virtual void batch_put_edge_with_index(vid_t src, vid_t dst, size_t index,
                                          timestamp_t ts = 0) = 0;
