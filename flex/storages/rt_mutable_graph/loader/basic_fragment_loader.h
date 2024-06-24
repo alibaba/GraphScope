@@ -181,20 +181,6 @@ class BasicFragmentLoader {
     auto INVALID_VID = std::numeric_limits<vid_t>::max();
     std::atomic<size_t> edge_count(0);
     if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
-<<<<<<< multip
-=======
-      const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
-                                                     edge_label_id);
-      size_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH;
-      if (prop[0].IsVarchar()) {
-        max_length = prop[0].additional_type_info.max_length;
-      }
-      auto dual_csr =
-          new DualCsr<std::string_view>(oe_strategy, ie_strategy, max_length);
-      dual_csr_list_[index] = dual_csr;
-      ie_[index] = dual_csr_list_[index]->GetInCsr();
-      oe_[index] = dual_csr_list_[index]->GetOutCsr();
->>>>>>> main
       CHECK(ie_degree.size() == dst_indexer.size());
       CHECK(oe_degree.size() == src_indexer.size());
       if (build_csr_in_mem) {

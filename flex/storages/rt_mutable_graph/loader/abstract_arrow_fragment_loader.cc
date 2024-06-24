@@ -378,7 +378,10 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
                                        filenames, supplier_creator);
       }
     } else if (property_types[0].type_enum ==
-               impl::PropertyTypeImpl::kVarChar) {
+                   impl::PropertyTypeImpl::kVarChar ||
+               property_types[0].type_enum == impl::PropertyTypeImpl::kString) {
+      // Both varchar and string are treated as string. For String, we use the
+      // default max length defined in PropertyType::STRING_DEFAULT_MAX_LENGTH
       const auto& prop =
           schema_.get_edge_property(src_label_i, dst_label_i, edge_label_i);
       auto dual_csr = new DualCsr<std::string_view>(
@@ -413,30 +416,6 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       addEdgesRecordBatchImpl<Record>(src_label_i, dst_label_i, edge_label_i,
                                       filenames, supplier_creator);
     }
-<<<<<<< multip
-=======
-  } else if (property_types[0] == PropertyType::kFloat) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<float>(src_label_i, dst_label_i,
-                                                       edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<float>(src_label_i, dst_label_i, edge_label_i,
-                                     filenames, supplier_creator);
-    }
-  } else if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar ||
-             property_types[0].type_enum == impl::PropertyTypeImpl::kString) {
-    // Both varchar and string are treated as string. For String, we use the
-    // default max length defined in PropertyType::STRING_DEFAULT_MAX_LENGTH
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
-    }
-  } else {
-    LOG(FATAL) << "Unsupported edge property type." << property_types[0];
->>>>>>> main
   }
 }
 
