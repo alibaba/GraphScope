@@ -152,9 +152,12 @@ endif ()
 
 find_package(opentelemetry-cpp CONFIG)
 if (OPENTELEMETRY_CPP_FOUND)
+    message(STATUS "opentelemetry-cpp found")
     find_package(Protobuf REQUIRED)
     find_package(CURL REQUIRED)
     add_definitions(-DHAVE_OPENTELEMETRY_CPP)
+else()
+    message(STATUS "opentelemetry-cpp not found, build without opentelemetry-cpp")
 endif ()
 
 # Find Doxygen
