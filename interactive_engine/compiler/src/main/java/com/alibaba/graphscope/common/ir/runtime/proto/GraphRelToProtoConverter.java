@@ -266,9 +266,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 && pxd.getResultOpt() != GraphOpt.PathExpandResult.END_V) {
             // 1. build an auxilia to cache necessary properties for the start vertex of the path
             GraphAlgebraPhysical.GetV.Builder startAuxiliaBuilder =
-                    buildVertex(originalGetV, PhysicalGetVOpt.ITSELF);
-            GraphAlgebra.QueryParams.Builder startParamsBuilder =
-                    startAuxiliaBuilder.getParamsBuilder();
+                    GraphAlgebraPhysical.GetV.newBuilder();
+            startAuxiliaBuilder.setOpt(Utils.protoGetVOpt(PhysicalGetVOpt.ITSELF));
+            GraphAlgebra.QueryParams.Builder startParamsBuilder = defaultQueryParams();
             addQueryColumns(startParamsBuilder, vertexColumns);
             startAuxiliaBuilder.setParams(startParamsBuilder);
             if (pxd.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
