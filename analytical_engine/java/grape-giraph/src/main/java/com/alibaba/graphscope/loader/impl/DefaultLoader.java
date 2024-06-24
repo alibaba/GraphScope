@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
@@ -39,24 +39,18 @@ import static com.alibaba.graphscope.loader.LoaderUtils.generateTypeInt;
 import static com.alibaba.graphscope.loader.LoaderUtils.getNumLinesOfFile;
 import static org.apache.giraph.utils.ReflectionUtils.getTypeArguments;
 
-public abstract class AbstractLoader implements LoaderBase {
-    private static Logger logger = LoggerFactory.getLogger(AbstractLoader.class);
-
+public class DefaultLoader implements LoaderBase {
+    protected static AtomicInteger LOADER_ID = new AtomicInteger(0);
+    protected static AtomicInteger V_CALLABLE_ID = new AtomicInteger(0);
+    protected static AtomicInteger E_CALLABLE_ID = new AtomicInteger(0);
+    private static Logger logger = LoggerFactory.getLogger(DefaultLoader.class);
     private static int BATCH_SIZE = 1024;
-
     protected int loaderId;
     protected int threadNum;
     protected int workerId;
     protected int workerNum;
-
     protected Class<? extends VertexInputFormat> vertexInputFormatClz;
     protected Class<? extends EdgeInputFormat> edgeInputFormatClz;
-
-    protected static AtomicInteger LOADER_ID = new AtomicInteger(0);
-    protected static AtomicInteger V_CALLABLE_ID = new AtomicInteger(0);
-    protected static AtomicInteger E_CALLABLE_ID = new AtomicInteger(0);
-
-
     protected VertexInputFormat vertexInputFormat;
     protected EdgeInputFormat edgeInputFormat;
 
@@ -95,7 +89,7 @@ public abstract class AbstractLoader implements LoaderBase {
     protected Class<? extends Writable> giraphEDataClass;
     protected URLClassLoader classLoader;
 
-    public AbstractLoader(int id, URLClassLoader classLoader) {
+    public DefaultLoader(int id, URLClassLoader classLoader) {
         this.classLoader = classLoader;
         logger.info("FileLoader using classLoader {} to load vif and eif", classLoader);
         this.giraphConfiguration.setClassLoader(this.classLoader);
@@ -262,9 +256,7 @@ public abstract class AbstractLoader implements LoaderBase {
 
         for (int i = 0; i < threadNum; ++i) {
             AbstractVertexLoaderCallable vertexLoaderCallable =
-//                    new VertexLoaderCallable(
-//                            i, inputPath, Math.min(cur, end), Math.min(cur + chunkSize, end));
-            createVertexLoaderCallable(i, inputPath, Math.min(cur, end), Math.min(cur + chunkSize, end));
+                    new AbstractVertexLoaderCallable(i, inputPath, Math.min(cur, end), Math.min(cur + chunkSize, end));
             futures[i] = executor.submit(vertexLoaderCallable);
             cur += chunkSize;
         }
@@ -276,7 +268,51 @@ public abstract class AbstractLoader implements LoaderBase {
         logger.info("[vertices] worker {} loaded {} lines ", workerId, sum);
     }
 
-    public abstract class AbstractVertexLoaderCallable implements Callable<Long> {
+    BufferedReader createBufferedReader(String inputPath) throws IOException {
+        if (inputPath.startsWith("hdfs://")) {
+            org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(inputPath);
+            return new BufferedReader(new InputStreamReader(path.getFileSystem(new Configuration()).open(path)));
+        } else {
+            FileReader fileReader = new FileReader(inputPath);
+            return new BufferedReader(fileReader);
+        }
+    }
+
+    protected void loadEdgesImpl(String filePath) throws ExecutionException, InterruptedException, IOException {
+        // Try to get number of lines
+        long numOfLines = getNumLinesOfFile(filePath);
+        long linesPerWorker = (numOfLines + (workerNum - 1)) / workerNum;
+        long start = Math.min(linesPerWorker * workerId, numOfLines);
+        long end = Math.min(linesPerWorker * (workerId + 1), numOfLines);
+        long chunkSize = (end - start + threadNum - 1) / threadNum;
+        proxy.reserveNumEdges((int) (end - start));
+        logger.debug(
+                "[reading edge] total lines {}, worker {} read {}, thread num {}, chunkSize {}",
+                numOfLines,
+                workerId,
+                end - start,
+                threadNum,
+                chunkSize);
+        long cur = start;
+
+        Future[] futures = new Future[threadNum];
+
+        for (int i = 0; i < threadNum; ++i) {
+            DefaultLoader.AbstractEdgeLoaderCallable edgeLoaderCallable =
+                    new DefaultLoader.AbstractEdgeLoaderCallable(
+                            i, filePath, Math.min(cur, end), Math.min(cur + chunkSize, end));
+            futures[i] = executor.submit(edgeLoaderCallable);
+            cur += chunkSize;
+        }
+
+        long sum = 0;
+        for (int i = 0; i < threadNum; ++i) {
+            sum += (Long) futures[i].get();
+        }
+        logger.info("[edges] worker {} loaded {} lines ", workerId, sum);
+    }
+
+    public class AbstractVertexLoaderCallable implements Callable<Long> {
         private int threadId;
         private int callableId;
         private BufferedReader bufferedReader;
@@ -284,15 +320,13 @@ public abstract class AbstractLoader implements LoaderBase {
         private long end; // exclusive
         private VertexReader vertexReader;
 
-        abstract BufferedReader createBufferedReader(String inputPath) throws FileNotFoundException;
-
         public AbstractVertexLoaderCallable(int threadId, String inputPath, long startLine, long endLine) {
             callableId = V_CALLABLE_ID.getAndAdd(1);
             try {
                 FileReader fileReader = new FileReader(inputPath);
 //                bufferedReader = new BufferedReader(fileReader);
                 bufferedReader = createBufferedReader(inputPath);
-            } catch (FileNotFoundException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -315,7 +349,7 @@ public abstract class AbstractLoader implements LoaderBase {
             logger.info(
                     "Abstract loader {} creating vertex loader callable: {}, file : {}, reader {},"
                             + " thread id {}, from {} to {}",
-                    AbstractLoader.this,
+                    DefaultLoader.this,
                     AbstractVertexLoaderCallable.this,
                     inputPath,
                     bufferedReader,
@@ -366,43 +400,7 @@ public abstract class AbstractLoader implements LoaderBase {
         }
     }
 
-    protected void loadEdgesImpl(String filePath) throws ExecutionException, InterruptedException, IOException {
-        // Try to get number of lines
-        long numOfLines = getNumLinesOfFile(filePath);
-        long linesPerWorker = (numOfLines + (workerNum - 1)) / workerNum;
-        long start = Math.min(linesPerWorker * workerId, numOfLines);
-        long end = Math.min(linesPerWorker * (workerId + 1), numOfLines);
-        long chunkSize = (end - start + threadNum - 1) / threadNum;
-        proxy.reserveNumEdges((int) (end - start));
-        logger.debug(
-                "[reading edge] total lines {}, worker {} read {}, thread num {}, chunkSize {}",
-                numOfLines,
-                workerId,
-                end - start,
-                threadNum,
-                chunkSize);
-        long cur = start;
-
-        Future[] futures = new Future[threadNum];
-
-        for (int i = 0; i < threadNum; ++i) {
-            AbstractLoader.AbstractEdgeLoaderCallable edgeLoaderCallable =
-                    createEdgeLoaderCallable(
-                            i, filePath, Math.min(cur, end), Math.min(cur + chunkSize, end));
-//                    new AbstractLoader.AbstractEdgeLoaderCallable(
-//                            i, filePath, Math.min(cur, end), Math.min(cur + chunkSize, end));
-            futures[i] = executor.submit(edgeLoaderCallable);
-            cur += chunkSize;
-        }
-
-        long sum = 0;
-        for (int i = 0; i < threadNum; ++i) {
-            sum += (Long) futures[i].get();
-        }
-        logger.info("[edges] worker {} loaded {} lines ", workerId, sum);
-    }
-
-    public abstract class AbstractEdgeLoaderCallable implements Callable<Long> {
+    public class AbstractEdgeLoaderCallable implements Callable<Long> {
         private int threadId;
         private int callableId;
         private BufferedReader bufferedReader;
@@ -410,15 +408,13 @@ public abstract class AbstractLoader implements LoaderBase {
         private long end; // exclusive
         private EdgeReader edgeReader;
 
-        abstract BufferedReader createBufferedReader(String inputPath) throws FileNotFoundException;
-
         public AbstractEdgeLoaderCallable(int threadId, String inputPath, long startLine, long endLine) {
             callableId = E_CALLABLE_ID.getAndAdd(1);
             try {
 
 //                bufferedReader = new BufferedReader(fileReader);
                 bufferedReader = createBufferedReader(inputPath);
-            } catch (FileNotFoundException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -441,7 +437,7 @@ public abstract class AbstractLoader implements LoaderBase {
             logger.info(
                     "File loader {} creating edge callable: {}, file : {}, reader {}, thread id {},"
                             + " from {} to {}",
-                    AbstractLoader.this,
+                    DefaultLoader.this,
                     AbstractEdgeLoaderCallable.this,
                     inputPath,
                     bufferedReader,
@@ -486,11 +482,5 @@ public abstract class AbstractLoader implements LoaderBase {
             return cnt - start;
         }
     }
-
-//    protected abstract void loadVerticesImpl(String inputPath) throws ExecutionException, InterruptedException;
-
-    protected abstract AbstractVertexLoaderCallable createVertexLoaderCallable(int i, String inputPath, long min, long min1);
-
-    protected abstract AbstractEdgeLoaderCallable createEdgeLoaderCallable(int i, String inputPath, long min, long min1);
 
 }

@@ -51,12 +51,6 @@ public interface LoaderBase {
 
     void loadEdges(String inputPath, String eformatClass) throws ExecutionException, InterruptedException, ClassNotFoundException, IOException;
 
-    LoaderBase.TYPE loaderType();
-
     int concurrency();
 
-    enum TYPE {
-        FileLoader,
-        HDFSLoader,
-    }
 }
