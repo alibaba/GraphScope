@@ -105,11 +105,8 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
       return new DualCsr<std::string_view>(oes, ies, 256);
     }
   } else {
-    // TODO: fix me
-    std::vector<StorageStrategy> storage_strategies(properties.size(),
-                                                    StorageStrategy::kMem);
-    return new MultipPropDualCsr(oes, ies, prop_names, properties,
-                                 storage_strategies);
+    // TODO: fix me, storage strategy not set
+    return new MultipPropDualCsr(oes, ies, prop_names, properties, {});
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;

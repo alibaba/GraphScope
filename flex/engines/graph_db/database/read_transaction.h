@@ -353,6 +353,10 @@ class ReadTransaction {
 
     bool IsValid() const;
 
+    Any GetField(int col_id) const;
+
+    int FieldNum() const;
+
     void Next();
 
     vid_t GetNeighbor() const;

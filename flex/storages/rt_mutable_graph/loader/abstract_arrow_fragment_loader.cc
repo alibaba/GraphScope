@@ -166,11 +166,6 @@ void check_edge_invariant(
         column_mappings,
     size_t src_col_ind, size_t dst_col_ind, label_t src_label_i,
     label_t dst_label_i, label_t edge_label_i) {
-  // TODO(zhanglei): Check column mappings after multiple property on edge is
-  // supported
-  if (column_mappings.size() > 1) {
-    LOG(FATAL) << "Edge column mapping must be less than 1";
-  }
   if (column_mappings.size() > 0) {
     auto& mapping = column_mappings[0];
     if (std::get<0>(mapping) == src_col_ind ||
@@ -255,7 +250,8 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
   auto& property_types = schema_.get_edge_properties(
       src_label_name, dst_label_name, edge_label_name);
   size_t col_num = property_types.size();
-  CHECK_LE(col_num, 1) << "Only single or no property is supported for edge.";
+  // CHECK_LE(col_num, 1) << "Only single or no property is supported for
+  // edge.";
   EdgeStrategy oe_strategy = schema_.get_outgoing_edge_strategy(
       src_label_name, dst_label_name, edge_label_name);
   EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(

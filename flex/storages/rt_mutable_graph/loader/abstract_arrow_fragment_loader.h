@@ -887,7 +887,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                   }
                   size_t row_num = std::max(table.row_num(), 1ul);
 
-                  while (row_num < offset_i) {
+                  while (row_num < offset_i + src_col->length()) {
                     row_num *= 2;
                   }
                   if (row_num > table.row_num()) {

@@ -470,8 +470,9 @@ class MultipPropDualCsr : public DualCsrBase {
     in_csr_->open(ie_name, snapshot_dir, work_dir);
     out_csr_->open(oe_name, snapshot_dir, work_dir);
     table_idx_.store(table_.row_num());
+    // fix me: storage_strategies_ is not used
     table_.open(edata_name, snapshot_dir, work_dir, col_name_, property_types_,
-                storage_strategies_);
+                {});
     table_.resize(
         std::max(table_.row_num() + (table_.row_num() + 4) / 5, 4096ul));
   }
@@ -482,8 +483,9 @@ class MultipPropDualCsr : public DualCsrBase {
                     size_t dst_vertex_cap) override {
     in_csr_->open_in_memory(snapshot_dir + "/" + ie_name, dst_vertex_cap);
     out_csr_->open_in_memory(snapshot_dir + "/" + oe_name, src_vertex_cap);
+    // fix me: storage_strategies_ is not used
     table_.open_in_memory(edata_name, snapshot_dir, col_name_, property_types_,
-                          storage_strategies_);
+                          {});
     table_idx_.store(table_.row_num());
     table_.resize(
         std::max(table_.row_num() + (table_.row_num() + 4) / 5, 4096ul));

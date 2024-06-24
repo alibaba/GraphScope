@@ -39,6 +39,15 @@ class MutableCsrConstEdgeIter : public CsrConstEdgeIterBase {
   Any get_data() const override {
     return AnyConverter<EDATA_T>::to_any((*cur_).get_data());
   }
+
+  Any get_field(int col_id) const override {
+    if (col_id == 0) {
+      return AnyConverter<EDATA_T>::to_any((*cur_).get_data());
+    } else {
+      return Any();
+    }
+  }
+
   timestamp_t get_timestamp() const override { return (*cur_).get_timestamp(); }
 
   void next() override { ++cur_; }
@@ -57,6 +66,39 @@ class MutableCsrConstEdgeIter : public CsrConstEdgeIterBase {
   const_nbr_ptr_t end_;
 };
 
+class MultipPropCsrConstEdgeIter : public CsrConstEdgeIterBase {
+  using const_nbr_ptr_t = typename MultipPropMutableNbrSlice::const_nbr_ptr_t;
+
+ public:
+  explicit MultipPropCsrConstEdgeIter(const MultipPropMutableNbrSlice& slice)
+      : cur_(slice.begin()), end_(slice.end()), field_num_(slice.field_num()) {}
+  ~MultipPropCsrConstEdgeIter() = default;
+
+  vid_t get_neighbor() const override { return (*cur_).get_neighbor(); }
+  Any get_data() const override { LOG(FATAL) << "Not implemented"; }
+
+  Any get_field(int col_id) const override { return (*cur_).get_field(col_id); }
+  int field_num() const override { return field_num_; }
+
+  timestamp_t get_timestamp() const override { return (*cur_).get_timestamp(); }
+
+  void next() override { ++cur_; }
+  CsrConstEdgeIterBase& operator+=(size_t offset) override {
+    cur_ += offset;
+    if (!(cur_ < end_)) {
+      cur_ = end_;
+    }
+    return *this;
+  }
+  bool is_valid() const override { return cur_ != end_; }
+  size_t size() const override { return end_ - cur_; }
+
+ private:
+  const_nbr_ptr_t cur_;
+  const_nbr_ptr_t end_;
+  int field_num_;
+};
+
 template <typename EDATA_T>
 class MutableCsrEdgeIter : public CsrEdgeIterBase {
   using nbr_t = MutableNbr<EDATA_T>;
@@ -69,6 +111,14 @@ class MutableCsrEdgeIter : public CsrEdgeIterBase {
   vid_t get_neighbor() const override { return cur_->neighbor; }
   Any get_data() const override {
     return AnyConverter<EDATA_T>::to_any(cur_->data);
+  }
+
+  Any get_field(int col_id) const override {
+    if (col_id == 0) {
+      return AnyConverter<EDATA_T>::to_any(cur_->data);
+    } else {
+      return Any();
+    }
   }
   timestamp_t get_timestamp() const override { return cur_->timestamp.load(); }
 
@@ -108,6 +158,14 @@ class MutableCsrEdgeIter<std::string_view> : public CsrEdgeIterBase {
   Any get_data() const override {
     return AnyConverter<std::string_view>::to_any(cur_.get_data());
   }
+
+  Any get_field(int col_id) const override {
+    if (col_id == 0) {
+      return AnyConverter<std::string_view>::to_any(cur_.get_data());
+    } else {
+      return Any();
+    }
+  }
   timestamp_t get_timestamp() const override { return cur_.get_timestamp(); }
 
   void set_data(const Any& value, timestamp_t ts) override {
@@ -133,6 +191,47 @@ class MutableCsrEdgeIter<std::string_view> : public CsrEdgeIterBase {
   nbr_ptr_t end_;
 };
 
+class MultipPropCsrEdgeIter : public CsrEdgeIterBase {
+  using nbr_ptr_t = typename MultipPropMutableNbrSliceMut::nbr_ptr_t;
+
+ public:
+  explicit MultipPropCsrEdgeIter(MultipPropMutableNbrSliceMut slice)
+      : cur_(slice.begin()), end_(slice.end()), field_num_(slice.field_num()) {}
+  ~MultipPropCsrEdgeIter() = default;
+
+  vid_t get_neighbor() const override { return cur_.get_neighbor(); }
+  Any get_data() const override {
+    LOG(FATAL) << "Not implemented";
+    return Any();
+  }
+
+  Any get_field(int col_id) const override { return (*cur_).get_field(col_id); }
+  int field_num() const override { return field_num_; }
+  timestamp_t get_timestamp() const override { return cur_.get_timestamp(); }
+
+  void set_data(const Any& value, timestamp_t ts) override {
+    LOG(FATAL) << "Not implemented";
+  }
+  size_t get_index() const { return cur_.get_index(); }
+  void set_timestamp(timestamp_t ts) { cur_.set_timestamp(ts); }
+
+  CsrEdgeIterBase& operator+=(size_t offset) override {
+    cur_ += offset;
+    if (!(cur_ < end_)) {
+      cur_ = end_;
+    }
+    return *this;
+  }
+
+  void next() override { ++cur_; }
+  bool is_valid() const override { return cur_ != end_; }
+  size_t size() const override { return end_.ptr_ - cur_.ptr_; }
+
+ private:
+  nbr_ptr_t cur_;
+  nbr_ptr_t end_;
+  int field_num_;
+};
 template <typename EDATA_T>
 class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
  public:
@@ -918,19 +1017,14 @@ class MultipPropMutableCsr : public MultipPropCsrBase {
   size_t size() const override { return adj_lists_.size(); }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
-    return nullptr;
-    // return std::make_shared<MutableCsrConstEdgeIter<std::string_view>>(
-    //   get_edges(v));
+    return std::make_shared<MultipPropCsrConstEdgeIter>(get_edges(v));
   }
 
   CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return nullptr;
-    // return new MutableCsrConstEdgeIter<std::string_view>(get_edges(v));
+    return new MultipPropCsrConstEdgeIter(get_edges(v));
   }
   std::shared_ptr<CsrEdgeIterBase> edge_iter_mut(vid_t v) override {
-    return nullptr;
-    // return std::make_shared<MutableCsrEdgeIter<std::string_view>>(
-    //   get_edges_mut(v));
+    return std::make_shared<MultipPropCsrEdgeIter>(get_edges_mut(v));
   }
 
   void put_edge(vid_t src, vid_t dst, size_t data, timestamp_t ts,
@@ -1460,15 +1554,15 @@ class SingleMultipPropMutableCsr : public MultipPropCsrBase {
   size_t size() const override { return nbr_list_.size(); }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
-    return nullptr;
+    return std::make_shared<MultipPropCsrConstEdgeIter>(get_edges(v));
   }
 
   CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return nullptr;
+    return new MultipPropCsrConstEdgeIter(get_edges(v));
   }
 
   std::shared_ptr<CsrEdgeIterBase> edge_iter_mut(vid_t v) override {
-    return nullptr;
+    return std::make_shared<MultipPropCsrEdgeIter>(get_edges_mut(v));
   }
 
   void put_edge(vid_t src, vid_t dst, size_t data, timestamp_t ts, Allocator&) {
@@ -1677,13 +1771,16 @@ class MultipPropEmptyCsr : public MultipPropCsrBase {
   void batch_put_edge_with_index(vid_t src, vid_t dst, size_t data,
                                  timestamp_t ts = 0) override {}
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
-    return nullptr;
+    return std::make_shared<MultipPropCsrConstEdgeIter>(
+        MultipPropMutableNbrSlice::empty(table_));
   }
   CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return nullptr;
+    return new MultipPropCsrConstEdgeIter(
+        MultipPropMutableNbrSlice::empty(table_));
   }
   std::shared_ptr<CsrEdgeIterBase> edge_iter_mut(vid_t v) override {
-    return nullptr;
+    return std::make_shared<MultipPropCsrEdgeIter>(
+        MultipPropMutableNbrSliceMut::empty(table_));
   }
 
   slice_t get_edges(vid_t v) const override { return slice_t::empty(table_); }

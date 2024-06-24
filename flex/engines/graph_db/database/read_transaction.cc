@@ -66,6 +66,14 @@ Any ReadTransaction::edge_iterator::GetData() const {
   return iter_->get_data();
 }
 
+Any ReadTransaction::edge_iterator::GetField(int col_id) const {
+  return iter_->get_field(col_id);
+}
+
+int ReadTransaction::edge_iterator::FieldNum() const {
+  return iter_->field_num();
+}
+
 bool ReadTransaction::edge_iterator::IsValid() const {
   return iter_->is_valid();
 }

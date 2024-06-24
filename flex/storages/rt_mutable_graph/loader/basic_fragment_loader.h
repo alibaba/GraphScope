@@ -144,6 +144,18 @@ class BasicFragmentLoader {
         tmp_dir(work_dir_), {}, {});
   }
 
+  template <typename EDATA_T>
+  static decltype(auto) get_casted_dual_csr(DualCsrBase* dual_csr) {
+    if constexpr (std::is_same_v<EDATA_T, Any>) {
+      auto casted_dual_csr = dynamic_cast<MultipPropDualCsr*>(dual_csr);
+      CHECK(casted_dual_csr != NULL);
+      return casted_dual_csr;
+    } else {
+      auto casted_dual_csr = dynamic_cast<DualCsr<EDATA_T>*>(dual_csr);
+      CHECK(casted_dual_csr != NULL);
+      return casted_dual_csr;
+    }
+  }
   template <typename EDATA_T, typename VECTOR_T>
   void PutEdges(label_t src_label_id, label_t dst_label_id,
                 label_t edge_label_id, const std::vector<VECTOR_T>& edges_vec,
@@ -151,10 +163,9 @@ class BasicFragmentLoader {
                 const std::vector<int32_t>& oe_degree, bool build_csr_in_mem) {
     size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
                    dst_label_id * edge_label_num_ + edge_label_id;
-
     auto dual_csr = dual_csr_list_[index];
     CHECK(dual_csr != NULL);
-    auto casted_dual_csr = dynamic_cast<DualCsr<EDATA_T>*>(dual_csr);
+    auto casted_dual_csr = get_casted_dual_csr<EDATA_T>(dual_csr);
     CHECK(casted_dual_csr != NULL);
     auto& src_indexer = lf_indexers_[src_label_id];
     auto& dst_indexer = lf_indexers_[dst_label_id];
@@ -190,7 +201,6 @@ class BasicFragmentLoader {
                            << std::get<1>(edge);
                   continue;
                 }
-
                 casted_dual_csr->BatchPutEdge(
                     std::get<0>(edge), std::get<1>(edge), std::get<2>(edge));
               }

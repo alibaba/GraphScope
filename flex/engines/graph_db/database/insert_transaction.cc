@@ -111,6 +111,58 @@ bool InsertTransaction::AddEdge(label_t src_label, const Any& src,
   return true;
 }
 
+bool InsertTransaction::AddEdge(label_t src_label, const Any& src,
+                                label_t dst_label, const Any& dst,
+                                label_t edge_label,
+                                const std::vector<Any>& props) {
+  vid_t lid;
+  if (!graph_.get_lid(src_label, src, lid)) {
+    if (added_vertices_.find(std::make_pair(src_label, src)) ==
+        added_vertices_.end()) {
+      std::string label_name = graph_.schema().get_vertex_label_name(src_label);
+      LOG(ERROR) << "Source vertex " << label_name << "[" << src.to_string()
+                 << "] not found...";
+      return false;
+    }
+  }
+  if (!graph_.get_lid(dst_label, dst, lid)) {
+    if (added_vertices_.find(std::make_pair(dst_label, dst)) ==
+        added_vertices_.end()) {
+      std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
+      LOG(ERROR) << "Destination vertex " << label_name << "["
+                 << dst.to_string() << "] not found...";
+      return false;
+    }
+  }
+  const auto& types =
+      graph_.schema().get_edge_properties(src_label, dst_label, edge_label);
+  if (types.size() != props.size()) {
+    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+    LOG(ERROR) << "Edge property " << label_name << " size not match, expected "
+               << types.size() << ", got " << props.size();
+    return false;
+  }
+
+  for (size_t i = 0; i < types.size(); ++i) {
+    if (props[i].type != types[i]) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name << "[" << i
+                 << "] type not match, expected " << types[i] << ", got "
+                 << props[i].type;
+      return false;
+    }
+  }
+  arc_ << static_cast<uint8_t>(1) << src_label;
+  serialize_field(arc_, src);
+  arc_ << dst_label;
+  serialize_field(arc_, dst);
+  arc_ << edge_label;
+  for (auto& prop : props) {
+    serialize_field(arc_, prop);
+  }
+  return true;
+}
+
 void InsertTransaction::Commit() {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
     return;

@@ -31,6 +31,12 @@ class ImmutableCsrConstEdgeIter : public CsrConstEdgeIterBase {
   Any get_data() const override {
     return AnyConverter<EDATA_T>::to_any((*cur_).get_data());
   }
+  Any get_field(int col_id) const override {
+    if (col_id == 0) {
+      return AnyConverter<EDATA_T>::to_any((*cur_).get_data());
+    }
+    return Any();
+  }
   timestamp_t get_timestamp() const override { return 0; }
 
   void next() override { ++cur_; }

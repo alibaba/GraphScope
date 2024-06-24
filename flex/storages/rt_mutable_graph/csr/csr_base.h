@@ -31,6 +31,8 @@ class CsrConstEdgeIterBase {
 
   virtual vid_t get_neighbor() const = 0;
   virtual Any get_data() const = 0;
+  virtual Any get_field(int col_id) const = 0;
+  virtual int field_num() const { return 1; }
   virtual timestamp_t get_timestamp() const = 0;
   virtual size_t size() const = 0;
 
@@ -47,6 +49,8 @@ class CsrEdgeIterBase {
 
   virtual vid_t get_neighbor() const = 0;
   virtual Any get_data() const = 0;
+  virtual Any get_field(int col_id) const = 0;
+  virtual int field_num() const { return 1; }
   virtual timestamp_t get_timestamp() const = 0;
   virtual size_t size() const = 0;
 
