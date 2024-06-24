@@ -892,7 +892,7 @@ class MutableCSRInterface {
     } else if (type == PropertyType::kUInt64) {
       return std::make_shared<TypedRefColumn<uint64_t>>(
           *std::dynamic_pointer_cast<TypedColumn<uint64_t>>(column));
-    } else if (type == PropertyType::kString || type.IsVarChar()) {
+    } else if (type == PropertyType::kString || type.IsVarchar()) {
       return std::make_shared<TypedRefColumn<std::string_view>>(
           *std::dynamic_pointer_cast<TypedColumn<std::string_view>>(column));
     } else if (type == PropertyType::kFloat) {
