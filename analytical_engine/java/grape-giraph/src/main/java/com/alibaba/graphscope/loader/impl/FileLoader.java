@@ -15,50 +15,15 @@
  */
 package com.alibaba.graphscope.loader.impl;
 
-import static com.alibaba.graphscope.loader.LoaderUtils.generateTypeInt;
-import static com.alibaba.graphscope.utils.FileUtils.getNumLinesOfFile;
-
-import static org.apache.giraph.utils.ReflectionUtils.getTypeArguments;
-
-import com.alibaba.graphscope.graph.impl.VertexImpl;
-import com.alibaba.graphscope.loader.GraphDataBufferManager;
 import com.alibaba.graphscope.loader.LoaderBase;
-import com.alibaba.graphscope.stdcxx.FFIByteVecVector;
-import com.alibaba.graphscope.stdcxx.FFIIntVecVector;
-import com.google.common.base.Preconditions;
 
-import org.apache.giraph.conf.GiraphConfiguration;
-import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
-import org.apache.giraph.edge.Edge;
-import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.io.EdgeInputFormat;
-import org.apache.giraph.io.EdgeReader;
-import org.apache.giraph.io.VertexInputFormat;
-import org.apache.giraph.io.VertexReader;
-import org.apache.giraph.io.formats.TextEdgeInputFormat;
-import org.apache.giraph.io.formats.TextVertexInputFormat;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Load from a file on system.

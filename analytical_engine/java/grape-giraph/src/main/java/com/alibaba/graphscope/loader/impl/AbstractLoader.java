@@ -36,7 +36,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.alibaba.graphscope.loader.LoaderUtils.generateTypeInt;
-import static com.alibaba.graphscope.utils.FileUtils.getNumLinesOfFile;
+import static com.alibaba.graphscope.loader.LoaderUtils.getNumLinesOfFile;
 import static org.apache.giraph.utils.ReflectionUtils.getTypeArguments;
 
 public abstract class AbstractLoader implements LoaderBase {

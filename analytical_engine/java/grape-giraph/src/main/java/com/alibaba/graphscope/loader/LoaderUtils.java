@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.loader;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -28,6 +29,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class LoaderUtils {
 
@@ -46,22 +50,41 @@ public class LoaderUtils {
         temp = new File(path);
         return temp.exists();
     }
+    public static long getNumLinesOfFile(String path) throws IOException {
+        //if path start with hdfs://, we should use hadoop api to get the number of lines
+        if (path.startsWith("hdfs://")) {
+            return getNumLinesOfHdfsFile(path);
+        }
+        else {
+            return getNumLinesOfLocalFile(path);
+        }
+    }
 
-    public static long getNumLinesOfFile(String path) {
-        ProcessBuilder builder = new ProcessBuilder("wc", "-l", path);
-        builder.inheritIO().redirectOutput(ProcessBuilder.Redirect.PIPE);
-        Process process = null;
+    public static long getNumLinesOfLocalFile(String path) {
+        long count = 0;
         try {
-            process = builder.start();
-            try (BufferedReader reader =
-                    new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String res = reader.readLine().trim().split("\\s+")[0];
-                return Long.parseLong(res);
-            }
-        } catch (IOException e) {
+            Path p = Paths.get(path);
+            count = Files.lines(p).count();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
+        return count;
+    }
+
+    public static long getNumLinesOfHdfsFile(String input) throws IOException {
+        org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(input);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(path.getFileSystem(new Configuration()).open(path)));
+        long count = 0;
+        try {
+            while (reader.readLine() != null) {
+                count++;
+            }
+            reader.close();
+        } catch (IOException e) {
+            logger.error("Failed to read file: " + input);
+            e.printStackTrace();
+        }
+        return count;
     }
 
     /**
