@@ -26,6 +26,7 @@
 
 #include <arrow/api.h>
 #include <arrow/io/api.h>
+#include <shared_mutex>
 #include "arrow/util/value_parsing.h"
 
 #include "grape/util.h"
@@ -791,8 +792,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     // strings being released as record batch is released.
     std::vector<std::shared_ptr<arrow::Array>> string_cols;
     std::atomic<size_t> offset(0);
-    std::atomic<int> table_writer(0);
-    std::atomic<bool> table_resize(false);
+    std::shared_mutex rw_mutex;
     for (auto filename : e_files) {
       auto record_batch_supplier_vec =
           supplier_creator(src_label_id, dst_label_id, e_label_id, filename,
@@ -891,26 +891,20 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                     row_num *= 2;
                   }
                   if (row_num > table.row_num()) {
-                    table_resize.store(true);
-                    while (table_writer.load() != 0) {
-                      std::this_thread::sleep_for(
-                          std::chrono::milliseconds(100));
-                    }
+                    std::unique_lock<std::shared_mutex> lock(rw_mutex);
                     table.resize(row_num);
-                    table_resize.store(false);
                   }
 
-                  while (table_resize.load()) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                  {
+                    std::shared_lock<std::shared_mutex> lock(rw_mutex);
+                    for (size_t i = 0; i < table.col_num(); ++i) {
+                      auto col = table.get_column_by_id(i);
+                      auto chunked_array =
+                          std::make_shared<arrow::ChunkedArray>(
+                              property_cols[i]);
+                      set_properties_column(col.get(), chunked_array, offsets);
+                    }
                   }
-                  table_writer.fetch_add(1);
-                  for (size_t i = 0; i < table.col_num(); ++i) {
-                    auto col = table.get_column_by_id(i);
-                    auto chunked_array =
-                        std::make_shared<arrow::ChunkedArray>(property_cols[i]);
-                    set_properties_column(col.get(), chunked_array, offsets);
-                  }
-                  table_writer.fetch_sub(1);
                 }
                 auto edge_property = schema_.get_edge_property(
                     src_label_id, dst_label_id, e_label_id);
