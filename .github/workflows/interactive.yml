@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
@@ -68,6 +68,7 @@ jobs:
         GIE_HOME: ${{ github.workspace }}/interactive_engine/
         HOME: /home/graphscope/
       run: |
+        . /home/graphscope/.graphscope_env
         cd ${GITHUB_WORKSPACE}/
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
@@ -323,6 +324,7 @@ jobs:
     - name: Run Gremlin test on modern graph
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
         LD_LIBRARY_PATH: /usr/local/lib
       run: |
@@ -364,7 +366,7 @@ jobs:
   test-cmake-options:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     strategy:
       matrix:
         BUILD_HQPS: [ON, OFF]
@@ -385,7 +387,7 @@ jobs:
   test-AOCC-compilation:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
@@ -393,7 +395,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex
         wget https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0_1_amd64.deb
-        sudo apt-get update && sudo apt-get install libncurses-dev libncurses5-dev
+        sudo apt-get update && sudo apt-get install -y libncurses-dev libncurses5-dev
         sudo dpkg -i aocc-compiler-4.1.0_1_amd64.deb
     
     - name: Test AOCC compiler
@@ -414,7 +416,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
