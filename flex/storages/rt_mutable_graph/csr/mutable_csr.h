@@ -39,7 +39,6 @@ class MutableCsrConstEdgeIter : public CsrConstEdgeIterBase {
   Any get_data() const override {
     return AnyConverter<EDATA_T>::to_any((*cur_).get_data());
   }
-
   timestamp_t get_timestamp() const override { return (*cur_).get_timestamp(); }
 
   void next() override { ++cur_; }
@@ -71,7 +70,6 @@ class MutableCsrEdgeIter : public CsrEdgeIterBase {
   Any get_data() const override {
     return AnyConverter<EDATA_T>::to_any(cur_->data);
   }
-
   timestamp_t get_timestamp() const override { return cur_->timestamp.load(); }
 
   void set_data(const Any& value, timestamp_t ts) override {
@@ -110,7 +108,6 @@ class MutableCsrEdgeIter<std::string_view> : public CsrEdgeIterBase {
   Any get_data() const override {
     return AnyConverter<std::string_view>::to_any(cur_.get_data());
   }
-
   timestamp_t get_timestamp() const override { return cur_.get_timestamp(); }
 
   void set_data(const Any& value, timestamp_t ts) override {

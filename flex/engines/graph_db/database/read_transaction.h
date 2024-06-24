@@ -27,7 +27,6 @@ namespace gs {
 
 class MutablePropertyFragment;
 class VersionManager;
-
 template <typename EDATA_T>
 class AdjListView {
   class nbr_iterator {

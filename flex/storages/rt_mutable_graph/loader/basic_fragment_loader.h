@@ -313,7 +313,6 @@ class BasicFragmentLoader {
                                     LoadingStatus status);
   void init_loading_status_file();
   void init_vertex_data();
-
   const Schema& schema_;
   std::string work_dir_;
   size_t vertex_label_num_, edge_label_num_;
