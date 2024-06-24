@@ -350,7 +350,7 @@ def get_groot_graph_from_k8s():
 
 
 def get_groot_graph():
-    """Groot service has been deployed and availabl"""
+    """Groot service has been deployed and available"""
     if CLUSTER_TYPE == "HOSTS":
         return get_groot_graph_from_local()
     elif CLUSTER_TYPE == "K8S":
