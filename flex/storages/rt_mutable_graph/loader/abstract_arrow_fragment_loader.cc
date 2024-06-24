@@ -326,7 +326,10 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       addEdgesRecordBatchImpl<float>(src_label_i, dst_label_i, edge_label_i,
                                      filenames, supplier_creator);
     }
-  } else if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
+  } else if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar ||
+             property_types[0].type_enum == impl::PropertyTypeImpl::kString) {
+    // Both varchar and string are treated as string. For String, we use the
+    // default max length defined in PropertyType::STRING_DEFAULT_MAX_LENGTH
     if (filenames.empty()) {
       basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
           src_label_i, dst_label_i, edge_label_i);
