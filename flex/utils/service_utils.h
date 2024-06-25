@@ -79,7 +79,7 @@ inline void from_json(const nlohmann::json& j, PropertyType& p) {
         j["primitive_type"].get<std::string>());
   } else if (j.contains("string")) {
     if (j["string"].contains("long_text")) {
-      p = PropertyType::StringView();
+      p = PropertyType::String();
     } else if (j.contains("string") && j["string"].contains("var_char")) {
       if (j["string"]["var_char"].contains("max_length")) {
         p = PropertyType::Varchar(
