@@ -22,6 +22,7 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +83,7 @@ public class DefaultLoader implements LoaderBase {
     protected GiraphConfiguration giraphConfiguration = new GiraphConfiguration(configuration);
     protected TaskAttemptID taskAttemptID = new TaskAttemptID();
     protected TaskAttemptContext taskAttemptContext =
-            new TaskAttemptContext(configuration, taskAttemptID);
+            new TaskAttemptContextImpl(configuration, taskAttemptID);
 
     protected Class<? extends WritableComparable> giraphOidClass;
     protected Class<? extends Writable> giraphVDataClass;

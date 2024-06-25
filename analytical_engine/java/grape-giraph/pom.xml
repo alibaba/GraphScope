@@ -41,16 +41,16 @@
     <benchmark.resultformat>json</benchmark.resultformat>
     <benchmark.runs>1</benchmark.runs>
     <benchmark.warmups>0</benchmark.warmups>
-    <hadoop-core.version>1.2.1</hadoop-core.version>
+<!--    <hadoop-core.version>1.2.1</hadoop-core.version>-->
     <jmh.version>1.21</jmh.version>
     <skip.perf.benchmarks>true</skip.perf.benchmarks>
   </properties>
   <dependencies>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>${hadoop-core.version}</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.apache.hadoop</groupId>-->
+<!--      <artifactId>hadoop-core</artifactId>-->
+<!--      <version>${hadoop-core.version}</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
