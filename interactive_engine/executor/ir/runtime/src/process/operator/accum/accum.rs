@@ -46,9 +46,27 @@ pub enum EntryAccumulator {
     ToFirst(First<DynEntry>),
 }
 
+impl EntryAccumulator {
+    // In entry accumulator, we ignore None-Entry for Count, Min, Max, Sum, Avg, DistinctCount,
+    // but for ToList, ToSet, we need to keep the None-Entry.
+    // TODO: for count(*), we need to count the None-Entry as well.
+    fn ignore_none_entry(&self) -> bool {
+        match self {
+            EntryAccumulator::ToCount(_)
+            | EntryAccumulator::ToMin(_)
+            | EntryAccumulator::ToMax(_)
+            | EntryAccumulator::ToDistinctCount(_)
+            | EntryAccumulator::ToSum(_)
+            | EntryAccumulator::ToAvg(_, _) => true,
+            EntryAccumulator::ToList(_) | EntryAccumulator::ToSet(_) | EntryAccumulator::ToFirst(_) => {
+                false
+            }
+        }
+    }
+}
+
 /// Accumulator for Record, including multiple accumulators for entries(columns) in Record.
-/// Notice that if the entry is a None-Entry (i.e., Object::None), it won't be accumulated.
-// TODO: if the none-entry counts, we may further need a flag to identify.
+/// Notice that if the entry is a None-Entry (i.e., Object::None), it won't be accumulated (for Count, Min, Max, Sum, Avg, DistinctCount).
 #[derive(Debug, Clone)]
 pub struct RecordAccumulator {
     accum_ops: Vec<(EntryAccumulator, TagKey, Option<KeyId>)>,
@@ -75,50 +93,50 @@ impl Accumulator<Record, Record> for RecordAccumulator {
 
 impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
     fn accum(&mut self, next: DynEntry) -> FnExecResult<()> {
-        // ignore non-exist tag/label/property values;
-        if !next.is_none() {
-            match self {
-                EntryAccumulator::ToCount(count) => count.accum(()),
-                EntryAccumulator::ToList(list) => list.accum(next),
-                EntryAccumulator::ToMin(min) => min.accum(next),
-                EntryAccumulator::ToMax(max) => max.accum(next),
-                EntryAccumulator::ToSet(set) => set.accum(next),
-                EntryAccumulator::ToDistinctCount(distinct_count) => distinct_count.accum(next),
-                EntryAccumulator::ToSum(sum) => {
-                    let primitive = next
-                        .as_object()
-                        .ok_or_else(|| {
-                            FnExecError::unexpected_data_error("DynEntry is not a object type `Sum`")
-                        })?
-                        .as_primitive()
-                        .map_err(|e| {
-                            FnExecError::unexpected_data_error(&format!(
-                                "DynEntry is not a primitive type `Sum` {}",
-                                e
-                            ))
-                        })?;
-                    sum.accum(primitive)
-                }
-                EntryAccumulator::ToAvg(sum, count) => {
-                    let primitive = next
-                        .as_object()
-                        .ok_or_else(|| {
-                            FnExecError::unexpected_data_error("DynEntry is not a object type `ToAvg`")
-                        })?
-                        .as_primitive()
-                        .map_err(|e| {
-                            FnExecError::unexpected_data_error(&format!(
-                                "DynEntry is not a primitive type `ToAvg` {}",
-                                e
-                            ))
-                        })?;
-                    sum.accum(primitive)?;
-                    count.accum(())
-                }
-                EntryAccumulator::ToFirst(first) => first.accum(next),
+        if self.ignore_none_entry() {
+            if next.is_none() {
+                return Ok(());
             }
-        } else {
-            Ok(())
+        }
+        match self {
+            EntryAccumulator::ToCount(count) => count.accum(()),
+            EntryAccumulator::ToList(list) => list.accum(next),
+            EntryAccumulator::ToMin(min) => min.accum(next),
+            EntryAccumulator::ToMax(max) => max.accum(next),
+            EntryAccumulator::ToSet(set) => set.accum(next),
+            EntryAccumulator::ToDistinctCount(distinct_count) => distinct_count.accum(next),
+            EntryAccumulator::ToSum(sum) => {
+                let primitive = next
+                    .as_object()
+                    .ok_or_else(|| {
+                        FnExecError::unexpected_data_error("DynEntry is not a object type `Sum`")
+                    })?
+                    .as_primitive()
+                    .map_err(|e| {
+                        FnExecError::unexpected_data_error(&format!(
+                            "DynEntry is not a primitive type `Sum` {}",
+                            e
+                        ))
+                    })?;
+                sum.accum(primitive)
+            }
+            EntryAccumulator::ToAvg(sum, count) => {
+                let primitive = next
+                    .as_object()
+                    .ok_or_else(|| {
+                        FnExecError::unexpected_data_error("DynEntry is not a object type `ToAvg`")
+                    })?
+                    .as_primitive()
+                    .map_err(|e| {
+                        FnExecError::unexpected_data_error(&format!(
+                            "DynEntry is not a primitive type `ToAvg` {}",
+                            e
+                        ))
+                    })?;
+                sum.accum(primitive)?;
+                count.accum(())
+            }
+            EntryAccumulator::ToFirst(first) => first.accum(next),
         }
     }
 
@@ -428,6 +446,48 @@ mod tests {
         assert_eq!(fold_result, expected_result);
     }
 
+    // g.V().fold()
+    #[test]
+    fn fold_with_null_test() {
+        let r1 = Record::new(object!(29), None);
+        let r2 = Record::new(object!(27), None);
+        let r3 = Record::new(object!(27), None);
+        let r4 = Record::new(Object::None, None);
+        let r5 = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 5, // to_list
+            alias: None,
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3, r4, r5], fold_opr_pb);
+        let mut fold_result = CollectionEntry::default().into();
+        let expected_result = CollectionEntry {
+            inner: vec![
+                Object::None.into(),
+                Object::None.into(),
+                object!(27).into(),
+                object!(27).into(),
+                object!(29).into(),
+            ],
+        }
+        .into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(None) {
+                fold_result = entry
+                    .clone()
+                    .as_any_ref()
+                    .downcast_ref::<CollectionEntry>()
+                    .unwrap()
+                    .clone();
+            }
+        }
+        fold_result
+            .inner
+            .sort_by(|v1, v2| v1.partial_cmp(&v2).unwrap_or(Ordering::Equal));
+        assert_eq!(fold_result, expected_result);
+    }
+
     // g.V().count().as("a") // unoptimized version, use accumulator directly
     #[test]
     fn count_unopt_test() {
@@ -438,6 +498,28 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
+        let mut cnt = 0;
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                cnt = entry.as_object().unwrap().as_u64().unwrap();
+            }
+        }
+        assert_eq!(cnt, 2);
+    }
+
+    // g.V().count().as("a") // unoptimized version, use accumulator directly
+    #[test]
+    fn count_unopt_with_null_test() {
+        let r1 = Record::new(object!(29), None);
+        let r2 = Record::new(object!(27), None);
+        let r3 = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 3, // count
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3], fold_opr_pb);
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
@@ -496,6 +578,28 @@ mod tests {
         assert_eq!(res, object!(27));
     }
 
+    // g.V().values('age').min().as("a")
+    #[test]
+    fn min_with_null_test() {
+        let r1 = Record::new(object!(29), None);
+        let r2 = Record::new(object!(27), None);
+        let r3 = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 1, // min
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3], fold_opr_pb);
+        let mut res = 0.into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                res = entry.as_object().unwrap().clone();
+            }
+        }
+        assert_eq!(res, object!(27));
+    }
+
     // g.V().values('name').max().as("a")
     #[test]
     fn max_test() {
@@ -508,6 +612,28 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(vec![r1, r2], fold_opr_pb);
+        let mut res = "".into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                res = entry.as_object().unwrap().clone();
+            }
+        }
+        assert_eq!(res, object!("vadas"));
+    }
+
+    // g.V().values('name').max().as("a")
+    #[test]
+    fn max_with_null_test() {
+        let r1 = Record::new(object!("marko"), None);
+        let r2 = Record::new(object!("vadas"), None);
+        let r3 = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 2, // max
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3], fold_opr_pb);
         let mut res = "".into();
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
@@ -534,6 +660,32 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(vec![r1, r2, r3, r4], fold_opr_pb);
+        let mut cnt = 0;
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                cnt = entry.as_object().unwrap().as_u64().unwrap();
+            }
+        }
+        assert_eq!(cnt, 2);
+    }
+
+    // g.V().distinct_count().as("a")
+    #[test]
+    fn distinct_count_with_null_test() {
+        let r1 = Record::new(object!(29), None);
+        let r2 = Record::new(object!(27), None);
+        let r3 = Record::new(Object::None, None);
+        let r4 = Record::new(object!(29), None);
+        let r5 = Record::new(object!(27), None);
+        let r6 = Record::new(Object::None, None);
+
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 4, // distinct_count
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3, r4, r5, r6], fold_opr_pb);
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
@@ -576,6 +728,41 @@ mod tests {
         assert_eq!(fold_result, expected_result);
     }
 
+    // g.V().fold() // fold by set
+    #[test]
+    fn fold_to_set_with_null_test() {
+        let r1 = Record::new(object!(29), None);
+        let r2 = Record::new(object!(27), None);
+        let r3 = Record::new(object!(27), None);
+        let r4 = Record::new(Object::None, None);
+        let r5 = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 6, // to_set
+            alias: None,
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3, r4, r5], fold_opr_pb);
+        let mut fold_result = CollectionEntry::default().into();
+        let expected_result =
+            CollectionEntry { inner: vec![Object::None.into(), object!(27).into(), object!(29).into()] }
+                .into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(None) {
+                fold_result = entry
+                    .clone()
+                    .as_any_ref()
+                    .downcast_ref::<CollectionEntry>()
+                    .unwrap()
+                    .clone();
+            }
+        }
+        fold_result
+            .inner
+            .sort_by(|v1, v2| v1.partial_cmp(&v2).unwrap_or(Ordering::Equal));
+        assert_eq!(fold_result, expected_result);
+    }
+
     // g.V().values('age').sum().as("a")
     #[test]
     fn sum_test() {
@@ -589,6 +776,28 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(vec![r1, r2, r3], fold_opr_pb);
+        let mut res = "".into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                res = entry.as_object().unwrap().clone();
+            }
+        }
+        assert_eq!(res, object!(60));
+    }
+
+    #[test]
+    fn sum_with_null_test() {
+        let r1 = Record::new(object!(10), None);
+        let r2 = Record::new(object!(20), None);
+        let r3 = Record::new(object!(30), None);
+        let r4 = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 0, // sum
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3, r4], fold_opr_pb);
         let mut res = "".into();
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
@@ -620,6 +829,29 @@ mod tests {
         assert_eq!(res, object!(20));
     }
 
+    // g.V().values('age').mean()
+    #[test]
+    fn avg_with_null_test() {
+        let r1 = Record::new(object!(10), None);
+        let r2 = Record::new(object!(20), None);
+        let r3 = Record::new(object!(30), None);
+        let r4 = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 7, // avg
+            alias: None,
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3, r4], fold_opr_pb);
+        let mut res = "".into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(None) {
+                res = entry.as_object().unwrap().clone();
+            }
+        }
+        assert_eq!(res, object!(20));
+    }
+
     fn fold_with_none_record_test(aggregate: i32) {
         let r = Record::new(Object::None, None);
         let function = pb::group_by::AggFunc {
@@ -636,6 +868,7 @@ mod tests {
                 res_num += 1;
             }
         }
+        // when the input is None, the accumulator would ignore it, and the result is the initial value.
         assert_eq!(res_num, 1);
     }
 
@@ -658,6 +891,7 @@ mod tests {
                 res_num += 1;
             }
         }
+        // when the input is None, the accumulator would ignore it, and the result is the initial value.
         assert_eq!(res_num, 1);
     }
 
