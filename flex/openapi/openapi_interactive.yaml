@@ -998,7 +998,7 @@ paths:
                 format: byte
         '500':
           description: Server internal error
-  /api/v1/file/uploading:
+  /v1/file/upload:
     post:
       tags: [Utils]
       operationId: uploadFile

@@ -321,6 +321,7 @@ class DefaultSession(Session):
         self._service_api = AdminServiceServiceManagementApi(self._client)
         self._edge_api = GraphServiceEdgeManagementApi(self._client)
         self._vertex_api = GraphServiceVertexManagementApi(self._client)
+        self._utils_api = UtilsApi(self._client)
         # TODO(zhanglei): Get endpoint from service, current implementation is adhoc.
         # get service port
         service_status = self.get_service_status()
@@ -481,6 +482,13 @@ class DefaultSession(Session):
         graph_id: Annotated[StrictStr, Field(description="The id of graph to load")],
         schema_mapping: SchemaMapping,
     ) -> Result[JobResponse]:
+        # First try to upload the input files if they are specified with a starting @
+        # return a new schema_mapping with the uploaded files
+        upload_res = try_upload_files(schema_mapping)
+        if not upload_res.is_ok():
+            return upload_res
+        schema_mapping = upload_res.get_value()
+        print("new schema_mapping: ", schema_mapping)
         try:
             response = self._graph_api.create_dataloading_job_with_http_info(
                 graph_id, schema_mapping
@@ -665,3 +673,6 @@ class DefaultSession(Session):
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)
+    
+    def try_upload_files(schema_mapping: SchemaMapping) -> Result[SchemaMapping]:
+        

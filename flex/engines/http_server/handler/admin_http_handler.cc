@@ -39,6 +39,50 @@ std::string trim_slash(const std::string& origin) {
   return res;
 }
 
+class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
+ public:
+  admin_file_upload_handler_impl(uint32_t group_id, uint32_t shard_concurrency)
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+    admin_actor_refs_.reserve(shard_concurrency_);
+    hiactor::scope_builder builder;
+    builder.set_shard(hiactor::local_shard_id())
+        .enter_sub_scope(hiactor::scope<executor_group>(0))
+        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
+    for (unsigned i = 0; i < shard_concurrency_; ++i) {
+      admin_actor_refs_.emplace_back(builder.build_ref<admin_actor_ref>(i));
+    }
+  }
+  ~admin_file_upload_handler_impl() override = default;
+
+  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
+      const seastar::sstring& path,
+      std::unique_ptr<seastar::httpd::request> req,
+      std::unique_ptr<seastar::httpd::reply> rep) override {
+    auto dst_executor = executor_idx_;
+
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
+    auto& method = req->_method;
+    if (method == "POST") {
+      return admin_actor_refs_[dst_executor]
+          .upload_file(query_param{std::move(req->content)})
+          .then_wrapped([rep = std::move(rep)](
+                            seastar::future<admin_query_result>&& fut) mutable {
+            return return_reply_with_result(std::move(rep), std::move(fut));
+          });
+    } else {
+      return seastar::make_exception_future<
+          std::unique_ptr<seastar::httpd::reply>>(
+          std::runtime_error("Unsupported method" + method));
+    }
+  }
+
+ private:
+  const uint32_t shard_concurrency_;
+  uint32_t executor_idx_;
+  std::vector<admin_actor_ref> admin_actor_refs_;
+};
+
 /**
  * Handle all request for graph management.
  */
@@ -591,6 +635,13 @@ seastar::future<> admin_http_handler::set_routes() {
           seastar::httpd::url("/v1/graph").remainder("graph_id"),
           new admin_http_graph_handler_impl(interactive_admin_group_id,
                                             shard_admin_graph_concurrency));
+    {
+      // uploading file to server
+      r.add(seastar::httpd::operation_type::POST,
+            seastar::httpd::url("/v1/file/upload"),
+            new admin_file_upload_handler_impl(interactive_admin_group_id,
+                                               shard_admin_graph_concurrency));
+    }
 
     // Get graph metadata
     {
