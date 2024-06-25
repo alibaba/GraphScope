@@ -216,7 +216,6 @@ class LDBCLongDateParser : public arrow::TimestampParser {
                   int64_t* out,
                   bool* out_zone_offset_present = NULLPTR) const override {
     uint64_t seconds;
-    LOG(INFO) << "LongDateParser: s: " << s << ", length: " << length;
     // convert (s, s + length - 4) to seconds_since_epoch
     if (ARROW_PREDICT_FALSE(
             !arrow::internal::ParseUnsigned(s, length - 3, &seconds))) {
