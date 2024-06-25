@@ -94,7 +94,7 @@ class TestDriver(unittest.TestCase):
             print("delete graph: ", rep2)
 
     def test_example(self):
-        self.createGraph()
+        self._graph_id = self.createGraph()
         self.bulkLoading()
         self.waitJobFinish()
         self.list_graph()
@@ -103,6 +103,7 @@ class TestDriver(unittest.TestCase):
         self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
+        self.restartOnNewGraph()
         self.getStatistics()
         self.callProcedure()
         self.callProcedureWithHttp()
@@ -154,8 +155,7 @@ class TestDriver(unittest.TestCase):
         create_graph.var_schema = create_schema
         resp = self._sess.create_graph(create_graph)
         assert resp.is_ok()
-        self._graph_id = resp.get_value().graph_id
-        print("create graph: ", self._graph_id)
+        return resp.get_value().graph_id
 
     def bulkLoading(self):
         assert os.environ.get("FLEX_DATA_DIR") is not None
@@ -263,6 +263,64 @@ class TestDriver(unittest.TestCase):
         print("restart: ", resp.get_value())
         # wait 5 seconds
         time.sleep(5)
+        # get service status
+        resp = self._sess.get_service_status()
+        assert resp.is_ok()
+        print("get service status: ", resp.get_value())
+    
+    def restartOnNewGraph(self):
+        original_graph_id = None
+        status_res = self._sess.get_service_status()
+        assert status_res.is_ok()
+        status = status_res.get_value()
+        if status.status == "Running":
+            if status.graph is not None and status.graph.id is not None:
+                original_graph_id = status.graph.id
+            else:
+                raise Exception("service status error, graph id is None")
+        elif status.status == "Stopped":
+            pass
+        else:
+            raise Exception("service status error " + status)
+        assert original_graph_id is not None
+        # create new graph
+        new_graph_id = self.createGraph()
+        # start service
+        print("start service on new graph: ", new_graph_id)
+        start_service_res = self._sess.start_service(
+            start_service_request=StartServiceRequest(graph_id=new_graph_id)
+        )
+        assert start_service_res.is_ok()
+        # restart service
+        print("restart service on new graph: ", new_graph_id)
+        restart_res = self._sess.restart_service()
+        assert restart_res.is_ok()
+        # get status
+        print("get service status: ")
+        status_res = self._sess.get_service_status()
+        assert status_res.is_ok()
+        print("get service status: ", status_res.get_value().status)
+        # stop
+        print("stop service: ")
+        stop_res = self._sess.stop_service()
+        assert stop_res.is_ok()
+        # get status
+        print("get service status: ")
+        status_res = self._sess.get_service_status()
+        assert status_res.is_ok()
+        print("get service status: ", status_res.get_value().status)
+        assert status_res.get_value().status == "Stopped"
+        # after stop, we should be able to delete the graph
+        print("delete graph: ", new_graph_id)
+        delete_res = self._sess.delete_graph(new_graph_id)
+        assert delete_res.is_ok()
+        # start on original graph
+        print("start service on original graph: ", original_graph_id)
+        start_service_res = self._sess.start_service(
+            start_service_request=StartServiceRequest(graph_id=original_graph_id)
+        )
+        assert start_service_res.is_ok()
+        print("finish restartOnNewGraph")
 
     def getStatistics(self):
         resp = self._sess.get_graph_statistics(self._graph_id)

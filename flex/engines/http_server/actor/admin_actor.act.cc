@@ -1177,10 +1177,7 @@ seastar::future<admin_query_result> admin_actor::service_status(
       }
     } else {
       res["graph"] = {};
-      LOG(ERROR) << "Fail to get running graph: "
-                 << running_graph_res.status().error_message();
-      return seastar::make_exception_future<admin_query_result>(
-          running_graph_res.status());
+      LOG(INFO) << "No graph is running";
     }
     res["start_time"] = hqps_service.get_start_time();
   } else {
