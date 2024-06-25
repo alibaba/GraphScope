@@ -71,9 +71,25 @@ public class LoaderUtils {
         return count;
     }
 
-    public static long getNumLinesOfHdfsFile(String input) throws IOException {
+    public static String getEndpointFromPath(String path) {
+        if (path.startsWith("hdfs://")) {
+            int index = path.indexOf("/", 7);
+            return path.substring(0, index);
+        }
+        return null;
+    }
+
+    public static BufferedReader createHdfsBufferedReader(String input) throws IOException {
         org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(input);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(path.getFileSystem(new Configuration()).open(path)));
+        Configuration conf = new Configuration();
+        String endpoint = getEndpointFromPath(input);
+        logger.info("endpoint: " + endpoint);
+        conf.set("fs.defaultFS", endpoint);
+        return new BufferedReader(new InputStreamReader(path.getFileSystem(conf).open(path)));
+    }
+
+    public static long getNumLinesOfHdfsFile(String input) throws IOException {
+        BufferedReader reader = createHdfsBufferedReader(input);
         long count = 0;
         try {
             while (reader.readLine() != null) {

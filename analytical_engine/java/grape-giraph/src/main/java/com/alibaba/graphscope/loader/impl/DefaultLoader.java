@@ -35,8 +35,7 @@ import java.net.URLClassLoader;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.alibaba.graphscope.loader.LoaderUtils.generateTypeInt;
-import static com.alibaba.graphscope.loader.LoaderUtils.getNumLinesOfFile;
+import static com.alibaba.graphscope.loader.LoaderUtils.*;
 import static org.apache.giraph.utils.ReflectionUtils.getTypeArguments;
 
 public class DefaultLoader implements LoaderBase {
@@ -270,8 +269,7 @@ public class DefaultLoader implements LoaderBase {
 
     BufferedReader createBufferedReader(String inputPath) throws IOException {
         if (inputPath.startsWith("hdfs://")) {
-            org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(inputPath);
-            return new BufferedReader(new InputStreamReader(path.getFileSystem(new Configuration()).open(path)));
+            return createHdfsBufferedReader(inputPath);
         } else {
             FileReader fileReader = new FileReader(inputPath);
             return new BufferedReader(fileReader);
