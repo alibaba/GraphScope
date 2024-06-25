@@ -62,8 +62,12 @@ ARG ENABLE_COORDINATOR="false"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # g++ + jre 500MB
-RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless && \
-    locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/* 
+RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless tzdata && \
+    locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+# shanghai zoneinfo
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # python3
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \

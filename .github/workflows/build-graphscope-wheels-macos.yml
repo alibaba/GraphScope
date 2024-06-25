@@ -11,6 +11,9 @@ on:
   push:
     tags:
       - "v*"
+  pull_request:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
@@ -18,7 +21,7 @@ concurrency:
 
 jobs:
   build-wheels:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
+    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
     runs-on: macos-12
     strategy:
       matrix:
@@ -48,7 +51,7 @@ jobs:
 
         # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
         # However the second trial would success.
-        python3 -m pip install click
+        python3 -m pip install click packaging
         python3 gsctl.py install-deps dev || true
         python3 gsctl.py install-deps dev
         echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
@@ -142,7 +145,7 @@ jobs:
         retention-days: 5
 
   build-client-wheels:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
+    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
     runs-on: macos-12
     strategy:
       matrix:
@@ -166,7 +169,7 @@ jobs:
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
-        python3 -m pip install click
+        python3 -m pip install click packaging
         python3 gsctl.py install-deps dev || true
         python3 gsctl.py install-deps dev
 
