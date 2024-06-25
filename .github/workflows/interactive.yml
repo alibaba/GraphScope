@@ -512,3 +512,14 @@ jobs:
         SCHEMA_FILE=${FLEX_DATA_DIR}/audit_graph_schema.yaml
         BULK_LOAD_FILE=${FLEX_DATA_DIR}/audit_bulk_load.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/ -p 2
+
+    - name: Test graph load on movie graph
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/movies/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_schema_test.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_import_test.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
