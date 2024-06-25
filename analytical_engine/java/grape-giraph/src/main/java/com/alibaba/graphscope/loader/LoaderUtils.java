@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.loader;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -85,7 +86,16 @@ public class LoaderUtils {
         String endpoint = getEndpointFromPath(input);
         logger.info("endpoint: " + endpoint);
         conf.set("fs.defaultFS", endpoint);
-        return new BufferedReader(new InputStreamReader(path.getFileSystem(conf).open(path)));
+        FileSystem fileSystem = null;
+        try {
+            fileSystem = FileSystem.get(conf);
+        }
+        catch (Exception e) {
+            logger.error("Failed to get file system: " + input);
+            e.printStackTrace();
+            return null;
+        }
+        return new BufferedReader(new InputStreamReader(fileSystem.open(path)));
     }
 
     public static long getNumLinesOfHdfsFile(String input) throws IOException {
