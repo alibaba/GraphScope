@@ -74,9 +74,26 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) upload_file(query_param&& param);
 
+  seastar::future<admin_query_result> ANNOTATION(actor:method) create_vertex(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) create_edge(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_vertex(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_edge(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) update_vertex(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) update_edge(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) get_vertex(graph_management_query_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) get_edge(graph_management_query_param&& param);
   // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.
   ACTOR_DO_WORK()
+
+  bool check_graph_id(const std::string &graph_id);
 
  private:
   std::mutex mtx_;
