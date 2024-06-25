@@ -100,8 +100,6 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
     // }
     //-------------------------------------------------------------------------
 
-    LOG(INFO) << "parsing zone:";
-
     seconds_type zone_offset(0);
     if (s[length - 1] == 'Z') {
       --length;
@@ -119,34 +117,29 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
       // if (out_zone_offset_present)
       //   *out_zone_offset_present = true;
     } else if (s[length - 5] == '+' || s[length - 5] == '-') {
-      LOG(INFO) << "s: " << s << ", length: " << length << "[+-]HHMM";
       // [+-]HHMM
       length -= 5;
       if (ARROW_PREDICT_FALSE(!arrow::internal::detail::ParseHHMM(
               s + length + 1, &zone_offset))) {
         return false;
       }
-      LOG(INFO) << "success parseHHMM";
       if (s[length] == '+')
         zone_offset *= -1;
       // if (out_zone_offset_present)
       //   *out_zone_offset_present = true;
     } else if ((s[length - 6] == '+' || s[length - 6] == '-') &&
                (s[length - 3] == ':')) {
-      LOG(INFO) << " length: " << length << "[+-]HH:MM";
       // [+-]HH:MM
       length -= 6;
       if (ARROW_PREDICT_FALSE(!arrow::internal::detail::ParseHH_MM(
               s + length + 1, &zone_offset))) {
         return false;
       }
-      LOG(INFO) << "success parseHH_MM";
       if (s[length] == '+')
         zone_offset *= -1;
       // if (out_zone_offset_present)
       //   *out_zone_offset_present = true;
     }
-    LOG(INFO) << "after parsing zone: " << zone_offset.count();
 
     seconds_type seconds_since_midnight;
     switch (length) {
@@ -184,7 +177,6 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
 
     seconds_since_epoch += seconds_since_midnight;
     seconds_since_epoch += zone_offset;
-    LOG(INFO) << "seconds_since_epoch: " << seconds_since_epoch.count();
 
     if (length <= 19) {
       *out =
@@ -192,7 +184,6 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
       return true;
     }
 
-    LOG(INFO) << s[19];
     if (ARROW_PREDICT_FALSE(s[19] != '.')) {
       return false;
     }
@@ -202,12 +193,10 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
             s + 20, length - 20, out_unit, &subseconds))) {
       return false;
     }
-    LOG(INFO) << "subseconds: " << subseconds;
 
     *out =
         arrow::util::CastSecondsToUnit(out_unit, seconds_since_epoch.count()) +
         subseconds;
-    LOG(INFO) << "return true;";
     return true;
   }
 
