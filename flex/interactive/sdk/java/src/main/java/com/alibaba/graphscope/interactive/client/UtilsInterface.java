@@ -15,12 +15,11 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
-public interface Session
-        extends VertexInterface,
-                EdgeInterface,
-                GraphInterface,
-                JobInterface,
-                ProcedureInterface,
-                QueryServiceInterface,
-                AutoCloseable,
-                UtilsInterface {}
+import com.alibaba.graphscope.interactive.client.common.Result;
+import com.alibaba.graphscope.interactive.models.UploadFileResponse;
+
+import java.io.File;
+
+public interface UtilsInterface {
+     Result<UploadFileResponse> uploadFile(File fileStorage);
+}

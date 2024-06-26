@@ -332,6 +332,48 @@ public class DriverTest {
     }
 
     @Test
+    @Order(2)
+    public void test1BulkLoadingUploading() {
+        SchemaMapping schemaMapping = new SchemaMapping();
+        {
+            SchemaMappingLoadingConfig loadingConfig = new SchemaMappingLoadingConfig();
+            loadingConfig.setImportOption(SchemaMappingLoadingConfig.ImportOptionEnum.INIT);
+            loadingConfig.setFormat(new SchemaMappingLoadingConfigFormat().type("csv"));
+            schemaMapping.setLoadingConfig(loadingConfig);
+        }
+        {
+            // get env var FLEX_DATA_DIR
+            if (System.getenv("FLEX_DATA_DIR") == null) {
+                logger.info("FLEX_DATA_DIR is not set");
+                return;
+            }
+            //The file will be uploaded to the server
+            String personPath = "@" + System.getenv("FLEX_DATA_DIR") + "/person.csv";
+            String knowsPath = "@" + System.getenv("FLEX_DATA_DIR") + "/person_knows_person.csv";
+            {
+                VertexMapping vertexMapping = new VertexMapping();
+                vertexMapping.setTypeName("person");
+                vertexMapping.addInputsItem(personPath);
+                schemaMapping.addVertexMappingsItem(vertexMapping);
+            }
+            {
+                EdgeMapping edgeMapping = new EdgeMapping();
+                edgeMapping.setTypeTriplet(
+                        new EdgeMappingTypeTriplet()
+                                .edge("knows")
+                                .sourceVertex("person")
+                                .destinationVertex("person"));
+                edgeMapping.addInputsItem(knowsPath);
+                schemaMapping.addEdgeMappingsItem(edgeMapping);
+            }
+        }
+        Result<JobResponse> rep = session.bulkLoading(graphId, schemaMapping);
+        assertOk(rep);
+        jobId = rep.getValue().getJobId();
+        logger.info("job id: " + jobId);
+    }
+
+    @Test
     @Order(3)
     public void test2waitJobFinished() {
         if (jobId == null) {

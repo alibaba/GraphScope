@@ -53,7 +53,15 @@ public class Status {
         this.message = message;
     }
 
-    public static Status ServerInternalError(String message) {
+    public static Status ok(String message) {
+        return new Status(StatusCode.kOk, message);
+    }
+
+    public static Status badRequest(String message) {
+        return new Status(StatusCode.kBadRequest, message);
+    }
+
+    public static Status serverInternalError(String message) {
         return new Status(StatusCode.kServerInternalError, message);
     }
 
