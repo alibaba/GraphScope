@@ -403,7 +403,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
 };
 
 template <>
-class DualCsr<Record> : public DualCsrBase {
+class DualCsr<RecordView> : public DualCsrBase {
  public:
   DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy,
           const std::vector<std::string>& col_name,
@@ -415,18 +415,18 @@ class DualCsr<Record> : public DualCsrBase {
         in_csr_(nullptr),
         out_csr_(nullptr) {
     if (ie_strategy == EdgeStrategy::kNone) {
-      in_csr_ = new EmptyCsr<Record>(table_);
+      in_csr_ = new EmptyCsr<RecordView>(table_);
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
-      in_csr_ = new MutableCsr<Record>(table_);
+      in_csr_ = new MutableCsr<RecordView>(table_);
     } else {
-      in_csr_ = new SingleMutableCsr<Record>(table_);
+      in_csr_ = new SingleMutableCsr<RecordView>(table_);
     }
     if (oe_strategy == EdgeStrategy::kNone) {
-      out_csr_ = new EmptyCsr<Record>(table_);
+      out_csr_ = new EmptyCsr<RecordView>(table_);
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
-      out_csr_ = new MutableCsr<Record>(table_);
+      out_csr_ = new MutableCsr<RecordView>(table_);
     } else {
-      out_csr_ = new SingleMutableCsr<Record>(table_);
+      out_csr_ = new SingleMutableCsr<RecordView>(table_);
     }
   }
 
@@ -470,10 +470,11 @@ class DualCsr<Record> : public DualCsrBase {
             const std::string& work_dir) override {
     in_csr_->open(ie_name, snapshot_dir, work_dir);
     out_csr_->open(oe_name, snapshot_dir, work_dir);
-    table_idx_.store(table_.row_num());
+
     // fix me: storage_strategies_ is not used
     table_.open(edata_name, snapshot_dir, work_dir, col_name_, property_types_,
                 {});
+    table_idx_.store(table_.row_num());
     table_.resize(
         std::max(table_.row_num() + (table_.row_num() + 4) / 5, 4096ul));
   }
@@ -524,6 +525,8 @@ class DualCsr<Record> : public DualCsrBase {
   void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
                   Allocator& alloc) override {
     size_t row_id = table_idx_.fetch_add(1);
+    size_t len;
+    oarc >> len;
     table_.ingest(row_id, oarc);
     in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
     out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
@@ -535,7 +538,42 @@ class DualCsr<Record> : public DualCsrBase {
 
   void UpdateEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
                   Allocator& alloc) override {
-    LOG(FATAL) << "Not implemented";
+    auto oe_ptr = out_csr_->edge_iter_mut(src);
+    grape::InArchive arc;
+    Record r = data.AsRecord();
+    for (size_t i = 0; i < r.len; ++i) {
+      arc << r.props[i];
+    }
+    grape::OutArchive oarc;
+    oarc.SetSlice(arc.GetBuffer(), arc.GetSize());
+    auto oe = dynamic_cast<MutableCsrEdgeIter<RecordView>*>(oe_ptr.get());
+    size_t index = std::numeric_limits<size_t>::max();
+    while (oe != nullptr && oe->is_valid()) {
+      if (oe->get_neighbor() == dst) {
+        oe->set_timestamp(ts);
+        index = oe->get_index();
+        break;
+      }
+      oe->next();
+    }
+    auto ie_ptr = in_csr_->edge_iter_mut(dst);
+    auto ie = dynamic_cast<MutableCsrEdgeIter<RecordView>*>(ie_ptr.get());
+    while (ie != nullptr && ie->is_valid()) {
+      if (ie->get_neighbor() == src) {
+        ie->set_timestamp(ts);
+        index = ie->get_index();
+        break;
+      }
+      ie->next();
+    }
+    if (index != std::numeric_limits<size_t>::max()) {
+      table_.ingest(index, oarc);
+    } else {
+      size_t row_id = table_idx_.fetch_add(1);
+      table_.ingest(row_id, oarc);
+      in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
+      out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
+    }
   }
 
   void Close() override {
@@ -548,8 +586,8 @@ class DualCsr<Record> : public DualCsrBase {
   const std::vector<std::string>& col_name_;
   const std::vector<PropertyType>& property_types_;
   const std::vector<StorageStrategy>& storage_strategies_;
-  TypedMutableCsrBase<Record>* in_csr_;
-  TypedMutableCsrBase<Record>* out_csr_;
+  TypedMutableCsrBase<RecordView>* in_csr_;
+  TypedMutableCsrBase<RecordView>* out_csr_;
   std::atomic<size_t> table_idx_;
   Table table_;
 };

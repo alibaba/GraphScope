@@ -277,7 +277,7 @@ static void append_edges(std::shared_ptr<arrow::Array> src_col,
 
   // if EDATA_T is grape::EmptyType, no need to read columns
   auto edata_col_thread = std::thread([&]() {
-    if constexpr (std::is_same<EDATA_T, Record>::value) {
+    if constexpr (std::is_same<EDATA_T, RecordView>::value) {
       size_t cur_ind = old_size;
       for (auto j = 0; j < src_col->length(); ++j) {
         std::get<2>(parsed_edges[cur_ind++]) = offset++;
@@ -698,7 +698,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
           label_t, label_t, label_t, const std::string&, const LoadingConfig&,
           int)>
           supplier_creator) {
-    if constexpr (std::is_same_v<EDATA_T, Record>) {
+    if constexpr (std::is_same_v<EDATA_T, RecordView>) {
       if (use_mmap_vector_) {
         addEdgesRecordBatchImplHelper<
             EDATA_T, std::vector<std::tuple<vid_t, vid_t, size_t>>>(
@@ -783,7 +783,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     std::vector<std::vector<std::shared_ptr<arrow::Array>>> string_columns(
         std::thread::hardware_concurrency());
 
-    if constexpr (std::is_same<EDATA_T, Record>::value) {
+    if constexpr (std::is_same<EDATA_T, RecordView>::value) {
       basic_fragment_loader_.init_edge_table(src_label_id, dst_label_id,
                                              e_label_id);
     }
@@ -872,8 +872,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                   property_cols.emplace_back(columns[i]);
                 }
                 size_t offset_i = 0;
-                if constexpr (std::is_same<EDATA_T, Record>::value) {
-                  auto casted_csr = dynamic_cast<DualCsr<Record>*>(
+                if constexpr (std::is_same<EDATA_T, RecordView>::value) {
+                  auto casted_csr = dynamic_cast<DualCsr<RecordView>*>(
                       basic_fragment_loader_.get_csr(src_label_id, dst_label_id,
                                                      e_label_id));
                   CHECK(casted_csr != NULL);

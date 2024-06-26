@@ -135,9 +135,9 @@ class TypedMutableCsrBase : public TypedCsrBase<EDATA_T> {
 };
 
 template <>
-class TypedCsrBase<Record> : public CsrBase {
+class TypedCsrBase<RecordView> : public CsrBase {
  public:
-  using slice_t = MutableNbrSlice<Record>;
+  using slice_t = MutableNbrSlice<RecordView>;
 
   virtual void batch_put_edge_with_index(vid_t src, vid_t dst, size_t index,
                                          timestamp_t ts = 0) = 0;

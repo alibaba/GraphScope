@@ -151,8 +151,8 @@ class BasicFragmentLoader {
 
   template <typename EDATA_T>
   static decltype(auto) get_casted_dual_csr(DualCsrBase* dual_csr) {
-    if constexpr (std::is_same_v<EDATA_T, Record>) {
-      auto casted_dual_csr = dynamic_cast<DualCsr<Record>*>(dual_csr);
+    if constexpr (std::is_same_v<EDATA_T, RecordView>) {
+      auto casted_dual_csr = dynamic_cast<DualCsr<RecordView>*>(dual_csr);
       CHECK(casted_dual_csr != NULL);
       return casted_dual_csr;
     } else {

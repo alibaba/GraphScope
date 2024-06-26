@@ -107,13 +107,37 @@ bool SingleVertexInsertTransaction::AddEdge(label_t src_label, const Any& src,
       return false;
     }
   }
-  const PropertyType& type =
-      graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (prop.type != type) {
-    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
-    LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
-               << type << ", got " << prop.type;
-    return false;
+  if (prop.type != PropertyType::kRecord) {
+    const PropertyType& type =
+        graph_.schema().get_edge_property(src_label, dst_label, edge_label);
+    if (prop.type != type) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " type not match, expected " << type << ", got "
+                 << prop.type;
+      return false;
+    }
+  } else {
+    const auto& types =
+        graph_.schema().get_edge_properties(src_label, dst_label, edge_label);
+    if (prop.AsRecord().size() != types.size()) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " size not match, expected " << types.size() << ", got "
+                 << prop.AsRecord().size();
+      return false;
+    }
+    auto r = prop.AsRecord();
+    for (size_t i = 0; i < r.size(); ++i) {
+      if (r[i].type != types[i]) {
+        std::string label_name =
+            graph_.schema().get_edge_label_name(edge_label);
+        LOG(ERROR) << "Edge property " << label_name
+                   << " type not match, expected " << types[i] << ", got "
+                   << r[i].type;
+        return false;
+      }
+    }
   }
   arc_ << static_cast<uint8_t>(1) << src_label;
   serialize_field(arc_, src);
@@ -121,74 +145,6 @@ bool SingleVertexInsertTransaction::AddEdge(label_t src_label, const Any& src,
   serialize_field(arc_, dst);
   arc_ << edge_label;
   serialize_field(arc_, prop);
-  parsed_endpoints_.push_back(src_vid);
-  parsed_endpoints_.push_back(dst_vid);
-  return true;
-}
-
-bool SingleVertexInsertTransaction::AddEdge(label_t src_label, const Any& src,
-                                            label_t dst_label, const Any& dst,
-                                            label_t edge_label,
-                                            const std::vector<Any>& props) {
-  vid_t src_vid, dst_vid;
-  if (src == added_vertex_id_ && src_label == added_vertex_label_) {
-    if (!graph_.get_lid(dst_label, dst, dst_vid)) {
-      std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
-      LOG(ERROR) << "Destination vertex " << label_name << "["
-                 << dst.to_string() << "] not found...";
-      return false;
-    }
-    src_vid = std::numeric_limits<vid_t>::max();
-  } else if (dst == added_vertex_id_ && dst_label == added_vertex_label_) {
-    if (!graph_.get_lid(src_label, src, src_vid)) {
-      std::string label_name = graph_.schema().get_vertex_label_name(src_label);
-      LOG(ERROR) << "Source vertex " << label_name << "[" << src.to_string()
-                 << "] not found...";
-      return false;
-    }
-    dst_vid = std::numeric_limits<vid_t>::max();
-  } else {
-    if (!graph_.get_lid(dst_label, dst, dst_vid)) {
-      std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
-      LOG(ERROR) << "Destination vertex " << label_name << "["
-                 << dst.to_string() << "] not found...";
-      return false;
-    }
-    if (!graph_.get_lid(src_label, src, src_vid)) {
-      std::string label_name = graph_.schema().get_vertex_label_name(src_label);
-      LOG(ERROR) << "Source vertex " << label_name << "[" << src.to_string()
-                 << "] not found...";
-      return false;
-    }
-  }
-
-  const auto& types =
-      graph_.schema().get_edge_properties(src_label, dst_label, edge_label);
-  if (types.size() != props.size()) {
-    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
-    LOG(ERROR) << "Edge property " << label_name << " size not match, expected "
-               << types.size() << ", got " << props.size();
-    return false;
-  }
-
-  for (size_t i = 0; i < types.size(); ++i) {
-    if (props[i].type != types[i]) {
-      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
-      LOG(ERROR) << "Edge property " << label_name << "[" << i
-                 << "] type not match, expected " << types[i] << ", got "
-                 << props[i].type;
-      return false;
-    }
-  }
-
-  arc_ << static_cast<uint8_t>(1) << src_label;
-  serialize_field(arc_, src);
-  arc_ << dst_label;
-  serialize_field(arc_, dst);
-  arc_ << edge_label;
-  for (auto& prop : props) {
-    serialize_field(arc_, prop);
-  }
   parsed_endpoints_.push_back(src_vid);
   parsed_endpoints_.push_back(dst_vid);
   return true;

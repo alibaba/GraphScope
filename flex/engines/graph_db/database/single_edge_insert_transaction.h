@@ -37,10 +37,6 @@ class SingleEdgeInsertTransaction {
   bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
                const Any& dst, label_t edge_label, const Any& prop);
 
-  bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
-               const Any& dst, label_t edge_label,
-               const std::vector<Any>& props);
-
   void Abort();
 
   timestamp_t timestamp() const;

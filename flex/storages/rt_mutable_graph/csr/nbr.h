@@ -254,7 +254,7 @@ class MutableNbrSlice {
  public:
   using const_nbr_t = const MutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
-  MutableNbrSlice() = default;
+  MutableNbrSlice() : ptr_(nullptr), size_(0){};
   MutableNbrSlice(const MutableNbrSlice& rhs)
       : ptr_(rhs.ptr_), size_(rhs.size_) {}
   ~MutableNbrSlice() = default;
@@ -280,7 +280,7 @@ class MutableNbrSlice {
 };
 
 template <>
-class MutableNbrSlice<Record> {
+class MutableNbrSlice<RecordView> {
  public:
   struct MutableTableNbr {
     using const_nbr_t = const MutableNbr<size_t>;
@@ -290,7 +290,7 @@ class MutableNbrSlice<Record> {
         : ptr_(ptr), table_(table) {}
     vid_t get_neighbor() const { return ptr_->neighbor; }
     timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
-    Record get_data() const { return Record(ptr_->data, &table_); }
+    RecordView get_data() const { return RecordView(ptr_->data, &table_); }
 
     const MutableTableNbr& operator*() const { return *this; }
     const MutableTableNbr* operator->() const { return this; }
@@ -325,7 +325,8 @@ class MutableNbrSlice<Record> {
   };
   using const_nbr_t = const MutableTableNbr;
   using const_nbr_ptr_t = const MutableTableNbr;
-  MutableNbrSlice(const Table& table) : slice_(), table_(table) {}
+  MutableNbrSlice(MutableNbrSlice<size_t> slice, const Table& table)
+      : slice_(slice), table_(table) {}
   MutableNbrSlice(const MutableNbrSlice& rhs)
       : slice_(rhs.slice_), table_(rhs.table_) {}
   ~MutableNbrSlice() = default;
@@ -344,9 +345,7 @@ class MutableNbrSlice<Record> {
     return MutableTableNbr(slice_.end(), table_);
   }
   static MutableNbrSlice empty(const Table& table) {
-    MutableNbrSlice ret(table);
-    ret.set_begin(nullptr);
-    ret.set_size(0);
+    MutableNbrSlice ret(MutableNbrSlice<size_t>::empty(), table);
     return ret;
   }
   MutableNbrSlice<size_t> slice_;
@@ -401,7 +400,8 @@ class MutableNbrSlice<std::string_view> {
   };
   using const_nbr_t = const MutableColumnNbr;
   using const_nbr_ptr_t = const MutableColumnNbr;
-  MutableNbrSlice(const StringColumn& column) : slice_(), column_(column) {}
+  MutableNbrSlice(MutableNbrSlice<size_t> slice, const StringColumn& column)
+      : slice_(slice), column_(column) {}
   MutableNbrSlice(const MutableNbrSlice& rhs)
       : slice_(rhs.slice_), column_(rhs.column_) {}
   ~MutableNbrSlice() = default;
@@ -418,9 +418,7 @@ class MutableNbrSlice<std::string_view> {
   }
 
   static MutableNbrSlice empty(const StringColumn& column) {
-    MutableNbrSlice ret(column);
-    ret.set_begin(nullptr);
-    ret.set_size(0);
+    MutableNbrSlice ret(MutableNbrSlice<size_t>::empty(), column);
     return ret;
   }
 
@@ -434,7 +432,7 @@ class MutableNbrSliceMut {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
   using nbr_ptr_t = MutableNbr<EDATA_T>*;
-  MutableNbrSliceMut() = default;
+  MutableNbrSliceMut() : ptr_(nullptr), size_(0){};
   ~MutableNbrSliceMut() = default;
 
   void set_size(int size) { size_ = size; }
@@ -510,7 +508,8 @@ class MutableNbrSliceMut<std::string_view> {
   };
   using nbr_ptr_t = MutableColumnNbr;
 
-  MutableNbrSliceMut(StringColumn& column) : column_(column) {}
+  MutableNbrSliceMut(MutableNbrSliceMut<size_t> slice, StringColumn& column)
+      : slice_(slice), column_(column) {}
   ~MutableNbrSliceMut() = default;
   void set_size(int size) { slice_.set_size(size); }
   int size() const { return slice_.size(); }
@@ -521,9 +520,7 @@ class MutableNbrSliceMut<std::string_view> {
   MutableColumnNbr end() { return MutableColumnNbr(slice_.end(), column_); }
 
   static MutableNbrSliceMut empty(StringColumn& column) {
-    MutableNbrSliceMut ret(column);
-    ret.set_begin(nullptr);
-    ret.set_size(0);
+    MutableNbrSliceMut ret(MutableNbrSliceMut<size_t>::empty(), column);
     return ret;
   }
 
@@ -533,7 +530,7 @@ class MutableNbrSliceMut<std::string_view> {
 };
 
 template <>
-class MutableNbrSliceMut<Record> {
+class MutableNbrSliceMut<RecordView> {
  public:
   struct MutableTableNbr {
     using nbr_t = MutableNbr<size_t>;
@@ -543,9 +540,18 @@ class MutableNbrSliceMut<Record> {
     vid_t get_neighbor() const { return ptr_->neighbor; }
     timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
     size_t get_index() const { return ptr_->data; }
-    Record get_data() const { return Record(ptr_->data, &table_); }
+    RecordView get_data() const { return RecordView(ptr_->data, &table_); }
 
-    // set data
+    void set_data(const Record& r, timestamp_t ts) {
+      grape::InArchive in;
+      for (size_t i = 0; i < r.len; ++i) {
+        in << r.props[i];
+      }
+      grape::OutArchive out;
+      out.SetSlice(in.GetBuffer(), in.GetSize());
+      table_.ingest(ptr_->data, out);
+      ptr_->timestamp.store(ts);
+    }
     void set_neighbor(vid_t neighbor) { ptr_->neighbor = neighbor; }
 
     void set_timestamp(timestamp_t ts) { ptr_->timestamp.store(ts); }
@@ -553,6 +559,7 @@ class MutableNbrSliceMut<Record> {
     const MutableTableNbr& operator*() const { return *this; }
     MutableTableNbr& operator*() { return *this; }
     const MutableTableNbr* operator->() const { return this; }
+    MutableTableNbr* operator->() { return this; }
     MutableTableNbr& operator=(const MutableTableNbr& nbr) {
       ptr_ = nbr.ptr_;
       return *this;
@@ -583,7 +590,8 @@ class MutableNbrSliceMut<Record> {
   };
   using nbr_ptr_t = MutableTableNbr;
 
-  MutableNbrSliceMut(Table& table) : table_(table) {}
+  MutableNbrSliceMut(MutableNbrSliceMut<size_t> slice, Table& table)
+      : slice_(slice), table_(table) {}
   ~MutableNbrSliceMut() = default;
   void set_size(int size) { slice_.set_size(size); }
   int size() const { return slice_.size(); }
@@ -595,9 +603,7 @@ class MutableNbrSliceMut<Record> {
   nbr_ptr_t end() { return MutableTableNbr(slice_.end(), table_); }
 
   static MutableNbrSliceMut empty(Table& table) {
-    MutableNbrSliceMut ret(table);
-    ret.set_begin(nullptr);
-    ret.set_size(0);
+    MutableNbrSliceMut ret(MutableNbrSliceMut<size_t>::empty(), table);
     return ret;
   }
 

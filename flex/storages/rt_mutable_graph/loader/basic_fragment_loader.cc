@@ -197,7 +197,8 @@ void BasicFragmentLoader::init_edge_table(label_t src_label_id,
                                           label_t edge_label_id) {
   size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
                  dst_label_id * edge_label_num_ + edge_label_id;
-  auto cast_dual_csr = dynamic_cast<DualCsr<Record>*>(dual_csr_list_[index]);
+  auto cast_dual_csr =
+      dynamic_cast<DualCsr<RecordView>*>(dual_csr_list_[index]);
   CHECK(cast_dual_csr != nullptr);
   auto src_label_name = schema_.get_vertex_label_name(src_label_id);
   auto dst_label_name = schema_.get_vertex_label_name(dst_label_id);

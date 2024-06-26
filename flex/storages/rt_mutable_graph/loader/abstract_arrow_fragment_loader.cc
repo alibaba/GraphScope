@@ -404,8 +404,8 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
         src_label_name, dst_label_name, edge_label_name);
     const auto& prop_names = schema_.get_edge_property_names(
         src_label_name, dst_label_name, edge_label_name);
-    auto dual_csr =
-        new DualCsr<Record>(oe_strategy, ie_strategy, prop_names, props, {});
+    auto dual_csr = new DualCsr<RecordView>(oe_strategy, ie_strategy,
+                                            prop_names, props, {});
     basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
                                    dual_csr);
     if (filenames.empty()) {
@@ -413,8 +413,8 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
                  << " dst label: " << dst_label_name
                  << " edge label: " << edge_label_name;
     } else {
-      addEdgesRecordBatchImpl<Record>(src_label_i, dst_label_i, edge_label_i,
-                                      filenames, supplier_creator);
+      addEdgesRecordBatchImpl<RecordView>(
+          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
     }
   }
 }
