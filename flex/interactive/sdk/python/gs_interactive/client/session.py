@@ -703,7 +703,10 @@ class DefaultSession(Session):
     def check_file_mixup(self, schema_mapping: SchemaMapping) -> Result[SchemaMapping]:
         root_dir_marked_with_at = False # Can not mix uploading file and not uploading file
         location=None
-        if schema_mapping.loading_config and schema_mapping.loading_config.data_source and schema_mapping.loading_config.data_source.scheme == 'file':
+        if schema_mapping.loading_config and schema_mapping.loading_config.data_source:
+            if schema_mapping.loading_config.data_source.scheme != 'file':
+                print("Only check mixup for file scheme")
+                return Result.ok(schema_mapping)
             location = schema_mapping.loading_config.data_source.location
         if location and location.startswith('@'):
             root_dir_marked_with_at = True
@@ -717,10 +720,8 @@ class DefaultSession(Session):
                             if input.startswith('@'):
                                 print("Root location given without @, but the input file starts with @" + input)
                                 return Result.error(Status(StatusCode.BAD_REQUEST, "Root location given without @, but the input file starts with @" + input), schema_mapping)
-                            else:
-                                continue
                         if location:
-                            vertex_mapping.inputs[i] = location + self.trim_path(input)
+                            vertex_mapping.inputs[i] = location + '/' + self.trim_path(input)
                         extracted_files.append(vertex_mapping.inputs[i])
         if schema_mapping.edge_mappings:
             for edge_mapping in schema_mapping.edge_mappings:
@@ -730,10 +731,8 @@ class DefaultSession(Session):
                             if input.startswith('@'):
                                 print("Root location given without @, but the input file starts with @" + input)
                                 return Result.error(Status(StatusCode.BAD_REQUEST, "Root location given without @, but the input file starts with @" + input), schema_mapping)
-                            else:
-                                continue
                         if location:
-                            edge_mapping.inputs[i] = location + self.trim_path(input)
+                            edge_mapping.inputs[i] = location + '/' + self.trim_path(input)
                         extracted_files.append(edge_mapping.inputs[i])
         if extracted_files:
             #count the number of files start with @
