@@ -521,7 +521,12 @@ static Status parse_vertex_properties(YAML::Node node,
                                       std::vector<std::string>& names,
                                       std::vector<StorageStrategy>& strategies,
                                       const std::string& version) {
-  if (!node || !node.IsSequence()) {
+  if (!node || node.IsNull()) {
+    VLOG(10) << "Found no vertex properties specified for vertex: "
+             << label_name;
+    return Status::OK();
+  }
+  if (!node.IsSequence()) {
     LOG(ERROR) << "Expect properties for " << label_name << " to be a sequence";
     return Status(StatusCode::InvalidSchema,
                   "Expect properties for " + label_name + " to be a sequence");
@@ -579,7 +584,7 @@ static Status parse_edge_properties(YAML::Node node,
                                     std::vector<PropertyType>& types,
                                     std::vector<std::string>& names,
                                     const std::string& version) {
-  if (!node) {
+  if (!node || node.IsNull()) {
     VLOG(10) << "Found no edge properties specified for edge: " << label_name;
     return Status::OK();
   }
@@ -611,6 +616,20 @@ static Status parse_edge_properties(YAML::Node node,
                     "type of edge-" + label_name + " prop-" +
                         std::to_string(i - 1) + " is not specified...");
     }
+    // For edge properties, we have some constrains on the property type. We
+    // currently only support var_char. long_text string are not supported.
+    if (prop_type == PropertyType::StringMap()) {
+      LOG(ERROR) << "Please use varchar as the type of edge-" << label_name
+                 << " prop-" << i - 1
+                 << ", if you want to use string property: " << prop_type
+                 << ", prop_type.enum" << prop_type.type_enum;
+      return Status(StatusCode::InvalidSchema,
+                    "Please use varchar as the type of edge-" + label_name +
+                        " prop-" + std::to_string(i - 1) +
+                        ", if you want to "
+                        "use string property.");
+    }
+
     if (!get_scalar(node[i], "property_name", prop_name_str)) {
       LOG(ERROR) << "name of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";

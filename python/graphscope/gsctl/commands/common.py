@@ -43,7 +43,7 @@ def cli():
     help="Coordinator endpoint, e.g. http://127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to a launched coordinator
+    """Connect to a launched coordinator.
 
     By default, it will read context from  ~/.gsctl. If '--coordinator-endpoint'
     is specified, use it as the current context and override the configuration file.
@@ -73,7 +73,7 @@ def connect(coordinator_endpoint):
 
 @cli.command()
 def close():
-    """Disconnect from coordinator"""
+    """Disconnect from coordinator."""
     try:
         context = disconnect_coordinator()
     except Exception as e:

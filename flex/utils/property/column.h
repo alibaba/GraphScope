@@ -18,6 +18,7 @@
 
 #include <string>
 #include <string_view>
+#include "grape/utils/concurrent_queue.h"
 
 #include "flex/utils/mmap_array.h"
 #include "flex/utils/property/types.h"
@@ -504,6 +505,7 @@ class StringMapColumn : public ColumnBase {
  private:
   TypedColumn<INDEX_T> index_col_;
   LFIndexer<INDEX_T>* meta_map_;
+  grape::SpinLock lock_;
 };
 
 template <typename INDEX_T>
@@ -547,10 +549,16 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
                                          const std::string_view& val) {
   INDEX_T lid;
   if (!meta_map_->get_index(val, lid)) {
-    lid = meta_map_->insert(val);
+    lock_.lock();
+    if (!meta_map_->get_index(val, lid)) {
+      lid = meta_map_->insert(val);
+    }
+    lock_.unlock();
   }
   index_col_.set_value(idx, lid);
 }
+
+using DefaultStringMapColumn = StringMapColumn<uint8_t>;
 
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem);

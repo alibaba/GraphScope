@@ -66,6 +66,10 @@ class CsrBase {
                             const std::string& work_dir,
                             const std::vector<int>& degree,
                             double reserve_ratio = 1.2) = 0;
+
+  virtual size_t batch_init_in_memory(const std::vector<int>& degree,
+                                      double reserve_ratio = 1.2) = 0;
+
   virtual void batch_sort_by_edge_data(timestamp_t ts) {
     LOG(FATAL) << "not supported...";
   }
@@ -88,6 +92,8 @@ class CsrBase {
 
   virtual void resize(vid_t vnum) = 0;
   virtual size_t size() const = 0;
+
+  virtual void close() = 0;
 
   virtual std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const = 0;
   virtual CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const = 0;
