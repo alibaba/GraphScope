@@ -138,7 +138,7 @@ class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
     std::vector<gs::Result<seastar::sstring>> results;
     return upload_file(std::move(file_name_and_contents), 0, dst_executor,
                        std::move(results))
-        .then([this, dst_executor](auto&& results) {
+        .then([](auto&& results) {
           auto final_res = generate_final_result(results);
           return seastar::make_ready_future<admin_query_result>(
               std::move(final_res));
