@@ -139,10 +139,13 @@ public class DefaultSession implements Session {
         SchemaMappingLoadingConfig config = schemaMapping.getLoadingConfig();
         if (config != null) {
             if (config.getDataSource() != null && config.getDataSource().getScheme() != null) {
-                if (config.getDataSource().getScheme().equals(SchemaMappingLoadingConfigDataSource.SchemeEnum.FILE)) {
+                if (config.getDataSource()
+                        .getScheme()
+                        .equals(SchemaMappingLoadingConfigDataSource.SchemeEnum.FILE)) {
                     location = config.getDataSource().getLocation();
                 } else {
-                    return new Result<SchemaMapping>(Status.ok("Only FILE scheme is supported"), schemaMapping);
+                    return new Result<SchemaMapping>(
+                            Status.ok("Only FILE scheme is supported"), schemaMapping);
                 }
             }
         }
@@ -158,7 +161,12 @@ public class DefaultSession implements Session {
                         String input = item.getInputs().get(i);
                         if (location != null && !rootLocationMarkedUploaded) {
                             if (input.startsWith("@")) {
-                                return new Result<SchemaMapping>(Status.badRequest("Root location given without @, but the input file starts with @" + input), null);
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest(
+                                                "Root location given without @, but the input file"
+                                                    + " starts with @"
+                                                        + input),
+                                        null);
                             }
                         }
                         if (location != null) {
@@ -170,14 +178,19 @@ public class DefaultSession implements Session {
                 }
             }
         }
-        if (schemaMapping.getEdgeMappings() != null){
+        if (schemaMapping.getEdgeMappings() != null) {
             for (EdgeMapping item : schemaMapping.getEdgeMappings()) {
                 if (item.getInputs() != null) {
                     for (int i = 0; i < item.getInputs().size(); ++i) {
                         String input = item.getInputs().get(i);
                         if (location != null && !rootLocationMarkedUploaded) {
                             if (input.startsWith("@")) {
-                                return new Result<SchemaMapping>(Status.badRequest("Root location given without @, but the input file starts with @" + input), null);
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest(
+                                                "Root location given without @, but the input file"
+                                                    + " starts with @"
+                                                        + input),
+                                        null);
                             }
                         }
                         if (location != null) {
@@ -193,14 +206,13 @@ public class DefaultSession implements Session {
             int count = 0;
             for (String file : extractedFiles) {
                 if (file.startsWith("@")) {
-                    count+=1;
+                    count += 1;
                 }
             }
-            if (count == 0){
+            if (count == 0) {
                 System.out.println("No files to upload");
                 return Result.ok(schemaMapping);
-            }
-            else if (count != extractedFiles.size()){
+            } else if (count != extractedFiles.size()) {
                 System.err.println("Can not mix uploading file and not uploading file");
                 return Result.error("Can not mix uploading file and not uploading file");
             }
@@ -218,12 +230,20 @@ public class DefaultSession implements Session {
                             input = input.substring(1);
                             File file = new File(input);
                             if (!file.exists()) {
-                                return new Result<SchemaMapping>(Status.badRequest("File does not exist: " + input), schemaMapping);
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest("File does not exist: " + input),
+                                        schemaMapping);
                             }
 
                             Result<UploadFileResponse> uploadedFile = uploadFile(file);
                             if (!uploadedFile.isOk()) {
-                                return new Result<SchemaMapping>(Status.badRequest("Failed to upload file: " + input + ", " + uploadedFile.getStatusMessage()), schemaMapping);
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest(
+                                                "Failed to upload file: "
+                                                        + input
+                                                        + ", "
+                                                        + uploadedFile.getStatusMessage()),
+                                        schemaMapping);
                             }
                             item.getInputs().set(i, uploadedFile.getValue().getFilePath());
                         }
@@ -240,11 +260,19 @@ public class DefaultSession implements Session {
                             input = input.substring(1);
                             File file = new File(input);
                             if (!file.exists()) {
-                                return new Result<SchemaMapping>(Status.badRequest("File does not exist: " + input), schemaMapping);
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest("File does not exist: " + input),
+                                        schemaMapping);
                             }
                             Result<UploadFileResponse> uploadedFile = uploadFile(file);
                             if (!uploadedFile.isOk()) {
-                                return new Result<SchemaMapping>(Status.badRequest("Failed to upload file: " + input + ", " + uploadedFile.getStatusMessage()), schemaMapping);
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest(
+                                                "Failed to upload file: "
+                                                        + input
+                                                        + ", "
+                                                        + uploadedFile.getStatusMessage()),
+                                        schemaMapping);
                             }
                             item.getInputs().set(i, uploadedFile.getValue().getFilePath());
                         }
@@ -271,13 +299,15 @@ public class DefaultSession implements Session {
     private Result<SchemaMapping> tryUploadFile(SchemaMapping schemaMapping) {
         Result<SchemaMapping> validateResult = validateSchemaMapping(schemaMapping);
         if (!validateResult.isOk()) {
-            return new Result<SchemaMapping>(Status.badRequest("validation failed for schema mapping"), schemaMapping);
+            return new Result<SchemaMapping>(
+                    Status.badRequest("validation failed for schema mapping"), schemaMapping);
         }
         SchemaMapping validatedSchemaMapping = validateResult.getValue();
         System.out.println("Schema mapping validated successfully");
         Result<SchemaMapping> uploadResult = uploadFilesAndUpdate(validatedSchemaMapping);
         if (!uploadResult.isOk()) {
-            return new Result<SchemaMapping>(Status.badRequest("upload failed for schema mapping"), schemaMapping);
+            return new Result<SchemaMapping>(
+                    Status.badRequest("upload failed for schema mapping"), schemaMapping);
         }
         return uploadResult;
     }
@@ -752,8 +782,7 @@ public class DefaultSession implements Session {
      * @throws Exception if this resource cannot be closed
      */
     @Override
-    public void close() throws Exception {
-    }
+    public void close() throws Exception {}
 
     /**
      * Upload a file to the server.
@@ -765,8 +794,7 @@ public class DefaultSession implements Session {
     @Override
     public Result<UploadFileResponse> uploadFile(File fileStorage) {
         try {
-            ApiResponse<UploadFileResponse> response =
-                    utilsApi.uploadFileWithHttpInfo(fileStorage);
+            ApiResponse<UploadFileResponse> response = utilsApi.uploadFileWithHttpInfo(fileStorage);
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();

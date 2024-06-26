@@ -21,5 +21,5 @@ import com.alibaba.graphscope.interactive.models.UploadFileResponse;
 import java.io.File;
 
 public interface UtilsInterface {
-     Result<UploadFileResponse> uploadFile(File fileStorage);
+    Result<UploadFileResponse> uploadFile(File fileStorage);
 }

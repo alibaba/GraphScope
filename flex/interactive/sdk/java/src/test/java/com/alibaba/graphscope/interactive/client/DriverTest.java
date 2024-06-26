@@ -329,10 +329,11 @@ public class DriverTest {
         assertOk(rep);
         jobId = rep.getValue().getJobId();
         logger.info("job id: " + jobId);
+        waitJobFinished(jobId);
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     public void test1BulkLoadingUploading() {
         SchemaMapping schemaMapping = new SchemaMapping();
         {
@@ -347,7 +348,7 @@ public class DriverTest {
                 logger.info("FLEX_DATA_DIR is not set");
                 return;
             }
-            //The file will be uploaded to the server
+            // The file will be uploaded to the server
             String personPath = "@" + System.getenv("FLEX_DATA_DIR") + "/person.csv";
             String knowsPath = "@" + System.getenv("FLEX_DATA_DIR") + "/person_knows_person.csv";
             {
@@ -371,30 +372,7 @@ public class DriverTest {
         assertOk(rep);
         jobId = rep.getValue().getJobId();
         logger.info("job id: " + jobId);
-    }
-
-    @Test
-    @Order(3)
-    public void test2waitJobFinished() {
-        if (jobId == null) {
-            return;
-        }
-        while (true) {
-            Result<JobStatus> rep = session.getJobStatus(jobId);
-            assertOk(rep);
-            JobStatus job = rep.getValue();
-            if (job.getStatus() == JobStatus.StatusEnum.SUCCESS) {
-                logger.info("job finished");
-                break;
-            } else if (job.getStatus() == JobStatus.StatusEnum.FAILED) {
-                throw new RuntimeException("job failed");
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        waitJobFinished(jobId);
     }
 
     @Test
@@ -619,5 +597,27 @@ public class DriverTest {
             return false;
         }
         return true;
+    }
+
+    private void waitJobFinished(String jobId) {
+        if (jobId == null) {
+            return;
+        }
+        while (true) {
+            Result<JobStatus> rep = session.getJobStatus(jobId);
+            assertOk(rep);
+            JobStatus job = rep.getValue();
+            if (job.getStatus() == JobStatus.StatusEnum.SUCCESS) {
+                logger.info("job finished");
+                break;
+            } else if (job.getStatus() == JobStatus.StatusEnum.FAILED) {
+                throw new RuntimeException("job failed");
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
