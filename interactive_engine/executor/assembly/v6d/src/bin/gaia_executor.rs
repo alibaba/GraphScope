@@ -21,12 +21,18 @@ use gaia_runtime::error::{StartServerError, StartServerResult};
 use global_query::{FFIGraphStore, GraphPartitionManager};
 use graph_proxy::{apis::PegasusClusterInfo, create_gs_store, VineyardMultiPartition};
 use log::info;
+#[cfg(feature = "mimalloc")]
+use mimalloc_rust::*;
 use pegasus::api::Sink;
 use pegasus::{wait_servers_ready, Configuration, JobConf, ServerConf};
 use pegasus_network::config::NetworkConfig;
 use pegasus_network::config::ServerAddr;
 use pegasus_server::rpc::{start_rpc_server, RPCServerConfig, ServiceStartListener};
 use runtime::initialize_job_assembly;
+
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

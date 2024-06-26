@@ -52,7 +52,8 @@ class Table {
                            const std::string& snapshot_dir,
                            const std::vector<std::string>& col_name,
                            const std::vector<PropertyType>& property_types,
-                           const std::vector<StorageStrategy>& strategies_, bool force);
+                           const std::vector<StorageStrategy>& strategies_,
+                           bool force);
 
   void touch(const std::string& name, const std::string& work_dir);
 
@@ -101,6 +102,8 @@ class Table {
   Any at(size_t row_id, size_t col_id) const;
 
   void ingest(uint32_t index, grape::OutArchive& arc);
+
+  void close();
 
  private:
   void buildColumnPtrs();

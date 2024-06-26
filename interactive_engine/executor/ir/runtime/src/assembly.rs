@@ -817,7 +817,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                         None
                     };
                     // process get_v
-                    if let Some(getv) = base.get_v.take() {
+                    if let Some(mut getv) = base.get_v.take() {
                         if (pb::get_v::VOpt::Itself as i32) == getv.opt {
                             // the case of expandv + auxilia (to deal with filtering on vertices).
                             if let Some(repartition) = repartition {
@@ -826,9 +826,31 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                             base_expand_plan.push(getv.clone().into());
                         } else {
                             // the case of expande + getv
-                            base_expand_plan.push(getv.clone().into());
-                            if let Some(repartition) = repartition {
-                                base_expand_plan.push(repartition);
+                            // specifically, if getv has predicates or columns,
+                            // separate it as getv(getAdj) + auxilia (for filter/get columns)
+                            let needs_separate = getv
+                                .params
+                                .as_ref()
+                                .map_or(false, |params| params.has_predicates() || params.has_columns());
+                            if needs_separate {
+                                let alias = getv.alias.take();
+                                let params = getv.params.take();
+                                let auxilia = pb::GetV {
+                                    opt: pb::get_v::VOpt::Itself as i32,
+                                    tag: None,
+                                    params: params,
+                                    alias,
+                                };
+                                base_expand_plan.push(getv.clone().into());
+                                if let Some(repartition) = repartition {
+                                    base_expand_plan.push(repartition);
+                                }
+                                base_expand_plan.push(auxilia.into());
+                            } else {
+                                base_expand_plan.push(getv.clone().into());
+                                if let Some(repartition) = repartition {
+                                    base_expand_plan.push(repartition);
+                                }
                             }
                         }
                     } else {

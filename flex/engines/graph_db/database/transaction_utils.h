@@ -47,6 +47,11 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
   } else if (prop.type == PropertyType::Float()) {
     arc << prop.value.f;
   } else if (prop.type == PropertyType::Empty()) {
+  } else if (prop.type == PropertyType::Record()) {
+    arc << prop.value.record.size();
+    for (auto& field : prop.value.record) {
+      serialize_field(arc, field);
+    }
   } else {
     LOG(FATAL) << "Unexpected property type" << int(prop.type.type_enum);
   }
@@ -78,6 +83,15 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
   } else if (prop.type == PropertyType::Float()) {
     arc >> prop.value.f;
   } else if (prop.type == PropertyType::Empty()) {
+  } else if (prop.type == PropertyType::Record()) {
+    size_t len;
+    arc >> len;
+    Record r(len);
+    for (size_t i = 0; i < r.len; ++i) {
+      deserialize_field(arc, r.props[i]);
+    }
+    prop.set_record(r);
+
   } else {
     LOG(FATAL) << "Unexpected property type: "
                << static_cast<int>(prop.type.type_enum);

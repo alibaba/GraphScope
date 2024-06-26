@@ -30,6 +30,13 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 
+#[cfg(feature = "mimalloc")]
+use mimalloc_rust::*;
+
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
+
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct GraphError {
