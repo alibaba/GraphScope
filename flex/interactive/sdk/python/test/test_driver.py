@@ -53,6 +53,9 @@ from gs_interactive.models.schema_mapping_loading_config import (
 from gs_interactive.models.schema_mapping_loading_config_format import (
     SchemaMappingLoadingConfigFormat,
 )
+from gs_interactive.models.schema_mapping_loading_config_data_source import (
+    SchemaMappingLoadingConfigDataSource,
+)
 from gs_interactive.models.start_service_request import StartServiceRequest
 from gs_interactive.models.string_type import StringType
 from gs_interactive.models.string_type_string import StringTypeString
@@ -156,13 +159,13 @@ class TestDriver(unittest.TestCase):
 
     def bulkLoading(self):
         assert os.environ.get("FLEX_DATA_DIR") is not None
-        person_csv_path = os.path.join(os.environ.get("FLEX_DATA_DIR"), "person.csv")
-        knows_csv_path = os.path.join(
-            os.environ.get("FLEX_DATA_DIR"), "person_knows_person.csv"
-        )
+        location = os.environ.get("FLEX_DATA_DIR")
+        person_csv_path = "person.csv"
+        knows_csv_path = "person_knows_person.csv"
         print("test bulk loading: ", self._graph_id)
         schema_mapping = SchemaMapping(
             loading_config=SchemaMappingLoadingConfig(
+                data_source=SchemaMappingLoadingConfigDataSource(scheme="file", location=location),
                 import_option="init",
                 format=SchemaMappingLoadingConfigFormat(type="csv"),
             ),

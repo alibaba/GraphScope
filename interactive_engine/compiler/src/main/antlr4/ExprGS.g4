@@ -377,6 +377,7 @@ oC_ReservedWord
             | FOLD
             | MEAN
             | 'd' | 'D' | 'f' | 'F' | 'l' | 'L'
+            | 'id' // lexer rule for ID conflicts with parser rule definition in gremlin grammar, include 'id' as reserved word so it can be used to denote a symbolic name
             ;
 
 UnescapedSymbolicName

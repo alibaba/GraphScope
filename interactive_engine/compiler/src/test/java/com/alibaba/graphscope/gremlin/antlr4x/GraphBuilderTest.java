@@ -1727,6 +1727,17 @@ public class GraphBuilderTest {
     }
 
     @Test
+    public void g_V_select_expr_property_id() {
+        RelNode rel = eval("g.V().select(expr(_.id))");
+        Assert.assertEquals(
+                "GraphLogicalProject(id=[id], isAppend=[false])\n"
+                        + "  GraphLogicalProject(id=[_.id], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[_], opt=[VERTEX])",
+                rel.explain().trim());
+    }
+
+    @Test
     public void g_V_path_as_a_select_a_valueMap() {
         RelNode rel =
                 eval(

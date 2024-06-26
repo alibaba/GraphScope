@@ -1234,6 +1234,13 @@ macro_rules! partial_cmp {
                 .as_str()
                 .map(|o| (&(**v)).partial_cmp(&(*o)))
                 .unwrap_or(None),
+            $crate::$ty::None => {
+                if let $crate::$ty::None = $other {
+                    Some(Ordering::Equal)
+                } else {
+                    Some(Ordering::Less)
+                }
+            }
             $crate::$ty::Vector(v1) => {
                 if let $crate::$ty::Vector(v2) = $other {
                     v1.partial_cmp(v2)

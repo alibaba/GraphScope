@@ -20,4 +20,4 @@ typing-extensions >= 4.7.1
 click >= 8.1.7
 psutil
 schedule
-gs_interactive == 0.3
+gs_interactive >= 0.3
