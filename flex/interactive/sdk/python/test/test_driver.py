@@ -321,6 +321,7 @@ class TestDriver(unittest.TestCase):
         )
         assert start_service_res.is_ok()
         print("finish restartOnNewGraph")
+        time.sleep(5)
 
     def getStatistics(self):
         resp = self._sess.get_graph_statistics(self._graph_id)
