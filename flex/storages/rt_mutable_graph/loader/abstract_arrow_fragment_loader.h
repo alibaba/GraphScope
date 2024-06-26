@@ -283,7 +283,6 @@ static void append_edges(std::shared_ptr<arrow::Array> src_col,
         std::get<2>(parsed_edges[cur_ind++]) = offset++;
       }
     } else if constexpr (!std::is_same<EDATA_T, grape::EmptyType>::value) {
-      // CHECK(edata_cols.size() == 1);
       auto edata_col = edata_cols;
       CHECK(src_col->length() == edata_col->length());
       size_t cur_ind = old_size;

@@ -250,8 +250,6 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
   auto& property_types = schema_.get_edge_properties(
       src_label_name, dst_label_name, edge_label_name);
   size_t col_num = property_types.size();
-  // CHECK_LE(col_num, 1) << "Only single or no property is supported for
-  // edge.";
   EdgeStrategy oe_strategy = schema_.get_outgoing_edge_strategy(
       src_label_name, dst_label_name, edge_label_name);
   EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
