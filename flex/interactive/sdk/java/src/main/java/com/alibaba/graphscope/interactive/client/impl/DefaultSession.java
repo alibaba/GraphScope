@@ -164,7 +164,7 @@ public class DefaultSession implements Session {
                                 return new Result<SchemaMapping>(
                                         Status.badRequest(
                                                 "Root location given without @, but the input file"
-                                                    + " starts with @"
+                                                        + " starts with @"
                                                         + input),
                                         null);
                             }
@@ -188,7 +188,7 @@ public class DefaultSession implements Session {
                                 return new Result<SchemaMapping>(
                                         Status.badRequest(
                                                 "Root location given without @, but the input file"
-                                                    + " starts with @"
+                                                        + " starts with @"
                                                         + input),
                                         null);
                             }
