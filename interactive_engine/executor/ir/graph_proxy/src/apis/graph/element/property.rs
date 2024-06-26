@@ -26,6 +26,9 @@ use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
+use super::Element;
+use crate::utils::expr::{ExprEvalError, ExprEvalResult};
+
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PropKey {
@@ -34,6 +37,51 @@ pub enum PropKey {
     Len,
     All,
     Key(NameOrId),
+}
+
+impl PropKey {
+    pub fn get_key<E: Element>(&self, element: &E) -> ExprEvalResult<Object> {
+        let prop_obj = if let PropKey::Len = self {
+            element.len().into()
+        } else {
+            let graph_element = element
+                .as_graph_element()
+                .ok_or_else(|| ExprEvalError::UnexpectedDataType(self.into()))?;
+            match self {
+                PropKey::Id => graph_element.id().into(),
+                PropKey::Label => graph_element
+                    .label()
+                    .map(|label| label.into())
+                    .unwrap_or(Object::None),
+                PropKey::Len => unreachable!(),
+                PropKey::All => graph_element
+                    .get_all_properties()
+                    .map(|obj| {
+                        obj.into_iter()
+                            .map(|(key, value)| {
+                                let obj_key: Object = match key {
+                                    NameOrId::Str(str) => str.into(),
+                                    NameOrId::Id(id) => id.into(),
+                                };
+                                (obj_key, value)
+                            })
+                            .collect::<Vec<(Object, Object)>>()
+                            .into()
+                    })
+                    .unwrap_or(Object::None),
+                PropKey::Key(key) => {
+                    if let Some(prop_val) = graph_element.get_property(key) {
+                        prop_val.try_to_owned().ok_or_else(|| {
+                            ExprEvalError::OtherErr("cannot get `Object` from `BorrowObject`".to_string())
+                        })?
+                    } else {
+                        Object::None
+                    }
+                }
+            }
+        };
+        Ok(prop_obj)
+    }
 }
 
 impl TryFrom<pb::Property> for PropKey {

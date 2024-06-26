@@ -130,6 +130,8 @@ struct CreateGraphMetaRequest {
   std::optional<uint64_t> data_update_time;
   int64_t creation_time;
 
+  std::vector<PluginMeta> plugin_metas;
+
   static CreateGraphMetaRequest FromJson(const std::string& json_str);
 
   std::string ToString() const;

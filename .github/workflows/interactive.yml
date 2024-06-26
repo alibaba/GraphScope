@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
@@ -68,6 +68,7 @@ jobs:
         GIE_HOME: ${{ github.workspace }}/interactive_engine/
         HOME: /home/graphscope/
       run: |
+        . /home/graphscope/.graphscope_env
         cd ${GITHUB_WORKSPACE}/
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
@@ -179,6 +180,18 @@ jobs:
         rm -r /tmp/csr-data-dir/wal
         ./tests/hqps/query_test ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml \
         /tmp/csr-data-dir/
+
+    - name: Test get graph meta from admin service
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
+        pip3 install argparse
+        pip3 install neo4j
+        bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
 
     - name: Run codegen test.
       env:
@@ -311,6 +324,7 @@ jobs:
     - name: Run Gremlin test on modern graph
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
         LD_LIBRARY_PATH: /usr/local/lib
       run: |
@@ -352,7 +366,7 @@ jobs:
   test-cmake-options:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     strategy:
       matrix:
         BUILD_HQPS: [ON, OFF]
@@ -373,7 +387,7 @@ jobs:
   test-AOCC-compilation:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
@@ -381,7 +395,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex
         wget https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0_1_amd64.deb
-        sudo apt-get update && sudo apt-get install libncurses-dev libncurses5-dev
+        sudo apt-get update && sudo apt-get install -y libncurses-dev libncurses5-dev
         sudo dpkg -i aocc-compiler-4.1.0_1_amd64.deb
     
     - name: Test AOCC compiler
@@ -402,7 +416,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     steps:
     - uses: actions/checkout@v3
 
@@ -453,6 +467,17 @@ jobs:
         BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
         GLOG_v=10 ./tests/rt_mutable_graph/string_edge_property_test ${SCHEMA_FILE} /tmp/csr-data-dir/
+    
+    - name: Test multiple properties edge
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_multiple_props_edge.yaml
+        BULK_LOAD_FILE=../tests/rt_mutable_graph/modern_graph_multiple_props_edge_import.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/multiple_props_edge_test ${SCHEMA_FILE} /tmp/csr-data-dir/
 
     - name: Test schema parsing and loading on modern graph
       env:
@@ -510,3 +535,14 @@ jobs:
         SCHEMA_FILE=${FLEX_DATA_DIR}/audit_graph_schema.yaml
         BULK_LOAD_FILE=${FLEX_DATA_DIR}/audit_bulk_load.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/ -p 2
+
+    - name: Test graph load on movie graph
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/movies/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_schema_test.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_import_test.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/

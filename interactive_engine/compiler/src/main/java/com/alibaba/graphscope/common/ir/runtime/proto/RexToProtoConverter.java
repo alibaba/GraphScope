@@ -62,6 +62,9 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         } else if (operator.getKind() == SqlKind.OTHER
                 && operator.getName().equals("PATH_CONCAT")) {
             return visitPathConcat(call);
+        } else if (operator.getKind() == SqlKind.OTHER
+                && operator.getName().equals("PATH_FUNCTION")) {
+            return visitPathFunction(call);
         } else if (operator.getKind() == SqlKind.EXTRACT) {
             return visitExtract(call);
         } else if (operator.getKind() == SqlKind.OTHER
@@ -72,6 +75,64 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         } else {
             return visitBinaryOperator(call);
         }
+    }
+
+    private OuterExpression.Expression visitPathFunction(RexCall call) {
+        List<RexNode> operands = call.getOperands();
+        RexGraphVariable variable = (RexGraphVariable) operands.get(0);
+        OuterExpression.PathFunction.Builder builder = OuterExpression.PathFunction.newBuilder();
+        if (variable.getAliasId() != AliasInference.DEFAULT_ID) {
+            builder.setTag(Common.NameOrId.newBuilder().setId(variable.getAliasId()).build());
+        }
+        GraphOpt.PathExpandFunction funcOpt =
+                ((RexLiteral) operands.get(1)).getValueAs(GraphOpt.PathExpandFunction.class);
+        builder.setOpt(OuterExpression.PathFunction.FuncOpt.valueOf(funcOpt.name()));
+        setPathFunctionProjection(builder, operands.get(2));
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setPathFunc(builder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private void setPathFunctionProjection(
+            OuterExpression.PathFunction.Builder builder, RexNode projection) {
+        switch (projection.getKind()) {
+            case MAP_VALUE_CONSTRUCTOR:
+                List<RexNode> operands = ((RexCall) projection).getOperands();
+                OuterExpression.PathFunction.PathElementKeyValues.Builder keyValuesBuilder =
+                        OuterExpression.PathFunction.PathElementKeyValues.newBuilder();
+                for (int i = 0; i < operands.size(); i += 2) {
+                    keyValuesBuilder.addKeyVals(
+                            OuterExpression.PathFunction.PathElementKeyValues.PathElementKeyValue
+                                    .newBuilder()
+                                    .setKey(operands.get(i).accept(this).getOperators(0).getConst())
+                                    .setVal(visitPathFunctionProperty(operands.get(i + 1))));
+                }
+                builder.setMap(keyValuesBuilder);
+                break;
+            case ARRAY_VALUE_CONSTRUCTOR:
+                OuterExpression.PathFunction.PathElementKeys.Builder valuesBuilder =
+                        OuterExpression.PathFunction.PathElementKeys.newBuilder();
+                ((RexCall) projection)
+                        .getOperands()
+                        .forEach(
+                                operand ->
+                                        valuesBuilder.addKeys(visitPathFunctionProperty(operand)));
+                builder.setVars(valuesBuilder);
+                break;
+            default:
+                builder.setProperty(visitPathFunctionProperty(projection));
+        }
+    }
+
+    private OuterExpression.Property visitPathFunctionProperty(RexNode variable) {
+        Preconditions.checkArgument(
+                variable instanceof RexGraphVariable
+                        && ((RexGraphVariable) variable).getProperty() != null,
+                "cannot get path function property from variable [" + variable + "]");
+        return Utils.protoProperty(((RexGraphVariable) variable).getProperty());
     }
 
     private OuterExpression.Expression visitPathConcat(RexCall call) {
@@ -209,6 +270,9 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                     break;
                 case MAP:
                     keyValueBuilder.setNested(valueOpr.getMap());
+                    break;
+                case PATH_FUNC:
+                    keyValueBuilder.setPathFunc(valueOpr.getPathFunc());
                     break;
                 default:
                     throw new IllegalArgumentException(

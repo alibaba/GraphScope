@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -47,24 +49,33 @@ public class LocalIrMetaReader implements IrMetaReader {
 
     @Override
     public IrMeta readMeta() throws IOException {
-        String metaPath =
+        String schemaUri =
                 Objects.requireNonNull(
-                        GraphConfig.GRAPH_SCHEMA.get(configs), "ir meta path not exist");
-        FileFormatType formatType = FileUtils.getFormatType(metaPath);
+                        GraphConfig.GRAPH_META_SCHEMA_URI.get(configs), "ir meta path not exist");
+        URI schemaURI = URI.create(schemaUri);
+        Path schemaPath =
+                (schemaURI.getScheme() == null) ? Path.of(schemaURI.getPath()) : Path.of(schemaURI);
+        FileFormatType formatType = FileUtils.getFormatType(schemaUri);
         IrGraphSchema graphSchema =
-                new IrGraphSchema(new SchemaInputStream(new FileInputStream(metaPath), formatType));
+                new IrGraphSchema(
+                        new SchemaInputStream(
+                                new FileInputStream(schemaPath.toFile()), formatType));
         IrMeta irMeta =
                 (formatType == FileFormatType.YAML)
                         ? new IrMeta(
                                 graphSchema,
-                                new GraphStoredProcedures(new FileInputStream(metaPath), this))
+                                new GraphStoredProcedures(new FileInputStream(schemaUri), this))
                         : new IrMeta(graphSchema);
         return irMeta;
     }
 
     @Override
     public IrGraphStatistics readStats(GraphId graphId) throws IOException {
-        String statsPath = GraphConfig.GRAPH_STATISTICS.get(configs);
-        return statsPath.isEmpty() ? null : new IrGraphStatistics(new FileInputStream(statsPath));
+        String statsUri = GraphConfig.GRAPH_META_STATISTICS_URI.get(configs);
+        if (statsUri.isEmpty()) return null;
+        URI statsURI = URI.create(statsUri);
+        Path statsPath =
+                (statsURI.getScheme() == null) ? Path.of(statsURI.getPath()) : Path.of(statsURI);
+        return new IrGraphStatistics(new FileInputStream(statsPath.toFile()));
     }
 }

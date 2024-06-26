@@ -234,7 +234,7 @@ void template_set_key_value(results::KeyValues* map,
   for (auto& kv : key_value) {
     auto cur_kv = map->add_key_values();
     cur_kv->mutable_key()->set_str(kv.first);
-    auto value = cur_kv->mutable_element();
+    auto value = cur_kv->mutable_value()->mutable_element();
     set_any_to_element(kv.second, value);
   }
 }

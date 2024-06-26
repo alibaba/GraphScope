@@ -186,10 +186,38 @@ bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
       return false;
     }
   }
-  PropertyType type =
-      graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (type != value.type) {
-    return false;
+
+  if (value.type != PropertyType::kRecord) {
+    const PropertyType& type =
+        graph_.schema().get_edge_property(src_label, dst_label, edge_label);
+    if (value.type != type) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " type not match, expected " << type << ", got "
+                 << value.type;
+      return false;
+    }
+  } else {
+    const auto& types =
+        graph_.schema().get_edge_properties(src_label, dst_label, edge_label);
+    if (value.AsRecord().size() != types.size()) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " size not match, expected " << types.size() << ", got "
+                 << value.AsRecord().size();
+      return false;
+    }
+    auto r = value.AsRecord();
+    for (size_t i = 0; i < r.size(); ++i) {
+      if (r[i].type != types[i]) {
+        std::string label_name =
+            graph_.schema().get_edge_label_name(edge_label);
+        LOG(ERROR) << "Edge property " << label_name
+                   << " type not match, expected " << types[i] << ", got "
+                   << r[i].type;
+        return false;
+      }
+    }
   }
 
   size_t in_csr_index = get_in_csr_index(src_label, dst_label, edge_label);

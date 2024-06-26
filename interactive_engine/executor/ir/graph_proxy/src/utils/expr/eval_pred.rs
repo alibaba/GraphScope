@@ -275,6 +275,7 @@ impl<'a> EvalPred for BorrowObject<'a> {
                 }
                 Ok(true)
             }
+            // When dealing with filtering, None is considered as false; otherwise, it is considered as a `NULL` or `UNKNOWN`
             BorrowObject::None => Ok(false),
             _ => Ok(true),
         }

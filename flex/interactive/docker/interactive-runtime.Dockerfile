@@ -41,6 +41,12 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
 
 # build coordinator
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+        export PATH=${HOME}/.local/bin:${PATH} && \
+        cd ${HOME}/GraphScope/flex/interactive/sdk && \
+        ./generate_sdk.sh -g python && cd python && \
+        python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt && \
+        python3 setup.py build_proto && python3 setup.py bdist_wheel && \
+        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
         cd ${HOME}/GraphScope/coordinator && \
         python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
@@ -135,6 +141,7 @@ RUN chmod +x /opt/flex/bin/*
 
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
       pip3 install --upgrade pip && \
+      pip3 install "numpy<2.0.0" && \
       pip3 install /opt/flex/wheel/*.whl; \
     fi
 
