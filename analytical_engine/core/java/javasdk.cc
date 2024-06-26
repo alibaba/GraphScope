@@ -254,6 +254,9 @@ JavaVM* GetJavaVM() {
       }
     }
     _jvm = CreateJavaVM();
+    if (_jvm == NULL) {
+      LOG(ERROR) << "Fail to create JVM.";
+    }
     VLOG(1) << "Created JVM " << reinterpret_cast<jlong>(_jvm);
   }
   return _jvm;

@@ -86,6 +86,7 @@ public class LoaderUtils {
         String endpoint = getEndpointFromPath(input);
         logger.info("endpoint: " + endpoint);
         conf.set("fs.defaultFS", endpoint);
+        conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         FileSystem fileSystem = null;
         try {
             fileSystem = FileSystem.get(conf);

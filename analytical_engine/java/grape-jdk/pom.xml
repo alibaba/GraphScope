@@ -58,11 +58,11 @@
       <groupId>com.alibaba</groupId>
       <artifactId>fastjson</artifactId>
     </dependency>
-    <dependency>
+    <!-- <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <scope>provided</scope>
-    </dependency>
+    </dependency> -->
     <!--    not used in code but needed at runtime,-->
     <dependency>
       <groupId>com.alibaba.fastffi</groupId>

@@ -98,6 +98,12 @@
             </goals>
             <phase>package</phase>
             <configuration>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <artifactSet>
+                <excludes>
+                <exclude>org.slf4j:*</exclude>
+                </excludes>
+              </artifactSet>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
@@ -108,6 +114,9 @@
                     <exclude>org/python/**</exclude>
                     <exclude>org/eclipse/**</exclude>
                     <exclude>it/unimi/dsi/fastutil/**</exclude>
+                    <exclude>org/apache/logging/**</exclude>
+                    <exclude>org/apache/log4j/**</exclude>
+                    <exclude>org/sl4j/**</exclude>
                   </excludes>
                 </filter>
               </filters>

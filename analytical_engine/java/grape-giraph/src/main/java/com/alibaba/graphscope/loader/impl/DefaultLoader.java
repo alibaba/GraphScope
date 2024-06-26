@@ -321,8 +321,6 @@ public class DefaultLoader implements LoaderBase {
         public AbstractVertexLoaderCallable(int threadId, String inputPath, long startLine, long endLine) {
             callableId = V_CALLABLE_ID.getAndAdd(1);
             try {
-                FileReader fileReader = new FileReader(inputPath);
-//                bufferedReader = new BufferedReader(fileReader);
                 bufferedReader = createBufferedReader(inputPath);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -409,8 +407,6 @@ public class DefaultLoader implements LoaderBase {
         public AbstractEdgeLoaderCallable(int threadId, String inputPath, long startLine, long endLine) {
             callableId = E_CALLABLE_ID.getAndAdd(1);
             try {
-
-//                bufferedReader = new BufferedReader(fileReader);
                 bufferedReader = createBufferedReader(inputPath);
             } catch (IOException e) {
                 e.printStackTrace();
