@@ -546,6 +546,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                                             __.as("a")
                                                     .has("PERSON", "id", 2199023256684L)
                                                     .out("5..6", "KNOWS")
+                                                    .with("RESULT_OPT", "ALL_V")
                                                     .as("c"))
                                     .endV()
                                     .has("PERSON", "id", 8796093023060L)

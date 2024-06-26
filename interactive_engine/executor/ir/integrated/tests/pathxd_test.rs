@@ -23,9 +23,11 @@ mod test {
     use graph_proxy::apis::{Element, GraphElement, ID};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
+    use ir_common::generated::common as common_pb;
     use ir_physical_client::physical_builder::*;
+    use pegasus_common::downcast::AsAny;
     use pegasus_server::JobRequest;
-    use runtime::process::entry::Entry;
+    use runtime::process::entry::{CollectionEntry, Entry};
 
     use crate::common::test::*;
 
@@ -954,8 +956,16 @@ mod test {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
-                    if let Some(properties) = entry.get(None).unwrap().as_object() {
-                        result_collection.push(properties.clone());
+                    if let Some(e) = entry.get(None) {
+                        let collection = e
+                            .as_any_ref()
+                            .downcast_ref::<CollectionEntry>()
+                            .unwrap();
+                        let mut path_values_collection = vec![];
+                        for v in collection.inner.iter() {
+                            path_values_collection.push(v.as_object().unwrap().clone());
+                        }
+                        result_collection.push(Object::Vector(path_values_collection));
                     }
                 }
                 Err(e) => {
@@ -1178,5 +1188,285 @@ mod test {
         expected_result_collection.sort();
         result_collection.sort();
         assert_eq!(result_collection, expected_result_collection);
+    }
+
+    // g.V().hasLabel("person").both("2..3", "knows").values("xx"), where values("xx") would be computed via PathFunc
+    fn init_path_expand_project_path_func_request(
+        result_opt: i32, path_key: common_pb::path_function::PathKey,
+    ) -> JobRequest {
+        let source_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
+            expand_opt: 0,
+            alias: None,
+            meta_data: None,
+            is_optional: false,
+        };
+
+        let path_expand_opr = pb::PathExpand {
+            base: Some(edge_expand.into()),
+            start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 2, upper: 3 }),
+            path_opt: 0, // Arbitrary
+            result_opt,
+            condition: None,
+            is_optional: false,
+        };
+
+        // to project path.name
+        let project_opr = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(common_pb::Expression {
+                    operators: vec![common_pb::ExprOpr {
+                        node_type: None,
+                        item: Some(common_pb::expr_opr::Item::PathFunc(common_pb::PathFunction {
+                            tag: None,
+                            opt: 0, // opt is not supported for now
+                            node_type: None,
+                            path_key: Some(path_key),
+                        })),
+                    }],
+                }),
+                alias: Some(TAG_A.into()),
+            }],
+            is_append: false,
+            meta_data: vec![],
+        };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.project(project_opr);
+        job_builder.sink(default_sink_pb());
+
+        job_builder.build().unwrap()
+    }
+
+    // g.V().hasLabel("person").both("2..3", "knows").with("RESULT_OPT", "ALL_V").values("name"),
+    #[test]
+    fn path_expand_allv_project_path_func_test() {
+        initialize();
+        let path_key = common_pb::path_function::PathKey::Property(common_pb::Property {
+            item: Some(common_pb::property::Item::Key("name".into())),
+        });
+        let request = init_path_expand_project_path_func_request(1, path_key); // all v
+        let mut results = submit_query(request, 2);
+        let mut result_collection: Vec<Object> = vec![];
+        let mut expected_result_paths: Vec<Object> = vec![
+            Object::Vector(vec![object!("marko"), object!("vadas"), object!("marko")]),
+            Object::Vector(vec![object!("marko"), object!("josh"), object!("marko")]),
+            Object::Vector(vec![object!("vadas"), object!("marko"), object!("vadas")]),
+            Object::Vector(vec![object!("vadas"), object!("marko"), object!("josh")]),
+            Object::Vector(vec![object!("josh"), object!("marko"), object!("vadas")]),
+            Object::Vector(vec![object!("josh"), object!("marko"), object!("josh")]),
+        ];
+
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(e) = entry.get(None) {
+                        let collection = e
+                            .as_any_ref()
+                            .downcast_ref::<CollectionEntry>()
+                            .unwrap();
+                        let mut path_values_collection = vec![];
+                        for v in collection.inner.iter() {
+                            path_values_collection.push(v.as_object().unwrap().clone());
+                        }
+                        result_collection.push(Object::Vector(path_values_collection));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+    }
+
+    // g.V().hasLabel("person").both("2..3", "knows").with("RESULT_OPT", "END_V").values("name"),
+    #[test]
+    fn path_expand_endv_project_path_func_test() {
+        initialize();
+        let path_key = common_pb::path_function::PathKey::Property(common_pb::Property {
+            item: Some(common_pb::property::Item::Key("name".into())),
+        });
+        let request = init_path_expand_project_path_func_request(0, path_key); // endv
+        let mut results = submit_query(request, 2);
+        let mut result_collection: Vec<Object> = vec![];
+        let mut expected_result_paths: Vec<Object> = vec![
+            Object::Vector(vec![object!("marko")]),
+            Object::Vector(vec![object!("marko")]),
+            Object::Vector(vec![object!("vadas")]),
+            Object::Vector(vec![object!("josh")]),
+            Object::Vector(vec![object!("vadas")]),
+            Object::Vector(vec![object!("josh")]),
+        ];
+
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(e) = entry.get(None) {
+                        let collection = e
+                            .as_any_ref()
+                            .downcast_ref::<CollectionEntry>()
+                            .unwrap();
+                        let mut path_values_collection = vec![];
+                        for v in collection.inner.iter() {
+                            path_values_collection.push(v.as_object().unwrap().clone());
+                        }
+                        result_collection.push(Object::Vector(path_values_collection));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+    }
+
+    // g.V().hasLabel("person").both("2..3", "knows").with("RESULT_OPT", "ALL_VE").values("name", "weight"),
+    #[test]
+    fn path_expand_allve_project_path_func_test() {
+        initialize();
+        let path_key = common_pb::path_function::PathKey::Vars(common_pb::path_function::PathElementKeys {
+            keys: vec![
+                common_pb::Property { item: Some(common_pb::property::Item::Key("name".into())) },
+                common_pb::Property { item: Some(common_pb::property::Item::Key("weight".into())) },
+            ],
+        });
+        let request = init_path_expand_project_path_func_request(2, path_key); // all ve
+        let mut results = submit_query(request, 2);
+        let mut result_collection: Vec<Object> = vec![];
+        let not_exist = object!("");
+        let mut expected_result_paths: Vec<Object> = vec![
+            // marko - 0.5 - vadas - 0.5 - marko
+            Object::Vector(
+                vec![
+                    // e.g., for the vertex element, name: marko, weight, None
+                    vec![object!("marko"), not_exist.clone()],
+                    // e.g., for the edge element, name: None, weight: 0.5
+                    vec![not_exist.clone(), object!("0.5")],
+                    vec![object!("vadas"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("0.5")],
+                    vec![object!("marko"), not_exist.clone()],
+                ]
+                .into_iter()
+                .map(|vec_obj| Object::Vector(vec_obj))
+                .collect(),
+            ),
+            // marko - 1 - josh - 1 - marko
+            Object::Vector(
+                vec![
+                    vec![object!("marko"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("1")],
+                    vec![object!("josh"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("1")],
+                    vec![object!("marko"), not_exist.clone()],
+                ]
+                .into_iter()
+                .map(|vec_obj| Object::Vector(vec_obj))
+                .collect(),
+            ),
+            // vadas - 0.5 - marko - 0.5 - vadas
+            Object::Vector(
+                vec![
+                    vec![object!("vadas"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("0.5")],
+                    vec![object!("marko"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("0.5")],
+                    vec![object!("vadas"), not_exist.clone()],
+                ]
+                .into_iter()
+                .map(|vec_obj| Object::Vector(vec_obj))
+                .collect(),
+            ),
+            // vadas - 0.5 - marko - 1 - josh
+            Object::Vector(
+                vec![
+                    // e.g., for the vertex element, name: marko, weight, None
+                    vec![object!("vadas"), not_exist.clone()],
+                    // e.g., for the edge element, name: None, weight: 0.5
+                    vec![not_exist.clone(), object!("0.5")],
+                    vec![object!("marko"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("1")],
+                    vec![object!("josh"), not_exist.clone()],
+                ]
+                .into_iter()
+                .map(|vec_obj| Object::Vector(vec_obj))
+                .collect(),
+            ),
+            // josh - 1 - marko - 0.5 - vadas
+            Object::Vector(
+                vec![
+                    vec![object!("josh"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("1")],
+                    vec![object!("marko"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("0.5")],
+                    vec![object!("vadas"), not_exist.clone()],
+                ]
+                .into_iter()
+                .map(|vec_obj| Object::Vector(vec_obj))
+                .collect(),
+            ),
+            // josh - 1 - marko - 1 - josh
+            Object::Vector(
+                vec![
+                    vec![object!("josh"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("1")],
+                    vec![object!("marko"), not_exist.clone()],
+                    vec![not_exist.clone(), object!("1")],
+                    vec![object!("josh"), not_exist.clone()],
+                ]
+                .into_iter()
+                .map(|vec_obj| Object::Vector(vec_obj))
+                .collect(),
+            ),
+        ];
+
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(e) = entry.get(None) {
+                        println!("entry {:?}", e);
+                        let collection = e
+                            .as_any_ref()
+                            .downcast_ref::<CollectionEntry>()
+                            .unwrap();
+                        let mut path_values_collection = vec![];
+                        for v in collection.inner.iter() {
+                            path_values_collection.push(v.as_object().unwrap().clone());
+                        }
+                        result_collection.push(Object::Vector(path_values_collection));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
     }
 }
