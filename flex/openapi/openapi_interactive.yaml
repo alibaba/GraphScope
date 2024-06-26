@@ -1021,9 +1021,9 @@ paths:
                 $ref: '#/components/schemas/UploadFileResponse'
               example:
                 file_path: /home/graphscope/path/to/file.csv
-                metadata:
-                  datasource: file
-                  file_type: csv
+                # metadata:
+                #   datasource: file
+                #   file_type: csv
         500:
           description: Server Internal Error
           content:
@@ -1779,7 +1779,7 @@ components:
     UploadFileResponse:
       required:
         - file_path
-        - metadata
+        # - metadata
       properties:
         file_path:
           type: string

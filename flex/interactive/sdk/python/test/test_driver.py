@@ -200,7 +200,7 @@ class TestDriver(unittest.TestCase):
         print("test bulk loading: ", self._graph_id, person_csv_path, knows_csv_path)
         schema_mapping = SchemaMapping(
             loading_config=SchemaMappingLoadingConfig(
-                data_source=SchemaMappingLoadingConfigDataSource(scheme="file", location=location),
+                data_source=SchemaMappingLoadingConfigDataSource(scheme="file"),
                 import_option="init",
                 format=SchemaMappingLoadingConfigFormat(type="csv"),
             ),
