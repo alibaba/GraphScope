@@ -58,9 +58,13 @@ public class GlogueSchema {
         edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
         for (GraphVertex vertex : graphSchema.getVertexList()) {
             schemaGraph.addVertex(vertex.getLabelId());
-            vertexTypeCardinality.put(
-                    vertex.getLabelId(),
-                    statistics.getVertexTypeCount(vertex.getLabelId()).doubleValue());
+            Long vertexTypeCount = statistics.getVertexTypeCount(vertex.getLabelId());
+            if (vertexTypeCount == null) {
+                throw new IllegalArgumentException(
+                        "Vertex type count not found for vertex type: " + vertex.getLabelId());
+            } else {
+                vertexTypeCardinality.put(vertex.getLabelId(), vertexTypeCount.doubleValue());
+            }
         }
         for (GraphEdge edge : graphSchema.getEdgeList()) {
             for (EdgeRelation relation : edge.getRelationList()) {
@@ -68,14 +72,17 @@ public class GlogueSchema {
                 int targetType = relation.getTarget().getLabelId();
                 EdgeTypeId edgeType = new EdgeTypeId(sourceType, targetType, edge.getLabelId());
                 schemaGraph.addEdge(sourceType, targetType, edgeType);
-                edgeTypeCardinality.put(
-                        edgeType,
-                        statistics
-                                .getEdgeTypeCount(
-                                        Optional.of(sourceType),
-                                        Optional.of(edge.getLabelId()),
-                                        Optional.of(targetType))
-                                .doubleValue());
+                Long edgeTypeCount =
+                        statistics.getEdgeTypeCount(
+                                Optional.of(sourceType),
+                                Optional.of(edge.getLabelId()),
+                                Optional.of(targetType));
+                if (edgeTypeCount == null) {
+                    throw new IllegalArgumentException(
+                            "Edge type count not found for edge type: " + edge.getLabelId());
+                } else {
+                    edgeTypeCardinality.put(edgeType, edgeTypeCount.doubleValue());
+                }
             }
         }
     }

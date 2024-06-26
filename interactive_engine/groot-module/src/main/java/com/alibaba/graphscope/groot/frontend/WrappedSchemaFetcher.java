@@ -43,8 +43,8 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
     public Map<Long, GraphSchema> getSchemaSnapshotPair() {
         SnapshotWithSchema snapshotSchema = this.snapshotCache.getSnapshotWithSchema();
         long MAX_SNAPSHOT_ID = Long.MAX_VALUE - 1;
-        // Always retrieve the latest result in secondary instance
-        long snapshotId = isSecondary ? MAX_SNAPSHOT_ID : snapshotSchema.getSnapshotId();
+        // Always retrieve the latest snapshot id to avoid inconsistency.
+        long snapshotId = MAX_SNAPSHOT_ID;
         GraphSchema schema = snapshotSchema.getGraphDef();
         return Map.of(snapshotId, schema);
     }
