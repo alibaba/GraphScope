@@ -14,7 +14,7 @@
  */
 
 #include "flex/utils/property/types.h"
-
+#include "flex/utils/property/table.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
@@ -84,6 +84,78 @@ PropertyType StringToPrimitivePropertyType(const std::string& str) {
 }
 }  // namespace config_parsing
 
+size_t RecordView::size() const { return table->col_num(); }
+
+Any RecordView::operator[](size_t col_id) const {
+  return table->get_column_by_id(col_id)->get(offset);
+}
+
+Record::Record(size_t len) : len(len) { props = new Any[len]; }
+
+Record::Record(const Record& record) {
+  len = record.len;
+  props = new Any[len];
+  for (size_t i = 0; i < len; ++i) {
+    props[i] = record.props[i];
+  }
+}
+
+Record::Record(Record&& record) {
+  len = record.len;
+  props = record.props;
+  record.len = 0;
+  record.props = nullptr;
+}
+
+Record& Record::operator=(const Record& record) {
+  if (this == &record) {
+    return *this;
+  }
+  if (props) {
+    delete[] props;
+  }
+  len = record.len;
+  props = new Any[len];
+  for (size_t i = 0; i < len; ++i) {
+    props[i] = record.props[i];
+  }
+  return *this;
+}
+
+Record::Record(const std::initializer_list<Any>& list) {
+  len = list.size();
+  props = new Any[len];
+  size_t i = 0;
+  for (auto& item : list) {
+    props[i++] = item;
+  }
+}
+
+Record::Record(const std::vector<Any>& vec) {
+  len = vec.size();
+  props = new Any[len];
+  for (size_t i = 0; i < len; ++i) {
+    props[i] = vec[i];
+  }
+}
+
+Any Record::operator[](size_t idx) const {
+  if (idx >= len) {
+    return Any();
+  }
+  return props[idx];
+}
+
+Any* Record::begin() const { return props; }
+Any* Record::end() const { return props + len; }
+
+Record::~Record() {
+  if (props) {
+    delete[] props;
+  }
+  props = nullptr;
+}
+
 const PropertyType PropertyType::kEmpty =
     PropertyType(impl::PropertyTypeImpl::kEmpty);
 const PropertyType PropertyType::kBool =
@@ -116,6 +188,10 @@ const PropertyType PropertyType::kVertexGlobalId =
     PropertyType(impl::PropertyTypeImpl::kVertexGlobalId);
 const PropertyType PropertyType::kLabel =
     PropertyType(impl::PropertyTypeImpl::kLabel);
+const PropertyType PropertyType::kRecordView =
+    PropertyType(impl::PropertyTypeImpl::kRecordView);
+const PropertyType PropertyType::kRecord =
+    PropertyType(impl::PropertyTypeImpl::kRecord);
 
 bool PropertyType::operator==(const PropertyType& other) const {
   if (type_enum == impl::PropertyTypeImpl::kVarChar &&
@@ -196,6 +272,14 @@ PropertyType PropertyType::Label() {
   return PropertyType(impl::PropertyTypeImpl::kLabel);
 }
 
+PropertyType PropertyType::RecordView() {
+  return PropertyType(impl::PropertyTypeImpl::kRecordView);
+}
+
+PropertyType PropertyType::Record() {
+  return PropertyType(impl::PropertyTypeImpl::kRecord);
+}
+
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value) {
   in_archive << value.type_enum;
@@ -244,6 +328,13 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << value.type << value.value.vertex_gid;
   } else if (value.type == PropertyType::Label()) {
     in_archive << value.type << value.value.label_key;
+  } else if (value.type == PropertyType::RecordView()) {
+    LOG(FATAL) << "Not supported";
+  } else if (value.type == PropertyType::Record()) {
+    in_archive << value.type << value.value.record.len;
+    for (size_t i = 0; i < value.value.record.len; ++i) {
+      in_archive << value.value.record.props[i];
+    }
   } else {
     in_archive << PropertyType::kEmpty;
   }
@@ -286,6 +377,17 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     out_archive >> value.value.vertex_gid;
   } else if (value.type == PropertyType::Label()) {
     out_archive >> value.value.label_key;
+  } else if (value.type == PropertyType::RecordView()) {
+    LOG(FATAL) << "Not supported";
+  } else if (value.type == PropertyType::Record()) {
+    size_t len;
+    out_archive >> len;
+    Record r;
+    r.props = new Any[len];
+    for (size_t i = 0; i < len; ++i) {
+      out_archive >> r.props[i];
+    }
+    value.set_record(r);
   } else {
     value.type = PropertyType::kEmpty;
   }

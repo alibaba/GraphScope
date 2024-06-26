@@ -174,4 +174,38 @@ IndexerType& BasicFragmentLoader::GetLFIndexer(label_t v_label) {
   return lf_indexers_[v_label];
 }
 
+void BasicFragmentLoader::set_csr(label_t src_label_id, label_t dst_label_id,
+                                  label_t edge_label_id,
+                                  DualCsrBase* dual_csr) {
+  size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
+                 dst_label_id * edge_label_num_ + edge_label_id;
+  dual_csr_list_[index] = dual_csr;
+  ie_[index] = dual_csr->GetInCsr();
+  oe_[index] = dual_csr->GetOutCsr();
+}
+
+DualCsrBase* BasicFragmentLoader::get_csr(label_t src_label_id,
+                                          label_t dst_label_id,
+                                          label_t edge_label_id) {
+  size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
+                 dst_label_id * edge_label_num_ + edge_label_id;
+  return dual_csr_list_[index];
+}
+
+void BasicFragmentLoader::init_edge_table(label_t src_label_id,
+                                          label_t dst_label_id,
+                                          label_t edge_label_id) {
+  size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
+                 dst_label_id * edge_label_num_ + edge_label_id;
+  auto cast_dual_csr =
+      dynamic_cast<DualCsr<RecordView>*>(dual_csr_list_[index]);
+  CHECK(cast_dual_csr != nullptr);
+  auto src_label_name = schema_.get_vertex_label_name(src_label_id);
+  auto dst_label_name = schema_.get_vertex_label_name(dst_label_id);
+  auto edge_label_name = schema_.get_edge_label_name(edge_label_id);
+  cast_dual_csr->InitTable(
+      edata_prefix(src_label_name, dst_label_name, edge_label_name),
+      tmp_dir(work_dir_));
+}
+
 }  // namespace gs
