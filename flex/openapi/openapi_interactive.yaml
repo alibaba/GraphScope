@@ -1298,6 +1298,8 @@ components:
               type: boolean
             creation_time:
               type: integer
+            update_time:
+              type: integer
     UpdateProcedureRequest:
       x-body-name: update_procedure_request
       type: object

@@ -181,6 +181,18 @@ jobs:
         ./tests/hqps/query_test ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml \
         /tmp/csr-data-dir/
 
+    - name: Test get graph meta from admin service
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
+        pip3 install argparse
+        pip3 install neo4j
+        bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
+
     - name: Run codegen test.
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
