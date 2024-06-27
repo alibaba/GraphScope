@@ -597,7 +597,7 @@ struct Any {
     }
   }
 
-  std::string AsString() const {
+  const std::string& AsString() const {
     assert(type.type_enum == impl::PropertyTypeImpl::kString);
     return *value.s_ptr.ptr;
   }
@@ -1136,7 +1136,8 @@ struct AnyConverter<std::string_view> {
   }
 
   static const std::string_view& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kStringView);
+    CHECK(value.type == PropertyType::kStringView &&
+          value.type.type_enum != impl::PropertyTypeImpl::kString);
     return value.value.s;
   }
 
