@@ -163,10 +163,18 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
         BigInteger jobId = idGenerator.generateId();
         String jobName = idGenerator.generateName(jobId);
+        String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
         IrMeta irMeta = metaQueryCallback.beforeExec();
+        // If the current graph schema is empty (as service startup can occur before data loading in
+        // Groot), we temporarily switch to the original IR core.
+        // In the future, once schema-free support is implemented, we will replace this temporary
+        // solution.
+        if (irMeta.getSchema().getVertexList().isEmpty()
+                && irMeta.getSchema().getEdgeList().isEmpty()) {
+            language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
+        }
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
         QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
-        String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
         GremlinExecutor.LifeCycle lifeCycle;
         switch (language) {
             case AntlrGremlinScriptEngineFactory.LANGUAGE_NAME:

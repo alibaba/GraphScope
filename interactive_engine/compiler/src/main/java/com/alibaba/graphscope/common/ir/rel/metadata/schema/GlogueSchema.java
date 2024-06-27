@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.schema;
 
 import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 
 import org.jgrapht.Graph;
@@ -52,8 +53,9 @@ public class GlogueSchema {
         this.edgeTypeCardinality = edgeTypeCardinality;
     }
 
-    // build a default GlogueSchema from GraphSchema by assuming all vertex and edge types have the same cardinality 1.0
-    public GlogueSchema(GraphSchema graphSchema) {
+    // build a default GlogueSchema from GraphSchema by assuming all vertex and edge types have the
+    // same cardinality 1.0
+    public GlogueSchema(IrGraphSchema graphSchema) {
         schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
         vertexTypeCardinality = new HashMap<Integer, Double>();
         edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
