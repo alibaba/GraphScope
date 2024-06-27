@@ -52,7 +52,6 @@ public class GlogueSchema {
         this.edgeTypeCardinality = edgeTypeCardinality;
     }
 
-    // build a default GlogueSchema from GraphSchema by assuming all vertex and edge types have the same cardinality 1.0
     public GlogueSchema(GraphSchema graphSchema) {
         schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
         vertexTypeCardinality = new HashMap<Integer, Double>();
@@ -108,7 +107,13 @@ public class GlogueSchema {
     }
 
     public static GlogueSchema fromMeta(IrMetaStats irMeta) {
-        return new GlogueSchema(irMeta.getSchema(), irMeta.getStatistics());
+        if (irMeta.getStatistics() == null) {
+            // build a default GlogueSchema by assuming all vertex and edge types have the same
+            // cardinality 1.0
+            return new GlogueSchema(irMeta.getSchema());
+        } else {
+            return new GlogueSchema(irMeta.getSchema(), irMeta.getStatistics());
+        }
     }
 
     public List<Integer> getVertexTypes() {
