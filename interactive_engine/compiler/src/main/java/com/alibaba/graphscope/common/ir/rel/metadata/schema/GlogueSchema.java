@@ -52,6 +52,26 @@ public class GlogueSchema {
         this.edgeTypeCardinality = edgeTypeCardinality;
     }
 
+    // build a default GlogueSchema from GraphSchema by assuming all vertex and edge types have the same cardinality 1.0
+    public GlogueSchema(GraphSchema graphSchema) {
+        schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
+        vertexTypeCardinality = new HashMap<Integer, Double>();
+        edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
+        for (GraphVertex vertex : graphSchema.getVertexList()) {
+            schemaGraph.addVertex(vertex.getLabelId());
+            vertexTypeCardinality.put(vertex.getLabelId(), 1.0);
+        }
+        for (GraphEdge edge : graphSchema.getEdgeList()) {
+            for (EdgeRelation relation : edge.getRelationList()) {
+                int sourceType = relation.getSource().getLabelId();
+                int targetType = relation.getTarget().getLabelId();
+                EdgeTypeId edgeType = new EdgeTypeId(sourceType, targetType, edge.getLabelId());
+                schemaGraph.addEdge(sourceType, targetType, edgeType);
+                edgeTypeCardinality.put(edgeType, 1.0);
+            }
+        }
+    }
+
     public GlogueSchema(GraphSchema graphSchema, GraphStatistics statistics) {
         schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
         vertexTypeCardinality = new HashMap<Integer, Double>();
