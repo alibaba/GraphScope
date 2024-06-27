@@ -166,6 +166,13 @@ impl GraphPath {
         }
     }
 
+    pub fn get_path_end_mut(&mut self) -> &mut VertexOrEdge {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => p.last_mut().unwrap(),
+            GraphPath::EndV((ref mut e, _)) | GraphPath::SimpleEndV((ref mut e, _, _)) => e,
+        }
+    }
+
     pub fn get_path(&self) -> Option<&Vec<VertexOrEdge>> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
@@ -318,13 +325,22 @@ impl GraphElement for GraphPath {
                 for v_or_e in path {
                     if let Some(p) = v_or_e.get_property(key) {
                         properties.push(p.try_to_owned().unwrap());
+                    } else {
+                        // Fill with None if the property is not found. Otherwise, the property order will be inconsistent.
+                        properties.push(Object::None);
                     }
                 }
                 Some(PropertyValue::Owned(Object::Vector(properties)))
             }
 
             GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) => {
-                v_or_e.get_property(key)
+                if let Some(prop) = v_or_e.get_property(key) {
+                    if let Some(obj) = prop.try_to_owned() {
+                        // make the type consistent with the all path.
+                        return Some(PropertyValue::Owned(Object::Vector(vec![obj])));
+                    }
+                }
+                Some(PropertyValue::Owned(Object::Vector(vec![Object::None])))
             }
         }
     }

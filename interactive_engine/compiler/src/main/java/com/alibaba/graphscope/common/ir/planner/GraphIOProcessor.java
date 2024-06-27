@@ -363,7 +363,9 @@ public class GraphIOProcessor {
                                     new ElementDetails(
                                             expandEdge.getElementDetails().getSelectivity(),
                                             new PathExpandRange(offset, fetch),
-                                            innerGetVTypes);
+                                            innerGetVTypes,
+                                            pxd.getResultOpt(),
+                                            pxd.getPathOpt());
                             expandEdge =
                                     (expandEdge instanceof SinglePatternEdge)
                                             ? new SinglePatternEdge(
@@ -825,10 +827,12 @@ public class GraphIOProcessor {
                                                 edge.getElementDetails()),
                                         true),
                                 getVConfig.getAlias());
+                GraphOpt.PathExpandResult resultOpt = edge.getElementDetails().getResultOpt();
+                GraphOpt.PathExpandPath pathOpt = edge.getElementDetails().getPathOpt();
                 pxdBuilder
                         .getV(innerGetVConfig)
-                        .resultOpt(GraphOpt.PathExpandResult.END_V)
-                        .pathOpt(GraphOpt.PathExpandPath.ARBITRARY)
+                        .resultOpt(resultOpt == null ? GraphOpt.PathExpandResult.END_V : resultOpt)
+                        .pathOpt(pathOpt == null ? GraphOpt.PathExpandPath.ARBITRARY : pathOpt)
                         .alias(edgeValue.getAlias())
                         .startAlias(srcValue.getAlias())
                         .range(

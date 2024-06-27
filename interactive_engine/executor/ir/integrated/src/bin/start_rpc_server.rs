@@ -17,8 +17,13 @@ use std::{path::PathBuf, sync::Arc};
 
 use graph_proxy::{apis::PegasusClusterInfo, create_exp_store, SimplePartition};
 use log::info;
+#[cfg(feature = "mimalloc")]
+use mimalloc_rust::*;
 use runtime::initialize_job_assembly;
 use structopt::StructOpt;
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "EchoServer", about = "example of rpc service")]
