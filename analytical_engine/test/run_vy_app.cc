@@ -40,9 +40,9 @@
 #include "sssp/sssp_opt.h"
 #include "wcc/wcc_opt.h"
 
+#include "core/applications.h"
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/loader/arrow_fragment_loader.h"
-#include "core/applications.h"
 
 namespace bl = boost::leaf;
 
@@ -50,7 +50,6 @@ using oid_t = vineyard::property_graph_types::OID_TYPE;
 using vid_t = vineyard::property_graph_types::VID_TYPE;
 
 using FragmentType = vineyard::ArrowFragment<oid_t, vid_t>;
-
 
 std::vector<int> prepareSamplingPathPattern(const std::string& path_pattern) {
   std::vector<int> label_id_seq;
@@ -92,8 +91,6 @@ void RunSamplingPath(std::shared_ptr<FragmentType> fragment,
   worker->Finalize();
 }
 
-
-
 void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
          vineyard::ObjectID id, bool run_projected, const std::string& app_name,
          const std::string& path_pattern) {
@@ -101,27 +98,37 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
       std::dynamic_pointer_cast<FragmentType>(client.GetObject(id));
 
   if (app_name == "lpa") {
-  gs::RunPropertyApp(fragment, comm_spec, "./outputs_lpau2i/", "lpa_u2i");
+    gs::RunPropertyApp(fragment, comm_spec, "./outputs_lpau2i/", "lpa_u2i");
   } else if (app_name == "sampling_path") {
     RunSamplingPath(fragment, comm_spec, "./outputs_sampling_path/",
                     path_pattern);
   } else {
     if (!run_projected) {
-         gs::RunPropertyApp(fragment, comm_spec, "./outputs_wcc/", "wcc_property");
-  gs::RunPropertyApp(fragment, comm_spec, "./outputs_sssp/", "sssp_property");
+      gs::RunPropertyApp(fragment, comm_spec, "./outputs_wcc/", "wcc_property");
+      gs::RunPropertyApp(fragment, comm_spec, "./outputs_sssp/",
+                         "sssp_property");
 
-  gs::RunPropertyApp(fragment, comm_spec, "./outputs_auto_wcc/", "wcc_auto_property");
-  gs::RunPropertyApp(fragment, comm_spec, "./outputs_auto_sssp/", "sssp_auto_property");
+      gs::RunPropertyApp(fragment, comm_spec, "./outputs_auto_wcc/",
+                         "wcc_auto_property");
+      gs::RunPropertyApp(fragment, comm_spec, "./outputs_auto_sssp/",
+                         "sssp_auto_property");
     } else {
-  gs::RunProjectedApp(fragment, comm_spec, "./output_projected_wcc/", "wcc_projected");
-  gs::RunProjectedApp(fragment, comm_spec, "./output_projected_sssp/", "sssp_projected");
-  gs::RunProjectedApp(fragment, comm_spec, "./output_projected_cdlp/", "cdlp_projected");
-  gs::RunProjectedApp(fragment, comm_spec, "./output_projected_bfs/", "bfs_projected");
+      gs::RunProjectedApp(fragment, comm_spec, "./output_projected_wcc/",
+                          "wcc_projected");
+      gs::RunProjectedApp(fragment, comm_spec, "./output_projected_sssp/",
+                          "sssp_projected");
+      gs::RunProjectedApp(fragment, comm_spec, "./output_projected_cdlp/",
+                          "cdlp_projected");
+      gs::RunProjectedApp(fragment, comm_spec, "./output_projected_bfs/",
+                          "bfs_projected");
 
-  gs::RunProjectedApp(fragment, comm_spec, "./output_projected_lcc/", "lcc_projected");
-  gs::RunProjectedApp(fragment, comm_spec, "./output_projected_pagerank/", "pagerank_projected");
+      gs::RunProjectedApp(fragment, comm_spec, "./output_projected_lcc/",
+                          "lcc_projected");
+      gs::RunProjectedApp(fragment, comm_spec, "./output_projected_pagerank/",
+                          "pagerank_projected");
+    }
   }
-}}
+}
 
 int main(int argc, char** argv) {
   if (argc < 6) {
@@ -171,7 +178,8 @@ int main(int argc, char** argv) {
 
     LOG(INFO) << "Connected to IPCServer: " << ipc_socket;
 
-    auto fragment_id = gs::LoadPropertyGraph(comm_spec, client, efiles, vfiles, directed != 0);
+    auto fragment_id =
+        gs::LoadPropertyGraph(comm_spec, client, efiles, vfiles, directed != 0);
 
     Run(client, comm_spec, fragment_id, run_projected, app_name, path_pattern);
     LOG(INFO) << "memory: " << vineyard::get_rss_pretty()

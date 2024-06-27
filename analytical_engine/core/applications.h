@@ -32,7 +32,6 @@
 #include "gflags/gflags_declare.h"
 #include "glog/logging.h"
 
-
 namespace gs {
 
 template <typename FRAG_T>
@@ -40,7 +39,7 @@ std::shared_ptr<FRAG_T> LoadSimpleGraph(const std::string& efile,
                                         const std::string& vfile,
                                         const grape::CommSpec& comm_spec);
 
-template <typename OID_T=int64_t, typename VID_T=uint64_t>
+template <typename OID_T = int64_t, typename VID_T = uint64_t>
 vineyard::ObjectID LoadPropertyGraph(const grape::CommSpec& comm_spec,
                                      vineyard::Client& client,
                                      const std::vector<std::string>& efiles,
