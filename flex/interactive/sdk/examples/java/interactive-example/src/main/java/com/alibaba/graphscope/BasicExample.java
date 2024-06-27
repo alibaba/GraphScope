@@ -23,6 +23,7 @@ import com.alibaba.graphscope.interactive.models.*;
 import org.apache.tinkerpop.gremlin.driver.Client;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,76 +32,90 @@ import java.util.List;
  */
 public class BasicExample {
 
-    public static String createGraph(Session session) {
-        CreateGraphRequest graph = new CreateGraphRequest();
-        graph.setName("testGraph");
-        graph.setDescription("a simple test graph");
-        CreateGraphSchemaRequest schema = new CreateGraphSchemaRequest();
-        {
-            CreateVertexType vertexType = new CreateVertexType();
-            vertexType.setTypeName("person");
-            List<CreatePropertyMeta> propertyMetaList = new ArrayList<>();
-            {
-                CreatePropertyMeta propertyMeta = new CreatePropertyMeta();
-                propertyMeta.setPropertyName("id");
-                propertyMeta.setPropertyType(
-                        new GSDataType(
-                                new PrimitiveType()
-                                        .primitiveType(
-                                                PrimitiveType.PrimitiveTypeEnum.SIGNED_INT64)));
-                propertyMetaList.add(propertyMeta);
-            }
-            {
-                CreatePropertyMeta propertyMeta = new CreatePropertyMeta();
-                propertyMeta.setPropertyName("name");
-                propertyMeta.setPropertyType(
-                        new GSDataType(
-                                (new StringType()
-                                        .string(
-                                                new StringTypeString(
-                                                        new LongText().longText(""))))));
-                System.out.println("json: " + propertyMeta.toJson());
-                propertyMetaList.add(propertyMeta);
-            }
-            {
-                // age
-                CreatePropertyMeta propertyMeta = new CreatePropertyMeta();
-                propertyMeta.setPropertyName("age");
-                propertyMeta.setPropertyType(
-                        new GSDataType(
-                                new PrimitiveType()
-                                        .primitiveType(
-                                                PrimitiveType.PrimitiveTypeEnum.SIGNED_INT32)));
-                propertyMetaList.add(propertyMeta);
-            }
-            vertexType.setProperties(propertyMetaList);
-            vertexType.addPrimaryKeysItem("id");
-            schema.addVertexTypesItem(vertexType);
-        }
-        {
-            CreateEdgeType edgeType = new CreateEdgeType();
-            edgeType.setTypeName("knows");
-            List<CreatePropertyMeta> propertyMetaList = new ArrayList<>();
-            {
-                CreatePropertyMeta propertyMeta = new CreatePropertyMeta();
-                propertyMeta.setPropertyName("weight");
-                propertyMeta.setPropertyType(
-                        new GSDataType(
-                                new PrimitiveType()
-                                        .primitiveType(PrimitiveType.PrimitiveTypeEnum.DOUBLE)));
-                propertyMetaList.add(propertyMeta);
-            }
-            edgeType.setProperties(propertyMetaList);
-            BaseEdgeTypeVertexTypePairRelationsInner relationShip =
-                    new BaseEdgeTypeVertexTypePairRelationsInner();
-            relationShip.setSourceVertex("person");
-            relationShip.setDestinationVertex("person");
-            relationShip.relation(
-                    BaseEdgeTypeVertexTypePairRelationsInner.RelationEnum.MANY_TO_MANY);
-            edgeType.addVertexTypePairRelationsItem(relationShip);
-            schema.addEdgeTypesItem(edgeType);
-        }
-        graph.setSchema(schema);
+    private static final String MODERN_GRAPH_SCHEMA_JSON = "{\n" +
+            "    \"name\": \"modern_graph\",\n" +
+            "    \"description\": \"This is a test graph\",\n" +
+            "    \"schema\": {\n" +
+            "        \"vertex_types\": [\n" +
+            "            {\n" +
+            "                \"type_name\": \"person\",\n" +
+            "                \"properties\": [\n" +
+            "                    {\n" +
+            "                        \"property_name\": \"id\",\n" +
+            "                        \"property_type\": {\"primitive_type\": \"DT_SIGNED_INT64\"},\n" +
+            "                    },\n" +
+            "                    {\n" +
+            "                        \"property_name\": \"name\",\n" +
+            "                        \"property_type\": {\"string\": {\"long_text\": \"\"}},\n" +
+            "                    },\n" +
+            "                    {\n" +
+            "                        \"property_name\": \"age\",\n" +
+            "                        \"property_type\": {\"primitive_type\": \"DT_SIGNED_INT32\"},\n" +
+            "                    },\n" +
+            "                ],\n" +
+            "                \"primary_keys\": [\"id\"],\n" +
+            "            }\n" +
+            "        ],\n" +
+            "        \"edge_types\": [\n" +
+            "            {\n" +
+            "                \"type_name\": \"knows\",\n" +
+            "                \"vertex_type_pair_relations\": [\n" +
+            "                    {\n" +
+            "                        \"source_vertex\": \"person\",\n" +
+            "                        \"destination_vertex\": \"person\",\n" +
+            "                        \"relation\": \"MANY_TO_MANY\",\n" +
+            "                    }\n" +
+            "                ],\n" +
+            "                \"properties\": [\n" +
+            "                    {\n" +
+            "                        \"property_name\": \"weight\",\n" +
+            "                        \"property_type\": {\"primitive_type\": \"DT_DOUBLE\"},\n" +
+            "                    }\n" +
+            "                ],\n" +
+            "                \"primary_keys\": [],\n" +
+            "            }\n" +
+            "        ],\n" +
+            "    },\n" +
+            "}";
+
+    //Remember to replace the path with your own file path
+    private static final String MODERN_GRAPH_BULK_LOADING_JSON = "{\n" +
+            "    \"vertex_mappings\": [\n" +
+            "        {\n" +
+            "            \"type_name\": \"person\",\n" +
+            "            \"inputs\": [\"@/tmp/person.csv\"],\n" +
+            "            \"column_mappings\": [\n" +
+            "                {\"column\": {\"index\": 0, \"name\": \"id\"}, \"property\": \"id\"},\n" +
+            "                {\"column\": {\"index\": 1, \"name\": \"name\"}, \"property\": \"name\"},\n" +
+            "                {\"column\": {\"index\": 2, \"name\": \"age\"}, \"property\": \"age\"},\n" +
+            "            ],\n" +
+            "        }\n" +
+            "    ],\n" +
+            "    \"edge_mappings\": [\n" +
+            "        {\n" +
+            "            \"type_triplet\": {\n" +
+            "                \"edge\": \"knows\",\n" +
+            "                \"source_vertex\": \"person\",\n" +
+            "                \"destination_vertex\": \"person\",\n" +
+            "            },\n" +
+            "            \"inputs\": [\n" +
+            "                \"@/tmp/person_knows_person.csv\"\n" +
+            "            ],\n" +
+            "            \"source_vertex_mappings\": [\n" +
+            "                {\"column\": {\"index\": 0, \"name\": \"person.id\"}, \"property\": \"id\"}\n" +
+            "            ],\n" +
+            "            \"destination_vertex_mappings\": [\n" +
+            "                {\"column\": {\"index\": 1, \"name\": \"person.id\"}, \"property\": \"id\"}\n" +
+            "            ],\n" +
+            "            \"column_mappings\": [\n" +
+            "                {\"column\": {\"index\": 2, \"name\": \"weight\"}, \"property\": \"weight\"}\n" +
+            "            ],\n" +
+            "        }\n" +
+            "    ],\n" +
+            "}";
+
+    public static String createGraph(Session session) throws IOException {
+        CreateGraphRequest graph = CreateGraphRequest.fromJson(MODERN_GRAPH_SCHEMA_JSON);
         Result<CreateGraphResponse> rep = session.createGraph(graph);
         if (rep.isOk()) {
             System.out.println("create graph success");
@@ -112,38 +127,8 @@ public class BasicExample {
         return graphId;
     }
 
-    public static String bulkLoading(Session session, String graphId) {
-        SchemaMapping schemaMapping = new SchemaMapping();
-        schemaMapping.setGraph(graphId);
-        {
-            SchemaMappingLoadingConfig loadingConfig = new SchemaMappingLoadingConfig();
-            loadingConfig.setImportOption(SchemaMappingLoadingConfig.ImportOptionEnum.INIT);
-            loadingConfig.setFormat(new SchemaMappingLoadingConfigFormat().type("csv"));
-            schemaMapping.setLoadingConfig(loadingConfig);
-        }
-        {
-            String personPath =
-                    new File("../../../examples/modern_graph/person.csv").getAbsolutePath();
-            String knowsPath =
-                    new File("../../../examples/modern_graph/person_knows_person.csv")
-                            .getAbsolutePath();
-            {
-                VertexMapping vertexMapping = new VertexMapping();
-                vertexMapping.setTypeName("person");
-                vertexMapping.addInputsItem(personPath);
-                schemaMapping.addVertexMappingsItem(vertexMapping);
-            }
-            {
-                EdgeMapping edgeMapping = new EdgeMapping();
-                edgeMapping.setTypeTriplet(
-                        new EdgeMappingTypeTriplet()
-                                .edge("knows")
-                                .sourceVertex("person")
-                                .destinationVertex("person"));
-                edgeMapping.addInputsItem(knowsPath);
-                schemaMapping.addEdgeMappingsItem(edgeMapping);
-            }
-        }
+    public static String bulkLoading(Session session, String graphId) throws IOException {
+        SchemaMapping schemaMapping = SchemaMapping.fromJson(MODERN_GRAPH_BULK_LOADING_JSON);
         Result<JobResponse> rep = session.bulkLoading(graphId, schemaMapping);
         if (rep.isOk()) {
             System.out.println("bulk loading success");
@@ -189,8 +174,18 @@ public class BasicExample {
         Driver driver = Driver.connect(endpoint);
         Session session = driver.session();
 
-        String graphId = createGraph(session);
-        String jobId = bulkLoading(session, graphId);
+        String graphId = null;
+        try {
+            graphId = createGraph(session);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String jobId = null;
+        try {
+            jobId = bulkLoading(session, graphId);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         waitJobFinished(session, jobId);
         System.out.println("bulk loading finished");
 
@@ -254,6 +249,13 @@ public class BasicExample {
             System.out.println("result: " + result.toString());
         }
         System.out.println("Finish all tests");
-        return;
+
+        // Delete the graph
+        Result<String> deleteGraphResponse = session.deleteGraph(graphId);
+        if (deleteGraphResponse.isOk()) {
+            System.out.println("delete graph success");
+        } else {
+            throw new RuntimeException("delete graph failed: " + deleteGraphResponse.getStatusMessage());
+        }
     }
 }
