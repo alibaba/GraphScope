@@ -2,7 +2,7 @@ graph: onecompany
 loading_config:
   data_source:
     scheme: file  # file, oss, s3, hdfs; only file is supported now
-    location: /home/graphscope/work/gs/flex/interactive/examples/huoyan/sample/
+    location: /home/graphscope/work/gs/flex/interactive/examples/new_huoyan/sample/
   import_option: init # append, overwrite, only init is supported now
   format:
     type: csv
@@ -23,6 +23,18 @@ vertex_mappings:
           index: 1
           name: vertex_name
         property: vertex_name
+      - column:
+          index: 2
+          name: status
+        property: status
+      - column:
+          index: 3
+          name: credit_code
+        property: credit_code
+      - column:
+          index: 4
+          name: license_number
+        property: license_number
   - type_name: person
     inputs:
       - person.csv 

@@ -7,13 +7,13 @@ loading_config:
   format:
     type: arrow
     metadata:
-      batch_reader: false
+      batch_reader: true
       quoting: true
       delimiter: ","
 vertex_mappings:
   - type_name: company  # must align with the schema
     inputs:
-      - onecomp/dwi_oc_rel_vertex_comp_interactive_d/ds=20240527
+      - onecomp/dwi_oc_rel_vertex_comp_interactive_d/ds=20240614
     column_mappings:
       - column:
           index: 0    # can be omitted if the index is the same as the property index
@@ -25,7 +25,7 @@ vertex_mappings:
         property: vertex_name
   - type_name: person
     inputs:
-      - onecomp/dwi_oc_rel_vertex_person_interactive_d/ds=20240527
+      - onecomp/dwi_oc_rel_vertex_person_interactive_d/ds=20240614
     column_mappings:
       - column:
           index: 0
@@ -41,7 +41,7 @@ edge_mappings:
       source_vertex:  company
       destination_vertex:  company
     inputs:
-      - onecomp/dwi_oc_rel_edge_comp_interactive_info_d/ds=20240527
+      - onecomp/dwi_oc_rel_edge_comp_interactive_info_d/ds=20240614
     source_vertex_mappings:
       - column:
           index: 0
@@ -62,7 +62,7 @@ edge_mappings:
       source_vertex:  person
       destination_vertex:  company
     inputs:
-      - onecomp/dwi_oc_rel_edge_comp_person_interactive_info_d/ds=20240527
+      - onecomp/dwi_oc_rel_edge_comp_person_interactive_info_d/ds=20240614
     source_vertex_mappings:
       - column:
           index: 0
