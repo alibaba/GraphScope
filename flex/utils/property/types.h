@@ -67,7 +67,7 @@ enum class PropertyTypeImpl {
   kInt32,
   kDate,
   kDay,
-  kString,
+  kStringView,
   kEmpty,
   kInt64,
   kDouble,
@@ -81,6 +81,9 @@ enum class PropertyTypeImpl {
   kVarChar,
   kVertexGlobalId,
   kLabel,
+  kRecordView,
+  kRecord,
+  kString,
 };
 
 // Stores additional type information for PropertyTypeImpl
@@ -117,11 +120,14 @@ struct PropertyType {
   static PropertyType Double();
   static PropertyType Date();
   static PropertyType Day();
-  static PropertyType String();
+  static PropertyType StringView();
   static PropertyType StringMap();
   static PropertyType Varchar(uint16_t max_length);
   static PropertyType VertexGlobalId();
   static PropertyType Label();
+  static PropertyType RecordView();
+  static PropertyType Record();
+  static PropertyType String();
 
   static const PropertyType kEmpty;
   static const PropertyType kBool;
@@ -135,10 +141,13 @@ struct PropertyType {
   static const PropertyType kDouble;
   static const PropertyType kDate;
   static const PropertyType kDay;
-  static const PropertyType kString;
+  static const PropertyType kStringView;
   static const PropertyType kStringMap;
   static const PropertyType kVertexGlobalId;
   static const PropertyType kLabel;
+  static const PropertyType kRecordView;
+  static const PropertyType kRecord;
+  static const PropertyType kString;
 
   bool operator==(const PropertyType& other) const;
   bool operator!=(const PropertyType& other) const;
@@ -270,6 +279,77 @@ struct LabelKey {
   LabelKey(label_data_type id) : label_id(id) {}
 };
 
+class Table;
+struct Any;
+struct RecordView {
+  RecordView() : offset(0), table(nullptr) {}
+  RecordView(size_t offset, const Table* table)
+      : offset(offset), table(table) {}
+  size_t size() const;
+  Any operator[](size_t idx) const;
+
+  template <typename T>
+  T get_field(int col_id) const;
+
+  size_t offset;
+  const Table* table;
+};
+
+struct Any;
+struct Record {
+  Record() : len(0), props(nullptr) {}
+  Record(size_t len);
+  Record(const Record& other);
+  Record(Record&& other);
+  Record& operator=(const Record& other);
+  Record(const std::vector<Any>& vec);
+  Record(const std::initializer_list<Any>& list);
+  ~Record();
+  size_t size() const { return len; }
+  Any operator[](size_t idx) const;
+  Any* begin() const;
+  Any* end() const;
+
+  size_t len;
+  Any* props;
+};
+
+struct StringPtr {
+  StringPtr() : ptr(nullptr) {}
+  StringPtr(const std::string& str) : ptr(new std::string(str)) {}
+  StringPtr(const StringPtr& other) {
+    if (other.ptr) {
+      ptr = new std::string(*other.ptr);
+    } else {
+      ptr = nullptr;
+    }
+  }
+  StringPtr(StringPtr&& other) : ptr(other.ptr) { other.ptr = nullptr; }
+  StringPtr& operator=(const StringPtr& other) {
+    if (this == &other) {
+      return *this;
+    }
+    if (ptr) {
+      delete ptr;
+    }
+    if (other.ptr) {
+      ptr = new std::string(*other.ptr);
+    } else {
+      ptr = nullptr;
+    }
+    return *this;
+  }
+  ~StringPtr() {
+    if (ptr) {
+      delete ptr;
+    }
+  }
+  // return string_view
+  std::string_view operator*() const {
+    return std::string_view((*ptr).data(), (*ptr).size());
+  }
+  std::string* ptr;
+};
 union AnyValue {
   AnyValue() {}
   ~AnyValue() {}
@@ -289,6 +369,11 @@ union AnyValue {
   double db;
   uint8_t u8;
   uint16_t u16;
+  RecordView record_view;
+
+  // Non-trivial types
+  Record record;
+  StringPtr s_ptr;
 };
 
 template <typename T>
@@ -297,16 +382,82 @@ struct AnyConverter;
 struct Any {
   Any() : type(PropertyType::kEmpty) {}
 
-  Any(const Any& other) : type(other.type), value(other.value) {}
+  Any(const Any& other) : type(other.type) {
+    if (type == PropertyType::kRecord) {
+      new (&value.record) Record(other.value.record);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+      new (&value.s_ptr) StringPtr(other.value.s_ptr);
+    } else {
+      memcpy(static_cast<void*>(&value), static_cast<const void*>(&other.value),
+             sizeof(AnyValue));
+    }
+  }
+
+  Any(Any&& other) : type(other.type) {
+    if (type == PropertyType::kRecord) {
+      new (&value.record) Record(std::move(other.value.record));
+    } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+      new (&value.s_ptr) StringPtr(std::move(other.value.s_ptr));
+    } else {
+      memcpy(static_cast<void*>(&value), static_cast<const void*>(&other.value),
+             sizeof(AnyValue));
+    }
+  }
+
+  Any(const std::initializer_list<Any>& list) {
+    type = PropertyType::kRecord;
+    new (&value.record) Record(list);
+  }
+  Any(const std::vector<Any>& vec) {
+    type = PropertyType::kRecord;
+    new (&value.record) Record(vec);
+  }
+
+  Any(const std::string& str) {
+    type = PropertyType::kString;
+    new (&value.s_ptr) StringPtr(str);
+  }
 
   template <typename T>
   Any(const T& val) {
     Any a = Any::From(val);
     type = a.type;
-    value = a.value;
+    if (type == PropertyType::kRecord) {
+      new (&value.record) Record(a.value.record);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+      new (&value.s_ptr) StringPtr(a.value.s_ptr);
+    } else {
+      memcpy(static_cast<void*>(&value), static_cast<const void*>(&a.value),
+             sizeof(AnyValue));
+    }
   }
 
-  ~Any() {}
+  Any& operator=(const Any& other) {
+    if (this == &other) {
+      return *this;
+    }
+    if (type == PropertyType::kRecord) {
+      value.record.~Record();
+    }
+    type = other.type;
+    if (type == PropertyType::kRecord) {
+      new (&value.record) Record(other.value.record);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+      new (&value.s_ptr) StringPtr(other.value.s_ptr);
+    } else {
+      memcpy(static_cast<void*>(&value), static_cast<const void*>(&other.value),
+             sizeof(AnyValue));
+    }
+    return *this;
+  }
+
+  ~Any() {
+    if (type == PropertyType::kRecord) {
+      value.record.~Record();
+    } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+      value.s_ptr.~StringPtr();
+    }
+  }
 
   int64_t get_long() const {
     assert(type == PropertyType::kInt64);
@@ -362,9 +513,14 @@ struct Any {
     value.day = v;
   }
 
-  void set_string(std::string_view v) {
-    type = PropertyType::kString;
+  void set_string_view(std::string_view v) {
+    type = PropertyType::kStringView;
     value.s = v;
+  }
+
+  void set_string(const std::string& v) {
+    type = PropertyType::kString;
+    new (&value.s_ptr) StringPtr(v);
   }
 
   void set_float(float v) {
@@ -387,12 +543,27 @@ struct Any {
     value.u16 = v;
   }
 
+  void set_record_view(RecordView v) {
+    type = PropertyType::kRecordView;
+    value.record_view = v;
+  }
+
+  void set_record(Record v) {
+    if (type == PropertyType::kRecord) {
+      value.record.~Record();
+    }
+    type = PropertyType::kRecord;
+    new (&(value.record)) Record(v);
+  }
+
   std::string to_string() const {
     if (type == PropertyType::kInt32) {
       return std::to_string(value.i);
     } else if (type == PropertyType::kInt64) {
       return std::to_string(value.l);
-    } else if (type == PropertyType::kString) {
+    } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+      return *value.s_ptr.ptr;
+    } else if (type == PropertyType::kStringView) {
       return std::string(value.s.data(), value.s.size());
       //      return value.s.to_string();
     } else if (type == PropertyType::kDate) {
@@ -426,9 +597,9 @@ struct Any {
     }
   }
 
-  std::string AsString() const {
-    assert(type == PropertyType::kString);
-    return std::string(value.s);
+  const std::string& AsString() const {
+    assert(type.type_enum == impl::PropertyTypeImpl::kString);
+    return *value.s_ptr.ptr;
   }
 
   int64_t AsInt64() const {
@@ -466,9 +637,13 @@ struct Any {
     return value.f;
   }
 
-  const std::string_view& AsStringView() const {
-    assert(type == PropertyType::kString);
-    return value.s;
+  std::string_view AsStringView() const {
+    assert(type == PropertyType::kStringView);
+    if (type.type_enum != impl::PropertyTypeImpl::kString) {
+      return value.s;
+    } else {
+      return *value.s_ptr.ptr;
+    }
   }
 
   const Date& AsDate() const {
@@ -491,6 +666,16 @@ struct Any {
     return value.label_key;
   }
 
+  const RecordView& AsRecordView() const {
+    assert(type == PropertyType::kRecordView);
+    return value.record_view;
+  }
+
+  const Record& AsRecord() const {
+    assert(type == PropertyType::kRecord);
+    return value.record;
+  }
+
   template <typename T>
   static Any From(const T& value) {
     return AnyConverter<T>::to_any(value);
@@ -506,8 +691,10 @@ struct Any {
         return value.d.milli_second == other.value.d.milli_second;
       } else if (type == PropertyType::kDay) {
         return value.day == other.value.day;
-      } else if (type == PropertyType::kString) {
-        return value.s == other.value.s;
+      } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+        return *value.s_ptr == other.AsStringView();
+      } else if (type == PropertyType::kStringView) {
+        return value.s == other.AsStringView();
       } else if (type == PropertyType::kEmpty) {
         return true;
       } else if (type == PropertyType::kDouble) {
@@ -532,6 +719,19 @@ struct Any {
       } else {
         return false;
       }
+    } else if (type == PropertyType::kRecordView) {
+      return value.record_view.offset == other.value.record_view.offset &&
+             value.record_view.table == other.value.record_view.table;
+    } else if (type == PropertyType::kRecord) {
+      if (value.record.len != other.value.record.len) {
+        return false;
+      }
+      for (size_t i = 0; i < value.record.len; ++i) {
+        if (!(value.record.props[i] == other.value.record.props[i])) {
+          return false;
+        }
+      }
+      return true;
     } else {
       return false;
     }
@@ -547,8 +747,10 @@ struct Any {
         return value.d.milli_second < other.value.d.milli_second;
       } else if (type == PropertyType::kDay) {
         return value.day < other.value.day;
-      } else if (type == PropertyType::kString) {
-        return value.s < other.value.s;
+      } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+        return *value.s_ptr < other.AsStringView();
+      } else if (type == PropertyType::kStringView) {
+        return value.s < other.AsStringView();
       } else if (type == PropertyType::kEmpty) {
         return false;
       } else if (type == PropertyType::kDouble) {
@@ -565,6 +767,18 @@ struct Any {
         return value.vertex_gid < other.value.vertex_gid;
       } else if (type == PropertyType::kLabel) {
         return value.label_key.label_id < other.value.label_key.label_id;
+      } else if (type == PropertyType::kRecord) {
+        for (size_t i = 0; i < value.record.len; ++i) {
+          if (i >= other.value.record.len) {
+            return false;
+          }
+          if (value.record.props[i] < other.value.record.props[i]) {
+            return true;
+          } else if (other.value.record.props[i] < value.record.props[i]) {
+            return false;
+          }
+        }
+        return false;
       } else {
         return false;
       }
@@ -668,15 +882,15 @@ struct ConvertAny<grape::EmptyType> {
 template <>
 struct ConvertAny<std::string> {
   static void to(const Any& value, std::string& out) {
-    CHECK(value.type == PropertyType::kString);
-    out = std::string(value.value.s);
+    CHECK(value.type.type_enum == impl::PropertyTypeImpl::kString);
+    out = *value.value.s_ptr.ptr;
   }
 };
 
 template <>
 struct ConvertAny<std::string_view> {
   static void to(const Any& value, std::string_view& out) {
-    CHECK(value.type == PropertyType::kString);
+    CHECK(value.type == PropertyType::kStringView);
     out = value.value.s;
   }
 };
@@ -697,6 +911,23 @@ struct ConvertAny<double> {
   }
 };
 
+template <>
+struct ConvertAny<RecordView> {
+  static void to(const Any& value, RecordView& out) {
+    CHECK(value.type == PropertyType::kRecordView);
+    out.offset = value.value.record_view.offset;
+    out.table = value.value.record_view.table;
+  }
+};
+
+template <>
+struct ConvertAny<Record> {
+  static void to(const Any& value, Record& out) {
+    CHECK(value.type == PropertyType::kRecord);
+    out = value.value.record;
+  }
+};
+
 template <typename T>
 struct AnyConverter {};
 
@@ -710,13 +941,6 @@ struct AnyConverter<bool> {
     ret.set_bool(value);
     return ret;
   }
-
-  static AnyValue to_any_value(const bool& value) {
-    AnyValue ret;
-    ret.b = value;
-    return ret;
-  }
-
   static const bool& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kBool);
     return value.value.b;
@@ -763,12 +987,6 @@ struct AnyConverter<int32_t> {
     return ret;
   }
 
-  static AnyValue to_any_value(const int32_t& value) {
-    AnyValue ret;
-    ret.i = value;
-    return ret;
-  }
-
   static const int32_t& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kInt32);
     return value.value.i;
@@ -789,12 +1007,6 @@ struct AnyConverter<uint32_t> {
     return ret;
   }
 
-  static AnyValue to_any_value(const uint32_t& value) {
-    AnyValue ret;
-    ret.ui = value;
-    return ret;
-  }
-
   static const uint32_t& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kUInt32);
     return value.value.ui;
@@ -811,12 +1023,6 @@ struct AnyConverter<int64_t> {
   static Any to_any(const int64_t& value) {
     Any ret;
     ret.set_i64(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const int64_t& value) {
-    AnyValue ret;
-    ret.l = value;
     return ret;
   }
 
@@ -840,12 +1046,6 @@ struct AnyConverter<uint64_t> {
     return ret;
   }
 
-  static AnyValue to_any_value(const uint64_t& value) {
-    AnyValue ret;
-    ret.ul = value;
-    return ret;
-  }
-
   static const uint64_t& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kUInt64);
     return value.value.ul;
@@ -863,12 +1063,6 @@ struct AnyConverter<GlobalId> {
   static Any to_any(const GlobalId& value) {
     Any ret;
     ret.set_vertex_gid(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const GlobalId& value) {
-    AnyValue ret;
-    ret.vertex_gid = value;
     return ret;
   }
 
@@ -898,12 +1092,6 @@ struct AnyConverter<Date> {
     return ret;
   }
 
-  static AnyValue to_any_value(const Date& value) {
-    AnyValue ret;
-    ret.d = value;
-    return ret;
-  }
-
   static const Date& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kDate);
     return value.value.d;
@@ -929,12 +1117,6 @@ struct AnyConverter<Day> {
     return ret;
   }
 
-  static AnyValue to_any_value(const Day& value) {
-    AnyValue ret;
-    ret.day = value;
-    return ret;
-  }
-
   static const Day& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kDay);
     return value.value.day;
@@ -945,22 +1127,17 @@ struct AnyConverter<Day> {
 
 template <>
 struct AnyConverter<std::string_view> {
-  static PropertyType type() { return PropertyType::kString; }
+  static PropertyType type() { return PropertyType::kStringView; }
 
   static Any to_any(const std::string_view& value) {
     Any ret;
-    ret.set_string(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const std::string_view& value) {
-    AnyValue ret;
-    ret.s = value;
+    ret.set_string_view(value);
     return ret;
   }
 
   static const std::string_view& from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kString);
+    CHECK(value.type == PropertyType::kStringView &&
+          value.type.type_enum != impl::PropertyTypeImpl::kString);
     return value.value.s;
   }
 
@@ -979,19 +1156,13 @@ struct AnyConverter<std::string> {
     return ret;
   }
 
-  static AnyValue to_any_value(const std::string& value) {
-    AnyValue ret;
-    ret.s = value;
-    return ret;
+  static std::string& from_any(const Any& value) {
+    CHECK(value.type.type_enum == impl::PropertyTypeImpl::kString);
+    return *value.value.s_ptr.ptr;
   }
 
-  static std::string from_any(const Any& value) {
-    CHECK(value.type == PropertyType::kString);
-    return std::string(value.value.s);
-  }
-
-  static std::string from_any_value(const AnyValue& value) {
-    return std::string(value.s);
+  static std::string& from_any_value(const AnyValue& value) {
+    return *value.s_ptr.ptr;
   }
 };
 
@@ -1001,11 +1172,6 @@ struct AnyConverter<grape::EmptyType> {
 
   static Any to_any(const grape::EmptyType& value) {
     Any ret;
-    return ret;
-  }
-
-  static AnyValue to_any_value(const grape::EmptyType& value) {
-    AnyValue ret;
     return ret;
   }
 
@@ -1026,12 +1192,6 @@ struct AnyConverter<double> {
   static Any to_any(const double& value) {
     Any ret;
     ret.set_double(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const double& value) {
-    AnyValue ret;
-    ret.db = value;
     return ret;
   }
 
@@ -1056,12 +1216,6 @@ struct AnyConverter<float> {
     return ret;
   }
 
-  static AnyValue to_any_value(const float& value) {
-    AnyValue ret;
-    ret.f = value;
-    return ret;
-  }
-
   static const float& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kFloat);
     return value.value.f;
@@ -1080,12 +1234,6 @@ struct AnyConverter<LabelKey> {
     return ret;
   }
 
-  static AnyValue to_any_value(const LabelKey& value) {
-    AnyValue ret;
-    ret.label_key = value;
-    return ret;
-  }
-
   static const LabelKey& from_any(const Any& value) {
     CHECK(value.type == PropertyType::kLabel);
     return value.value.label_key;
@@ -1095,6 +1243,54 @@ struct AnyConverter<LabelKey> {
     return value.label_key;
   }
 };
+
+template <>
+struct AnyConverter<RecordView> {
+  static PropertyType type() { return PropertyType::kRecordView; }
+
+  static Any to_any(const RecordView& value) {
+    Any ret;
+    ret.set_record_view(value);
+    return ret;
+  }
+
+  static const RecordView& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kRecordView);
+    return value.value.record_view;
+  }
+
+  static const RecordView& from_any_value(const AnyValue& value) {
+    return value.record_view;
+  }
+};
+
+template <>
+struct AnyConverter<Record> {
+  static PropertyType type() { return PropertyType::kRecord; }
+
+  static Any to_any(const Record& value) {
+    Any ret;
+    ret.set_record(value);
+    return ret;
+  }
+
+  static const Record& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kRecord);
+    return value.value.record;
+  }
+
+  static const Record& from_any_value(const AnyValue& value) {
+    return value.record;
+  }
+};
+
+template <typename T>
+T RecordView::get_field(int col_id) const {
+  auto val = operator[](col_id);
+  T ret{};
+  ConvertAny<T>::to(val, ret);
+  return ret;
+}
 
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value);
@@ -1165,7 +1361,7 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
     os << "date";
   } else if (pt == gs::PropertyType::Day()) {
     os << "day";
-  } else if (pt == gs::PropertyType::String()) {
+  } else if (pt == gs::PropertyType::StringView()) {
     os << "string";
   } else if (pt == gs::PropertyType::StringMap()) {
     os << "string_map";
@@ -1205,7 +1401,7 @@ struct convert<gs::PropertyType> {
     } else if (config["string"]) {
       if (config["string"].IsMap()) {
         if (config["string"]["long_text"]) {
-          property_type = gs::PropertyType::String();
+          property_type = gs::PropertyType::StringView();
         } else if (config["string"]["var_char"]) {
           if (config["string"]["var_char"]["max_length"]) {
             property_type = gs::PropertyType::Varchar(
@@ -1259,7 +1455,7 @@ struct convert<gs::PropertyType> {
         type == gs::PropertyType::Double()) {
       node["primitive_type"] =
           gs::config_parsing::PrimitivePropertyTypeToString(type);
-    } else if (type == gs::PropertyType::String() ||
+    } else if (type == gs::PropertyType::StringView() ||
                type == gs::PropertyType::StringMap()) {
       node["string"]["long_text"] = "";
     } else if (type.IsVarchar()) {

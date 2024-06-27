@@ -18,10 +18,8 @@ package com.alibaba.graphscope.groot.servers.ir;
 
 import com.alibaba.graphscope.GraphServer;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
-import com.alibaba.graphscope.common.config.AuthConfig;
-import com.alibaba.graphscope.common.config.FrontendConfig;
-import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.common.config.PlannerConfig;
+import com.alibaba.graphscope.common.config.*;
+import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
@@ -60,8 +58,10 @@ public class IrServiceProducer {
         logger.info("IR configs: {}", irConfigs);
         GraphRelOptimizer optimizer = new GraphRelOptimizer(irConfigs);
         IrMetaFetcher irMetaFetcher =
-                new GrootMetaFetcher(
-                        new GrootIrMetaReader(schemaFetcher), optimizer.getGlogueHolder());
+                new DynamicIrMetaFetcher(
+                        irConfigs,
+                        new GrootIrMetaReader(schemaFetcher),
+                        optimizer.getGlogueHolder());
         RoleClients<SnapshotUpdateClient> updateCommitter =
                 new RoleClients<>(channelManager, RoleType.COORDINATOR, SnapshotUpdateClient::new);
         int frontendId = CommonConfig.NODE_IDX.get(configs);
@@ -130,10 +130,17 @@ public class IrServiceProducer {
         addToConfigMapIfExist(FrontendConfig.FRONTEND_SERVER_NUM.getKey(), configMap);
         // add frontend qps limit
         addToConfigMapIfExist(FrontendConfig.QUERY_PER_SECOND_LIMIT.getKey(), configMap);
+        // add graph schema fetch interval
+        addToConfigMapIfExist(GraphConfig.GRAPH_META_SCHEMA_FETCH_INTERVAL_MS.getKey(), configMap);
+        // add graph statistics fetch interval
+        addToConfigMapIfExist(
+                GraphConfig.GRAPH_META_STATISTICS_FETCH_INTERVAL_MS.getKey(), configMap);
         // add graph planner configs
         addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_IS_ON.getKey(), configMap);
         addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_OPT.getKey(), configMap);
         addToConfigMapIfExist(PlannerConfig.GRAPH_PLANNER_RULES.getKey(), configMap);
+        addToConfigMapIfExist(FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.getKey(), configMap);
+        addToConfigMapIfExist(FrontendConfig.GRAPH_PHYSICAL_OPT.getKey(), configMap);
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 

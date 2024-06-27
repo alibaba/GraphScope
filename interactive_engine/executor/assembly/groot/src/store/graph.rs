@@ -21,8 +21,18 @@ use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
 use crate::store::jna_response::JnaResponse;
 
 pub type GraphHandle = *const c_void;
+
+#[cfg(feature = "mimalloc")]
+use mimalloc_rust::*;
+
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
+
+#[cfg(not(feature = "mimalloc"))]
 use tikv_jemallocator::Jemalloc;
 
+#[cfg(not(feature = "mimalloc"))]
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 
@@ -125,6 +135,29 @@ pub extern "C" fn writeBatch(
         }
     };
     return ret;
+}
+
+#[no_mangle]
+pub extern "C" fn getGraphStatistics(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
+    trace!("getGraphStatistics");
+    unsafe {
+        let graph_store_ptr = &*(ptr as *const GraphStore);
+        match graph_store_ptr.get_graph_statistics_blob(snapshot_id) {
+            Ok(blob) => {
+                let mut response = JnaResponse::new_success();
+                if let Err(e) = response.data(blob) {
+                    response.success(false);
+                    let msg = format!("{:?}", e);
+                    response.err_msg(&msg);
+                }
+                response
+            }
+            Err(e) => {
+                let msg = format!("{:?}", e);
+                JnaResponse::new_error(&msg)
+            }
+        }
+    }
 }
 
 fn do_write_batch<G: MultiVersionGraph>(

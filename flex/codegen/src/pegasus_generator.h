@@ -160,7 +160,8 @@ class PegasusGenerator {
     std::string plan_json;
     google::protobuf::util::JsonPrintOptions option;
     option.always_print_primitive_fields = true;
-    auto st = google::protobuf::util::MessageToJsonString(plan_, &plan_json, option);
+    auto st =
+        google::protobuf::util::MessageToJsonString(plan_, &plan_json, option);
     for (auto i = 0; i < size; ++i) {
       auto op = plan_.plan(i);
       LOG(INFO) << "Start codegen for operator " << i;

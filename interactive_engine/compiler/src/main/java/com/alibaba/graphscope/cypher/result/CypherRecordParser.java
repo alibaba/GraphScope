@@ -197,7 +197,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         entry -> {
                             valueMap.put(
                                     entry.getKey().getStr(),
-                                    parseElement(entry.getValue(), valueType));
+                                    parseEntry(entry.getValue(), valueType));
                         });
         return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
@@ -216,8 +216,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
         for (int i = 0; i < entries.size(); ++i) {
             IrResult.KeyValues.KeyValue entry = entries.get(i);
-            valueMap.put(
-                    entry.getKey().getStr(), parseElement(entry.getValue(), valueTypes.get(i)));
+            valueMap.put(entry.getKey().getStr(), parseEntry(entry.getValue(), valueTypes.get(i)));
         }
         return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }

@@ -285,7 +285,9 @@ def find_graphscope_packages():
     packages = []
 
     # add graphscope
-    for pkg in find_packages(".", exclude=["graphscope.flex.*"]):
+    for pkg in find_packages(
+        ".", exclude=["graphscope.flex.*", "graphscope.gsctl", "graphscope.gsctl.*"]
+    ):
         packages.append(pkg)
 
     return packages
@@ -303,8 +305,6 @@ def parsed_package_data():
         "graphscope": [
             "VERSION",
             "proto/*.pyi",
-            "gsctl/scripts/*.sh",
-            "gsctl/scripts/lib/*.sh",
         ],
     }
 
@@ -472,11 +472,6 @@ setup(
         "Documentation": "https://graphscope.io/docs",
         "Source": "https://github.com/alibaba/GraphScope",
         "Tracker": "https://github.com/alibaba/GraphScope/issues",
-    },
-    entry_points={
-        "console_scripts": [
-            "gsctl = graphscope.gsctl.gsctl:cli",
-        ],
     },
 )
 

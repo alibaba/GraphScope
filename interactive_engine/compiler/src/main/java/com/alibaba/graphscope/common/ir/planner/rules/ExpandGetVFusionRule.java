@@ -103,9 +103,12 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
     }
 
     private boolean canFuse(GraphLogicalGetV getV, GraphLogicalExpand expand) {
-        // If GraphLogicalGetV has filters, then we cannot fuse them directly. Instead, we create a
+        // If GraphLogicalGetV has filters (or need to cache properties), then we cannot fuse them
+        // directly. Instead, we create a
         // EdgeExpand(V) with an Auxilia for the filters.
-        // If GraphLogicalGetV has no filters, then:
+        // todo: currently, we have not considered the property cache case yet. We will add this
+        // after FieldTrimmer is ready.
+        // If GraphLogicalGetV has no filters (or need to cache properties), then:
         // 1. if we want to expand "person-knows->person", and the type in getV is "person",
         // we can fuse them into one EdgeExpand with type "knows" (where "knows" will be given in
         // EdgeExpand's QueryParam in PhysicalPlan)

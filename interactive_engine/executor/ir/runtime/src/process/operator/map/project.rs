@@ -13,9 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryFrom;
+use std::collections::BTreeMap;
+use std::convert::{TryFrom, TryInto};
 
+use common_pb::path_concat::Endpoint;
 use dyn_type::Object;
+use graph_proxy::apis::PropKey;
 use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
@@ -25,13 +28,28 @@ use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::FnExecError;
 use crate::error::{FnExecResult, FnGenResult};
-use crate::process::entry::CollectionEntry;
 use crate::process::entry::DynEntry;
 use crate::process::entry::Entry;
 use crate::process::entry::PairEntry;
+use crate::process::entry::{CollectionEntry, EntryType};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::operator::TagKey;
 use crate::process::record::Record;
+
+#[derive(Debug)]
+enum Projector {
+    ExprProjector(Evaluator),
+    GraphElementProjector(TagKey),
+    /// VecProjector will output a collection entry, which is a collection of projected graph elements (computed via TagKey).
+    VecProjector(Vec<TagKey>),
+    /// MapProjector will output a collection entry, which is a collection of key-value pairs. The key is a Object (preserve the user-given key), and the value is a projected graph element (computed via TagKey).
+    /// Besides, MapProjector supports nested map.
+    MapProjector(VariableKeyValues),
+    /// A simple concatenation of two paths.
+    PathConcatProjector((TagKey, Endpoint), (TagKey, Endpoint)),
+    /// PathValueProjector will output a collection of projected properties of the element in the path.
+    PathValueProjector(PathTagKeyValues),
+}
 
 /// Project entries with specified tags or further their properties.
 /// Notice that when projecting a single column, if the result is a None-Entry,
@@ -43,15 +61,141 @@ struct ProjectOperator {
 }
 
 #[derive(Debug)]
-pub enum Projector {
-    ExprProjector(Evaluator),
-    GraphElementProjector(TagKey),
-    /// MultiGraphElementProject will output a collection entry.
-    /// If the key is given, it is a collection of PairEntry with user-given key, and value of projected graph elements (computed via TagKey);
-    /// If the key is None, it is a collection of projected graph elements (computed via TagKey).
-    MultiGraphElementProjector(Vec<(Option<Object>, TagKey)>),
-    /// A simple concatenation of multiple entries.
-    ConcatProjector(Vec<TagKey>),
+enum VariableValue {
+    Value(TagKey),
+    PathFunc(PathTagKeyValues),
+    Nest(VariableKeyValues),
+}
+
+#[derive(Debug)]
+struct VariableKeyValue {
+    key: Object,
+    value: VariableValue,
+}
+
+#[derive(Debug)]
+struct VariableKeyValues {
+    key_vals: Vec<VariableKeyValue>,
+}
+
+impl VariableKeyValues {
+    fn exec_projector(&self, input: &Record) -> FnExecResult<DynEntry> {
+        let mut map_collection = Vec::with_capacity(self.key_vals.len());
+        for kv in self.key_vals.iter() {
+            let key = kv.key.clone();
+            let value = match &kv.value {
+                VariableValue::Value(tag_key) => tag_key.get_arc_entry(input)?,
+                VariableValue::Nest(nest) => nest.exec_projector(input)?,
+                VariableValue::PathFunc(path_func) => path_func.exec_projector(input)?,
+            };
+            map_collection.push(PairEntry::new(key.into(), value).into());
+        }
+        Ok(DynEntry::new(CollectionEntry { inner: map_collection }))
+    }
+}
+
+#[derive(Debug)]
+enum PathKey {
+    Property(PropKey),
+    Vec(Vec<PropKey>),
+    Map(Vec<(Object, PropKey)>),
+}
+
+impl PathKey {
+    // get the properties of the elements in path according to the path key.
+    // The properties are returned as a Object::Vector, e.g., project a.name where a is a path, the result is a vector of names.
+    fn get_key(&self, entry: &DynEntry) -> FnExecResult<Object> {
+        match self {
+            PathKey::Property(prop_key) => Ok(prop_key.get_key(entry)?),
+            PathKey::Vec(vec) => {
+                let prop_num = vec.len();
+                if prop_num == 0 {
+                    warn!("Empty Path Properties in PathKey::Vec");
+                    return Ok(Object::Vector(vec![]));
+                }
+                let prob_props = self.get_path_props(entry, &vec[0])?;
+                let mut prop_collection: Vec<Vec<Object>> = prob_props
+                    .into_iter()
+                    .map(|prop| {
+                        let mut inner_vec = Vec::with_capacity(prop_num);
+                        inner_vec.push(prop);
+                        inner_vec.extend((1..prop_num).map(|_| Object::None));
+                        inner_vec
+                    })
+                    .collect();
+                for (prop_idx, prop_key) in vec.into_iter().enumerate().skip(1) {
+                    let props = self.get_path_props(entry, &prop_key)?;
+                    for (path_idx, prop) in props.into_iter().enumerate() {
+                        prop_collection[path_idx][prop_idx] = prop;
+                    }
+                }
+                Ok(Object::Vector(
+                    prop_collection
+                        .into_iter()
+                        .map(|vec| Object::Vector(vec))
+                        .collect(),
+                ))
+            }
+            PathKey::Map(map) => {
+                let prop_num = map.len();
+                if prop_num == 0 {
+                    warn!("Empty Path Properties in PathKey::Vec");
+                    return Ok(Object::Vector(vec![]));
+                }
+                let prob_key = &map[0].0;
+                let prob_props = self.get_path_props(entry, &map[0].1)?;
+                let mut prop_collection = Vec::with_capacity(prob_props.len());
+                for prop_val in prob_props.into_iter() {
+                    let mut btree_map = BTreeMap::new();
+                    btree_map.insert(prob_key.clone(), prop_val);
+                    prop_collection.push(btree_map);
+                }
+                for (key_name, prop_key) in map.into_iter().skip(1) {
+                    let props = prop_key.get_key(entry)?.take_vector().unwrap();
+                    for (path_idx, prop) in props.into_iter().enumerate() {
+                        prop_collection[path_idx].insert(key_name.clone(), prop);
+                    }
+                }
+                Ok(Object::Vector(
+                    prop_collection
+                        .into_iter()
+                        .map(|map| Object::KV(map))
+                        .collect(),
+                ))
+            }
+        }
+    }
+
+    fn get_path_props(&self, entry: &DynEntry, prop_key: &PropKey) -> FnExecResult<Vec<Object>> {
+        Ok(prop_key
+            .get_key(entry)?
+            .take_vector()
+            .map_err(|e| FnExecError::ExprEvalError(e.into()))?)
+    }
+}
+
+#[derive(Debug)]
+struct PathTagKeyValues {
+    tag: Option<KeyId>,
+    val: PathKey,
+    // TODO: support function options.
+    // Currently, if the path is ALLV, return the properties of vertices; if the path is ALLVE, return the properties of both vertices and edges.
+    _opt: common_pb::path_function::FuncOpt,
+}
+
+impl PathTagKeyValues {
+    fn exec_projector(&self, input: &Record) -> FnExecResult<DynEntry> {
+        if let Some(entry) = input.get(self.tag) {
+            if EntryType::Path != entry.get_type() {
+                Err(FnExecError::unexpected_data_error("Apply PathTagKeyValues on a non-Path entry"))
+            } else {
+                let projected_properties_obj = self.val.get_key(&entry)?;
+                Ok(projected_properties_obj.into())
+            }
+        } else {
+            Ok(DynEntry::new(Object::Vector(vec![])))
+        }
+    }
 }
 
 // TODO:
@@ -69,47 +213,87 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
             DynEntry::new(projected_result)
         }
         Projector::GraphElementProjector(tag_key) => tag_key.get_arc_entry(input)?,
-        Projector::MultiGraphElementProjector(key_vals) => {
-            let mut collection = Vec::with_capacity(key_vals.len());
-            for (key, tag_key) in key_vals.iter() {
+        Projector::VecProjector(vec) => {
+            let mut collection = Vec::with_capacity(vec.len());
+            for tag_key in vec.iter() {
                 let entry = tag_key.get_arc_entry(input)?;
-                if let Some(key) = key {
-                    collection.push(PairEntry::new(key.clone().into(), entry).into());
-                } else {
-                    collection.push(entry);
-                }
+                collection.push(entry);
             }
             DynEntry::new(CollectionEntry { inner: collection })
         }
-        Projector::ConcatProjector(concat_vars) => {
-            if concat_vars.len() != 2 {
-                Err(FnExecError::unsupported_error("Only support concatenated 2 entries now"))?
-            } else {
-                let left_path = concat_vars[0]
-                    .get_arc_entry(input)?
-                    .as_graph_path()
-                    .cloned();
-                let right_path = concat_vars[1]
-                    .get_arc_entry(input)?
-                    .as_graph_path()
-                    .cloned();
-                if left_path.is_none() || right_path.is_none() {
-                    Err(FnExecError::unsupported_error("Concatenated entries are not Path"))?
-                } else {
-                    let mut left_path = left_path.unwrap();
-                    let right_path = right_path.unwrap().take_path();
-                    if let Some(mut right_path) = right_path {
-                        // specifically, we pop the last entry of right_path, which is already in left_path
-                        right_path.pop();
-                        right_path.reverse();
-                        for entry in right_path {
-                            left_path.append(entry);
-                        }
+        Projector::MapProjector(map) => map.exec_projector(input)?,
+        Projector::PathConcatProjector((left, left_endpoint), (right, right_endpoint)) => {
+            let mut left_path = left
+                .get_arc_entry(input)?
+                .as_graph_path()
+                .ok_or_else(|| FnExecError::unsupported_error("Left entry is not Path in PathConcat"))?
+                .clone();
+            let mut right_path = right
+                .get_arc_entry(input)?
+                .as_graph_path()
+                .ok_or_else(|| FnExecError::unsupported_error("Right entry is not Path in PathConcat"))?
+                .clone();
+
+            let mut invalid = false;
+            let mut concat_success = false;
+            match (left_endpoint, right_endpoint) {
+                // e.g., concat [3,2,1], [3,4,5] => [1,2,3,4,5]
+                (Endpoint::Start, Endpoint::Start) => {
+                    if left_path.get_path_start() != right_path.get_path_start() {
+                        invalid = true;
+                    } else {
+                        left_path.reverse();
+                        left_path.pop();
+                        concat_success = left_path.append_path(right_path);
                     }
-                    DynEntry::new(left_path)
+                }
+                (Endpoint::Start, Endpoint::End) => {
+                    // e.g., concat [3,2,1], [5,4,3] => [1,2,3,4,5]
+                    if left_path.get_path_start().is_none()
+                        || (left_path.get_path_start().unwrap() != right_path.get_path_end())
+                    {
+                        invalid = true;
+                    } else {
+                        left_path.reverse();
+                        left_path.pop();
+                        right_path.reverse();
+                        concat_success = left_path.append_path(right_path);
+                    }
+                }
+                (Endpoint::End, Endpoint::Start) => {
+                    // e.g., concat [1,2,3], [3,4,5] => [1,2,3,4,5]
+                    if right_path.get_path_start().is_none()
+                        || (right_path.get_path_start().unwrap() != left_path.get_path_end())
+                    {
+                        invalid = true;
+                    } else {
+                        left_path.pop();
+                        concat_success = left_path.append_path(right_path);
+                    }
+                }
+                (Endpoint::End, Endpoint::End) => {
+                    // e.g., concat [1,2,3], [5,4,3] => [1,2,3,4,5]
+                    if left_path.get_path_end() != right_path.get_path_end() {
+                        invalid = true;
+                    } else {
+                        left_path.pop();
+                        right_path.reverse();
+                        concat_success = left_path.append_path(right_path);
+                    }
                 }
             }
+
+            if invalid {
+                Err(FnExecError::unexpected_data_error(&format!(
+                    "Concat vertices are not the same in PathConcat"
+                )))?
+            } else if !concat_success {
+                Err(FnExecError::unexpected_data_error(&format!("Failed to concat paths in PathConcat")))?
+            } else {
+                DynEntry::new(left_path)
+            }
         }
+        Projector::PathValueProjector(path) => path.exec_projector(input)?,
     };
     Ok(entry)
 }
@@ -182,38 +366,58 @@ impl FilterMapFuncGen for pb::Project {
                         let tag_keys = vars
                             .keys
                             .iter()
-                            .map(|var| match TagKey::try_from(var.clone()) {
-                                Ok(tag_key) => Ok((None, tag_key)),
-                                Err(err) => Err(err),
-                            })
-                            .collect::<Result<Vec<(Option<Object>, TagKey)>, _>>()?;
-                        Projector::MultiGraphElementProjector(tag_keys)
-                    }
-                    common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Map(key_vals)), .. } => {
-                        let mut key_value_vec = Vec::with_capacity(key_vals.key_vals.len());
-                        for key_val in key_vals.key_vals.iter() {
-                            let key = key_val.key.as_ref().ok_or_else(|| {
-                                ParsePbError::EmptyFieldError(format!("key in Map Expr {:?}", key_val))
-                            })?;
-                            let key_obj = Object::try_from(key.clone())?;
-                            let val = key_val.value.as_ref().ok_or_else(|| {
-                                ParsePbError::EmptyFieldError(format!("value in Map Expr {:?}", key_val))
-                            })?;
-                            let tag_key = TagKey::try_from(val.clone())?;
-                            key_value_vec.push((Some(key_obj), tag_key));
-                        }
-                        Projector::MultiGraphElementProjector(key_value_vec)
-                    }
-                    common_pb::ExprOpr {
-                        item: Some(common_pb::expr_opr::Item::Concat(concat_vars)),
-                        ..
-                    } => {
-                        let tag_keys = concat_vars
-                            .vars
-                            .iter()
                             .map(|var| TagKey::try_from(var.clone()))
                             .collect::<Result<Vec<TagKey>, _>>()?;
-                        Projector::ConcatProjector(tag_keys)
+                        Projector::VecProjector(tag_keys)
+                    }
+                    common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Map(key_vals)), .. } => {
+                        let variable_key_values = VariableKeyValues::try_from(key_vals.clone())?;
+                        Projector::MapProjector(variable_key_values)
+                    }
+                    common_pb::ExprOpr {
+                        item: Some(common_pb::expr_opr::Item::PathConcat(concat_vars)),
+                        ..
+                    } => {
+                        let left = concat_vars.left.as_ref().ok_or_else(|| {
+                            ParsePbError::EmptyFieldError(format!(
+                                "left in PathConcat Expr {:?}",
+                                concat_vars
+                            ))
+                        })?;
+                        let left_path_tag = left.path_tag.clone().ok_or_else(|| {
+                            ParsePbError::EmptyFieldError(format!(
+                                "path_tag in PathConcat Expr {:?}",
+                                concat_vars
+                            ))
+                        })?;
+                        let left_endpoint: common_pb::path_concat::Endpoint =
+                            unsafe { std::mem::transmute(left.endpoint) };
+                        let right = concat_vars.right.as_ref().ok_or_else(|| {
+                            ParsePbError::EmptyFieldError(format!(
+                                "right in PathConcat Expr {:?}",
+                                concat_vars
+                            ))
+                        })?;
+
+                        let right_path_tag = right.path_tag.clone().ok_or_else(|| {
+                            ParsePbError::EmptyFieldError(format!(
+                                "path_tag in PathConcat Expr {:?}",
+                                concat_vars
+                            ))
+                        })?;
+                        let right_endpoint: common_pb::path_concat::Endpoint =
+                            unsafe { std::mem::transmute(right.endpoint) };
+                        Projector::PathConcatProjector(
+                            (TagKey::try_from(left_path_tag)?, left_endpoint),
+                            (TagKey::try_from(right_path_tag)?, right_endpoint),
+                        )
+                    }
+                    common_pb::ExprOpr {
+                        item: Some(common_pb::expr_opr::Item::PathFunc(path_func)),
+                        ..
+                    } => {
+                        let path_key_values = PathTagKeyValues::try_from(path_func.clone())?;
+                        Projector::PathValueProjector(path_key_values)
                     }
                     _ => {
                         let evaluator = Evaluator::try_from(expr)?;
@@ -234,8 +438,89 @@ impl FilterMapFuncGen for pb::Project {
     }
 }
 
+impl TryFrom<common_pb::VariableKeyValues> for VariableKeyValues {
+    type Error = ParsePbError;
+
+    fn try_from(key_vals: common_pb::VariableKeyValues) -> Result<Self, Self::Error> {
+        let mut vec = Vec::with_capacity(key_vals.key_vals.len());
+        for key_val in key_vals.key_vals {
+            let (_key, _value) = (key_val.key, key_val.value);
+            let key = if let Some(key) = _key {
+                Object::try_from(key.clone())?
+            } else {
+                return Err(ParsePbError::from("empty key provided in Map"));
+            };
+            let value = if let Some(val) = _value {
+                match val {
+                    common_pb::variable_key_value::Value::Val(val) => {
+                        VariableValue::Value(TagKey::try_from(val.clone())?)
+                    }
+                    common_pb::variable_key_value::Value::Nested(nested_vals) => {
+                        let nested = VariableKeyValues::try_from(nested_vals)?;
+                        VariableValue::Nest(nested)
+                    }
+                    common_pb::variable_key_value::Value::PathFunc(path_func) => {
+                        let path_key_values = path_func.try_into()?;
+                        VariableValue::PathFunc(path_key_values)
+                    }
+                }
+            } else {
+                return Err(ParsePbError::from("empty value provided in Map"));
+            };
+            vec.push(VariableKeyValue { key, value });
+        }
+        Ok(VariableKeyValues { key_vals: vec })
+    }
+}
+
+impl TryFrom<common_pb::PathFunction> for PathTagKeyValues {
+    type Error = ParsePbError;
+
+    fn try_from(path_func: common_pb::PathFunction) -> Result<Self, Self::Error> {
+        let path_key = path_func
+            .path_key
+            .ok_or_else(|| ParsePbError::from("empty path key"))?;
+        let func_opt = unsafe { std::mem::transmute(path_func.opt) };
+        let path_key_values = PathTagKeyValues {
+            tag: path_func
+                .tag
+                .map(|tag| KeyId::try_from(tag))
+                .transpose()?,
+            val: match path_key {
+                common_pb::path_function::PathKey::Property(prop) => {
+                    PathKey::Property(PropKey::try_from(prop)?)
+                }
+                common_pb::path_function::PathKey::Vars(vars) => PathKey::Vec(
+                    vars.keys
+                        .into_iter()
+                        .map(|prop| PropKey::try_from(prop))
+                        .collect::<Result<Vec<PropKey>, _>>()?,
+                ),
+                common_pb::path_function::PathKey::Map(map) => PathKey::Map(
+                    map.key_vals
+                        .into_iter()
+                        .map(|key_val| {
+                            let key = Object::try_from(key_val.key.unwrap());
+                            let value = PropKey::try_from(key_val.val.unwrap());
+                            if key.is_ok() && value.is_ok() {
+                                Ok((key.unwrap(), value.unwrap()))
+                            } else {
+                                Err(ParsePbError::from("invalid key-value pair in Map"))
+                            }
+                        })
+                        .collect::<Result<Vec<(Object, PropKey)>, _>>()?,
+                ),
+            },
+            _opt: func_opt,
+        };
+        Ok(path_key_values)
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use ahash::HashMap;
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, Edge, GraphElement, GraphPath, Vertex};
@@ -251,8 +536,8 @@ mod tests {
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
-        to_expr_map_pb, to_expr_var_pb, to_expr_vars_pb, to_var_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C,
-        TAG_D, TAG_E, TAG_F, TAG_G,
+        to_expr_map_pb, to_expr_var_pb, to_expr_vars_pb, to_prop_pb, to_var_pb, PERSON_LABEL, TAG_A, TAG_B,
+        TAG_C, TAG_D, TAG_E, TAG_F, TAG_G,
     };
     use crate::process::record::Record;
 
@@ -685,7 +970,7 @@ mod tests {
     }
 
     // g.V().valueMap('age', 'name') with alias of 'age' as 'newAge' and 'name' as 'newName', by map
-    // this is projected by MultiGraphElementProjector
+    // this is projected by MapProjector
     #[test]
     fn simple_project_map_mapping_test() {
         let project_opr_pb = pb::Project {
@@ -816,7 +1101,7 @@ mod tests {
     }
 
     // g.V().as("a").select("a").by(valueMap("age", "name")),with alias of 'a.age' as 'newAge' and 'a.tname' as 'newName', by map
-    // this is projected by MultiGraphElementProjector
+    // this is projected by MapProjector
     #[test]
     fn simple_project_tag_map_mapping_test() {
         let project_opr_pb = pb::Project {
@@ -862,6 +1147,102 @@ mod tests {
         let expected_result = vec![
             vec![(object!("newName"), object!("marko")), (object!("newAge"), object!(29))],
             vec![(object!("newName"), object!("vadas")), (object!("newAge"), object!(27))],
+        ];
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().as("a").select("a").by(valueMap("age", "name")), with expr_opr as a nested VariableKeyValues
+    // this is projected by MapProjector (nested)
+    #[test]
+    fn project_nested_map_test() {
+        // project a.{name, age}
+        let variable_key_value = common_pb::VariableKeyValues {
+            key_vals: vec![
+                common_pb::VariableKeyValue {
+                    key: Some(common_pb::Value::from("name".to_string())),
+                    value: Some(common_pb::variable_key_value::Value::Val(to_var_pb(
+                        None,
+                        Some("name".into()),
+                    ))),
+                },
+                common_pb::VariableKeyValue {
+                    key: Some(common_pb::Value::from("age".to_string())),
+                    value: Some(common_pb::variable_key_value::Value::Val(to_var_pb(
+                        None,
+                        Some("age".into()),
+                    ))),
+                },
+            ],
+        };
+        let nested_variable_key_vals = common_pb::VariableKeyValues {
+            key_vals: vec![common_pb::VariableKeyValue {
+                key: Some(common_pb::Value::from("a".to_string())),
+                value: Some(common_pb::variable_key_value::Value::Nested(variable_key_value)),
+            }],
+        };
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(common_pb::Expression {
+                    operators: vec![common_pb::ExprOpr {
+                        node_type: None,
+                        item: Some(common_pb::expr_opr::Item::Map(nested_variable_key_vals)),
+                    }],
+                }),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let collection = res
+                .get(None)
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap();
+            let mut result = vec![];
+            for entry in collection.inner.iter() {
+                let pair_entry = entry
+                    .as_any_ref()
+                    .downcast_ref::<PairEntry>()
+                    .unwrap();
+                let key = pair_entry
+                    .get_left()
+                    .as_any_ref()
+                    .downcast_ref::<Object>()
+                    .unwrap();
+                let value = pair_entry
+                    .get_right()
+                    .as_any_ref()
+                    .downcast_ref::<CollectionEntry>()
+                    .unwrap();
+                let mut result_value = vec![];
+                for entry in value.inner.iter() {
+                    let inner_pair = entry
+                        .as_any_ref()
+                        .downcast_ref::<PairEntry>()
+                        .unwrap();
+                    let inner_key = inner_pair
+                        .get_left()
+                        .as_any_ref()
+                        .downcast_ref::<Object>()
+                        .unwrap();
+                    let inner_val = inner_pair
+                        .get_right()
+                        .as_any_ref()
+                        .downcast_ref::<Object>()
+                        .unwrap();
+                    result_value.push((inner_key.clone(), inner_val.clone()));
+                }
+                result.push((key.clone(), result_value.clone()));
+            }
+            object_result.push(result);
+        }
+        let expected_result = vec![
+            vec![(object!("a"), vec![(object!("name"), object!("marko")), (object!("age"), object!(29))])],
+            vec![(object!("a"), vec![(object!("name"), object!("vadas")), (object!("age"), object!(27))])],
         ];
         assert_eq!(object_result, expected_result);
     }
@@ -1154,54 +1535,52 @@ mod tests {
         assert_eq!(results, expected_results);
     }
 
-    #[test]
-    fn project_concat_allv_path_test() {
+    fn build_path(vids: Vec<i64>) -> GraphPath {
         let details = DynDetails::default();
-        // sub_path1: [1,2]
-        let mut sub_path1 = GraphPath::new(
-            Vertex::new(1, None, details.clone()),
+        let mut path = GraphPath::new(
+            Vertex::new(vids[0], None, details.clone()),
             pb::path_expand::PathOpt::Arbitrary,
             pb::path_expand::ResultOpt::AllV,
         );
-        sub_path1.append(Vertex::new(2, None, details.clone()));
-        // sub_path2: [3,2]
-        let mut sub_path2 = GraphPath::new(
-            Vertex::new(3, None, details.clone()),
-            pb::path_expand::PathOpt::Arbitrary,
-            pb::path_expand::ResultOpt::AllV,
-        );
-        sub_path2.append(Vertex::new(2, None, details.clone()));
-        // concat path: [1,2,3]
-        let mut concat_path = GraphPath::new(
-            Vertex::new(1, None, details.clone()),
-            pb::path_expand::PathOpt::Arbitrary,
-            pb::path_expand::ResultOpt::AllV,
-        );
-        concat_path.append(Vertex::new(2, None, details.clone()));
-        concat_path.append(Vertex::new(3, None, details.clone()));
+        for i in 1..vids.len() {
+            path.append(Vertex::new(vids[i], None, details.clone()));
+        }
+        path
+    }
 
-        let mut r1 = Record::new(sub_path1, Some(TAG_A.into()));
-        r1.append(sub_path2, Some(TAG_B.into()));
-
-        let source = vec![r1];
-        let project_opr_pb = pb::Project {
+    fn build_project_path_concat(
+        left_endpoint: common_pb::path_concat::Endpoint, right_endpoint: common_pb::path_concat::Endpoint,
+    ) -> pb::Project {
+        let path_concat = common_pb::PathConcat {
+            left: Some(common_pb::path_concat::ConcatPathInfo {
+                path_tag: Some(to_var_pb(Some(TAG_A.into()), None)),
+                endpoint: left_endpoint as i32,
+            }),
+            right: Some(common_pb::path_concat::ConcatPathInfo {
+                path_tag: Some(to_var_pb(Some(TAG_B.into()), None)),
+                endpoint: right_endpoint as i32,
+            }),
+        };
+        pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: Some(common_pb::Expression {
                     operators: vec![common_pb::ExprOpr {
-                        item: Some(common_pb::expr_opr::Item::Concat(common_pb::Concat {
-                            vars: vec![
-                                to_var_pb(Some(TAG_A.into()), None),
-                                to_var_pb(Some(TAG_B.into()), None),
-                            ],
-                        })),
+                        item: Some(common_pb::expr_opr::Item::PathConcat(path_concat)),
                         node_type: None,
                     }],
                 }),
                 alias: Some(TAG_C.into()),
             }],
             is_append: false,
-        };
-        let mut result = project_test(source, project_opr_pb);
+        }
+    }
+
+    fn project_concat_allv_path_test(
+        left_path: GraphPath, right_path: GraphPath, project_opr_pb: pb::Project, concat_path: GraphPath,
+    ) {
+        let mut r1 = Record::new(left_path, Some(TAG_A.into()));
+        r1.append(right_path, Some(TAG_B.into()));
+        let mut result = project_test(vec![r1], project_opr_pb);
         let mut results = vec![];
         while let Some(Ok(res)) = result.next() {
             let path = res
@@ -1213,6 +1592,70 @@ mod tests {
             results.push(path.clone());
         }
         assert_eq!(results, vec![concat_path]);
+    }
+
+    #[test]
+    fn project_concat_allv_path_test_01() {
+        // sub_path1: [1,2]
+        let sub_path1 = build_path(vec![1, 2]);
+        // sub_path2: [3,2]
+        let sub_path2 = build_path(vec![3, 2]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::End,
+            common_pb::path_concat::Endpoint::End,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
+    }
+
+    #[test]
+    fn project_concat_allv_path_test_02() {
+        // sub_path1: [1,2]
+        let sub_path1 = build_path(vec![1, 2]);
+        // sub_path2: [2,3]
+        let sub_path2 = build_path(vec![2, 3]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::End,
+            common_pb::path_concat::Endpoint::Start,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
+    }
+
+    #[test]
+    fn project_concat_allv_path_test_03() {
+        // sub_path1: [2,1]
+        let sub_path1 = build_path(vec![2, 1]);
+        // sub_path2: [3,2]
+        let sub_path2 = build_path(vec![3, 2]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::Start,
+            common_pb::path_concat::Endpoint::End,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
+    }
+
+    #[test]
+    fn project_concat_allv_path_test_04() {
+        // sub_path1: [2,1]
+        let sub_path1 = build_path(vec![2, 1]);
+        // sub_path2: [2,3]
+        let sub_path2 = build_path(vec![2, 3]);
+        // concat project
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::Start,
+            common_pb::path_concat::Endpoint::Start,
+        );
+        // concat path: [1,2,3]
+        let concat_path = build_path(vec![1, 2, 3]);
+        project_concat_allv_path_test(sub_path1, sub_path2, project_opr_pb, concat_path);
     }
 
     #[test]
@@ -1249,23 +1692,10 @@ mod tests {
         r1.append(sub_path2, Some(TAG_B.into()));
 
         let source = vec![r1];
-        let project_opr_pb = pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(common_pb::Expression {
-                    operators: vec![common_pb::ExprOpr {
-                        item: Some(common_pb::expr_opr::Item::Concat(common_pb::Concat {
-                            vars: vec![
-                                to_var_pb(Some(TAG_A.into()), None),
-                                to_var_pb(Some(TAG_B.into()), None),
-                            ],
-                        })),
-                        node_type: None,
-                    }],
-                }),
-                alias: Some(TAG_C.into()),
-            }],
-            is_append: false,
-        };
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::End,
+            common_pb::path_concat::Endpoint::End,
+        );
         let mut result = project_test(source, project_opr_pb);
         let mut results = vec![];
         while let Some(Ok(res)) = result.next() {
@@ -1278,5 +1708,156 @@ mod tests {
             results.push(path.clone());
         }
         assert_eq!(results, vec![concat_path]);
+    }
+
+    // a fail test case
+    #[test]
+    fn project_concat_allv_path_error_test() {
+        // sub_path1: [1,2]
+        let sub_path1 = build_path(vec![1, 2]);
+        // sub_path2: [2,3]
+        let sub_path2 = build_path(vec![2, 3]);
+        // concat project, if concat sub_path1.start and sub_path2.start, it will fail
+        let project_opr_pb = build_project_path_concat(
+            common_pb::path_concat::Endpoint::Start,
+            common_pb::path_concat::Endpoint::Start,
+        );
+
+        let mut r1 = Record::new(sub_path1, Some(TAG_A.into()));
+        r1.append(sub_path2, Some(TAG_B.into()));
+        let mut result = project_test(vec![r1], project_opr_pb);
+        if let Some(res) = result.next() {
+            assert!(res.is_err());
+        }
+    }
+
+    fn init_path_record() -> Record {
+        let vertex1 = init_vertex1();
+        let vertex2 = init_vertex2();
+        let mut path =
+            GraphPath::new(vertex1, pb::path_expand::PathOpt::Arbitrary, pb::path_expand::ResultOpt::AllV);
+        path.append(vertex2);
+        Record::new(path, None)
+    }
+
+    fn to_path_func_pb(
+        tag: Option<NameOrId>, path_key: common_pb::path_function::PathKey,
+        opt: common_pb::path_function::FuncOpt,
+    ) -> common_pb::PathFunction {
+        common_pb::PathFunction {
+            tag: tag.map(|t| t.into()),
+            opt: opt as i32,
+            node_type: None,
+            path_key: Some(path_key),
+        }
+    }
+
+    fn to_expr_path_func_pb(
+        tag: Option<NameOrId>, path_key: common_pb::path_function::PathKey,
+        opt: common_pb::path_function::FuncOpt,
+    ) -> common_pb::Expression {
+        common_pb::Expression {
+            operators: vec![common_pb::ExprOpr {
+                node_type: None,
+                item: Some(common_pb::expr_opr::Item::PathFunc(to_path_func_pb(tag, path_key, opt))),
+            }],
+        }
+    }
+
+    // g.V().out(2..3).values('name')
+    #[test]
+    fn project_path_prop_test() {
+        let path_key = common_pb::path_function::PathKey::Property(to_prop_pb("name".into()));
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_path_func_pb(None, path_key, common_pb::path_function::FuncOpt::Vertex)),
+                alias: Some(TAG_A.into()),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(vec![init_path_record()], project_opr_pb);
+
+        let mut object_result = Object::None;
+        if let Some(Ok(res)) = result.next() {
+            let a_entry = res.get(Some(TAG_A));
+            object_result = a_entry.unwrap().as_object().unwrap().clone();
+        }
+        assert!(result.next().is_none());
+        let expected_result = Object::Vector(vec![object!("marko"), object!("vadas")]);
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().out(2..3).values('name','age')
+    #[test]
+    fn project_path_prop_vars_test() {
+        let path_key = common_pb::path_function::PathKey::Vars(common_pb::path_function::PathElementKeys {
+            keys: vec![to_prop_pb("name".into()), to_prop_pb("age".into())],
+        });
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_path_func_pb(None, path_key, common_pb::path_function::FuncOpt::Vertex)),
+                alias: Some(TAG_A.into()),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(vec![init_path_record()], project_opr_pb);
+        let mut object_result = Object::None;
+        if let Some(Ok(res)) = result.next() {
+            let a_entry = res.get(Some(TAG_A));
+            object_result = a_entry.unwrap().as_object().unwrap().clone();
+        }
+        assert!(result.next().is_none());
+        let expected_result = Object::Vector(vec![
+            Object::Vector(vec![object!("marko"), object!(29)]),
+            Object::Vector(vec![object!("vadas"), object!(27)]),
+        ]);
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().out(2..3).valueMap('name','age')
+    #[test]
+    fn project_path_prop_map_test() {
+        let path_key =
+            common_pb::path_function::PathKey::Map(common_pb::path_function::PathElementKeyValues {
+                key_vals: vec![
+                    common_pb::path_function::path_element_key_values::PathElementKeyValue {
+                        key: Some("name".to_string().into()),
+                        val: Some(to_prop_pb("name".into())),
+                    },
+                    common_pb::path_function::path_element_key_values::PathElementKeyValue {
+                        key: Some("age".to_string().into()),
+                        val: Some(to_prop_pb("age".into())),
+                    },
+                ],
+            });
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_path_func_pb(None, path_key, common_pb::path_function::FuncOpt::Vertex)),
+                alias: Some(TAG_A.into()),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(vec![init_path_record()], project_opr_pb);
+
+        let mut object_result = Object::None;
+        if let Some(Ok(res)) = result.next() {
+            let a_entry = res.get(Some(TAG_A));
+            println!("{:?}", a_entry);
+            object_result = a_entry.unwrap().as_object().unwrap().clone();
+        }
+        assert!(result.next().is_none());
+        let expected_result = Object::Vector(vec![
+            Object::KV(
+                vec![(object!("name"), object!("marko")), (object!("age"), object!(29))]
+                    .into_iter()
+                    .collect(),
+            ),
+            Object::KV(
+                vec![(object!("name"), object!("vadas")), (object!("age"), object!(27))]
+                    .into_iter()
+                    .collect(),
+            ),
+        ]);
+        assert_eq!(object_result, expected_result);
     }
 }

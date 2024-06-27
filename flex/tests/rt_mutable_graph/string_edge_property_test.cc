@@ -47,7 +47,7 @@ class TestStringEdgeProperty {
     auto oe = db_.graph().get_outgoing_edges(src_label_, src_lid, dst_label_,
                                              edge_label_);
     CHECK(oe != nullptr) << "Got nullptr oe\n";
-    CHECK(oe->get_data().type == PropertyType::kString)
+    CHECK(oe->get_data().type == PropertyType::kStringView)
         << "Inconsistent type, Except: string, Got " << oe->get_data().type;
     std::cout << oe->get_data().AsStringView() << "\n";
     LOG(INFO) << "Finish test get edge\n";

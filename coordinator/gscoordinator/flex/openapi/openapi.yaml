@@ -1,0 +1,3717 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: graphscope@alibaba-inc.com
+    name: GraphScope
+  description: |-
+    This is a specification for GraphScope FLEX HTTP service based on the OpenAPI 3.0 specification. You can find out more details about
+    specification at [doc](https://swagger.io/specification/v3/).
+
+    Some useful links:
+    - [GraphScope Repository](https://github.com/alibaba/GraphScope)
+    - [The Source API definition for GraphScope Interactive](https://github.com/GraphScope/portal/tree/main/httpservice)
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: GraphScope FLEX HTTP SERVICE API
+  version: 1.0.0
+externalDocs:
+  description: Find out More about GraphScope
+  url: http://graphscope.io
+servers:
+- url: /
+tags:
+- name: Deployment
+- name: Graph
+- name: DataSource
+- name: Job
+- name: Stored Procedure
+- name: Service
+- name: Alert
+- name: Utils
+paths:
+  /api/v1/alert/message:
+    get:
+      description: List all alert messages
+      operationId: list_alert_messages
+      parameters:
+      - explode: true
+        in: query
+        name: alert_type
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          enum:
+          - solved
+          - unsolved
+          - dealing
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: severity
+        required: false
+        schema:
+          enum:
+          - warning
+          - emergency
+          type: string
+        style: form
+      - description: format with "2023-02-21-11-56-30"
+        explode: true
+        in: query
+        name: start_time
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: format with "2023-02-21-11-56-30"
+        explode: true
+        in: query
+        name: end_time
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          format: int32
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: ALERT-MESSAGE-QWERTYUIOP-1
+                alert_name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: unsolved
+                message: "Disk usage node1 85.12%, exceeds threshold"
+              - id: ALERT-MESSAGE-QWERTYUIOP-2
+                alert_name: HighDiskUtilization
+                severity: emergency
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: solved
+                message: "Disk usage node1 85.12%, exceeds threshold"
+              - id: ALERT-MESSAGE-QWERTYUIOP-3
+                alert_name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                target:
+                - hostname-1
+                trigger_time: 2023-02-21 11:56:30
+                status: dealing
+                message: "Disk usage node1 85.12%, exceeds threshold"
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetAlertMessageResponse'
+                type: array
+          description: Successfully returned the alert messages
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+  /api/v1/alert/message-collection:
+    delete:
+      description: Delete alert message in batch
+      operationId: delete_alert_message_in_batch
+      parameters:
+      - description: "A list of message id separated by comma, e.g. id1,id2,id3"
+        explode: true
+        in: query
+        name: message_ids
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the alert message
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+  /api/v1/alert/message-collection/status:
+    put:
+      description: Update the message status in batch
+      operationId: update_alert_message_in_batch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAlertMessageStatusRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+  /api/v1/alert/receiver:
+    get:
+      description: List all alert receivers
+      operationId: list_alert_receivers
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: RECEIVER-QWERTYUIOP-1
+                type: webhook
+                webhook_url: http://webhook.com
+                is_at_all: false
+                at_user_ids:
+                - 111111
+                - 222222
+                enable: false
+              - id: RECEIVER-QWERTYUIOP-2
+                type: webhook
+                webhook_url: http://webhook.com
+                is_at_all: false
+                at_user_ids:
+                - 111111
+                - 222222
+                enable: true
+                message: error message
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetAlertReceiverResponse'
+                type: array
+          description: Successfully returned the alert receivers
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+    post:
+      description: Create a new alert receiver
+      operationId: create_alert_receiver
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertReceiverRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully created the alert receiver
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+  /api/v1/alert/receiver/{receiver_id}:
+    delete:
+      description: Delete the alert receiver by ID
+      operationId: delete_alert_receiver_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: receiver_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the alert receiver
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+    put:
+      description: Update alert receiver by ID
+      operationId: update_alert_receiver_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: receiver_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertReceiverRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully updated the alert receiver
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+  /api/v1/alert/rule:
+    get:
+      description: List all alert rules
+      operationId: list_alert_rules
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: ALERTRULE-1
+                name: HighDiskUtilization
+                severity: warning
+                metric_type: node
+                conditions_description: disk usage >= 85
+                enable: true
+              - id: ALERTRULE-2
+                name: GremlinServiceAvailable
+                severity: emergency
+                metric_type: node
+                conditions_description: g.V().limit(1) failed
+                enable: false
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetAlertRuleResponse'
+                type: array
+          description: Successfully returned the alert rules
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+  /api/v1/alert/rule/{rule_id}:
+    delete:
+      operationId: delete_alert_rule_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: rule_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the alert rule
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+    put:
+      operationId: update_alert_rule_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: rule_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertRuleRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully updated the alert rule
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Alert
+      x-openapi-router-controller: gscoordinator.flex.controllers.alert_controller
+  /api/v1/deployment:
+    get:
+      description: Deployment information
+      operationId: get_deployment_info
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                cluster_type: HOSTS
+                creation_time: 2024-01-01 00:00:00
+                instance_name: demo
+                frontend: Cypher/Gremlin
+                engine: Hiactor
+                storage: MutableCSR
+                version: 0.27.0
+              schema:
+                $ref: '#/components/schemas/RunningDeploymentInfo'
+          description: Successfully returned the deployment information
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Deployment
+      x-openapi-router-controller: gscoordinator.flex.controllers.deployment_controller
+  /api/v1/deployment/status:
+    get:
+      description: Deployment status
+      operationId: get_deployment_status
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                cluster_type: HOSTS
+                nodes:
+                - name: HOSTNAME-1
+                  cpu_usage: 83.0
+                  memory_usage: 37.5
+                  disk_usage: 97
+              schema:
+                $ref: '#/components/schemas/RunningDeploymentStatus'
+          description: Successfully returned the deployment status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Deployment
+      x-openapi-router-controller: gscoordinator.flex.controllers.deployment_controller
+  /api/v1/file/uploading:
+    post:
+      operationId: upload_file
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/uploadFile_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+                metadata:
+                  datasource: file
+                  file_type: csv
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+          description: successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Utils
+      x-openapi-router-controller: gscoordinator.flex.controllers.utils_controller
+  /api/v1/graph:
+    get:
+      description: List all graphs
+      operationId: list_graphs
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: GRAPHID
+                name: demo
+                creation_time: 2024-01-01 00:00:00
+                schema_update_time: 2024-01-02 00:00:00
+                data_update_time: 2024-01-03 00:00:00
+                stored_procedures:
+                - id: STORED-PROCEDURE-ID
+                  name: stored_procedure_name
+                  type: cypher
+                  query: MATCH(a) return COUNT(a);
+                  library: /path/to/library
+                  params:
+                  - name: param1
+                    type:
+                      string:
+                        long_text: null
+                  returns:
+                  - name: return1
+                    type:
+                      PrimitiveType: DT_SIGNED_INT64
+                  bound_graph: demo
+                  runnable: true
+                schema:
+                  vertex_types:
+                  - type_id: 0
+                    type_name: person
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        string:
+                          long_text: null
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        string:
+                          long_text: null
+                    primary_keys:
+                    - id
+                  - type_id: 1
+                    type_name: software
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        string:
+                          long_text: null
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        string:
+                          long_text: null
+                    primary_keys:
+                    - id
+                  edge_types:
+                  - type_id: 0
+                    type_name: knows
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: person
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_DOUBLE
+                  - type_id: 1
+                    type_name: created
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: software
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_DOUBLE
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetGraphResponse'
+                type: array
+          description: Successfully returned all graphs
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+    post:
+      description: Create a new graph
+      operationId: create_graph
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGraphRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateGraphResponse'
+          description: The graph was created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+  /api/v1/graph/{graph_id}:
+    delete:
+      description: Delete graph by ID
+      operationId: delete_graph_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the graph
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+    get:
+      description: Get graph by ID
+      operationId: get_graph_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: GRAPHID
+                name: demo
+                creation_time: 2024-01-01 00:00:00
+                schema_update_time: 2024-01-02 00:00:00
+                data_update_time: 2024-01-03 00:00:00
+                stored_procedures:
+                - id: STORED-PROCEDURE-ID
+                  name: stored_procedure_name
+                  type: cypher
+                  query: MATCH(a) return COUNT(a);
+                  library: /path/to/library
+                  params:
+                  - name: param1
+                    type:
+                      string:
+                        long_text: null
+                  returns:
+                  - name: return1
+                    type:
+                      PrimitiveType: DT_SIGNED_INT64
+                  bound_graph: demo
+                  runnable: true
+                schema:
+                  vertex_types:
+                  - type_id: 0
+                    type_name: person
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        string:
+                          long_text: null
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        string:
+                          long_text: null
+                    primary_keys:
+                    - id
+                  - type_id: 1
+                    type_name: software
+                    properties:
+                    - property_id: 0
+                      property_name: id
+                      property_type:
+                        string:
+                          long_text: null
+                    - property_id: 1
+                      property_name: name
+                      property_type:
+                        string:
+                          long_text: null
+                    primary_keys:
+                    - id
+                  edge_types:
+                  - type_id: 0
+                    type_name: knows
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: person
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_DOUBLE
+                  - type_id: 1
+                    type_name: created
+                    vertex_type_pair_relations:
+                    - source_vertex: person
+                      destination_vertex: software
+                      relation: MANY_TO_MANY
+                      x_csr_params:
+                        edge_storage_strategy: ONLY_IN
+                    properties:
+                    - property_id: 0
+                      property_name: weight
+                      property_type:
+                        primitive_type: DT_DOUBLE
+              schema:
+                $ref: '#/components/schemas/GetGraphResponse'
+          description: Successfully returned the graph
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+  /api/v1/graph/{graph_id}/dataloading:
+    post:
+      description: Submit a dataloading job
+      operationId: submit_dataloading_job
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataloadingJobConfig'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDataloadingJobResponse'
+          description: Successfully submitted the job
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: gscoordinator.flex.controllers.job_controller
+  /api/v1/graph/{graph_id}/dataloading/config:
+    get:
+      description: Get the data loading configuration
+      operationId: get_dataloading_job_config
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataloadingJobConfig'
+          description: Successfully returned the dataloading job configuration
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: gscoordinator.flex.controllers.job_controller
+  /api/v1/graph/{graph_id}/datasource:
+    get:
+      description: Get data source by ID
+      operationId: get_datasource_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                vertex_mappings:
+                - type_name: person
+                  inputs:
+                  - file:///path/to/person.csv
+                  column_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  - column:
+                      index: 1
+                      name: name
+                    property: name
+                - type_name: software
+                  inputs:
+                  - file:///path/to/software.csv
+                  column_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  - column:
+                      index: 1
+                      name: name
+                    property: name
+                edge_mappings:
+                - type_triplet:
+                    edge: knows
+                    source_vertex: person
+                    destination_vertex: person
+                  inputs:
+                  - file:///path/to/knows.csv
+                  source_vertex_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  destination_vertex_mappings:
+                  - column:
+                      index: 1
+                      name: id
+                    property: id
+                  column_mappings:
+                  - column:
+                      index: 2
+                      name: weight
+                    property: weight
+                - type_triplet:
+                    edge: created
+                    source_vertex: person
+                    destination_vertex: software
+                  inputs:
+                  - file:///path/to/created.csv
+                  source_vertex_mappings:
+                  - column:
+                      index: 0
+                      name: id
+                    property: id
+                  destination_vertex_mappings:
+                  - column:
+                      index: 1
+                      name: id
+                    property: id
+                  column_mappings:
+                  - column:
+                      index: 2
+                      name: weight
+                    property: weight
+              schema:
+                $ref: '#/components/schemas/SchemaMapping'
+          description: Successful returned all data sources
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - DataSource
+      x-openapi-router-controller: gscoordinator.flex.controllers.data_source_controller
+    post:
+      description: Bind data sources in batches
+      operationId: bind_datasource_in_batch
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaMapping'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful bind the data sources
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - DataSource
+      x-openapi-router-controller: gscoordinator.flex.controllers.data_source_controller
+  /api/v1/graph/{graph_id}/datasource/edge/{type_name}:
+    delete:
+      description: Unbind datas ource on an edge type
+      operationId: unbind_edge_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: source_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: destination_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully unbind the data source
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - DataSource
+      x-openapi-router-controller: gscoordinator.flex.controllers.data_source_controller
+  /api/v1/graph/{graph_id}/datasource/vertex/{type_name}:
+    delete:
+      description: Unbind data source on a vertex type
+      operationId: unbind_vertex_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully unbind the data source
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - DataSource
+      x-openapi-router-controller: gscoordinator.flex.controllers.data_source_controller
+  /api/v1/graph/{graph_id}/schema:
+    get:
+      description: Get graph schema by ID
+      operationId: get_schema_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                vertex_types:
+                - type_id: 0
+                  type_name: person
+                  properties:
+                  - property_id: 0
+                    property_name: id
+                    property_type:
+                      string:
+                        long_text: null
+                  - property_id: 1
+                    property_name: name
+                    property_type:
+                      string:
+                        long_text: null
+                  primary_keys:
+                  - id
+                - type_id: 1
+                  type_name: software
+                  properties:
+                  - property_id: 0
+                    property_name: id
+                    property_type:
+                      string:
+                        long_text: null
+                  - property_id: 1
+                    property_name: name
+                    property_type:
+                      string:
+                        long_text: null
+                  primary_keys:
+                  - id
+                edge_types:
+                - type_id: 0
+                  type_name: knows
+                  vertex_type_pair_relations:
+                  - source_vertex: person
+                    destination_vertex: person
+                    relation: MANY_TO_MANY
+                    x_csr_params:
+                      edge_storage_strategy: ONLY_IN
+                  properties:
+                  - property_id: 0
+                    property_name: weight
+                    property_type:
+                      primitive_type: DT_DOUBLE
+                - type_id: 1
+                  type_name: created
+                  vertex_type_pair_relations:
+                  - source_vertex: person
+                    destination_vertex: software
+                    relation: MANY_TO_MANY
+                    x_csr_params:
+                      edge_storage_strategy: ONLY_IN
+                  properties:
+                  - property_id: 0
+                    property_name: weight
+                    property_type:
+                      primitive_type: DT_DOUBLE
+              schema:
+                $ref: '#/components/schemas/GetGraphSchemaResponse'
+          description: Successfully returned the graph schema
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+    post:
+      description: Import graph schema
+      operationId: import_schema_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGraphSchemaRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful imported the graph schema
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+  /api/v1/graph/{graph_id}/schema/edge:
+    post:
+      description: Create a edge type
+      operationId: create_edge_type
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEdgeType'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful created the edge type
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+  /api/v1/graph/{graph_id}/schema/edge/{type_name}:
+    delete:
+      description: Delete edge type by name
+      operationId: delete_edge_type_by_name
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: source_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: destination_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful deleted the edge type
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+  /api/v1/graph/{graph_id}/schema/vertex:
+    post:
+      description: Create a vertex type
+      operationId: create_vertex_type
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVertexType'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful created a vertex type
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+  /api/v1/graph/{graph_id}/schema/vertex/{type_name}:
+    delete:
+      description: Delete vertex type by name
+      operationId: delete_vertex_type_by_name
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successful deleted the vertex type
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Graph
+      x-openapi-router-controller: gscoordinator.flex.controllers.graph_controller
+  /api/v1/graph/{graph_id}/service:
+    get:
+      description: Get service status by graph ID
+      operationId: get_service_status_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                graph_id: GRAPHID
+                status: Running
+                sdk_endpoints:
+                  cypher: neo4j://mock.api.cypher:7676
+                  gremin: ws://mock.api.gremlin/gremlin
+                  hqps: http://mock.api.hqps:10000
+                start_time: 2024-01-01 00:00:00
+              schema:
+                $ref: '#/components/schemas/ServiceStatus'
+          description: Successfully returned the service status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Service
+      x-openapi-router-controller: gscoordinator.flex.controllers.service_controller
+  /api/v1/graph/{graph_id}/storedproc:
+    get:
+      description: List all stored procedures on a certain graph
+      operationId: list_stored_procedures
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: STORED-PROCEDUREID-1
+                name: stored_procedure_name_1
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: true
+              - id: STORED-PROCEDUREID-2
+                name: stored_procedure_name_2
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: false
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetStoredProcResponse'
+                type: array
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gscoordinator.flex.controllers.stored_procedure_controller
+    post:
+      description: Create a new stored procedure on a certain graph
+      operationId: create_stored_procedure
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStoredProcRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateStoredProcResponse'
+          description: Successfully created a stored procedure
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gscoordinator.flex.controllers.stored_procedure_controller
+  /api/v1/graph/{graph_id}/storedproc/{stored_procedure_id}:
+    delete:
+      description: Delete a stored procedure by ID
+      operationId: delete_stored_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: stored_procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully deleted the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gscoordinator.flex.controllers.stored_procedure_controller
+    get:
+      description: Get a stored procedure by ID
+      operationId: get_stored_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: stored_procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                id: STORED-PROCEDURE-ID
+                name: stored_procedure_name
+                type: cypher
+                query: MATCH(a) return COUNT(a);
+                library: /path/to/library
+                params:
+                - name: param1
+                  type:
+                    string:
+                      long_text: null
+                returns:
+                - name: return1
+                  type:
+                    PrimitiveType: DT_SIGNED_INT64
+                bound_graph: demo
+                runnable: true
+              schema:
+                $ref: '#/components/schemas/GetStoredProcResponse'
+          description: Successfully returned the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gscoordinator.flex.controllers.stored_procedure_controller
+    put:
+      description: Update a stored procedure by ID
+      operationId: update_stored_procedure_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: graph_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: stored_procedure_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStoredProcRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully updated the stored procedure
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Stored Procedure
+      x-openapi-router-controller: gscoordinator.flex.controllers.stored_procedure_controller
+  /api/v1/job:
+    get:
+      description: List all jobs
+      operationId: list_jobs
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: JOB-QWERTYUIOPASDFGH-1
+                type: DATA IMPORT
+                status: RUNNING
+                start_time: 2024-02-24 00:00:00
+                log: logging...
+                detail:
+                  graph_id: GRAPHID
+              - id: JOB-QWERTYUIOPASDFGH-2
+                type: DATA IMPORT
+                status: CANCELLED
+                start_time: 2024-02-24 00:00:00
+                log: logging...
+                detail:
+                  graph_id: GRAPHID
+              - id: JOB-QWERTYUIOPASDFGH-3
+                type: DATA IMPORT
+                status: SUCCESS
+                start_time: 2024-02-24 00:00:00
+                end_time: 2024-02-24 12:00:00
+                detail:
+                  graph_id: GRAPHID
+              - id: JOB-QWERTYUIOPASDFGH-4
+                type: DATA IMPORT
+                status: FAILED
+                start_time: 2024-02-24 00:00:00
+                end_time: 2024-02-24 12:00:00
+                log: logging...
+                detail:
+                  graph_id: GRAPHID
+              - id: JOB-QWERTYUIOPASDFGH-5
+                type: DATA IMPORT
+                status: WAITING
+                detail:
+                  graph_id: GRAPHID
+              schema:
+                items:
+                  $ref: '#/components/schemas/JobStatus'
+                type: array
+          description: Successful returned all the jobs
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: gscoordinator.flex.controllers.job_controller
+  /api/v1/job/{job_id}:
+    delete:
+      description: Delete job by ID
+      operationId: delete_job_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfuly cancelled the job
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: gscoordinator.flex.controllers.job_controller
+    get:
+      description: Get job status by ID
+      operationId: get_job_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+          description: Successfully returned the job status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Job
+      x-openapi-router-controller: gscoordinator.flex.controllers.job_controller
+  /api/v1/service:
+    get:
+      description: List all service status
+      operationId: list_service_status
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - graph_id: GRAPHID
+                status: Running
+                sdk_endpoints:
+                  cypher: neo4j://mock.api.cypher:7676
+                  gremin: ws://mock.api.gremlin/gremlin
+                  hqps: http://mock.api.hqps:10000
+                start_time: 2024-01-01 00:00:00
+              schema:
+                items:
+                  $ref: '#/components/schemas/ServiceStatus'
+                type: array
+          description: Successfully returned all service status
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Service
+      x-openapi-router-controller: gscoordinator.flex.controllers.service_controller
+  /api/v1/service/restart:
+    post:
+      description: Restart current service
+      operationId: restart_service
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully restarted the service
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Service
+      x-openapi-router-controller: gscoordinator.flex.controllers.service_controller
+  /api/v1/service/start:
+    post:
+      description: Start service
+      operationId: start_service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartServiceRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully started the service
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Bad request
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Service
+      x-openapi-router-controller: gscoordinator.flex.controllers.service_controller
+  /api/v1/service/stop:
+    post:
+      description: Stop current service
+      operationId: stop_service
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+          description: Successfully stopped the service
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Server error
+      tags:
+      - Service
+      x-openapi-router-controller: gscoordinator.flex.controllers.service_controller
+components:
+  responses:
+    "400":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Bad request
+    "404":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Not found
+    "500":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Server error
+  schemas:
+    APIResponse:
+      type: string
+    Error:
+      example:
+        code: 0
+        message: message
+      properties:
+        code:
+          description: Error code
+          format: int32
+          title: code
+          type: integer
+        message:
+          description: Error message
+          title: message
+          type: string
+      required:
+      - code
+      - message
+      title: Error
+    AnyValue:
+      title: default_value
+    RunningDeploymentInfo:
+      example:
+        creation_time: creation_time
+        instance_name: instance_name
+        engine: Hiactor
+        cluster_type: HOSTS
+        storage: MutableCSR
+        version: version
+        frontend: Cypher/Gremlin
+      properties:
+        instance_name:
+          title: instance_name
+          type: string
+        cluster_type:
+          enum:
+          - HOSTS
+          - KUBERNETES
+          title: cluster_type
+          type: string
+        version:
+          title: version
+          type: string
+        creation_time:
+          title: creation_time
+          type: string
+        frontend:
+          enum:
+          - Cypher/Gremlin
+          - AnalyticalApps
+          title: frontend
+          type: string
+        engine:
+          enum:
+          - Hiactor
+          - Gaia
+          title: engine
+          type: string
+        storage:
+          enum:
+          - MutableCSR
+          title: storage
+          type: string
+      required:
+      - cluster_type
+      - creation_time
+      - engine
+      - frontend
+      - instance_name
+      - storage
+      - version
+      title: RunningDeploymentInfo
+    NodeStatus:
+      example:
+        name: name
+        memory_usage: 6.027456183070403
+        disk_usage: 1.4658129805029452
+        cpu_usage: 0.8008281904610115
+      properties:
+        name:
+          title: name
+          type: string
+        cpu_usage:
+          format: double
+          title: cpu_usage
+          type: number
+        memory_usage:
+          format: double
+          title: memory_usage
+          type: number
+        disk_usage:
+          format: double
+          title: disk_usage
+          type: number
+      required:
+      - cpu_usage
+      - disk_usage
+      - memory_usage
+      - name
+      title: NodeStatus
+    RunningDeploymentStatus:
+      example:
+        nodes:
+        - name: name
+          memory_usage: 6.027456183070403
+          disk_usage: 1.4658129805029452
+          cpu_usage: 0.8008281904610115
+        - name: name
+          memory_usage: 6.027456183070403
+          disk_usage: 1.4658129805029452
+          cpu_usage: 0.8008281904610115
+        cluster_type: HOSTS
+      properties:
+        cluster_type:
+          enum:
+          - HOSTS
+          - KUBERNETES
+          title: cluster_type
+          type: string
+        nodes:
+          items:
+            $ref: '#/components/schemas/RunningDeploymentStatus_nodes_inner'
+          title: nodes
+          type: array
+      required:
+      - cluster_type
+      - nodes
+      title: RunningDeploymentStatus
+    StartServiceRequest:
+      example:
+        graph_id: graph_id
+      properties:
+        graph_id:
+          title: graph_id
+          type: string
+      title: StartServiceRequest
+      x-body-name: start_service_request
+    ServiceStatus:
+      example:
+        start_time: start_time
+        graph_id: graph_id
+        sdk_endpoints:
+          gremlin: gremlin
+          cypher: cypher
+          hqps: hqps
+          grpc: grpc
+        status: Running
+      properties:
+        graph_id:
+          title: graph_id
+          type: string
+        status:
+          enum:
+          - Running
+          - Stopped
+          title: status
+          type: string
+        sdk_endpoints:
+          $ref: '#/components/schemas/ServiceStatus_sdk_endpoints'
+        start_time:
+          title: start_time
+          type: string
+      required:
+      - creation_time
+      - graph_id
+      - status
+      title: ServiceStatus
+    UploadFileResponse:
+      example:
+        file_path: file_path
+        metadata:
+          key: ""
+      properties:
+        file_path:
+          title: file_path
+          type: string
+        metadata:
+          additionalProperties: true
+          title: metadata
+          type: object
+      required:
+      - file_path
+      - metadata
+      title: UploadFileResponse
+    LongText:
+      properties:
+        long_text:
+          nullable: true
+          title: long_text
+          type: string
+      required:
+      - long_text
+      title: LongText
+    PrimitiveType:
+      example:
+        primitive_type: DT_SIGNED_INT32
+      properties:
+        primitive_type:
+          enum:
+          - DT_SIGNED_INT32
+          - DT_UNSIGNED_INT32
+          - DT_SIGNED_INT64
+          - DT_UNSIGNED_INT64
+          - DT_BOOL
+          - DT_FLOAT
+          - DT_DOUBLE
+          title: primitive_type
+          type: string
+      required:
+      - primitive_type
+      title: PrimitiveType
+    StringType:
+      properties:
+        string:
+          $ref: '#/components/schemas/StringType_string'
+      required:
+      - string
+      title: StringType
+    GSDataType:
+      oneOf:
+      - $ref: '#/components/schemas/PrimitiveType'
+      - $ref: '#/components/schemas/StringType'
+      title: GSDataType
+    Parameter:
+      properties:
+        name:
+          title: name
+          type: string
+        type:
+          $ref: '#/components/schemas/GSDataType'
+      required:
+      - name
+      - type
+      title: Parameter
+    BasePropertyMeta:
+      properties:
+        property_name:
+          title: property_name
+          type: string
+        property_type:
+          $ref: '#/components/schemas/GSDataType'
+        nullable:
+          title: nullable
+          type: boolean
+        default_value:
+          title: default_value
+        description:
+          title: description
+          type: string
+      required:
+      - property_name
+      - property_type
+      title: BasePropertyMeta
+    CreatePropertyMeta:
+      allOf:
+      - $ref: '#/components/schemas/BasePropertyMeta'
+      example:
+        nullable: true
+        property_type:
+          primitive_type: DT_SIGNED_INT32
+        description: description
+        default_value: ""
+        property_name: property_name
+      title: CreatePropertyMeta
+      x-body-name: create_property_meta
+    GetPropertyMeta:
+      allOf:
+      - $ref: '#/components/schemas/BasePropertyMeta'
+      - properties:
+          property_id:
+            format: int32
+            type: integer
+        required:
+        - property_id
+        type: object
+      example:
+        nullable: true
+        property_type:
+          primitive_type: DT_SIGNED_INT32
+        description: description
+        default_value: ""
+        property_id: 1
+        property_name: property_name
+      title: GetPropertyMeta
+      x-body-name: get_property_meta
+    BaseVertexType:
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        primary_keys:
+          items:
+            type: string
+          title: primary_keys
+          type: array
+        x_csr_params:
+          $ref: '#/components/schemas/BaseVertexType_x_csr_params'
+      required:
+      - primary_keys
+      - type_name
+      title: BaseVertexType
+    CreateVertexType:
+      allOf:
+      - $ref: '#/components/schemas/BaseVertexType'
+      - properties:
+          properties:
+            items:
+              $ref: '#/components/schemas/CreatePropertyMeta'
+            type: array
+          description:
+            type: string
+        required:
+        - properties
+        type: object
+      example:
+        type_name: type_name
+        primary_keys:
+        - primary_keys
+        - primary_keys
+        x_csr_params:
+          max_vertex_num: 0
+        description: description
+        properties:
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_name: property_name
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_name: property_name
+      title: CreateVertexType
+      x-body-name: create_vertex_type
+    BaseEdgeType:
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        vertex_type_pair_relations:
+          items:
+            $ref: '#/components/schemas/BaseEdgeType_vertex_type_pair_relations_inner'
+          title: vertex_type_pair_relations
+          type: array
+        directed:
+          title: directed
+          type: boolean
+        primary_keys:
+          items:
+            type: string
+          title: primary_keys
+          type: array
+      required:
+      - type_name
+      - vertex_type_pair_relations
+      title: BaseEdgeType
+    CreateEdgeType:
+      allOf:
+      - $ref: '#/components/schemas/BaseEdgeType'
+      - properties:
+          properties:
+            items:
+              $ref: '#/components/schemas/CreatePropertyMeta'
+            type: array
+          description:
+            type: string
+        required:
+        - properties
+        type: object
+      example:
+        type_name: type_name
+        directed: true
+        primary_keys:
+        - primary_keys
+        - primary_keys
+        vertex_type_pair_relations:
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        description: description
+        properties:
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_name: property_name
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_name: property_name
+      title: CreateEdgeType
+      x-body-name: create_edge_type
+    CreateStoredProcRequest:
+      example:
+        query: query
+        name: name
+        description: description
+        type: cpp
+      properties:
+        name:
+          title: name
+          type: string
+        description:
+          title: description
+          type: string
+        type:
+          enum:
+          - cpp
+          - cypher
+          title: type
+          type: string
+        query:
+          title: query
+          type: string
+      required:
+      - name
+      - query
+      - type
+      title: CreateStoredProcRequest
+      x-body-name: create_stored_proc_request
+    CreateStoredProcResponse:
+      example:
+        stored_procedure_id: stored_procedure_id
+      properties:
+        stored_procedure_id:
+          title: stored_procedure_id
+          type: string
+      required:
+      - stored_procedure_id
+      title: CreateStoredProcResponse
+    CreateGraphSchemaRequest:
+      example:
+        vertex_types:
+        - type_name: type_name
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          x_csr_params:
+            max_vertex_num: 0
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+        - type_name: type_name
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          x_csr_params:
+            max_vertex_num: 0
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+        edge_types:
+        - type_name: type_name
+          directed: true
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          vertex_type_pair_relations:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+        - type_name: type_name
+          directed: true
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          vertex_type_pair_relations:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_name: property_name
+      properties:
+        vertex_types:
+          items:
+            $ref: '#/components/schemas/CreateVertexType'
+          title: vertex_types
+          type: array
+        edge_types:
+          items:
+            $ref: '#/components/schemas/CreateEdgeType'
+          title: edge_types
+          type: array
+      required:
+      - edge_types
+      - vertex_types
+      title: CreateGraphSchemaRequest
+      x-body-name: create_graph_schema_request
+    CreateGraphRequest:
+      example:
+        schema:
+          vertex_types:
+          - type_name: type_name
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            x_csr_params:
+              max_vertex_num: 0
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+          - type_name: type_name
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            x_csr_params:
+              max_vertex_num: 0
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+          edge_types:
+          - type_name: type_name
+            directed: true
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            vertex_type_pair_relations:
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+          - type_name: type_name
+            directed: true
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            vertex_type_pair_relations:
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_name: property_name
+        stored_procedures:
+        - query: query
+          name: name
+          description: description
+          type: cpp
+        - query: query
+          name: name
+          description: description
+          type: cpp
+        name: name
+        description: description
+      properties:
+        name:
+          title: name
+          type: string
+        description:
+          title: description
+          type: string
+        stored_procedures:
+          items:
+            $ref: '#/components/schemas/CreateStoredProcRequest'
+          title: stored_procedures
+          type: array
+        schema:
+          $ref: '#/components/schemas/CreateGraphSchemaRequest'
+      title: CreateGraphRequest
+      x-body-name: create_graph_request
+    CreateGraphResponse:
+      example:
+        graph_id: graph_id
+      properties:
+        graph_id:
+          title: graph_id
+          type: string
+      required:
+      - graph_id
+      title: CreateGraphResponse
+    StoredProcedureMeta:
+      allOf:
+      - $ref: '#/components/schemas/CreateStoredProcRequest'
+      - properties:
+          id:
+            type: string
+          library:
+            type: string
+          params:
+            items:
+              $ref: '#/components/schemas/Parameter'
+            type: array
+          returns:
+            items:
+              $ref: '#/components/schemas/Parameter'
+            type: array
+        required:
+        - id
+        - library
+        - params
+        - returns
+        type: object
+      title: StoredProcedureMeta
+    GetStoredProcResponse:
+      allOf:
+      - $ref: '#/components/schemas/StoredProcedureMeta'
+      - properties:
+          bound_graph:
+            type: string
+          runnable:
+            type: boolean
+        required:
+        - bound_graph
+        - runnable
+        type: object
+      example:
+        runnable: true
+        bound_graph: bound_graph
+      title: GetStoredProcResponse
+    UpdateStoredProcRequest:
+      example:
+        description: description
+      properties:
+        description:
+          title: description
+          type: string
+      required:
+      - description
+      title: UpdateStoredProcRequest
+      x-body-name: update_stored_proc_request
+    GetVertexType:
+      allOf:
+      - $ref: '#/components/schemas/BaseVertexType'
+      - properties:
+          type_id:
+            format: int32
+            type: integer
+          properties:
+            items:
+              $ref: '#/components/schemas/GetPropertyMeta'
+            type: array
+          description:
+            type: string
+        required:
+        - properties
+        - type_id
+        type: object
+      example:
+        type_name: type_name
+        primary_keys:
+        - primary_keys
+        - primary_keys
+        x_csr_params:
+          max_vertex_num: 0
+        type_id: 6
+        description: description
+        properties:
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_id: 1
+          property_name: property_name
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_id: 1
+          property_name: property_name
+      title: GetVertexType
+    GetEdgeType:
+      allOf:
+      - $ref: '#/components/schemas/BaseEdgeType'
+      - properties:
+          type_id:
+            format: int32
+            type: integer
+          properties:
+            items:
+              $ref: '#/components/schemas/GetPropertyMeta'
+            type: array
+          description:
+            type: string
+        required:
+        - type_id
+        type: object
+      example:
+        type_name: type_name
+        directed: true
+        primary_keys:
+        - primary_keys
+        - primary_keys
+        vertex_type_pair_relations:
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        - source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+          relation: MANY_TO_MANY
+        type_id: 5
+        description: description
+        properties:
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_id: 1
+          property_name: property_name
+        - nullable: true
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+          description: description
+          default_value: ""
+          property_id: 1
+          property_name: property_name
+      title: GetEdgeType
+    GetGraphSchemaResponse:
+      example:
+        vertex_types:
+        - type_name: type_name
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          x_csr_params:
+            max_vertex_num: 0
+          type_id: 6
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+        - type_name: type_name
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          x_csr_params:
+            max_vertex_num: 0
+          type_id: 6
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+        edge_types:
+        - type_name: type_name
+          directed: true
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          vertex_type_pair_relations:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          type_id: 5
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+        - type_name: type_name
+          directed: true
+          primary_keys:
+          - primary_keys
+          - primary_keys
+          vertex_type_pair_relations:
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          - source_vertex: source_vertex
+            destination_vertex: destination_vertex
+            x_csr_params:
+              edge_storage_strategy: ONLY_IN
+            relation: MANY_TO_MANY
+          type_id: 5
+          description: description
+          properties:
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+          - nullable: true
+            property_type:
+              primitive_type: DT_SIGNED_INT32
+            description: description
+            default_value: ""
+            property_id: 1
+            property_name: property_name
+      properties:
+        vertex_types:
+          items:
+            $ref: '#/components/schemas/GetVertexType'
+          title: vertex_types
+          type: array
+        edge_types:
+          items:
+            $ref: '#/components/schemas/GetEdgeType'
+          title: edge_types
+          type: array
+      required:
+      - edge_types
+      - vertex_types
+      title: GetGraphSchemaResponse
+    GetGraphResponse:
+      example:
+        creation_time: creation_time
+        schema:
+          vertex_types:
+          - type_name: type_name
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            x_csr_params:
+              max_vertex_num: 0
+            type_id: 6
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+          - type_name: type_name
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            x_csr_params:
+              max_vertex_num: 0
+            type_id: 6
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+          edge_types:
+          - type_name: type_name
+            directed: true
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            vertex_type_pair_relations:
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            type_id: 5
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+          - type_name: type_name
+            directed: true
+            primary_keys:
+            - primary_keys
+            - primary_keys
+            vertex_type_pair_relations:
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            - source_vertex: source_vertex
+              destination_vertex: destination_vertex
+              x_csr_params:
+                edge_storage_strategy: ONLY_IN
+              relation: MANY_TO_MANY
+            type_id: 5
+            description: description
+            properties:
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+            - nullable: true
+              property_type:
+                primitive_type: DT_SIGNED_INT32
+              description: description
+              default_value: ""
+              property_id: 1
+              property_name: property_name
+        stored_procedures:
+        - runnable: true
+          bound_graph: bound_graph
+        - runnable: true
+          bound_graph: bound_graph
+        name: name
+        description: description
+        schema_update_time: schema_update_time
+        id: id
+        store_type: mutable_csr
+        data_update_time: data_update_time
+      properties:
+        id:
+          title: id
+          type: string
+        name:
+          title: name
+          type: string
+        description:
+          title: description
+          type: string
+        store_type:
+          enum:
+          - mutable_csr
+          title: store_type
+          type: string
+        creation_time:
+          title: creation_time
+          type: string
+        data_update_time:
+          title: data_update_time
+          type: string
+        schema_update_time:
+          title: schema_update_time
+          type: string
+        stored_procedures:
+          items:
+            $ref: '#/components/schemas/GetStoredProcResponse'
+          title: stored_procedures
+          type: array
+        schema:
+          $ref: '#/components/schemas/GetGraphSchemaResponse'
+      required:
+      - creation_time
+      - data_update_time
+      - id
+      - name
+      - schema
+      - schema_update_time
+      title: GetGraphResponse
+    ColumnMapping:
+      example:
+        column:
+          name: name
+          index: 0
+        property: property
+      properties:
+        column:
+          $ref: '#/components/schemas/ColumnMapping_column'
+        property:
+          description: must align with the schema
+          title: property
+          type: string
+      required:
+      - column
+      - property
+      title: ColumnMapping
+    VertexMapping:
+      example:
+        type_name: type_name
+        inputs:
+        - file:///path/to/file.csv
+        - file:///path/to/file.csv
+        column_mappings:
+        - column:
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        inputs:
+          items:
+            example: file:///path/to/file.csv
+            type: string
+          title: inputs
+          type: array
+        column_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          title: column_mappings
+          type: array
+      required:
+      - column_mappings
+      - inputs
+      - type_name
+      title: VertexMapping
+      x-body-name: vertex_mapping
+    EdgeMapping:
+      example:
+        inputs:
+        - inputs
+        - inputs
+        source_vertex_mappings:
+        - column:
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
+        destination_vertex_mappings:
+        - column:
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
+        column_mappings:
+        - column:
+            name: name
+            index: 0
+          property: property
+        - column:
+            name: name
+            index: 0
+          property: property
+        type_triplet:
+          edge: edge
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+      properties:
+        type_triplet:
+          $ref: '#/components/schemas/EdgeMapping_type_triplet'
+        inputs:
+          items:
+            type: string
+          title: inputs
+          type: array
+        source_vertex_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          title: source_vertex_mappings
+          type: array
+        destination_vertex_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          title: destination_vertex_mappings
+          type: array
+        column_mappings:
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+          title: column_mappings
+          type: array
+      required:
+      - destination_vertex_mappings
+      - inputs
+      - source_vertex_mappings
+      - type_triplet
+      title: EdgeMapping
+      x-body-name: edge_mapping
+    SchemaMapping:
+      example:
+        edge_mappings:
+        - inputs:
+          - inputs
+          - inputs
+          source_vertex_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          destination_vertex_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          column_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          type_triplet:
+            edge: edge
+            source_vertex: source_vertex
+            destination_vertex: destination_vertex
+        - inputs:
+          - inputs
+          - inputs
+          source_vertex_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          destination_vertex_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          column_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+          type_triplet:
+            edge: edge
+            source_vertex: source_vertex
+            destination_vertex: destination_vertex
+        vertex_mappings:
+        - type_name: type_name
+          inputs:
+          - file:///path/to/file.csv
+          - file:///path/to/file.csv
+          column_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+        - type_name: type_name
+          inputs:
+          - file:///path/to/file.csv
+          - file:///path/to/file.csv
+          column_mappings:
+          - column:
+              name: name
+              index: 0
+            property: property
+          - column:
+              name: name
+              index: 0
+            property: property
+      properties:
+        vertex_mappings:
+          items:
+            $ref: '#/components/schemas/VertexMapping'
+          title: vertex_mappings
+          type: array
+        edge_mappings:
+          items:
+            $ref: '#/components/schemas/EdgeMapping'
+          title: edge_mappings
+          type: array
+      required:
+      - edge_mappings
+      - vertex_mappings
+      title: SchemaMapping
+      x-body-name: schema_mapping
+    DataloadingJobConfig:
+      example:
+        schedule: schedule
+        loading_config:
+          format:
+            metadata:
+              key: ""
+            type: type
+          import_option: overwrite
+        vertices:
+        - type_name: type_name
+        - type_name: type_name
+        repeat: once
+        edges:
+        - type_name: type_name
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+        - type_name: type_name
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+      properties:
+        loading_config:
+          $ref: '#/components/schemas/DataloadingJobConfig_loading_config'
+        vertices:
+          items:
+            $ref: '#/components/schemas/DataloadingJobConfig_vertices_inner'
+          title: vertices
+          type: array
+        edges:
+          items:
+            $ref: '#/components/schemas/DataloadingJobConfig_edges_inner'
+          title: edges
+          type: array
+        schedule:
+          description: format with '2023-02-21 11:56:30'
+          nullable: true
+          title: schedule
+          type: string
+        repeat:
+          enum:
+          - once
+          - day
+          - week
+          nullable: true
+          title: repeat
+          type: string
+      required:
+      - edges
+      - loading_config
+      - vertices
+      title: DataloadingJobConfig
+      x-body-name: dataloading_job_config
+    JobStatus:
+      example:
+        start_time: start_time
+        log: log
+        end_time: end_time
+        id: id
+        detail:
+          key: ""
+        type: type
+        status: RUNNING
+      properties:
+        id:
+          title: id
+          type: string
+        type:
+          title: type
+          type: string
+        status:
+          enum:
+          - RUNNING
+          - SUCCESS
+          - FAILED
+          - CANCELLED
+          - WAITING
+          title: status
+          type: string
+        start_time:
+          title: start_time
+          type: string
+        end_time:
+          title: end_time
+          type: string
+        log:
+          description: logview URL or log string
+          title: log
+          type: string
+        detail:
+          additionalProperties: true
+          title: detail
+          type: object
+      required:
+      - id
+      - status
+      - type
+      title: JobStatus
+    CreateDataloadingJobResponse:
+      example:
+        job_id: job_id
+      properties:
+        job_id:
+          title: job_id
+          type: string
+      required:
+      - job_id
+      title: CreateDataloadingJobResponse
+    CreateAlertRuleRequest:
+      example:
+        severity: warning
+        conditions_description: conditions_description
+        enable: true
+        name: name
+        metric_type: node
+        frequency: 0
+      properties:
+        name:
+          title: name
+          type: string
+        severity:
+          enum:
+          - warning
+          - emergency
+          title: severity
+          type: string
+        metric_type:
+          enum:
+          - node
+          - service
+          title: metric_type
+          type: string
+        conditions_description:
+          title: conditions_description
+          type: string
+        frequency:
+          description: (mins)
+          title: frequency
+          type: integer
+        enable:
+          title: enable
+          type: boolean
+      required:
+      - conditions_description
+      - enable
+      - frequency
+      - metric_type
+      - name
+      - severity
+      title: CreateAlertRuleRequest
+      x-body-name: create_alert_rule_request
+    GetAlertRuleResponse:
+      allOf:
+      - $ref: '#/components/schemas/CreateAlertRuleRequest'
+      - properties:
+          id:
+            type: string
+        required:
+        - id
+        type: object
+      example:
+        severity: warning
+        conditions_description: conditions_description
+        enable: true
+        name: name
+        metric_type: node
+        id: id
+        frequency: 0
+      title: GetAlertRuleResponse
+    GetAlertMessageResponse:
+      example:
+        severity: warning
+        trigger_time: trigger_time
+        metric_type: node
+        id: id
+        message: message
+        alert_name: alert_name
+        target:
+        - target
+        - target
+        status: unsolved
+      properties:
+        id:
+          description: Generated in server side
+          title: id
+          type: string
+        alert_name:
+          title: alert_name
+          type: string
+        severity:
+          enum:
+          - warning
+          - emergency
+          title: severity
+          type: string
+        metric_type:
+          enum:
+          - node
+          - service
+          title: metric_type
+          type: string
+        target:
+          items:
+            type: string
+          title: target
+          type: array
+        trigger_time:
+          title: trigger_time
+          type: string
+        status:
+          enum:
+          - unsolved
+          - solved
+          - dealing
+          title: status
+          type: string
+        message:
+          title: message
+          type: string
+      required:
+      - alert_name
+      - id
+      - message
+      - metric_type
+      - severity
+      - status
+      - target
+      - trigger_time
+      title: GetAlertMessageResponse
+    UpdateAlertMessageStatusRequest:
+      example:
+        message_ids:
+        - message_ids
+        - message_ids
+        status: unsolved
+      properties:
+        message_ids:
+          items:
+            type: string
+          title: message_ids
+          type: array
+        status:
+          enum:
+          - unsolved
+          - solved
+          - dealing
+          title: status
+          type: string
+      required:
+      - message_ids
+      - status
+      title: UpdateAlertMessageStatusRequest
+      x-body-name: update_alert_message_status_request
+    CreateAlertReceiverRequest:
+      example:
+        webhook_url: webhook_url
+        is_at_all: true
+        enable: true
+        at_user_ids:
+        - at_user_ids
+        - at_user_ids
+        type: webhook
+      properties:
+        type:
+          enum:
+          - webhook
+          title: type
+          type: string
+        webhook_url:
+          title: webhook_url
+          type: string
+        at_user_ids:
+          items:
+            type: string
+          title: at_user_ids
+          type: array
+        is_at_all:
+          title: is_at_all
+          type: boolean
+        enable:
+          title: enable
+          type: boolean
+      required:
+      - at_user_ids
+      - enable
+      - is_at_all
+      - type
+      - webhook_url
+      title: CreateAlertReceiverRequest
+      x-body-name: create_alert_receiver_request
+    GetAlertReceiverResponse:
+      allOf:
+      - $ref: '#/components/schemas/CreateAlertReceiverRequest'
+      - properties:
+          id:
+            type: string
+          message:
+            description: Error message generated in server side
+            type: string
+        required:
+        - id
+        - message
+        type: object
+      example:
+        webhook_url: webhook_url
+        is_at_all: true
+        enable: true
+        at_user_ids:
+        - at_user_ids
+        - at_user_ids
+        id: id
+        type: webhook
+        message: message
+      title: GetAlertReceiverResponse
+    uploadFile_request:
+      properties:
+        filestorage:
+          format: binary
+          type: string
+      type: object
+    RunningDeploymentStatus_nodes_inner:
+      oneOf:
+      - $ref: '#/components/schemas/NodeStatus'
+      title: RunningDeploymentStatus_nodes_inner
+    ServiceStatus_sdk_endpoints:
+      example:
+        gremlin: gremlin
+        cypher: cypher
+        hqps: hqps
+        grpc: grpc
+      properties:
+        cypher:
+          title: cypher
+          type: string
+        gremlin:
+          title: gremlin
+          type: string
+        hqps:
+          title: hqps
+          type: string
+        grpc:
+          title: grpc
+          type: string
+      title: ServiceStatus_sdk_endpoints
+    StringType_string:
+      oneOf:
+      - $ref: '#/components/schemas/LongText'
+      title: StringType_string
+      type: object
+    BaseVertexType_x_csr_params:
+      description: Used for storage optimization
+      example:
+        max_vertex_num: 0
+      properties:
+        max_vertex_num:
+          title: max_vertex_num
+          type: integer
+      title: BaseVertexType_x_csr_params
+      type: object
+    BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params:
+      description: Used for storage optimization
+      example:
+        edge_storage_strategy: ONLY_IN
+      properties:
+        edge_storage_strategy:
+          enum:
+          - ONLY_IN
+          - ONLY_OUT
+          - BOTH_OUT_IN
+          title: edge_storage_strategy
+          type: string
+      title: BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params
+    BaseEdgeType_vertex_type_pair_relations_inner:
+      example:
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+        x_csr_params:
+          edge_storage_strategy: ONLY_IN
+        relation: MANY_TO_MANY
+      properties:
+        source_vertex:
+          title: source_vertex
+          type: string
+        destination_vertex:
+          title: destination_vertex
+          type: string
+        relation:
+          enum:
+          - MANY_TO_MANY
+          - ONE_TO_MANY
+          - MANY_TO_ONE
+          - ONE_TO_ONE
+          title: relation
+          type: string
+        x_csr_params:
+          $ref: '#/components/schemas/BaseEdgeType_vertex_type_pair_relations_inner_x_csr_params'
+      required:
+      - destination_vertex
+      - relation
+      - source_vertex
+      title: BaseEdgeType_vertex_type_pair_relations_inner
+    ColumnMapping_column:
+      example:
+        name: name
+        index: 0
+      properties:
+        index:
+          format: int32
+          title: index
+          type: integer
+        name:
+          title: name
+          type: string
+      title: ColumnMapping_column
+    EdgeMapping_type_triplet:
+      description: "source label -> [edge label] -> destination label"
+      example:
+        edge: edge
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+      properties:
+        edge:
+          title: edge
+          type: string
+        source_vertex:
+          title: source_vertex
+          type: string
+        destination_vertex:
+          title: destination_vertex
+          type: string
+      required:
+      - destination_vertex
+      - edge
+      - source_vertex
+      title: EdgeMapping_type_triplet
+    DataloadingJobConfig_loading_config_format:
+      example:
+        metadata:
+          key: ""
+        type: type
+      properties:
+        type:
+          title: type
+          type: string
+        metadata:
+          additionalProperties: true
+          title: metadata
+          type: object
+      title: DataloadingJobConfig_loading_config_format
+    DataloadingJobConfig_loading_config:
+      example:
+        format:
+          metadata:
+            key: ""
+          type: type
+        import_option: overwrite
+      properties:
+        import_option:
+          enum:
+          - init
+          - overwrite
+          example: overwrite
+          title: import_option
+          type: string
+        format:
+          $ref: '#/components/schemas/DataloadingJobConfig_loading_config_format'
+      title: DataloadingJobConfig_loading_config
+    DataloadingJobConfig_vertices_inner:
+      example:
+        type_name: type_name
+      properties:
+        type_name:
+          title: type_name
+          type: string
+      title: DataloadingJobConfig_vertices_inner
+      type: object
+    DataloadingJobConfig_edges_inner:
+      example:
+        type_name: type_name
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        source_vertex:
+          title: source_vertex
+          type: string
+        destination_vertex:
+          title: destination_vertex
+          type: string
+      title: DataloadingJobConfig_edges_inner
+      type: object

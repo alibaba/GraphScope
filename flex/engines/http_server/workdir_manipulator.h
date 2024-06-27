@@ -60,6 +60,8 @@ class WorkDirManipulator {
   static const std::string RUNNING_GRAPH_FILE_NAME;
   static const std::string TMP_DIR;
   static const std::string GRAPH_LOADER_BIN;
+  static const std::string UPLOAD_DIR;
+  static constexpr int32_t MAX_CONTENT_SIZE = 100 * 1024 * 1024;  // 100MB
 
   static void SetWorkspace(const std::string& workspace_path);
 
@@ -159,6 +161,8 @@ class WorkDirManipulator {
 
   static std::string GetLogDir();
 
+  static std::string GetUploadDir();
+
   static std::string GetCompilerLogFile();
   // Return a unique temp dir for the graph.
   static std::string GetTempIndicesDir(const std::string& graph_name);
@@ -168,6 +172,14 @@ class WorkDirManipulator {
   // Move the temp indices to the graph indices dir.
   static gs::Result<std::string> CommitTempIndices(
       const std::string& graph_name);
+
+  // Create a file which contains the content, in binary, returns the filename.
+  // NOTE: Creating new files under a directory. Limit the size of the content.
+  //       The uploaded file are mainly used for bulk loading, we will clear
+  //       them after the loading process.
+  //       TODO(zhanglei): Consider the bulk loading may fail, so we will
+  //       automatically clear the uploaded files after a period of time.
+  static gs::Result<std::string> CreateFile(const seastar::sstring& content);
 
  private:
   static std::string get_tmp_bulk_loading_job_log_path(

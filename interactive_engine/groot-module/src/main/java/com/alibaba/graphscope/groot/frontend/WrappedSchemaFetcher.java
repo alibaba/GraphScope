@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
 import com.alibaba.graphscope.groot.meta.MetaService;
 
@@ -43,10 +43,15 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
     public Map<Long, GraphSchema> getSchemaSnapshotPair() {
         SnapshotWithSchema snapshotSchema = this.snapshotCache.getSnapshotWithSchema();
         long MAX_SNAPSHOT_ID = Long.MAX_VALUE - 1;
-        // Always retrieve the latest result in secondary instance
-        long snapshotId = isSecondary ? MAX_SNAPSHOT_ID : snapshotSchema.getSnapshotId();
+        // Always retrieve the latest snapshot id to avoid inconsistency.
+        long snapshotId = MAX_SNAPSHOT_ID;
         GraphSchema schema = snapshotSchema.getGraphDef();
         return Map.of(snapshotId, schema);
+    }
+
+    @Override
+    public GraphStatistics getStatistics() {
+        return this.snapshotCache.getGraphStatistics();
     }
 
     @Override

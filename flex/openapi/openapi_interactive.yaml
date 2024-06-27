@@ -20,7 +20,7 @@ info:
     
     QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
   version: "1.0.0"
-  title: GraphScope Interactive API v0.0.3
+  title: GraphScope Interactive API v0.3
   contact:
     email: graphscope@alibaba-inc.com
   license:
@@ -998,6 +998,38 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+  /v1/file/upload:
+    post:
+      tags: [Utils]
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filestorage:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+                # metadata:
+                #   datasource: file
+                #   file_type: csv
+        500:
+          description: Server Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
 components:
   schemas:
     AnyValue: {}
@@ -1298,6 +1330,8 @@ components:
               type: boolean
             creation_time:
               type: integer
+            update_time:
+              type: integer
     UpdateProcedureRequest:
       x-body-name: update_procedure_request
       type: object
@@ -1568,6 +1602,16 @@ components:
         loading_config:
           type: object
           properties:
+            data_source:
+              type: object
+              properties:
+                scheme:
+                  type: string
+                  enum:
+                    - odps
+                    - file
+                location:
+                  type: string
             import_option:
               type: string
               enum:
@@ -1732,5 +1776,15 @@ components:
           type: string
           description: URL or log string
         detail:
+          type: object
+          additionalProperties: true
+    UploadFileResponse:
+      required:
+        - file_path
+        # - metadata
+      properties:
+        file_path:
+          type: string
+        metadata:
           type: object
           additionalProperties: true

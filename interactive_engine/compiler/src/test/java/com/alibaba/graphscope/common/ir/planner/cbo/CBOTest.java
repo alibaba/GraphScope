@@ -193,4 +193,50 @@ public class CBOTest {
                     + " alias=[forum], opt=[VERTEX])",
                 com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
     }
+
+    @Test
+    public void Q5_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+
+        // The optimized order is from 'b' to 'a', which is opposite to the user-given order.
+        // Verify that the path expand type is correctly inferred in this situation.
+        RelNode before1 =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a)-[*1..2]->(b:COMMENT) Return a", builder)
+                        .build();
+        RelNode after1 = optimizer.optimize(before1, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON, COMMENT]}],"
+                    + " alias=[a], opt=[END])\n"
+                    + "    GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[[EdgeLabel(LIKES,"
+                    + " PERSON, COMMENT), EdgeLabel(REPLYOF, COMMENT, COMMENT)]], alias=[_],"
+                    + " opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " alias=[_], start_alias=[b])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[COMMENT]}],"
+                    + " alias=[b], opt=[VERTEX])",
+                after1.explain().trim());
+
+        // check the type of path expand if the order is from 'a' to 'b'
+        RelNode before2 =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a {id: 1})-[*1..2]->(b:COMMENT) Return a", builder)
+                        .build();
+        RelNode after2 = optimizer.optimize(before2, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[COMMENT]}], alias=[b],"
+                    + " opt=[END])\n"
+                    + "    GraphLogicalPathExpand(fused=[GraphPhysicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[COMMENT]}], alias=[_], opt=[END], physicalOpt=[ITSELF])\n"
+                    + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(LIKES, PERSON, COMMENT),"
+                    + " EdgeLabel(REPLYOF, COMMENT, COMMENT)]], alias=[_], opt=[OUT],"
+                    + " physicalOpt=[VERTEX])\n"
+                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " alias=[_], start_alias=[a])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON,"
+                    + " COMMENT]}], alias=[a], fusedFilter=[[=(_.id, 1)]], opt=[VERTEX])",
+                after2.explain().trim());
+    }
 }

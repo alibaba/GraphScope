@@ -44,7 +44,8 @@ public class VineyardIrMetaReader implements IrMetaReader {
     public IrMeta readMeta() throws IOException {
         String schemaString =
                 FileUtils.readFileToString(
-                        new File(GraphConfig.GRAPH_SCHEMA.get(configs)), StandardCharsets.UTF_8);
+                        new File(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs)),
+                        StandardCharsets.UTF_8);
         GraphSchema graphSchema = DefaultGraphSchema.buildSchemaFromJson(schemaString);
         return new IrMeta(new IrGraphSchema(graphSchema, true));
     }

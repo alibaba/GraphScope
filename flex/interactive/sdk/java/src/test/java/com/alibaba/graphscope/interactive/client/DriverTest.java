@@ -17,7 +17,7 @@ package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.alibaba.graphscope.interactive.models.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
@@ -329,30 +329,50 @@ public class DriverTest {
         assertOk(rep);
         jobId = rep.getValue().getJobId();
         logger.info("job id: " + jobId);
+        waitJobFinished(jobId);
     }
 
     @Test
     @Order(3)
-    public void test2waitJobFinished() {
-        if (jobId == null) {
-            return;
+    public void test1BulkLoadingUploading() {
+        SchemaMapping schemaMapping = new SchemaMapping();
+        {
+            SchemaMappingLoadingConfig loadingConfig = new SchemaMappingLoadingConfig();
+            loadingConfig.setImportOption(SchemaMappingLoadingConfig.ImportOptionEnum.INIT);
+            loadingConfig.setFormat(new SchemaMappingLoadingConfigFormat().type("csv"));
+            schemaMapping.setLoadingConfig(loadingConfig);
         }
-        while (true) {
-            Result<JobStatus> rep = session.getJobStatus(jobId);
-            assertOk(rep);
-            JobStatus job = rep.getValue();
-            if (job.getStatus() == JobStatus.StatusEnum.SUCCESS) {
-                logger.info("job finished");
-                break;
-            } else if (job.getStatus() == JobStatus.StatusEnum.FAILED) {
-                throw new RuntimeException("job failed");
+        {
+            // get env var FLEX_DATA_DIR
+            if (System.getenv("FLEX_DATA_DIR") == null) {
+                logger.info("FLEX_DATA_DIR is not set");
+                return;
             }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            // The file will be uploaded to the server
+            String personPath = "@" + System.getenv("FLEX_DATA_DIR") + "/person.csv";
+            String knowsPath = "@" + System.getenv("FLEX_DATA_DIR") + "/person_knows_person.csv";
+            {
+                VertexMapping vertexMapping = new VertexMapping();
+                vertexMapping.setTypeName("person");
+                vertexMapping.addInputsItem(personPath);
+                schemaMapping.addVertexMappingsItem(vertexMapping);
+            }
+            {
+                EdgeMapping edgeMapping = new EdgeMapping();
+                edgeMapping.setTypeTriplet(
+                        new EdgeMappingTypeTriplet()
+                                .edge("knows")
+                                .sourceVertex("person")
+                                .destinationVertex("person"));
+                edgeMapping.addInputsItem(knowsPath);
+                schemaMapping.addEdgeMappingsItem(edgeMapping);
             }
         }
+        Result<JobResponse> rep = session.bulkLoading(graphId, schemaMapping);
+        assertOk(rep);
+        jobId = rep.getValue().getJobId();
+        logger.info("job id: " + jobId);
+        waitJobFinished(jobId);
     }
 
     @Test
@@ -577,5 +597,27 @@ public class DriverTest {
             return false;
         }
         return true;
+    }
+
+    private void waitJobFinished(String jobId) {
+        if (jobId == null) {
+            return;
+        }
+        while (true) {
+            Result<JobStatus> rep = session.getJobStatus(jobId);
+            assertOk(rep);
+            JobStatus job = rep.getValue();
+            if (job.getStatus() == JobStatus.StatusEnum.SUCCESS) {
+                logger.info("job finished");
+                break;
+            } else if (job.getStatus() == JobStatus.StatusEnum.FAILED) {
+                throw new RuntimeException("job failed");
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -1110,7 +1110,17 @@ fn preprocess_expression(
                 common_pb::expr_opr::Item::Map(key_values) => {
                     for key_val in &mut key_values.key_vals {
                         if let Some(value) = key_val.value.as_mut() {
-                            preprocess_var(value, meta, plan_meta, false)?;
+                            match value {
+                                common_pb::variable_key_value::Value::Val(val) => {
+                                    preprocess_var(val, meta, plan_meta, false)?;
+                                }
+                                common_pb::variable_key_value::Value::Nested(_) => {
+                                    return Err(IrError::Unsupported("nested value in Map".to_string()));
+                                }
+                                common_pb::variable_key_value::Value::PathFunc(_) => {
+                                    return Err(IrError::Unsupported("PathFunc in Map".to_string()));
+                                }
+                            }
                         }
                     }
                     count = 0;

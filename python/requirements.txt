@@ -9,7 +9,7 @@ neo4j==5.10.0
 nest_asyncio
 networkx==2.8.0;python_version>="3.8"
 networkx==2.6.0;python_version<"3.8"
-numpy
+numpy<2.0.0
 orjson
 packaging
 pandas<=2.0.3
@@ -22,7 +22,6 @@ ujson;python_version>="3.11"
 PyYAML
 rich
 tqdm
-click
 vineyard>=0.16.3;sys_platform!="win32"
 simple-parsing
 graphscope-flex>=0.27.0

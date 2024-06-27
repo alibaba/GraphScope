@@ -121,7 +121,11 @@ flex/interactive/sdk/java/.openapi-generator/*
 flex/interactive/sdk/java/src/main/AndroidManifest.xml
 flex/interactive/sdk/java/.openapi-generate/
 flex/interactive/sdk/java/settings.gradle
-flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/openapi/
+flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/models/
+flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/api/
+flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/auth/
+flex/interactive/sdk/java/src/main/java/com/alibaba/graphscope/interactive/*.java
+
 
 flex/interactive/sdk/python/.github/
 flex/interactive/sdk/python/.gitignore
@@ -133,8 +137,15 @@ flex/interactive/sdk/python/dist/
 flex/interactive/sdk/python/.travis.yml
 flex/interactive/sdk/python/tox.ini
 flex/interactive/sdk/python/pyproject.toml
-flex/interactive/sdk/python/interactive_sdk/openapi/
-!flex/interactive/sdk/python/interactive_sdk/client/generated/__init__.py
+flex/interactive/sdk/python/gs_interactive/models/
+flex/interactive/sdk/python/gs_interactive/api/
+flex/interactive/sdk/python/gs_interactive/__init__.py
+flex/interactive/sdk/python/gs_interactive/api_client.py
+flex/interactive/sdk/python/gs_interactive/api_response.py
+flex/interactive/sdk/python/gs_interactive/configuration.py
+flex/interactive/sdk/python/gs_interactive/exceptions.py
+flex/interactive/sdk/python/gs_interactive/rest.py
+!flex/interactive/sdk/python/gs_interactive/client/generated/__init__.py
 
 
 **/.cache/

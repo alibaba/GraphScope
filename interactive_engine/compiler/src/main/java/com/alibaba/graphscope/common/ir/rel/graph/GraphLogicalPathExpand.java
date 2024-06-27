@@ -92,14 +92,7 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
         this.startAlias = Objects.requireNonNull(startAlias);
         this.optional = optional;
-        // Here, we set the result opt in a direct manner, where the opt represents what sort of
-        // vertex and edge information should be saved for the path.
-        // if the alias exists, then result opt is set to 'ALL_V_E' to cache all inner vertices or
-        // edges, otherwise set to 'END_V' to reduce the memory consumption.
-        this.resultOpt =
-                (this.aliasId == AliasInference.DEFAULT_ID)
-                        ? resultOpt
-                        : GraphOpt.PathExpandResult.ALL_V_E;
+        this.resultOpt = resultOpt;
         this.untilCondition = untilCondition;
     }
 

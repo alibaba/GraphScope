@@ -32,6 +32,7 @@ import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
@@ -161,7 +162,7 @@ public class GremlinRecordParser implements RecordParser<Object> {
                 .getKeyValuesList()
                 .forEach(
                         entry -> {
-                            Object value = parseElement(entry.getValue(), valueType);
+                            Object value = parseEntry(entry.getValue(), valueType);
                             if (value != null) {
                                 valueMap.put(parseMapKey(entry.getKey().getStr()), value);
                             }
@@ -183,7 +184,7 @@ public class GremlinRecordParser implements RecordParser<Object> {
         Map<Object, Object> valueMap = Maps.newLinkedHashMap();
         for (int i = 0; i < entries.size(); ++i) {
             IrResult.KeyValues.KeyValue entry = entries.get(i);
-            Object value = parseElement(entry.getValue(), valueTypes.get(i));
+            Object value = parseEntry(entry.getValue(), valueTypes.get(i));
             if (value != null) {
                 valueMap.put(parseMapKey(entry.getKey().getStr()), value);
             }
@@ -287,6 +288,30 @@ public class GremlinRecordParser implements RecordParser<Object> {
                 return value.getF64Array().getItemList();
             case STR_ARRAY:
                 return value.getStrArray().getItemList();
+            case PAIR_ARRAY:
+                if (dataType instanceof MapSqlType) {
+                    return value.getPairArray().getItemList().stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            k -> parseValue(k.getKey(), dataType.getKeyType()),
+                                            v -> parseValue(v.getVal(), dataType.getValueType())));
+                } else if (dataType instanceof ArbitraryMapType) {
+                    List<Common.Pair> pairArray = value.getPairArray().getItemList();
+                    List<RelDataType> keyTypes = ((ArbitraryMapType) dataType).getKeyTypes();
+                    List<RelDataType> valueTypes = ((ArbitraryMapType) dataType).getValueTypes();
+                    Map map = Maps.newLinkedHashMap();
+                    for (int i = 0; i < pairArray.size(); ++i) {
+                        Common.Pair pair = pairArray.get(i);
+                        map.put(
+                                parseValue(
+                                        pair.getKey(),
+                                        i < keyTypes.size() ? keyTypes.get(i) : null),
+                                parseValue(
+                                        pair.getVal(),
+                                        i < valueTypes.size() ? valueTypes.get(i) : null));
+                    }
+                    return map;
+                }
             case NONE:
                 return null;
                 // todo: support temporal types

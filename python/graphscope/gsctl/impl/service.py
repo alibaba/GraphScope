@@ -16,29 +16,31 @@
 # limitations under the License.
 #
 
+from typing import List
+
 import graphscope.flex.rest
 from graphscope.flex.rest import ServiceStatus
 from graphscope.flex.rest import StartServiceRequest
 from graphscope.gsctl.config import get_current_context
 
 
-def get_service_status() -> ServiceStatus:
+def list_service_status() -> List[ServiceStatus]:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.ServiceApi(api_client)
-        return api_instance.get_service_status()
+        return api_instance.list_service_status()
 
 
-def start_service(graph_name: str) -> str:
+def start_service(graph_identifier: str) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.ServiceApi(api_client)
         return api_instance.start_service(
-            StartServiceRequest.from_dict({"graph_name": graph_name})
+            StartServiceRequest.from_dict({"graph_id": graph_identifier})
         )
 
 

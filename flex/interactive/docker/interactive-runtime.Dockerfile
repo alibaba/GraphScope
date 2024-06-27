@@ -13,7 +13,7 @@ SHELL ["/bin/bash", "-c"]
 RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget libcurl4-openssl-dev && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
-    sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
+    sudo apt-get update && sudo apt-get install -y libarrow-dev=15.0.2-1
 
 RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   sh -s -- -y --profile minimal --default-toolchain=1.70.0 && \
@@ -41,7 +41,13 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
 
 # build coordinator
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
-        cd ${HOME}/GraphScope/flex/coordinator && \
+        export PATH=${HOME}/.local/bin:${PATH} && \
+        cd ${HOME}/GraphScope/flex/interactive/sdk && \
+        ./generate_sdk.sh -g python && cd python && \
+        python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt && \
+        python3 setup.py build_proto && python3 setup.py bdist_wheel && \
+        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/ && \
+        cd ${HOME}/GraphScope/coordinator && \
         python3 setup.py bdist_wheel && \
         mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
     fi
@@ -56,8 +62,12 @@ ARG ENABLE_COORDINATOR="false"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # g++ + jre 500MB
-RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless && \
-    locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/* 
+RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless tzdata && \
+    locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+# shanghai zoneinfo
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # python3
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
@@ -134,6 +144,8 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 RUN chmod +x /opt/flex/bin/*
 
 RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      pip3 install --upgrade pip && \
+      pip3 install "numpy<2.0.0" && \
       pip3 install /opt/flex/wheel/*.whl; \
     fi
 

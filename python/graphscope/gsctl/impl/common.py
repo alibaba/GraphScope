@@ -19,29 +19,30 @@
 from typing import Union
 
 import graphscope.flex.rest
-from graphscope.flex.rest import ConnectionStatus
+from graphscope.flex.rest import RunningDeploymentInfo
 from graphscope.gsctl.config import Context
 from graphscope.gsctl.config import load_gs_config
 
 
-def connect_coordinator(coordinator_endpoint: str) -> ConnectionStatus:
+def connect_coordinator(coordinator_endpoint: str) -> RunningDeploymentInfo:
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.flex.rest.ConnectionApi(api_client)
-        connection = graphscope.flex.rest.Connection.from_dict(
-            {"coordinator_endpoint": coordinator_endpoint}
-        )
-        connection_status = api_instance.connect(connection)
+        api_instance = graphscope.flex.rest.DeploymentApi(api_client)
+        deployment_info = api_instance.get_deployment_info()
         # coordinator connected, set the context
-        if connection_status.status == "CONNECTED":
-            context = Context(
-                flex=connection_status.solution,
-                coordinator_endpoint=coordinator_endpoint,
-            )
-            config = load_gs_config()
-            config.set_and_write(context)
-        return connection_status
+        flex = {
+            "engine": deployment_info.engine,
+            "storage": deployment_info.storage,
+            "frontend": deployment_info.frontend,
+        }
+        context = Context(
+            flex=flex,
+            coordinator_endpoint=coordinator_endpoint,
+        )
+        config = load_gs_config()
+        config.set_and_write(context)
+        return deployment_info
 
 
 def disconnect_coordinator() -> Union[None, Context]:

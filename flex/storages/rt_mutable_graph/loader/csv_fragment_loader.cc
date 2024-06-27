@@ -230,30 +230,36 @@ static void put_column_names_option(const LoadingConfig& loading_config,
 
 std::shared_ptr<IFragmentLoader> CSVFragmentLoader::Make(
     const std::string& work_dir, const Schema& schema,
-    const LoadingConfig& loading_config, int32_t thread_num) {
+    const LoadingConfig& loading_config, int32_t thread_num,
+    bool build_csr_in_mem, bool use_mmap_vector) {
   return std::shared_ptr<IFragmentLoader>(
-      new CSVFragmentLoader(work_dir, schema, loading_config, thread_num));
+      new CSVFragmentLoader(work_dir, schema, loading_config, thread_num,
+                            build_csr_in_mem, use_mmap_vector));
 }
 
 void CSVFragmentLoader::addVertices(label_t v_label_id,
                                     const std::vector<std::string>& v_files) {
   auto record_batch_supplier_creator =
       [this](label_t label_id, const std::string& v_file,
-             const LoadingConfig& loading_config) {
+             const LoadingConfig& loading_config, int) {
         arrow::csv::ConvertOptions convert_options;
         arrow::csv::ReadOptions read_options;
         arrow::csv::ParseOptions parse_options;
         fillVertexReaderMeta(read_options, parse_options, convert_options,
                              v_file, label_id);
+        std::vector<std::shared_ptr<IRecordBatchSupplier>> suppliers;
         if (loading_config.GetIsBatchReader()) {
           auto res = std::make_shared<CSVStreamRecordBatchSupplier>(
               label_id, v_file, convert_options, read_options, parse_options);
-          return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+          suppliers.emplace_back(
+              std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
         } else {
           auto res = std::make_shared<CSVTableRecordBatchSupplier>(
               label_id, v_file, convert_options, read_options, parse_options);
-          return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+          suppliers.emplace_back(
+              std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
         }
+        return suppliers;
       };
   return AbstractArrowFragmentLoader::AddVerticesRecordBatch(
       v_label_id, v_files, record_batch_supplier_creator);
@@ -264,21 +270,25 @@ void CSVFragmentLoader::addEdges(label_t src_label_i, label_t dst_label_i,
                                  const std::vector<std::string>& filenames) {
   auto lambda = [this](label_t src_label_id, label_t dst_label_id,
                        label_t e_label_id, const std::string& filename,
-                       const LoadingConfig& loading_config) {
+                       const LoadingConfig& loading_config, int) {
     arrow::csv::ConvertOptions convert_options;
     arrow::csv::ReadOptions read_options;
     arrow::csv::ParseOptions parse_options;
     fillEdgeReaderMeta(read_options, parse_options, convert_options, filename,
                        src_label_id, dst_label_id, e_label_id);
+    std::vector<std::shared_ptr<IRecordBatchSupplier>> suppliers;
     if (loading_config.GetIsBatchReader()) {
       auto res = std::make_shared<CSVStreamRecordBatchSupplier>(
           e_label_id, filename, convert_options, read_options, parse_options);
-      return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+      suppliers.emplace_back(
+          std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
     } else {
       auto res = std::make_shared<CSVTableRecordBatchSupplier>(
           e_label_id, filename, convert_options, read_options, parse_options);
-      return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+      suppliers.emplace_back(
+          std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
     }
+    return suppliers;
   };
   AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       src_label_i, dst_label_i, edge_label_i, filenames, lambda);
@@ -307,8 +317,8 @@ void CSVFragmentLoader::loadVertices() {
          ++iter) {
       vertex_files.emplace_back(iter->first, iter->second);
     }
-    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, "
-              << " " << vertex_files.size() << " vertex files, ";
+    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, " << " "
+              << vertex_files.size() << " vertex files, ";
     std::atomic<size_t> v_ind(0);
     std::vector<std::thread> threads(thread_num_);
     for (int i = 0; i < thread_num_; ++i) {
@@ -364,7 +374,6 @@ void CSVFragmentLoader::fillVertexReaderMeta(
   // parse all column_names
 
   std::vector<std::string> included_col_names;
-  std::vector<size_t> included_col_indices;
   std::vector<std::string> mapped_property_names;
 
   auto cur_label_col_mapping = loading_config_.GetVertexColumnMappings(v_label);
@@ -391,7 +400,6 @@ void CSVFragmentLoader::fillVertexReaderMeta(
 
     for (size_t i = 0; i < read_options.column_names.size(); ++i) {
       included_col_names.emplace_back(read_options.column_names[i]);
-      included_col_indices.emplace_back(i);
       // We assume the order of the columns in the file is the same as the
       // order of the properties in the schema, except for primary key.
       mapped_property_names.emplace_back(property_names[i]);
@@ -400,11 +408,21 @@ void CSVFragmentLoader::fillVertexReaderMeta(
     for (size_t i = 0; i < cur_label_col_mapping.size(); ++i) {
       auto& [col_id, col_name, property_name] = cur_label_col_mapping[i];
       if (col_name.empty()) {
-        // use default mapping
+        if (col_id >= read_options.column_names.size() || col_id < 0) {
+          LOG(FATAL) << "The specified column index: " << col_id
+                     << " is out of range, please check your configuration";
+        }
         col_name = read_options.column_names[col_id];
       }
+      // check whether index match to the name if col_id is valid
+      if (col_id >= 0 && col_id < read_options.column_names.size()) {
+        if (col_name != read_options.column_names[col_id]) {
+          LOG(FATAL) << "The specified column name: " << col_name
+                     << " does not match the column name in the file: "
+                     << read_options.column_names[col_id];
+        }
+      }
       included_col_names.emplace_back(col_name);
-      included_col_indices.emplace_back(col_id);
       mapped_property_names.emplace_back(property_name);
     }
   }
@@ -530,8 +548,19 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
       // TODO: make the property column's names are in same order with schema.
       auto& [col_id, col_name, property_name] = cur_label_col_mapping[i];
       if (col_name.empty()) {
-        // use default mapping
+        if (col_id >= read_options.column_names.size() || col_id < 0) {
+          LOG(FATAL) << "The specified column index: " << col_id
+                     << " is out of range, please check your configuration";
+        }
         col_name = read_options.column_names[col_id];
+      }
+      // check whether index match to the name if col_id is valid
+      if (col_id >= 0 && col_id < read_options.column_names.size()) {
+        if (col_name != read_options.column_names[col_id]) {
+          LOG(FATAL) << "The specified column name: " << col_name
+                     << " does not match the column name in the file: "
+                     << read_options.column_names[col_id];
+        }
       }
       included_col_names.emplace_back(col_name);
       mapped_property_names.emplace_back(property_name);
