@@ -1384,6 +1384,13 @@ seastar::future<admin_query_result> admin_actor::delete_vertex(
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("delete_vertex"));
 }
+std::string json_to_string(const nlohmann::json& json) {
+  if (json.is_string()) {
+    return json.get<std::string>();
+  } else {
+    return json.dump();
+  }
+}
 seastar::future<admin_query_result> admin_actor::delete_edge(
     graph_management_param&& param) {
   LOG(INFO) << "delete_edge";
@@ -1395,9 +1402,101 @@ seastar::future<admin_query_result> admin_actor::delete_edge(
 seastar::future<admin_query_result> admin_actor::update_vertex(
     graph_management_param&& param) {
   LOG(INFO) << "update_vertex";
-  LOG(INFO) << param.content.first;
-  LOG(INFO) << param.content.second;
+  std::string graph_id = param.content.first;
+  nlohmann::json input_json = nlohmann::json::parse(param.content.second);
+  // input value
+  std::string label, primary_key_value;
+  std::unordered_map<std::string, gs::Any> new_properties_map;
+  std::unordered_map<std::string, std::string> new_properties_map_str;
+  // compute value
+  std::string primary_key_name;
+  std::vector<std::string> colNames;
+  // 检查当前运行的图是否为 graph_id
+  if (!check_graph_id(graph_id)) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::Status(gs::StatusCode::NotFound, "Graph not running: " + graph_id)));
+  }
+  // 检查输入参数是否正确
+  {
+    auto label_iter = input_json.find("label");
+    auto primary_key_value_iter = input_json.find("primary_key_value");
+    auto properties_iter = input_json.find("properties");
+    if (label_iter == input_json.end() || 
+        primary_key_value_iter == input_json.end() || 
+        properties_iter == input_json.end() ) {
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::InvalidSchema, "Bad Request: Bad input parameter, you need to provide label, primary_key_value and properties")));
+    } else {
+      label = json_to_string(*label_iter);
+      primary_key_value = json_to_string(*primary_key_value_iter);
+      for (auto &property : (*properties_iter)["properties"]){
+        auto name_string = json_to_string(property["name"]);
+        auto value_string = json_to_string(property["value"]);
+        new_properties_map_str.insert({name_string, value_string});
+      }
+    }
+  }
+  // 检查 metadata 里面有没有 graph_id 这张图
+  auto graph_meta_res = metadata_store_->GetGraphMeta(graph_id);
+  if (!graph_meta_res.ok()) {
+    LOG(ERROR) << "Graph not exists: " << graph_id;
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::Status(gs::StatusCode::NotFound, "Graph not exists: " + graph_id)));
+  }
+  LOG(INFO) << "Update Vertex{" << label << "}:" << primary_key_value << " for graph:" << graph_id;
+  try {
+    auto &schema = graph_meta_res.value().schema;
+    auto schema_json = nlohmann::json::parse(schema);
+    auto vertex_types_all = schema_json["vertex_types"];
+    bool label_exists_in_schema = false;
+    // 检查 label 是否存在
+    for(auto &vertex_types : vertex_types_all){
+      if (vertex_types["type_name"] != label) continue;
+      label_exists_in_schema = true;
+      primary_key_name = vertex_types["primary_keys"][0];
+      // compute colNames 
+      for (auto &property : vertex_types["properties"]){
+        auto property_name = json_to_string(property["property_name"]);
+        colNames.push_back(property_name);
+        std::string colType;
+        if (property["property_type"].find("primitive_type") != property["property_type"].end()){
+          colType = json_to_string(property["property_type"]["primitive_type"]);
+        } else {
+          colType = "String";
+        }
+        auto new_properties_map_iter = new_properties_map_str.find(property_name);
+        if (new_properties_map_iter == new_properties_map_str.end()){
+            if (property_name == primary_key_name) {
+              continue;
+            } else {
+              throw std::runtime_error("property not exists in input properties: " + std::string(property_name));
+            }
+        }
+        new_properties_map[property_name] = gs::ConvertStringToAny(new_properties_map_str[property_name], gs::config_parsing::StringToPrimitivePropertyType(colType));
+      }
+      break;
+    }
+    if (!label_exists_in_schema){
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+             gs::Status(gs::StatusCode::NotFound, "Vertex Label not exists in schema: " + label)));
+    }
+  } catch (std::exception &e) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::Status(gs::StatusCode::InternalError, "Fail to parse schema: " + std::string(e.what()))));
+  }
+  // try{
+  //   auto &db = gs::GraphDB::get();
 
+  // } catch(std::exception &e) {
+  //   return seastar::make_ready_future<admin_query_result>(
+  //       gs::Result<seastar::sstring>(
+  //           gs::Status(gs::StatusCode::InternalError, "Fail to update vertex: " + std::string(e.what()))));
+  // }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("update_vertex"));
 }
@@ -1502,7 +1601,7 @@ seastar::future<admin_query_result> admin_actor::update_edge(
           primary_key_type = property["property_type"]["primitive_type"];
         } else if (property["property_type"].find("string") 
             != property["property_type"].end()){
-          primary_key_type = "string";
+          primary_key_type = "String";
         } else {
           LOG(ERROR) << "Primary key type not found";
           return seastar::make_ready_future<admin_query_result>(
@@ -1621,7 +1720,7 @@ seastar::future<admin_query_result> admin_actor::get_vertex(
         } else if (property["property_type"].find("string") 
               != property["property_type"].end()){
           // 如果是 string
-          primary_keys_type = "string";
+          primary_keys_type = "String";
         } else {
           LOG(ERROR) << "Primary key type not found";
           return seastar::make_ready_future<admin_query_result>(
@@ -1784,7 +1883,7 @@ seastar::future<admin_query_result> admin_actor::get_edge(
           primary_key_type = property["property_type"]["primitive_type"];
         } else if (property["property_type"].find("string") 
             != property["property_type"].end()){
-          primary_key_type = "string";
+          primary_key_type = "String";
         } else {
           LOG(ERROR) << "Primary key type not found";
           return seastar::make_ready_future<admin_query_result>(
