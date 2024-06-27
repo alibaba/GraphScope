@@ -78,7 +78,7 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
   size_t size() const override { return 0; }
   void resize(size_t size) override {}
 
-  PropertyType type() const override { return PropertyType::kString; }
+  PropertyType type() const override { return PropertyType::kStringView; }
 
   void set_value(size_t index, const std::string_view& val) {}
 
@@ -161,7 +161,7 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<DayColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<DefaultStringMapColumn>(strategy);
-    } else if (type == PropertyType::kString) {
+    } else if (type == PropertyType::kStringView) {
       return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       return std::make_shared<StringColumn>(

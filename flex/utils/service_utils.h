@@ -63,7 +63,8 @@ inline void to_json(nlohmann::json& j, const PropertyType& p) {
     j["temporal"]["timestamp"] = {};
   } else if (p == PropertyType::Day()) {
     j["temporal"]["date32"] = {};
-  } else if (p == PropertyType::String() || p == PropertyType::StringMap()) {
+  } else if (p == PropertyType::StringView() ||
+             p == PropertyType::StringMap()) {
     j["string"]["long_text"] = {};
   } else if (p.IsVarchar()) {
     j["string"]["var_char"]["max_length"] = p.additional_type_info.max_length;
@@ -78,7 +79,7 @@ inline void from_json(const nlohmann::json& j, PropertyType& p) {
         j["primitive_type"].get<std::string>());
   } else if (j.contains("string")) {
     if (j["string"].contains("long_text")) {
-      p = PropertyType::String();
+      p = PropertyType::StringView();
     } else if (j.contains("string") && j["string"].contains("var_char")) {
       if (j["string"]["var_char"].contains("max_length")) {
         p = PropertyType::Varchar(

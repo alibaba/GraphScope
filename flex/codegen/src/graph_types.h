@@ -33,7 +33,7 @@ enum class DataType {
   kInt64 = 1,
   kFloat = 2,
   kDouble = 3,
-  kString = 4,
+  kStringView = 4,
   kInt64Array = 5,
   kInt32Array = 6,
   kBoolean = 7,
@@ -72,7 +72,7 @@ static codegen::DataType common_data_type_pb_2_data_type(
   case common::DataType::DOUBLE:
     return codegen::DataType::kDouble;
   case common::DataType::STRING:
-    return codegen::DataType::kString;
+    return codegen::DataType::kStringView;
   case common::DataType::INT64_ARRAY:
     return codegen::DataType::kInt64Array;
   case common::DataType::INT32_ARRAY:
@@ -182,7 +182,7 @@ static std::string data_type_2_string(const codegen::DataType& data_type) {
     return "int64_t";
   case codegen::DataType::kDouble:
     return "double";
-  case codegen::DataType::kString:
+  case codegen::DataType::kStringView:
     return "std::string_view";
   case codegen::DataType::kInt64Array:
     return "std::vector<int64_t>";
@@ -220,7 +220,7 @@ static std::string decode_type_as_str(const codegen::DataType& data_type) {
     return "get_long()";
   case codegen::DataType::kDouble:
     return "get_double()";
-  case codegen::DataType::kString:
+  case codegen::DataType::kStringView:
     return "get_string()";
   case codegen::DataType::kBoolean:
     return "get_bool()";
@@ -239,7 +239,7 @@ static std::string data_type_2_rust_string(const codegen::DataType& data_type) {
     return "i64";
   case codegen::DataType::kDouble:
     return "double";
-  case codegen::DataType::kString:
+  case codegen::DataType::kStringView:
     return "String";
   case codegen::DataType::kInt64Array:
     return "Vector<i64>";

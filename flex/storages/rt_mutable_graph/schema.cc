@@ -717,7 +717,7 @@ static Status parse_vertex_schema(YAML::Node node, Schema& schema) {
           "Primary key " + primary_key_name + " is not found in properties");
     }
     if (property_types[primary_key_inds[i]] != PropertyType::kInt64 &&
-        property_types[primary_key_inds[i]] != PropertyType::kString &&
+        property_types[primary_key_inds[i]] != PropertyType::kStringView &&
         property_types[primary_key_inds[i]] != PropertyType::kUInt64 &&
         property_types[primary_key_inds[i]] != PropertyType::kInt32 &&
         property_types[primary_key_inds[i]] != PropertyType::kUInt32 &&
@@ -784,7 +784,7 @@ static Status parse_edge_schema(YAML::Node node, Schema& schema) {
                                          property_types, prop_names,
                                          schema.GetVersion()));
 
-   if (node["description"]) {
+  if (node["description"]) {
     description = node["description"].as<std::string>();
   }
   if (node["nullable"]) {
