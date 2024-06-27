@@ -78,11 +78,11 @@ limitations under the License.
 
 namespace bl = boost::leaf;
 
-using ProjectedFragmentType =
-    gs::ArrowProjectedFragment<oid_t, vid_t, grape::EmptyType,
-                               grape::EmptyType>;
-using ProjectedFragmentType2 =
-    gs::ArrowProjectedFragment<oid_t, vid_t, grape::EmptyType, int64_t>;
+using oid_t = vineyard::property_graph_types::OID_TYPE;
+using vid_t = vineyard::property_graph_types::VID_TYPE;
+
+using FragmentType = vineyard::ArrowFragment<oid_t, vid_t>;
+    
 
 namespace gs {
 
@@ -97,6 +97,7 @@ std::shared_ptr<FRAG_T> LoadSimpleGraph(const std::string& efile,
   return fragment;
 }
 
+template <typename OID_T, typename VID_T>
 vineyard::ObjectID LoadPropertyGraph(const grape::CommSpec& comm_spec,
                                      vineyard::Client& client,
                                      const std::vector<std::string>& efiles,
@@ -104,7 +105,7 @@ vineyard::ObjectID LoadPropertyGraph(const grape::CommSpec& comm_spec,
                                      int directed) {
   vineyard::ObjectID fragment_id = vineyard::InvalidObjectID();
   {
-    auto loader = std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t>>(
+    auto loader = std::make_unique<gs::ArrowFragmentLoader<OID_T, VID_T>>(
         client, comm_spec, efiles, vfiles, directed != 0,
         /* generate_eid */ false, /* retain_oid */ false);
     fragment_id =
@@ -165,66 +166,80 @@ void DoQuery(const grape::CommSpec& comm_spec, std::shared_ptr<FRAG_T> fragment,
             << ", peak = " << vineyard::get_peak_rss_pretty();
 }
 
-void RunPropertyApp(std::shared_ptr<FragmentType> fragment,
+template <typename FRAG_T>
+void RunPropertyApp(std::shared_ptr<FRAG_T> fragment,
                     const grape::CommSpec& comm_spec,
                     const std::string& out_prefix, const std::string& name) {
   if (name == "wcc_property") {
-    using AppType = gs::WCCProperty<FragmentType>;
-    DoQuery<FragmentType, AppType>(comm_spec, fragment, out_prefix);
+    using AppType = gs::WCCProperty<FRAG_T>;
+    DoQuery<FRAG_T, AppType>(comm_spec, fragment, out_prefix);
   } else if (name == "sssp_property") {
-    using AppType = gs::SSSPProperty<FragmentType>;
-    DoQuery<FragmentType, AppType, oid_t>(comm_spec, fragment, out_prefix,
+    using AppType = gs::SSSPProperty<FRAG_T>;
+    DoQuery<FRAG_T, AppType, oid_t>(comm_spec, fragment, out_prefix,
                                           FLAGS_sssp_source);
-  }
-  if (name == "wcc_auto_property") {
-    using AppType = gs::AutoWCCProperty<FragmentType>;
-    DoQuery<FragmentType, AppType>(comm_spec, fragment, out_prefix);
+  } else if (name == "wcc_auto_property") {
+    using AppType = gs::AutoWCCProperty<FRAG_T>;
+    DoQuery<FRAG_T, AppType>(comm_spec, fragment, out_prefix);
   } else if (name == "sssp_auto_property") {
-    using AppType = gs::AutoSSSPProperty<FragmentType>;
-    DoQuery<FragmentType, AppType, oid_t>(comm_spec, fragment, out_prefix,
+    using AppType = gs::AutoSSSPProperty<FRAG_T>;
+    DoQuery<FRAG_T, AppType, oid_t>(comm_spec, fragment, out_prefix,
                                           FLAGS_sssp_source);
   } else if (name == "lpa_u2i_property") {
-    using AppType = gs::LPAU2I<FragmentType>;
-    DoQuery<FragmentType, AppType>(comm_spec, fragment, out_prefix);
+    using AppType = gs::LPAU2I<FRAG_T>;
+    DoQuery<FRAG_T, AppType>(comm_spec, fragment, out_prefix);
   }
 }
 
-void RunProjectedApp(std::shared_ptr<FragmentType> fragment,
+
+
+template <typename FRAG_T>
+void RunProjectedApp(std::shared_ptr<FRAG_T> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix, const std::string& name) {
+
   if (name == "sssp_projected") {
-    auto projected = ProjectGraph<FragmentType, ProjectedFragmentType2>(
+    using PROJECTED_FRAG_T = gs::ArrowProjectedFragment<oid_t, vid_t, grape::EmptyType, int64_t>;
+    auto projected = ProjectGraph<FRAG_T, PROJECTED_FRAG_T>(
         fragment, 0, -1, 0, 2);
-    using AppType = grape::SSSPOpt<ProjectedFragmentType2>;
-    DoQuery<ProjectedFragmentType2, AppType, oid_t>(
+    using AppType = grape::SSSPOpt<PROJECTED_FRAG_T>;
+    DoQuery<PROJECTED_FRAG_T, AppType, oid_t>(
         comm_spec, projected, out_prefix, FLAGS_sssp_source);
   } else {
-    auto projected = ProjectGraph<FragmentType, ProjectedFragmentType>(
+    using PROJECTED_FRAG_T = gs::ArrowProjectedFragment<oid_t, vid_t, grape::EmptyType,
+                               grape::EmptyType>;
+    auto projected = ProjectGraph<FRAG_T, PROJECTED_FRAG_T>(
         fragment, 0, -1, 0, -1);
     if (name == "wcc_projected") {
-      using AppType = grape::WCCOpt<ProjectedFragmentType>;
-      DoQuery<ProjectedFragmentType, AppType>(comm_spec, projected, out_prefix);
+      using AppType = grape::WCCOpt<PROJECTED_FRAG_T>;
+      DoQuery<PROJECTED_FRAG_T, AppType>(comm_spec, projected, out_prefix);
     } else if (name == "cdlp_projected") {
       // TODO(siyuan): uncomment once latest libgrape-lite is released.
-      using AppType = grape::CDLPOpt<ProjectedFragmentType, int64_t>;
-      DoQuery<ProjectedFragmentType, AppType, int>(comm_spec, projected,
+      using AppType = grape::CDLPOpt<PROJECTED_FRAG_T, int64_t>;
+      DoQuery<PROJECTED_FRAG_T, AppType, int>(comm_spec, projected,
                                                    out_prefix, FLAGS_max_round);
     } else if (name == "bfs_projected") {
-      using AppType = grape::BFSOpt<ProjectedFragmentType>;
-      DoQuery<ProjectedFragmentType, AppType, oid_t>(
+      using AppType = grape::BFSOpt<PROJECTED_FRAG_T>;
+      DoQuery<PROJECTED_FRAG_T, AppType, oid_t>(
           comm_spec, projected, out_prefix, FLAGS_bfs_source);
     } else if (name == "lcc_projected") {
-      using AppType = grape::LCCOpt<ProjectedFragmentType>;
-      DoQuery<ProjectedFragmentType, AppType>(comm_spec, projected, out_prefix);
+      using AppType = grape::LCCOpt<PROJECTED_FRAG_T>;
+      DoQuery<PROJECTED_FRAG_T, AppType>(comm_spec, projected, out_prefix);
     } else if (name == "pagerank_projected") {
-      using AppType = grape::PageRankOpt<ProjectedFragmentType>;
-      DoQuery<ProjectedFragmentType, AppType, double, int>(
+      using AppType = grape::PageRankOpt<PROJECTED_FRAG_T>;
+      DoQuery<PROJECTED_FRAG_T, AppType, double, int>(
           comm_spec, projected, out_prefix, FLAGS_pagerank_delta,
           FLAGS_max_round);
+    } else if (name == "wcc_auto_projected") {
+      using AppType = grape::WCCAuto<PROJECTED_FRAG_T>;
+      DoQuery<PROJECTED_FRAG_T, AppType>(comm_spec, projected, out_prefix);
     }
   }
 }
 
+/**
+    * @brief Run application in batch mode
+    * @example ./grape_engine -batch_mode -vineyard_socket /tmp/vineyard.sock -efile p2p-31.e#label=e#src_label=v#dst_label=v#delimiter=' ' -vfile p2p-31.v#label=v#delimiter=' ' -application wcc -out_prefix ret
+ */
 void RunApp() {
   std::string ipc_socket = FLAGS_vineyard_socket;
 
@@ -237,6 +252,15 @@ void RunApp() {
   bool directed = FLAGS_directed;
   std::string app_name = FLAGS_application;
 
+  std::vector<std::string> available_apps = {
+      "wcc_property", "sssp_property", "wcc_auto_property", "sssp_auto_property",
+      "lpa_u2i_property", "wcc_projected", "cdlp_projected", "bfs_projected",
+      "lcc_projected", "pagerank_projected", "wcc_auto_projected", "sssp_projected"};
+      
+if (std::find(available_apps.begin(), available_apps.end(), app_name) ==
+      available_apps.end()) {
+    LOG(FATAL) << "Application " << app_name << " is not supported.";
+  }
   {
     grape::CommSpec comm_spec;
     comm_spec.Init(MPI_COMM_WORLD);

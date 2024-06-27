@@ -32,12 +32,6 @@
 #include "gflags/gflags_declare.h"
 #include "glog/logging.h"
 
-namespace bl = boost::leaf;
-
-using oid_t = vineyard::property_graph_types::OID_TYPE;
-using vid_t = vineyard::property_graph_types::VID_TYPE;
-
-using FragmentType = vineyard::ArrowFragment<oid_t, vid_t>;
 
 namespace gs {
 
@@ -46,6 +40,7 @@ std::shared_ptr<FRAG_T> LoadSimpleGraph(const std::string& efile,
                                         const std::string& vfile,
                                         const grape::CommSpec& comm_spec);
 
+template <typename OID_T=int64_t, typename VID_T=uint64_t>
 vineyard::ObjectID LoadPropertyGraph(const grape::CommSpec& comm_spec,
                                      vineyard::Client& client,
                                      const std::vector<std::string>& efiles,
@@ -59,11 +54,13 @@ template <typename FRAG_T, typename APP_T, typename... Args>
 void DoQuery(const grape::CommSpec& comm_spec, std::shared_ptr<FRAG_T> fragment,
              const std::string& out_prefix, Args... args);
 
-void RunProjectedApp(std::shared_ptr<FragmentType> fragment,
+template <typename FRAG_T>
+void RunProjectedApp(std::shared_ptr<FRAG_T> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix, const std::string& name);
 
-void RunPropertyApp(std::shared_ptr<FragmentType> fragment,
+template <typename FRAG_T>
+void RunPropertyApp(std::shared_ptr<FRAG_T> fragment,
                     const grape::CommSpec& comm_spec,
                     const std::string& out_prefix, const std::string& name);
 std::vector<int> prepareSamplingPathPattern(const std::string& path_pattern);
