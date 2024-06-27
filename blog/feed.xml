@@ -5,9 +5,38 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 05 Jun 2024 03:24:11 +0000</pubDate>
-    <lastBuildDate>Wed, 05 Jun 2024 03:24:11 +0000</lastBuildDate>
+    <pubDate>Thu, 27 Jun 2024 08:14:13 +0000</pubDate>
+    <lastBuildDate>Thu, 27 Jun 2024 08:14:13 +0000</lastBuildDate>
     <generator>Jekyll v4.3.3</generator>
+    
+      <item>
+        <title>GraphScope Refreshes the World Record for the LDBC SNB Benchmark in both Performance and Data Scale</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/ldbc-news-title.jpg&quot; alt=&quot;benchmark&quot; /&gt;
+Recently, &lt;a href=&quot;https://ldbcouncil.org&quot;&gt;LDBC&lt;/a&gt; released the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb/&quot;&gt;latest results for the LDBC SNB Interactive benchmark test&lt;/a&gt;, where GraphScope Flex leads the pack once again with a score exceeding 127,000 QPS (Queries Per Second), representing a more than 2.6 times improvement over the second place, which was the previous record holder!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2024-06-27-benchmark.jpg&quot; alt=&quot;Benchmark screenshot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In addition, GraphScope Flex has updated the maximum data scale for the benchmark test, being the only system among all the participants that used the SF1000 dataset for the test. The SF1000 dataset, generated with the LDBC’s official data generator, has a Scale Factor (SF) of 1000. This dataset contains approximately 2.9 billion vertices and 208 billion edges, with the original disk data file size around 1TB, making it an extremely large-scale graph. Previously, the maximum any system participating in the LDBC SNB Interactive had been tested was SF300, which is about a third of the scale of SF1000.&lt;/p&gt;
+
+&lt;p&gt;LDBC is an internationally recognized authority in the field of graph computing, developing and leading a series of graph benchmarks, including the Social Network Benchmark (SNB), the Graphalytics Benchmark, and the Financial Benchmark (FinBench), to measure the capabilities and performance of various types of graph systems. The SNB Interactive benchmark test that GraphScope Flex participated in simulates a social network graph of Facebook at different scales, executing operations including basic Create, Read, Update, Delete (CRUD) as well as complex tasks like shortest paths and multi-hop queries, covering commonly used operations and queries in transactional online query scenarios and is recognized as an authoritative benchmark in the field of graph data.
+During the test process, a driver continuously sends a variety of query requests to the system being tested at high speed, and the system’s performance is measured by its throughput (QPS) in handling queries. The testing procedure is professional and rigorous, with systems submitting their codes to be tested and their scores verified by LDBC’s professional staff.&lt;/p&gt;
+
+&lt;p&gt;In recent years, with the collective efforts of R&amp;amp;D personnel in the graph database industry, the performance of graph computing has continuously improved. GraphScope Flex participated in the LDBC SNB Interactive benchmark test for the first time in July 2023, achieving more than a 2.45 times performance improvement over the then world record holder, &lt;a href=&quot;https://www.tugraph.org/&quot;&gt;TuGraph&lt;/a&gt; (developed by Ant Group). Then in December 2023, &lt;a href=&quot;https://atlasgraph.io/en/&quot;&gt;AtlasGraph&lt;/a&gt; took the lead with a performance 45% higher than that of GraphScope Flex. One year later, GraphScope Flex has once again won the top spot, achieving approximately 2.6 times the performance of AtlasGraph and testing on the larger data scale SF1000 for the first time. This performance is due to a series of technical upgrades in GraphScope Flex over the year:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;A more compact graph structure and more efficient graph storage, allowing larger graphs to be loaded into limited memory with higher access efficiency;&lt;/li&gt;
+  &lt;li&gt;Further optimized graph queries, with the help of auxiliary data, online cost analysis is utilized to choose the optimal execution sequence, reducing the overhead of queries.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We will provide a detailed analysis of the technical optimizations used in the version of GraphScope Flex for this benchmark test. Stay tuned!&lt;/p&gt;
+</description>
+        <pubDate>Thu, 27 Jun 2024 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2024/06/27/GraphScope-refreshes-the-world-record-for-the-LDBC-benchmark.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/06/27/GraphScope-refreshes-the-world-record-for-the-LDBC-benchmark.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>GOpt: A Unified Graph Query Optimization Framework in GraphScope</title>
@@ -1135,44 +1164,6 @@ Reach out to us via &lt;a href=&quot;https://github.com/alibaba/GraphScope/discu
         <pubDate>Tue, 08 Aug 2023 14:10:44 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2023/08/08/Empowering-Graph-Analysis-Tasks-with-GPU-Acceleration.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/08/08/Empowering-Graph-Analysis-Tasks-with-GPU-Acceleration.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Dynamic Graph Sampling Service for Realtime GNN Inference at Scale</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-06-title.jpg&quot; alt=&quot;dgs&quot; /&gt;
-Graph neural networks(GNNs) learn graph vertex representations by aggregating multi-hop neighbor information. Industrial applications often adopt mini-batch training to scale out GNNs on large-scale graphs, where neighbor sampling is used during both model training and inference. Since the structure and attributes of real-world graphs often change dynamically, it is imperative that the inferred vertex representation can accurately reflect these updates.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/dgs.jpg&quot; alt=&quot;Training and Inference in Dynamic Graph&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;challenges-in-sampling-dynamic-graph&quot;&gt;Challenges in Sampling Dynamic Graph&lt;/h3&gt;
-&lt;p&gt;GNN inference services, such as real-time recommendation systems, often require stable millisecond-level latency SLOs. However, meeting this requirement can be challenging due to highly concurrent inference requests and dynamic graph updates. Firstly, multi-hop sampling can introduce high time complexity, as sampling a vertex often requires traversing all its neighbors. Secondly, as the graphs in industrial 
-settings often exceed the single-machine memory, graphs are either persisted in disk or partitioned and stored in memory in a distributed cluster. Both approaches will incur significant I/O overheads during graph sampling. Thirdly, the computation required for sampling different vertices can vary significantly due to the inherent skewness in real-world graphs, which will lead to unstable latency performance among
-concurrent inference requests. Given these observations, existing approaches, e.g., using graph databases for storage and graph sampling, cannot fulfill the performance SLOs of real-time GNN inference services.&lt;/p&gt;
-
-&lt;h3 id=&quot;how-does-dgs-solve-the-problem&quot;&gt;How does DGS Solve the Problem?&lt;/h3&gt;
-&lt;p&gt;We propose Dynamic Graph Sampling Service (DGS), which aims to address the challenges associated with graph sampling in real-time GNN inference on dynamic graphs. Our key insight is that the GNN inference service is query-aware: given a GNN model, the graph sampling query for both training and inference is fixed. With this observation, we propose an event-driven pre-sampling mechanism in DGS. Driven by the graph updates, sample caches of vertices are dynamically updated using reservoir sampling following the specified query. In specific, DGS decomposes a k-hop sampling query into $k$ one-hop sampling queries. For each one-hop query, when a graph update of a relevant vertex (e.g., an edge sourcing from this vertex with a specified vertex label) arrives, the one-hop sampling results of this vertex will be updated accordingly. The k-hop sampling result of an inference request can be constructed via a fixed number of point look-ups in the cached one-hop sampling results. The following figure depicts an example of query decomposition.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/query.jpg&quot; alt=&quot;Query Decomposition&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;DGS further isolates graph pre-sampling and inference serving physically to avoid the interference between read and write workloads.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/DGSoverview.jpg&quot; alt=&quot;DGS Overview&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The overall architecture of DGS is depicted in the above figure. DGS mainly consists of two types of components: sampling workers and serving workers. The input graph updates are partitioned according to the key (e.g., vertex IDs) range. Each sampling worker is responsible for a specific partition: conducting pre-sampling for the one-hop sampling queries and transmitting the results to the serving workers. Each serving worker caches the sampling results of $k$ one-hop queries received from sampling workers and serves the inference requests for a partition of vertices in the graph. The sampling and serving workers can scale independently to cope with workload fluctuations of graph updates and inference requests. To minimize the latency in generating complete k-hop sampling results, DGS sends all k-hop sampling results of vertex $v_i$ to the serving worker that handles $v_i$’s inference request, such that generating the complete graph sampling for an inference request only requires accessing local caches on a single serving worker. To achieve this, every sampling worker maintains a subscription table for each one-hop query recording the list of serving workers that subscribe to the one-hop query results. E.g., either adding or deleting vertex $v_j$ from the first-hop samples of $v_i$ triggers a message recording this event sent to the sampling server that holds the partition containing $v_j$, and the subscription information of $v_j$ will be updated correspondingly. With this design, DGS can achieve a very stable latency performance under highly concurrent inference workloads.&lt;/p&gt;
-
-&lt;h3 id=&quot;performance-of-dgs&quot;&gt;Performance of DGS&lt;/h3&gt;
-&lt;p&gt;Experiments on real Alibaba e-commerce datasets show that DGS can maintain the P99 latency of inference requests  (of a two-hop random sampling query) within $20ms$ milliseconds, and process around $20,000$ requests per second in each serving worker. The throughput of update ingestion of a single sampling worker reaches $109$MB/s and can scale out linearly.&lt;/p&gt;
-
-&lt;p&gt;This blog briefly introduces the design concept, system architecture, and performance of DGS. With DGS, users can infer the latest graph representation based on real-time changes in graph structure and features. We provide an end-to-end &lt;a href=&quot;https://graph-learn.readthedocs.io/en/latest/en/dgs/tutorial.html&quot;&gt;tutorial&lt;/a&gt; for training and model deployment, as well as online inference based on DGS. Please feel free to try it out! For more details, please refer to the &lt;a href=&quot;https://github.com/alibaba/graph-learn/tree/master/dynamic_graph_service&quot;&gt;source code&lt;/a&gt; and &lt;a href=&quot;https://graph-learn.readthedocs.io/en/latest/en/dgs/intro.html&quot;&gt;documents&lt;/a&gt;.&lt;/p&gt;
-
-</description>
-        <pubDate>Sun, 06 Aug 2023 11:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/08/06/Dynamic-Graph-Sampling-Service-for-Realtime-GNN-Inference-at-Scale.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/08/06/Dynamic-Graph-Sampling-Service-for-Realtime-GNN-Inference-at-Scale.html</guid>
         
         
         <category>Tech</category>
