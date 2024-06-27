@@ -13,11 +13,18 @@
  * limitations under the License.
  */
 
+#ifndef ANALYTICAL_ENGINE_CORE_APPLICATIONS_H_
+#define ANALYTICAL_ENGINE_CORE_APPLICATIONS_H_
+
 #include <cstdio>
 #include <fstream>
+#include <memory>
 #include <string>
+#include <vector>
 
 #include "common/util/uuid.h"
+#include "gflags/gflags.h"
+#include "gflags/gflags_declare.h"
 #include "glog/logging.h"
 
 #include "grape/grape.h"
@@ -27,10 +34,6 @@
 
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/loader/arrow_fragment_loader.h"
-
-#include "gflags/gflags.h"
-#include "gflags/gflags_declare.h"
-#include "glog/logging.h"
 
 namespace gs {
 
@@ -66,3 +69,5 @@ std::vector<int> prepareSamplingPathPattern(const std::string& path_pattern);
 
 void RunApp();
 }  // namespace gs
+
+#endif  // ANALYTICAL_ENGINE_CORE_APPLICATIONS_H_
