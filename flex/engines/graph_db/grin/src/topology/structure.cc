@@ -161,7 +161,7 @@ const void* grin_get_edge_data_value(GRIN_GRAPH, GRIN_EDGE e) {
   case GRIN_DATATYPE::Float: {
     return new float(_e->data.value.f);
   }
-  case GRIN_DATATYPE::String: {
+  case GRIN_DATATYPE::StringView: {
     auto s = _e->data.value.s;
     auto len = s.size() + 1;
     char* out = new char[len];

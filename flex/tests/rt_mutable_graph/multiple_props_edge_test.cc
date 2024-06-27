@@ -94,10 +94,10 @@ class TestMultiplePropertiesEdge {
     LOG(INFO) << "Finish test get GraphView\n";
   }
 
-  void test_add_edge(int64_t src, const std::string_view& dst) {
+  void test_add_edge(int64_t src, const std::string& dst) {
     {
       auto txn = db_.GetSingleVertexInsertTransaction();
-      std::string_view name = "test-3";
+      std::string name = "test-3";
       int age = 34;
       CHECK(txn.AddVertex(src_label_, src, {Any::From(name), Any::From(age)}))
           << "Add vertex failed";

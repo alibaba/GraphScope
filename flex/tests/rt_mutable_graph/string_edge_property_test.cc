@@ -53,10 +53,9 @@ class TestStringEdgeProperty {
     LOG(INFO) << "Finish test get edge\n";
   }
 
-  void test_get_graph_view(int64_t src, const std::string& dst_str) {
+  void test_get_graph_view(int64_t src, const std::string& dst) {
     auto txn = db_.GetReadTransaction();
     vid_t src_lid, dst_lid;
-    std::string_view dst(dst_str.data(), dst_str.size());
 
     CHECK(db_.graph().get_lid(src_label_, src, src_lid));
     CHECK(db_.graph().get_lid(dst_label_, dst, dst_lid));
@@ -83,11 +82,10 @@ class TestStringEdgeProperty {
     LOG(INFO) << "Finish test get GraphView\n";
   }
 
-  void test_add_edge(int64_t src, const std::string& dst_str) {
-    std::string_view dst(dst_str.data(), dst_str.size());
+  void test_add_edge(int64_t src, const std::string& dst) {
     {
       auto txn = db_.GetSingleVertexInsertTransaction();
-      std::string_view name = "test-3";
+      std::string name = "test-3";
       int age = 34;
       CHECK(txn.AddVertex(src_label_, src, {Any::From(name), Any::From(age)}))
           << "Add vertex failed";
@@ -99,7 +97,7 @@ class TestStringEdgeProperty {
 
     {
       auto txn = db_.GetSingleEdgeInsertTransaction();
-      std::string_view str = "test";
+      std::string str = "test";
       CHECK(txn.AddEdge(src_label_, src, dst_label_, dst, edge_label_,
                         Any::From(str)))
           << "Add edge failed\n";

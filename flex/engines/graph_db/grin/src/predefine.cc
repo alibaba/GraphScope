@@ -12,7 +12,7 @@ GRIN_DATATYPE _get_data_type(const gs::PropertyType& type) {
   } else if (type == gs::PropertyType::kUInt64) {
     return GRIN_DATATYPE::UInt64;
   } else if (type == gs::PropertyType::kStringView) {
-    return GRIN_DATATYPE::String;
+    return GRIN_DATATYPE::StringView;
   } else if (type == gs::PropertyType::kDate) {
     return GRIN_DATATYPE::Timestamp64;
   } else if (type == gs::PropertyType::kDouble) {

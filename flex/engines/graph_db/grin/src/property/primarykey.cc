@@ -43,7 +43,7 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_primary_keys_by_vertex_type(
   } else if (type == gs::PropertyType::kUInt32) {
     vp += (GRIN_DATATYPE::UInt32 * 1u) << 16;
   } else if (type == gs::PropertyType::kStringView) {
-    vp += (GRIN_DATATYPE::String * 1u) << 16;
+    vp += (GRIN_DATATYPE::StringView * 1u) << 16;
   } else {
     vp = GRIN_NULL_VERTEX_PROPERTY;
   }

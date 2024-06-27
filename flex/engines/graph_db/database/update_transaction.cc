@@ -487,7 +487,7 @@ void UpdateTransaction::set_edge_data_with_offset(
                          : get_in_csr_index(neighbor_label, label, edge_label);
   if (value.type == PropertyType::kStringView) {
     size_t loc = sv_vec_.size();
-    sv_vec_.emplace_back(std::string(value.value.s));
+    sv_vec_.emplace_back(value.AsStringView());
     Any dup_value;
     dup_value.set_string(sv_vec_[loc]);
     updated_edge_data_[csr_index][v].emplace(
