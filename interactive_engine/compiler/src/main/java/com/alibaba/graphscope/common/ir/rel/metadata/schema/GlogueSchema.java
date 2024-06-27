@@ -81,6 +81,8 @@ public class GlogueSchema {
             if (vertexTypeCount == null) {
                 throw new IllegalArgumentException(
                         "Vertex type count not found for vertex type: " + vertex.getLabelId());
+            } else if (vertexTypeCount == 0) {
+                vertexTypeCardinality.put(vertex.getLabelId(), 1.0);
             } else {
                 vertexTypeCardinality.put(vertex.getLabelId(), vertexTypeCount.doubleValue());
             }
@@ -99,6 +101,8 @@ public class GlogueSchema {
                 if (edgeTypeCount == null) {
                     throw new IllegalArgumentException(
                             "Edge type count not found for edge type: " + edge.getLabelId());
+                } else if (edgeTypeCount == 0) {
+                    edgeTypeCardinality.put(edgeType, 0.0);
                 } else {
                     edgeTypeCardinality.put(edgeType, edgeTypeCount.doubleValue());
                 }
