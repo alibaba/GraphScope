@@ -19,6 +19,7 @@
 |**boundGraph** | **String** |  |  [optional] |
 |**runnable** | **Boolean** |  |  [optional] |
 |**creationTime** | **Integer** |  |  [optional] |
+|**updateTime** | **Integer** |  |  [optional] |
 
 
 

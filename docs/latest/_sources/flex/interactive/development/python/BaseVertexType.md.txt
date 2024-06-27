@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.base_vertex_type import BaseVertexType
+from gs_interactive.models.base_vertex_type import BaseVertexType
 
 # TODO update the JSON string below
 json = "{}"

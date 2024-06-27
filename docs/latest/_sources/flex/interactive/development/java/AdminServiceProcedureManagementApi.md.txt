@@ -22,11 +22,11 @@ Create a new procedure on a graph
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.AdminServiceProcedureManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.AdminServiceProcedureManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -89,11 +89,11 @@ Delete a procedure on a graph by name
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.AdminServiceProcedureManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.AdminServiceProcedureManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -154,11 +154,11 @@ Get a procedure by name
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.AdminServiceProcedureManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.AdminServiceProcedureManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -219,11 +219,11 @@ List all procedures
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.AdminServiceProcedureManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.AdminServiceProcedureManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -282,11 +282,11 @@ Update procedure on a graph by name
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.AdminServiceProcedureManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.AdminServiceProcedureManagementApi;
 
 public class Example {
   public static void main(String[] args) {

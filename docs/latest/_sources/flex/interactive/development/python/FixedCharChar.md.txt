@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.fixed_char_char import FixedCharChar
+from gs_interactive.models.fixed_char_char import FixedCharChar
 
 # TODO update the JSON string below
 json = "{}"

@@ -103,6 +103,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a85047ea5b23cffa1e9040ee4a4e027ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf350f22f924177af8127be118d05109"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsr.html#adf350f22f924177af8127be118d05109">BatchInit</a> (const std::string &amp;oe_name, const std::string &amp;ie_name, const std::string &amp;edata_name, const std::string &amp;work_dir, const std::vector&lt; int &gt; &amp;oe_degree, const std::vector&lt; int &gt; &amp;ie_degree) override</td></tr>
 <tr class="separator:adf350f22f924177af8127be118d05109"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a496b44b38bcb67e18c1e3a0d59b67a04"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsr.html#a496b44b38bcb67e18c1e3a0d59b67a04">BatchInitInMemory</a> (const std::string &amp;edata_name, const std::string &amp;work_dir, const std::vector&lt; int &gt; &amp;oe_degree, const std::vector&lt; int &gt; &amp;ie_degree) override</td></tr>
+<tr class="separator:a496b44b38bcb67e18c1e3a0d59b67a04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac8d0544b8be78fc5ee6bb1b83d33c3f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsr.html#aac8d0544b8be78fc5ee6bb1b83d33c3f">Open</a> (const std::string &amp;oe_name, const std::string &amp;ie_name, const std::string &amp;edata_name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::string &amp;work_dir) override</td></tr>
 <tr class="separator:aac8d0544b8be78fc5ee6bb1b83d33c3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5cf9c98c5bb007736f7dbc4af373c2c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsr.html#ae5cf9c98c5bb007736f7dbc4af373c2c">OpenInMemory</a> (const std::string &amp;oe_name, const std::string &amp;ie_name, const std::string &amp;edata_name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, size_t src_vertex_cap, size_t dst_vertex_cap) override</td></tr>
@@ -127,6 +129,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a3de7bbf92fc2ddf2abd23a1755fe6bfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7556e8acd0b36ba38f68bb4d0abd06af"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsr.html#a7556e8acd0b36ba38f68bb4d0abd06af">BatchPutEdge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const EDATA_T &amp;data)</td></tr>
 <tr class="separator:a7556e8acd0b36ba38f68bb4d0abd06af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abedc6f30e4547c0f52b7d8c3da3f433a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsr.html#abedc6f30e4547c0f52b7d8c3da3f433a">Close</a> () override</td></tr>
+<tr class="separator:abedc6f30e4547c0f52b7d8c3da3f433a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classgs_1_1DualCsrBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1DualCsrBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1DualCsrBase.html">gs::DualCsrBase</a></td></tr>
 <tr class="memitem:ab14bad1490f75288ee068e0c302aff0f inherit pub_methods_classgs_1_1DualCsrBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#ab14bad1490f75288ee068e0c302aff0f">DualCsrBase</a> ()=default</td></tr>
 <tr class="separator:ab14bad1490f75288ee068e0c302aff0f inherit pub_methods_classgs_1_1DualCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -287,6 +291,58 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="a496b44b38bcb67e18c1e3a0d59b67a04"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a496b44b38bcb67e18c1e3a0d59b67a04">&#9670;&nbsp;</a></span>BatchInitInMemory()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classgs_1_1DualCsr.html">gs::DualCsr</a>&lt; EDATA_T &gt;::BatchInitInMemory </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>edata_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>oe_degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>ie_degree</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="el" href="classgs_1_1DualCsrBase.html#a1577b7b83e344956bc4dd4ebbca486f8">gs::DualCsrBase</a>.</p>
+
+</div>
+</div>
 <a id="a7556e8acd0b36ba38f68bb4d0abd06af"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7556e8acd0b36ba38f68bb4d0abd06af">&#9670;&nbsp;</a></span>BatchPutEdge()</h2>
 
@@ -328,6 +384,35 @@ template&lt;typename EDATA_T &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="abedc6f30e4547c0f52b7d8c3da3f433a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abedc6f30e4547c0f52b7d8c3da3f433a">&#9670;&nbsp;</a></span>Close()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classgs_1_1DualCsr.html">gs::DualCsr</a>&lt; EDATA_T &gt;::Close </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="el" href="classgs_1_1DualCsrBase.html#af332cc9ebdbfeacb41215aac55b85a79">gs::DualCsrBase</a>.</p>
 
 </div>
 </div>

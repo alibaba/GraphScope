@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.base_vertex_type_x_csr_params import BaseVertexTypeXCsrParams
+from gs_interactive.models.base_vertex_type_x_csr_params import BaseVertexTypeXCsrParams
 
 # TODO update the JSON string below
 json = "{}"

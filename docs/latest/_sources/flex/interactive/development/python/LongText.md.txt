@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.long_text import LongText
+from gs_interactive.models.long_text import LongText
 
 # TODO update the JSON string below
 json = "{}"

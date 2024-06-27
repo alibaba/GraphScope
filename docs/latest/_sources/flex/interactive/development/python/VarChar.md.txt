@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.var_char import VarChar
+from gs_interactive.models.var_char import VarChar
 
 # TODO update the JSON string below
 json = "{}"

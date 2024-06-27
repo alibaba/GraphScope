@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.base_property_meta import BasePropertyMeta
+from gs_interactive.models.base_property_meta import BasePropertyMeta
 
 # TODO update the JSON string below
 json = "{}"

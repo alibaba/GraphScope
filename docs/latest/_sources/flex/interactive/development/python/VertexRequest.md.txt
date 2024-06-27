@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.vertex_request import VertexRequest
+from gs_interactive.models.vertex_request import VertexRequest
 
 # TODO update the JSON string below
 json = "{}"

@@ -17,11 +17,12 @@ Name | Type | Description | Notes
 **bound_graph** | **str** |  | [optional] 
 **runnable** | **bool** |  | [optional] 
 **creation_time** | **int** |  | [optional] 
+**update_time** | **int** |  | [optional] 
 
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.get_procedure_response import GetProcedureResponse
+from gs_interactive.models.get_procedure_response import GetProcedureResponse
 
 # TODO update the JSON string below
 json = "{}"

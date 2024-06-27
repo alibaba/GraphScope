@@ -106,14 +106,14 @@ Collaboration diagram for gs::AbstractArrowFragmentLoader:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a756788e2358acc58fc05ef68de7560f2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a756788e2358acc58fc05ef68de7560f2">AbstractArrowFragmentLoader</a> (const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int32_t thread_num)</td></tr>
-<tr class="separator:a756788e2358acc58fc05ef68de7560f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d5ae189d37a3e991ea3bcfacde56257"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a6d5ae189d37a3e991ea3bcfacde56257">AbstractArrowFragmentLoader</a> (const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int32_t thread_num, bool build_csr_in_mem, bool use_mmap_vector)</td></tr>
+<tr class="separator:a6d5ae189d37a3e991ea3bcfacde56257"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6a6990caf96d7131a2a48456f884cab9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a6a6990caf96d7131a2a48456f884cab9">~AbstractArrowFragmentLoader</a> ()</td></tr>
 <tr class="separator:a6a6990caf96d7131a2a48456f884cab9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a160303b8ee924d3764720843faef1fff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a160303b8ee924d3764720843faef1fff">AddVerticesRecordBatch</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;input_paths, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
-<tr class="separator:a160303b8ee924d3764720843faef1fff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8368cd9a962c3479375db5be88378d1f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a8368cd9a962c3479375db5be88378d1f">AddEdgesRecordBatch</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label_id, const std::vector&lt; std::string &gt; &amp;input_paths, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
-<tr class="separator:a8368cd9a962c3479375db5be88378d1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dde84b7ce995944c037eb5020acddd0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a0dde84b7ce995944c037eb5020acddd0">AddVerticesRecordBatch</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;input_paths, std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt; supplier_creator)</td></tr>
+<tr class="separator:a0dde84b7ce995944c037eb5020acddd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2ae61d706d923c369c18382a3c93ca3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#af2ae61d706d923c369c18382a3c93ca3">AddEdgesRecordBatch</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label_id, const std::vector&lt; std::string &gt; &amp;input_paths, std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt; supplier_creator)</td></tr>
+<tr class="separator:af2ae61d706d923c369c18382a3c93ca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classgs_1_1IFragmentLoader"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1IFragmentLoader')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1IFragmentLoader.html">gs::IFragmentLoader</a></td></tr>
 <tr class="memitem:af9118d3dccc4115c53847930575ac7d8 inherit pub_methods_classgs_1_1IFragmentLoader"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1IFragmentLoader.html#af9118d3dccc4115c53847930575ac7d8">~IFragmentLoader</a> ()=default</td></tr>
 <tr class="separator:af9118d3dccc4115c53847930575ac7d8 inherit pub_methods_classgs_1_1IFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -125,15 +125,18 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a6868b0828d34e79e360ceeb4783ac7e6"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
 <tr class="memitem:a6868b0828d34e79e360ceeb4783ac7e6"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a6868b0828d34e79e360ceeb4783ac7e6">addVertexBatchFromArray</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;indexer, std::shared_ptr&lt; arrow::Array &gt; &amp;primary_key_col, const std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;property_cols)</td></tr>
 <tr class="separator:a6868b0828d34e79e360ceeb4783ac7e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5968f8c95ecccfbea4cdc00f5d394f61"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
-<tr class="memitem:a5968f8c95ecccfbea4cdc00f5d394f61"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a5968f8c95ecccfbea4cdc00f5d394f61">addVertexRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;v_files, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
-<tr class="separator:a5968f8c95ecccfbea4cdc00f5d394f61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae19540d2cf9a4f0570be8df9b2d861a4"><td class="memTemplParams" colspan="2">template&lt;typename SRC_PK_T , typename EDATA_T &gt; </td></tr>
-<tr class="memitem:ae19540d2cf9a4f0570be8df9b2d861a4"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#ae19540d2cf9a4f0570be8df9b2d861a4">_append_edges</a> (std::shared_ptr&lt; arrow::Array &gt; src_col, std::shared_ptr&lt; arrow::Array &gt; dst_col, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;src_indexer, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;dst_indexer, std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;property_cols, const <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &amp;edge_property, std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, EDATA_T &gt;&gt; &amp;parsed_edges, std::vector&lt; int32_t &gt; &amp;ie_degree, std::vector&lt; int32_t &gt; &amp;oe_degree)</td></tr>
-<tr class="separator:ae19540d2cf9a4f0570be8df9b2d861a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a663a7c186690b6eb1c3a13f23c04e634"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
-<tr class="memitem:a663a7c186690b6eb1c3a13f23c04e634"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a663a7c186690b6eb1c3a13f23c04e634">addEdgesRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> e_label_id, const std::vector&lt; std::string &gt; &amp;e_files, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
-<tr class="separator:a663a7c186690b6eb1c3a13f23c04e634"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a218fa29e94a8876064d0ca06b67107fa"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
+<tr class="memitem:a218fa29e94a8876064d0ca06b67107fa"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a218fa29e94a8876064d0ca06b67107fa">addVertexRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;v_files, std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt; supplier_creator)</td></tr>
+<tr class="separator:a218fa29e94a8876064d0ca06b67107fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af624f4a80fed106005d28a84923729e4"><td class="memTemplParams" colspan="2">template&lt;typename SRC_PK_T , typename EDATA_T , typename VECTOR_T &gt; </td></tr>
+<tr class="memitem:af624f4a80fed106005d28a84923729e4"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#af624f4a80fed106005d28a84923729e4">_append_edges</a> (std::shared_ptr&lt; arrow::Array &gt; src_col, std::shared_ptr&lt; arrow::Array &gt; dst_col, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;src_indexer, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;dst_indexer, std::shared_ptr&lt; arrow::Array &gt; &amp;property_cols, const <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &amp;edge_property, VECTOR_T &amp;parsed_edges, std::vector&lt; std::atomic&lt; int32_t &gt;&gt; &amp;ie_degree, std::vector&lt; std::atomic&lt; int32_t &gt;&gt; &amp;oe_degree, size_t offset)</td></tr>
+<tr class="separator:af624f4a80fed106005d28a84923729e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bbd189848e9d1db518d88ce2eaadb1c"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
+<tr class="memitem:a3bbd189848e9d1db518d88ce2eaadb1c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a3bbd189848e9d1db518d88ce2eaadb1c">addEdgesRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> e_label_id, const std::vector&lt; std::string &gt; &amp;e_files, std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt; supplier_creator)</td></tr>
+<tr class="separator:a3bbd189848e9d1db518d88ce2eaadb1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3078c5defe41df911405ec60311d80f"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T , typename VECTOR_T &gt; </td></tr>
+<tr class="memitem:af3078c5defe41df911405ec60311d80f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#af3078c5defe41df911405ec60311d80f">addEdgesRecordBatchImplHelper</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> e_label_id, const std::vector&lt; std::string &gt; &amp;e_files, std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt; supplier_creator)</td></tr>
+<tr class="separator:af3078c5defe41df911405ec60311d80f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -147,12 +150,18 @@ Protected Attributes</h2></td></tr>
 <tr class="separator:afcb2b39c772396c603d9c48ab21d58c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4280c6aa85a39c91486a04b6ca632f9a"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a4280c6aa85a39c91486a04b6ca632f9a">thread_num_</a></td></tr>
 <tr class="separator:a4280c6aa85a39c91486a04b6ca632f9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bb236856a7932a8ba672656cf6f3ae2"><td class="memItemLeft" align="right" valign="top">std::mutex *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a2bb236856a7932a8ba672656cf6f3ae2">mtxs_</a></td></tr>
+<tr class="separator:a2bb236856a7932a8ba672656cf6f3ae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeecabb74faef9375bcda1af7e26afa8d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#aeecabb74faef9375bcda1af7e26afa8d">build_csr_in_mem_</a></td></tr>
+<tr class="separator:aeecabb74faef9375bcda1af7e26afa8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5c9a7f46fc68ea20a96f89b72f89f63"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#ad5c9a7f46fc68ea20a96f89b72f89f63">use_mmap_vector_</a></td></tr>
+<tr class="separator:ad5c9a7f46fc68ea20a96f89b72f89f63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0edb43e0de49f7cff079aa86da7ca4c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1BasicFragmentLoader.html">BasicFragmentLoader</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#ab0edb43e0de49f7cff079aa86da7ca4c">basic_fragment_loader_</a></td></tr>
 <tr class="separator:ab0edb43e0de49f7cff079aa86da7ca4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a756788e2358acc58fc05ef68de7560f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a756788e2358acc58fc05ef68de7560f2">&#9670;&nbsp;</a></span>AbstractArrowFragmentLoader()</h2>
+<a id="a6d5ae189d37a3e991ea3bcfacde56257"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d5ae189d37a3e991ea3bcfacde56257">&#9670;&nbsp;</a></span>AbstractArrowFragmentLoader()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -182,7 +191,19 @@ Protected Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int32_t&#160;</td>
-          <td class="paramname"><em>thread_num</em>&#160;</td>
+          <td class="paramname"><em>thread_num</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>build_csr_in_mem</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>use_mmap_vector</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -225,13 +246,13 @@ Protected Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ae19540d2cf9a4f0570be8df9b2d861a4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae19540d2cf9a4f0570be8df9b2d861a4">&#9670;&nbsp;</a></span>_append_edges()</h2>
+<a id="af624f4a80fed106005d28a84923729e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af624f4a80fed106005d28a84923729e4">&#9670;&nbsp;</a></span>_append_edges()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename SRC_PK_T , typename EDATA_T &gt; </div>
+template&lt;typename SRC_PK_T , typename EDATA_T , typename VECTOR_T &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -263,7 +284,7 @@ template&lt;typename SRC_PK_T , typename EDATA_T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;&#160;</td>
+          <td class="paramtype">std::shared_ptr&lt; arrow::Array &gt; &amp;&#160;</td>
           <td class="paramname"><em>property_cols</em>, </td>
         </tr>
         <tr>
@@ -275,20 +296,26 @@ template&lt;typename SRC_PK_T , typename EDATA_T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, EDATA_T &gt;&gt; &amp;&#160;</td>
+          <td class="paramtype">VECTOR_T &amp;&#160;</td>
           <td class="paramname"><em>parsed_edges</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; int32_t &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; std::atomic&lt; int32_t &gt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>ie_degree</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; int32_t &gt; &amp;&#160;</td>
-          <td class="paramname"><em>oe_degree</em>&#160;</td>
+          <td class="paramtype">std::vector&lt; std::atomic&lt; int32_t &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>oe_degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -305,8 +332,8 @@ template&lt;typename SRC_PK_T , typename EDATA_T &gt; </div>
 
 </div>
 </div>
-<a id="a8368cd9a962c3479375db5be88378d1f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8368cd9a962c3479375db5be88378d1f">&#9670;&nbsp;</a></span>AddEdgesRecordBatch()</h2>
+<a id="af2ae61d706d923c369c18382a3c93ca3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2ae61d706d923c369c18382a3c93ca3">&#9670;&nbsp;</a></span>AddEdgesRecordBatch()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -338,7 +365,7 @@ template&lt;typename SRC_PK_T , typename EDATA_T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt;&#160;</td>
           <td class="paramname"><em>supplier_creator</em>&#160;</td>
         </tr>
         <tr>
@@ -351,8 +378,8 @@ template&lt;typename SRC_PK_T , typename EDATA_T &gt; </div>
 
 </div>
 </div>
-<a id="a663a7c186690b6eb1c3a13f23c04e634"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a663a7c186690b6eb1c3a13f23c04e634">&#9670;&nbsp;</a></span>addEdgesRecordBatchImpl()</h2>
+<a id="a3bbd189848e9d1db518d88ce2eaadb1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3bbd189848e9d1db518d88ce2eaadb1c">&#9670;&nbsp;</a></span>addEdgesRecordBatchImpl()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -389,7 +416,63 @@ template&lt;typename EDATA_T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt;&#160;</td>
+          <td class="paramname"><em>supplier_creator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af3078c5defe41df911405ec60311d80f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3078c5defe41df911405ec60311d80f">&#9670;&nbsp;</a></span>addEdgesRecordBatchImplHelper()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T , typename VECTOR_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::AbstractArrowFragmentLoader::addEdgesRecordBatchImplHelper </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>src_label_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>dst_label_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>e_label_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>e_files</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt;&#160;</td>
           <td class="paramname"><em>supplier_creator</em>&#160;</td>
         </tr>
         <tr>
@@ -457,8 +540,8 @@ template&lt;typename KEY_T &gt; </div>
 
 </div>
 </div>
-<a id="a5968f8c95ecccfbea4cdc00f5d394f61"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5968f8c95ecccfbea4cdc00f5d394f61">&#9670;&nbsp;</a></span>addVertexRecordBatchImpl()</h2>
+<a id="a218fa29e94a8876064d0ca06b67107fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a218fa29e94a8876064d0ca06b67107fa">&#9670;&nbsp;</a></span>addVertexRecordBatchImpl()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -483,7 +566,7 @@ template&lt;typename KEY_T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt;&#160;</td>
           <td class="paramname"><em>supplier_creator</em>&#160;</td>
         </tr>
         <tr>
@@ -501,8 +584,8 @@ template&lt;typename KEY_T &gt; </div>
 
 </div>
 </div>
-<a id="a160303b8ee924d3764720843faef1fff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a160303b8ee924d3764720843faef1fff">&#9670;&nbsp;</a></span>AddVerticesRecordBatch()</h2>
+<a id="a0dde84b7ce995944c037eb5020acddd0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0dde84b7ce995944c037eb5020acddd0">&#9670;&nbsp;</a></span>AddVerticesRecordBatch()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -522,7 +605,7 @@ template&lt;typename KEY_T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;&gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;, int)&gt;&#160;</td>
           <td class="paramname"><em>supplier_creator</em>&#160;</td>
         </tr>
         <tr>
@@ -552,6 +635,28 @@ template&lt;typename KEY_T &gt; </div>
   </td>
   <td class="mlabels-right">
 <span class="mlabels"><span class="mlabel">mutable</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aeecabb74faef9375bcda1af7e26afa8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeecabb74faef9375bcda1af7e26afa8d">&#9670;&nbsp;</a></span>build_csr_in_mem_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::AbstractArrowFragmentLoader::build_csr_in_mem_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -602,6 +707,28 @@ template&lt;typename KEY_T &gt; </div>
 
 </div>
 </div>
+<a id="a2bb236856a7932a8ba672656cf6f3ae2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2bb236856a7932a8ba672656cf6f3ae2">&#9670;&nbsp;</a></span>mtxs_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::mutex* gs::AbstractArrowFragmentLoader::mtxs_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="aa079b70efa367db8d1f2a58c66daacc6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa079b70efa367db8d1f2a58c66daacc6">&#9670;&nbsp;</a></span>schema_</h2>
 
@@ -635,6 +762,28 @@ template&lt;typename KEY_T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">int32_t gs::AbstractArrowFragmentLoader::thread_num_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad5c9a7f46fc68ea20a96f89b72f89f63"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5c9a7f46fc68ea20a96f89b72f89f63">&#9670;&nbsp;</a></span>use_mmap_vector_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::AbstractArrowFragmentLoader::use_mmap_vector_</td>
         </tr>
       </table>
   </td>

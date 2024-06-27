@@ -1,4 +1,4 @@
-# interactive_sdk.openapi.AdminServiceProcedureManagementApi
+# gs_interactive.AdminServiceProcedureManagementApi
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
@@ -22,25 +22,25 @@ Create a new procedure on a graph
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.create_procedure_request import CreateProcedureRequest
-from interactive_sdk.openapi.models.create_procedure_response import CreateProcedureResponse
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.create_procedure_request import CreateProcedureRequest
+from gs_interactive.models.create_procedure_response import CreateProcedureResponse
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
-    create_procedure_request = interactive_sdk.openapi.CreateProcedureRequest() # CreateProcedureRequest | 
+    create_procedure_request = gs_interactive.CreateProcedureRequest() # CreateProcedureRequest | 
 
     try:
         api_response = api_instance.create_procedure(graph_id, create_procedure_request)
@@ -95,21 +95,21 @@ Delete a procedure on a graph by name
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
     procedure_id = 'procedure_id_example' # str | 
 
@@ -164,22 +164,22 @@ Get a procedure by name
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.get_procedure_response import GetProcedureResponse
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.get_procedure_response import GetProcedureResponse
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
     procedure_id = 'procedure_id_example' # str | 
 
@@ -234,22 +234,22 @@ List all procedures
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.get_procedure_response import GetProcedureResponse
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.get_procedure_response import GetProcedureResponse
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
 
     try:
@@ -302,25 +302,25 @@ Update procedure on a graph by name
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.update_procedure_request import UpdateProcedureRequest
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.update_procedure_request import UpdateProcedureRequest
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceProcedureManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
     procedure_id = 'procedure_id_example' # str | 
-    update_procedure_request = interactive_sdk.openapi.UpdateProcedureRequest() # UpdateProcedureRequest |  (optional)
+    update_procedure_request = gs_interactive.UpdateProcedureRequest() # UpdateProcedureRequest |  (optional)
 
     try:
         api_response = api_instance.update_procedure(graph_id, procedure_id, update_procedure_request=update_procedure_request)

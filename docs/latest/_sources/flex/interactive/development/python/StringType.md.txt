@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.string_type import StringType
+from gs_interactive.models.string_type import StringType
 
 # TODO update the JSON string below
 json = "{}"

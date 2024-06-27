@@ -1,4 +1,4 @@
-# interactive_sdk.openapi.GraphServiceEdgeManagementApi
+# gs_interactive.GraphServiceEdgeManagementApi
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
@@ -21,22 +21,22 @@ Add the edge to graph.
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.edge_request import EdgeRequest
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.edge_request import EdgeRequest
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.GraphServiceEdgeManagementApi(api_client)
+    api_instance = gs_interactive.GraphServiceEdgeManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
     edge_request = {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]} # EdgeRequest |  (optional)
 
@@ -94,21 +94,21 @@ Remove the edge from current graph.
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.GraphServiceEdgeManagementApi(api_client)
+    api_instance = gs_interactive.GraphServiceEdgeManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
     src_label = 'person' # str | The label name of src vertex.
     src_primary_key_value = 1 # object | The primary key value of src vertex.
@@ -172,22 +172,22 @@ Get the properties for the specified vertex.
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.edge_data import EdgeData
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.edge_data import EdgeData
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.GraphServiceEdgeManagementApi(api_client)
+    api_instance = gs_interactive.GraphServiceEdgeManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
     edge_label = 'created' # str | The label name of querying edge.
     src_label = 'person' # str | The label name of src vertex.
@@ -253,22 +253,22 @@ Update the edge on the running graph.
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.edge_request import EdgeRequest
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.edge_request import EdgeRequest
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.GraphServiceEdgeManagementApi(api_client)
+    api_instance = gs_interactive.GraphServiceEdgeManagementApi(api_client)
     graph_id = 'graph_id_example' # str | 
     edge_request = {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.3}]} # EdgeRequest |  (optional)
 

@@ -21,11 +21,11 @@ Add the provided vertex to the specified graph.
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.GraphServiceVertexManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.GraphServiceVertexManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -89,11 +89,11 @@ Remove the vertex from the specified graph.
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.GraphServiceVertexManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.GraphServiceVertexManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -158,11 +158,11 @@ Get the properties for the specified vertex. example: &#x60;&#x60;&#x60;http GET
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.GraphServiceVertexManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.GraphServiceVertexManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -227,11 +227,11 @@ Remove the vertex from the specified graph.
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.GraphServiceVertexManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.GraphServiceVertexManagementApi;
 
 public class Example {
   public static void main(String[] args) {

@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.create_graph_schema_request import CreateGraphSchemaRequest
+from gs_interactive.models.create_graph_schema_request import CreateGraphSchemaRequest
 
 # TODO update the JSON string below
 json = "{}"

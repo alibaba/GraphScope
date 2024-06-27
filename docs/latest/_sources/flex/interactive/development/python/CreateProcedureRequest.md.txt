@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.create_procedure_request import CreateProcedureRequest
+from gs_interactive.models.create_procedure_request import CreateProcedureRequest
 
 # TODO update the JSON string below
 json = "{}"

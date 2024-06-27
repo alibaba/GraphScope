@@ -1,0 +1,32 @@
+# GetGraphStatisticsResponse
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**total_vertex_count** | **int** |  | 
+**total_edge_count** | **int** |  | 
+**vertex_type_statistics** | [**List[VertexStatistics]**](VertexStatistics.md) |  | [optional] 
+**edge_type_statistics** | [**List[EdgeStatistics]**](EdgeStatistics.md) |  | [optional] 
+
+## Example
+
+```python
+from interactive_sdk.openapi.models.get_graph_statistics_response import GetGraphStatisticsResponse
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of GetGraphStatisticsResponse from a JSON string
+get_graph_statistics_response_instance = GetGraphStatisticsResponse.from_json(json)
+# print the JSON string representation of the object
+print(GetGraphStatisticsResponse.to_json())
+
+# convert the object into a dict
+get_graph_statistics_response_dict = get_graph_statistics_response_instance.to_dict()
+# create an instance of GetGraphStatisticsResponse from a dict
+get_graph_statistics_response_from_dict = GetGraphStatisticsResponse.from_dict(get_graph_statistics_response_dict)
+```
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

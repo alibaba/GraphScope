@@ -1,0 +1,31 @@
+# EdgeStatistics
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**type_id** | **int** |  | [optional] 
+**type_name** | **str** |  | [optional] 
+**vertex_type_pair_statistics** | [**List[VertexTypePairStatistics]**](VertexTypePairStatistics.md) |  | [optional] 
+
+## Example
+
+```python
+from interactive_sdk.openapi.models.edge_statistics import EdgeStatistics
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of EdgeStatistics from a JSON string
+edge_statistics_instance = EdgeStatistics.from_json(json)
+# print the JSON string representation of the object
+print(EdgeStatistics.to_json())
+
+# convert the object into a dict
+edge_statistics_dict = edge_statistics_instance.to_dict()
+# create an instance of EdgeStatistics from a dict
+edge_statistics_from_dict = EdgeStatistics.from_dict(edge_statistics_dict)
+```
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.schema_mapping_loading_config_format import SchemaMappingLoadingConfigFormat
+from gs_interactive.models.schema_mapping_loading_config_format import SchemaMappingLoadingConfigFormat
 
 # TODO update the JSON string below
 json = "{}"

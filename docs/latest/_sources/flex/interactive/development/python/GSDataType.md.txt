@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.gs_data_type import GSDataType
+from gs_interactive.models.gs_data_type import GSDataType
 
 # TODO update the JSON string below
 json = "{}"

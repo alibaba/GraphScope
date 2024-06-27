@@ -88,6 +88,23 @@ $(function() {
 <li>ReadTransaction()
 : <a class="el" href="classgs_1_1ReadTransaction.html#a1b6aa011d0aa4a2b2b4c34cd0871cd14">gs::ReadTransaction</a>
 </li>
+<li>record
+: <a class="el" href="uniongs_1_1AnyValue.html#ae317e44b25f3d9252da849a3804dba87">gs::AnyValue</a>
+</li>
+<li>Record()
+: <a class="el" href="structgs_1_1PropertyType.html#a3bf4975d813ad8db4a9d0d5127dc620f">gs::PropertyType</a>
+, <a class="el" href="structgs_1_1Record.html#a7aaedba408f2fdcc697ebbeccafbf847">gs::Record</a>
+</li>
+<li>record_view
+: <a class="el" href="uniongs_1_1AnyValue.html#a77dd9518c15c75819ec6f80f95dc52d3">gs::AnyValue</a>
+</li>
+<li>RecordNbr()
+: <a class="el" href="structgs_1_1SingleMutableCsr_3_01RecordView_01_4_1_1RecordNbr.html#a7d34630468eea15cad4a012248803378">gs::SingleMutableCsr&lt; RecordView &gt;::RecordNbr</a>
+</li>
+<li>RecordView()
+: <a class="el" href="structgs_1_1PropertyType.html#aefda0ffbabf93b47a036a6a8c63715ac">gs::PropertyType</a>
+, <a class="el" href="structgs_1_1RecordView.html#ab2bca64c52e6053ec6f209484688d1a9">gs::RecordView</a>
+</li>
 <li>Register()
 : <a class="el" href="classgs_1_1LoaderFactory.html#a929e747f1ad61bcd7f3374c6ac208597">gs::LoaderFactory</a>
 </li>
@@ -121,6 +138,7 @@ $(function() {
 <li>reserve()
 : <a class="el" href="classgs_1_1ArenaAllocator.html#a0ad54d6f9f14c028d47dc2ac1acc30a0">gs::ArenaAllocator</a>
 , <a class="el" href="classgs_1_1LFIndexer.html#ae790836bc860340b9240a9bef2409b46">gs::LFIndexer&lt; INDEX_T &gt;</a>
+, <a class="el" href="classgs_1_1mmap__vector.html#abf5771b0cc26085c577563fe36293552">gs::mmap_vector&lt; T &gt;</a>
 </li>
 <li>RESERVED_PLUGIN_NUM
 : <a class="el" href="classgs_1_1Schema.html#a931f5d511e6b089ecf55439e569147b4">gs::Schema</a>
@@ -145,15 +163,19 @@ $(function() {
 </li>
 <li>resize()
 : <a class="el" href="classgs_1_1EmptyCsr.html#a88a6b75c7b6913c88b5ccdc396ed1c51">gs::EmptyCsr&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1EmptyCsr_3_01RecordView_01_4.html#ae8c92a506281831c86b76cb7f2aede26">gs::EmptyCsr&lt; RecordView &gt;</a>
 , <a class="el" href="classgs_1_1EmptyCsr_3_01std_1_1string__view_01_4.html#a456d7e05375e54500767bd14185f6480">gs::EmptyCsr&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1ImmutableCsr.html#a8eaef850795678cecad1bea5ed914ae4">gs::ImmutableCsr&lt; EDATA_T &gt;</a>
 , <a class="el" href="classgs_1_1mmap__array.html#acd2e1c69c5bc661c79c956631dcc4bd8">gs::mmap_array&lt; T &gt;</a>
 , <a class="el" href="classgs_1_1mmap__array_3_01std_1_1string__view_01_4.html#a97cbad9f5e650da4f35051a67980c7b6">gs::mmap_array&lt; std::string_view &gt;</a>
+, <a class="el" href="classgs_1_1mmap__vector.html#aa10812660c3e92dd398d35073e602312">gs::mmap_vector&lt; T &gt;</a>
 , <a class="el" href="classgs_1_1MutableCsr.html#acc41d140546a4a54698e3b0317fcd8b4">gs::MutableCsr&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1MutableCsr_3_01RecordView_01_4.html#a324cc64b938699c0a380ece2b81e1f87">gs::MutableCsr&lt; RecordView &gt;</a>
 , <a class="el" href="classgs_1_1MutableCsr_3_01std_1_1string__view_01_4.html#a266308f8db44af2a1bf6bf1bffad0163">gs::MutableCsr&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1SingleImmutableCsr.html#a559bd27160a4b08030116e6a8e0af7fd">gs::SingleImmutableCsr&lt; EDATA_T &gt;</a>
 , <a class="el" href="classgs_1_1SingleImmutableCsr_3_01std_1_1string__view_01_4.html#a7925c1fb3e3a1268b9d353f6893b158c">gs::SingleImmutableCsr&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1SingleMutableCsr.html#ad2121e1e21bdb5b929d20eda23ef9ffa">gs::SingleMutableCsr&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1SingleMutableCsr_3_01RecordView_01_4.html#ac932fff93c0382f782825343892d1392">gs::SingleMutableCsr&lt; RecordView &gt;</a>
 , <a class="el" href="classgs_1_1SingleMutableCsr_3_01std_1_1string__view_01_4.html#a672480a74052aafad64562f49b2d647e">gs::SingleMutableCsr&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1StringMapColumn.html#a635e40fe964e409aa9172aee9e3e8227">gs::StringMapColumn&lt; INDEX_T &gt;</a>
 , <a class="el" href="classgs_1_1Table.html#a9ea5829bafb93445ab07fc45958baac1">gs::Table</a>
@@ -163,7 +185,7 @@ $(function() {
 , <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#aa50b101d281f0a896907b9e5706e5239">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>
 </li>
 <li>Result()
-: <a class="el" href="classgs_1_1Result.html#afddf90d9eb8695b27bbe3c19b3fe8998">gs::Result&lt; T &gt;</a>
+: <a class="el" href="classgs_1_1Result.html#a49652f8b0966b087cf8166b7ed2ccf15">gs::Result&lt; T &gt;</a>
 </li>
 <li>revert_update_timestamp()
 : <a class="el" href="classgs_1_1VersionManager.html#a0f1ef8ca31b63f60283fd4c3498ecd5d">gs::VersionManager</a>

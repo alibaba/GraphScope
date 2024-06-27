@@ -1,4 +1,4 @@
-# interactive_sdk.openapi.AdminServiceServiceManagementApi
+# gs_interactive.AdminServiceServiceManagementApi
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
@@ -21,22 +21,22 @@ Get service status
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.service_status import ServiceStatus
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.service_status import ServiceStatus
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
 
     try:
         api_response = api_instance.get_service_status()
@@ -84,21 +84,21 @@ Start current service
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
 
     try:
         api_response = api_instance.restart_service()
@@ -146,23 +146,23 @@ Start service on a specified graph
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.start_service_request import StartServiceRequest
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.start_service_request import StartServiceRequest
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(api_client)
-    start_service_request = interactive_sdk.openapi.StartServiceRequest() # StartServiceRequest | Start service on a specified graph (optional)
+    api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
+    start_service_request = gs_interactive.StartServiceRequest() # StartServiceRequest | Start service on a specified graph (optional)
 
     try:
         api_response = api_instance.start_service(start_service_request=start_service_request)
@@ -214,21 +214,21 @@ Stop current service
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceServiceManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
 
     try:
         api_response = api_instance.stop_service()

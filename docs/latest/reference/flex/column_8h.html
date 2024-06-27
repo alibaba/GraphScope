@@ -77,6 +77,7 @@ $(function() {
 <div class="contents">
 <div class="textblock"><code>#include &lt;string&gt;</code><br />
 <code>#include &lt;string_view&gt;</code><br />
+<code>#include &quot;grape/utils/concurrent_queue.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="mmap__array_8h_source.html">flex/utils/mmap_array.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="utils_2property_2types_8h_source.html">flex/utils/property/types.h</a>&quot;</code><br />
 <code>#include &quot;grape/serialization/out_archive.h&quot;</code><br />
@@ -85,11 +86,12 @@ Include dependency graph for column.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="column_8h__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2property_2column_8h" alt=""/></div>
 <map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2property_2column_8h" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2property_2column_8h">
-<area shape="rect" title=" " alt="" coords="436,5,663,61"/>
+<area shape="rect" title=" " alt="" coords="788,5,1015,61"/>
 <area shape="rect" title=" " alt="" coords="129,206,188,233"/>
 <area shape="rect" title=" " alt="" coords="213,206,310,233"/>
-<area shape="rect" href="mmap__array_8h.html" title=" " alt="" coords="462,117,637,143"/>
-<area shape="rect" href="utils_2property_2types_8h.html" title=" " alt="" coords="1157,109,1294,151"/>
+<area shape="rect" title=" " alt="" coords="1323,109,1487,151"/>
+<area shape="rect" href="mmap__array_8h.html" title=" " alt="" coords="537,117,711,143"/>
+<area shape="rect" href="utils_2property_2types_8h.html" title=" " alt="" coords="1110,109,1247,151"/>
 <area shape="rect" title=" " alt="" coords="1841,199,1983,240"/>
 <area shape="rect" title=" " alt="" coords="896,288,971,315"/>
 <area shape="rect" title=" " alt="" coords="591,206,657,233"/>
@@ -117,53 +119,54 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="column_8h__dep__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2property_2column_8hdep" alt=""/></div>
 <map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2property_2column_8hdep" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2property_2column_8hdep">
-<area shape="rect" title=" " alt="" coords="851,5,1077,61"/>
-<area shape="rect" href="nbr_8h.html" title=" " alt="" coords="389,109,616,165"/>
-<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="364,881,591,952"/>
-<area shape="rect" href="id__indexer_8h.html" title=" " alt="" coords="1053,213,1280,269"/>
-<area shape="rect" href="column_8cc.html" title=" " alt="" coords="1411,317,1637,373"/>
-<area shape="rect" href="table_8h.html" title=" " alt="" coords="851,317,1077,373"/>
-<area shape="rect" href="adj__list_8h.html" title=" " alt="" coords="464,213,691,269"/>
-<area shape="rect" href="mutable__csr_8h.html" title=" " alt="" coords="219,317,477,373"/>
-<area shape="rect" href="csr__base_8h.html" title=" " alt="" coords="152,213,389,269"/>
-<area shape="rect" href="mutable__csr_8cc.html" title=" " alt="" coords="110,421,375,477"/>
-<area shape="rect" href="dual__csr_8h.html" title=" " alt="" coords="653,421,880,477"/>
-<area shape="rect" href="mutable__property__fragment_8h.html" title=" " alt="" coords="1072,525,1299,596"/>
-<area shape="rect" href="read__transaction_8h.html" title=" " alt="" coords="43,651,317,707"/>
-<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="501,763,728,833"/>
-<area shape="rect" href="abstract__arrow__fragment__loader_8h.html" title=" " alt="" coords="2165,763,2408,833"/>
-<area shape="rect" href="csv__fragment__loader_8h.html" title=" " alt="" coords="1939,881,2165,952"/>
-<area shape="rect" href="odps__fragment__loader_8h.html" title=" " alt="" coords="2556,881,2783,952"/>
-<area shape="rect" href="basic__fragment__loader_8h.html" title=" " alt="" coords="2456,644,2683,715"/>
-<area shape="rect" href="i__fragment__loader_8h.html" title=" " alt="" coords="1777,644,2004,715"/>
-<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="965,889,1192,945"/>
-<area shape="rect" href="mutable__property__fragment_8cc.html" title=" " alt="" coords="1091,644,1317,715"/>
-<area shape="rect" href="compact__transaction_8cc.html" title=" " alt="" coords="1341,644,1568,715"/>
-<area shape="rect" href="insert__transaction_8cc.html" title=" " alt="" coords="853,763,1080,833"/>
-<area shape="rect" href="read__transaction_8cc.html" title=" " alt="" coords="145,770,426,826"/>
-<area shape="rect" href="single__edge__insert__transaction_8cc.html" title=" " alt="" coords="1104,763,1331,833"/>
-<area shape="rect" href="single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="1355,763,1581,833"/>
-<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="691,651,965,707"/>
-<area shape="rect" href="update__transaction_8cc.html" title=" " alt="" coords="627,881,853,952"/>
-<area shape="rect" href="abstract__arrow__fragment__loader_8cc.html" title=" " alt="" coords="2189,881,2432,952"/>
-<area shape="rect" href="csv__fragment__loader_8cc.html" title=" " alt="" coords="1939,1000,2165,1071"/>
-<area shape="rect" href="odps__fragment__loader_8cc.html" title=" " alt="" coords="2556,1000,2783,1071"/>
-<area shape="rect" href="basic__fragment__loader_8cc.html" title=" " alt="" coords="2784,763,3011,833"/>
-<area shape="rect" href="loader__factory_8h.html" title=" " alt="" coords="1809,763,2039,833"/>
-<area shape="rect" href="loader__factory_8cc.html" title=" " alt="" coords="1683,881,1914,952"/>
-<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="640,1007,867,1063"/>
-<area shape="rect" href="graph__db_8cc.html" title=" " alt="" coords="487,1119,719,1175"/>
-<area shape="rect" href="graph__db__session_8cc.html" title=" " alt="" coords="891,1000,1117,1071"/>
-<area shape="rect" href="server__app_8cc.html" title=" " alt="" coords="743,1119,969,1175"/>
-<area shape="rect" href="app__base_8cc.html" title=" " alt="" coords="339,1007,565,1063"/>
-<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="88,1007,315,1063"/>
-<area shape="rect" href="hqps__app_8cc.html" title=" " alt="" coords="88,1119,315,1175"/>
-<area shape="rect" href="schema_8h.html" title=" " alt="" coords="1283,421,1509,477"/>
-<area shape="rect" href="indexers_8h.html" title=" " alt="" coords="1101,325,1336,366"/>
-<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="2079,644,2305,715"/>
-<area shape="rect" href="schema_8cc.html" title=" " alt="" coords="1323,533,1549,589"/>
-<area shape="rect" href="loading__config_8cc.html" title=" " alt="" coords="2432,763,2659,833"/>
-<area shape="rect" href="table_8cc.html" title=" " alt="" coords="904,421,1131,477"/>
+<area shape="rect" title=" " alt="" coords="1308,5,1535,61"/>
+<area shape="rect" href="nbr_8h.html" title=" " alt="" coords="296,317,523,373"/>
+<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="612,1089,839,1160"/>
+<area shape="rect" href="id__indexer_8h.html" title=" " alt="" coords="1308,109,1535,165"/>
+<area shape="rect" href="column_8cc.html" title=" " alt="" coords="1509,213,1736,269"/>
+<area shape="rect" href="table_8h.html" title=" " alt="" coords="948,213,1175,269"/>
+<area shape="rect" href="adj__list_8h.html" title=" " alt="" coords="205,421,432,477"/>
+<area shape="rect" href="mutable__csr_8h.html" title=" " alt="" coords="445,525,704,581"/>
+<area shape="rect" href="csr__base_8h.html" title=" " alt="" coords="456,421,693,477"/>
+<area shape="rect" href="mutable__csr_8cc.html" title=" " alt="" coords="271,629,537,685"/>
+<area shape="rect" href="dual__csr_8h.html" title=" " alt="" coords="848,629,1075,685"/>
+<area shape="rect" href="mutable__property__fragment_8h.html" title=" " alt="" coords="1059,733,1285,804"/>
+<area shape="rect" href="read__transaction_8h.html" title=" " alt="" coords="307,859,581,915"/>
+<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="5,971,232,1041"/>
+<area shape="rect" href="abstract__arrow__fragment__loader_8h.html" title=" " alt="" coords="2520,971,2763,1041"/>
+<area shape="rect" href="csv__fragment__loader_8h.html" title=" " alt="" coords="2761,1089,2988,1160"/>
+<area shape="rect" href="odps__fragment__loader_8h.html" title=" " alt="" coords="2244,1089,2471,1160"/>
+<area shape="rect" href="basic__fragment__loader_8h.html" title=" " alt="" coords="2939,852,3165,923"/>
+<area shape="rect" href="i__fragment__loader_8h.html" title=" " alt="" coords="2369,852,2596,923"/>
+<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="291,1097,517,1153"/>
+<area shape="rect" href="mutable__property__fragment_8cc.html" title=" " alt="" coords="808,852,1035,923"/>
+<area shape="rect" href="compact__transaction_8cc.html" title=" " alt="" coords="1059,852,1285,923"/>
+<area shape="rect" href="insert__transaction_8cc.html" title=" " alt="" coords="839,971,1065,1041"/>
+<area shape="rect" href="read__transaction_8cc.html" title=" " alt="" coords="409,978,690,1034"/>
+<area shape="rect" href="single__edge__insert__transaction_8cc.html" title=" " alt="" coords="1208,971,1435,1041"/>
+<area shape="rect" href="single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="1459,971,1685,1041"/>
+<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="1309,859,1584,915"/>
+<area shape="rect" href="update__transaction_8cc.html" title=" " alt="" coords="13,1089,240,1160"/>
+<area shape="rect" href="abstract__arrow__fragment__loader_8cc.html" title=" " alt="" coords="2495,1089,2737,1160"/>
+<area shape="rect" href="csv__fragment__loader_8cc.html" title=" " alt="" coords="2761,1208,2988,1279"/>
+<area shape="rect" href="odps__fragment__loader_8cc.html" title=" " alt="" coords="2244,1208,2471,1279"/>
+<area shape="rect" href="basic__fragment__loader_8cc.html" title=" " alt="" coords="2939,971,3165,1041"/>
+<area shape="rect" href="loader__factory_8h.html" title=" " alt="" coords="2163,971,2394,1041"/>
+<area shape="rect" href="loader__factory_8cc.html" title=" " alt="" coords="1989,1089,2219,1160"/>
+<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="153,1215,380,1271"/>
+<area shape="rect" href="graph__db_8cc.html" title=" " alt="" coords="452,1327,684,1383"/>
+<area shape="rect" href="graph__db__session_8cc.html" title=" " alt="" coords="455,1208,681,1279"/>
+<area shape="rect" href="server__app_8cc.html" title=" " alt="" coords="153,1327,380,1383"/>
+<area shape="rect" href="app__base_8cc.html" title=" " alt="" coords="1007,1215,1233,1271"/>
+<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="756,1215,983,1271"/>
+<area shape="rect" href="hqps__app_8cc.html" title=" " alt="" coords="756,1327,983,1383"/>
+<area shape="rect" href="schema_8h.html" title=" " alt="" coords="1359,629,1585,685"/>
+<area shape="rect" href="indexers_8h.html" title=" " alt="" coords="1149,533,1384,574"/>
+<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="1912,852,2139,923"/>
+<area shape="rect" href="schema_8cc.html" title=" " alt="" coords="1359,741,1585,797"/>
+<area shape="rect" href="loading__config_8cc.html" title=" " alt="" coords="1912,971,2139,1041"/>
+<area shape="rect" href="table_8cc.html" title=" " alt="" coords="547,317,773,373"/>
+<area shape="rect" href="types_8cc.html" title=" " alt="" coords="797,317,1024,373"/>
 </map>
 </div>
 </div>
@@ -218,6 +221,8 @@ Typedefs</h2></td></tr>
 <tr class="separator:ac86726b211d2ff412286bd0945b7be60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9684fa4c30f163f7a9bb43f6bf7bc33"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#aa9684fa4c30f163f7a9bb43f6bf7bc33">gs::StringColumn</a> = TypedColumn&lt; std::string_view &gt;</td></tr>
 <tr class="separator:aa9684fa4c30f163f7a9bb43f6bf7bc33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac09a6380fe15660afc1c47667cc9d5d7"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ac09a6380fe15660afc1c47667cc9d5d7">gs::DefaultStringMapColumn</a> = StringMapColumn&lt; uint8_t &gt;</td></tr>
+<tr class="separator:ac09a6380fe15660afc1c47667cc9d5d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>

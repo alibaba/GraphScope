@@ -21,11 +21,11 @@ Add the edge to graph.
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.GraphServiceEdgeManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.GraphServiceEdgeManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -88,11 +88,11 @@ Remove the edge from current graph.
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.GraphServiceEdgeManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.GraphServiceEdgeManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -161,11 +161,11 @@ Get the properties for the specified vertex.
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.GraphServiceEdgeManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.GraphServiceEdgeManagementApi;
 
 public class Example {
   public static void main(String[] args) {
@@ -236,11 +236,11 @@ Update the edge on the running graph.
 ### Example
 ```java
 // Import classes:
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.Configuration;
-import com.alibaba.graphscope.interactive.openapi.models.*;
-import com.alibaba.graphscope.interactive.openapi.api.GraphServiceEdgeManagementApi;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.Configuration;
+import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.api.GraphServiceEdgeManagementApi;
 
 public class Example {
   public static void main(String[] args) {

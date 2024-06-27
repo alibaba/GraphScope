@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.property_array import PropertyArray
+from gs_interactive.models.property_array import PropertyArray
 
 # TODO update the JSON string below
 json = "{}"

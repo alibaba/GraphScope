@@ -1,0 +1,16 @@
+<map id="gs::Record" name="gs::Record">
+<area shape="rect" id="node1" title=" " alt="" coords="287,303,377,329"/>
+<area shape="rect" id="node3" href="$uniongs_1_1AnyValue.html" title=" " alt="" coords="456,459,563,486"/>
+<area shape="rect" id="node2" href="$structgs_1_1Any.html" title=" " alt="" coords="298,616,369,643"/>
+<area shape="rect" id="node4" href="$structgs_1_1RecordView.html" title=" " alt="" coords="748,303,871,329"/>
+<area shape="rect" id="node5" href="$classgs_1_1Table.html" title=" " alt="" coords="770,213,849,240"/>
+<area shape="rect" id="node6" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="739,109,879,151"/>
+<area shape="rect" id="node7" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="611,5,799,47"/>
+<area shape="rect" id="node8" href="$structgs_1_1GHash.html" title=" " alt="" coords="823,13,1006,39"/>
+<area shape="rect" id="node9" href="$structgs_1_1LabelKey.html" title=" " alt="" coords="401,303,505,329"/>
+<area shape="rect" id="node10" href="$structgs_1_1Day.html" title=" " alt="" coords="530,303,601,329"/>
+<area shape="rect" id="node11" href="$structgs_1_1DayValue.html" title=" " alt="" coords="512,213,619,240"/>
+<area shape="rect" id="node12" href="$structgs_1_1GlobalId.html" title=" " alt="" coords="625,303,724,329"/>
+<area shape="rect" id="node13" href="$structgs_1_1PropertyType.html" title=" " alt="" coords="41,459,172,486"/>
+<area shape="rect" id="node14" href="$uniongs_1_1impl_1_1AdditionalTypeInfo.html" title=" " alt="" coords="5,303,208,329"/>
+</map>

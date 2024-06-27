@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.edge_request import EdgeRequest
+from gs_interactive.models.edge_request import EdgeRequest
 
 # TODO update the JSON string below
 json = "{}"

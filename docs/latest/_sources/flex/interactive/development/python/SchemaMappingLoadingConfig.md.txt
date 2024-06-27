@@ -5,13 +5,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**data_source** | [**SchemaMappingLoadingConfigDataSource**](SchemaMappingLoadingConfigDataSource.md) |  | [optional] 
 **import_option** | **str** |  | [optional] 
 **format** | [**SchemaMappingLoadingConfigFormat**](SchemaMappingLoadingConfigFormat.md) |  | [optional] 
 
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.schema_mapping_loading_config import SchemaMappingLoadingConfig
+from gs_interactive.models.schema_mapping_loading_config import SchemaMappingLoadingConfig
 
 # TODO update the JSON string below
 json = "{}"

@@ -80,9 +80,10 @@ Inheritance diagram for gs::DualCsrBase:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1DualCsrBase__inherit__graph.png" border="0" usemap="#gs_1_1DualCsrBase_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1DualCsrBase_inherit__map" id="gs_1_1DualCsrBase_inherit__map">
-<area shape="rect" title=" " alt="" coords="134,5,262,32"/>
+<area shape="rect" title=" " alt="" coords="250,5,378,32"/>
 <area shape="rect" href="classgs_1_1DualCsr.html" title=" " alt="" coords="5,87,188,114"/>
-<area shape="rect" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="213,80,389,121"/>
+<area shape="rect" href="classgs_1_1DualCsr_3_01RecordView_01_4.html" title=" " alt="" coords="213,87,415,114"/>
+<area shape="rect" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="439,80,615,121"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -94,6 +95,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a5fc9097ecadc166a0dc2a6d7e69a37b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf420e60ab05a4a69218127868db27ea"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#acf420e60ab05a4a69218127868db27ea">BatchInit</a> (const std::string &amp;oe_name, const std::string &amp;ie_name, const std::string &amp;edata_name, const std::string &amp;work_dir, const std::vector&lt; int &gt; &amp;oe_degree, const std::vector&lt; int &gt; &amp;ie_degree)=0</td></tr>
 <tr class="separator:acf420e60ab05a4a69218127868db27ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1577b7b83e344956bc4dd4ebbca486f8"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a1577b7b83e344956bc4dd4ebbca486f8">BatchInitInMemory</a> (const std::string &amp;edata_name, const std::string &amp;work_dir, const std::vector&lt; int &gt; &amp;oe_degree, const std::vector&lt; int &gt; &amp;ie_degree)=0</td></tr>
+<tr class="separator:a1577b7b83e344956bc4dd4ebbca486f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13150d95ae9ba92e843efbe322fd394e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a13150d95ae9ba92e843efbe322fd394e">Open</a> (const std::string &amp;oe_name, const std::string &amp;ie_name, const std::string &amp;edata_name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::string &amp;work_dir)=0</td></tr>
 <tr class="separator:a13150d95ae9ba92e843efbe322fd394e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32c858b82f925164db06767b1b423b89"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a32c858b82f925164db06767b1b423b89">OpenInMemory</a> (const std::string &amp;oe_name, const std::string &amp;ie_name, const std::string &amp;edata_name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, size_t src_vertex_cap, size_t dst_vertex_cap)=0</td></tr>
@@ -120,6 +123,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a4ba058618cca5b1398fd442febee6a13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75937d3f5f5f70a44b564a7daa35863e"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a75937d3f5f5f70a44b564a7daa35863e">GetOutCsr</a> () const =0</td></tr>
 <tr class="separator:a75937d3f5f5f70a44b564a7daa35863e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af332cc9ebdbfeacb41215aac55b85a79"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#af332cc9ebdbfeacb41215aac55b85a79">Close</a> ()=0</td></tr>
+<tr class="separator:af332cc9ebdbfeacb41215aac55b85a79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ab14bad1490f75288ee068e0c302aff0f"></a>
@@ -231,7 +236,84 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a5a16acb33f1ee8e75ce59551b7a961f4">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#adf350f22f924177af8127be118d05109">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#a6b746cd6eb3e4d3ef9b21c0d7f5787c6">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a5a16acb33f1ee8e75ce59551b7a961f4">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#adf350f22f924177af8127be118d05109">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a1577b7b83e344956bc4dd4ebbca486f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1577b7b83e344956bc4dd4ebbca486f8">&#9670;&nbsp;</a></span>BatchInitInMemory()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void gs::DualCsrBase::BatchInitInMemory </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>edata_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>oe_degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>ie_degree</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#a632c04bd8dc36f4b1f81089404aaa1cb">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a6a31d8aca66d468be574b6f63dd5f753">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a496b44b38bcb67e18c1e3a0d59b67a04">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="af332cc9ebdbfeacb41215aac55b85a79"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af332cc9ebdbfeacb41215aac55b85a79">&#9670;&nbsp;</a></span>Close()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void gs::DualCsrBase::Close </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#acdee7845f179e46ece58d62bccda93c9">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ad05c694975e60564e5b0e5ecf1de4a15">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#abedc6f30e4547c0f52b7d8c3da3f433a">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -281,7 +363,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a0eac7bcad71391b3b5f669c9ea632581">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a05f9ba230877bf201749026acf69d4c5">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#abbbb70acc3ba37f0179628bf90b45409">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a0eac7bcad71391b3b5f669c9ea632581">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a05f9ba230877bf201749026acf69d4c5">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -308,7 +390,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a298e4059fa8b6f888b35c3f98f5b2267">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a0fe3cc96b3625e2e45e5e5357c7093a1">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#a5caee74c4ce5ecee99e8ab33f1d11138">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a298e4059fa8b6f888b35c3f98f5b2267">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a0fe3cc96b3625e2e45e5e5357c7093a1">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -335,7 +417,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ad0bddf3d9925bf9e2316a917b0173ae2">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a2e4a28b362919abfe0202f5c58082011">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#a80024256ac1cd5f382819274f968c9ee">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ad0bddf3d9925bf9e2316a917b0173ae2">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a2e4a28b362919abfe0202f5c58082011">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -362,7 +444,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ae9d49e3ab47dca825374e5bd5414fd34">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a80b6af2d4fce2958f88baeaa97e81109">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#a58c2e83c41307c7ca649496c7af03e40">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ae9d49e3ab47dca825374e5bd5414fd34">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a80b6af2d4fce2958f88baeaa97e81109">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -389,7 +471,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a45f6339fd8c0ae63311e9e40190c1ba7">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#ac5afae893a17311e038b386a319de0a5">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#a42ef5b8645f4c327d3a54b70c3586312">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a45f6339fd8c0ae63311e9e40190c1ba7">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#ac5afae893a17311e038b386a319de0a5">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -445,7 +527,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a106d226f1ecb3a41b33e017295135063">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a0dc7d49266a69312a216a65f7431c590">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#af1e2e3d55a763eceeba7707d4235c360">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a106d226f1ecb3a41b33e017295135063">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a0dc7d49266a69312a216a65f7431c590">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -501,7 +583,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a087e2d66093cc85a193e58205afd573f">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#aac8d0544b8be78fc5ee6bb1b83d33c3f">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#aca5374db00ccb0e098dd15ecbe100a18">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a087e2d66093cc85a193e58205afd573f">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#aac8d0544b8be78fc5ee6bb1b83d33c3f">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -563,7 +645,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#afe144d16271d09ffb739f8ac95945c50">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#ae5cf9c98c5bb007736f7dbc4af373c2c">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#afbf1efbdffc04e6b26eee871d18ceacb">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#afe144d16271d09ffb739f8ac95945c50">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#ae5cf9c98c5bb007736f7dbc4af373c2c">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -625,7 +707,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ac4589fa6e0618b1339be7aa39f80861a">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a36c651001546a869b7499693e3836a3e">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#ae3c8ccd1d57edf7724943dd55a1cee07">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ac4589fa6e0618b1339be7aa39f80861a">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a36c651001546a869b7499693e3836a3e">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -689,7 +771,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#aa9c7e412664e74fbe8134dbd84c99a2d">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a20b4cbc68554444adb8f2258205fa07b">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#a7da4059bf005bf50f953d34ae0f115e2">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#aa9c7e412664e74fbe8134dbd84c99a2d">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a20b4cbc68554444adb8f2258205fa07b">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -745,7 +827,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ad965a39b5d26bf6267e8bc7ab80418e0">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a3de7bbf92fc2ddf2abd23a1755fe6bfd">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01RecordView_01_4.html#ae439409ea9786437d66aa53ef7f84ec7">gs::DualCsr&lt; RecordView &gt;</a>, <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ad965a39b5d26bf6267e8bc7ab80418e0">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a3de7bbf92fc2ddf2abd23a1755fe6bfd">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>

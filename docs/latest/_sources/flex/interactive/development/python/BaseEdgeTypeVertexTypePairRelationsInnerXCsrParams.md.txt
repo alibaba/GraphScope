@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.base_edge_type_vertex_type_pair_relations_inner_x_csr_params import BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams
+from gs_interactive.models.base_edge_type_vertex_type_pair_relations_inner_x_csr_params import BaseEdgeTypeVertexTypePairRelationsInnerXCsrParams
 
 # TODO update the JSON string below
 json = "{}"

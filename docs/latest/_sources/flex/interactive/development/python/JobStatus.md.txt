@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.job_status import JobStatus
+from gs_interactive.models.job_status import JobStatus
 
 # TODO update the JSON string below
 json = "{}"

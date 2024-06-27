@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.job_response import JobResponse
+from gs_interactive.models.job_response import JobResponse
 
 # TODO update the JSON string below
 json = "{}"

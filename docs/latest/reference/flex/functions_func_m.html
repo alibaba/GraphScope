@@ -66,12 +66,15 @@ $(function() {
 
 <h3><a id="index_m"></a>- m -</h3><ul>
 <li>Make()
-: <a class="el" href="classgs_1_1CSVFragmentLoader.html#a1c62b8bc69916aff8043570601b21a8b">gs::CSVFragmentLoader</a>
-, <a class="el" href="classgs_1_1ODPSFragmentLoader.html#a61c3e0dc5c70608173eed159b27963f2">gs::ODPSFragmentLoader</a>
+: <a class="el" href="classgs_1_1CSVFragmentLoader.html#ab23c128bf3d46e8b95205fa8a4f5b622">gs::CSVFragmentLoader</a>
+, <a class="el" href="classgs_1_1ODPSFragmentLoader.html#a35950f4bed1ccc41323c8426ee4d23c7">gs::ODPSFragmentLoader</a>
 </li>
 <li>mmap_array()
 : <a class="el" href="classgs_1_1mmap__array.html#a196a33254919bda9cc1449cade6b35fe">gs::mmap_array&lt; T &gt;</a>
 , <a class="el" href="classgs_1_1mmap__array_3_01std_1_1string__view_01_4.html#a04b0932148c595765d427136559dfa78">gs::mmap_array&lt; std::string_view &gt;</a>
+</li>
+<li>mmap_vector()
+: <a class="el" href="classgs_1_1mmap__vector.html#a530355109518cc649f93ec14dd62d32e">gs::mmap_vector&lt; T &gt;</a>
 </li>
 <li>mode()
 : <a class="el" href="classgs_1_1AppBase.html#a28b24079ddb47fcc13a6ef5edecf0053">gs::AppBase</a>
@@ -89,7 +92,6 @@ $(function() {
 </li>
 <li>MutableAdjlist()
 : <a class="el" href="classgs_1_1MutableAdjlist.html#ac3cd640b610e49fb08352dbc813bab89">gs::MutableAdjlist&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1MutableAdjlist_3_01std_1_1string__view_01_4.html#a3037eb9dfa7d4f191d046f250a8591fe">gs::MutableAdjlist&lt; std::string_view &gt;</a>
 </li>
 <li>MutableColumnNbr()
 : <a class="el" href="structgs_1_1MutableNbrSlice_3_01std_1_1string__view_01_4_1_1MutableColumnNbr.html#a0208b1a2e54b7dbb23843c7720ea2ee0">gs::MutableNbrSlice&lt; std::string_view &gt;::MutableColumnNbr</a>
@@ -97,6 +99,7 @@ $(function() {
 </li>
 <li>MutableCsr()
 : <a class="el" href="classgs_1_1MutableCsr.html#a3ed17652222ad4e6b9ca2798413016a9">gs::MutableCsr&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1MutableCsr_3_01RecordView_01_4.html#aef5a23a7fd228f11b8fd399c288b5311">gs::MutableCsr&lt; RecordView &gt;</a>
 , <a class="el" href="classgs_1_1MutableCsr_3_01std_1_1string__view_01_4.html#a7653507e150895b4dedc90ac61384f7c">gs::MutableCsr&lt; std::string_view &gt;</a>
 </li>
 <li>MutableCsrConstEdgeIter()
@@ -104,22 +107,29 @@ $(function() {
 </li>
 <li>MutableCsrEdgeIter()
 : <a class="el" href="classgs_1_1MutableCsrEdgeIter.html#a0fee600bf65ad6baa9f3a15430241d39">gs::MutableCsrEdgeIter&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1MutableCsrEdgeIter_3_01RecordView_01_4.html#a35d85b2ec2ee9889bc439ff8ca0c23cf">gs::MutableCsrEdgeIter&lt; RecordView &gt;</a>
 , <a class="el" href="classgs_1_1MutableCsrEdgeIter_3_01std_1_1string__view_01_4.html#af5816b12314f92ad33584a2f6c379325">gs::MutableCsrEdgeIter&lt; std::string_view &gt;</a>
 </li>
 <li>MutableNbr()
-: <a class="el" href="structgs_1_1MutableNbr.html#a8191b5b47b88670cd20b856bbd0e5adc">gs::MutableNbr&lt; EDATA_T &gt;</a>
+: <a class="el" href="structgs_1_1MutableNbr.html#a6ecd4d50ccad3e38276f0868196f887a">gs::MutableNbr&lt; EDATA_T &gt;</a>
 , <a class="el" href="structgs_1_1MutableNbr_3_01grape_1_1EmptyType_01_4.html#a77659e0acb29c25c5ba641c4082828d9">gs::MutableNbr&lt; grape::EmptyType &gt;</a>
 </li>
 <li>MutableNbrSlice()
 : <a class="el" href="classgs_1_1MutableNbrSlice.html#af8160fdb6bead7c2a1a4b012533eeb2b">gs::MutableNbrSlice&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1MutableNbrSlice_3_01RecordView_01_4.html#a9bca690a74ed2e703bbd02b4e6f11421">gs::MutableNbrSlice&lt; RecordView &gt;</a>
 , <a class="el" href="classgs_1_1MutableNbrSlice_3_01std_1_1string__view_01_4.html#a92f9c6144ab24cf99ab437fc32d9fec6">gs::MutableNbrSlice&lt; std::string_view &gt;</a>
 </li>
 <li>MutableNbrSliceMut()
-: <a class="el" href="classgs_1_1MutableNbrSliceMut.html#a48cd704c82137ac84907494ecd2060a9">gs::MutableNbrSliceMut&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1MutableNbrSliceMut_3_01std_1_1string__view_01_4.html#aa68862edaf53f80a2e13905758f6dce3">gs::MutableNbrSliceMut&lt; std::string_view &gt;</a>
+: <a class="el" href="classgs_1_1MutableNbrSliceMut.html#aae14a3ca6313af6366839369200c5177">gs::MutableNbrSliceMut&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1MutableNbrSliceMut_3_01RecordView_01_4.html#a50f22d350bffab5029631425e44ab70a">gs::MutableNbrSliceMut&lt; RecordView &gt;</a>
+, <a class="el" href="classgs_1_1MutableNbrSliceMut_3_01std_1_1string__view_01_4.html#ab1cd74fdadc5ff04897bb139ed7699ec">gs::MutableNbrSliceMut&lt; std::string_view &gt;</a>
 </li>
 <li>MutablePropertyFragment()
 : <a class="el" href="classgs_1_1MutablePropertyFragment.html#a63f930ed858d9e064a41af2203bd5795">gs::MutablePropertyFragment</a>
+</li>
+<li>MutableTableNbr()
+: <a class="el" href="structgs_1_1MutableNbrSlice_3_01RecordView_01_4_1_1MutableTableNbr.html#a622ed116744c0112de7acc01ba5bf47d">gs::MutableNbrSlice&lt; RecordView &gt;::MutableTableNbr</a>
+, <a class="el" href="structgs_1_1MutableNbrSliceMut_3_01RecordView_01_4_1_1MutableTableNbr.html#a63c5d03aa6bd4b6f641015c0f11ae8d8">gs::MutableNbrSliceMut&lt; RecordView &gt;::MutableTableNbr</a>
 </li>
 </ul>
 </div><!-- contents -->

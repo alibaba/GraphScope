@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.create_edge_type import CreateEdgeType
+from gs_interactive.models.create_edge_type import CreateEdgeType
 
 # TODO update the JSON string below
 json = "{}"

@@ -1,4 +1,4 @@
-# interactive_sdk.openapi.AdminServiceJobManagementApi
+# gs_interactive.AdminServiceJobManagementApi
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
@@ -18,21 +18,21 @@ Method | HTTP request | Description
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
     job_id = 'job_id_example' # str | 
 
     try:
@@ -82,22 +82,22 @@ No authorization required
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.job_status import JobStatus
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.job_status import JobStatus
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
     job_id = 'job_id_example' # str | The id of the job, returned from POST /v1/graph/{graph_id}/dataloading
 
     try:
@@ -147,22 +147,22 @@ No authorization required
 
 
 ```python
-import interactive_sdk.openapi
-from interactive_sdk.openapi.models.job_status import JobStatus
-from interactive_sdk.openapi.rest import ApiException
+import gs_interactive
+from gs_interactive.models.job_status import JobStatus
+from gs_interactive.rest import ApiException
 from pprint import pprint
 
 # Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
 # See configuration.py for a list of all supported configuration parameters.
-configuration = interactive_sdk.openapi.Configuration(
+configuration = gs_interactive.Configuration(
     host = "{INTERACTIVE_ENDPOINT}"
 )
 
 
 # Enter a context with an instance of the API client
-with interactive_sdk.openapi.ApiClient(configuration) as api_client:
+with gs_interactive.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = interactive_sdk.openapi.AdminServiceJobManagementApi(api_client)
+    api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
 
     try:
         api_response = api_instance.list_jobs()

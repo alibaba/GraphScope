@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.get_vertex_type import GetVertexType
+from gs_interactive.models.get_vertex_type import GetVertexType
 
 # TODO update the JSON string below
 json = "{}"

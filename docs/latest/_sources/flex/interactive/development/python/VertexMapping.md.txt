@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.vertex_mapping import VertexMapping
+from gs_interactive.models.vertex_mapping import VertexMapping
 
 # TODO update the JSON string below
 json = "{}"

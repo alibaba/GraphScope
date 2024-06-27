@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.get_graph_response import GetGraphResponse
+from gs_interactive.models.get_graph_response import GetGraphResponse
 
 # TODO update the JSON string below
 json = "{}"

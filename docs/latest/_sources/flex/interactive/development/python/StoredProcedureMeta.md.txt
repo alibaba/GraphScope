@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.stored_procedure_meta import StoredProcedureMeta
+from gs_interactive.models.stored_procedure_meta import StoredProcedureMeta
 
 # TODO update the JSON string below
 json = "{}"

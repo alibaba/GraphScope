@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.parameter import Parameter
+from gs_interactive.models.parameter import Parameter
 
 # TODO update the JSON string below
 json = "{}"

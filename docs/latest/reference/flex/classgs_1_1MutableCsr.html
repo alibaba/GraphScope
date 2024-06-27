@@ -127,6 +127,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ae13f13e4a6d05d5a1753d1bb6bae541a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ee19fbb9d6d5bd58725d253fa2b8d39"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsr.html#a5ee19fbb9d6d5bd58725d253fa2b8d39">batch_init</a> (const std::string &amp;name, const std::string &amp;work_dir, const std::vector&lt; int &gt; &amp;degree, double reserve_ratio) override</td></tr>
 <tr class="separator:a5ee19fbb9d6d5bd58725d253fa2b8d39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad976f9f14027f9203800aaca2a8adcdf"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsr.html#ad976f9f14027f9203800aaca2a8adcdf">batch_init_in_memory</a> (const std::vector&lt; int &gt; &amp;degree, double reserve_ratio) override</td></tr>
+<tr class="separator:ad976f9f14027f9203800aaca2a8adcdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac540bf9e693b8936d0a2eb089c19ace5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsr.html#ac540bf9e693b8936d0a2eb089c19ace5">batch_put_edge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const EDATA_T &amp;data, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts) override</td></tr>
 <tr class="separator:ac540bf9e693b8936d0a2eb089c19ace5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac2a2a5d5d0d73caa8b12b120dc1ca70f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsr.html#ac2a2a5d5d0d73caa8b12b120dc1ca70f">batch_sort_by_edge_data</a> (<a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts) override</td></tr>
@@ -159,6 +161,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a6aadd919433cdbe1f801b6b171533ae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00100545156e5914e303fa3da9dc725f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1MutableCsr.html#a4674a8f1c75eaabfa134fb791b27b396">mut_slice_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsr.html#a00100545156e5914e303fa3da9dc725f">get_edges_mut</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> i)</td></tr>
 <tr class="separator:a00100545156e5914e303fa3da9dc725f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e012b86ff9fe47f47cebb0fbac5f88d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsr.html#a7e012b86ff9fe47f47cebb0fbac5f88d">close</a> () override</td></tr>
+<tr class="separator:a7e012b86ff9fe47f47cebb0fbac5f88d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classgs_1_1CsrBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1CsrBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1CsrBase.html">gs::CsrBase</a></td></tr>
 <tr class="memitem:a2d9f07e4d73cd4fde3ff72221cdf270c inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a2d9f07e4d73cd4fde3ff72221cdf270c">CsrBase</a> ()=default</td></tr>
 <tr class="separator:a2d9f07e4d73cd4fde3ff72221cdf270c inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -356,6 +360,46 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="ad976f9f14027f9203800aaca2a8adcdf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad976f9f14027f9203800aaca2a8adcdf">&#9670;&nbsp;</a></span>batch_init_in_memory()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t <a class="el" href="classgs_1_1MutableCsr.html">gs::MutableCsr</a>&lt; EDATA_T &gt;::batch_init_in_memory </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>reserve_ratio</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="el" href="classgs_1_1CsrBase.html#a669021e05ec1cea80e02b3271f8390df">gs::CsrBase</a>.</p>
+
+</div>
+</div>
 <a id="ac540bf9e693b8936d0a2eb089c19ace5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac540bf9e693b8936d0a2eb089c19ace5">&#9670;&nbsp;</a></span>batch_put_edge()</h2>
 
@@ -435,6 +479,35 @@ template&lt;typename EDATA_T &gt; </div>
 </div><div class="memdoc">
 
 <p>Reimplemented from <a class="el" href="classgs_1_1CsrBase.html#a18d4b01225f8adc216c061d6bb2ba3cf">gs::CsrBase</a>.</p>
+
+</div>
+</div>
+<a id="a7e012b86ff9fe47f47cebb0fbac5f88d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e012b86ff9fe47f47cebb0fbac5f88d">&#9670;&nbsp;</a></span>close()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classgs_1_1MutableCsr.html">gs::MutableCsr</a>&lt; EDATA_T &gt;::close </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="el" href="classgs_1_1CsrBase.html#aafc74cdb208e0b7d8bdb9d637cf0ab45">gs::CsrBase</a>.</p>
 
 </div>
 </div>

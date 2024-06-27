@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.start_service_request import StartServiceRequest
+from gs_interactive.models.start_service_request import StartServiceRequest
 
 # TODO update the JSON string below
 json = "{}"

@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet
+from gs_interactive.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet
 
 # TODO update the JSON string below
 json = "{}"

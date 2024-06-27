@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.get_edge_type import GetEdgeType
+from gs_interactive.models.get_edge_type import GetEdgeType
 
 # TODO update the JSON string below
 json = "{}"

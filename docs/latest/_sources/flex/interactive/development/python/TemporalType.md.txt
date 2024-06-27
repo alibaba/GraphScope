@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```python
-from interactive_sdk.openapi.models.temporal_type import TemporalType
+from gs_interactive.models.temporal_type import TemporalType
 
 # TODO update the JSON string below
 json = "{}"
