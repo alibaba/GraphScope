@@ -2,13 +2,14 @@
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
-Method | HTTP request | Description
-------------- | ------------- | -------------
-[**create_procedure**](AdminServiceProcedureManagementApi.md#create_procedure) | **POST** /v1/graph/{graph_id}/procedure | 
-[**delete_procedure**](AdminServiceProcedureManagementApi.md#delete_procedure) | **DELETE** /v1/graph/{graph_id}/procedure/{procedure_id} | 
-[**get_procedure**](AdminServiceProcedureManagementApi.md#get_procedure) | **GET** /v1/graph/{graph_id}/procedure/{procedure_id} | 
-[**list_procedures**](AdminServiceProcedureManagementApi.md#list_procedures) | **GET** /v1/graph/{graph_id}/procedure | 
-[**update_procedure**](AdminServiceProcedureManagementApi.md#update_procedure) | **PUT** /v1/graph/{graph_id}/procedure/{procedure_id} | 
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**CreateProcedure**](ProcedureManagementApi.md#CreateProcedure) | **POST** /v1/graph/{graph_id}/procedure | Create a procedure on the specified graph |
+| [**DeleteProcedure**](ProcedureManagementApi.md#DeleteProcedure) | **DELETE** /v1/graph/{graph_id}/procedure/{procedure_id} | Delete a procedure on the specified graph |
+| [**GetProcedure**](ProcedureManagementApi.md#GetProcedure) | **GET** /v1/graph/{graph_id}/procedure/{procedure_id} | Get the metadata of a procedure on the specified graph |
+| [**ListProcedures**](ProcedureManagementApi.md#ListProcedures) | **GET** /v1/graph/{graph_id}/procedure | List all procedures bound to a specified graph |
+| [**UpdateProcedure**](ProcedureManagementApi.md#UpdateProcedure) | **PUT** /v1/graph/{graph_id}/procedure/{procedure_id} | Update the metadata of the specified graph |
+
 
 
 # **create_procedure**

@@ -4,10 +4,10 @@ All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**GetServiceStatus**](ServiceManagementApi.md#GetServiceStatus) | **GET** /v1/service/status |  |
-| [**RestartService**](ServiceManagementApi.md#RestartService) | **POST** /v1/service/restart |  |
-| [**StartService**](ServiceManagementApi.md#StartService) | **POST** /v1/service/start |  |
-| [**StopService**](ServiceManagementApi.md#StopService) | **POST** /v1/service/stop |  |
+| [**GetServiceStatus**](ServiceManagementApi.md#GetServiceStatus) | **GET** /v1/service/status | Get the status and metrics of service |
+| [**RestartService**](ServiceManagementApi.md#RestartService) | **POST** /v1/service/restart | Restart the query service on the current running graph |
+| [**StartService**](ServiceManagementApi.md#StartService) | **POST** /v1/service/start | Start the query service on the specified graph |
+| [**StopService**](ServiceManagementApi.md#StopService) | **POST** /v1/service/stop | Stop the query service |
 
 
 <a id="GetServiceStatus"></a>

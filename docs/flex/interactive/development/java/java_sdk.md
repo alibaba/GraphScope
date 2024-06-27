@@ -63,7 +63,7 @@ Interactive Service is listening at ${INTERACTIVE_ENDPOINT}.
 
 ### Connect and submit a query
 
-Interactive provide you with a default graph, modern graph. You can connect to the interactive endpoint, and try to run a simple query with following code.
+Interactive provide you with a default graph, `modern_graph`. You can connect to the interactive endpoint, and try to run a simple query with following code.
 
 ```java
 package com.alibaba.graphscope;
@@ -103,8 +103,8 @@ In this example, we will create a simple graph with only one vertex type `persso
 
 ```java
 public class GettingStarted {
-    private static final String MODERN_GRAPH_SCHEMA_JSON = "{\n" +
-            "    \"name\": \"modern_graph\",\n" +
+    private static final String TEST_GRAPH_SCHEMA_JSON = "{\n" +
+            "    \"name\": \"test_graph\",\n" +
             "    \"description\": \"This is a test graph\",\n" +
             "    \"schema\": {\n" +
             "        \"vertex_types\": [\n" +
@@ -150,7 +150,7 @@ public class GettingStarted {
             "}";
 
     public static String createGraph(Session session) throws IOException {
-        CreateGraphRequest graph = CreateGraphRequest.fromJson(MODERN_GRAPH_SCHEMA_JSON);
+        CreateGraphRequest graph = CreateGraphRequest.fromJson(TEST_GRAPH_SCHEMA_JSON);
         Result<CreateGraphResponse> rep = session.createGraph(graph);
         if (rep.isOk()) {
             System.out.println("create graph success");
@@ -171,7 +171,7 @@ public class GettingStarted {
 }
 ```
 
-In the above example, a graph with name `modern_graph` is defined via a json string. You can also define the graph with programmatic interface provided by [CreateGraphRequest](./CreateGraphRequest.md). So you call the method `createGraph`, a string reprensents the unique identifier of the graph is returned.
+In the above example, a graph with name `test_graph` is defined via a json string. You can also define the graph with programmatic interface provided by [CreateGraphRequest](./CreateGraphRequest.md). So you call the method `createGraph`, a string reprensents the unique identifier of the graph is returned.
 
 
 ### Import data to the graph
@@ -179,12 +179,12 @@ In the above example, a graph with name `modern_graph` is defined via a json str
 After a new graph is created, you may want to import data into the newly created graph. 
 For the detail configuration of data import, please refer to [Data Import Configuration](../../data_import).
 
-For example, you can import the local csv files into the `modern_graph`. Note that, currently only csv files are supported now. Remember to replase `/path/to/person.csv` and `/path/to/person_knows_person.csv` with the actual local path. You can download them from [GraphScope Interactive Github reop](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph).
+For example, you can import the local csv files into the `test_graph`. Note that, currently only csv files are supported now. Remember to replase `/path/to/person.csv` and `/path/to/person_knows_person.csv` with the actual local path. You can download them from [GraphScope Interactive Github reop](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph).
 
 ```java
 public class GettingStarted {
     //Remember to replace the path with your own file path
-    private static final String MODERN_GRAPH_BULK_LOADING_JSON = "{\n" +
+    private static final String TEST_GRAPH_BULK_LOADING_JSON = "{\n" +
             "    \"vertex_mappings\": [\n" +
             "        {\n" +
             "            \"type_name\": \"person\",\n" +
@@ -220,7 +220,7 @@ public class GettingStarted {
             "}";
 
     public static void bulkLoading(Session session, String graphId) throws IOException {
-        SchemaMapping schemaMapping = SchemaMapping.fromJson(MODERN_GRAPH_BULK_LOADING_JSON);
+        SchemaMapping schemaMapping = SchemaMapping.fromJson(TEST_GRAPH_BULK_LOADING_JSON);
         Result<JobResponse> rep = session.bulkLoading(graphId, schemaMapping);
         if (rep.isOk()) {
             System.out.println("Bulk loading success");
@@ -299,11 +299,11 @@ public class GettingStarted{
 }
 ```
 
-The procedure could not be invokded now, since currently interactive service has not been switched to the newly created `modern_graph`. We need to start the service on `modern_graph`.
+The procedure could not be invokded now, since currently interactive service has not been switched to the newly created `test_graph`. We need to start the service on `test_graph`.
 
 ### Start the query service on the new graph
 
-Although Interactive supports multiple graphs in terms of logic and storage, it can only serve on one graph at a time. This means that at any given moment, only one graph is available to provide query service. So we need to switch to the newly created `modern_graph` with following code.
+Although Interactive supports multiple graphs in terms of logic and storage, it can only serve on one graph at a time. This means that at any given moment, only one graph is available to provide query service. So we need to switch to the newly created `test_graph` with following code.
 
 ```java
 public class GettingStarted{
@@ -332,7 +332,7 @@ public class GettingStarted{
 
 ### Submit queries to the new graph
 
-After starting query service on the new graph, we are now able to submit queries to `modern_graph`.
+After starting query service on the new graph, we are now able to submit queries to `test_graph`.
 
 #### Submit gremlin queries
 
@@ -435,7 +435,7 @@ Class | Method | HTTP request | Description
 *ProcedureManagementApi* | [**DeleteProcedure**](./ProcedureManagementApi.md#DeleteProcedure) | **DELETE** /v1/graph/{graph_id}/procedure/{procedure_id} | 
 *ProcedureManagementApi* | [**GetProcedure**](./ProcedureManagementApi.md#GetProcedure) | **GET** /v1/graph/{graph_id}/procedure/{procedure_id} | 
 *ProcedureManagementApi* | [**ListProcedures**](./ProcedureManagementApi.md#ListProcedures) | **GET** /v1/graph/{graph_id}/procedure | 
-*ProcedureManagementApi* | [**updateProcedure**](./ProcedureManagementApi.md#UpdateProcedure) | **PUT** /v1/graph/{graph_id}/procedure/{procedure_id} | 
+*ProcedureManagementApi* | [**UpdateProcedure**](./ProcedureManagementApi.md#UpdateProcedure) | **PUT** /v1/graph/{graph_id}/procedure/{procedure_id} | 
 *ServiceManagementApi* | [**GetServiceStatus**](./ServiceManagementApi.md#GetServiceStatus) | **GET** /v1/service/status | 
 *ServiceManagementApi* | [**RestartService**](./ServiceManagementApi.md#RestartService) | **POST** /v1/service/restart | 
 *ServiceManagementApi* | [**StartService**](./ServiceManagementApi.md#StartService) | **POST** /v1/service/start | 
@@ -443,14 +443,6 @@ Class | Method | HTTP request | Description
 *QueryServiceApi* | [**CallProcedure**](./QueryServiceApi.md#CallProcedure) | **POST** /v1/graph/{graph_id}/query | 
 *QueryServiceApi* | [**CallProcedureOnCurrentGraph**](./QueryServiceApi.md#CallProcedureOnCurrentGraph) | **POST** /v1/graph/current/query | 
 <!-- TODO(zhanglei): Add Vertex/Edge APIs after supported by Interactive -->
-<!-- *GraphServiceEdgeManagementApi* | [**addEdge**](./GraphServiceEdgeManagementApi.md#addEdge) | **POST** /v1/graph/{graph_id}/edge | Add edge to the graph
-*GraphServiceEdgeManagementApi* | [**deleteEdge**](./GraphServiceEdgeManagementApi.md#deleteEdge) | **DELETE** /v1/graph/{graph_id}/edge | Remove edge from the graph
-*GraphServiceEdgeManagementApi* | [**getEdge**](./GraphServiceEdgeManagementApi.md#getEdge) | **GET** /v1/graph/{graph_id}/edge | Get the edge&#39;s properties with src and dst vertex primary keys.
-*GraphServiceEdgeManagementApi* | [**updateEdge**](./GraphServiceEdgeManagementApi.md#updateEdge) | **PUT** /v1/graph/{graph_id}/edge | Update edge&#39;s property -->
-<!-- *GraphServiceVertexManagementApi* | [**addVertex**](./GraphServiceVertexManagementApi.md#addVertex) | **POST** /v1/graph/{graph_id}/vertex | Add vertex to the graph
-*GraphServiceVertexManagementApi* | [**deleteVertex**](./GraphServiceVertexManagementApi.md#deleteVertex) | **DELETE** /v1/graph/{graph_id}/vertex | Remove vertex from the graph
-*GraphServiceVertexManagementApi* | [**getVertex**](./GraphServiceVertexManagementApi.md#getVertex) | **GET** /v1/graph/{graph_id}/vertex | Get the vertex&#39;s properties with vertex primary key.
-*GraphServiceVertexManagementApi* | [**updateVertex**](./GraphServiceVertexManagementApi.md#updateVertex) | **PUT** /v1/graph/{graph_id}/vertex | Update vertex&#39;s property -->
 
 
 ## Documentation for Data Structures

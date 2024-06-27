@@ -10,12 +10,12 @@ Python 3.7+
 ### pip install
 
 ```bash
-pip3 install interactive-sdk
+pip3 install gs_interactive
 ```
 
 Then import the package:
 ```python
-import interactive_sdk
+import gs_interactive
 ```
 
 ### Setuptools
@@ -23,13 +23,14 @@ import interactive_sdk
 Install via [Setuptools](http://pypi.python.org/pypi/setuptools).
 
 ```sh
+python3 setup.py build_proto
 python setup.py install --user
 ```
-(or `sudo python setup.py install` to install the package for all users)
+(or `sudo python3 setup.py install` to install the package for all users)
 
 Then import the package:
 ```python
-import interactive_sdk
+import gs_interactive
 ```
 
 ### Tests
@@ -44,60 +45,279 @@ First, install and start the interactive service via [Interactive Getting Starte
 Interactive Service is listening at ${INTERACTIVE_ENDPOINT}.
 ```
 
-Then, connect to the interactive endpoint, and try to run a simple query with following code.
+### Connect and submit a query
+
+Interactive provide you with a default graph, `modern_graph`. You can connect to the interactive endpoint, and try to run a simple query with following code.
 
 ```python
+import time
+import os
 
-from interactive_sdk.client.driver import Driver
+from gs_interactive.client.driver import Driver
+from gs_interactive.client.session import Session
+from gs_interactive.models import *
 
-# Replace {INTERACTIVE_ENDPOINT} with the actual endpoint of the Interactive service.
-interactive_endpoint='{INTERACTIVE_ENDPOINT}'
-driver = Driver(endpoint=interactive_endpoint)
+if "INTERACTIVE_ENDPOINT" in os.environ:
+    endpoint = os.environ["INTERACTIVE_ENDPOINT"]
+else:
+    print("INTERACTIVE_ENDPOINT not found in env")
+    exit(1)
 
-# Interactive will initially start on a builtin modern graph. You can run a simple cypher query
+driver = Driver(endpoint=endpoint)
 with driver.getNeo4jSession() as session:
-    resp = session.run('MATCH(n) RETURN COUNT(n);')
-    for record in resp:
-        print('record: ', record)
-        # record:  <Record $f0=6>
+    result = session.run("MATCH(n) RETURN COUNT(n);")
+    for record in result:
+        print(record)
 ```
 
-For a more detailed example, please refer to [Python SDK Example](https://github.com/alibaba/GraphScope/blob/main/flex/interactive/sdk/examples/python/basic_example.py).
+### Create a new graph
 
+To create a new graph, user need to specify the name, description, vertex types and edges types.
+For the detail data model of the graph, please refer to [Data Model](../../data_model). 
+
+In this example, we will create a simple graph with only one vertex type `persson`, and one edge type named `knows`.
+
+```python
+# Graph schema is defined by a json string.
+test_graph_def = {
+    "name": "test_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            }
+        ],
+    },
+}
+
+# get the interactive session
+sess = driver.session()
+
+# construct the request from json string
+create_graph_request = CreateGraphRequest.from_json(test_graph_def)
+resp = sess.create_graph(create_graph_request)
+assert resp.is_ok()
+graph_id = resp.get_value().graph_id
+print("Graph id: ", graph_id)
+```
+
+In the above example, a graph with name `test_graph` is defined via a json string. You can also define the graph with programmatic interface provided by [CreateGraphRequest](./CreateGraphRequest.md). So you call the method `createGraph`, a string reprensents the unique identifier of the graph is returned.
+
+
+### Import data to the graph
+
+After a new graph is created, you may want to import data into the newly created graph. 
+For the detail configuration of data import, please refer to [Data Import Configuration](../../data_import).
+
+For example, you can import the local csv files into the `test_graph`. Note that, currently only csv files are supported now. Remember to replase `/path/to/person.csv` and `/path/to/person_knows_person.csv` with the actual local path. You can download them from [GraphScope Interactive Github reop](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph).
+
+```python
+test_graph_datasource = {
+    "vertex_mappings": [
+        {
+            "type_name": "person",
+            "inputs": ["@/path/to/person.csv"],
+            "column_mappings": [
+                {"column": {"index": 0, "name": "id"}, "property": "id"},
+                {"column": {"index": 1, "name": "name"}, "property": "name"},
+                {"column": {"index": 2, "name": "age"}, "property": "age"},
+            ],
+        }
+    ],
+    "edge_mappings": [
+        {
+            "type_triplet": {
+                "edge": "knows",
+                "source_vertex": "person",
+                "destination_vertex": "person",
+            },
+            "inputs": [
+                "@/path/to/person_knows_person.csv"
+            ],
+            "source_vertex_mappings": [
+                {"column": {"index": 0, "name": "person.id"}, "property": "id"}
+            ],
+            "destination_vertex_mappings": [
+                {"column": {"index": 1, "name": "person.id"}, "property": "id"}
+            ],
+            "column_mappings": [
+                {"column": {"index": 2, "name": "weight"}, "property": "weight"}
+            ],
+        }
+    ],
+}
+
+bulk_load_request = SchemaMapping.from_dict(test_graph_datasource)
+resp = sess.bulk_loading(graph_id, bulk_load_request)
+assert resp.is_ok()
+job_id = resp.get_value().job_id
+print('The bulkloading job id is ', job_id)
+
+# wait until the job has completed successfully.
+ while True:
+    resp = sess.get_job(job_id)
+    assert resp.is_ok()
+    status = resp.get_value().status
+    print("job status: ", status)
+    if status == "SUCCESS":
+        break
+    elif status == "FAILED":
+        raise Exception("job failed")
+    else:
+        time.sleep(1)
+```
+
+For each vertex/edge types, you need to provide the input data source and column mapping infomation.
+Remember to add `@` at the begining of the local file path. 
+`Session.bulkLoading()` will submit an dataloading job to the service, and we can query the status of the job via `Session.getJobStatus()`, and wait until the job has compleleted successfully.
+
+### Create a stored procedure
+
+Stored procedures can be registered into GraphScope Interactive to encapsulate and reuse complex graph operations. Interactive support both `cypher` and `c++` queries as stored procedures. 
+With the following code, you will create a procedure named `testProcedure` which is definied via a `cypher` query.
+
+```python
+proc_name="test_procedure"
+create_proc_request = CreateProcedureRequest(
+    name=proc_name,
+    description="test procedure",
+    query="MATCH (n) RETURN COUNT(n);",
+    type="cypher",
+)
+resp = sess.create_procedure(graph_id, create_proc_request)
+assert resp.is_ok()
+print("successfully create procedure: ", proc_name)
+```
+
+The procedure could not be invokded now, since currently interactive service has not been switched to the newly created `modern_graph`. We need to start the service on `modern_graph`.
+
+### Start the query service on the new graph
+
+Although Interactive supports multiple graphs in terms of logic and storage, it can only serve on one graph at a time. This means that at any given moment, only one graph is available to provide query service. So we need to switch to the newly created `modern_graph` with following code.
+
+```python
+resp = sess.start_service(
+    start_service_request=StartServiceRequest(graph_id=graph_id)
+)
+assert resp.is_ok()
+print("start service ok", resp)
+```
+
+### Submit queries to the new graph
+
+After starting query service on the new graph, we are now able to submit queries to `modern_graph`.
+
+#### Submit gremlin queries
+
+```python
+query = "g.V().count();"
+ret = []
+gremlin_client = driver.getGremlinClient()
+q = gremlin_client.submit(query)
+while True:
+    try:
+        ret.extend(q.next())
+    except StopIteration:
+        break
+print(ret)
+```
+
+#### Submit cypher queries
+
+```python
+```
+
+#### Query the stored procedure
+
+```python
+query = "MATCH (n) RETURN COUNT(n);"
+with driver.getNeo4jSession() as session:
+    resp = session.run(query)
+    for record in resp:
+        print(record)
+```
+
+### Delete the graph
+
+Finally, we can delete the graph. The graph data and stored procedure bound to the graph will also be deleted.
+
+```python
+resp = self._sess.delete_graph(graph_id)
+assert resp.is_ok()
+print("delete graph res: ", resp)
+```
+
+For the full example, please refer to [Java SDK Example](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/sdk/examples/java/interactive-example)
 
 ## Documentation for Service APIs
+
+The APIs in interactive SDK are divided into five categories.
+- GraphManagementApi
+- ProcedureManagementApi
+- JobManagementApi
+- ServiceManagementApi
+- QueryServiceApi
 
 All URIs are relative to `${INTERACTIVE_ENDPOINT}`
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*AdminServiceGraphManagementApi* | [**create_dataloading_job**](./AdminServiceGraphManagementApi.md#create_dataloading_job) | **POST** /v1/graph/{graph_id}/dataloading | 
-*AdminServiceGraphManagementApi* | [**create_graph**](./AdminServiceGraphManagementApi.md#create_graph) | **POST** /v1/graph | 
-*AdminServiceGraphManagementApi* | [**delete_graph**](./AdminServiceGraphManagementApi.md#delete_graph) | **DELETE** /v1/graph/{graph_id} | 
-*AdminServiceGraphManagementApi* | [**get_graph**](./AdminServiceGraphManagementApi.md#get_graph) | **GET** /v1/graph/{graph_id} | 
-*AdminServiceGraphManagementApi* | [**get_schema**](./AdminServiceGraphManagementApi.md#get_schema) | **GET** /v1/graph/{graph_id}/schema | 
-*AdminServiceGraphManagementApi* | [**list_graphs**](./AdminServiceGraphManagementApi.md#list_graphs) | **GET** /v1/graph | 
-*AdminServiceJobManagementApi* | [**delete_job_by_id**](./AdminServiceJobManagementApi.md#delete_job_by_id) | **DELETE** /v1/job/{job_id} | 
-*AdminServiceJobManagementApi* | [**get_job_by_id**](./AdminServiceJobManagementApi.md#get_job_by_id) | **GET** /v1/job/{job_id} | 
-*AdminServiceJobManagementApi* | [**list_jobs**](./AdminServiceJobManagementApi.md#list_jobs) | **GET** /v1/job | 
-*AdminServiceProcedureManagementApi* | [**create_procedure**](./AdminServiceProcedureManagementApi.md#create_procedure) | **POST** /v1/graph/{graph_id}/procedure | 
-*AdminServiceProcedureManagementApi* | [**delete_procedure**](./AdminServiceProcedureManagementApi.md#delete_procedure) | **DELETE** /v1/graph/{graph_id}/procedure/{procedure_id} | 
-*AdminServiceProcedureManagementApi* | [**get_procedure**](./AdminServiceProcedureManagementApi.md#get_procedure) | **GET** /v1/graph/{graph_id}/procedure/{procedure_id} | 
-*AdminServiceProcedureManagementApi* | [**list_procedures**](./AdminServiceProcedureManagementApi.md#list_procedures) | **GET** /v1/graph/{graph_id}/procedure | 
-*AdminServiceProcedureManagementApi* | [**update_procedure**](./AdminServiceProcedureManagementApi.md#update_procedure) | **PUT** /v1/graph/{graph_id}/procedure/{procedure_id} | 
-*AdminServiceServiceManagementApi* | [**get_service_status**](./AdminServiceServiceManagementApi.md#get_service_status) | **GET** /v1/service/status | 
-*AdminServiceServiceManagementApi* | [**restart_service**](./AdminServiceServiceManagementApi.md#restart_service) | **POST** /v1/service/restart | 
-*AdminServiceServiceManagementApi* | [**start_service**](./AdminServiceServiceManagementApi.md#start_service) | **POST** /v1/service/start | 
-*AdminServiceServiceManagementApi* | [**stop_service**](./AdminServiceServiceManagementApi.md#stop_service) | **POST** /v1/service/stop | 
-*GraphServiceEdgeManagementApi* | [**add_edge**](./GraphServiceEdgeManagementApi.md#add_edge) | **POST** /v1/graph/{graph_id}/edge | Add edge to the graph
-*GraphServiceEdgeManagementApi* | [**delete_edge**](./GraphServiceEdgeManagementApi.md#delete_edge) | **DELETE** /v1/graph/{graph_id}/edge | Remove edge from the graph
-*GraphServiceEdgeManagementApi* | [**get_edge**](./GraphServiceEdgeManagementApi.md#get_edge) | **GET** /v1/graph/{graph_id}/edge | Get the edge&#39;s properties with src and dst vertex primary keys.
-*GraphServiceEdgeManagementApi* | [**update_edge**](./GraphServiceEdgeManagementApi.md#update_edge) | **PUT** /v1/graph/{graph_id}/edge | Update edge&#39;s property
-*GraphServiceVertexManagementApi* | [**add_vertex**](./GraphServiceVertexManagementApi.md#add_vertex) | **POST** /v1/graph/{graph_id}/vertex | Add vertex to the graph
-*GraphServiceVertexManagementApi* | [**delete_vertex**](./GraphServiceVertexManagementApi.md#delete_vertex) | **DELETE** /v1/graph/{graph_id}/vertex | Remove vertex from the graph
-*GraphServiceVertexManagementApi* | [**get_vertex**](./GraphServiceVertexManagementApi.md#get_vertex) | **GET** /v1/graph/{graph_id}/vertex | Get the vertex&#39;s properties with vertex primary key.
-*GraphServiceVertexManagementApi* | [**update_vertex**](./GraphServiceVertexManagementApi.md#update_vertex) | **PUT** /v1/graph/{graph_id}/vertex | Update vertex&#39;s property
-*QueryServiceApi* | [**proc_call**](./QueryServiceApi.md#proc_call) | **POST** /v1/graph/{graph_id}/query | run queries on graph
+*GraphManagementApi* | [**BulkLoading**](./GraphManagementApi.md#Bulkloading) | **POST** /v1/graph/{graph_id}/dataloading | 
+*GraphManagementApi* | [**CreateGraph**](./GraphManagementApi.md#CreateGraph) | **POST** /v1/graph | 
+*GraphManagementApi* | [**DeleteGraph**](./GraphManagementApi.md#DeleteGraph) | **DELETE** /v1/graph/{graph_id} | 
+*GraphManagementApi* | [**GetGraphMeta**](./GraphManagementApi.md#GetGraphMeta) | **GET** /v1/graph/{graph_id} | 
+*GraphManagementApi* | [**GetGraphSchema**](./GraphManagementApi.md#GetGraphSchema) | **GET** /v1/graph/{graph_id}/schema | 
+*GraphManagementApi* | [**ListGraphs**](./GraphManagementApi.md#ListGraphs) | **GET** /v1/graph | 
+*JobManagementApi* | [**CancellJob**](./JobManagementApi.md#CancellJob) | **DELETE** /v1/job/{job_id} | 
+*JobManagementApi* | [**GetJobById**](./JobManagementApi.md#GetJobById) | **GET** /v1/job/{job_id} | 
+*JobManagementApi* | [**ListJobs**](./JobManagementApi.md#ListJobs) | **GET** /v1/job | 
+*ProcedureManagementApi* | [**CreateProcedure**](./ProcedureManagementApi.md#CreateProcedure) | **POST** /v1/graph/{graph_id}/procedure | 
+*ProcedureManagementApi* | [**DeleteProcedure**](./ProcedureManagementApi.md#DeleteProcedure) | **DELETE** /v1/graph/{graph_id}/procedure/{procedure_id} | 
+*ProcedureManagementApi* | [**GetProcedure**](./ProcedureManagementApi.md#GetProcedure) | **GET** /v1/graph/{graph_id}/procedure/{procedure_id} | 
+*ProcedureManagementApi* | [**ListProcedures**](./ProcedureManagementApi.md#ListProcedures) | **GET** /v1/graph/{graph_id}/procedure | 
+*ProcedureManagementApi* | [**UpdateProcedure**](./ProcedureManagementApi.md#UpdateProcedure) | **PUT** /v1/graph/{graph_id}/procedure/{procedure_id} | 
+*ServiceManagementApi* | [**GetServiceStatus**](./ServiceManagementApi.md#GetServiceStatus) | **GET** /v1/service/status | 
+*ServiceManagementApi* | [**RestartService**](./ServiceManagementApi.md#RestartService) | **POST** /v1/service/restart | 
+*ServiceManagementApi* | [**StartService**](./ServiceManagementApi.md#StartService) | **POST** /v1/service/start | 
+*ServiceManagementApi* | [**StopService**](./ServiceManagementApi.md#StopService) | **POST** /v1/service/stop | 
+*QueryServiceApi* | [**CallProcedure**](./QueryServiceApi.md#CallProcedure) | **POST** /v1/graph/{graph_id}/query | 
+*QueryServiceApi* | [**CallProcedureOnCurrentGraph**](./QueryServiceApi.md#CallProcedureOnCurrentGraph) | **POST** /v1/graph/current/query | 
+<!-- TODO(zhanglei): Add Vertex/Edge APIs after supported by Interactive -->
 
 
 ## Documentation for Data Structures

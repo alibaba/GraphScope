@@ -2,10 +2,14 @@
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
+Although Interactive supports multiple graphs in storage level, the query service currently could only runs on a single graph. 
+This means that at any given time, only one graph can provide query services. 
+If you attempt to submit a query to a graph that is not currently running, we will throw an error directly.
+
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**CallProcedure**](QueryServiceApi.md#CallProcedure) | **POST** /v1/graph/{graph_id}/query | run queries on graph |
-| [**CallProcedureOnCurrentGraph**](QueryServiceApi.md#CallProcedureOnCurrentGraph) | **POST** /v1/graph/current/query | run queries on the running graph |
+| [**CallProcedure**](QueryServiceApi.md#CallProcedure) | **POST** /v1/graph/{graph_id}/query | submit query to the graph identified by the specified graph id |
+| [**CallProcedureOnCurrentGraph**](QueryServiceApi.md#CallProcedureOnCurrentGraph) | **POST** /v1/graph/current/query | submit query to the current running graph |
 
 
 <a id="CallProcedure"></a>
@@ -128,7 +132,7 @@ public class Example {
                                                     PrimitiveType.PrimitiveTypeEnum
                                                             .SIGNED_INT32))));
     // Note that graph id is not specified, will try to call the procedure on the current running graph, if exits.
-    Result<IrResult.CollectiveResults> queryRes = session.callProcedure( request);
+    Result<IrResult.CollectiveResults> queryRes = session.callProcedure(request);
     if (!queryRes.isOk()) {
         System.out.println("Failed to call procedure: " + queryRes.getStatusMessage());
         return;

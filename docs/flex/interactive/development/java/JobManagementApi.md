@@ -4,9 +4,9 @@ All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**CancellJob**](JobManagementApi.md#CancellJob) | **DELETE** /v1/job/{job_id} |  |
-| [**GetJobById**](JobManagementApi.md#GetJobById) | **GET** /v1/job/{job_id} |  |
-| [**ListJobs**](JobManagementApi.md#ListJobs) | **GET** /v1/job |  |
+| [**CancellJob**](JobManagementApi.md#CancellJob) | **DELETE** /v1/job/{job_id} | Cancell the job with specified jobId |
+| [**GetJobById**](JobManagementApi.md#GetJobById) | **GET** /v1/job/{job_id} | Get the metadata of the job with specified jobId |
+| [**ListJobs**](JobManagementApi.md#ListJobs) | **GET** /v1/job | List all jobs(including history jobs) |
 
 
 <a id="CancellJob"></a>

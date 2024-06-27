@@ -2,12 +2,11 @@
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
-Method | HTTP request | Description
-------------- | ------------- | -------------
-[**delete_job_by_id**](AdminServiceJobManagementApi.md#delete_job_by_id) | **DELETE** /v1/job/{job_id} | 
-[**get_job_by_id**](AdminServiceJobManagementApi.md#get_job_by_id) | **GET** /v1/job/{job_id} | 
-[**list_jobs**](AdminServiceJobManagementApi.md#list_jobs) | **GET** /v1/job | 
-
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**CancellJob**](JobManagementApi.md#CancellJob) | **DELETE** /v1/job/{job_id} | Cancell the job with specified jobId |
+| [**GetJobById**](JobManagementApi.md#GetJobById) | **GET** /v1/job/{job_id} | Get the metadata of the job with specified jobId |
+| [**ListJobs**](JobManagementApi.md#ListJobs) | **GET** /v1/job | List all jobs(including history jobs) |
 
 # **delete_job_by_id**
 > str delete_job_by_id(job_id)

@@ -38,13 +38,13 @@ clean:
 
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
-	cd ${WORKING_DIR}/../analytical_engine/java && \
-	mvn -P javadoc javadoc:aggregate \
-		-Dmaven.antrun.skip=true \
-		-DskipTests \
-		-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
-		-Djavadoc.output.destDir=gae_java \
-		--quiet
+	# cd ${WORKING_DIR}/../analytical_engine/java && \
+	# mvn -P javadoc javadoc:aggregate \
+	# 	-Dmaven.antrun.skip=true \
+	# 	-DskipTests \
+	# 	-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
+	# 	-Djavadoc.output.destDir=gae_java \
+	# 	--quiet
 
 	# sphinx will append the `flex/` part to the output directory
 	@echo "Building Flex doc to $(BUILDDIR)/${TAG}/$@/reference/"

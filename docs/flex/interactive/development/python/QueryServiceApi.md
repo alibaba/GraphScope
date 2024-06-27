@@ -2,18 +2,23 @@
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
-Method | HTTP request | Description
-------------- | ------------- | -------------
-[**proc_call**](QueryServiceApi.md#proc_call) | **POST** /v1/graph/{graph_id}/query | run queries on graph
-[**proc_call_current**](QueryServiceApi.md#proc_call_current) | **POST** /v1/graph/current/query | run queries on the running graph
+Although Interactive supports multiple graphs in storage level, the query service currently could only runs on a single graph. 
+This means that at any given time, only one graph can provide query services. 
+If you attempt to submit a query to a graph that is not currently running, we will throw an error directly.
+
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**CallProcedure**](QueryServiceApi.md#CallProcedure) | **POST** /v1/graph/{graph_id}/query | submit query to the graph identified by the specified graph id |
+| [**CallProcedureOnCurrentGraph**](QueryServiceApi.md#CallProcedureOnCurrentGraph) | **POST** /v1/graph/current/query | submit query to the current running graph |
 
 
 # **proc_call**
 > bytearray proc_call(graph_id, x_interactive_request_format, body=body)
 
-run queries on graph
+Submit procedure call queries to the specified graph.
+The output format for the query is define by the [results.proto](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/results.proto).
 
-After the procedure is created, user can use this API to run the procedure. TODO: a full example cypher->plan->json. TODO: make sure typeinfo can be passed. 
+For the creation of stored procedure please refer to [CypherStoredProcedure](../cypher_procedure.md) and [CppStoredProcedure](../cpp_procedure.md).
 
 ### Example
 

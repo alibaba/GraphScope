@@ -1,20 +1,20 @@
-# gs_interactive.AdminServiceGraphManagementApi
+# GraphManagementApi
 
 All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
-Method | HTTP request | Description
-------------- | ------------- | -------------
-[**create_dataloading_job**](AdminServiceGraphManagementApi.md#create_dataloading_job) | **POST** /v1/graph/{graph_id}/dataloading | 
-[**create_graph**](AdminServiceGraphManagementApi.md#create_graph) | **POST** /v1/graph | 
-[**delete_graph**](AdminServiceGraphManagementApi.md#delete_graph) | **DELETE** /v1/graph/{graph_id} | 
-[**get_graph**](AdminServiceGraphManagementApi.md#get_graph) | **GET** /v1/graph/{graph_id} | 
-[**get_graph_statistic**](AdminServiceGraphManagementApi.md#get_graph_statistic) | **GET** /v1/graph/{graph_id}/statistics | 
-[**get_schema**](AdminServiceGraphManagementApi.md#get_schema) | **GET** /v1/graph/{graph_id}/schema | 
-[**list_graphs**](AdminServiceGraphManagementApi.md#list_graphs) | **GET** /v1/graph | 
+| Method | HTTP request | Description |
+|------------- | ------------- | -------------|
+| [**ListGraphs**](GraphManagementApi.md#ListGraphs) | **GET** /v1/graph | List all graphs' metadata |
+| [**CreateGraph**](GraphManagementApi.md#CreateGraph) | **POST** /v1/graph | Create a new graph  |
+| [**GetGraphMeta**](GraphManagementApi.md#GetGraphMeta) | **GET** /v1/graph/{graph_id} | Get the metadata for a graph identified by the specified graphId |
+| [**GetGraphSchema**](GraphManagementApi.md#GetGraphSchema) | **GET** /v1/graph/{graph_id}/schema | Get the schema for a graph identified by the specified graphId |
+| [**DeleteGraph**](GraphManagementApi.md#DeleteGraph) | **DELETE** /v1/graph/{graph_id} | Remove the graph identified by the specified graphId |
+| [**GetGraphStatistic**](GraphManagementApi.md#GetGraphStatistic) | **GET** /v1/graph/{graph_id}/statistics |Get the statistics for a graph identified by the specified graphId  |
+| [**BulkLoading**](GraphManagementApi.md#BulkLoading) | **POST** /v1/graph/{graph_id}/dataloading | Create a bulk loading job for the graph identified by the specified graphId |
 
 
 # **create_dataloading_job**
-> JobResponse create_dataloading_job(graph_id, schema_mapping)
+> ResultJobResponse create_dataloading_job(graph_id, schema_mapping)
 
 
 
