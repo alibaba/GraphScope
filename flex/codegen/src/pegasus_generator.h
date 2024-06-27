@@ -129,7 +129,7 @@ class PegasusGenerator {
           ss << ".downcast_ref::<Int32Column>()\n";
           break;
         }
-        case codegen::DataType::kStringView: {
+        case codegen::DataType::kString: {
           ss << ".downcast_ref::<StringColumn>()\n";
           break;
         }

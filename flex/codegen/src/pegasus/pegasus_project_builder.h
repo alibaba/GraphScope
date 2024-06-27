@@ -185,13 +185,13 @@ class ProjectOpBuilder {
           }
           case common::DataType::STRING: {
             std::vector<codegen::DataType> data_types;
-            data_types.push_back(codegen::DataType::kStringView);
+            data_types.push_back(codegen::DataType::kString);
             ctx_.SetOutput(i, data_types);
             break;
           }
           default:
             std::vector<codegen::DataType> data_types;
-            data_types.push_back(codegen::DataType::kStringView);
+            data_types.push_back(codegen::DataType::kString);
             ctx_.SetOutput(i, data_types);
             // LOG(FATAL) << "Unsupported type";
           }
