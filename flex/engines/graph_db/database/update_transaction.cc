@@ -52,7 +52,8 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
     } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
       added_vertices_.emplace_back(
           std::make_shared<IdIndexer<uint32_t, vid_t>>());
-    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kString) {
+    } else if (graph_.lf_indexers_[idx].get_type() ==
+               PropertyType::kStringView) {
       added_vertices_.emplace_back(
           std::make_shared<IdIndexer<std::string_view, vid_t>>());
     } else {
@@ -125,7 +126,7 @@ bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
   for (int col_i = 0; col_i != col_num; ++col_i) {
     if (props[col_i].type != types[col_i]) {
       if (types[col_i] == PropertyType::kStringMap &&
-          props[col_i].type == PropertyType::kString) {
+          props[col_i].type == PropertyType::kStringView) {
         continue;
       }
       return false;
@@ -484,9 +485,9 @@ void UpdateTransaction::set_edge_data_with_offset(
     label_t edge_label, const Any& value, size_t offset) {
   size_t csr_index = dir ? get_out_csr_index(label, neighbor_label, edge_label)
                          : get_in_csr_index(neighbor_label, label, edge_label);
-  if (value.type == PropertyType::kString) {
+  if (value.type == PropertyType::kStringView) {
     size_t loc = sv_vec_.size();
-    sv_vec_.emplace_back(std::string(value.value.s));
+    sv_vec_.emplace_back(value.AsStringView());
     Any dup_value;
     dup_value.set_string(sv_vec_[loc]);
     updated_edge_data_[csr_index][v].emplace(
@@ -555,7 +556,8 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
       added_vertices.emplace_back(
           std::make_shared<IdIndexer<uint32_t, vid_t>>());
-    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kString) {
+    } else if (graph.lf_indexers_[idx].get_type() ==
+               PropertyType::kStringView) {
       added_vertices.emplace_back(
           std::make_shared<IdIndexer<std::string_view, vid_t>>());
     } else {

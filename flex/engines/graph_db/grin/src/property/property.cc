@@ -88,7 +88,7 @@ void grin_destroy_vertex_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp) {}
  */
 GRIN_DATATYPE grin_get_vertex_property_datatype(GRIN_GRAPH g,
                                                 GRIN_VERTEX_PROPERTY vp) {
-  return (GRIN_DATATYPE)(vp >> 16);
+  return (GRIN_DATATYPE) (vp >> 16);
 }
 
 int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,
@@ -203,7 +203,7 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
   auto pdt = (vp >> 16);
   auto pid = vp & (0xff);
 
-  if (label != plabel || pdt != GRIN_DATATYPE::String) {
+  if (label != plabel || pdt != GRIN_DATATYPE::StringView) {
     grin_error_code = INVALID_VALUE;
     return NULL;
   }
@@ -341,7 +341,7 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
       return _col->extra_buffer().data() + vid - basic_size;
     }
   }
-  case GRIN_DATATYPE::String: {
+  case GRIN_DATATYPE::StringView: {
     auto _col = static_cast<const gs::StringColumn*>(col);
     auto s = _col->get_view(vid);
     auto len = s.size() + 1;
@@ -475,7 +475,7 @@ const char* grin_get_edge_property_value_of_string(GRIN_GRAPH g, GRIN_EDGE e,
                                                    GRIN_EDGE_PROPERTY ep) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   auto idx = ep >> 24;
-  if (idx > 0 || _get_data_type(_e->data.type) != GRIN_DATATYPE::String) {
+  if (idx > 0 || _get_data_type(_e->data.type) != GRIN_DATATYPE::StringView) {
     grin_error_code = INVALID_VALUE;
     return NULL;
   }

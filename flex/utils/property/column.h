@@ -387,7 +387,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   }
 
   void set_any(size_t idx, const Any& value) override {
-    set_value(idx, AnyConverter<std::string_view>::from_any(value));
+    set_value(idx, value.AsStringView());
   }
 
   std::string_view get_view(size_t idx) const {
@@ -480,7 +480,7 @@ class StringMapColumn : public ColumnBase {
   void set_value(size_t idx, const std::string_view& val);
 
   void set_any(size_t idx, const Any& value) override {
-    set_value(idx, AnyConverter<std::string_view>::from_any(value));
+    set_value(idx, value.AsStringView());
   }
 
   std::string_view get_view(size_t idx) const;

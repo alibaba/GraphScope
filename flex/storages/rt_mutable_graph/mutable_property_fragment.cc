@@ -101,7 +101,7 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
     } else if (properties[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
       return new DualCsr<std::string_view>(
           oes, ies, properties[0].additional_type_info.max_length);
-    } else if (properties[0] == PropertyType::kString) {
+    } else if (properties[0] == PropertyType::kStringView) {
       return new DualCsr<std::string_view>(oes, ies, 256);
     }
   } else {

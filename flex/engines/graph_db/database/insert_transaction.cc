@@ -55,7 +55,7 @@ bool InsertTransaction::AddVertex(label_t label, const Any& id,
   for (int col_i = 0; col_i != col_num; ++col_i) {
     auto& prop = props[col_i];
     if (prop.type != types[col_i]) {
-      if (prop.type == PropertyType::kString &&
+      if (prop.type == PropertyType::kStringView &&
           types[col_i] == PropertyType::kStringMap) {
       } else {
         arc_.Resize(arc_size);
