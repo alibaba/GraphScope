@@ -96,6 +96,7 @@ class TestDriver(unittest.TestCase):
     def test_example(self):
         self._graph_id = self.createGraph()
         self.bulkLoading()
+        self.bulkLoadingUploading()
         self.waitJobFinish()
         self.list_graph()
         self.runCypherQuery()
@@ -166,6 +167,40 @@ class TestDriver(unittest.TestCase):
         schema_mapping = SchemaMapping(
             loading_config=SchemaMappingLoadingConfig(
                 data_source=SchemaMappingLoadingConfigDataSource(scheme="file", location=location),
+                import_option="init",
+                format=SchemaMappingLoadingConfigFormat(type="csv"),
+            ),
+            vertex_mappings=[
+                VertexMapping(type_name="person", inputs=[person_csv_path])
+            ],
+            edge_mappings=[
+                EdgeMapping(
+                    type_triplet=EdgeMappingTypeTriplet(
+                        edge="knows",
+                        source_vertex="person",
+                        destination_vertex="person",
+                    ),
+                    inputs=[knows_csv_path],
+                )
+            ],
+        )
+        resp = self._sess.bulk_loading(self._graph_id, schema_mapping)
+        assert resp.is_ok()
+        self._job_id = resp.get_value().job_id
+
+
+    def bulkLoadingUploading(self):
+        """
+        Test bulk loading with uploading files
+        """
+        assert os.environ.get("FLEX_DATA_DIR") is not None
+        location = os.environ.get("FLEX_DATA_DIR")
+        person_csv_path = "@/{}/person.csv".format(location)
+        knows_csv_path = "@/{}/person_knows_person.csv".format(location)
+        print("test bulk loading: ", self._graph_id, person_csv_path, knows_csv_path)
+        schema_mapping = SchemaMapping(
+            loading_config=SchemaMappingLoadingConfig(
+                data_source=SchemaMappingLoadingConfigDataSource(scheme="file"),
                 import_option="init",
                 format=SchemaMappingLoadingConfigFormat(type="csv"),
             ),
