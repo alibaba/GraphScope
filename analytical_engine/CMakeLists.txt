@@ -364,10 +364,16 @@ if (ENABLE_JAVA_SDK)
     endif()
 endif()
 
+add_library(applications SHARED core/applications.cc)
+target_include_directories(applications PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps utils apps)
+target_link_libraries(applications ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
+target_link_libraries(applications OpenMP::OpenMP_CXX)
+target_link_libraries(applications gs_util)
+target_link_libraries(grape_engine PRIVATE applications)
 
 # Test targets
 if (BUILD_TESTS)
-    add_executable(run_app test/run_app.cc core/object/dynamic.cc)
+    add_executable(run_app test/run_app.cc core/object/dynamic.cc core/flags.cc)
     target_include_directories(run_app PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps utils apps)
     target_link_libraries(run_app ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
     target_link_libraries(run_app OpenMP::OpenMP_CXX)

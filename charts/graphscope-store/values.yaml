@@ -508,7 +508,6 @@ auth:
 pegasus:
   worker:
     num: 1
-  timeout: 240000
 
 secondary:
   enabled: false

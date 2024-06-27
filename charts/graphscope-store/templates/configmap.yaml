@@ -75,7 +75,6 @@ data:
     # Pegasus config
     pegasus.hosts=PEGASUS_HOSTS  # this is used by ir server to compute the server size
     pegasus.worker.num={{ .Values.pegasus.worker.num }}
-    pegasus.timeout={{ .Values.pegasus.timeout }}
     pegasus.batch.size=1024
     pegasus.output.capacity=16
 

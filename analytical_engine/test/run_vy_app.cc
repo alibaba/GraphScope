@@ -122,17 +122,8 @@ void RunLPAU2I(std::shared_ptr<FragmentType> fragment,
   worker->Finalize();
 }
 
-void RunSamplingPath(std::shared_ptr<FragmentType> fragment,
-                     const grape::CommSpec& comm_spec,
-                     const std::string& out_prefix,
-                     const std::string& path_pattern) {
-  using AppType = gs::SamplingPath<FragmentType>;
-  auto app = std::make_shared<AppType>();
-  auto worker = AppType::CreateWorker(app, fragment);
-  auto spec = grape::DefaultParallelEngineSpec();
-
+std::vector<int> prepareSamplingPathPattern(const std::string& path_pattern) {
   std::vector<int> label_id_seq;
-
   std::string delimiter = "-";
   auto start = 0U;
   auto end = path_pattern.find(delimiter);
@@ -143,6 +134,19 @@ void RunSamplingPath(std::shared_ptr<FragmentType> fragment,
     end = path_pattern.find(delimiter, start);
   }
   label_id_seq.push_back(std::stoi(path_pattern.substr(start, end)));
+  return label_id_seq;
+}
+
+void RunSamplingPath(std::shared_ptr<FragmentType> fragment,
+                     const grape::CommSpec& comm_spec,
+                     const std::string& out_prefix,
+                     const std::string& path_pattern) {
+  using AppType = gs::SamplingPath<FragmentType>;
+  auto app = std::make_shared<AppType>();
+  auto worker = AppType::CreateWorker(app, fragment);
+  auto spec = grape::DefaultParallelEngineSpec();
+
+  std::vector<int> label_id_seq = prepareSamplingPathPattern(path_pattern);
 
   worker->Init(comm_spec, spec);
   worker->Query(label_id_seq, 10000000);
