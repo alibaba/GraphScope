@@ -934,7 +934,7 @@ seastar::future<> admin_http_handler::set_routes() {
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/vertex");
-      r.add(match_rule, seastar::httpd::operation_type::DELETE);
+      r.add(match_rule, SEASTAR_DELETE);
     }
     {
       // Delete Edge
@@ -944,7 +944,7 @@ seastar::future<> admin_http_handler::set_routes() {
       match_rule->add_str("/v1/graph")
           .add_param("graph_id")
           .add_str("/edge");
-      r.add(match_rule, seastar::httpd::operation_type::DELETE);
+      r.add(match_rule, SEASTAR_DELETE);
     } 
     {
       // add Vertex
