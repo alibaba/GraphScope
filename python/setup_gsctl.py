@@ -56,7 +56,7 @@ setup(
     },
     install_requires=REQUIRES,
     packages=find_packages(
-        include=["graphscope.gsctl", "graphscope.gsctl.*", "VERSION"]
+        include=["graphscope.gsctl", "graphscope.gsctl.*"]
     ),
     include_package_data=True,
     license="Apache 2.0",
@@ -64,7 +64,7 @@ setup(
     long_description="""\
     gsctl is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope. These functionalities include building and testing binaries, managing sessions and resources, and more.
     """,  # noqa: E501
-    package_data={"graphscope.gsctl": ["scripts/*.sh", "scripts/lib/*.sh"]},
+    package_data={"graphscope.gsctl": ["scripts/*.sh", "scripts/lib/*.sh", "VERSION"]},
     entry_points={
         "console_scripts": [
             "gsctl = graphscope.gsctl.gsctl:cli",

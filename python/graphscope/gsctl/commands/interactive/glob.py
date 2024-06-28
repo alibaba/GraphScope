@@ -134,11 +134,11 @@ def graph(filename):  # noqa: F811
         return
     try:
         graph = read_yaml_file(filename)
-        create_graph(graph)
+        graph_id = create_graph(graph)
     except Exception as e:
         err(f"Failed to create graph: {str(e)}")
     else:
-        succ(f"Create graph {graph['name']} successfully.")
+        succ(f"Create graph {graph['name']}(id={graph_id}) successfully.")
 
 
 @delete.command()
