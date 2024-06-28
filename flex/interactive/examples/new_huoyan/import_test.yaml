@@ -2,7 +2,7 @@ graph: onecompany
 loading_config:
   data_source:
     scheme: file  # file, oss, s3, hdfs; only file is supported now
-    location: /home/graphscope/work/gs/flex/interactive/examples/new_huoyan/sample/
+    # location: /home/graphscope/work/gs/flex/interactive/examples/new_huoyan/sample/
   import_option: init # append, overwrite, only init is supported now
   format:
     type: csv
@@ -67,12 +67,12 @@ edge_mappings:
     column_mappings:
       - column:
           index: 2
-          name: rel_type
-        property: rel_type
-      - column:
-          index: 3
           name: rel_weight
         property: rel_weight
+      - column:
+          index: 3
+          name: rel_label
+        property: rel_label
       - column:
           index: 4
           name: rel_info
@@ -96,12 +96,12 @@ edge_mappings:
     column_mappings:
       - column:
           index: 2
-          name: rel_type
-        property: rel_type
-      - column:
-          index: 3
           name: rel_weight
         property: rel_weight
+      - column:
+          index: 3
+          name: rel_label
+        property: rel_label
       - column:
           index: 4
           name: rel_info

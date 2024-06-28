@@ -1,4 +1,4 @@
-src,dst,rel_type,rel_weight,rel_info
-4,1,2,1.0,"rel_info1"
-5,2,2,0.9,"rel_info2"
-6,3,2,0.8,"rel_info3"
+src,dst,rel_weight,rel_label,rel_info
+4,1,1.0,2,"rel_info1"
+5,2,0.9,2,"rel_info2"
+6,3,0.8,2,"rel_info3"

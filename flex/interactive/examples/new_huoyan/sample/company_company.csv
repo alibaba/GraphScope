@@ -1,3 +1,3 @@
-src,dst,rel_type,rel_weight,rel_info
-1,2,1,1.0,"rel_info11"
-2,3,2,1.0,"rel_info22"
+src,dst,rel_weight,rel_label,rel_info
+1,2,1.0,1,"rel_info11"
+2,3,1.0,2,"rel_info22"

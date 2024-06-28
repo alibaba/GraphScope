@@ -10,12 +10,22 @@
  *@brief Return the investigation path from the given company to the target.
  The input is 1 start company/person and a list of target companies.
 
+  The rel_label(or rel_type) has the following mapping relation
+  person-[]->company:
+    1: shareholder；
+    2: shareholder_his；
+    3: legalperson；
+    4: legalperson_his；
+    5: executive；
+    6: executive_his
+  company-[]->company:
+    0: invest
  */
 namespace gs {
 class HuoYan : public WriteAppBase {
  public:
   static constexpr double timeout_sec = 15;
-  static constexpr int32_t REL_TYPE_MAX = 19;  // 0 ~ 18
+  static constexpr int32_t REL_TYPE_MAX = 8;  // 1 ~ 7
   HuoYan() : is_initialized_(false) {}
   ~HuoYan() {}
   bool is_simple(const std::vector<vid_t>& path) {
@@ -31,35 +41,51 @@ class HuoYan : public WriteAppBase {
   }
 
   bool edge_expand(gs::ReadTransaction& txn, const std::vector<vid_t>& vid_vec,
-                   label_t dst_label_id, const AdjListView<int64_t>& edges,
+                   label_t dst_label_id, const AdjListView<RecordView>& edges,
                    const std::vector<bool>& valid_rel_type_ids, int32_t cur_ind,
                    std::vector<std::vector<vid_t>>& cur_paths,
+                   std::vector<std::vector<double>>& cur_weights,
                    std::vector<std::vector<int32_t>>& cur_rel_types,
+                   std::vector<std::vector<std::string_view>>& cur_rel_infos,
                    std::vector<std::vector<Direction>> cur_directions,
                    std::vector<std::vector<vid_t>>& next_paths,
+                   std::vector<std::vector<double>>& next_weights,
                    std::vector<std::vector<int32_t>>& next_rel_types,
+                   std::vector<std::vector<std::string_view>>& next_rel_infos,
                    std::vector<std::vector<Direction>> next_directions,
                    size_t& result_size, int result_limit, Encoder& output,
                    double& cur_time_left, Direction direction) {
     auto& cur_path = cur_paths[cur_ind];
     auto& cur_rel_type = cur_rel_types[cur_ind];
+    auto& cur_weight = cur_weights[cur_ind];
+    auto& cur_rel_info = cur_rel_infos[cur_ind];
     auto& cur_direction = cur_directions[cur_ind];
     double t0 = -grape::GetCurrentTime();
     // The direction is same for all edges.
     cur_direction.emplace_back(direction);
     for (auto& edge : edges) {
-      auto& dst = edge.neighbor;
+      auto dst = edge.get_neighbor();
       auto encoded_vid = encode_vid(dst_label_id, dst);
-      if (!valid_rel_type_ids[edge.data]) {
+      auto data = edge.get_data();
+      auto edge_rel_type = data[1].AsInt64();
+      if (!valid_rel_type_ids[edge_rel_type]) {
         // filter edges by rel type
         continue;
       }
       cur_path.emplace_back(encoded_vid);
-      cur_rel_type.emplace_back(edge.data);
+      CHECK(data.size() == 3) << "Expect 3 but got: " << data.size();
+      VLOG(10) << data[0].AsDouble() << "," << edge_rel_type << ","
+               << data[2].AsStringView();
+      cur_weight.emplace_back(data[0].AsDouble());
+      cur_rel_type.emplace_back();
+      cur_rel_info.emplace_back(data[2].AsStringView());
 
       if (is_simple(cur_path)) {
         next_paths.emplace_back(cur_path);
+        next_weights.emplace_back(cur_weight);
         next_rel_types.emplace_back(cur_rel_type);
+        next_rel_infos.emplace_back(cur_rel_info);
+
         next_directions.emplace_back(cur_direction);
         if ((dst_label_id == comp_label_id_ && valid_comp_vids_[dst]) ||
             dst_label_id == person_label_id_) {
@@ -70,8 +96,8 @@ class HuoYan : public WriteAppBase {
             throw std::runtime_error("Error Internal state");
           }
           VLOG(10) << "put path of size: " << cur_rel_type.size();
-          if (!results_creator_->add_result(cur_path, cur_rel_type,
-                                            cur_direction)) {
+          if (!results_creator_->add_result(cur_path, cur_weight, cur_rel_type,
+                                            cur_rel_info, cur_direction)) {
             LOG(ERROR) << "Failed to add result";
             return false;
           }
@@ -166,8 +192,7 @@ class HuoYan : public WriteAppBase {
     typed_comp_named_col_ =
         std::dynamic_pointer_cast<TypedColumn<std::string_view>>(comp_name_col);
     typed_comp_status_col_ =
-        std::dynamic_pointer_cast<TypedColumn<std::string_view>>(
-            comp_status_col);
+        std::dynamic_pointer_cast<TypedColumn<int64_t>>(comp_status_col);
     typed_comp_credit_code_col_ =
         std::dynamic_pointer_cast<TypedColumn<std::string_view>>(
             comp_credit_code_col);
@@ -256,28 +281,35 @@ class HuoYan : public WriteAppBase {
       valid_comp_vids_[vid] = true;
     }
 
-    auto cmp_invest_outgoing_view = txn.GetOutgoingGraphView<int64_t>(
+    auto cmp_invest_outgoing_view = txn.GetOutgoingGraphView<RecordView>(
         comp_label_id_, comp_label_id_, invest_label_id_);
-    auto cmp_invest_incoming_view = txn.GetIncomingGraphView<int64_t>(
+    auto cmp_invest_incoming_view = txn.GetIncomingGraphView<RecordView>(
         comp_label_id_, comp_label_id_, invest_label_id_);
 
-    auto person_invest_outgoing_view = txn.GetOutgoingGraphView<int64_t>(
+    auto person_invest_outgoing_view = txn.GetOutgoingGraphView<RecordView>(
         person_label_id_, comp_label_id_, person_invest_label_id_);
-    auto person_invest_incoming_view = txn.GetIncomingGraphView<int64_t>(
+    auto person_invest_incoming_view = txn.GetIncomingGraphView<RecordView>(
         comp_label_id_, person_label_id_, person_invest_label_id_);
 
     // Expand from vid_vec, until end_vertex is valid, or hop limit is reached.
     std::vector<std::vector<vid_t>> cur_paths;
+    std::vector<std::vector<double>> cur_weights;
     std::vector<std::vector<int32_t>> cur_rel_types;
+    std::vector<std::vector<std::string_view>> cur_rel_infos;
     std::vector<std::vector<Direction>> cur_directions;
+
     std::vector<std::vector<vid_t>> next_paths;
+    std::vector<std::vector<double>> next_weights;
     std::vector<std::vector<int32_t>> next_rel_types;
+    std::vector<std::vector<std::string_view>> next_rel_infos;
     std::vector<std::vector<Direction>> next_directions;
     // init cur_paths
     for (auto& vid : vid_vec) {
       cur_paths.emplace_back(
           std::vector<vid_t>{encode_vid(comp_label_id_, start_vid)});
       cur_rel_types.emplace_back(std::vector<int32_t>{});
+      cur_weights.emplace_back(std::vector<double>{});
+      cur_rel_infos.emplace_back(std::vector<std::string_view>{});
       cur_directions.emplace_back(std::vector<Direction>{});
     }
     // size_t begin_loc = output.skip_int();
@@ -296,39 +328,43 @@ class HuoYan : public WriteAppBase {
         auto label = decode_label(last_vid_encoded);
         if (label == comp_label_id_) {
           const auto& oedges = cmp_invest_outgoing_view.get_edges(last_vid);
-          if (edge_expand(txn, vid_vec, comp_label_id_, oedges,
-                          valid_rel_type_ids, j, cur_paths, cur_rel_types,
-                          cur_directions, next_paths, next_rel_types,
-                          next_directions, result_size, result_limit, output,
-                          cur_time_left, Direction::Out)) {
+          if (edge_expand(
+                  txn, vid_vec, comp_label_id_, oedges, valid_rel_type_ids, j,
+                  cur_paths, cur_weights, cur_rel_types, cur_rel_infos,
+                  cur_directions, next_paths, next_weights, next_rel_types,
+                  next_rel_infos, next_directions, result_size, result_limit,
+                  output, cur_time_left, Direction::Out)) {
             return true;  // early terminate.
           }
 
           const auto& iedges = cmp_invest_incoming_view.get_edges(last_vid);
           if (edge_expand(txn, vid_vec, comp_label_id_, iedges,
-                          valid_rel_type_ids, j, cur_paths, cur_rel_types,
-                          cur_directions, next_paths, next_rel_types,
-                          next_directions, result_size, result_limit, output,
-                          cur_time_left, Direction::In)) {
+                          valid_rel_type_ids, j, cur_paths, cur_weights,
+                          cur_rel_types, cur_rel_infos, cur_directions,
+                          next_paths, next_weights, next_rel_types,
+                          next_rel_infos, next_directions, result_size,
+                          result_limit, output, cur_time_left, Direction::In)) {
             return true;  // early terminate.
           }
 
           const auto& oedges2 = person_invest_incoming_view.get_edges(last_vid);
           if (edge_expand(txn, vid_vec, person_label_id_, oedges2,
-                          valid_rel_type_ids, j, cur_paths, cur_rel_types,
-                          cur_directions, next_paths, next_rel_types,
-                          next_directions, result_size, result_limit, output,
-                          cur_time_left, Direction::In)) {
+                          valid_rel_type_ids, j, cur_paths, cur_weights,
+                          cur_rel_types, cur_rel_infos, cur_directions,
+                          next_paths, next_weights, next_rel_types,
+                          next_rel_infos, next_directions, result_size,
+                          result_limit, output, cur_time_left, Direction::In)) {
             return true;  // early terminate.
           }
         } else if (label == person_label_id_) {
           const auto& oedges = person_invest_outgoing_view.get_edges(last_vid);
           double t0 = -grape::GetCurrentTime();
-          if (edge_expand(txn, vid_vec, comp_label_id_, oedges,
-                          valid_rel_type_ids, j, cur_paths, cur_rel_types,
-                          cur_directions, next_paths, next_rel_types,
-                          next_directions, result_size, result_limit, output,
-                          cur_time_left, Direction::Out)) {
+          if (edge_expand(
+                  txn, vid_vec, comp_label_id_, oedges, valid_rel_type_ids, j,
+                  cur_paths, cur_weights, cur_rel_types, cur_rel_infos,
+                  cur_directions, next_paths, next_weights, next_rel_types,
+                  next_rel_infos, next_directions, result_size, result_limit,
+                  output, cur_time_left, Direction::Out)) {
             return true;  // early terminate.
           }
         } else {
@@ -341,9 +377,13 @@ class HuoYan : public WriteAppBase {
       //       << ", next_paths: " << next_paths.size();
       cur_paths.swap(next_paths);
       cur_rel_types.swap(next_rel_types);
+      cur_weights.swap(cur_weights);
+      cur_rel_infos.swap(cur_rel_infos);
       cur_directions.swap(next_directions);
       next_paths.clear();
       next_rel_types.clear();
+      next_weights.clear();
+      next_rel_infos.clear();
       next_directions.clear();
     }
 
@@ -369,7 +409,7 @@ class HuoYan : public WriteAppBase {
   std::vector<bool> valid_comp_vids_;
 
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_named_col_;
-  std::shared_ptr<TypedColumn<std::string_view>> typed_comp_status_col_;
+  std::shared_ptr<TypedColumn<int64_t>> typed_comp_status_col_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_credit_code_col_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_license_number_col_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_person_named_col_;

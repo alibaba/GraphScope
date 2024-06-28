@@ -27,9 +27,32 @@ inline int64_t get_oid_from_encoded_vid(ReadTransaction& txn,
   return txn.GetVertexId(label, vid).AsInt64();
 }
 
+inline std::string rel_type_to_string(int64_t rel_type) {
+  if (rel_type == 0) {
+    return "invest";
+  } else if (rel_type == 1) {
+    return "shareholder";
+  } else if (rel_type == 2) {
+    return "shareholder_his";
+  } else if (rel_type == 3) {
+    return "legalperson";
+  } else if (rel_type == 4) {
+    return "legalperson_his";
+  } else if (rel_type == 5) {
+    return "executive";
+  } else if (rel_type == 6) {
+    return "executive_his";
+  } else {
+    LOG(ERROR) << "Unknown rel type: " << rel_type;
+    return "unknown";
+  }
+}
+
 struct Path {
   std::vector<uint32_t> vids;
   std::vector<int32_t> rel_types;
+  std::vector<double> weights;
+  std::vector<std::string_view> rel_infos;
   std::vector<Direction> directions;
   // The size of rel_types is one less than the size of vids.
 };
@@ -47,7 +70,7 @@ struct ResultsCreator {
   ResultsCreator(
       label_t comp_label_id, label_t person_label_id,
       std::shared_ptr<TypedColumn<std::string_view>> typed_comp_named_col,
-      std::shared_ptr<TypedColumn<std::string_view>> typed_comp_status_col,
+      std::shared_ptr<TypedColumn<int64_t>> typed_comp_status_col,
       std::shared_ptr<TypedColumn<std::string_view>> typed_comp_credit_code_col,
       std::shared_ptr<TypedColumn<std::string_view>>
           typed_comp_license_number_col,
@@ -113,7 +136,9 @@ struct ResultsCreator {
 
   // TODO: support multiple properties on edge.
   bool add_result(const std::vector<vid_t>& cur_path,
+                  const std::vector<double>& weights,
                   const std::vector<int32_t>& rel_types,
+                  const std::vector<std::string_view>& rel_infos,
                   const std::vector<Direction>& directions) {
     if (cur_path.size() < 2) {
       LOG(ERROR) << "Path size is less than 2";
@@ -135,7 +160,9 @@ struct ResultsCreator {
     }
     Path path;
     path.vids = cur_path;
+    path.weights = weights;
     path.rel_types = rel_types;
+    path.rel_infos = rel_infos;
     path.directions = directions;
     results_.path_to_end_node[end_node_id].push_back(path);
     return true;
@@ -146,9 +173,12 @@ struct ResultsCreator {
     return std::to_string(encoded_start_id) + "->" + std::to_string(end_vid);
   }
 
-  inline nlohmann::json get_edge_properties(int32_t rel_type) const {
+  inline nlohmann::json get_edge_properties(
+      double weight, int64_t rel_type, const std::string_view& rel_info) const {
     nlohmann::json properties;
-    properties["type"] = rel_type;
+    properties["type"] = rel_type_to_string(rel_type);
+    properties["weight"] = weight;
+    properties["rel_info"] = rel_info;
     return properties;
   }
 
@@ -191,7 +221,16 @@ struct ResultsCreator {
                   prev_oid, get_oid_from_encoded_vid(txn, path.vids[i + 1]));
               rel_json["endNode"] =
                   get_vertex_name_from_encoded_vid(path.vids[i + 1]);
-              rel_json["properties"] = get_edge_properties(path.rel_types[i]);
+              rel_json["properties"] = get_edge_properties(
+                  path.weights[i], path.rel_types[i], path.rel_infos[i]);
+            } else {
+              rel_json["startNode"] =
+                  get_vertex_name_from_encoded_vid(path.vids[i + 1]);
+              rel_json["id"] = build_edge_id(
+                  get_oid_from_encoded_vid(txn, path.vids[i + 1]), prev_oid);
+              rel_json["endNode"] = prev_name;
+              rel_json["properties"] = get_edge_properties(
+                  path.weights[i], path.rel_types[i], path.rel_infos[i]);
             }
           }
         }
@@ -203,7 +242,7 @@ struct ResultsCreator {
   }
 
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_named_col_;
-  std::shared_ptr<TypedColumn<std::string_view>> typed_comp_status_col_;
+  std::shared_ptr<TypedColumn<int64_t>> typed_comp_status_col_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_credit_code_col_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_license_number_col_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_person_named_col_;
