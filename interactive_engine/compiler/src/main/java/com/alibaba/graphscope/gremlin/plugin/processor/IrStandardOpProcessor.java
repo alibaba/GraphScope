@@ -129,10 +129,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // hack implementation here: rpc client is the old way to submit job (gremlin -> traversal
         // -> ir_core -> pegasus), we should remove it after replacing it with gremlin-calcite
         // stack.
-        if (FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME
-                        .get(this.configs)
-                        .equals(AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)
-                && FrontendConfig.ENGINE_TYPE.get(this.configs).equals("pegasus")) {
+        if (FrontendConfig.ENGINE_TYPE.get(this.configs).equals("pegasus")) {
             this.rpcClient = new RpcClient(fetcher.fetch());
         } else {
             this.rpcClient = null;
