@@ -26,9 +26,7 @@ schema:
         - property_id: 2
           property_name: status
           property_type:
-            string:
-              var_char:
-                max_length: 16
+            primitive_type: DT_SIGNED_INT64
         - property_id: 3
           property_name: credit_code
           property_type:
@@ -69,13 +67,13 @@ schema:
           relation: MANY_TO_MANY
       properties:
         - property_id: 0
-          property_name: rel_type 
-          property_type:
-            primitive_type: DT_SIGNED_INT64
-        - property_id: 1
           property_name: rel_weight
           property_type:
             primitive_type: DT_DOUBLE
+        - property_id: 1
+          property_name: rel_label 
+          property_type:
+            primitive_type: DT_SIGNED_INT64
         - property_id: 2
           property_name: rel_info
           property_type:
@@ -90,13 +88,13 @@ schema:
           relation: MANY_TO_MANY
       properties:
         - property_id: 0
-          property_name: rel_type 
-          property_type:
-            primitive_type: DT_SIGNED_INT64
-        - property_id: 1
           property_name: rel_weight
           property_type:
             primitive_type: DT_DOUBLE
+        - property_id: 1
+          property_name: rel_label 
+          property_type:
+            primitive_type: DT_SIGNED_INT64
         - property_id: 2
           property_name: rel_info
           property_type:

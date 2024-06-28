@@ -7,32 +7,44 @@ loading_config:
   format:
     type: arrow
     metadata:
-      batch_reader: false
+      batch_reader: true
       quoting: true
       delimiter: ","
 vertex_mappings:
   - type_name: company  # must align with the schema
     inputs:
-      - onecomp/dwi_oc_rel_vertex_comp_interactive_d/ds=20240527
+      - onecomp/dwi_oc_rel_vertex_company_interactive_d/ds=20240626
     column_mappings:
       - column:
-          index: 0    # can be omitted if the index is the same as the property index
+          index: 2    # can be omitted if the index is the same as the property index
           name: vertex_id  # can be omitted if the name is not known
         property: vertex_id
       - column:
-          index: 1
+          index: 3
           name: vertex_name
         property: vertex_name
+      - column:
+          index: 4
+          name: status
+        property: status
+      - column:
+          index: 5
+          name: social_credit_code 
+        property: credit_code
+      - column:
+          index: 6
+          name: license_number
+        property: license_number
   - type_name: person
     inputs:
-      - onecomp/dwi_oc_rel_vertex_person_interactive_d/ds=20240527
+      - onecomp/dwi_oc_rel_vertex_person_interactive_d/ds=20240626
     column_mappings:
       - column:
-          index: 0
+          index: 2
           name: vertex_id
         property: vertex_id
       - column:
-          index: 1
+          index: 3
           name: vertex_name
         property: vertex_name
 edge_mappings:
@@ -41,40 +53,56 @@ edge_mappings:
       source_vertex:  company
       destination_vertex:  company
     inputs:
-      - onecomp/dwi_oc_rel_edge_comp_interactive_info_d/ds=20240527
+      - onecomp/dwi_oc_rel_edge_comp_comp_interactive_d/ds=20240626
     source_vertex_mappings:
       - column:
-          index: 0
-          name: vertex_id
+          index: 2
+          name: onecomp_id
         property: vertex_id
     destination_vertex_mappings:
       - column:
-          index: 2
-          name: rel_vertex_id
+          index: 3
+          name: rel_node_id
         property: vertex_id
     column_mappings:
       - column:
+          index: 4
+          name: rel_weight
+        property: rel_weight
+      - column:
           index: 5
-          name: rel_type
-        property: rel_type
+          name: rel_label
+        property: rel_label
+      - column:
+          index: 6
+          name: rel_info
+        property: rel_info
   - type_triplet:
       edge: personInvest
       source_vertex:  person
       destination_vertex:  company
     inputs:
-      - onecomp/dwi_oc_rel_edge_comp_person_interactive_info_d/ds=20240527
+      - onecomp/dwi_oc_rel_edge_comp_person_interactive_d/ds=20240626
     source_vertex_mappings:
       - column:
-          index: 0
-          name: vertex_id
+          index: 2
+          name: person_id 
         property: vertex_id
     destination_vertex_mappings:
       - column:
-          index: 2
-          name: rel_vertex_id
+          index: 3
+          name: rel_node_id
         property: vertex_id
     column_mappings:
       - column:
+          index: 4
+          name: rel_weight
+        property: rel_weight
+      - column:
+          index: 5
+          name: rel_label
+        property: rel_label
+      - column:
           index: 6
-          name: rel_type
-        property: rel_type
+          name: rel_info
+        property: rel_info
