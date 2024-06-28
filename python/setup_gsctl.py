@@ -41,7 +41,13 @@ def parse_version(root, **kwargs):
 
 NAME = "gsctl"
 PYTHON_REQUIRES = ">=3.7"
-REQUIRES = ["click >= 8.1.6", "graphscope-flex >= 0.27.0", "treelib", "packaging"]
+REQUIRES = [
+    "click >= 8.1.6",
+    "graphscope-flex >= 0.27.0",
+    "treelib",
+    "packaging",
+    "pyyaml",
+]
 
 setup(
     name=NAME,
