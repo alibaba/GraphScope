@@ -102,7 +102,7 @@ public class GlogueSchema {
                     throw new IllegalArgumentException(
                             "Edge type count not found for edge type: " + edge.getLabelId());
                 } else if (edgeTypeCount == 0) {
-                    edgeTypeCardinality.put(edgeType, 0.0);
+                    edgeTypeCardinality.put(edgeType, 1.0);
                 } else {
                     edgeTypeCardinality.put(edgeType, edgeTypeCount.doubleValue());
                 }
