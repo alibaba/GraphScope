@@ -1406,11 +1406,11 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
   nlohmann::json input_json = nlohmann::json::parse(param.content.second);
   // input value
   std::string label, primary_key_value;
-  std::unordered_map<std::string, gs::Any> new_properties_map;
-  std::unordered_map<std::string, std::string> new_properties_map_str;
   // compute value
   std::string primary_key_name;
   std::vector<std::string> colNames;
+  std::unordered_map<std::string, gs::Any> new_properties_map;
+  std::unordered_map<std::string, std::string> new_properties_map_str;
   // 检查当前运行的图是否为 graph_id
   if (!check_graph_id(graph_id)) {
     return seastar::make_ready_future<admin_query_result>(
@@ -1461,21 +1461,17 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
       for (auto &property : vertex_types["properties"]){
         auto property_name = json_to_string(property["property_name"]);
         colNames.push_back(property_name);
-        std::string colType;
-        if (property["property_type"].find("primitive_type") != property["property_type"].end()){
-          colType = json_to_string(property["property_type"]["primitive_type"]);
-        } else {
-          colType = "String";
-        }
+        gs::PropertyType colType;
+        gs::from_json(property["property_type"], colType);
         auto new_properties_map_iter = new_properties_map_str.find(property_name);
-        if (new_properties_map_iter == new_properties_map_str.end()){
-            if (property_name == primary_key_name) {
-              continue;
-            } else {
-              throw std::runtime_error("property not exists in input properties: " + std::string(property_name));
-            }
+        if (property_name == primary_key_name) {
+          new_properties_map[property_name] = gs::ConvertStringToAny(primary_key_value, colType);
+          continue;
         }
-        new_properties_map[property_name] = gs::ConvertStringToAny(new_properties_map_str[property_name], gs::config_parsing::StringToPrimitivePropertyType(colType));
+        if (new_properties_map_iter == new_properties_map_str.end()){
+          throw std::runtime_error("property not exists in input properties: " + std::string(property_name));
+        }
+        new_properties_map[property_name] = gs::ConvertStringToAny(new_properties_map_str[property_name], colType);
       }
       break;
     }
@@ -1489,14 +1485,40 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
         gs::Result<seastar::sstring>(
             gs::Status(gs::StatusCode::InternalError, "Fail to parse schema: " + std::string(e.what()))));
   }
-  // try{
-  //   auto &db = gs::GraphDB::get();
-
-  // } catch(std::exception &e) {
-  //   return seastar::make_ready_future<admin_query_result>(
-  //       gs::Result<seastar::sstring>(
-  //           gs::Status(gs::StatusCode::InternalError, "Fail to update vertex: " + std::string(e.what()))));
-  // }
+  try{
+    auto &db = gs::GraphDB::get().GetSession(hiactor::local_shard_id());
+    auto label_id = db.schema().get_vertex_label_id(label);
+    auto txnRead = db.GetReadTransaction();
+    gs::vid_t vertex_id;
+    if (txnRead.GetVertexIndex(label_id, new_properties_map[primary_key_name], vertex_id) == false) {
+      txnRead.Abort();
+      return seastar::make_ready_future<admin_query_result>(
+          gs::Result<seastar::sstring>(
+              gs::Status(gs::StatusCode::NotFound, "Vertex not exists: " + label + ":" + primary_key_value)));
+    }
+    txnRead.Commit();
+    auto txnWrite = db.GetUpdateTransaction();
+    bool has_found_pk = false;
+    for (int i = 0; i < int(colNames.size()); i++){
+      if (colNames[i] == primary_key_name){
+        has_found_pk = true;
+        continue;
+      }
+      LOG(INFO) << i << " " << colNames[i] << "=" << txnWrite.GetVertexField(label_id, vertex_id, i - int(has_found_pk)).to_string() << " -> " << new_properties_map[colNames[i]].to_string();
+      if (txnWrite.SetVertexField(label_id, vertex_id, i - int(has_found_pk), new_properties_map[colNames[i]]) == false) {
+        txnWrite.Abort();
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>(
+                gs::Status(gs::StatusCode::InternalError, "Fail to update vertex: " + label + ":" + primary_key_value)));
+      }
+      LOG(INFO) << i << " " << colNames[i] << "=" << txnWrite.GetVertexField(label_id, vertex_id, i - int(has_found_pk)).to_string();
+    }
+    txnWrite.Commit();
+  } catch(std::exception &e) {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            gs::Status(gs::StatusCode::InternalError, "Fail to update vertex: " + std::string(e.what()))));
+  }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("update_vertex"));
 }
