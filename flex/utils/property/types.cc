@@ -508,8 +508,8 @@ Any ConvertStringToAny(const std::string& value, const gs::PropertyType& type) {
     return gs::Any(gs::Date(static_cast<int64_t>(std::stoll(value))));
   } else if (type == gs::PropertyType::Day()) {
     return gs::Any(gs::Day(static_cast<int64_t>(std::stoll(value))));
-  } else if (type == gs::PropertyType::String()) {
-    return gs::Any(std::string_view(value));
+  } else if (type == gs::PropertyType::String() || type == gs::PropertyType::StringMap()) {
+    return gs::Any(std::string(value));
   } else if (type == gs::PropertyType::Int64()) {
     return gs::Any(static_cast<int64_t>(std::stoll(value)));
   } else if (type == gs::PropertyType::Double()) {
@@ -535,16 +535,14 @@ Any ConvertStringToAny(const std::string& value, const gs::PropertyType& type) {
     return gs::Any(static_cast<uint8_t>(std::stoul(value)));
   } else if (type == gs::PropertyType::UInt16()) {
     return gs::Any(static_cast<uint16_t>(std::stoul(value)));
-  } else if (type == gs::PropertyType::StringMap()) {
-    return gs::Any(std::string_view(value));
   } else if (type == gs::PropertyType::VertexGlobalId()) {
     return gs::Any(gs::GlobalId(static_cast<uint64_t>(std::stoull(value))));
   } else if (type == gs::PropertyType::Label()) {
     return gs::Any(gs::LabelKey(static_cast<uint8_t>(std::stoul(value))));
-  } else if (type.type_enum == gs::impl::PropertyTypeImpl::kVarChar) { // varchar
-    return gs::Any(std::string_view(value));
   } else if (type == gs::PropertyType::Empty()) {
     return gs::Any();
+  } else if (type == gs::PropertyType::StringView()) {
+    return gs::Any(std::string_view(value));
   } else {
     LOG(FATAL) << "Unsupported type: " << type;
   }
