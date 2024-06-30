@@ -1,6 +1,6 @@
 [submodule "learning_engine/graph-learn"]
 	path = learning_engine/graph-learn
-	url = https://github.com/alibaba/graph-learn.git
+	url = https://github.com/LiSu/graph-learn.git
 
 [submodule "flex/grin"]
 	path = flex/grin
