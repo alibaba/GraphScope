@@ -184,7 +184,6 @@ class TypedColumn : public ColumnBase {
   PropertyType type() const override { return AnyConverter<T>::type(); }
 
   void set_value(size_t index, const T& val) {
-    // assert(index >= basic_size_ && index < basic_size_ + extra_size_);
     if (index >= basic_size_ && index < basic_size_ + extra_size_) {
       extra_buffer_.set(index - basic_size_, val);
     } else if (index < basic_size_) {
