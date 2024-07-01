@@ -221,7 +221,8 @@ struct ResultsCreator {
 
           if (i < path.rel_types.size()) {
             nlohmann::json rel_json;
-            rel_json["type"] = path.rel_types[i];  // todo: rel type to string
+            rel_json["type"] = rel_type_to_string(path.rel_types[i]);
+            rel_json["name"] = rel_json["type"];
             auto& dir = path.directions[i];
             if (dir == Direction::Out) {
               rel_json["startNode"] = prev_name;
