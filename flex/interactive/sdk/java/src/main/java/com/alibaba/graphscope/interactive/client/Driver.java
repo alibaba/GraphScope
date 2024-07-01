@@ -32,36 +32,96 @@ import java.util.logging.Logger;
 public class Driver {
     private static final Logger logger = Logger.getLogger(Driver.class.getName());
 
-    private final String host;
-    private final int port;
+    private final String adminUri;
+    private final String storedProcUri;
+    private String cypherUri;
+    private String gremlinUri;
+    private String host;
+    private int port;
     private Session defaultSession;
 
-    public static Driver connect(String host, int port) {
-        return new Driver(host + ":" + port);
+    /**
+     * Connect to the interactive service with the environment variables
+     *  INTERACTIVE_ADMIN_ENDPOINT, INTERACTIVE_STORED_PROC_ENDPOINT, INTERACTIVE_CYPHER_ENDPOINT, INTERACTIVE_GREMLIN_ENDPOINT
+     * @return The driver object.
+     */
+    public static Driver connect() {
+        String adminUri = System.getenv("INTERACTIVE_ADMIN_ENDPOINT");
+        if (adminUri == null){
+            throw new IllegalArgumentException("INTERACTIVE_ADMIN_ENDPOINT is not set");
+        }
+        String storedProcUri = System.getenv("INTERACTIVE_STORED_PROC_ENDPOINT");
+        if (storedProcUri == null){
+            throw new IllegalArgumentException("INTERACTIVE_STORED_PROC_ENDPOINT is not set");
+        }
+        String cypherUri = System.getenv("INTERACTIVE_CYPHER_ENDPOINT");
+        if (cypherUri == null){
+           logger.warning("INTERACTIVE_CYPHER_ENDPOINT is not set, will try to parse endpoint from service_status");
+        }
+        String gremlinUri = System.getenv("INTERACTIVE_GREMLIN_ENDPOINT");
+        if (gremlinUri == null){
+            logger.warning("INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to parse endpoint from service_status");
+        }
+        return connect(adminUri, storedProcUri, cypherUri, gremlinUri);
     }
 
+    /**
+     * Connect to the interactive service by specifying the URIs of the admin, stored procedure, cypher, and gremlin services.
+     * @param adminUri The URI of the admin service.
+     * @param storedProcUri The URI of the stored procedure service.
+     * @param cypherUri The URI of the cypher service.
+     * @param gremlinUri The URI of the gremlin service.
+     * @return The driver object.
+     */
+    public static Driver connect(String adminUri, String storedProcUri, String cypherUri, String gremlinUri) {
+        return new Driver(adminUri, storedProcUri, cypherUri, gremlinUri);
+    }
+
+    /**
+     * Should only be used internally. Users should use method connect() or connect(admin_uri,storedProcUri,cypherUri,gremlinUri)
+     * which require the URIs of all services, or need all uris exported to the environment variables.
+     * Connect to the interactive service by only specifying the admin service's uri.
+     * @param uri The URI of the admin service.
+     * @return The driver object.
+     */
     public static Driver connect(String uri) {
         return new Driver(uri);
     }
 
     private Driver(String uri) {
+        this.adminUri = uri;
+        this.storedProcUri = null;
+        this.cypherUri = null;
+        this.gremlinUri = null;
         // Parse uri
-        String[] parts = uri.split(":");
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("Invalid uri: " + uri);
-        }
-        String host = parts[0];
-        this.port = Integer.parseInt(parts[1]);
-        if (host.startsWith("http://")) {
-            this.host = host.substring(7);
-        } else {
-            this.host = host;
-        }
+        initHostPort();
+        this.defaultSession = null;
     }
 
-    private Driver(String host, int port) {
-        this.host = host;
-        this.port = port;
+    private Driver(String adminUri, String storedProcUri, String cypherUri, String gremlinUri) {
+        this.adminUri = adminUri;
+        this.storedProcUri = storedProcUri;
+        this.cypherUri = cypherUri;
+        this.gremlinUri = gremlinUri;
+        // Parse uri
+        if (!storedProcUri.startsWith("http")){
+            throw new IllegalArgumentException("Invalid uri: " + storedProcUri);
+        }
+        initHostPort();
+        this.defaultSession = null;
+    }
+
+    private Driver(String adminUri, String storedProcUri) {
+        this.adminUri = adminUri;
+        this.storedProcUri = storedProcUri;
+        this.cypherUri = null;
+        this.gremlinUri = null;
+        // Parse uri
+        if (!storedProcUri.startsWith("http")){
+            throw new IllegalArgumentException("Invalid uri: " + storedProcUri);
+        }
+        initHostPort();
+        this.defaultSession = null;
     }
 
     /**
@@ -70,7 +130,12 @@ public class Driver {
      * @return
      */
     public Session session() {
-        return DefaultSession.newInstance(this.host, this.port);
+        if (storedProcUri == null) {
+            return DefaultSession.newInstance(adminUri);
+        }
+        else {
+            return DefaultSession.newInstance(adminUri, storedProcUri);
+        }
     }
 
     public Session getDefaultSession() {
@@ -101,11 +166,15 @@ public class Driver {
     }
 
     public String getNeo4jEndpoint() {
+        if (cypherUri != null) {
+            return cypherUri;
+        }
         Pair<String, Integer> endpoint = getNeo4jEndpointImpl();
         if (endpoint == null) {
             return null;
         }
-        return "bolt://" + endpoint.getLeft() + ":" + endpoint.getRight();
+        cypherUri =  "bolt://" + endpoint.getLeft() + ":" + endpoint.getRight();
+        return cypherUri;
     }
 
     /**
@@ -118,7 +187,7 @@ public class Driver {
     }
 
     public Client getGremlinClient() {
-        Pair<String, Integer> endpoint = getGremlinEndpointImpl();
+        Pair<String, Integer> endpoint = getGremlinEndpoint();
         Cluster cluster =
                 Cluster.build()
                         .addContactPoint(endpoint.getLeft())
@@ -161,6 +230,17 @@ public class Driver {
 
     // TODO(zhanglei): return null if gremlin is not enabled
     private Pair<String, Integer> getGremlinEndpointImpl() {
+        if (gremlinUri != null) {
+            //parse host and port from ws://host:port/gremlin
+            String[] parts = gremlinUri.split(":");
+            if (parts.length != 3) {
+                throw new IllegalArgumentException("Invalid uri: " + gremlinUri);
+            }
+            String host = parts[1].substring(2);
+            String portStr = parts[2].split("/")[0];
+            Integer port = Integer.parseInt(portStr);
+            return Pair.of(host, port);
+        }
         Session gsSession = getDefaultSession();
         Result<ServiceStatus> serviceStatus = gsSession.getServiceStatus();
         if (!serviceStatus.isOk()) {
@@ -172,5 +252,17 @@ public class Driver {
             // Currently, we assume the host is the same as the gs server
             return Pair.of(host, gremlinPort);
         }
+    }
+
+    private void initHostPort() {
+        if (!adminUri.startsWith("http")){
+            throw new IllegalArgumentException("Invalid uri: " + adminUri);
+        }
+        String[] parts = adminUri.split(":");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid uri: " + adminUri);
+        }
+        this.host = parts[0].substring(7);
+        this.port = Integer.parseInt(parts[1]);
     }
 }
