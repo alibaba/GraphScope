@@ -4,8 +4,8 @@
 
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
-#include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
+#include "flex/storages/rt_mutable_graph/types.h"
 
 #include "nlohmann/json.hpp"
 
@@ -165,7 +165,11 @@ struct ResultsCreator {
     path.rel_types = rel_types;
     path.rel_infos = rel_infos;
     path.directions = directions;
-    LOG(INFO) << "emplace path: " << gs::to_string(path.vids) << ", " << gs::to_string(path.weights) << ", " << gs::to_string(path.rel_types) << ", " << gs::to_string(path.rel_infos) << ", " << gs::to_string(path.directions);
+    LOG(INFO) << "emplace path: " << gs::to_string(path.vids) << ", "
+              << gs::to_string(path.weights) << ", "
+              << gs::to_string(path.rel_types) << ", "
+              << gs::to_string(path.rel_infos) << ", "
+              << gs::to_string(path.directions);
     results_.path_to_end_node[end_node_id].push_back(path);
     return true;
   }
@@ -195,9 +199,8 @@ struct ResultsCreator {
       end_node_json["startNodeName"] = start_node_name;
       uint32_t prev_oid;
       std::string prev_name;
-//      nlohmann::json paths = nlohmann::json::array();
-      json["paths"] = nlohmann::json::array();
-      LOG(INFO) << "paths vec size:" << paths_vec.size(); 
+      nlohmann::json paths = nlohmann::json::array();
+      LOG(INFO) << "paths vec size:" << paths_vec.size();
       for (const auto& path : paths_vec) {
         nlohmann::json path_json = nlohmann::json::object();
         path_json["relations"] = nlohmann::json::array();
@@ -214,6 +217,7 @@ struct ResultsCreator {
           node_json["properties"] =
               get_vertex_properties_from_encoded_vid(txn, path.vids[i]);
           path_json["nodes"].push_back(node_json);
+          VLOG(10) << "node_json: " << node_json.dump();
 
           if (i < path.rel_types.size()) {
             nlohmann::json rel_json;
@@ -236,10 +240,15 @@ struct ResultsCreator {
               rel_json["properties"] = get_edge_properties(
                   path.weights[i], path.rel_types[i], path.rel_infos[i]);
             }
+            VLOG(10) << "rel json: " << rel_json.dump();
+            path_json["relations"].push_back(rel_json);
           }
         }
-        json["paths"].push_back(path_json);
+        // json["paths"].push_back(path_json);
+        paths.push_back(path_json);
+        VLOG(10) << "path_json: " << path_json.dump();
       }
+      end_node_json["paths"] = paths;
       json.push_back(end_node_json);
     }
     return json.dump();
