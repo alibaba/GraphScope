@@ -4,12 +4,12 @@ All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**CancellJob**](JobManagementApi.md#CancellJob) | **DELETE** /v1/job/{job_id} | Cancell the job with specified jobId |
+| [**CancelJob**](JobManagementApi.md#CancelJob) | **DELETE** /v1/job/{job_id} | Cancell the job with specified jobId |
 | [**GetJobById**](JobManagementApi.md#GetJobById) | **GET** /v1/job/{job_id} | Get the metadata of the job with specified jobId |
 | [**ListJobs**](JobManagementApi.md#ListJobs) | **GET** /v1/job | List all jobs(including history jobs) |
 
-# **delete_job_by_id**
-> str delete_job_by_id(job_id)
+# **CancelJob**
+> Result[str] cancel_job(job_id)
 
 
 
@@ -17,29 +17,18 @@ All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
 
 ```python
-import gs_interactive
-from gs_interactive.rest import ApiException
-from pprint import pprint
+from gs_interactive.client.driver import Driver
+from gs_interactive.client.session import Session
+from gs_interactive.models import *
 
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
+driver = Driver()
+sess = driver.session()
 
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
-    job_id = 'job_id_example' # str | 
-
-    try:
-        api_response = api_instance.delete_job_by_id(job_id)
-        print("The response of AdminServiceJobManagementApi->delete_job_by_id:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceJobManagementApi->delete_job_by_id: %s\n" % e)
+# loading_resp = sess.bulk_loading(graph_id, bulk_load_request)
+# job_id = resp.get_value().job_id
+resp = sess.cancel_job(job_id)
+assert resp.is_ok()
+print("cancel job resp", resp)
 ```
 
 
@@ -72,8 +61,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **get_job_by_id**
-> JobStatus get_job_by_id(job_id)
+# **GetJobById**
+> Result[JobStatus] get_job(job_id)
 
 
 
@@ -81,30 +70,10 @@ No authorization required
 
 
 ```python
-import gs_interactive
-from gs_interactive.models.job_status import JobStatus
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
-    job_id = 'job_id_example' # str | The id of the job, returned from POST /v1/graph/{graph_id}/dataloading
-
-    try:
-        api_response = api_instance.get_job_by_id(job_id)
-        print("The response of AdminServiceJobManagementApi->get_job_by_id:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceJobManagementApi->get_job_by_id: %s\n" % e)
+resp = sess.get_job(job_id)
+assert resp.is_ok()
+status = resp.get_value().status
+print("job status: ", status)
 ```
 
 
@@ -137,8 +106,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **list_jobs**
-> List[JobStatus] list_jobs()
+# **ListJobs**
+> Result[List[JobStatus]] list_jobs()
 
 
 
@@ -146,29 +115,9 @@ No authorization required
 
 
 ```python
-import gs_interactive
-from gs_interactive.models.job_status import JobStatus
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceJobManagementApi(api_client)
-
-    try:
-        api_response = api_instance.list_jobs()
-        print("The response of AdminServiceJobManagementApi->list_jobs:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceJobManagementApi->list_jobs: %s\n" % e)
+resp = sess.list_jobs(job_id)
+assert resp.is_ok()
+print("list job resp: ", resp)
 ```
 
 

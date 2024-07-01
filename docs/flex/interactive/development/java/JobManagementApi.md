@@ -4,14 +4,14 @@ All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**CancellJob**](JobManagementApi.md#CancellJob) | **DELETE** /v1/job/{job_id} | Cancell the job with specified jobId |
+| [**CancelJob**](JobManagementApi.md#CancelJob) | **DELETE** /v1/job/{job_id} | Cancel the job with specified jobId |
 | [**GetJobById**](JobManagementApi.md#GetJobById) | **GET** /v1/job/{job_id} | Get the metadata of the job with specified jobId |
 | [**ListJobs**](JobManagementApi.md#ListJobs) | **GET** /v1/job | List all jobs(including history jobs) |
 
 
-<a id="CancellJob"></a>
-# **CancellJob**
-> Result&lt;String&gt; cancellJob(jobId)
+<a id="CancelJob"></a>
+# **CancelJob**
+> Result&lt;String&gt; cancelJob(jobId)
 
 See [bulkLoading](GraphManagementApi.md#bulkloading) about how to submit a bulk loading job.
 

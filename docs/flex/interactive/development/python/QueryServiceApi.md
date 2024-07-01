@@ -12,8 +12,8 @@ If you attempt to submit a query to a graph that is not currently running, we wi
 | [**CallProcedureOnCurrentGraph**](QueryServiceApi.md#CallProcedureOnCurrentGraph) | **POST** /v1/graph/current/query | submit query to the current running graph |
 
 
-# **proc_call**
-> bytearray proc_call(graph_id, x_interactive_request_format, body=body)
+# **CallProcedure**
+> Result[CollectiveResults] call_procedure(graph_id, params)
 
 Submit procedure call queries to the specified graph.
 The output format for the query is define by the [results.proto](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/results.proto).
@@ -24,32 +24,23 @@ For the creation of stored procedure please refer to [CypherStoredProcedure](../
 
 
 ```python
-import gs_interactive
-from gs_interactive.rest import ApiException
-from pprint import pprint
+# create graph..
+# create procedure
 
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
+req = QueryRequest(
+    query_name=proc_id,
+    arguments=[
+        TypedValue(
+            type=GSDataType(
+                PrimitiveType(primitive_type="DT_SIGNED_INT32")
+            ),
+            value = 1
+        )
+    ]
 )
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.QueryServiceApi(api_client)
-    graph_id = 'graph_id_example' # str | 
-    x_interactive_request_format = 'x_interactive_request_format_example' # str | 
-    body = None # bytearray |  (optional)
-
-    try:
-        # run queries on graph
-        api_response = api_instance.proc_call(graph_id, x_interactive_request_format, body=body)
-        print("The response of QueryServiceApi->proc_call:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling QueryServiceApi->proc_call: %s\n" % e)
+resp = sess.call_procedure(graph_id = graph_id, params = req)
+assert resp.is_ok()
+print("call procedure result: ", resp.get_value())
 ```
 
 
@@ -60,12 +51,11 @@ with gs_interactive.ApiClient(configuration) as api_client:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **graph_id** | **str**|  | 
- **x_interactive_request_format** | **str**|  | 
- **body** | **bytearray**|  | [optional] 
+ **params** | **QueryRequest**|  | [optional] 
 
 ### Return type
 
-**bytearray**
+**CollectiveResults**
 
 ### Authorization
 
@@ -85,8 +75,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **proc_call_current**
-> bytearray proc_call_current(x_interactive_request_format, body=body)
+# **CallProcedureOnCurrentGraph**
+> Result[CollectiveResults] call_procedure_current(params)
 
 run queries on the running graph
 
@@ -96,31 +86,23 @@ Submit a query to the running graph.
 
 
 ```python
-import gs_interactive
-from gs_interactive.rest import ApiException
-from pprint import pprint
+# create graph..
+# create procedure
 
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
+req = QueryRequest(
+    query_name=proc_id,
+    arguments=[
+        TypedValue(
+            type=GSDataType(
+                PrimitiveType(primitive_type="DT_SIGNED_INT32")
+            ),
+            value = 1
+        )
+    ]
 )
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.QueryServiceApi(api_client)
-    x_interactive_request_format = 'x_interactive_request_format_example' # str | 
-    body = None # bytearray |  (optional)
-
-    try:
-        # run queries on the running graph
-        api_response = api_instance.proc_call_current(x_interactive_request_format, body=body)
-        print("The response of QueryServiceApi->proc_call_current:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling QueryServiceApi->proc_call_current: %s\n" % e)
+resp = sess.call_procedure(params = req)
+assert resp.is_ok()
+print("call procedure result: ", resp.get_value())
 ```
 
 
@@ -130,12 +112,11 @@ with gs_interactive.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **x_interactive_request_format** | **str**|  | 
- **body** | **bytearray**|  | [optional] 
+ **body** | **QueryRequest**|  | [optional] 
 
 ### Return type
 
-**bytearray**
+**CollectiveResults**
 
 ### Authorization
 

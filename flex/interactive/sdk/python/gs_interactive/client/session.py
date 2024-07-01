@@ -231,7 +231,7 @@ class ProcedureInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def update_procedure(
-        self, graph_id: StrictStr, procedure: UpdateProcedureRequest
+        self, graph_id: StrictStr, proc_id: StrictStr, procedure: UpdateProcedureRequest
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -538,11 +538,11 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def update_procedure(
-        self, graph_id: StrictStr, procedure: UpdateProcedureRequest
+        self, graph_id: StrictStr, proc_id: StrictStr, procedure: UpdateProcedureRequest
     ) -> Result[str]:
         try:
             response = self._procedure_api.update_procedure_with_http_info(
-                graph_id, procedure
+                graph_id, proc_id, procedure
             )
             return Result.from_response(response)
         except Exception as e:

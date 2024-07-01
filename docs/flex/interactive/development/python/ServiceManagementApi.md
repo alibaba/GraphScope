@@ -10,8 +10,8 @@ All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 | [**StopService**](ServiceManagementApi.md#StopService) | **POST** /v1/service/stop | Stop the query service |
 
 
-# **get_service_status**
-> ServiceStatus get_service_status()
+# **GetServiceStatus**
+> Result[ServiceStatus] get_service_status()
 
 
 
@@ -21,29 +21,9 @@ Get service status
 
 
 ```python
-import gs_interactive
-from gs_interactive.models.service_status import ServiceStatus
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
-
-    try:
-        api_response = api_instance.get_service_status()
-        print("The response of AdminServiceServiceManagementApi->get_service_status:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceServiceManagementApi->get_service_status: %s\n" % e)
+resp = sess.get_service_status()
+assert resp.is_ok()
+print("Current service status", resp)
 ```
 
 
@@ -73,8 +53,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **restart_service**
-> str restart_service()
+# **RestartService**
+> Result[str] restart_service()
 
 
 
@@ -84,28 +64,9 @@ Start current service
 
 
 ```python
-import gs_interactive
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
-
-    try:
-        api_response = api_instance.restart_service()
-        print("The response of AdminServiceServiceManagementApi->restart_service:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceServiceManagementApi->restart_service: %s\n" % e)
+resp = sess.restart_service()
+assert resp.is_ok()
+print("restart service result", resp)
 ```
 
 
@@ -135,8 +96,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **start_service**
-> str start_service(start_service_request=start_service_request)
+# **StartService**
+> Result[str] start_service(start_service_request=start_service_request)
 
 
 
@@ -146,30 +107,11 @@ Start service on a specified graph
 
 
 ```python
-import gs_interactive
-from gs_interactive.models.start_service_request import StartServiceRequest
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
+resp = sess.start_service(
+    start_service_request=StartServiceRequest(graph_id=graph_id)
 )
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
-    start_service_request = gs_interactive.StartServiceRequest() # StartServiceRequest | Start service on a specified graph (optional)
-
-    try:
-        api_response = api_instance.start_service(start_service_request=start_service_request)
-        print("The response of AdminServiceServiceManagementApi->start_service:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceServiceManagementApi->start_service: %s\n" % e)
+assert resp.is_ok()
+print("restart service result: ", resp.get_value())
 ```
 
 
@@ -203,39 +145,20 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **stop_service**
-> str stop_service()
+# **StopService**
+> Result[str] stop_service()
 
 
 
-Stop current service
+Stop current query service. The admin service will still be serving.
 
 ### Example
 
 
 ```python
-import gs_interactive
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceServiceManagementApi(api_client)
-
-    try:
-        api_response = api_instance.stop_service()
-        print("The response of AdminServiceServiceManagementApi->stop_service:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceServiceManagementApi->stop_service: %s\n" % e)
+stop_res = sess.stop_service()
+assert stop_res.is_ok()
+print("stop service result", stop_res)
 ```
 
 

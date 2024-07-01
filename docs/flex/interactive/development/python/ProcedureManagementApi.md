@@ -12,8 +12,8 @@ All URIs are relative to *{INTERACTIVE_ENDPOINT}*
 
 
 
-# **create_procedure**
-> CreateProcedureResponse create_procedure(graph_id, create_procedure_request)
+# **CreateProcedure**
+> Result[CreateProcedureResponse] create_procedure(graph_id, create_procedure_request)
 
 
 
@@ -23,32 +23,74 @@ Create a new procedure on a graph
 
 
 ```python
-import gs_interactive
-from gs_interactive.models.create_procedure_request import CreateProcedureRequest
-from gs_interactive.models.create_procedure_response import CreateProcedureResponse
-from gs_interactive.rest import ApiException
-from pprint import pprint
+from gs_interactive.client.driver import Driver
+from gs_interactive.client.session import Session
+from gs_interactive.models import *
 
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
+test_graph_def = {
+    "name": "test_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            }
+        ],
+    },
+}
+driver = Driver()
+sess = driver.session()
+create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
+resp = sess.create_graph(create_graph_request)
+assert resp.is_ok()
+graph_id = resp.get_value().graph_id
+print("Graph id: ", graph_id)
+
+# Create procedure
+create_proc_request = CreateProcedureRequest(
+    name="test_procedure",
+    description="test procedure",
+    query="MATCH (n) RETURN COUNT(n);",
+    type="cypher",
 )
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
-    graph_id = 'graph_id_example' # str | 
-    create_procedure_request = gs_interactive.CreateProcedureRequest() # CreateProcedureRequest | 
-
-    try:
-        api_response = api_instance.create_procedure(graph_id, create_procedure_request)
-        print("The response of AdminServiceProcedureManagementApi->create_procedure:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceProcedureManagementApi->create_procedure: %s\n" % e)
+resp = sess.create_procedure(graph_id, create_proc_request)
+assert resp.is_ok()
+proc_id = resp.get_value().procedure_id
+print("procedure id", proc_id)
 ```
 
 
@@ -85,8 +127,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **delete_procedure**
-> str delete_procedure(graph_id, procedure_id)
+# **DeleteProcedure**
+> Result[str] delete_procedure(graph_id, procedure_id)
 
 
 
@@ -96,30 +138,9 @@ Delete a procedure on a graph by name
 
 
 ```python
-import gs_interactive
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
-    graph_id = 'graph_id_example' # str | 
-    procedure_id = 'procedure_id_example' # str | 
-
-    try:
-        api_response = api_instance.delete_procedure(graph_id, procedure_id)
-        print("The response of AdminServiceProcedureManagementApi->delete_procedure:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceProcedureManagementApi->delete_procedure: %s\n" % e)
+resp = sess.delete_procedure(graph_id, proc_id)
+assert resp.is_ok()
+print("delete procedure result", resp)
 ```
 
 
@@ -154,42 +175,20 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **get_procedure**
-> GetProcedureResponse get_procedure(graph_id, procedure_id)
+# **GetProcedure**
+> Result[GetProcedureResponse] get_procedure(graph_id, procedure_id)
 
 
 
-Get a procedure by name
+Get a procedure by graph id and procedure id.
 
 ### Example
 
 
 ```python
-import gs_interactive
-from gs_interactive.models.get_procedure_response import GetProcedureResponse
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
-    graph_id = 'graph_id_example' # str | 
-    procedure_id = 'procedure_id_example' # str | 
-
-    try:
-        api_response = api_instance.get_procedure(graph_id, procedure_id)
-        print("The response of AdminServiceProcedureManagementApi->get_procedure:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceProcedureManagementApi->get_procedure: %s\n" % e)
+resp = sess.get_procedure(graph_id, proc_id)
+assert resp.is_ok()
+print("get procedure ", resp)
 ```
 
 
@@ -224,41 +223,20 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **list_procedures**
-> List[GetProcedureResponse] list_procedures(graph_id)
+# **ListProcedures**
+> Result[List[GetProcedureResponse]] list_procedures(graph_id)
 
 
 
-List all procedures
+List all procedures bound to a graph
 
 ### Example
 
 
 ```python
-import gs_interactive
-from gs_interactive.models.get_procedure_response import GetProcedureResponse
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
-    graph_id = 'graph_id_example' # str | 
-
-    try:
-        api_response = api_instance.list_procedures(graph_id)
-        print("The response of AdminServiceProcedureManagementApi->list_procedures:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceProcedureManagementApi->list_procedures: %s\n" % e)
+resp = sess.list_procedures(graph_id)
+assert resp.is_ok()
+print("list all procedures", resp)
 ```
 
 
@@ -292,43 +270,21 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **update_procedure**
-> str update_procedure(graph_id, procedure_id, update_procedure_request=update_procedure_request)
+# **UpdateProcedure**
+> Result[str] update_procedure(graph_id, procedure_id, update_procedure_request=update_procedure_request)
 
 
 
-Update procedure on a graph by name
+Update the metadata of a procedure, i.e. description. The procedure's query or implementation can not be updated.
 
 ### Example
 
 
 ```python
-import gs_interactive
-from gs_interactive.models.update_procedure_request import UpdateProcedureRequest
-from gs_interactive.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to {INTERACTIVE_ENDPOINT}
-# See configuration.py for a list of all supported configuration parameters.
-configuration = gs_interactive.Configuration(
-    host = "{INTERACTIVE_ENDPOINT}"
-)
-
-
-# Enter a context with an instance of the API client
-with gs_interactive.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = gs_interactive.AdminServiceProcedureManagementApi(api_client)
-    graph_id = 'graph_id_example' # str | 
-    procedure_id = 'procedure_id_example' # str | 
-    update_procedure_request = gs_interactive.UpdateProcedureRequest() # UpdateProcedureRequest |  (optional)
-
-    try:
-        api_response = api_instance.update_procedure(graph_id, procedure_id, update_procedure_request=update_procedure_request)
-        print("The response of AdminServiceProcedureManagementApi->update_procedure:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling AdminServiceProcedureManagementApi->update_procedure: %s\n" % e)
+update_proc_req = UpdateProcedureRequest(description="A new description")
+resp = sess.update_procedure(graph_id, proc_id, update_proc_req)
+assert resp.is_ok()
+print("update proc success", resp)
 ```
 
 
