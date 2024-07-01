@@ -693,9 +693,9 @@ g.V().out("1..10").with('RESULT_OPT', 'ALL_V')
 g.V().out("1..10").with('RESULT_OPT', 'ALL_V').endV()
 ```
 #### Getting Properites
-The properties of the elements (vertices and/or edges) in the path can be projected by `values()`-step or `valueMap()`-step.
+The properties of the elements (vertices and/or edges) in the path can be projected by `values()`-step, `valueMap()`-step, and `elementMap()`-step.
 It is important to note that the specific elements targeted for property projection are determined by the `RESULT_OPT` setting. 
-For instance, if you configure `RESULT_OPT` as `ALL_V`,  `values()` or `valueMap()` will then project the properties of all vertices present in the path.
+For instance, if you configure `RESULT_OPT` as `ALL_V`,  `values()`, `valueMap()`, or `elementMap()` will then project the properties of all vertices present in the path.
 ```bash
 # get properties of each vertex in the path
 gremlin> g.V().both("1..3","knows").with('RESULT_OPT', 'ALL_V').values("name")
@@ -720,6 +720,17 @@ gremlin> g.V().both("1..3","knows").with('RESULT_OPT', 'ALL_V').valueMap("name",
 ==>[{age=27, name=vadas}, {age=29, name=marko}, {age=32, name=josh}]
 ==>[{age=32, name=josh}, {age=29, name=marko}, {age=27, name=vadas}]
 ==>[{age=32, name=josh}, {age=29, name=marko}, {age=32, name=josh}]
+gremlin> g.V().both("1..3","knows").with('RESULT_OPT', 'ALL_V').elementMap("name","age")
+==>[{age=27, name=vadas, ~id=2, ~label=0}, {age=29, name=marko, ~id=1, ~label=0}]
+==>[{age=32, name=josh, ~id=4, ~label=0}, {age=29, name=marko, ~id=1, ~label=0}]
+==>[{age=29, name=marko, ~id=1, ~label=0}, {age=27, name=vadas, ~id=2, ~label=0}]
+==>[{age=29, name=marko, ~id=1, ~label=0}, {age=32, name=josh, ~id=4, ~label=0}]
+==>[{age=27, name=vadas, ~id=2, ~label=0}, {age=29, name=marko, ~id=1, ~label=0}, {age=27, name=vadas, ~id=2, ~label=0}]
+==>[{age=27, name=vadas, ~id=2, ~label=0}, {age=29, name=marko, ~id=1, ~label=0}, {age=32, name=josh, ~id=4, ~label=0}]
+==>[{age=32, name=josh, ~id=4, ~label=0}, {age=29, name=marko, ~id=1, ~label=0}, {age=27, name=vadas, ~id=2, ~label=0}]
+==>[{age=32, name=josh, ~id=4, ~label=0}, {age=29, name=marko, ~id=1, ~label=0}, {age=32, name=josh, ~id=4, ~label=0}]
+==>[{age=29, name=marko, ~id=1, ~label=0}, {age=27, name=vadas, ~id=2, ~label=0}, {age=29, name=marko, ~id=1, ~label=0}]
+==>[{age=29, name=marko, ~id=1, ~label=0}, {age=32, name=josh, ~id=4, ~label=0}, {age=29, name=marko, ~id=1, ~label=0}]
 ```
 
 ### Expression
