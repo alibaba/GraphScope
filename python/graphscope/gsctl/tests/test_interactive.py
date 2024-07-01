@@ -97,6 +97,49 @@ modern_graph = {
     },
 }
 
+
+modern_graph_with_empty_edge_property = {
+    "name": "modern_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"long_text": ""}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [],
+                "primary_keys": [],
+            }
+        ],
+    },
+}
+
+
 modern_graph_vertex_only = {
     "name": "modern_graph",
     "description": "This is a test graph, only contains vertex",
@@ -383,12 +426,45 @@ class TestE2EInteractive(object):
         assert stored_procedure_id == "procedure_name"
         delete_graph_by_id(graph_id_2)
 
-    def test_start_service_on_vertex_only_graph(self):
+    def test_corner_case_on_starting_service(self):
+        original_graph_id = None
+        status = list_service_status()
+        for s in status:
+            if s.status == "Running":
+                original_graph_id = s.graph_id
+        assert original_graph_id is not None
+
+        # case 1:
+        # start service on vertex only graph
         graph_id = create_graph(modern_graph_vertex_only)
         start_service(graph_id)
         status = list_service_status()
         for s in status:
             if s.graph_id == graph_id:
+                assert s.status == "Running"
+            else:
+                assert s.status == "Stopped"
+        stop_service()
+        delete_graph_by_id(graph_id)
+
+        # case 2:
+        # start service on graph with empty edge property
+        graph_id = create_graph(modern_graph_with_empty_edge_property)
+        start_service(original_graph_id)
+        status = list_service_status()
+        for s in status:
+            if s.graph_id == original_graph_id:
+                assert s.status == "Running"
+            else:
+                assert s.status == "Stopped"
+        stop_service()
+        delete_graph_by_id(graph_id)
+
+        # switch to original graph
+        start_service(original_graph_id)
+        status = list_service_status()
+        for s in status:
+            if s.graph_id == original_graph_id:
                 assert s.status == "Running"
             else:
                 assert s.status == "Stopped"

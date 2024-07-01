@@ -24,6 +24,7 @@
 #include "flex/engines/http_server/generated/actor/admin_actor_ref.act.autogen.h"
 #include "flex/engines/http_server/types.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
+#include "flex/third_party/httplib.h"
 
 #include <glog/logging.h>
 
@@ -39,6 +40,181 @@ std::string trim_slash(const std::string& origin) {
   }
   return res;
 }
+
+// Only returns success if all results are success
+// But currently, only one file uploading is supported.
+admin_query_result generate_final_result(
+    server::payload<std::vector<gs::Result<seastar::sstring>>>& result) {
+  auto result_val = result.content;
+  nlohmann::json json_res;
+  if (result_val.size() != 1) {
+    LOG(INFO) << "Only one file uploading is supported";
+    return admin_query_result{gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Only one file uploading is supported"))};
+  }
+  for (auto& res : result_val) {
+    if (res.ok()) {
+      json_res["file_path"] = res.value();
+    } else {
+      return admin_query_result{std::move(res)};
+    }
+  }
+  return admin_query_result{gs::Result<seastar::sstring>(json_res.dump())};
+}
+
+inline bool parse_multipart_boundary(const seastar::sstring& content_type,
+                                     seastar::sstring& boundary) {
+  auto pos = content_type.find("boundary=");
+  if (pos == std::string::npos) {
+    return false;
+  }
+  boundary = content_type.substr(pos + 9);
+  if (boundary.length() >= 2 && boundary[0] == '"' && boundary.back() == '"') {
+    boundary = boundary.substr(1, boundary.size() - 2);
+  }
+  return !boundary.empty();
+}
+
+class admin_file_upload_handler_impl : public seastar::httpd::handler_base {
+ public:
+  admin_file_upload_handler_impl(uint32_t group_id, uint32_t shard_concurrency)
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+    admin_actor_refs_.reserve(shard_concurrency_);
+    hiactor::scope_builder builder;
+    builder.set_shard(hiactor::local_shard_id())
+        .enter_sub_scope(hiactor::scope<executor_group>(0))
+        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
+    for (unsigned i = 0; i < shard_concurrency_; ++i) {
+      admin_actor_refs_.emplace_back(builder.build_ref<admin_actor_ref>(i));
+    }
+  }
+  ~admin_file_upload_handler_impl() override = default;
+
+  seastar::future<server::payload<std::vector<gs::Result<seastar::sstring>>>>
+  upload_file(std::vector<std::pair<seastar::sstring, seastar::sstring>>&&
+                  file_name_and_contents,
+              size_t cur_ind, uint32_t dst_executor,
+              std::vector<gs::Result<seastar::sstring>>&& results) {
+    if (cur_ind >= file_name_and_contents.size()) {
+      VLOG(10) << "Successfully uploaded " << file_name_and_contents.size()
+               << " files.";
+      return seastar::make_ready_future<
+          server::payload<std::vector<gs::Result<seastar::sstring>>>>(
+          std::move(results));
+    } else {
+      return admin_actor_refs_[dst_executor]
+          .upload_file(
+              query_param{std::move(file_name_and_contents[cur_ind].second)})
+          .then_wrapped([this, dst_executor, cur_ind,
+                         file_name_and_contents =
+                             std::move(file_name_and_contents),
+                         results =
+                             std::move(results)](auto&& result_fut) mutable {
+            auto result = result_fut.get0();
+            auto result_val = result.content;
+            if (result_val.ok()) {
+              VLOG(10) << "Upload file success: "
+                       << file_name_and_contents[cur_ind].first << ", "
+                       << result_val.value();
+            } else {
+              LOG(ERROR) << "Upload file failed";
+              return seastar::make_exception_future<
+                  server::payload<std::vector<gs::Result<seastar::sstring>>>>(
+                  std::runtime_error("Upload file failed: " +
+                                     result_val.status().error_message()));
+            }
+            results.emplace_back(result_val);
+            return upload_file(std::move(file_name_and_contents), cur_ind + 1,
+                               dst_executor, std::move(results));
+          });
+    }
+  }
+
+  seastar::future<server::payload<gs::Result<seastar::sstring>>> upload_files(
+      std::vector<std::pair<seastar::sstring, seastar::sstring>>&&
+          file_name_and_contents,
+      uint32_t dst_executor) {
+    // upload each file in chain
+    std::vector<gs::Result<seastar::sstring>> results;
+    return upload_file(std::move(file_name_and_contents), 0, dst_executor,
+                       std::move(results))
+        .then([](auto&& results) {
+          auto final_res = generate_final_result(results);
+          return seastar::make_ready_future<admin_query_result>(
+              std::move(final_res));
+        });
+  }
+
+  std::vector<std::pair<seastar::sstring, seastar::sstring>>
+  parse_multipart_form_data(const seastar::sstring& content,
+                            const seastar::sstring& boundary) {
+    std::vector<seastar::sstring> names, filenames, content_types, contents;
+    httplib::detail::MultipartFormDataParser parser;
+    parser.set_boundary(boundary);
+    httplib::MultipartContentHeader header_callback =
+        [&names, &filenames,
+         &content_types](const httplib::MultipartFormData& header) {
+          names.push_back(header.name);
+          filenames.push_back(header.filename);
+          content_types.push_back(header.content_type);
+          return true;
+        };
+    httplib::ContentReceiver content_callback =
+        [&contents](const char* data, size_t data_length) {
+          contents.emplace_back(data, data_length);
+          return true;
+        };
+    parser.parse(content.data(), content.size(), content_callback,
+                 header_callback);
+    VLOG(10) << "filestorage names:" << gs::to_string(names);
+    VLOG(10) << "filenames: " << gs::to_string(filenames);
+    VLOG(10) << "content types" << gs::to_string(content_types);
+    std::vector<std::pair<seastar::sstring, seastar::sstring>> res;
+    for (size_t i = 0; i < names.size(); ++i) {
+      res.emplace_back(names[i], contents[i]);
+    }
+    return res;
+  }
+
+  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
+      const seastar::sstring& path,
+      std::unique_ptr<seastar::httpd::request> req,
+      std::unique_ptr<seastar::httpd::reply> rep) override {
+    auto dst_executor = executor_idx_;
+
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    LOG(INFO) << "Handling path:" << path << ", method: " << req->_method;
+    auto& method = req->_method;
+    if (method == "POST") {
+      seastar::sstring boundary;
+      if (!parse_multipart_boundary(req->_headers["Content-Type"], boundary)) {
+        LOG(ERROR) << "Failed to parse boundary";
+        return seastar::make_exception_future<
+            std::unique_ptr<seastar::httpd::reply>>(
+            std::runtime_error("Failed to parse boundary"));
+      }
+      std::vector<std::pair<seastar::sstring, seastar::sstring>>
+          file_name_and_contents =
+              parse_multipart_form_data(req->content, boundary);
+      // upload for each file
+      return upload_files(std::move(file_name_and_contents), dst_executor)
+          .then_wrapped([rep = std::move(rep)](
+                            seastar::future<admin_query_result>&& fut) mutable {
+            return return_reply_with_result(std::move(rep), std::move(fut));
+          });
+    } else {
+      return seastar::make_exception_future<
+          std::unique_ptr<seastar::httpd::reply>>(
+          std::runtime_error("Unsupported method" + method));
+    }
+  }
+
+ private:
+  const uint32_t shard_concurrency_;
+  uint32_t executor_idx_;
+  std::vector<admin_actor_ref> admin_actor_refs_;
+};
 
 /**
  * Handle all request for graph management.
@@ -560,8 +736,7 @@ seastar::future<> admin_http_handler::set_routes() {
           .add_str("/procedure")
           .add_param("procedure_id");
       // Delete a procedure
-      r.add(new seastar::httpd::match_rule(*match_rule),
-            seastar::httpd::operation_type::DELETE);
+      r.add(new seastar::httpd::match_rule(*match_rule), SEASTAR_DELETE);
     }
     {
       // Each procedure's handling
@@ -588,10 +763,17 @@ seastar::future<> admin_http_handler::set_routes() {
                                             shard_admin_graph_concurrency));
 
     // Delete a graph
-    r.add(seastar::httpd::operation_type::DELETE,
+    r.add(SEASTAR_DELETE,
           seastar::httpd::url("/v1/graph").remainder("graph_id"),
           new admin_http_graph_handler_impl(interactive_admin_group_id,
                                             shard_admin_graph_concurrency));
+    {
+      // uploading file to server
+      r.add(seastar::httpd::operation_type::POST,
+            seastar::httpd::url("/v1/file/upload"),
+            new admin_file_upload_handler_impl(interactive_admin_group_id,
+                                               shard_admin_graph_concurrency));
+    }
 
     // Get graph metadata
     {
@@ -708,7 +890,7 @@ seastar::future<> admin_http_handler::set_routes() {
       CHECK(params.at("procedure_id") == "/proce1")
           << params.at("procedure_id");
       params.clear();
-      test_handler = r.get_handler(seastar::httpd::operation_type::DELETE,
+      test_handler = r.get_handler(SEASTAR_DELETE,
                                    "/v1/graph/abc/procedure/proce1", params);
       CHECK(test_handler);
       test_handler = r.get_handler(seastar::httpd::operation_type::PUT,
@@ -728,8 +910,7 @@ seastar::future<> admin_http_handler::set_routes() {
       match_rule->add_str("/v1/job").add_param("job_id");
       r.add(match_rule, seastar::httpd::operation_type::GET);
 
-      r.add(seastar::httpd::operation_type::DELETE,
-            seastar::httpd::url("/v1/job").remainder("job_id"),
+      r.add(SEASTAR_DELETE, seastar::httpd::url("/v1/job").remainder("job_id"),
             new admin_http_job_handler_impl(interactive_admin_group_id,
                                             shard_admin_job_concurrency));
     }

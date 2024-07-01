@@ -239,7 +239,7 @@ class LFIndexer {
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       keys_ = new StringColumn(StorageStrategy::kMem,
                                type.additional_type_info.max_length);
-    } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+    } else if (type.type_enum == impl::PropertyTypeImpl::kStringView) {
       LOG(WARNING) << "String type is a deprecated type, use varchar instead.";
       LOG(WARNING) << "Use default max length"
                    << PropertyType::STRING_DEFAULT_MAX_LENGTH
@@ -422,6 +422,7 @@ class LFIndexer {
     keys_->dump(snapshot_dir + "/" + name + ".keys");
     indices_.dump(snapshot_dir + "/" + name + ".indices");
     dump_meta(snapshot_dir + "/" + name + ".meta");
+    close();
   }
 
   void close() {

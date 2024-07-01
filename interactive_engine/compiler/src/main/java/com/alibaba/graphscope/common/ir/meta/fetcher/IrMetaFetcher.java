@@ -26,8 +26,8 @@ import java.util.Optional;
 
 /**
  * This interface primarily describes the strategies to obtaining IrMeta, which are mainly of two types: static and dynamic.
- * The static strategy {@code StaticIrMetaFetcher} assumes that IrMeta does not change after initialization,
- * while the dynamic strategy {@code DynamicIrMetaFetcher} assumes that IrMeta can change.
+ * The static strategy {@link StaticIrMetaFetcher} assumes that IrMeta does not change after initialization,
+ * while the dynamic strategy {@link DynamicIrMetaFetcher} assumes that IrMeta can change.
  */
 public abstract class IrMetaFetcher {
     protected final IrMetaReader reader;

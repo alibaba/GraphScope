@@ -55,7 +55,7 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, const Any& id,
   for (int col_i = 0; col_i != col_num; ++col_i) {
     auto& prop = props[col_i];
     if (prop.type != types[col_i]) {
-      if (!(prop.type == PropertyType::kString &&
+      if (!(prop.type == PropertyType::kStringView &&
             types[col_i] == PropertyType::kStringMap)) {
         arc_.Resize(arc_size);
         std::string label_name = graph_.schema().get_vertex_label_name(label);
@@ -107,13 +107,37 @@ bool SingleVertexInsertTransaction::AddEdge(label_t src_label, const Any& src,
       return false;
     }
   }
-  const PropertyType& type =
-      graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (prop.type != type) {
-    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
-    LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
-               << type << ", got " << prop.type;
-    return false;
+  if (prop.type != PropertyType::kRecord) {
+    const PropertyType& type =
+        graph_.schema().get_edge_property(src_label, dst_label, edge_label);
+    if (prop.type != type) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " type not match, expected " << type << ", got "
+                 << prop.type;
+      return false;
+    }
+  } else {
+    const auto& types =
+        graph_.schema().get_edge_properties(src_label, dst_label, edge_label);
+    if (prop.AsRecord().size() != types.size()) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " size not match, expected " << types.size() << ", got "
+                 << prop.AsRecord().size();
+      return false;
+    }
+    auto r = prop.AsRecord();
+    for (size_t i = 0; i < r.size(); ++i) {
+      if (r[i].type != types[i]) {
+        std::string label_name =
+            graph_.schema().get_edge_label_name(edge_label);
+        LOG(ERROR) << "Edge property " << label_name
+                   << " type not match, expected " << types[i] << ", got "
+                   << r[i].type;
+        return false;
+      }
+    }
   }
   arc_ << static_cast<uint8_t>(1) << src_label;
   serialize_field(arc_, src);

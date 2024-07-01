@@ -34,7 +34,7 @@ std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
   } else if (type == PropertyType::Day()) {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
-  } else if (type == PropertyType::String()) {
+  } else if (type == PropertyType::StringView()) {
     return arrow::large_utf8();
   } else if (type == PropertyType::StringMap()) {
     return arrow::large_utf8();

@@ -50,7 +50,7 @@ struct murmurhash2_64 {
   }
 
   static inline hash_type hash(const Any& val, uint64_t seed) {
-    if (val.type == PropertyType::kString) {
+    if (val.type == PropertyType::kStringView) {
       return hash(val.AsStringView(), seed);
     } else if (val.type == PropertyType::kInt64) {
       return hash<int64_t>(val.AsInt64(), seed);

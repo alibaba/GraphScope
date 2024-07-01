@@ -43,7 +43,7 @@ oid_t generate_id() {
 
 void append_string_to_field(gs::UpdateTransaction::vertex_iterator& vit,
                             int col_id, const std::string& str) {
-  std::string cur_str = vit.GetField(col_id).AsString();
+  std::string cur_str = std::string(vit.GetField(col_id).AsStringView());
   if (cur_str.empty()) {
     cur_str = str;
   } else {
@@ -449,7 +449,7 @@ std::tuple<std::string, std::string, std::string> G0Check(GraphDB& db,
       break;
     }
   }
-  std::string p1_version_history = vit1.GetField(1).AsString();
+  std::string p1_version_history = std::string(vit1.GetField(1).AsStringView());
 
   auto vit2 = txn.GetVertexIterator(person_label_id);
   for (; vit2.IsValid(); vit2.Next()) {
@@ -457,7 +457,7 @@ std::tuple<std::string, std::string, std::string> G0Check(GraphDB& db,
       break;
     }
   }
-  std::string p2_version_history = vit2.GetField(1).AsString();
+  std::string p2_version_history = std::string(vit2.GetField(1).AsStringView());
 
   auto oeit = txn.GetOutEdgeIterator(person_label_id, vit1.GetIndex(),
                                      person_label_id, knows_label_id);

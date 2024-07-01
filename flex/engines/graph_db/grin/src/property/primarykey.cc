@@ -42,8 +42,8 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_primary_keys_by_vertex_type(
     vp += (GRIN_DATATYPE::UInt64 * 1u) << 16;
   } else if (type == gs::PropertyType::kUInt32) {
     vp += (GRIN_DATATYPE::UInt32 * 1u) << 16;
-  } else if (type == gs::PropertyType::kString) {
-    vp += (GRIN_DATATYPE::String * 1u) << 16;
+  } else if (type == gs::PropertyType::kStringView) {
+    vp += (GRIN_DATATYPE::StringView * 1u) << 16;
   } else {
     vp = GRIN_NULL_VERTEX_PROPERTY;
   }
@@ -68,7 +68,7 @@ GRIN_ROW grin_get_vertex_primary_keys_row(GRIN_GRAPH g, GRIN_VERTEX v) {
     auto oid = _g->g.get_oid(label, vid).AsInt64();
     auto p = new int64_t(oid);
     row->emplace_back(p);
-  } else if (type == gs::PropertyType::kString) {
+  } else if (type == gs::PropertyType::kStringView) {
     auto oid = _g->g.get_oid(label, vid).AsStringView();
     auto p = new std::string_view(oid);
     row->emplace_back(p);

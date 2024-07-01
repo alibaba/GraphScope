@@ -489,7 +489,7 @@ class ScanOpBuilder {
       return "uint32_t";
     } else if (type == gs::PropertyType::UInt64()) {
       return "uint64_t";
-    } else if (type == gs::PropertyType::String()) {
+    } else if (type == gs::PropertyType::StringView()) {
       return "std::string_view";
     } else {
       LOG(FATAL) << "Currently only support int, long, string as primary key";

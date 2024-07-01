@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.ImmutableList;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -30,6 +31,8 @@ public class ElementDetails implements Comparable<ElementDetails> {
     private final @Nullable PathExpandRange range;
     // record inner getV types of path expand
     private final List<Integer> pxdInnerGetVTypes;
+    private final GraphOpt.PathExpandResult resultOpt;
+    private final GraphOpt.PathExpandPath pathOpt;
     private boolean optional;
 
     public ElementDetails() {
@@ -37,27 +40,35 @@ public class ElementDetails implements Comparable<ElementDetails> {
     }
 
     public ElementDetails(double selectivity) {
-        this(selectivity, null, ImmutableList.of());
+        this(selectivity, null, ImmutableList.of(), null, null);
     }
 
     public ElementDetails(
-            double selectivity, @Nullable PathExpandRange range, List<Integer> pxdInnerGetVTypes) {
-        this(selectivity, range, pxdInnerGetVTypes, false);
+            double selectivity,
+            @Nullable PathExpandRange range,
+            List<Integer> pxdInnerGetVTypes,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt) {
+        this(selectivity, range, pxdInnerGetVTypes, resultOpt, pathOpt, false);
     }
 
     public ElementDetails(double selectivity, boolean optional) {
-        this(selectivity, null, ImmutableList.of(), optional);
+        this(selectivity, null, ImmutableList.of(), null, null, optional);
     }
 
     public ElementDetails(
             double selectivity,
             @Nullable PathExpandRange range,
             List<Integer> pxdInnerVertexTypes,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
             boolean optional) {
         this.selectivity = selectivity;
         this.range = range;
         this.pxdInnerGetVTypes = pxdInnerVertexTypes;
         this.optional = optional;
+        this.resultOpt = resultOpt;
+        this.pathOpt = pathOpt;
     }
 
     @Override
@@ -94,6 +105,14 @@ public class ElementDetails implements Comparable<ElementDetails> {
 
     public List<Integer> getPxdInnerGetVTypes() {
         return Collections.unmodifiableList(this.pxdInnerGetVTypes);
+    }
+
+    public GraphOpt.PathExpandResult getResultOpt() {
+        return resultOpt;
+    }
+
+    public GraphOpt.PathExpandPath getPathOpt() {
+        return pathOpt;
     }
 
     @Override

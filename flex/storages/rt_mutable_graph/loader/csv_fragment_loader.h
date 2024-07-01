@@ -66,13 +66,16 @@ class CSVTableRecordBatchSupplier : public IRecordBatchSupplier {
 class CSVFragmentLoader : public AbstractArrowFragmentLoader {
  public:
   CSVFragmentLoader(const std::string& work_dir, const Schema& schema,
-                    const LoadingConfig& loading_config, int32_t thread_num)
+                    const LoadingConfig& loading_config, int32_t thread_num,
+                    bool build_csr_in_mem, bool use_mmap_vector)
       : AbstractArrowFragmentLoader(work_dir, schema, loading_config,
-                                    thread_num) {}
+                                    thread_num, build_csr_in_mem,
+                                    use_mmap_vector) {}
 
   static std::shared_ptr<IFragmentLoader> Make(
       const std::string& work_dir, const Schema& schema,
-      const LoadingConfig& loading_config, int32_t thread_num);
+      const LoadingConfig& loading_config, int32_t thread_num,
+      bool build_csr_in_mem, bool use_mmap_vector);
 
   ~CSVFragmentLoader() {}
 

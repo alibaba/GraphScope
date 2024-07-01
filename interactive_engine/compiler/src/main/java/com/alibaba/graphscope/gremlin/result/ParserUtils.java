@@ -226,18 +226,6 @@ public class ParserUtils {
     }
 
     public static Object parseElement(IrResult.KeyValues.KeyValue value) {
-        switch (value.getValueCase()) {
-            case ELEMENT:
-                return parseElement(value.getElement());
-            case NESTED:
-                return parseEntry(IrResult.Entry.newBuilder().setMap(value.getNested()).build());
-            default:
-                throw new GremlinResultParserException(
-                        "keyValue ["
-                                + value
-                                + "] has invalid value type ["
-                                + value.getValueCase()
-                                + "]");
-        }
+        return parseEntry(value.getValue());
     }
 }

@@ -80,19 +80,21 @@ mod tests {
 
     use ahash::HashMap;
     use dyn_type::Object;
+    use graph_proxy::apis::GraphElement;
     use graph_proxy::apis::{DynDetails, Vertex};
-    use ir_common::generated::common as common_pb;
     use ir_common::generated::physical as pb;
+    use ir_common::generated::{algebra, common as common_pb};
     use ir_common::NameOrId;
-    use pegasus::api::{FoldByKey, KeyBy, Map, Sink};
+    use pegasus::api::{Dedup, FoldByKey, KeyBy, Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
     use crate::process::entry::{CollectionEntry, DynEntry, Entry};
     use crate::process::functions::GroupGen;
     use crate::process::operator::accum::accumulator::Accumulator;
+    use crate::process::operator::keyed::KeyFunctionGen;
     use crate::process::operator::tests::{
-        init_source, init_vertex1, init_vertex2, PERSON_LABEL, TAG_A, TAG_B, TAG_C,
+        init_source, init_vertex1, init_vertex2, to_var_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C,
     };
     use crate::process::record::Record;
 
@@ -105,6 +107,30 @@ mod tests {
         source
     }
 
+    // v1: marko, 29;
+    // v2: vadas, 27;
+    // v3: marko, 27;
+    // v4: josh, null;
+    // v5: peter, null;
+    fn init_group_source_with_null() -> Vec<Record> {
+        let mut source = init_source();
+        source.push(Record::new(init_vertex3(), None));
+        let map4: HashMap<NameOrId, Object> =
+            vec![("id".into(), object!(4)), ("name".into(), object!("josh")), ("age".into(), Object::None)]
+                .into_iter()
+                .collect();
+        let map5: HashMap<NameOrId, Object> = vec![
+            ("id".into(), object!(5)),
+            ("name".into(), object!("peter")),
+            ("age".into(), Object::None),
+        ]
+        .into_iter()
+        .collect();
+        source.push(Record::new(Vertex::new(4, Some(PERSON_LABEL), DynDetails::new(map4)), None));
+        source.push(Record::new(Vertex::new(5, Some(PERSON_LABEL), DynDetails::new(map5)), None));
+        source
+    }
+
     fn init_vertex3() -> Vertex {
         let map3: HashMap<NameOrId, Object> =
             vec![("id".into(), object!(3)), ("age".into(), object!(27)), ("name".into(), object!("marko"))]
@@ -113,12 +139,13 @@ mod tests {
         Vertex::new(3, Some(PERSON_LABEL), DynDetails::new(map3))
     }
 
-    fn group_test(group_opr_pb: pb::GroupBy) -> ResultStream<Record> {
+    fn group_test(source: Vec<Record>, group_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("group_test");
         let result = pegasus::run(conf, || {
+            let source = source.clone();
             let group_opr_pb = group_opr_pb.clone();
             move |input, output| {
-                let stream = input.input_from(init_group_source().into_iter())?;
+                let stream = input.input_from(source.into_iter())?;
                 let group_key = group_opr_pb.gen_group_key()?;
                 let group_accum = group_opr_pb.gen_group_accum()?;
                 let group_map = group_opr_pb.gen_group_map()?;
@@ -157,7 +184,7 @@ mod tests {
             alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = HashSet::new();
         let expected_result: HashSet<(DynEntry, DynEntry)> = [
             (init_vertex1().into(), CollectionEntry { inner: vec![init_vertex1().into()] }.into()),
@@ -189,7 +216,7 @@ mod tests {
             alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = vec![];
         let mut expected_result: Vec<(Object, DynEntry)> = vec![
             (
@@ -235,7 +262,7 @@ mod tests {
         };
         let group_opr_pb =
             pb::GroupBy { mappings: vec![key_alias_1, key_alias_2], functions: vec![function] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = HashSet::new();
         let expected_result: HashSet<((DynEntry, DynEntry), DynEntry)> = [
             (
@@ -283,7 +310,7 @@ mod tests {
         };
         let group_opr_pb =
             pb::GroupBy { mappings: vec![key_alias], functions: vec![function_1, function_2] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = HashSet::new();
         let expected_result: HashSet<(DynEntry, (DynEntry, DynEntry))> = [
             (
@@ -325,7 +352,7 @@ mod tests {
             alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = HashSet::new();
         let expected_result: HashSet<(DynEntry, DynEntry)> = [
             (init_vertex1().into(), object!(1u64).into()),
@@ -356,7 +383,7 @@ mod tests {
             alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = HashSet::new();
         let expected_result: HashSet<(DynEntry, DynEntry)> = [
             (object!("marko").into(), object!(2u64).into()),
@@ -386,7 +413,7 @@ mod tests {
             alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = HashSet::new();
         let expected_result: HashSet<(DynEntry, DynEntry)> =
             [(object!("vadas").into(), object!(27).into()), (object!("marko").into(), object!(27).into())]
@@ -415,7 +442,7 @@ mod tests {
             alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = HashSet::new();
         let expected_result: HashSet<(DynEntry, DynEntry)> =
             [(object!("marko").into(), object!(29).into()), (object!("vadas").into(), object!(27).into())]
@@ -444,7 +471,7 @@ mod tests {
             alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
-        let mut result = group_test(group_opr_pb);
+        let mut result = group_test(init_group_source(), group_opr_pb);
         let mut group_result = vec![];
         let mut expected_result: Vec<(Object, DynEntry)> = vec![
             (object!("marko"), DynEntry::new(init_vertex1())),
@@ -462,5 +489,129 @@ mod tests {
         expected_result.sort_by(|o1, o2| o1.0.cmp(&o2.0));
         group_result.sort_by(|o1, o2| o1.0.cmp(&o2.0));
         assert_eq!(group_result, expected_result);
+    }
+
+    // g.V().groupCount().by("age") where josh's and peter's age are null
+    #[test]
+    fn group_count_by_null_prop_test() {
+        // v1: marko, 29;
+        // v2: vadas, 27;
+        // v3: marko, 27;
+        // v4: josh, null;
+        // v5: peter, null;
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 3, // Count
+            alias: Some(TAG_B.into()),
+        };
+        let key_alias = pb::group_by::KeyAlias {
+            key: Some(common_pb::Variable::from("@.age".to_string())),
+            alias: Some(TAG_A.into()),
+        };
+        let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
+        let mut result = group_test(init_group_source_with_null(), group_opr_pb);
+        let mut group_result = HashSet::new();
+        let expected_result: HashSet<(DynEntry, DynEntry)> = [
+            (Object::None.into(), object!(2u64).into()),
+            (object!(27).into(), object!(2u64).into()),
+            (object!(29).into(), object!(1u64).into()),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        while let Some(Ok(result)) = result.next() {
+            let key = result.get(Some(TAG_A)).unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
+            group_result.insert((key.clone(), val.clone()));
+        }
+        assert_eq!(group_result, expected_result);
+    }
+
+    // g.V().dedup().by("age") where josh's and peter's age are null
+    #[test]
+    fn group_first_by_null_prop_test() {
+        // v1: marko, 29;
+        // v2: vadas, 27;
+        // v3: marko, 27;
+        // v4: josh, null;
+        // v5: peter, null;
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 8, // first
+            alias: Some(TAG_B.into()),
+        };
+        let key_alias = pb::group_by::KeyAlias {
+            key: Some(common_pb::Variable::from("@.age".to_string())),
+            alias: Some(TAG_A.into()),
+        };
+        let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
+        let mut result = group_test(init_group_source_with_null(), group_opr_pb);
+        let mut group_result = HashSet::new();
+        let expected_result: HashSet<(DynEntry, Object)> = [
+            (Object::None.into(), object!("josh")),
+            (object!(27).into(), object!("vadas")),
+            (object!(29).into(), object!("marko")),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        while let Some(Ok(result)) = result.next() {
+            let key = result.get(Some(TAG_A)).unwrap();
+            let val = result
+                .get(Some(TAG_B))
+                .unwrap()
+                .as_vertex()
+                .unwrap()
+                .get_property(&"name".into())
+                .unwrap()
+                .try_to_owned()
+                .unwrap();
+            group_result.insert((key.clone(), val.clone()));
+        }
+        assert_eq!(group_result, expected_result);
+    }
+
+    // g.V().dedup().by("age") where josh's and peter's age are null
+    #[test]
+    fn dedup_by_null_test() {
+        // v1: marko, 29;
+        // v2: vadas, 27;
+        // v3: marko, 27;
+        // v4: josh, null;
+        // v5: peter, null;
+        let conf = JobConf::new("dedup_test");
+        let mut result = pegasus::run(conf, || {
+            let source = init_group_source_with_null();
+            let dedup_opr = algebra::Dedup { keys: vec![to_var_pb(None, Some("age".into()))] };
+
+            move |input, output| {
+                let stream = input.input_from(source.into_iter())?;
+                // let selector = self.udf_gen.gen_dedup(dedup)?;
+                let selector = dedup_opr.gen_key()?;
+                let res_stream = stream
+                    .key_by(move |record| selector.get_kv(record))?
+                    .dedup()?
+                    .map(|pair| Ok(pair.value))?;
+                res_stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+        let mut expected_result = vec![object!("josh"), object!("vadas"), object!("marko")];
+        let mut dedup_result = vec![];
+        while let Some(Ok(result)) = result.next() {
+            let val = result
+                .get(None)
+                .unwrap()
+                .as_vertex()
+                .unwrap()
+                .get_property(&"name".into())
+                .unwrap()
+                .try_to_owned()
+                .unwrap();
+            dedup_result.push(val.clone());
+        }
+        expected_result.sort();
+        dedup_result.sort();
+        assert_eq!(dedup_result, expected_result);
     }
 }

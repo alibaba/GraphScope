@@ -17,7 +17,12 @@ use std::{env, sync::Arc};
 
 use graph_proxy::{apis::PegasusClusterInfo, create_exp_store, SimplePartition};
 use log::info;
+#[cfg(feature = "mimalloc")]
+use mimalloc_rust::*;
 use runtime::initialize_job_assembly;
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
