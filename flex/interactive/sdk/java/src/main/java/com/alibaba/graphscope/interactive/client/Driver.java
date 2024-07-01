@@ -47,20 +47,24 @@ public class Driver {
      */
     public static Driver connect() {
         String adminUri = System.getenv("INTERACTIVE_ADMIN_ENDPOINT");
-        if (adminUri == null){
+        if (adminUri == null) {
             throw new IllegalArgumentException("INTERACTIVE_ADMIN_ENDPOINT is not set");
         }
         String storedProcUri = System.getenv("INTERACTIVE_STORED_PROC_ENDPOINT");
-        if (storedProcUri == null){
+        if (storedProcUri == null) {
             throw new IllegalArgumentException("INTERACTIVE_STORED_PROC_ENDPOINT is not set");
         }
         String cypherUri = System.getenv("INTERACTIVE_CYPHER_ENDPOINT");
-        if (cypherUri == null){
-           logger.warning("INTERACTIVE_CYPHER_ENDPOINT is not set, will try to parse endpoint from service_status");
+        if (cypherUri == null) {
+            logger.warning(
+                    "INTERACTIVE_CYPHER_ENDPOINT is not set, will try to parse endpoint from"
+                            + " service_status");
         }
         String gremlinUri = System.getenv("INTERACTIVE_GREMLIN_ENDPOINT");
-        if (gremlinUri == null){
-            logger.warning("INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to parse endpoint from service_status");
+        if (gremlinUri == null) {
+            logger.warning(
+                    "INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to parse endpoint from"
+                            + " service_status");
         }
         return connect(adminUri, storedProcUri, cypherUri, gremlinUri);
     }
@@ -73,7 +77,8 @@ public class Driver {
      * @param gremlinUri The URI of the gremlin service.
      * @return The driver object.
      */
-    public static Driver connect(String adminUri, String storedProcUri, String cypherUri, String gremlinUri) {
+    public static Driver connect(
+            String adminUri, String storedProcUri, String cypherUri, String gremlinUri) {
         return new Driver(adminUri, storedProcUri, cypherUri, gremlinUri);
     }
 
@@ -104,7 +109,7 @@ public class Driver {
         this.cypherUri = cypherUri;
         this.gremlinUri = gremlinUri;
         // Parse uri
-        if (!storedProcUri.startsWith("http")){
+        if (!storedProcUri.startsWith("http")) {
             throw new IllegalArgumentException("Invalid uri: " + storedProcUri);
         }
         initHostPort();
@@ -117,7 +122,7 @@ public class Driver {
         this.cypherUri = null;
         this.gremlinUri = null;
         // Parse uri
-        if (!storedProcUri.startsWith("http")){
+        if (!storedProcUri.startsWith("http")) {
             throw new IllegalArgumentException("Invalid uri: " + storedProcUri);
         }
         initHostPort();
@@ -132,8 +137,7 @@ public class Driver {
     public Session session() {
         if (storedProcUri == null) {
             return DefaultSession.newInstance(adminUri);
-        }
-        else {
+        } else {
             return DefaultSession.newInstance(adminUri, storedProcUri);
         }
     }
@@ -173,7 +177,7 @@ public class Driver {
         if (endpoint == null) {
             return null;
         }
-        cypherUri =  "bolt://" + endpoint.getLeft() + ":" + endpoint.getRight();
+        cypherUri = "bolt://" + endpoint.getLeft() + ":" + endpoint.getRight();
         return cypherUri;
     }
 
@@ -231,7 +235,7 @@ public class Driver {
     // TODO(zhanglei): return null if gremlin is not enabled
     private Pair<String, Integer> getGremlinEndpointImpl() {
         if (gremlinUri != null) {
-            //parse host and port from ws://host:port/gremlin
+            // parse host and port from ws://host:port/gremlin
             String[] parts = gremlinUri.split(":");
             if (parts.length != 3) {
                 throw new IllegalArgumentException("Invalid uri: " + gremlinUri);
@@ -255,7 +259,7 @@ public class Driver {
     }
 
     private void initHostPort() {
-        if (!adminUri.startsWith("http")){
+        if (!adminUri.startsWith("http")) {
             throw new IllegalArgumentException("Invalid uri: " + adminUri);
         }
         String[] parts = adminUri.split(":");
