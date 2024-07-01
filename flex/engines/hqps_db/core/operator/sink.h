@@ -114,8 +114,9 @@ void template_set_value(common::Value* value, T v) {
 }
 
 template <typename T,
-          typename std::enable_if<(std::is_same_v<T, uint64_t>) &&(
-              !std::is_same_v<uint64_t, unsigned long>)>::type* = nullptr>
+          typename std::enable_if<
+              (std::is_same_v<T, uint64_t>) &&
+              (!std::is_same_v<uint64_t, unsigned long>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
   value->set_i64(v);
 }
@@ -212,7 +213,7 @@ void set_any_to_element(const Any& any, results::Element* element) {
     element->mutable_object()->set_f64(any.value.f);
   } else if (any.type == PropertyType::Date()) {
     element->mutable_object()->set_i64(any.value.d.milli_second);
-  } else if (any.type == PropertyType::String()) {
+  } else if (any.type == PropertyType::StringView()) {
     element->mutable_object()->mutable_str()->assign(any.value.s.data(),
                                                      any.value.s.size());
   } else if (any.type == PropertyType::VertexGlobalId()) {
@@ -260,7 +261,7 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
     value->set_f64(any.value.f);
   } else if (any.type == PropertyType::Date()) {
     value->set_i64(any.value.d.milli_second);
-  } else if (any.type == PropertyType::String()) {
+  } else if (any.type == PropertyType::StringView()) {
     value->mutable_str()->assign(any.value.s.data(), any.value.s.size());
   } else {
     LOG(WARNING) << "Unexpected property type: "

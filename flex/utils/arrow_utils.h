@@ -312,7 +312,7 @@ struct TypeConverter<float> {
 };
 template <>
 struct TypeConverter<std::string> {
-  static PropertyType property_type() { return PropertyType::kString; }
+  static PropertyType property_type() { return PropertyType::kStringView; }
   using ArrowType = arrow::LargeStringType;
   using ArrowArrayType = arrow::LargeStringArray;
   static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
@@ -322,7 +322,7 @@ struct TypeConverter<std::string> {
 
 template <>
 struct TypeConverter<std::string_view> {
-  static PropertyType property_type() { return PropertyType::kString; }
+  static PropertyType property_type() { return PropertyType::kStringView; }
   using ArrowType = arrow::LargeStringType;
   using ArrowArrayType = arrow::LargeStringArray;
   static std::shared_ptr<arrow::DataType> ArrowTypeValue() {

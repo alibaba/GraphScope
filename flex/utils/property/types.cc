@@ -33,7 +33,7 @@ std::string PrimitivePropertyTypeToString(PropertyType type) {
     return DT_DATE;
   } else if (type == PropertyType::kDay) {
     return DT_DAY;
-  } else if (type == PropertyType::kString) {
+  } else if (type == PropertyType::kStringView) {
     return DT_STRING;
   } else if (type == PropertyType::kStringMap) {
     return DT_STRINGMAP;
@@ -180,8 +180,8 @@ const PropertyType PropertyType::kDate =
     PropertyType(impl::PropertyTypeImpl::kDate);
 const PropertyType PropertyType::kDay =
     PropertyType(impl::PropertyTypeImpl::kDay);
-const PropertyType PropertyType::kString =
-    PropertyType(impl::PropertyTypeImpl::kString);
+const PropertyType PropertyType::kStringView =
+    PropertyType(impl::PropertyTypeImpl::kStringView);
 const PropertyType PropertyType::kStringMap =
     PropertyType(impl::PropertyTypeImpl::kStringMap);
 const PropertyType PropertyType::kVertexGlobalId =
@@ -192,6 +192,8 @@ const PropertyType PropertyType::kRecordView =
     PropertyType(impl::PropertyTypeImpl::kRecordView);
 const PropertyType PropertyType::kRecord =
     PropertyType(impl::PropertyTypeImpl::kRecord);
+const PropertyType PropertyType::kString =
+    PropertyType(impl::PropertyTypeImpl::kString);
 
 bool PropertyType::operator==(const PropertyType& other) const {
   if (type_enum == impl::PropertyTypeImpl::kVarChar &&
@@ -199,10 +201,18 @@ bool PropertyType::operator==(const PropertyType& other) const {
     return additional_type_info.max_length ==
            other.additional_type_info.max_length;
   }
-  if ((type_enum == impl::PropertyTypeImpl::kString &&
+  if ((type_enum == impl::PropertyTypeImpl::kStringView &&
        other.type_enum == impl::PropertyTypeImpl::kVarChar) ||
       (type_enum == impl::PropertyTypeImpl::kVarChar &&
-       other.type_enum == impl::PropertyTypeImpl::kString)) {
+       other.type_enum == impl::PropertyTypeImpl::kStringView)) {
+    return true;
+  }
+  if ((type_enum == impl::PropertyTypeImpl::kString &&
+       (other.type_enum == impl::PropertyTypeImpl::kStringView ||
+        other.type_enum == impl::PropertyTypeImpl::kVarChar)) ||
+      (other.type_enum == impl::PropertyTypeImpl::kString &&
+       (type_enum == impl::PropertyTypeImpl::kStringView ||
+        type_enum == impl::PropertyTypeImpl::kVarChar))) {
     return true;
   }
   return type_enum == other.type_enum;
@@ -256,6 +266,9 @@ PropertyType PropertyType::Day() {
 }
 PropertyType PropertyType::String() {
   return PropertyType(impl::PropertyTypeImpl::kString);
+}
+PropertyType PropertyType::StringView() {
+  return PropertyType(impl::PropertyTypeImpl::kStringView);
 }
 PropertyType PropertyType::StringMap() {
   return PropertyType(impl::PropertyTypeImpl::kStringMap);
@@ -322,7 +335,12 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << value.type << value.value.d.milli_second;
   } else if (value.type == PropertyType::Day()) {
     in_archive << value.type << value.value.day.to_u32();
-  } else if (value.type == PropertyType::String()) {
+  } else if (value.type == impl::PropertyTypeImpl::kString) {
+    // serialize as string_view
+    auto s = *value.value.s_ptr;
+    auto type = PropertyType::StringView();
+    in_archive << type << s;
+  } else if (value.type == PropertyType::StringView()) {
     in_archive << value.type << value.value.s;
   } else if (value.type == PropertyType::VertexGlobalId()) {
     in_archive << value.type << value.value.vertex_gid;
@@ -371,7 +389,9 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     uint32_t val;
     out_archive >> val;
     value.value.day.from_u32(val);
-  } else if (value.type == PropertyType::String()) {
+  } else if (value.type.type_enum == impl::PropertyTypeImpl::kString) {
+    LOG(FATAL) << "Not supported";
+  } else if (value.type == PropertyType::StringView()) {
     out_archive >> value.value.s;
   } else if (value.type == PropertyType::VertexGlobalId()) {
     out_archive >> value.value.vertex_gid;

@@ -256,7 +256,7 @@ static void append_edges(std::shared_ptr<arrow::Array> src_col,
                                  const std::shared_ptr<arrow::Array>& cur_col) {
     if (cur_indexer.get_type() == PropertyType::kInt64) {
       CHECK(cur_col->type()->Equals(arrow::int64()));
-    } else if (cur_indexer.get_type() == PropertyType::kString) {
+    } else if (cur_indexer.get_type() == PropertyType::kStringView) {
       CHECK(cur_col->type()->Equals(arrow::utf8()) ||
             cur_col->type()->Equals(arrow::large_utf8()));
     } else if (cur_indexer.get_type() == PropertyType::kInt32) {
