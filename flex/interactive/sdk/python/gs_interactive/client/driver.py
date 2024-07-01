@@ -36,6 +36,10 @@ class Driver:
     def __init__(self):
         """
         Construct a new driver from the endpoints declared in environment variables.
+        INTERACTIVE_ADMIN_ENDPOINT: http://host:port
+        INTERACTIVE_STORED_PROC_ENDPOINT: http://host:port
+        INTERACTIVE_CYPHER_ENDPOINT: neo4j://host:port or bolt://host:port
+        INTERACTIVE_GREMLIN_ENDPOINT: ws://host:port/gremlin
         """
         self._admin_endpoint = os.environ.get("INTERACTIVE_ADMIN_ENDPOINT")
         assert self._admin_endpoint is not None, "INTERACTIVE_ADMIN_ENDPOINT is not set"
@@ -48,6 +52,7 @@ class Driver:
         if self._gremlin_endpoint is None:
             print("INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to get it from service status endpoint")
         self._session = None
+        self.init_host_and_port()
 
     def __init__(self, admin_endpoint: str, stored_proc_endpoint : str, cypher_endpoint : str, gremlin_endpoint : str):
         """
@@ -58,6 +63,7 @@ class Driver:
         self._cypher_endpoint = cypher_endpoint
         self._gremlin_endpoint = gremlin_endpoint
         self._session = None
+        self.init_host_and_port()
 
     def __init__(self, admin_endpoint: str):
         """
@@ -68,6 +74,13 @@ class Driver:
         """
         # split uri into host and port
         self._admin_endpoint = admin_endpoint
+        self._stored_proc_endpoint = None
+        self._cypher_endpoint = None
+        self._gremlin_endpoint = None
+        self._session = None
+        self.init_host_and_port()
+
+    def init_host_and_port(self):
         # prepend http:// to self._admin_endpoint
         if not self._admin_endpoint.startswith("http://"):
             raise ValueError("Invalid uri, expected format is http://host:port")
@@ -77,7 +90,6 @@ class Driver:
             raise ValueError("Invalid uri, expected format is host:port")
         self._host = splitted[0]
         self._port = int(splitted[1])
-        self._session = None
 
     def session(self) -> Session:
         if self._stored_proc_endpoint is None:
