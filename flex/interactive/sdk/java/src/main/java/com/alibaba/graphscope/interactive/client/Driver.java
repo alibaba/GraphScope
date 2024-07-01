@@ -263,10 +263,10 @@ public class Driver {
             throw new IllegalArgumentException("Invalid uri: " + adminUri);
         }
         String[] parts = adminUri.split(":");
-        if (parts.length != 2) {
+        if (parts.length != 3) {
             throw new IllegalArgumentException("Invalid uri: " + adminUri);
         }
-        this.host = parts[0].substring(7);
-        this.port = Integer.parseInt(parts[1]);
+        host = parts[1].substring(2);
+        port = Integer.parseInt(parts[2]);
     }
 }

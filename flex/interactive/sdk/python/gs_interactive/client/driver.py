@@ -33,7 +33,31 @@ from gs_interactive.client.session import DefaultSession, Session
 
 
 class Driver:
-    def __init__(self):
+    def __init__(self, admin_endpoint: str = None, stored_proc_endpoint : str = None, cypher_endpoint : str = None, gremlin_endpoint : str = None):
+        """
+        Construct a new driver with the given endpoints.
+        """
+        if admin_endpoint is None:
+            self.read_endpoints_from_env()
+        else:
+            self._admin_endpoint = admin_endpoint
+            self._stored_proc_endpoint = stored_proc_endpoint
+            self._cypher_endpoint = cypher_endpoint
+            self._gremlin_endpoint = gremlin_endpoint
+        self._session = None
+        self.init_host_and_port()
+
+    def init_host_and_port(self):
+        # prepend http:// to self._admin_endpoint
+        if not self._admin_endpoint.startswith("http://"):
+            raise ValueError("Invalid uri, expected format is http://host:port")
+        host_and_port = self._admin_endpoint[7:]
+        splitted = host_and_port.split(":")
+        if len(splitted) != 2:
+            raise ValueError("Invalid uri, expected format is host:port")
+        self._host = splitted[0]
+        self._port = int(splitted[1])
+    def read_endpoints_from_env(self):
         """
         Construct a new driver from the endpoints declared in environment variables.
         INTERACTIVE_ADMIN_ENDPOINT: http://host:port
@@ -51,48 +75,9 @@ class Driver:
         self._gremlin_endpoint = os.environ.get("INTERACTIVE_GREMLIN_ENDPOINT")
         if self._gremlin_endpoint is None:
             print("INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to get it from service status endpoint")
-        self._session = None
-        self.init_host_and_port()
-
-    def __init__(self, admin_endpoint: str, stored_proc_endpoint : str, cypher_endpoint : str, gremlin_endpoint : str):
-        """
-        Construct a new driver with the given endpoints.
-        """
-        self._admin_endpoint = admin_endpoint
-        self._stored_proc_endpoint = stored_proc_endpoint
-        self._cypher_endpoint = cypher_endpoint
-        self._gremlin_endpoint = gremlin_endpoint
-        self._session = None
-        self.init_host_and_port()
-
-    def __init__(self, admin_endpoint: str):
-        """
-        This should only be used internally, user should use the constructor which requires no arguments.
-        Construct a new driver instance with the given admin endpoint uri.
-        In this method, we parse the stored procedure port and gremlin/cypher port from the reponse of the
-        service status endpoint.
-        """
-        # split uri into host and port
-        self._admin_endpoint = admin_endpoint
-        self._stored_proc_endpoint = None
-        self._cypher_endpoint = None
-        self._gremlin_endpoint = None
-        self._session = None
-        self.init_host_and_port()
-
-    def init_host_and_port(self):
-        # prepend http:// to self._admin_endpoint
-        if not self._admin_endpoint.startswith("http://"):
-            raise ValueError("Invalid uri, expected format is http://host:port")
-        host_and_port = self._admin_endpoint[7:]
-        splitted = host_and_port.split(":")
-        if len(splitted) != 2:
-            raise ValueError("Invalid uri, expected format is host:port")
-        self._host = splitted[0]
-        self._port = int(splitted[1])
 
     def session(self) -> Session:
-        if self._stored_proc_endpoint is None:
+        if self._stored_proc_endpoint is not None:
             return DefaultSession(self._admin_endpoint, self._stored_proc_endpoint)
         return DefaultSession(self._admin_endpoint)
 
