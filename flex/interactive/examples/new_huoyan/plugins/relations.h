@@ -5,6 +5,7 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/app/interactive_app_base.h"
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 
 #include "nlohmann/json.hpp"
 
@@ -164,6 +165,7 @@ struct ResultsCreator {
     path.rel_types = rel_types;
     path.rel_infos = rel_infos;
     path.directions = directions;
+    LOG(INFO) << "emplace path: " << gs::to_string(path.vids) << ", " << gs::to_string(path.weights) << ", " << gs::to_string(path.rel_types) << ", " << gs::to_string(path.rel_infos) << ", " << gs::to_string(path.directions);
     results_.path_to_end_node[end_node_id].push_back(path);
     return true;
   }
@@ -193,7 +195,9 @@ struct ResultsCreator {
       end_node_json["startNodeName"] = start_node_name;
       uint32_t prev_oid;
       std::string prev_name;
-      nlohmann::json paths = nlohmann::json::array();
+//      nlohmann::json paths = nlohmann::json::array();
+      json["paths"] = nlohmann::json::array();
+      LOG(INFO) << "paths vec size:" << paths_vec.size(); 
       for (const auto& path : paths_vec) {
         nlohmann::json path_json = nlohmann::json::object();
         path_json["relations"] = nlohmann::json::array();
@@ -234,7 +238,7 @@ struct ResultsCreator {
             }
           }
         }
-        paths.push_back(path_json);
+        json["paths"].push_back(path_json);
       }
       json.push_back(end_node_json);
     }

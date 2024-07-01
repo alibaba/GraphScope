@@ -13,7 +13,7 @@ loading_config:
 vertex_mappings:
   - type_name: company  # must align with the schema
     inputs:
-      - onecomp/dwi_oc_rel_vertex_company_interactive_d/ds=20240626
+      - onecomp/dwi_oc_rel_vertex_company_interactive_d/ds=20240625
     column_mappings:
       - column:
           index: 2    # can be omitted if the index is the same as the property index
@@ -37,7 +37,7 @@ vertex_mappings:
         property: license_number
   - type_name: person
     inputs:
-      - onecomp/dwi_oc_rel_vertex_person_interactive_d/ds=20240626
+      - onecomp/dwi_oc_rel_vertex_person_interactive_d/ds=20240627
     column_mappings:
       - column:
           index: 2
@@ -53,7 +53,7 @@ edge_mappings:
       source_vertex:  company
       destination_vertex:  company
     inputs:
-      - onecomp/dwi_oc_rel_edge_comp_comp_interactive_d/ds=20240626
+      - onecomp/dwi_oc_rel_edge_comp_comp_interactive_d/ds=20240625
     source_vertex_mappings:
       - column:
           index: 2
@@ -82,7 +82,7 @@ edge_mappings:
       source_vertex:  person
       destination_vertex:  company
     inputs:
-      - onecomp/dwi_oc_rel_edge_comp_person_interactive_d/ds=20240626
+      - onecomp/dwi_oc_rel_edge_comp_person_interactive_d/ds=20240625
     source_vertex_mappings:
       - column:
           index: 2

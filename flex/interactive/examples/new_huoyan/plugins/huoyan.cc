@@ -150,6 +150,7 @@ class HuoYan : public WriteAppBase {
   }
 
   bool initialize(GraphDBSession& graph) {
+    LOG(INFO) << "initializing...";
     comp_label_id_ = graph.schema().get_vertex_label_id("company");
     person_label_id_ = graph.schema().get_vertex_label_id("person");
     invest_label_id_ = graph.schema().get_edge_label_id("invest");
