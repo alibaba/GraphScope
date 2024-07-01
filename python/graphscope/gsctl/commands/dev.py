@@ -201,11 +201,11 @@ def deploy(
     container_name,
     image_registry,
     image_tag,
-    coordinator_port = 8081,
-    admin_port = 7778,
-    storedproc_port = 10001,
-    cypher_port = 7688,
-    gremlin_port = 8183,
+    coordinator_port=8081,
+    admin_port=7778,
+    storedproc_port=10001,
+    cypher_port=7688,
+    gremlin_port=8183,
 ):  # noqa: F811
     """Deploy Flex Interactive instance"""
     cmd = []
