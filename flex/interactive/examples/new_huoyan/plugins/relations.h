@@ -65,9 +65,6 @@ struct Results {
 };
 
 struct ResultsCreator {
-  label_t comp_label_id_;
-  label_t person_label_id_;
-
   ResultsCreator(
       label_t comp_label_id, label_t person_label_id,
       std::shared_ptr<TypedColumn<std::string_view>> typed_comp_named_col,
@@ -83,6 +80,8 @@ struct ResultsCreator {
         typed_comp_credit_code_col_(typed_comp_credit_code_col),
         typed_comp_license_number_col_(typed_comp_license_number_col),
         typed_person_named_col_(typed_person_named_col) {}
+
+  void set_start_vid(uint32_t start_vid) { results_.start_node_id = start_vid; }
 
   inline std::string get_vertex_label_str_from_encoded_vid(
       vid_t encoded_vid) const {
@@ -255,6 +254,8 @@ struct ResultsCreator {
     return json.dump();
   }
 
+  label_t comp_label_id_;
+  label_t person_label_id_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_named_col_;
   std::shared_ptr<TypedColumn<int64_t>> typed_comp_status_col_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_credit_code_col_;

@@ -221,7 +221,14 @@ class HuoYan : public WriteAppBase {
   bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) {
     //////////Initialization////////////////////////////
     if (!is_initialized_.load()) {
-      initialize(graph);
+      if (!initialize(graph)) {
+        LOG(ERROR) << "Failed to initialize";
+        return false;
+      } else {
+        LOG(INFO) << "Successfully initialized";
+      }
+    } else {
+      LOG(INFO) << "Already initialized";
     }
     ////////////Initialization///////////////////////////
 
@@ -250,6 +257,7 @@ class HuoYan : public WriteAppBase {
       LOG(ERROR) << "Start oid: " << start_oid << ", not found";
       return false;
     }
+    results_creator_->set_start_vid(encode_vid(comp_label_id_, start_vid));
     LOG(INFO) << "start vid: " << start_vid;
 
     int32_t vec_size = input.get_int();
