@@ -242,8 +242,8 @@ Coordinator is listening on {coordinator_port} port, you can connect to coordina
     gsctl connect --coordinator-endpoint http://127.0.0.1:{coordinator_port}
 
 Interactive service is ready, you can connect to the interactive service with interactive sdk:
-Interactive Admin service is listening at 
-    http://127.0.0.1{admin_port}, 
+Interactive Admin service is listening at
+    http://127.0.0.1{admin_port},
 You can connect to admin service with Interactive SDK, with following environment variables declared.
 
 ############################################################################################
@@ -253,11 +253,11 @@ You can connect to admin service with Interactive SDK, with following environmen
     export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
 ############################################################################################
 
-See https://graphscope.io/docs/latest/flex/interactive/development/java/java_sdk and 
-https://graphscope.io/docs/latest/flex/interactive/development/python/python_sdk for more details 
+See https://graphscope.io/docs/latest/flex/interactive/development/java/java_sdk and
+https://graphscope.io/docs/latest/flex/interactive/development/python/python_sdk for more details
 about the usage of Interactive SDK.
 
-Apart from interactive sdk, you can also use neo4j native tools(like cypher-shell) to connect to cypher endpoint, 
+Apart from interactive sdk, you can also use neo4j native tools(like cypher-shell) to connect to cypher endpoint,
 and gremlin console to connect to gremlin endpoint.
         """
         click.secho(message, bold=False)
