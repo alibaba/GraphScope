@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import os
 import sys
 
 from gremlin_python import statics
@@ -32,13 +33,45 @@ from gs_interactive.client.session import DefaultSession, Session
 
 
 class Driver:
-    def __init__(self, endpoint: str):
+    def __init__(self):
+        """
+        Construct a new driver from the endpoints declared in environment variables.
+        """
+        self._admin_endpoint = os.environ.get("INTERACTIVE_ADMIN_ENDPOINT")
+        assert self._admin_endpoint is not None, "INTERACTIVE_ADMIN_ENDPOINT is not set"
+        self._stored_proc_endpoint = os.environ.get("INTERACTIVE_STORED_PROC_ENDPOINT")
+        assert self._stored_proc_endpoint is not None, "INTERACTIVE_STORED_PROC_ENDPOINT is not set"
+        self._cypher_endpoint = os.environ.get("INTERACTIVE_CYPHER_ENDPOINT")
+        if self._cypher_endpoint is None:
+            print("INTERACTIVE_CYPHER_ENDPOINT is not set, will try to get it from service status endpoint")
+        self._gremlin_endpoint = os.environ.get("INTERACTIVE_GREMLIN_ENDPOINT")
+        if self._gremlin_endpoint is None:
+            print("INTERACTIVE_GREMLIN_ENDPOINT is not set, will try to get it from service status endpoint")
+        self._session = None
+
+    def __init__(self, admin_endpoint: str, stored_proc_endpoint : str, cypher_endpoint : str, gremlin_endpoint : str):
+        """
+        Construct a new driver with the given endpoints.
+        """
+        self._admin_endpoint = admin_endpoint
+        self._stored_proc_endpoint = stored_proc_endpoint
+        self._cypher_endpoint = cypher_endpoint
+        self._gremlin_endpoint = gremlin_endpoint
+        self._session = None
+
+    def __init__(self, admin_endpoint: str):
+        """
+        This should only be used internally, user should use the constructor which requires no arguments.
+        Construct a new driver instance with the given admin endpoint uri.
+        In this method, we parse the stored procedure port and gremlin/cypher port from the reponse of the
+        service status endpoint.
+        """
         # split uri into host and port
-        self._endpoint = endpoint
-        # prepend http:// to self._endpoint
-        if not self._endpoint.startswith("http://"):
+        self._admin_endpoint = admin_endpoint
+        # prepend http:// to self._admin_endpoint
+        if not self._admin_endpoint.startswith("http://"):
             raise ValueError("Invalid uri, expected format is http://host:port")
-        host_and_port = self._endpoint[7:]
+        host_and_port = self._admin_endpoint[7:]
         splitted = host_and_port.split(":")
         if len(splitted) != 2:
             raise ValueError("Invalid uri, expected format is host:port")
@@ -47,7 +80,9 @@ class Driver:
         self._session = None
 
     def session(self) -> Session:
-        return DefaultSession(self._endpoint)
+        if self._stored_proc_endpoint is None:
+            return DefaultSession(self._admin_endpoint, self._stored_proc_endpoint)
+        return DefaultSession(self._admin_endpoint)
 
     def getDefaultSession(self) -> Session:
         if self._session is None:
@@ -69,10 +104,15 @@ class Driver:
         return self._port
 
     def getNeo4jSessionImpl(self, **config) -> Neo4jSession:
-        endpoint = self.getNeo4jEndpoint()
-        return GraphDatabase.driver(endpoint, auth=None).session(**config)
+        if self._cypher_endpoint is None:
+            self._cypher_endpoint = self.getNeo4jEndpoint()
+        return GraphDatabase.driver(self._cypher_endpoint, auth=None).session(**config)
 
     def getNeo4jEndpoint(self) -> str:
+        """
+        Get the bolt endpoint from the service status endpoint.
+        Only works if the sdk was running in the same pod as the service.
+        """
         service_status = self.getDefaultSession().get_service_status()
         if service_status.is_ok():
             bolt_port = service_status.get_value().bolt_port
@@ -83,11 +123,16 @@ class Driver:
             )
 
     def getGremlinClientImpl(self):
-        gremlin_endpoint = self.getGremlinEndpoint()
-        graph_url = "ws://" + gremlin_endpoint + "/gremlin"
+        if self._gremlin_endpoint is None:
+            self._gremlin_endpoint = self.getGremlinEndpoint()
+        graph_url = "ws://" + self._gremlin_endpoint + "/gremlin"
         return Client(graph_url, "g")
 
     def getGremlinEndpoint(self):
+        """
+        Get the gremlin endpoint from the service status endpoint.
+        Only works if the sdk was running in the same pod as the service.
+        """
         service_status = self.getDefaultSession().get_service_status()
         if service_status.is_ok():
             gremlin_port = service_status.get_value().gremlin_port
