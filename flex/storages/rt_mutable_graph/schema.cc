@@ -1154,8 +1154,6 @@ static Status parse_schema_from_yaml_node(const YAML::Node& graph_node,
   }
   LOG(INFO) << "Parse stored_procedures";
 
-
-  LOG(INFO) << "here";
   if (graph_node["stored_procedures"]) {
     RETURN_IF_NOT_OK(parse_stored_procedures(graph_node["stored_procedures"],
                                              parent_dir, schema));

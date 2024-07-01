@@ -17,7 +17,6 @@
 
 #include <assert.h>
 #include <fcntl.h>
-#include <linux/version.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -119,7 +118,6 @@ inline void copy_file(const std::string& src, const std::string& dst) {
     }
     len -= ret;
   } while (len > 0 && ret > 0);
-
   close(src_fd);
   close(dst_fd);
 #else

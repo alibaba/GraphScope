@@ -317,8 +317,8 @@ void CSVFragmentLoader::loadVertices() {
          ++iter) {
       vertex_files.emplace_back(iter->first, iter->second);
     }
-    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, " << " "
-              << vertex_files.size() << " vertex files, ";
+    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, "
+              << " " << vertex_files.size() << " vertex files, ";
     std::atomic<size_t> v_ind(0);
     std::vector<std::thread> threads(thread_num_);
     for (int i = 0; i < thread_num_; ++i) {
@@ -354,7 +354,6 @@ void CSVFragmentLoader::fillVertexReaderMeta(
       arrow::TimestampParser::MakeISO8601());
   // BOOLEAN parser
   put_boolean_option(convert_options);
-  convert_options.check_utf8 = false;
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
@@ -363,13 +362,6 @@ void CSVFragmentLoader::fillVertexReaderMeta(
   put_escape_char_option(loading_config_, parse_options);
   put_quote_char_option(loading_config_, parse_options);
   put_block_size_option(loading_config_, read_options);
-
-  parse_options.invalid_row_handler = [](const arrow::csv::InvalidRow& row) {
-  // Log error, skip, or handle the row as required
-  std::cerr << "Skipping invalid row: " << row.number << std::endl;
-  // Return Status::OK() to skip the row
-  return arrow::csv::InvalidRowResult::Skip;
-  };
 
   // parse all column_names
 

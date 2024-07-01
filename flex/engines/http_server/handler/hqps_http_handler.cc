@@ -167,17 +167,6 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-  LOG(INFO) << "req size: " << req->content.size();
-  if (req->content.size() <= 0) {
-    // At least one input format byte is needed
-    rep->set_status(seastar::httpd::reply::status_type::internal_server_error);
-    rep->write_body("bin", seastar::sstring("Empty request!"));
-    rep->done();
-    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
-        std::move(rep));
-  }
-  uint8_t input_format =
-      req->content.back();  // see graph_db_session.h#parse_query_type
   // TODO(zhanglei): choose read or write based on the request, after the
   // read/write info is supported in physical plan
   auto request_format = req->get_header(INTERACTIVE_REQUEST_FORMAT);

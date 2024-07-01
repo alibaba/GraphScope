@@ -128,7 +128,6 @@ void ODPSReadClient::CreateReadSession(
 
   getReadSessionStatus(*session_id, split_count, table_identifier);
   VLOG(1) << "Got split_count: " << *split_count;
-  //  *split_count = std::min(*split_count,8);
 }
 
 void ODPSReadClient::getReadSessionStatus(

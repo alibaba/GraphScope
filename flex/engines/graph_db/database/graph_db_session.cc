@@ -150,7 +150,6 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
           std::chrono::duration_cast<std::chrono::microseconds>(end - start)
               .count());
       ++query_num_;
-      LOG(INFO) << "got result of buffer size: " << result_buffer.size();
       return result_buffer;
     }
 
