@@ -399,7 +399,6 @@ class TypedColumn<std::string_view> : public ColumnBase {
   PropertyType type() const override { return PropertyType::Varchar(width_); }
 
   void set_value(size_t idx, const std::string_view& val) {
-    // assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
     if (idx >= basic_size_ && idx < basic_size_ + extra_size_) {
       size_t offset = pos_.fetch_add(val.size());
       extra_buffer_.set(idx - basic_size_, offset, val);
