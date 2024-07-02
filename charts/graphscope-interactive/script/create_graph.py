@@ -36,56 +36,69 @@ from gs_interactive.models.edge_mapping_source_vertex_mappings_inner_column impo
 )
 from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
-from gs_interactive.models.create_graph_request import CreateGraphRequest
-from gs_interactive.models.schema_mapping import SchemaMapping
-from gs_interactive.models.create_procedure_request import CreateProcedureRequest
-from gs_interactive.models.start_service_request import StartServiceRequest
-from gs_interactive.models.schema_mapping_loading_config import (
-    SchemaMappingLoadingConfig,
-    SchemaMappingLoadingConfigFormat,
-)
-from gs_interactive.models.vertex_mapping import VertexMapping
-from gs_interactive.models.edge_mapping import EdgeMapping
-from gs_interactive.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet
-from gs_interactive.models.schema_mapping_loading_config_data_source import (
-    SchemaMappingLoadingConfigDataSource,
-)
-
+from gs_interactive.models import *
 
 huoyan_graph = {
     "version": "v0.1",
-    "name": "onecompany",
+    "name": "onecompany_group",
     "store_type": "mutable_csr",
+    "stored_procedures": [
+        {
+            "name": "huoyan",
+            "description": "A stored procedure that does something",
+            "library": "/home/graphscope/work/gs/flex/interactive/examples/new_huoyan/plugins/libhuoyan.so",
+            "type": "cpp",
+        }
+    ],
     "schema": {
         "vertex_types": [
             {
+                "type_id": 0,
                 "type_name": "company",
-                "x_csr_params": {"max_vertex_num": 500000000},
+                "x_csr_params": {"max_vertex_num": 1200000000},
                 "properties": [
                     {
+                        "property_id": 0,
                         "property_name": "vertex_id",
                         "property_type": {"primitive_type": "DT_SIGNED_INT64"},
                     },
                     {
+                        "property_id": 1,
                         "property_name": "vertex_name",
-                        # "property_type": {"string": {"var_char": {"max_length": 64}}},
-                        "property_type": {"string": {"long_text": ""}},
+                        "property_type": {"string": {"var_char": {"max_length": 64}}},
+                    },
+                    {
+                        "property_id": 2,
+                        "property_name": "status",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_id": 3,
+                        "property_name": "credit_code",
+                        "property_type": {"string": {"var_char": {"max_length": 64}}},
+                    },
+                    {
+                        "property_id": 4,
+                        "property_name": "license_number",
+                        "property_type": {"string": {"var_char": {"max_length": 64}}},
                     },
                 ],
                 "primary_keys": ["vertex_id"],
             },
             {
+                "type_id": 1,
                 "type_name": "person",
-                "x_csr_params": {"max_vertex_num": 500000000},
+                "x_csr_params": {"max_vertex_num": 1200000000},
                 "properties": [
                     {
+                        "property_id": 0,
                         "property_name": "vertex_id",
                         "property_type": {"primitive_type": "DT_SIGNED_INT64"},
                     },
                     {
+                        "property_id": 1,
                         "property_name": "vertex_name",
-                        # "property_type": {"string": {"var_char": {"max_length": 64}}},
-                        "property_type": {"string": {"long_text": ""}},
+                        "property_type": {"string": {"var_char": {"max_length": 64}}},
                     },
                 ],
                 "primary_keys": ["vertex_id"],
@@ -93,6 +106,7 @@ huoyan_graph = {
         ],
         "edge_types": [
             {
+                "type_id": 0,
                 "type_name": "invest",
                 "vertex_type_pair_relations": [
                     {
@@ -104,12 +118,23 @@ huoyan_graph = {
                 "properties": [
                     {
                         "property_id": 0,
-                        "property_name": "rel_type",
+                        "property_name": "rel_weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    },
+                    {
+                        "property_id": 1,
+                        "property_name": "rel_label",
                         "property_type": {"primitive_type": "DT_SIGNED_INT64"},
-                    }
+                    },
+                    {
+                        "property_id": 2,
+                        "property_name": "rel_info",
+                        "property_type": {"string": {"var_char": {"max_length": 64}}},
+                    },
                 ],
             },
             {
+                "type_id": 1,
                 "type_name": "personInvest",
                 "vertex_type_pair_relations": [
                     {
@@ -121,9 +146,19 @@ huoyan_graph = {
                 "properties": [
                     {
                         "property_id": 0,
-                        "property_name": "rel_type",
+                        "property_name": "rel_weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    },
+                    {
+                        "property_id": 1,
+                        "property_name": "rel_label",
                         "property_type": {"primitive_type": "DT_SIGNED_INT64"},
-                    }
+                    },
+                    {
+                        "property_id": 2,
+                        "property_name": "rel_info",
+                        "property_type": {"string": {"var_char": {"max_length": 64}}},
+                    },
                 ],
             },
         ],
@@ -206,15 +241,164 @@ huoyan_graph = {
 
 
 def create_graph(sess: Session, ds: str):
-    copied_huoyan_graph = huoyan_graph.copy()
-    copied_huoyan_graph["name"] = f"onecompany_{ds}"
-    create_graph_res = sess.create_graph(
-        CreateGraphRequest.from_dict(copied_huoyan_graph)
+    # copied_huoyan_graph = huoyan_graph.copy()
+    graph_name = f"onecompany_{ds}"
+    create_graph_req = CreateGraphRequest(
+        name=graph_name,
+        description=f"onecompany graph for {ds}",
+        var_schema=CreateGraphSchemaRequest(
+            vertex_types=[
+                CreateVertexType(
+                    type_name="company",
+                    x_csr_params=BaseVertexTypeXCsrParams(max_vertex_num=1200000000),
+                    properties=[
+                        CreatePropertyMeta(
+                            property_name="vertex_id",
+                            property_type=GSDataType(
+                                PrimitiveType(primitive_type="DT_SIGNED_INT64")
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="vertex_name",
+                            property_type=GSDataType(
+                                StringType(
+                                    string=StringTypeString(
+                                        VarChar(var_char=VarCharVarChar(max_length=64))
+                                    )
+                                )
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="status",
+                            property_type=GSDataType(
+                                PrimitiveType(primitive_type="DT_SIGNED_INT64")
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="credit_code",
+                            property_type=GSDataType(
+                                StringType(
+                                    string=StringTypeString(
+                                        VarChar(var_char=VarCharVarChar(max_length=64))
+                                    )
+                                )
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="license_number",
+                            property_type=GSDataType(
+                                StringType(
+                                    string=StringTypeString(
+                                        VarChar(var_char=VarCharVarChar(max_length=64))
+                                    )
+                                )
+                            ),
+                        ),
+                    ],
+                    primary_keys=["vertex_id"],
+                ),
+                CreateVertexType(
+                    type_name="person",
+                    x_csr_params=BaseVertexTypeXCsrParams(max_vertex_num=500000000),
+                    properties=[
+                        CreatePropertyMeta(
+                            property_name="vertex_id",
+                            property_type=GSDataType(
+                                PrimitiveType(primitive_type="DT_SIGNED_INT64")
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="vertex_name",
+                            property_type=GSDataType(
+                                StringType(
+                                    string=StringTypeString(
+                                        VarChar(var_char=VarCharVarChar(max_length=64))
+                                    )
+                                )
+                            ),
+                        ),
+                    ],
+                ),
+            ],
+            edge_types=[
+                CreateEdgeType(
+                    type_name="invest",
+                    vertex_type_pair_relations=[
+                        BaseEdgeTypeVertexTypePairRelationsInner(
+                            source_vertex="company",
+                            destination_vertex="company",
+                            relation="MANY_TO_MANY",
+                        )
+                    ],
+                    properties=[
+                        CreatePropertyMeta(
+                            property_name="rel_weight",
+                            property_type=GSDataType(
+                                PrimitiveType(primitive_type="DT_DOUBLE")
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="rel_label",
+                            property_type=GSDataType(
+                                PrimitiveType(primitive_type="DT_SIGNED_INT64")
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="rel_info",
+                            property_type=GSDataType(
+                                StringType(
+                                    string=StringTypeString(
+                                        VarChar(var_char=VarCharVarChar(max_length=16))
+                                    )
+                                )
+                            ),
+                        ),
+                    ],
+                ),
+                CreateEdgeType(
+                    type_name="personInvest",
+                    vertex_type_pair_relations=[
+                        BaseEdgeTypeVertexTypePairRelationsInner(
+                            source_vertex="person",
+                            destination_vertex="company",
+                            relation="MANY_TO_MANY",
+                        )
+                    ],
+                    properties=[
+                        CreatePropertyMeta(
+                            property_name="rel_weight",
+                            property_type=GSDataType(
+                                PrimitiveType(primitive_type="DT_DOUBLE")
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="rel_label",
+                            property_type=GSDataType(
+                                PrimitiveType(primitive_type="DT_SIGNED_INT64")
+                            ),
+                        ),
+                        CreatePropertyMeta(
+                            property_name="rel_info",
+                            property_type=GSDataType(
+                                StringType(
+                                    string=StringTypeString(
+                                        VarChar(var_char=VarCharVarChar(max_length=64))
+                                    )
+                                )
+                            ),
+                        ),
+                    ],
+                ),
+            ],
+        ),
     )
+    create_graph_res = sess.create_graph(create_graph_req)
+    # CreateGraphRequest.from_dict(copied_huoyan_graph)
+
     assert create_graph_res.is_ok()
     create_graph_resp = create_graph_res.get_value()
     print(
-        f"create graph {create_graph_resp.graph_id} successfully with name {copied_huoyan_graph['name']}"
+        f"create graph {create_graph_resp.graph_id} successfully with name graph_name"
     )
     return create_graph_resp.graph_id
 
@@ -232,36 +416,54 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
         vertex_mappings=[
             VertexMapping(
                 type_name="company",
-                inputs=[f"grape_dev/lei_huoyan_company/ds={ds}"],
+                inputs=[f"onecomp/dwi_oc_rel_vertex_company_interactive_d/ds={ds}"],
                 column_mappings=[
                     ColumnMapping(
                         var_property="vertex_id",
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=0, name="vertex_id"
+                            index=2, name="vertex_id"
                         ),
                     ),
                     ColumnMapping(
                         var_property="vertex_name",
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=1, name="vertex_name"
+                            index=3, name="vertex_name"
+                        ),
+                    ),
+                    ColumnMapping(
+                        var_property="status",
+                        column=EdgeMappingSourceVertexMappingsInnerColumn(
+                            index=4, name="status"
+                        ),
+                    ),
+                    ColumnMapping(
+                        var_property="credit_code",
+                        column=EdgeMappingSourceVertexMappingsInnerColumn(
+                            index=5, name="credit_code"
+                        ),
+                    ),
+                    ColumnMapping(
+                        var_property="license_number",
+                        column=EdgeMappingSourceVertexMappingsInnerColumn(
+                            index=6, name="license_number"
                         ),
                     ),
                 ],
             ),
             VertexMapping(
                 type_name="person",
-                inputs=[f"grape_dev/lei_huoyan_person/ds={ds}"],
+                inputs=[f"onecomp/dwi_oc_rel_vertex_person_interactive_d/ds={ds}"],
                 column_mappings=[
                     ColumnMapping(
                         var_property="vertex_id",
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=0, name="vertex_id"
+                            index=2, name="vertex_id"
                         ),
                     ),
                     ColumnMapping(
                         var_property="vertex_name",
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=1, name="vertex_name"
+                            index=3, name="vertex_name"
                         ),
                     ),
                 ],
@@ -274,19 +476,31 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
                     source_vertex="company",
                     destination_vertex="company",
                 ),
-                inputs=[f"grape_dev/lei_huoyan_company_invest/ds={ds}"],
+                inputs=[f"onecomp/dwi_oc_rel_edge_comp_comp_interactive_d/ds={ds}"],
                 column_mappings=[
                     ColumnMapping(
-                        var_property="rel_type",
+                        var_property="rel_weight",
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=2, name="rel_type"
+                            index=4, name="rel_weight"
+                        ),
+                    ),
+                    ColumnMapping(
+                        var_property="rel_label",
+                        column=EdgeMappingSourceVertexMappingsInnerColumn(
+                            index=5, name="rel_label"
+                        ),
+                    ),
+                    ColumnMapping(
+                        var_property="rel_info",
+                        column=EdgeMappingSourceVertexMappingsInnerColumn(
+                            index=6, name="rel_info"
                         ),
                     ),
                 ],
                 source_vertex_mappings=[
                     EdgeMappingSourceVertexMappingsInner(
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=0, name="src"
+                            index=2, name="onecomp_id"
                         ),
                         var_property="vertex_id",
                     )
@@ -294,7 +508,7 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
                 destination_vertex_mappings=[
                     EdgeMappingDestinationVertexMappingsInner(
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=1, name="dst"
+                            index=3, name="rel_node_id"
                         ),
                         var_property="vertex_id",
                     )
@@ -306,19 +520,31 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
                     source_vertex="person",
                     destination_vertex="company",
                 ),
-                inputs=[f"grape_dev/lei_huoyan_person_invest/ds={ds}"],
+                inputs=[f"onecomp/dwi_oc_rel_edge_comp_person_interactive_d/ds={ds}"],
                 column_mappings=[
                     ColumnMapping(
-                        var_property="rel_type",
+                        var_property="rel_weight",
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=2, name="rel_type"
+                            index=4, name="rel_weight"
                         ),
-                    )
+                    ),
+                    ColumnMapping(
+                        var_property="rel_label",
+                        column=EdgeMappingSourceVertexMappingsInnerColumn(
+                            index=5, name="rel_label"
+                        ),
+                    ),
+                    ColumnMapping(
+                        var_property="rel_info",
+                        column=EdgeMappingSourceVertexMappingsInnerColumn(
+                            index=6, name="rel_info"
+                        ),
+                    ),
                 ],
                 source_vertex_mappings=[
                     EdgeMappingSourceVertexMappingsInner(
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=0, name="src"
+                            index=2, name="person_id"
                         ),
                         var_property="vertex_id",
                     )
@@ -326,7 +552,7 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
                 destination_vertex_mappings=[
                     EdgeMappingDestinationVertexMappingsInner(
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=1, name="dst"
+                            index=3, name="rel_node_id"
                         ),
                         var_property="vertex_id",
                     )
@@ -411,18 +637,21 @@ if __name__ == "__main__":
     parser.add_argument("--endpoint", type=str, default="http://localhost:7777")
     parser.add_argument("--proc-name", type=str, default="huoyan")
     parser.add_argument("--remove-old-graph", type=bool, default=False)
-
-    # get the date string of yesterday, yyyymmdd
-    import datetime
-
-    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-    ds = yesterday.strftime("%Y%m%d")
-    print("ds: ", ds)
+    parser.add_argument("--ds", type=str)
 
     # finish
     args = parser.parse_args()
     print(args)
     print("connecting to ", args.endpoint)
+    if args.ds is None:
+        # get the date string of yesterday, yyyymmdd
+        import datetime
+
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        ds = yesterday.strftime("%Y%m%d")
+    else:
+        ds = args.ds
+    print("ds: ", ds)
     driver = Driver(args.endpoint)
     sess = driver.session()
     # get current running graph
