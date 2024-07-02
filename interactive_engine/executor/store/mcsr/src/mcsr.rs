@@ -18,33 +18,39 @@ use std::alloc::Layout;
 use std::any::Any;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::slice::Iter;
+use std::slice::{Iter, SliceIndex};
 use std::{alloc, ptr};
 
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::graph::IndexType;
-use crate::graph_db::{CsrTrait, Nbr, NbrIter};
+use crate::graph_db::{CsrTrait, Nbr, NbrIter, NbrOffsetIter};
 
 pub struct AdjList<I> {
-    ptr: *mut Nbr<I>,
+    nbr_ptr: *mut Nbr<I>,
+    offset_ptr: *mut usize,
     pub(crate) deg: i64,
     pub(crate) cap: i64,
 }
 
 impl<I: IndexType> AdjList<I> {
     pub fn new() -> Self {
-        AdjList { ptr: ptr::null_mut(), deg: 0, cap: 0 }
+        AdjList { nbr_ptr: ptr::null_mut(), offset_ptr: ptr::null_mut(), deg: 0, cap: 0 }
     }
 
-    pub fn set(&mut self, ptr: *mut Nbr<I>, degree: i64, capacity: i64) {
-        self.ptr = ptr;
+    pub fn set(&mut self, nbr_ptr: *mut Nbr<I>, offset_ptr: *mut usize, degree: i64, capacity: i64) {
+        self.nbr_ptr = nbr_ptr;
+        self.offset_ptr = offset_ptr;
         self.deg = degree;
         self.cap = capacity;
     }
 
     pub fn data(&self) -> *const Nbr<I> {
-        self.ptr as *const Nbr<I>
+        self.nbr_ptr as *const Nbr<I>
+    }
+
+    pub fn offset(&self) -> *const usize {
+        self.offset_ptr as *const usize
     }
 
     pub fn degree(&self) -> i64 {
@@ -66,21 +72,42 @@ impl<I: IndexType> AdjList<I> {
     pub fn put_edge(&mut self, id: I, offset: usize) {
         assert!(self.deg < self.cap);
         unsafe {
-            ptr::write(self.ptr.add(self.deg as usize), Nbr::<I> { neighbor: id, offset });
+            ptr::write(self.nbr_ptr.add(self.deg as usize), Nbr::<I> { neighbor: id });
+            if !self.offset_ptr.is_null() {
+                ptr::write(self.offset_ptr.add(self.deg as usize), offset);
+            }
         }
         self.deg += 1;
     }
 
     pub fn iter(&self) -> NbrIter<'_, I> {
-        NbrIter::new(self.ptr as *const Nbr<I>, unsafe {
-            (self.ptr as *const Nbr<I>).add(self.deg as usize)
+        NbrIter::new(self.nbr_ptr as *const Nbr<I>, unsafe {
+            (self.nbr_ptr as *const Nbr<I>).add(self.deg as usize)
         })
+    }
+
+    pub fn iter_offset(&self) -> NbrOffsetIter<'_, I> {
+        if self.offset_ptr.is_null() {
+            NbrOffsetIter::new(
+                self.nbr_ptr as *const Nbr<I>,
+                unsafe { (self.nbr_ptr as *const Nbr<I>).add(self.deg as usize) },
+                ptr::null(),
+                ptr::null(),
+            )
+        } else {
+            NbrOffsetIter::new(
+                self.nbr_ptr as *const Nbr<I>,
+                unsafe { (self.nbr_ptr as *const Nbr<I>).add(self.deg as usize) },
+                self.offset_ptr as *const usize,
+                unsafe { (self.offset_ptr as *const usize).add(self.deg as usize) },
+            )
+        }
     }
 }
 
 impl<I> Clone for AdjList<I> {
     fn clone(&self) -> Self {
-        AdjList { ptr: self.ptr, deg: self.deg, cap: self.cap }
+        AdjList { nbr_ptr: self.nbr_ptr, offset_ptr: self.offset_ptr, deg: self.deg, cap: self.cap }
     }
 }
 
@@ -89,32 +116,33 @@ unsafe impl<I: IndexType> Send for AdjList<I> {}
 unsafe impl<I: IndexType> Sync for AdjList<I> {}
 
 pub struct MutableCsr<I> {
-    buffers: Vec<(*mut u8, usize)>,
+    buffers: Vec<(*mut u8, *mut u8, usize)>,
     adj_lists: Vec<AdjList<I>>,
     prev: Vec<I>,
     next: Vec<I>,
     edge_num: usize,
+    has_offset: bool,
 }
 
 pub struct MutableCsrEdgeIter<'a, I: IndexType> {
     cur_vertex: usize,
     adj_list_iter: Iter<'a, AdjList<I>>,
-    nbr_iter: NbrIter<'a, I>,
+    nbr_iter: NbrOffsetIter<'a, I>,
 }
 
 impl<'a, I: IndexType> MutableCsrEdgeIter<'a, I> {
     pub fn new(adj_list: &'a Vec<AdjList<I>>, cur_vertex: usize) -> Self {
         let mut adj_list_iter = adj_list.iter();
         if let Some(adj_list) = adj_list_iter.next() {
-            Self { cur_vertex, adj_list_iter, nbr_iter: adj_list.iter() }
+            Self { cur_vertex, adj_list_iter, nbr_iter: adj_list.iter_offset() }
         } else {
-            Self { cur_vertex, adj_list_iter, nbr_iter: NbrIter::<'a, I>::new_empty() }
+            Self { cur_vertex, adj_list_iter, nbr_iter: NbrOffsetIter::<'a, I>::new_empty() }
         }
     }
 }
 
 impl<'a, I: IndexType> Iterator for MutableCsrEdgeIter<'a, I> {
-    type Item = (I, &'a Nbr<I>);
+    type Item = (I, (&'a Nbr<I>, Option<&'a usize>));
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
@@ -123,9 +151,9 @@ impl<'a, I: IndexType> Iterator for MutableCsrEdgeIter<'a, I> {
             } else {
                 if let Some(adj_list) = self.adj_list_iter.next() {
                     self.cur_vertex += 1;
-                    self.nbr_iter = adj_list.iter();
+                    self.nbr_iter = adj_list.iter_offset();
                 } else {
-                    self.nbr_iter = NbrIter::new_empty();
+                    self.nbr_iter = NbrOffsetIter::new_empty();
                     return None;
                 }
             }
@@ -139,7 +167,18 @@ unsafe impl<I: IndexType> Sync for MutableCsrEdgeIter<'_, I> {}
 
 impl<I: IndexType> MutableCsr<I> {
     pub fn new() -> Self {
-        MutableCsr { buffers: vec![], adj_lists: vec![], prev: vec![], next: vec![], edge_num: 0_usize }
+        MutableCsr {
+            buffers: vec![],
+            adj_lists: vec![],
+            prev: vec![],
+            next: vec![],
+            edge_num: 0_usize,
+            has_offset: false,
+        }
+    }
+
+    pub fn set_offset(&mut self, has_offset: bool) {
+        self.has_offset = has_offset;
     }
 
     pub fn resize_vertices(&mut self, vnum: I) {
@@ -175,6 +214,14 @@ impl<I: IndexType> MutableCsr<I> {
             let new_buf = unsafe { alloc::alloc(layout) };
             let mut p = <I as IndexType>::max();
             let mut begin = new_buf as *mut Nbr<I>;
+            let offset_buf = if self.has_offset {
+                let offset_layout = Layout::array::<usize>(new_buf_size).unwrap();
+                let new_buf = unsafe { alloc::alloc(offset_layout) };
+                new_buf
+            } else {
+                ptr::null_mut()
+            };
+            let mut offset_begin = offset_buf as *mut usize;
             for i in 0..vnum {
                 let mut cap = self.adj_lists[i].capacity();
                 if cap < 0 {
@@ -189,14 +236,18 @@ impl<I: IndexType> MutableCsr<I> {
                     if old_degree > 0 {
                         unsafe { ptr::copy(self.adj_lists[i].data(), begin, old_degree as usize) };
                     }
-                    self.adj_lists[i].set(begin, old_degree, cap);
+                    self.adj_lists[i].set(begin, offset_begin, old_degree, cap);
                     begin = unsafe { begin.add(cap as usize) };
+                    if self.has_offset {
+                        offset_begin = unsafe { offset_begin.add(cap as usize) };
+                    }
                 }
             }
             if p != <I as IndexType>::max() {
                 self.next[p.index()] = <I as IndexType>::max();
             }
-            self.buffers.push((new_buf, new_buf_size));
+            self.buffers
+                .push((new_buf, offset_buf, new_buf_size));
         }
     }
 
@@ -229,6 +280,7 @@ impl<I: IndexType> MutableCsr<I> {
         let vnum = f.read_u64().unwrap() as usize;
         let total_capacity = f.read_u64().unwrap() as usize;
         self.edge_num = f.read_u64().unwrap() as usize;
+        self.has_offset = if f.read_i32().unwrap() == 0 { false } else { true };
 
         let mut degree_vec = vec![0_i64; vnum];
         let mut capacity_vec = vec![0_i64; vnum];
@@ -251,21 +303,40 @@ impl<I: IndexType> MutableCsr<I> {
             let buf_slice = slice::from_raw_parts_mut(buf, total_capacity * std::mem::size_of::<Nbr<I>>());
             f.read_exact(buf_slice).ok();
 
-            self.buffers.push((buf, total_capacity));
+            let offset_buf = if self.has_offset {
+                let offset_buf_layout = Layout::array::<usize>(total_capacity).unwrap();
+                let offset_buf = alloc::alloc(offset_buf_layout);
+                let offset_buf_slice =
+                    slice::from_raw_parts_mut(offset_buf, total_capacity * std::mem::size_of::<usize>());
+                f.read_exact(offset_buf_slice).ok();
+                offset_buf
+            } else {
+                ptr::null_mut()
+            };
+
+            self.buffers
+                .push((buf, offset_buf, total_capacity));
         }
 
         let mut begin = self.buffers[0].0 as *mut Nbr<I>;
+        let mut offset_begin = self.buffers[0].1 as *mut usize;
         self.adj_lists.resize(vnum, AdjList::<I>::new());
         self.prev.resize(vnum, <I as IndexType>::max());
         self.next.resize(vnum, <I as IndexType>::max());
         for i in 0..vnum {
-            self.adj_lists[i].set(begin, degree_vec[i], capacity_vec[i]);
+            self.adj_lists[i].set(begin, offset_begin, degree_vec[i], capacity_vec[i]);
             begin = unsafe { begin.add(capacity_vec[i] as usize) };
+            if !offset_begin.is_null() {
+                offset_begin = unsafe { offset_begin.add(capacity_vec[i] as usize) };
+            }
         }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
         if self.adj_lists.len() != other.adj_lists.len() {
+            return false;
+        }
+        if self.has_offset != other.has_offset {
             return false;
         }
         let vnum = self.adj_lists.len();
@@ -274,12 +345,15 @@ impl<I: IndexType> MutableCsr<I> {
                 return false;
             }
             let deg = self.adj_lists[i].degree();
-            let mut iter1 = self.adj_lists[i].iter();
-            let mut iter2 = other.adj_lists[i].iter();
+            let mut iter1 = self.adj_lists[i].iter_offset();
+            let mut iter2 = other.adj_lists[i].iter_offset();
             for _ in 0..deg {
                 let v1 = iter1.next().unwrap();
                 let v2 = iter2.next().unwrap();
-                if v1.neighbor != v2.neighbor {
+                if v1.0.neighbor != v2.0.neighbor {
+                    return false;
+                }
+                if v1.1 != v2.1 {
                     return false;
                 }
             }
@@ -313,7 +387,17 @@ impl<I: IndexType> CsrTrait<I> for MutableCsr<I> {
         }
     }
 
-    fn get_all_edges<'a>(&'a self) -> Box<dyn Iterator<Item = (I, &'a Nbr<I>)> + 'a + Send> {
+    fn get_edges_with_offset(&self, src: I) -> Option<NbrOffsetIter<'_, I>> {
+        if src.index() < self.adj_lists.len() {
+            Some(self.adj_lists[src.index()].iter_offset())
+        } else {
+            None
+        }
+    }
+
+    fn get_all_edges<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = (I, (&'a Nbr<I>, Option<&'a usize>))> + 'a + Send> {
         Box::new(MutableCsrEdgeIter::new(&self.adj_lists, 0_usize))
     }
 
@@ -336,6 +420,11 @@ impl<I: IndexType> CsrTrait<I> for MutableCsr<I> {
 
         f.write_u64(total_capacity as u64).unwrap();
         f.write_u64(self.edge_num as u64).unwrap();
+        if self.has_offset {
+            f.write_i32(1).unwrap();
+        } else {
+            f.write_i32(0).unwrap();
+        }
 
         unsafe {
             let degree_vec_slice =
@@ -348,10 +437,17 @@ impl<I: IndexType> CsrTrait<I> for MutableCsr<I> {
             );
             f.write_all(capacity_vec_slice).unwrap();
 
-            assert_eq!(total_capacity, self.buffers[0].1);
+            assert_eq!(total_capacity, self.buffers[0].2);
             let buffer_slice =
-                slice::from_raw_parts(self.buffers[0].0, self.buffers[0].1 * std::mem::size_of::<Nbr<I>>());
+                slice::from_raw_parts(self.buffers[0].0, self.buffers[0].2 * std::mem::size_of::<Nbr<I>>());
             f.write_all(buffer_slice).unwrap();
+            if self.has_offset {
+                let offset_buffer_slice = slice::from_raw_parts(
+                    self.buffers[0].1,
+                    self.buffers[0].2 * std::mem::size_of::<usize>(),
+                );
+                f.write_all(offset_buffer_slice).unwrap();
+            }
         }
 
         f.flush().unwrap();
@@ -364,10 +460,16 @@ impl<I: IndexType> CsrTrait<I> for MutableCsr<I> {
 
 impl<I> Drop for MutableCsr<I> {
     fn drop(&mut self) {
-        for (ptr, buf_size) in self.buffers.iter() {
+        for (ptr, offset_ptr, buf_size) in self.buffers.iter() {
             let layout = Layout::array::<Nbr<I>>(*buf_size).unwrap();
             unsafe {
                 alloc::dealloc(*ptr, layout);
+            }
+            if !offset_ptr.is_null() {
+                let offset_layout = Layout::array::<usize>(*buf_size).unwrap();
+                unsafe {
+                    alloc::dealloc(*offset_ptr, offset_layout);
+                }
             }
         }
         self.buffers.clear();
@@ -380,6 +482,11 @@ unsafe impl<I: IndexType> Sync for MutableCsr<I> {}
 
 impl<I: IndexType> Encode for MutableCsr<I> {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        if self.has_offset {
+            writer.write_i32(1).unwrap();
+        } else {
+            writer.write_i32(0).unwrap();
+        }
         let vnum = self.adj_lists.len();
         writer.write_u64(vnum as u64)?;
         for i in 0..vnum {
@@ -387,10 +494,12 @@ impl<I: IndexType> Encode for MutableCsr<I> {
         }
         let mut nbr_num = 0_usize;
         for i in 0..vnum {
-            if let Some(edges) = self.get_edges(I::new(i)) {
+            if let Some(edges) = self.get_edges_with_offset(I::new(i)) {
                 for e in edges {
-                    e.neighbor.write_to(writer)?;
-                    e.offset.write_to(writer)?;
+                    e.0.neighbor.write_to(writer)?;
+                    if self.has_offset {
+                        e.1.unwrap().write_to(writer)?;
+                    }
                     nbr_num += 1;
                 }
             }
@@ -403,6 +512,8 @@ impl<I: IndexType> Encode for MutableCsr<I> {
 impl<I: IndexType> Decode for MutableCsr<I> {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let mut ret = Self::new();
+        let has_offset = if reader.read_i32().unwrap() == 0 { false } else { true };
+        ret.set_offset(has_offset);
         let vnum = reader.read_u64()? as usize;
         ret.resize_vertices(I::new(vnum));
         let mut degree_vec = Vec::with_capacity(vnum);
@@ -413,7 +524,7 @@ impl<I: IndexType> Decode for MutableCsr<I> {
         for i in 0..vnum {
             for _ in 0..degree_vec[i] {
                 let neighbor = I::read_from(reader)?;
-                let offset = usize::read_from(reader)?;
+                let offset = if ret.has_offset { usize::read_from(reader)? } else { 0 };
                 ret.put_edge(I::new(i), neighbor, offset);
             }
         }

@@ -241,7 +241,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                         .buffer_capacity(4096)
                         .comment(Some(b'#'))
                         .flexible(true)
-                        .has_headers(false)
+                        .has_headers(self.skip_header)
                         .from_reader(BufReader::new(File::open(&vertex_file).unwrap()));
                     let mut wtr = WriterBuilder::new()
                         .delimiter(self.delim)
@@ -289,7 +289,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                         .buffer_capacity(4096)
                         .comment(Some(b'#'))
                         .flexible(true)
-                        .has_headers(false)
+                        .has_headers(self.skip_header)
                         .from_reader(BufReader::new(GzReader::from_path(&vertex_file).unwrap()));
                     let mut wtr = WriterBuilder::new()
                         .delimiter(self.delim)
@@ -353,7 +353,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                                     .buffer_capacity(4096)
                                     .comment(Some(b'#'))
                                     .flexible(true)
-                                    .has_headers(false)
+                                    .has_headers(self.skip_header)
                                     .from_reader(BufReader::new(File::open(&edge_file).unwrap()));
                                 let wtr = WriterBuilder::new()
                                     .delimiter(self.delim)
@@ -400,7 +400,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                                     .buffer_capacity(4096)
                                     .comment(Some(b'#'))
                                     .flexible(true)
-                                    .has_headers(false)
+                                    .has_headers(self.skip_header)
                                     .from_reader(BufReader::new(GzReader::from_path(&edge_file).unwrap()));
                                 let wtr = WriterBuilder::new()
                                     .delimiter(self.delim)
