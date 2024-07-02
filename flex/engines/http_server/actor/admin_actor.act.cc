@@ -29,6 +29,10 @@
 
 namespace server {
 
+std::string to_message_json(const std::string& message) {
+  return "{\"message\":\"" + message + "\"}";
+}
+
 gs::GraphStatistics get_graph_statistics(const gs::GraphDBSession& sess) {
   gs::GraphStatistics stat;
   const auto& graph = sess.graph();
@@ -569,8 +573,8 @@ seastar::future<admin_query_result> admin_actor::run_delete_graph(
     }
     WorkDirManipulator::DeleteGraph(query_param.content);
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>("Successfully delete graph: " +
-                                     query_param.content));
+        gs::Result<seastar::sstring>(to_message_json(
+            "Successfully delete graph: " + query_param.content)));
   } else {
     LOG(ERROR) << "Fail to delete graph: "
                << delete_res.status().error_message();
@@ -809,8 +813,8 @@ seastar::future<admin_query_result> admin_actor::delete_procedure(
 
   VLOG(10) << "Successfully delete procedure: " << procedure_id;
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>("Successfully delete procedure: " +
-                                   procedure_id));
+      gs::Result<seastar::sstring>(
+          to_message_json("Successfully delete procedure: " + procedure_id)));
 }
 
 // update a procedure by graph name and procedure name
@@ -867,8 +871,8 @@ seastar::future<admin_query_result> admin_actor::update_procedure(
   if (update_res.ok()) {
     VLOG(10) << "Successfully update procedure: " << procedure_id;
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>("Successfully update procedure: " +
-                                     procedure_id));
+        gs::Result<seastar::sstring>(
+            to_message_json("Successfully update procedure: " + procedure_id)));
   } else {
     LOG(ERROR) << "Fail to create procedure: "
                << update_res.status().error_message();
@@ -1073,7 +1077,8 @@ seastar::future<admin_query_result> admin_actor::start_service(
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
     hqps_service.reset_start_time();
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>("Successfully start service"));
+        gs::Result<seastar::sstring>(
+            to_message_json("Successfully start service")));
   });
 }
 
@@ -1111,7 +1116,8 @@ seastar::future<admin_query_result> admin_actor::stop_service(
       if (hqps_service.stop_compiler_subprocess()) {
         LOG(INFO) << "Successfully stop compiler";
         return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>("Successfully stop service"));
+            gs::Result<seastar::sstring>(
+                to_message_json("Successfully stop service")));
       } else {
         LOG(ERROR) << "Fail to stop compiler";
         return seastar::make_ready_future<admin_query_result>(
@@ -1301,7 +1307,8 @@ seastar::future<admin_query_result> admin_actor::cancel_job(
   if (cancel_meta_res.ok()) {
     VLOG(10) << "Successfully cancel job: " << job_id;
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>("Successfully cancel job: " + job_id));
+        gs::Result<seastar::sstring>(
+            to_message_json("Successfully cancel job: " + job_id)));
   } else {
     LOG(ERROR) << "Fail to cancel job: " << job_id << ", error message: "
                << cancel_meta_res.status().error_message();

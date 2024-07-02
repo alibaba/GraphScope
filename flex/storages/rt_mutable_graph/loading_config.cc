@@ -151,8 +151,7 @@ static bool parse_column_mappings(
     int32_t column_id = -1;
     if (!get_scalar(column_mapping, "index", column_id)) {
       VLOG(10) << "Column index for column mapping is not set, skip";
-    }
-    else {
+    } else {
       if (column_id < 0) {
         LOG(ERROR) << "Column index for column mapping should be non-negative";
         return false;
@@ -555,6 +554,25 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
       get_scalar(data_source_node, "location", data_location);
     }
 
+    if (loading_config_node["x_csr_params"]) {
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::PARALLELISM, load_config.parallelism_)) {
+        VLOG(10) << "Parallelism is set to: " << load_config.parallelism_;
+      }
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::BUILD_CSR_IN_MEM,
+                     load_config.build_csr_in_mem_)) {
+        VLOG(10) << "Build csr in memory is set to: "
+                 << load_config.build_csr_in_mem_;
+      }
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::USE_MMAP_VECTOR,
+                     load_config.use_mmap_vector_)) {
+        VLOG(10) << "Use mmap vector is set to: "
+                 << load_config.use_mmap_vector_;
+      }
+    }
+
     RETURN_IF_NOT_OK(
         parse_bulk_load_method(loading_config_node, load_config.method_));
     auto format_node = loading_config_node["format"];
@@ -717,14 +735,23 @@ LoadingConfig::LoadingConfig(const Schema& schema)
     : schema_(schema),
       scheme_("file"),
       method_(BulkLoadMethod::kInit),
-      format_("csv") {}
+      format_("csv"),
+      parallelism_(loader_options::DEFAULT_PARALLELISM),
+      build_csr_in_mem_(loader_options::DEFAULT_BUILD_CSR_IN_MEM),
+      use_mmap_vector_(loader_options::DEFAULT_USE_MMAP_VECTOR) {}
 
 LoadingConfig::LoadingConfig(const Schema& schema,
                              const std::string& data_source,
                              const std::string& delimiter,
                              const BulkLoadMethod& method,
                              const std::string& format)
-    : schema_(schema), scheme_(data_source), method_(method), format_(format) {
+    : schema_(schema),
+      scheme_(data_source),
+      method_(method),
+      format_(format),
+      parallelism_(loader_options::DEFAULT_PARALLELISM),
+      build_csr_in_mem_(loader_options::DEFAULT_BUILD_CSR_IN_MEM),
+      use_mmap_vector_(loader_options::DEFAULT_USE_MMAP_VECTOR) {
   metadata_[reader_options::DELIMITER] = delimiter;
 }
 

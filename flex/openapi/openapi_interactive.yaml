@@ -1602,6 +1602,16 @@ components:
         loading_config:
           type: object
           properties:
+            x_csr_params:
+              type: object
+              description: mutable_csr specific parameters
+              properties:
+                parallelism: # how many thread used for bulk loading
+                  type: integer
+                build_csr_in_mem: # whether to build csr in memory
+                  type: boolean
+                use_mmap_vector: # whether to use mmap vector
+                  type: boolean
             data_source:
               type: object
               properties:
