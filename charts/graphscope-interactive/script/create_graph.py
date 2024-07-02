@@ -318,6 +318,7 @@ def create_graph(sess: Session, ds: str):
                             ),
                         ),
                     ],
+                    primary_keys=["vertex_id"],
                 ),
             ],
             edge_types=[
@@ -439,7 +440,7 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
                     ColumnMapping(
                         var_property="credit_code",
                         column=EdgeMappingSourceVertexMappingsInnerColumn(
-                            index=5, name="credit_code"
+                            index=5, name="social_credit_code"
                         ),
                     ),
                     ColumnMapping(
@@ -580,7 +581,7 @@ def wait_job_finish(sess: Session, job_id: str):
             print("job failed: ", resp.get_value())
             raise Exception("job failed")
         else:
-            time.sleep(1)
+            time.sleep(10)
     print("Finish loading graph: ", job_id)
 
 
