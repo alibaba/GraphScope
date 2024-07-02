@@ -68,7 +68,8 @@ class Driver:
         self._admin_endpoint = os.environ.get("INTERACTIVE_ADMIN_ENDPOINT")
         assert self._admin_endpoint is not None, "INTERACTIVE_ADMIN_ENDPOINT is not set"
         self._stored_proc_endpoint = os.environ.get("INTERACTIVE_STORED_PROC_ENDPOINT")
-        assert self._stored_proc_endpoint is not None, "INTERACTIVE_STORED_PROC_ENDPOINT is not set"
+        if self._stored_proc_endpoint is None:
+            print("INTERACTIVE_STORED_PROC_ENDPOINT is not set, will try to get it from service status endpoint")
         self._cypher_endpoint = os.environ.get("INTERACTIVE_CYPHER_ENDPOINT")
         if self._cypher_endpoint is None:
             print("INTERACTIVE_CYPHER_ENDPOINT is not set, will try to get it from service status endpoint")

@@ -52,7 +52,9 @@ public class Driver {
         }
         String storedProcUri = System.getenv("INTERACTIVE_STORED_PROC_ENDPOINT");
         if (storedProcUri == null) {
-            throw new IllegalArgumentException("INTERACTIVE_STORED_PROC_ENDPOINT is not set");
+            logger.warning(
+                    "INTERACTIVE_STORED_PROC_ENDPOINT is not set, will try to parse endpoint from"
+                            + " service_status");
         }
         String cypherUri = System.getenv("INTERACTIVE_CYPHER_ENDPOINT");
         if (cypherUri == null) {
@@ -109,20 +111,7 @@ public class Driver {
         this.cypherUri = cypherUri;
         this.gremlinUri = gremlinUri;
         // Parse uri
-        if (!storedProcUri.startsWith("http")) {
-            throw new IllegalArgumentException("Invalid uri: " + storedProcUri);
-        }
-        initHostPort();
-        this.defaultSession = null;
-    }
-
-    private Driver(String adminUri, String storedProcUri) {
-        this.adminUri = adminUri;
-        this.storedProcUri = storedProcUri;
-        this.cypherUri = null;
-        this.gremlinUri = null;
-        // Parse uri
-        if (!storedProcUri.startsWith("http")) {
+        if (storedProcUri != null && !storedProcUri.startsWith("http")) {
             throw new IllegalArgumentException("Invalid uri: " + storedProcUri);
         }
         initHostPort();
