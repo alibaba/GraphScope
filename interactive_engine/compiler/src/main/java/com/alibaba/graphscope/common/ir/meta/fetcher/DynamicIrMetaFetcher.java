@@ -42,6 +42,8 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
     private static final Logger logger = LoggerFactory.getLogger(DynamicIrMetaFetcher.class);
     private final ScheduledExecutorService scheduler;
     private volatile IrMetaStats currentState;
+    // To manage the state changes of statistics resulting from different update operations.
+    private volatile StatsState statsState;
 
     public DynamicIrMetaFetcher(Configs configs, IrMetaReader dataReader, IrMetaTracker tracker) {
         super(dataReader, tracker);
@@ -66,12 +68,15 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
     private synchronized void syncMeta() {
         try {
             IrMeta meta = this.reader.readMeta();
+            GraphStatistics curStats;
             // if the graph id is changed, we need to update the statistics
-            GraphStatistics curStats =
-                    (this.currentState == null
-                                    || !this.currentState.getGraphId().equals(meta.getGraphId()))
-                            ? null
-                            : this.currentState.getStatistics();
+            if (this.currentState == null
+                    || !this.currentState.getGraphId().equals(meta.getGraphId())) {
+                this.statsState = StatsState.INITIALIZED;
+                curStats = null;
+            } else {
+                curStats = this.currentState.getStatistics();
+            }
             this.currentState =
                     new IrMetaStats(
                             meta.getGraphId(),
@@ -79,7 +84,7 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                             meta.getSchema(),
                             meta.getStoredProcedures(),
                             curStats);
-            if (this.currentState.getStatistics() == null) {
+            if (this.statsState != StatsState.SYNCED) {
                 syncStats();
             }
         } catch (Exception e) {
@@ -101,15 +106,30 @@ public class DynamicIrMetaFetcher extends IrMetaFetcher implements AutoCloseable
                     if (tracker != null) {
                         tracker.onChanged(this.currentState);
                     }
+                    this.statsState = StatsState.SYNCED;
                 }
             }
         } catch (Exception e) {
             logger.warn("failed to read graph statistics, error is {}", e);
+        } finally {
+            if (this.currentState != null
+                    && tracker != null
+                    && this.statsState == StatsState.INITIALIZED) {
+                tracker.onChanged(this.currentState);
+                this.statsState = StatsState.MOCKED;
+            }
         }
     }
 
     @Override
     public void close() throws Exception {
         this.scheduler.shutdown();
+    }
+
+    public enum StatsState {
+        INITIALIZED, // first initialized or graph id changed
+        MOCKED, // the switch can only occur from the INITIALIZED state. If remote statistics are
+        // unavailable, a mocked statistics object is created once.
+        SYNCED // remote stats is synced
     }
 }
