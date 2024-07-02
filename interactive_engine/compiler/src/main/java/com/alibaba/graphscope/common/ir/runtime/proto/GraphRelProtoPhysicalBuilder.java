@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.SnapshotId;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
@@ -37,6 +38,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,12 +63,14 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
         super(logicalPlan);
         this.physicalBuilder = GraphAlgebraPhysical.PhysicalPlan.newBuilder();
         this.relToCommons = createRelToCommons(logicalPlan);
+
         this.relShuttle =
                 new GraphRelToProtoConverter(
                         irMeta.getSchema().isColumnId(),
                         graphConfig,
                         this.physicalBuilder,
-                        this.relToCommons);
+                        this.relToCommons,
+                        createExtraParams(irMeta));
     }
 
     @Override
@@ -148,6 +152,16 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
                     }
                 });
         return relToCommons;
+    }
+
+    private HashMap<String, String> createExtraParams(IrMeta irMeta) {
+        HashMap<String, String> extraParams = new HashMap<>();
+        // prepare extra params for physical plan, e.g. snapshot id
+        SnapshotId snapshotId = irMeta.getSnapshotId();
+        if (snapshotId.isAcquired()) {
+            extraParams.put("SID", String.valueOf(snapshotId.getId()));
+        }
+        return extraParams;
     }
 
     /**
