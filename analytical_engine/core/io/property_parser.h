@@ -245,19 +245,24 @@ inline void SplitTable(const std::string& data, int num,
 inline void DistributeChunk(const rpc::Chunk& chunk, int num,
                             std::vector<rpc::Chunk>& distributed_chunk) {
   distributed_chunk.resize(num);
-  const auto& attrs = chunk.attr();
-  std::string protocol = attrs.at(rpc::PROTOCOL).s();
+  // Copy to a map to avoid the undefined reference issue (inside
+  // protobuf's internal code: Map::at()') on MacOS
+  std::map<int, rpc::AttrValue> params;
+  for (auto& pair : chunk.attr()) {
+    params[pair.first] = pair.second;
+  }
+  std::string protocol = params.at(rpc::PROTOCOL).s();
   std::vector<std::string> distributed_values;
   const std::string& data = chunk.buffer();
   if (protocol == "pandas") {
     SplitTable(data, num, distributed_values);
   } else {
-    distributed_values.resize(num, attrs.at(rpc::SOURCE).s());
+    distributed_values.resize(num, params.at(rpc::SOURCE).s());
   }
   for (int i = 0; i < num; ++i) {
     distributed_chunk[i].set_buffer(std::move(distributed_values[i]));
     auto* attr = distributed_chunk[i].mutable_attr();
-    for (auto& pair : attrs) {
+    for (auto& pair : params) {
       (*attr)[pair.first].CopyFrom(pair.second);
     }
   }
