@@ -104,14 +104,21 @@ class ProcedureCaller():
             print("call count_vertex_num failed: ", resp.get_status_message())
             exit(1)
 
-        # plus_one, should be with id 3
-        # construct a byte array with bytes: the 4 bytes of integer 1, and a byte 3
-        byte_string = bytes([0,0,0,0,2]) # 4 bytes of integer 1, and a byte 3
+        # plus_one, should be with id 2
+        # construct a byte array with bytes: the 4 bytes of integer 1, and a byte 2
+        value = 1
+        byte_string = value.to_bytes(4, byteorder=sys.byteorder) + bytes([2])
+        # byte_string = bytes([1,0,0,0,2]) # 4 bytes of integer 1, and a byte 3
         params = byte_string.decode('utf-8')
         resp = self._sess.call_procedure_raw(graph_id, params)
         if not resp.is_ok():
             print("call plus_one failed: ", resp.get_status_message())
             exit(1)
+        res = resp.get_value()
+        assert len(res) == 4
+        # the four byte represent a integer
+        res = int.from_bytes(res, byteorder=sys.byteorder)
+        assert(res == 2)
 
 if __name__ == "__main__":
     #parse command line args
