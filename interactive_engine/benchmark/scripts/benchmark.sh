@@ -14,6 +14,19 @@
 # limitations under the License.
 
 CURR_DIR=$(pwd)
-CONF_DIR=$CURR_DIR/config/interactive-benchmark.properties
-java -cp $CURR_DIR:lib/* com.alibaba.graphscope.gaia.benchmark.InteractiveBenchmark $CONF_DIR
+
+# Default class to run
+CLASS_TO_RUN=com.alibaba.graphscope.gaia.benchmark.InteractiveBenchmark
+if [ "$1" = "--cypher" ]; then
+    CLASS_TO_RUN=com.alibaba.graphscope.gaia.benchmark.CypherBenchmark
+elif [ "$1" = "--gremlin" ]; then
+    CLASS_TO_RUN=com.alibaba.graphscope.gaia.benchmark.InteractiveBenchmark
+fi
+
+cd "$(dirname "$0")"
+cd ../target
+tar -xf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
+cd gaia-benchmark-0.0.1-SNAPSHOT
+CONF_DIR=./config/interactive-benchmark.properties
+java -cp '.:lib/*' $CLASS_TO_RUN "$CONF_DIR"
 cd $CURR_DIR

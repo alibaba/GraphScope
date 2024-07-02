@@ -27,45 +27,10 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>queries/</directory>
-            <outputDirectory>/queries</outputDirectory>
+            <directory>queries</directory>
+            <outputDirectory>/queries/</outputDirectory>
             <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/ic</directory>
-            <outputDirectory>/queries/ic</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/ic/exp</directory>
-            <outputDirectory>/queries/ic/exp</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/ic/groot</directory>
-            <outputDirectory>/queries/ic/groot</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/bi</directory>
-            <outputDirectory>/queries/bi</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/lsqb</directory>
-            <outputDirectory>/queries/lsqb</outputDirectory>
-            <includes>
-                <include>*</include>
+                <include>**/*</include>
             </includes>
         </fileSet>
         <fileSet>

@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Result;
 import org.apache.tinkerpop.gremlin.driver.ResultSet;
+import org.neo4j.driver.*;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -83,6 +84,41 @@ public class CommonQuery {
         }
     }
 
+    public void processCypherQuery(
+            Session session,
+            HashMap<String, String> singleParameter,
+            boolean printResult,
+            boolean printQuery) {
+        try {
+            String cypherQuery = generateGremlinQuery(singleParameter, queryPattern);
+            long startTime = System.currentTimeMillis();
+            org.neo4j.driver.Result resultSet = session.run(cypherQuery);
+            Pair<Integer, String> result = processCypherResult(resultSet);
+            long endTime = System.currentTimeMillis();
+            long executeTime = endTime - startTime;
+            if (printQuery) {
+                String printInfo =
+                        String.format(
+                                "QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
+                                queryName,
+                                singleParameter.toString(),
+                                result.getLeft(),
+                                executeTime);
+                if (printResult) {
+                    printInfo = String.format("%s Result: { %s }", printInfo, result.getRight());
+                }
+                System.out.println(printInfo);
+            }
+
+        } catch (Exception e) {
+            System.out.println(
+                    String.format(
+                            "Timeout or failed: QueryName[%s], Parameter[%s].",
+                            queryName, singleParameter.toString()));
+            e.printStackTrace();
+        }
+    }
+
     String generateGremlinQuery(
             HashMap<String, String> singleParameter, String gremlinQueryPattern) {
         for (String parameter : singleParameter.keySet()) {
@@ -105,10 +141,25 @@ public class CommonQuery {
         return Pair.of(count, result);
     }
 
+    Pair<Integer, String> processCypherResult(org.neo4j.driver.Result cypherResult) {
+        int count = 0;
+        String result = "";
+        while (cypherResult.hasNext()) {
+            count += 1;
+            result = String.format("%s\n%s", result, cypherResult.next().asMap().toString());
+        }
+        return Pair.of(count, result);
+    }
+
     private static String getGremlinQueryPattern(String gremlinQueryPath) throws Exception {
         FileInputStream fileInputStream = new FileInputStream(gremlinQueryPath);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
-        return bufferedReader.readLine();
+        String line;
+        StringBuilder stringBuilder = new StringBuilder();
+        while ((line = bufferedReader.readLine()) != null) {
+            stringBuilder.append(line).append(" ");
+        }
+        return stringBuilder.toString().trim();
     }
 
     private static ArrayList<HashMap<String, String>> getParameters(String parameterFilePath)
