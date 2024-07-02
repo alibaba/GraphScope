@@ -1731,12 +1731,7 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
       }
       LOG(INFO) << "label_id=" << int(label_id) << " lid=" << vertex_lid
                 << " col_id=" << i - int(has_found_pk)
-                << " goto=" << new_properties_map[colNames[i]].to_string()
-                << " now="
-                << txnWrite
-                       .GetVertexField(label_id, vertex_lid,
-                                       i - int(has_found_pk))
-                       .to_string();
+                << " goto=" << new_properties_map[colNames[i]].to_string();
       if (txnWrite.SetVertexField(label_id, vertex_lid, i - int(has_found_pk),
                                   new_properties_map[colNames[i]]) == false) {
         txnWrite.Abort();
@@ -1745,14 +1740,6 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
                 gs::StatusCode::InternalError,
                 "Fail to update vertex: " + label + ":" + primary_key_value)));
       }
-      LOG(INFO) << "label_id=" << int(label_id) << " lid=" << vertex_lid
-                << " col_id=" << i - int(has_found_pk)
-                << " goto=" << new_properties_map[colNames[i]].to_string()
-                << " now="
-                << txnWrite
-                       .GetVertexField(label_id, vertex_lid,
-                                       i - int(has_found_pk))
-                       .to_string();
     }
     txnWrite.Commit();
   } catch (std::exception& e) {
@@ -2011,7 +1998,6 @@ seastar::future<admin_query_result> admin_actor::get_vertex(
           continue;
         }
         // 如果是 primary key
-        LOG(INFO) << "Primary key: " << primary_keys_name;
         // 如果是 int32/int64/uin32/uint64
         if (property["property_type"].find("primitive_type") !=
             property["property_type"].end()) {
@@ -2026,7 +2012,6 @@ seastar::future<admin_query_result> admin_actor::get_vertex(
               gs::Result<seastar::sstring>(gs::Status(
                   gs::StatusCode::NotFound, "Primary key type not found")));
         }
-        LOG(INFO) << "Primary key type: " << primary_keys_type;
       }
       break;
     }
@@ -2049,7 +2034,6 @@ seastar::future<admin_query_result> admin_actor::get_vertex(
   try {
     auto& db = gs::GraphDB::get().GetSession(hiactor::local_shard_id());
     auto label_id = db.schema().get_vertex_label_id(label);
-    LOG(INFO) << "label_id: " << int(label_id);
     auto pk_type_property =
         gs::config_parsing::StringToPrimitivePropertyType(primary_keys_type);
     auto pk_value_any =
