@@ -1,0 +1,180 @@
+# Dev and Test
+
+This document describe how the source code of Interactive is organized, and how to build `Interactive` from source and run tests.
+
+## Dev Environment
+
+Before build `Interactive` from source code, you need to prepare a development environment with many dependencies. 
+Here we provide two options, installing all dependencies on the local machine, or build it inside the provided docker image.
+
+### Install Deps on Local
+
+To install all dependencies on your local machine, run the following code with command-line utility script `gsctl.py`.
+
+```bash
+python3 gsctl.py install-deps dev
+```
+
+> Currently interactive could not be built from source on macos. But you can try to build interactive on the docker image, since our docker image supports `arm64` platform.
+
+### Develop on Docker Container
+
+We provided a docker image `graphscope-dev` with all tools and dependencies included.
+
+```bash
+docker run --rm -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
+```
+
+Or you can open the codebase of GraphScope in [dev container](../../../development/dev_guide.md#develop-with-dev-containers).
+
+## Understanding the Codebase
+
+Interactive is composed of two parts, the execution engine and frontend compiler. 
+
+### Interactive Query Engine
+
+The code for Interactive Query engine is under folder `flex`, and is organized as follows.
+- `codegen`: A binary `gen_code_from_plan` is built from this repo, which is able to generate c++ code from a physical plan.
+- `engines`: 
+    - `engines/graph_db`: Provide the interface and implementation of `GraphDB`, which represents the storage of the graph.
+    - `engines/hqps_db`: Contains the implementation Graph Query Engine, including the data structures and implementation of physical operators.
+    - `engines/http_server`: Contains the http server based on seastar httpd, and the definition of actors of [hiactor](https://github.com/alibaba/hiactor).
+- `interactive`: Contains the product related stuffs.
+    - `interactive/docker`: The dockerfile of interactive.
+    - `interactive/examples`: Some example graph definition and raw data.
+    - `interactive/openapi/openapi_interactive`: The openapi specification for interactive RESTful API.
+- `storages`:
+    - `storages/metadata`: The implementation of metadata store.
+    - `storages/immutable_graph`: The implementation of immutable graph storage.
+    - `storages/rt_mutable_graph`: The implementation of a mutable graph storage, which is based on `mutable_csr`.
+- `tests`: Contains the test cases and scripsts
+- `third_party`: Third party dependencies.
+- `utils`: Utility class and functions.
+
+
+### Compiler
+
+Compiler plays an important rule in interactive, by translate graph queries expressed in graph query languages (Cypher/Gremlin) into physical query plans based on GAIA IR.
+The code of `Compiler` is under `interactive_engine/compiler`. 
+For more detail information about compiler, please check [this documentation](../../../interactive_engine/design_of_gie.md)
+
+## Build Interactive
+
+First, build the Interactive Query Engine.
+
+```bash
+git submodule update --init
+cd flex
+mkdir build && cd build
+cmake ..
+make -j
+```
+
+Then, build the Compiler.
+```bash
+cd interactive_engine
+mvn clean package -DskipTests -Pexperimental
+```
+
+## Testing
+
+There are many test cases designed for Interactive, you can refer to [interactive.yaml](https://github.com/alibaba/GraphScope/blob/main/.github/workflows/interactive.yml) for the github workflow.
+
+Here is a simple test case for verifying the correctness of SDK and interactive admin service.
+
+
+First we need to create a directory as Interactive workspace, and try to create a new graph with name `modern_graph` and import data to the graph.
+
+```bash
+# Clone the testing data
+export GS_TEST_DIR=/tmp/gstest
+git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+
+export GITHUB_WORKSPACE=/path/to/GraphScope
+export FLEX_DATA_DIR=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph
+export TMP_INTERACTIVE_WORKSPACE=/tmp/temp_workspace
+cd ${GITHUB_WORKSPACE}/flex/build/
+
+# Create interactive workspace
+mkdir -p ${TMP_INTERACTIVE_WORKSPACE}
+SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+
+# Create a directory to put modern_graph's schema.yaml and graph data
+mkdir -p ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/
+cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+
+# Load data to modern_graph
+GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
+```
+
+Workspace is like the data directory for a database, where the metadata and graph data is placed. Here is an example.
+```txt
+/tmp/temp_workspace
+├── data
+│   ├── 1 -> /tmp/temp_workspace/data/modern_graph
+│   ├── 2
+│   └── modern_graph
+└── METADATA
+    ├── GRAPH_META
+    ├── INDICES_LOCK
+    ├── JOB_META
+    ├── PLUGIN_META
+    ├── PLUGINS_LOCK
+    └── RUNNING_GRAPH
+```
+
+
+Then create a `engine_config.yaml` to define the configuration of interactive.
+
+```yaml
+log_level: INFO
+default_graph: modern_graph
+compute_engine:
+  type: hiactor
+  workers:
+    - localhost:10000
+  thread_num_per_worker: 1
+  store:
+    type: cpp-mcsr
+  metadata_store:
+    type: file
+compiler:
+  planner:
+    is_on: true
+    opt: RBO
+    rules:
+      - FilterIntoJoinRule
+      - FilterMatchRule
+      - NotMatchToAntiJoinRule
+  meta:
+    reader:
+      schema:
+        uri: http://localhost:7777/v1/service/status
+        interval: 1000 # ms
+      statistics:
+        uri: http://localhost:7777/v1/graph/%s/statistics
+        interval: 86400000 # ms
+  endpoint:
+    default_listen_address: localhost
+    bolt_connector:
+      disabled: false
+      port: 7687
+    gremlin_connector:
+      disabled: false
+      port: 8182
+  query_timeout: 40000
+  gremlin_script_language_name: antlr_gremlin_calcite
+http_service:
+  default_listen_address: localhost
+  admin_port: 7777
+  query_port: 10000
+```
+
+Then we run a script `hqps_admin_test.sh` to verify the correctness of interactive admin service.
+
+```bash
+cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+# Change the default_graph field to 
+bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config.yaml ${GS_TEST_DIR}
+```
