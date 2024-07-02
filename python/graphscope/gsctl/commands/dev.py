@@ -198,13 +198,14 @@ def interactive(app, graphscope_repo):
 )
 def deploy(
     type,
-    coordinator_port,
-    cypher_port,
-    storedproc_port,
-    gremlin_port,
     container_name,
     image_registry,
     image_tag,
+    coordinator_port=8081,
+    admin_port=7778,
+    storedproc_port=10001,
+    cypher_port=7688,
+    gremlin_port=8183,
 ):  # noqa: F811
     """Deploy Flex Interactive instance"""
     cmd = []
@@ -220,12 +221,14 @@ def deploy(
             "-p",
             f"{coordinator_port}:8080",
             "-p",
-            f"{cypher_port}:7687",
+            f"{admin_port}:7777",
             "-p",
             f"{storedproc_port}:10000",
+            "-p",
+            f"{cypher_port}:7687",
+            "-p",
+            f"{gremlin_port}:8182",
         ]
-        if gremlin_port != -1:
-            cmd.extend(["-p", f"{gremlin_port}:8182"])
         image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
     click.secho("Run command: {0}".format(" ".join(cmd)))
@@ -238,18 +241,25 @@ def deploy(
 Coordinator is listening on {coordinator_port} port, you can connect to coordinator by:
     gsctl connect --coordinator-endpoint http://127.0.0.1:{coordinator_port}
 
-Cypher service is listening on {cypher_port} port, you can connect to cypher service with:
-    neo4j://127.0.0.1:{cypher_port}
+Interactive service is ready, you can connect to the interactive service with interactive sdk:
+Interactive Admin service is listening at
+    http://127.0.0.1{admin_port},
+You can connect to admin service with Interactive SDK, with following environment variables declared.
 
-Stored procedure service is listening on {storedproc_port} port , you can connect to stored procedure service with:
-    http://127.0.0.1:{storedproc_port}
+############################################################################################
+    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
+    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
+    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
+    export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+############################################################################################
+
+See https://graphscope.io/docs/latest/flex/interactive/development/java/java_sdk and
+https://graphscope.io/docs/latest/flex/interactive/development/python/python_sdk for more details
+about the usage of Interactive SDK.
+
+Apart from interactive sdk, you can also use neo4j native tools(like cypher-shell) to connect to cypher endpoint,
+and gremlin console to connect to gremlin endpoint.
         """
-        if gremlin_port != -1:
-            message += f"""
-Gremlin service is listening on {gremlin_port} port, you can connect to gremlin service with:
-    ws://127.0.0.1:{gremlin_port}/gremlin
-
-            """
         click.secho(message, bold=False)
     else:
         click.secho("[FAILED] ", nl=False, fg="red", bold=True)

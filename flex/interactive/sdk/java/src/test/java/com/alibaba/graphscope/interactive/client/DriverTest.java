@@ -198,7 +198,8 @@ public class DriverTest {
 
     @BeforeAll
     public static void beforeClass() {
-        String interactiveEndpoint = System.getProperty("interactive.endpoint", "localhost:7777");
+        String interactiveEndpoint =
+                System.getProperty("interactive.endpoint", "http://localhost:7777");
         driver = Driver.connect(interactiveEndpoint);
         session = driver.session();
         String neo4jEndpoint = driver.getNeo4jEndpoint();
@@ -562,6 +563,15 @@ public class DriverTest {
         String query = "CALL " + cypherProcedureId + "() YIELD *;";
         org.neo4j.driver.Result result = neo4jSession.run(query);
         logger.info("result: " + result.toString());
+    }
+
+    @Test
+    @Order(16)
+    public void test11CreateDriver() {
+        // Create a new driver with all endpoints specified.
+        // Assume the environment variables are set
+        Driver driver = Driver.connect();
+        Session session = driver.session();
     }
 
     @AfterAll
