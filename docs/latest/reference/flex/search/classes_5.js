@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['edge_5fiterator_1466',['edge_iterator',['../classgs_1_1ReadTransaction_1_1edge__iterator.html',1,'gs::ReadTransaction::edge_iterator'],['../classgs_1_1UpdateTransaction_1_1edge__iterator.html',1,'gs::UpdateTransaction::edge_iterator']]],
-  ['emptycsr_1467',['EmptyCsr',['../classgs_1_1EmptyCsr.html',1,'gs']]],
-  ['emptycsr_3c_20recordview_20_3e_1468',['EmptyCsr&lt; RecordView &gt;',['../classgs_1_1EmptyCsr_3_01RecordView_01_4.html',1,'gs']]],
-  ['emptycsr_3c_20std_3a_3astring_5fview_20_3e_1469',['EmptyCsr&lt; std::string_view &gt;',['../classgs_1_1EmptyCsr_3_01std_1_1string__view_01_4.html',1,'gs']]],
-  ['encoder_1470',['Encoder',['../classgs_1_1Encoder.html',1,'gs']]]
+  ['edge_5fiterator_1473',['edge_iterator',['../classgs_1_1ReadTransaction_1_1edge__iterator.html',1,'gs::ReadTransaction::edge_iterator'],['../classgs_1_1UpdateTransaction_1_1edge__iterator.html',1,'gs::UpdateTransaction::edge_iterator']]],
+  ['emptycsr_1474',['EmptyCsr',['../classgs_1_1EmptyCsr.html',1,'gs']]],
+  ['emptycsr_3c_20recordview_20_3e_1475',['EmptyCsr&lt; RecordView &gt;',['../classgs_1_1EmptyCsr_3_01RecordView_01_4.html',1,'gs']]],
+  ['emptycsr_3c_20std_3a_3astring_5fview_20_3e_1476',['EmptyCsr&lt; std::string_view &gt;',['../classgs_1_1EmptyCsr_3_01std_1_1string__view_01_4.html',1,'gs']]],
+  ['encoder_1477',['Encoder',['../classgs_1_1Encoder.html',1,'gs']]]
 ];
