@@ -106,7 +106,10 @@ impl PathKey {
     // The properties are returned as a Object::Vector, e.g., project a.name where a is a path, the result is a vector of names.
     fn get_key(&self, entry: &DynEntry) -> FnExecResult<Object> {
         match self {
-            PathKey::Property(prop_key) => Ok(prop_key.get_key(entry)?),
+            PathKey::Property(prop_key) => {
+                let props = self.get_path_props(entry, prop_key)?;
+                Ok(Object::Vector(props))
+            }
             PathKey::Vec(vec) => {
                 let prop_num = vec.len();
                 if prop_num == 0 {
@@ -151,7 +154,7 @@ impl PathKey {
                     prop_collection.push(btree_map);
                 }
                 for (key_name, prop_key) in map.into_iter().skip(1) {
-                    let props = prop_key.get_key(entry)?.take_vector().unwrap();
+                    let props = self.get_path_props(entry, &prop_key)?;
                     for (path_idx, prop) in props.into_iter().enumerate() {
                         prop_collection[path_idx].insert(key_name.clone(), prop);
                     }
@@ -167,10 +170,36 @@ impl PathKey {
     }
 
     fn get_path_props(&self, entry: &DynEntry, prop_key: &PropKey) -> FnExecResult<Vec<Object>> {
-        Ok(prop_key
-            .get_key(entry)?
-            .take_vector()
-            .map_err(|e| FnExecError::ExprEvalError(e.into()))?)
+        if PropKey::Id.eq(prop_key) {
+            Ok(entry
+                .as_graph_path()
+                .ok_or_else(|| {
+                    FnExecError::unexpected_data_error("Apply PathKey::Property on a non-Path entry")
+                })?
+                .get_elem_ids()
+                .into_iter()
+                .map(|id| id.into())
+                .collect())
+        } else if PropKey::Label.eq(prop_key) {
+            Ok(entry
+                .as_graph_path()
+                .ok_or_else(|| {
+                    FnExecError::unexpected_data_error("Apply PathKey::Property on a non-Path entry")
+                })?
+                .get_elem_labels()
+                .into_iter()
+                .map(|label| {
+                    label
+                        .map(|label| label.into())
+                        .unwrap_or(Object::None)
+                })
+                .collect())
+        } else {
+            Ok(prop_key
+                .get_key(entry)?
+                .take_vector()
+                .map_err(|e| FnExecError::ExprEvalError(e.into()))?)
+        }
     }
 }
 
@@ -1842,7 +1871,6 @@ mod tests {
         let mut object_result = Object::None;
         if let Some(Ok(res)) = result.next() {
             let a_entry = res.get(Some(TAG_A));
-            println!("{:?}", a_entry);
             object_result = a_entry.unwrap().as_object().unwrap().clone();
         }
         assert!(result.next().is_none());
@@ -1856,6 +1884,68 @@ mod tests {
                 vec![(object!("name"), object!("vadas")), (object!("age"), object!(27))]
                     .into_iter()
                     .collect(),
+            ),
+        ]);
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().out(2..3).elementMap('name')
+    #[test]
+    fn project_path_elem_prop_map_test() {
+        let path_key =
+            common_pb::path_function::PathKey::Map(common_pb::path_function::PathElementKeyValues {
+                key_vals: vec![
+                    common_pb::path_function::path_element_key_values::PathElementKeyValue {
+                        key: Some("~id".to_string().into()),
+                        val: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
+                        }),
+                    },
+                    common_pb::path_function::path_element_key_values::PathElementKeyValue {
+                        key: Some("~label".to_string().into()),
+                        val: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})),
+                        }),
+                    },
+                    common_pb::path_function::path_element_key_values::PathElementKeyValue {
+                        key: Some("name".to_string().into()),
+                        val: Some(to_prop_pb("name".into())),
+                    },
+                ],
+            });
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_path_func_pb(None, path_key, common_pb::path_function::FuncOpt::Vertex)),
+                alias: Some(TAG_A.into()),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(vec![init_path_record()], project_opr_pb);
+
+        let mut object_result = Object::None;
+        if let Some(Ok(res)) = result.next() {
+            let a_entry = res.get(Some(TAG_A));
+            object_result = a_entry.unwrap().as_object().unwrap().clone();
+        }
+        assert!(result.next().is_none());
+        let expected_result = Object::Vector(vec![
+            Object::KV(
+                vec![
+                    (object!("~id"), object!(1)),
+                    (object!("~label"), object!(PERSON_LABEL)),
+                    (object!("name"), object!("marko")),
+                ]
+                .into_iter()
+                .collect(),
+            ),
+            Object::KV(
+                vec![
+                    (object!("~id"), object!(2)),
+                    (object!("~label"), object!(PERSON_LABEL)),
+                    (object!("name"), object!("vadas")),
+                ]
+                .into_iter()
+                .collect(),
             ),
         ]);
         assert_eq!(object_result, expected_result);
