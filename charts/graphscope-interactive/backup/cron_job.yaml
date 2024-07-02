@@ -1,0 +1,39 @@
+{{- if .Values.cronjob.enabled }}
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "graphscope-interactive.cronjob.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+spec:
+  schedule: "{{ .Values.cronjob.schedule }}"
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            {{- if .Values.cronjob.podAnnotations }}
+            {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.cronjob.podAnnotations "context" $) | nindent 12 }}
+            {{- end }}
+          labels: {{- include "graphscope-interactive.labels" . | nindent 12 }}
+            app.kubernetes.io/component: cronjob
+            {{- if .Values.primary.podLabels }}
+            {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.cronjob.podLabels "context" $) | nindent 12 }}
+            {{- end }}
+        spec:
+          {{- if .Values.tolerations }}
+          tolerations: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 10 }}
+          {{- end }}
+          containers:
+          - name: my-cronjob-container
+            image: {{ include "graphscope-interactive.cronjob.image" . }}
+            imagePullPolicy: {{ .Values.cronjob.image.pullPolicy }}
+            command: 
+              - "/bin/sh"
+              - "-c"
+              - |
+                {{- .Values.cronjob.command | nindent 16 }}
+          restartPolicy: OnFailure
+{{- end }}

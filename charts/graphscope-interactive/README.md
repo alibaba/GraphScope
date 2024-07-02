@@ -3,6 +3,7 @@
 ## QuickStart
 
 ```bash
+helm install release  -f ./charts/graphscope-interactive/nginx_ingress_custom.yaml oci://ghcr.io/nginxinc/charts/nginx-ingress --version 1.2.1
 $ helm install {your-release-name} .
 ```
 
@@ -13,6 +14,9 @@ $ kubectl describe svc {your-release-name} -graphscope-interactive-frontend | gr
 #192.168.0.44:7687
 # the first is the gremlin endpoint(currently not supported)
 # the second is the cypher endpoint
+$ kubectl describe svc {your-release-name} -graphscope-interactive-engine | grep "Endpoints:" | awk -F' ' '{print $2}'
+# the first is the admin port
+# the second is the query port
 ```
 
 Delete the deployment via 
@@ -105,3 +109,28 @@ hiactorWorkerNum: 1 # currently only support 1.
 hiactorTimeout: 240000
 
 ```
+
+
+## TODO
+
+- TODO: Support cypher/gremlin queries.
+
+## Installtion
+
+```bash
+helm install lei-test -f settings.yaml . --set odps.access.id="",odps.access.key="",odps.endpoint=""
+export NODE_IP=$(ktl -n kubetask get pod lei-test-graphscope-interactive-primary-0 -o jsonpath="{.status.podIP}")
+export ADMIN_PORT=$(ktl get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[0].ports[0].containerPort}')
+export QUERY_PORT=$(ktl get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[1].ports[0].containerPort}')
+export ADMIN_ENDPOINT=${NODE_IP}:${ADMIN_PORT}
+export QUERY_ENDPOINT=${NODE_IP}:${QUERY_PORT}
+echo "ADMIN_ENDPOINT: ${ADMIN_ENDPOINT}"
+echo "QUERY_ENDPOINT: ${QUERY_ENDPOINT}"
+```
+
+```bash
+export NODE_IP=$(118f -n kubetask get pod lei-test-graphscope-interactive-primary-0 -o jsonpath="{.status.podIP}")
+export ADMIN_PORT=$(118f get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[0].ports[0].containerPort}')
+export QUERY_PORT=$(118f get pod lei-test-graphscope-interactive-primary-0 -ojsonpath='{.spec.containers[1].ports[0].containerPort}')
+```
+

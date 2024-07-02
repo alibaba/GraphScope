@@ -1,0 +1,17 @@
+controller:
+  globalConfiguration:
+    ## Creates the GlobalConfiguration custom resource. Requires controller.enableCustomResources.
+    create: true
+
+    ## The spec of the GlobalConfiguration for defining the global configuration parameters of the Ingress Controller.
+    spec:  ## Ensure both curly brackets are removed when adding listeners in YAML format.
+      listeners:
+        - name: http-10000
+          port: 10000
+          protocol: HTTP
+  service:
+    customPorts:
+      - name: http-10000
+        port: 10000
+        protocol: TCP
+        targetPort: 10000

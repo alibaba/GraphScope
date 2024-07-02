@@ -11,6 +11,10 @@ if (Hiactor_FOUND)
     list(FILTER server_actor_autogen_files EXCLUDE REGEX ".*codegen.*")
   endif ()
 
+  if (NOT BUILD_PROXY)
+    list(FILTER server_actor_autogen_files EXCLUDE REGEX ".*proxy.*")
+  endif ()
+
   # get all .cc files in current directory, except for generated/
   file(GLOB_RECURSE SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
   list(FILTER SERVER_FILES EXCLUDE REGEX ".*generated.*")
@@ -21,6 +25,14 @@ if (Hiactor_FOUND)
     list(FILTER SERVER_FILES EXCLUDE REGEX ".*codegen*")
     list(FILTER SERVER_FILES EXCLUDE REGEX ".*workdir_manipulator*")
   endif ()
+
+  if (NOT BUILD_PROXY)
+    list(FILTER SERVER_FILES EXCLUDE REGEX ".*proxy_actor*")
+    list(FILTER SERVER_FILES EXCLUDE REGEX ".*proxy_http*")
+    list(FILTER SERVER_FILES EXCLUDE REGEX ".*proxy_service*")
+  endif ()
+
+  message(STATUS "SERVER_FILES: ${SERVER_FILES}")
 
   add_library(flex_server STATIC ${SERVER_FILES} ${server_actor_autogen_files})
   add_dependencies(flex_server server_actor_autogen)

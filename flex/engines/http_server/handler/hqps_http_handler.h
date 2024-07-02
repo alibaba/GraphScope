@@ -29,6 +29,19 @@
 
 namespace server {
 
+class hqps_heartbeat_handler : public seastar::httpd::handler_base {
+ public:
+  hqps_heartbeat_handler();
+  ~hqps_heartbeat_handler() override;
+
+  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
+      const seastar::sstring& path,
+      std::unique_ptr<seastar::httpd::request> req,
+      std::unique_ptr<seastar::httpd::reply> rep) override;
+
+ private:
+};
+
 class hqps_ic_handler : public seastar::httpd::handler_base {
  public:
   // extra headers
@@ -133,6 +146,7 @@ class hqps_http_handler {
 
   std::vector<hqps_ic_handler*> ic_handlers_;
   std::vector<hqps_adhoc_query_handler*> adhoc_query_handlers_;
+  hqps_heartbeat_handler* heart_beat_handler_;
 };
 
 }  // namespace server

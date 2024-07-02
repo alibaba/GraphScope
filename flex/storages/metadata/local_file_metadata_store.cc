@@ -38,7 +38,7 @@ Result<LocalFileMetadataStore::meta_key_t> LocalFileMetadataStore::CreateMeta(
   std::unique_lock<std::mutex> lock(meta_mutex_);
   meta_key_t meta_key;
   ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(meta_key, get_next_meta_key(meta_kind));
-  VLOG(10) << "got next meta key: " << meta_key;
+  LOG(INFO) << "got next meta key: " << meta_key << ", for " << meta_kind;
   if (is_key_exist(meta_kind, meta_key)) {
     return Status(StatusCode::InternalError,
                   "When creating meta, got an existing key");
