@@ -56,6 +56,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,13 +72,15 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     private boolean preCacheEdgeProps;
     private final IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons;
     private final int depth;
+    private final HashMap<String, String> extraParams = new HashMap<>();
 
     public GraphRelToProtoConverter(
             boolean isColumnId,
             Configs configs,
             GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
-            IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons) {
-        this(isColumnId, configs, physicalBuilder, relToCommons, 0);
+            IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons,
+            HashMap<String, String> extraParams) {
+        this(isColumnId, configs, physicalBuilder, relToCommons, extraParams, 0);
     }
 
     public GraphRelToProtoConverter(
@@ -85,6 +88,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             Configs configs,
             GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
             IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons,
+            HashMap<String, String> extraParams,
             int depth) {
         this.isColumnId = isColumnId;
         this.rexBuilder = GraphPlanner.rexBuilderFactory.apply(configs);
@@ -97,6 +101,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         // precache edge properties.
         this.preCacheEdgeProps = true;
         this.relToCommons = relToCommons;
+        this.extraParams.putAll(extraParams);
         this.depth = depth;
     }
 
@@ -496,7 +501,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalPlan.newBuilder();
         query.rel.accept(
                 new GraphRelToProtoConverter(
-                        isColumnId, graphConfig, applyPlanBuilder, this.relToCommons, depth + 1));
+                        isColumnId,
+                        graphConfig,
+                        applyPlanBuilder,
+                        this.relToCommons,
+                        this.extraParams,
+                        depth + 1));
         GraphAlgebraPhysical.Apply.Builder applyBuilder =
                 GraphAlgebraPhysical.Apply.newBuilder()
                         .setSubPlan(applyPlanBuilder)
@@ -793,11 +803,21 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         RelNode left = join.getLeft();
         left.accept(
                 new GraphRelToProtoConverter(
-                        isColumnId, graphConfig, leftPlanBuilder, this.relToCommons, depth + 1));
+                        isColumnId,
+                        graphConfig,
+                        leftPlanBuilder,
+                        this.relToCommons,
+                        this.extraParams,
+                        depth + 1));
         RelNode right = join.getRight();
         right.accept(
                 new GraphRelToProtoConverter(
-                        isColumnId, graphConfig, rightPlanBuilder, this.relToCommons, depth + 1));
+                        isColumnId,
+                        graphConfig,
+                        rightPlanBuilder,
+                        this.relToCommons,
+                        this.extraParams,
+                        depth + 1));
         if (isPartitioned) {
 
             Map<Integer, Set<GraphNameOrId>> leftTagColumns =
@@ -838,6 +858,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                                 graphConfig,
                                 commonPlanBuilder,
                                 this.relToCommons,
+                                this.extraParams,
                                 depth + 1));
             }
             physicalBuilder.addAllPlan(commonPlanBuilder.getPlanList());
@@ -861,6 +882,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             graphConfig,
                             inputPlanBuilder,
                             this.relToCommons,
+                            this.extraParams,
                             depth + 1));
             unionBuilder.addSubPlans(inputPlanBuilder);
         }
@@ -886,6 +908,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                                 graphConfig,
                                 commonPlanBuilder,
                                 this.relToCommons,
+                                this.extraParams,
                                 depth + 1));
             }
             physicalBuilder.addAllPlan(commonPlanBuilder.getPlanList());
@@ -922,7 +945,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphAlgebraPhysical.PhysicalPlan.newBuilder();
             input.accept(
                     new GraphRelToProtoConverter(
-                            isColumnId, graphConfig, subPlanBuilder, this.relToCommons, depth + 1));
+                            isColumnId,
+                            graphConfig,
+                            subPlanBuilder,
+                            this.relToCommons,
+                            this.extraParams,
+                            depth + 1));
             intersectBuilder.addSubPlans(subPlanBuilder);
         }
         intersectOprBuilder.setOpr(
@@ -1032,6 +1060,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebra.QueryParams.Builder paramsBuilder = GraphAlgebra.QueryParams.newBuilder();
         // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as default.
         paramsBuilder.setSampleRatio(1.0);
+        if (!this.extraParams.isEmpty()) {
+            paramsBuilder.putAllExtra(extraParams);
+        }
         return paramsBuilder;
     }
 
