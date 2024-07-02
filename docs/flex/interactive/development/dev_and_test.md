@@ -4,8 +4,8 @@ This document describe how the source code of Interactive is organized, and how 
 
 ## Dev Environment
 
-Before build `Interactive` from source code, you need to prepare a development environment with many dependencies. 
-Here we provide two options, installing all dependencies on the local machine, or build it inside the provided docker image.
+Before building `Interactive` from the source code, you need to set up a development environment with numerous dependencies.
+Here, we offer two options: installing all dependencies on the local machine or building it within the provided Docker image
 
 ### Install Deps on Local
 
@@ -15,7 +15,7 @@ To install all dependencies on your local machine, run the following code with c
 python3 gsctl.py install-deps dev
 ```
 
-> Currently interactive could not be built from source on macos. But you can try to build interactive on the docker image, since our docker image supports `arm64` platform.
+> Currently, Interactive cannot be built from source on macOS. However, you can attempt to build Interactive on the Docker image, as our Docker image supports the 'arm64' platform.
 
 ### Develop on Docker Container
 
@@ -54,8 +54,8 @@ The code for Interactive Query engine is under folder `flex`, and is organized a
 
 ### Compiler
 
-Compiler plays an important rule in interactive, by translate graph queries expressed in graph query languages (Cypher/Gremlin) into physical query plans based on GAIA IR.
-The code of `Compiler` is under `interactive_engine/compiler`. 
+The Compiler plays an important role in Interactive by translating graph queries expressed in graph query languages (Cypher/Gremlin) into physical query plans based on GAIA IR.
+The code for Compiler is located under `interactive_engine/compiler`.
 For more detail information about compiler, please check [this documentation](../../../interactive_engine/design_of_gie.md)
 
 ## Build Interactive
@@ -79,9 +79,7 @@ mvn clean package -DskipTests -Pexperimental
 ## Testing
 
 There are many test cases designed for Interactive, you can refer to [interactive.yaml](https://github.com/alibaba/GraphScope/blob/main/.github/workflows/interactive.yml) for the github workflow.
-
 Here is a simple test case for verifying the correctness of SDK and interactive admin service.
-
 
 First we need to create a directory as Interactive workspace, and try to create a new graph with name `modern_graph` and import data to the graph.
 
