@@ -95,8 +95,6 @@ class DefaultPropertyWorker {
 
     context_->Init(messages_, std::forward<Args>(args)...);
 
-    int round = 0;
-
     messages_.Start();
 
     messages_.StartARound();
@@ -114,7 +112,6 @@ class DefaultPropertyWorker {
 
     while (!messages_.ToTerminate()) {
       t = grape::GetCurrentTime();
-      round++;
       messages_.StartARound();
 
       app_->IncEval(graph, *context_, messages_);
