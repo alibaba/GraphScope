@@ -60,12 +60,12 @@ static const std::unordered_set<std::string> CSV_META_KEY_WORDS = {
 }  // namespace reader_options
 
 namespace loader_options {
-static const char* PARALLELISM = "parallelism";
-static const char* BUILD_CSR_IN_MEM = "build_csr_in_mem";
-static const char* USE_MMAP_VECTOR = "use_mmap_vector";
-static const int32_t DEFAULT_PARALLELISM = 1;
-static const bool DEFAULT_BUILD_CSR_IN_MEM = false;
-static const bool DEFAULT_USE_MMAP_VECTOR = false;
+static constexpr const char* PARALLELISM = "parallelism";
+static constexpr const char* BUILD_CSR_IN_MEM = "build_csr_in_mem";
+static constexpr const char* USE_MMAP_VECTOR = "use_mmap_vector";
+static constexpr const int32_t DEFAULT_PARALLELISM = 1;
+static constexpr const bool DEFAULT_BUILD_CSR_IN_MEM = false;
+static constexpr const bool DEFAULT_USE_MMAP_VECTOR = false;
 }  // namespace loader_options
 
 class LoadingConfig;
