@@ -104,6 +104,8 @@ graphscope-darwin-py3:
 
 graphscope-manylinux2014-py3-nodocker:
 	# TODO(siyuan) Remove after newer wheel image are released
+	sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+	sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* && \
 	sudo yum install java-11-openjdk-devel -y && \
 	sudo yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
 	cd $(WORKING_DIR)/../.. && \
