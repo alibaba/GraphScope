@@ -468,6 +468,7 @@ def parse_sys_args():
     return parser.parse_args()
 
 WORKSPACE = Path(os.path.join("/", tempfile.gettempprefix(), "gs", "builtin")).resolve()
+ENABLE_JAVA_SDK = False
 
 if __name__ == "__main__":
     args = parse_sys_args()
