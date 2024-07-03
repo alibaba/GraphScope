@@ -1,15 +1,15 @@
 # Dev and Test
 
-This document describe how the source code of Interactive is organized, and how to build `Interactive` from source and run tests.
+This document describes the organization of the source code for Interactive and provides instructions on how to build `Interactive` from source and run tests.
 
 ## Dev Environment
 
-Before building `Interactive` from the source code, you need to set up a development environment with numerous dependencies.
-Here, we offer two options: installing all dependencies on the local machine or building it within the provided Docker image
+Before building `Interactive` from the source code, you need to set up a development environment with various dependencies. 
+Here, we provide two options: installing all dependencies on the local machine or building it within the provided Docker image.
 
 ### Install Deps on Local
 
-To install all dependencies on your local machine, run the following code with command-line utility script `gsctl.py`.
+To install all dependencies on your local machine, run the following code with the command-line utility script `gsctl.py`.
 
 ```bash
 python3 gsctl.py install-deps dev
@@ -33,30 +33,31 @@ Interactive is composed of two parts, the execution engine and frontend compiler
 
 ### Interactive Query Engine
 
-The code for Interactive Query engine is under folder `flex`, and is organized as follows.
-- `codegen`: A binary `gen_code_from_plan` is built from this repo, which is able to generate c++ code from a physical plan.
-- `engines`: 
-    - `engines/graph_db`: Provide the interface and implementation of `GraphDB`, which represents the storage of the graph.
-    - `engines/hqps_db`: Contains the implementation Graph Query Engine, including the data structures and implementation of physical operators.
-    - `engines/http_server`: Contains the http server based on seastar httpd, and the definition of actors of [hiactor](https://github.com/alibaba/hiactor).
-- `interactive`: Contains the product related stuffs.
-    - `interactive/docker`: The dockerfile of interactive.
-    - `interactive/examples`: Some example graph definition and raw data.
-    - `interactive/openapi/openapi_interactive`: The openapi specification for interactive RESTful API.
+The Interactive Query Engine code is organized in the `flex` folder as follows:
+- `codegen`: The binary `gen_code_from_plan` is built from this repository, capable of generating C++ code from a physical plan.
+- `engines`:
+    - `engines/graph_db`: Provides the interface and implementation of `GraphDB`, which manages graph storage.
+    - `engines/hqps_db`: Includes the Graph Query Engine implementation, data structures, and physical operators.
+    - `engines/http_server`: Incorporates the HTTP server based on Seastar httpd and defines actors in [hiactor](https://github.com/alibaba/hiactor).
+- `interactive`: Contains product-related components.
+    - `interactive/docker`: Dockerfile for Interactive.
+    - `interactive/examples`: Graph definition examples and raw data.
+    - `interactive/openapi/openapi_interactive`: OpenAPI specification for Interactive's RESTful API.
 - `storages`:
-    - `storages/metadata`: The implementation of metadata store.
-    - `storages/immutable_graph`: The implementation of immutable graph storage.
-    - `storages/rt_mutable_graph`: The implementation of a mutable graph storage, which is based on `mutable_csr`.
-- `tests`: Contains the test cases and scripsts
-- `third_party`: Third party dependencies.
-- `utils`: Utility class and functions.
+    - `storages/metadata`: Implementation of the metadata store.
+    - `storages/immutable_graph`: Implementation of immutable graph storage.
+    - `storages/rt_mutable_graph`: Implementation of mutable graph storage based on `mutable_csr`.
+- `tests`: Includes test cases and scripts.
+- `third_party`: Contains third-party dependencies.
+- `utils`: Utility classes and functions.
+
 
 
 ### Compiler
 
-The Compiler plays an important role in Interactive by translating graph queries expressed in graph query languages (Cypher/Gremlin) into physical query plans based on GAIA IR.
-The code for Compiler is located under `interactive_engine/compiler`.
-For more detail information about compiler, please check [this documentation](../../../interactive_engine/design_of_gie.md)
+The Compiler is crucial in Interactive as it converts graph queries written in graph query languages (Cypher/Gremlin) into physical query plans using GAIA IR.
+The Compiler code is found in `interactive_engine/compiler`.
+For additional details on the Compiler, refer to [this documentation](../../../interactive_engine/design_of_gie.md)
 
 ## Build Interactive
 
@@ -80,10 +81,10 @@ mvn clean package -DskipTests -Pexperimental
 
 ## Testing
 
-There are many test cases designed for Interactive, you can refer to [interactive.yaml](https://github.com/alibaba/GraphScope/blob/main/.github/workflows/interactive.yml) for the github workflow.
-Here is a simple test case for verifying the correctness of SDK and interactive admin service.
+Numerous test cases have been created for Interactive, which can be referenced in the GitHub workflow[interactive.yaml](https://github.com/alibaba/GraphScope/blob/main/.github/workflows/interactive.yml).
+Below is a basic test case for validating the accuracy of the SDK and interactive admin service.
 
-First we need to create a directory as Interactive workspace, and try to create a new graph with name `modern_graph` and import data to the graph.
+Initially, a directory needs to be established as the Interactive workspace, then proceed to create a new graph named `modern_graph` and import data into the graph.
 
 ```bash
 # Clone the testing data
@@ -108,7 +109,8 @@ cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
 GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
 ```
 
-Workspace is like the data directory for a database, where the metadata and graph data is placed. Here is an example.
+A workspace is akin to the data directory for a database, housing metadata and graph data. Here is an example.
+
 ```txt
 /tmp/temp_workspace
 ├── data
@@ -126,15 +128,15 @@ Workspace is like the data directory for a database, where the metadata and grap
 
 
 
-There is an `engine_config_test.yaml` file in the `${GITHUB_WORKSPACE}/flex/tests/hqps` directory, 
-change the `default_graph` field to `modern_graph` as we intend to test on `modern_graph`.
+In the `${GITHUB_WORKSPACE}/flex/tests/hqps` directory, there is an `engine_config_test.yaml` file.
+Modify the `default_graph` field to `modern_graph` for testing purposes on `modern_graph`.
 
 ```bash
 cd ${GITHUB_WORKSPACE}/flex/tests/hqps
 sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
 ```
 
-Then we run a script `hqps_admin_test.sh` to verify the correctness of interactive admin service.
+Subsequently, execute the `hqps_admin_test.sh` script to test the of the interactive admin service.
 
 ```bash
 cd ${GITHUB_WORKSPACE}/flex/tests/hqps
