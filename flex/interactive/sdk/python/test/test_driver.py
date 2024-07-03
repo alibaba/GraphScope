@@ -74,6 +74,7 @@ class TestDriver(unittest.TestCase):
         self.callProcedure()
         self.callProcedureWithHttp()
         self.callProcedureWithHttpCurrent()
+        self.createDriver()
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
@@ -407,6 +408,11 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.call_procedure_current(params = req)
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
+    
+    def createDriver(self):
+        driver = Driver()
+        sess = driver.getDefaultSession()
+        print("create driver: ", sess)     
 
 if __name__ == "__main__":
     unittest.main()
