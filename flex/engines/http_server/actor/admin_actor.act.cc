@@ -1365,21 +1365,19 @@ std::string json_to_string(const nlohmann::json& json) {
   }
 }
 template <typename T>
-struct temp{
+struct temp {
   T txn;
-  temp(gs::GraphDBSession & db) {
-    throw std::runtime_error("Not implemented");
-  }
+  temp(gs::GraphDBSession& db) { throw std::runtime_error("Not implemented"); }
 };
 template <>
-struct temp<gs::SingleVertexInsertTransaction>{
+struct temp<gs::SingleVertexInsertTransaction> {
   gs::SingleVertexInsertTransaction txn;
-  temp(gs::GraphDBSession & db) : txn(db.GetSingleVertexInsertTransaction()) {}
+  temp(gs::GraphDBSession& db) : txn(db.GetSingleVertexInsertTransaction()) {}
 };
 template <>
-struct temp<gs::InsertTransaction>{
+struct temp<gs::InsertTransaction> {
   gs::InsertTransaction txn;
-  temp(gs::GraphDBSession & db) : txn(db.GetInsertTransaction()) {}
+  temp(gs::GraphDBSession& db) : txn(db.GetInsertTransaction()) {}
 };
 
 seastar::future<admin_query_result> admin_actor::create_vertex(
@@ -1424,10 +1422,10 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
   }
   // vertex相关的数据
   std::vector<std::string> label, primary_key_value;
-  std::vector<std::unordered_map<std::string, gs::Any> > new_properties_map;
+  std::vector<std::unordered_map<std::string, gs::Any>> new_properties_map;
   // compute value
   std::vector<std::string> primary_key_name(vertex_num);
-  std::vector<std::vector<std::string> > colNames(vertex_num);
+  std::vector<std::vector<std::string>> colNames(vertex_num);
 
   // edge相关的数据
   std::vector<std::string> src_label, dst_label, edge_label,
@@ -1439,7 +1437,7 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
       dst_primary_key_type(edge_num);
   std::vector<gs::Any> property_new_value_any(edge_num);
   // 输入顶点
-  for (auto & vertex_insert : input_json["vertex_request"]) {
+  for (auto& vertex_insert : input_json["vertex_request"]) {
     auto label_iter = vertex_insert.find("label");
     auto primary_key_value_iter = vertex_insert.find("primary_key_value");
     auto properties_iter = vertex_insert.find("properties");
@@ -1486,15 +1484,17 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
           colNames[i].push_back(property_name);
           gs::PropertyType colType;
           gs::from_json(property["property_type"], colType);
-          auto new_properties_map_iter = new_properties_map[i].find(property_name);
+          auto new_properties_map_iter =
+              new_properties_map[i].find(property_name);
           if (property_name == primary_key_name[i]) {
             new_properties_map[i][property_name] =
                 gs::ConvertStringToAny(primary_key_value[i], colType);
             continue;
           }
           if (new_properties_map_iter == new_properties_map[i].end()) {
-            throw std::runtime_error("property not exists in input properties: " +
-                                    std::string(property_name));
+            throw std::runtime_error(
+                "property not exists in input properties: " +
+                std::string(property_name));
           }
           new_properties_map[i][property_name] = gs::ConvertStringToAny(
               new_properties_map[i][property_name].to_string(), colType);
@@ -1505,7 +1505,7 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
         return seastar::make_ready_future<admin_query_result>(
             gs::Result<seastar::sstring>(
                 gs::Status(gs::StatusCode::NotFound,
-                          "Vertex Label not exists in schema: " + label[i])));
+                           "Vertex Label not exists in schema: " + label[i])));
       }
     }
   } catch (std::exception& e) {
@@ -1671,42 +1671,49 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
     using singleInsPtr = std::unique_ptr<singleInsTrans>;
     using insPtr = std::unique_ptr<insTrans>;
     std::variant<singleInsPtr, insPtr> txnWrite;
-    if (vertex_num == 1) txnWrite = std::make_unique<singleInsTrans>(db);
-    else txnWrite = std::make_unique<insTrans>(db);
-    
+    if (vertex_num == 1)
+      txnWrite = std::make_unique<singleInsTrans>(db);
+    else
+      txnWrite = std::make_unique<insTrans>(db);
+
     for (int v_ins_id = 0; v_ins_id < vertex_num; v_ins_id++) {
       auto label_id = db.schema().get_vertex_label_id(label[v_ins_id]);
       std::vector<gs::Any> insert_arr;
       gs::Any insert_id;
-      for (auto & col : colNames[v_ins_id]) {
-        if (col == primary_key_name[v_ins_id]){
+      for (auto& col : colNames[v_ins_id]) {
+        if (col == primary_key_name[v_ins_id]) {
           insert_id = new_properties_map[v_ins_id][col];
         } else {
           insert_arr.push_back(new_properties_map[v_ins_id][col]);
         }
       }
       bool ret;
-      if (vertex_num == 1) ret = std::get<singleInsPtr>(txnWrite)->txn.AddVertex(label_id, insert_id, insert_arr);
-      else ret = std::get<insPtr>(txnWrite)->txn.AddVertex(label_id, insert_id, insert_arr);
-      if (ret == false){
+      if (vertex_num == 1)
+        ret = std::get<singleInsPtr>(txnWrite)->txn.AddVertex(
+            label_id, insert_id, insert_arr);
+      else
+        ret = std::get<insPtr>(txnWrite)->txn.AddVertex(label_id, insert_id,
+                                                        insert_arr);
+      if (ret == false) {
         return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(
-                gs::Status(gs::StatusCode::InternalError,
-                          "Fail to create vertex")));
+            gs::Result<seastar::sstring>(gs::Status(
+                gs::StatusCode::InternalError, "Fail to create vertex")));
       }
     }
     for (int i = 0; i < edge_num; i++) {
       if (vertex_num == 1) {
-        std::get<singleInsPtr>(txnWrite)->txn.AddEdge(src_label_id[i], src_pk_value_any[i], dst_label_id[i],
-                        dst_pk_value_any[i], edge_label_id[i],
-                        property_new_value_any[i]);
-      }
-      else std::get<insPtr>(txnWrite)->txn.AddEdge(src_label_id[i], src_pk_value_any[i], dst_label_id[i],
-                        dst_pk_value_any[i], edge_label_id[i],
-                        property_new_value_any[i]);
+        std::get<singleInsPtr>(txnWrite)->txn.AddEdge(
+            src_label_id[i], src_pk_value_any[i], dst_label_id[i],
+            dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]);
+      } else
+        std::get<insPtr>(txnWrite)->txn.AddEdge(
+            src_label_id[i], src_pk_value_any[i], dst_label_id[i],
+            dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]);
     }
-    if (vertex_num == 1) std::get<singleInsPtr>(txnWrite)->txn.Commit();
-    else std::get<insPtr>(txnWrite)->txn.Commit();
+    if (vertex_num == 1)
+      std::get<singleInsPtr>(txnWrite)->txn.Commit();
+    else
+      std::get<insPtr>(txnWrite)->txn.Commit();
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to create vertex: " << e.what();
     return seastar::make_ready_future<admin_query_result>(
@@ -2636,19 +2643,16 @@ seastar::future<admin_query_result> admin_actor::get_edge(
 
 seastar::future<admin_query_result> admin_actor::delete_vertex(
     graph_management_param&& param) {
-  LOG(INFO) << "delete_vertex";
-  LOG(INFO) << param.content.first;
-  LOG(INFO) << param.content.second;
+  // 404 unimplemented
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>("delete_vertex"));
+      gs::Result<seastar::sstring>(gs::Status(
+          gs::StatusCode::NotFound, "Delete vertex is not implemented")));
 }
 seastar::future<admin_query_result> admin_actor::delete_edge(
     graph_management_param&& param) {
-  LOG(INFO) << "delete_edge";
-  LOG(INFO) << param.content.first;
-  LOG(INFO) << param.content.second;
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>("delete_edge"));
+      gs::Result<seastar::sstring>(gs::Status(
+          gs::StatusCode::NotFound, "Delete edge is not implemented")));
 }
 
 bool admin_actor::check_graph_id(const std::string& graph_id) {
