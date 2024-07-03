@@ -24,43 +24,8 @@ import unittest
 import pytest
 
 from gs_interactive.client.driver import Driver
-from gs_interactive.models.base_edge_type_vertex_type_pair_relations_inner import (
-    BaseEdgeTypeVertexTypePairRelationsInner,
-)
-from gs_interactive.models.create_edge_type import CreateEdgeType
-from gs_interactive.models.create_graph_request import CreateGraphRequest
-from gs_interactive.models.create_graph_schema_request import (
-    CreateGraphSchemaRequest,
-)
-from gs_interactive.models.create_procedure_request import (
-    CreateProcedureRequest,
-)
-from gs_interactive.models.create_property_meta import CreatePropertyMeta
-from gs_interactive.models.create_vertex_type import CreateVertexType
-from gs_interactive.models.edge_mapping import EdgeMapping
-from gs_interactive.models.edge_mapping_type_triplet import (
-    EdgeMappingTypeTriplet,
-)
-from gs_interactive.models.gs_data_type import GSDataType
-from gs_interactive.models.typed_value import TypedValue
-from gs_interactive.models.job_status import JobStatus
-from gs_interactive.models.long_text import LongText
-from gs_interactive.models.primitive_type import PrimitiveType
-from gs_interactive.models.schema_mapping import SchemaMapping
-from gs_interactive.models.schema_mapping_loading_config import (
-    SchemaMappingLoadingConfig,
-)
-from gs_interactive.models.schema_mapping_loading_config_format import (
-    SchemaMappingLoadingConfigFormat,
-)
-from gs_interactive.models.schema_mapping_loading_config_data_source import (
-    SchemaMappingLoadingConfigDataSource,
-)
-from gs_interactive.models.start_service_request import StartServiceRequest
-from gs_interactive.models.string_type import StringType
-from gs_interactive.models.string_type_string import StringTypeString
-from gs_interactive.models.vertex_mapping import VertexMapping
-from gs_interactive.models.query_request import QueryRequest
+from gs_interactive.models import *
+
 
 class TestDriver(unittest.TestCase):
     """Test usage of driver"""
@@ -169,6 +134,11 @@ class TestDriver(unittest.TestCase):
                 data_source=SchemaMappingLoadingConfigDataSource(scheme="file", location=location),
                 import_option="init",
                 format=SchemaMappingLoadingConfigFormat(type="csv"),
+                x_csr_params=SchemaMappingLoadingConfigXCsrParams(
+                    parallelism=1,
+                    build_csr_in_mem=True,
+                    use_mmap_vector=True
+                ),
             ),
             vertex_mappings=[
                 VertexMapping(type_name="person", inputs=[person_csv_path])
