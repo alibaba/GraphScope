@@ -36,10 +36,20 @@ jobs:
         # move wheels into one folder to upload to PyPI
         mkdir ${GITHUB_WORKSPACE}/upload_pypi
         mv ${GITHUB_WORKSPACE}/python/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf gsctl.tar.gz ${GITHUB_WORKSPACE}/upload_pypi/*.whl
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: gsctl-${{ github.sha }}
+        path: |
+          gsctl.tar.gz
+        retention-days: 5
 
     - name: Publish distribution to PyPI
       uses: pypa/gh-action-pypi-publish@v1.4.2
-      if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope'
       with:
         user: __token__
         password: ${{ secrets.PYPI_PASSWORD }}
