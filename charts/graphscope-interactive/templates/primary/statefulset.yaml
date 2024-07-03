@@ -187,7 +187,7 @@ spec:
 
               sudo chown -R graphscope:graphscope $INTERACTIVE_WORKSPACE
               # cmd="/opt/flex/bin/entrypoint.sh -t proxy -e $secondary_service_node_ip:${SECONDARY_QUERY_PORT} -p $PRIMARY_QUERY_PORT --hang-until-success ${HANG_UNTIL_SUCCESS}"
-              cmd="/opt/flex/bin/entrypoint.sh -t proxy -e ${SECONDARY_SERVICE_NAME}:${SECONDARY_QUERY_PORT} -p $PRIMARY_QUERY_PORT --hang-until-success ${HANG_UNTIL_SUCCESS}"
+              cmd="/opt/flex/bin/entrypoint.sh -t proxy -e ${SECONDARY_SERVICE_NAME}:${SECONDARY_QUERY_PORT} -p $PRIMARY_QUERY_PORT --hang-until-success ${HANG_UNTIL_SUCCESS} --parallelism ${ENGINE_SHARD_NUM}"
               echo "cmd: $cmd"
               eval $cmd
               # sleep infinity

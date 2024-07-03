@@ -142,7 +142,7 @@ primary:
   logLevel: INFO
 
   # Number of thread each worker will use
-  threadNumPerWorker: 1
+  threadNumPerWorker: 64
 
   ## updateStrategy for GraphScope Interactive statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
@@ -381,7 +381,7 @@ secondary:
   logLevel: INFO
 
   # Number of thread each worker will use
-  threadNumPerWorker: 1
+  threadNumPerWorker: 64
 
   ## updateStrategy for GraphScope Interactive statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies

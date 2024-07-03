@@ -67,8 +67,8 @@ using seastar_http_headers_t =
 class HttpProxy {
  public:
   static constexpr int32_t CONNECTION_TIMEOUT = 5;  // 5s
-  static constexpr int32_t READ_TIMEOUT = 30;       // 5s
-  static constexpr int32_t WRITE_TIMEOUT = 30;      // 10s
+  static constexpr int32_t READ_TIMEOUT = 300;      // 5s
+  static constexpr int32_t WRITE_TIMEOUT = 300;     // 10s
   HttpProxy();
   ~HttpProxy();
 

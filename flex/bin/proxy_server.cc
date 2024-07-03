@@ -82,7 +82,9 @@ int main(int argc, char** argv) {
       "port,p", bpo::value<uint16_t>()->default_value(9999),
       "The port of the proxy server")(
       "hang-until-success", bpo::value<bool>()->default_value(true),
-      "Hang until the request is successfully forwarded");
+      "Hang until the request is successfully forwarded")(
+      "parallelism", bpo::value<int>()->default_value(1),
+      "The number of threads to handle requests");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -113,6 +115,9 @@ int main(int argc, char** argv) {
   uint16_t http_port = 9999;
   if (vm.count("port")) {
     http_port = vm["port"].as<uint16_t>();
+  }
+  if (vm.count("parallelism")) {
+    shard_num = vm["parallelism"].as<int>();
   }
 
   if (!server::ProxyService::get()

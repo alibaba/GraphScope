@@ -87,7 +87,7 @@ spec:
               fi
               echo "POD_NAME: $POD_NAME"
               sudo chown -R graphscope:graphscope $INTERACTIVE_WORKSPACE
-              cmd="/opt/flex/bin/entrypoint.sh -t engine -w $INTERACTIVE_WORKSPACE"
+              cmd="/opt/flex/bin/entrypoint.sh -t engine -w $INTERACTIVE_WORKSPACE --parallelism $ENGINE_SHARD_NUM"
               echo "CMD: $cmd"
               eval $cmd
               # sleep infinity

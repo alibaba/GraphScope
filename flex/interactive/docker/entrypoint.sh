@@ -43,10 +43,16 @@ EOF
 
 function prepare_workspace() {
     #receive args
+    if [ $# -ne 2 ]; then
+        echo "Usage: prepare_workspace <workspace> <parallelism>"
+        exit 1
+    fi
     local workspace=$1
     if [ -z "${workspace}" ]; then
         workspace="/tmp/interactive_workspace"
     fi
+    local PARALLELISM=$2
+    echo "Preparing workspace: ${workspace}, parallelism: ${PARALLELISM}"
     #if workspace is not exist, create it
     mkdir -p ${workspace}
     mkdir -p ${workspace}/conf/
@@ -62,6 +68,7 @@ function prepare_workspace() {
     fi
     #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
     sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
+    sed -i "s/thread_num_per_worker:.*/thread_num_per_worker: ${PARALLELISM}/" $engine_config_path
     echo "Using default graph: ${DEFAULT_GRAPH_NAME} to start the service"
     
     # copy the builtin graph
@@ -91,7 +98,7 @@ function launch_service() {
     start_cmd="${INTERACTIVE_SERVER_BIN} -c ${engine_config_path}"
     start_cmd="${start_cmd} -w ${workspace}"
     start_cmd="${start_cmd} --enable-admin-service true"
-    start_cmd="${start_cmd} --start-compiler true"
+    # start_cmd="${start_cmd} --start-compiler true"
     echo "Starting the service with command: $start_cmd"
     if $ENABLE_COORDINATOR; then start_cmd="${start_cmd} &"; fi
     eval $start_cmd
@@ -116,15 +123,16 @@ EOF
 
 function launch_proxy_service() {
   #expect 1 arg
-  if [ $# -ne 3 ]; then
-    echo "Usage: launch_proxy_service <endpoints> <port> <hang-until-success>"
+  if [ $# -ne 4 ]; then
+    echo "Usage: launch_proxy_service <endpoints> <port> <hang-until-success> <parallelism>"
     echo "       number of args: $#"
     exit 1
   fi
   local endpoints=$1
   local port=$2
   local hang_until_success=$3
-  start_cmd="${PROXY_SERVER_BIN} -e '${endpoints}' -p ${port} --hang-until-success ${hang_until_success}"
+  local parallelism=$4
+  start_cmd="${PROXY_SERVER_BIN} -e '${endpoints}' -p ${port} --hang-until-success ${hang_until_success} --parallelism ${parallelism}"
   echo "Starting the proxy service with command: $start_cmd"
   eval $start_cmd
 }
@@ -137,6 +145,7 @@ WORKSPACE=/tmp/interactive_workspace
 SERVICE_TYPE="engine"
 PROXY_PORT=10000
 HANG_UNTIL_SUCCESS=false
+PARALLELISM=32
 while [[ $# -gt 0 ]]; do
   key="$1"
 
@@ -174,6 +183,11 @@ while [[ $# -gt 0 ]]; do
     HANG_UNTIL_SUCCESS="$1"
     shift
     ;;
+  --parallelism)
+    shift
+    PARALLELISM="$1"
+    shift
+    ;;
   *) # unknown option
     echo "unknown option $1"
     usage
@@ -189,10 +203,10 @@ if [ "${SERVICE_TYPE}" != "engine" ] && [ "${SERVICE_TYPE}" != "proxy" ]; then
 fi
 if [ "${SERVICE_TYPE}" == "proxy" ]; then
     echo "Start the proxy service"
-    launch_proxy_service $ENDPOINTS $PROXY_PORT $HANG_UNTIL_SUCCESS
+    launch_proxy_service $ENDPOINTS $PROXY_PORT $HANG_UNTIL_SUCCESS $PARALLELISM
 else
     echo "Start the engine service"
-    prepare_workspace $WORKSPACE
+    prepare_workspace $WORKSPACE $PARALLELISM
     launch_service $WORKSPACE 
     launch_coordinator
 fi
