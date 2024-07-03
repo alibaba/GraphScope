@@ -22,7 +22,7 @@ python3 gsctl.py install-deps dev
 We provided a docker image `graphscope-dev` with all tools and dependencies included.
 
 ```bash
-docker run --rm -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
+docker run -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
 ```
 
 Or you can open the codebase of GraphScope in [dev container](../../../development/dev_guide.md#develop-with-dev-containers).
