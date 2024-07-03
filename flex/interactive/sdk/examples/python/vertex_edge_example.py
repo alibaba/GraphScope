@@ -1,6 +1,5 @@
 import gs_interactive
 from gs_interactive.models.vertex_request import VertexRequest
-from gs_interactive.models.vertex_request import VertexRequest
 from gs_interactive.models.edge_request import EdgeRequest
 from gs_interactive.models.property_array import PropertyArray
 from gs_interactive.models.model_property import ModelProperty
@@ -12,8 +11,6 @@ import argparse
 configuration = gs_interactive.Configuration(host="INTERACTIVE_ENDPOINT")
 
 class VertexSDK:
-    def __init__(self, configuration):
-        self.configuration = configuration
     @staticmethod
     def add():
         with gs_interactive.ApiClient(configuration) as api_client:
@@ -107,8 +104,6 @@ class VertexSDK:
 
 
 class EdgeSDK:
-    def __init__(self, configuration):
-        self.configuration = configuration
     @staticmethod
     def update_edge():
         with gs_interactive.ApiClient(configuration) as api_client:
