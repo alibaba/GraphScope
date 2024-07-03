@@ -8,6 +8,11 @@ ARG CI=false
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
+# uninstall openjdk-11 and install openjdk-8
+RUN sudo apt purge -y openjdk* && sudo apt purge -y default-jre* && \
+    sudo apt-get update && sudo apt-get install -y openjdk-8-jdk && \
+    sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version
+
 RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" = "true" ]; then \
         cp -r artifacts/learning /home/graphscope/install; \
@@ -38,9 +43,13 @@ FROM ubuntu:22.04 AS coordinator
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && \
-    apt-get install -y sudo python3-pip openmpi-bin curl tzdata default-jdk && \
+    apt-get install -y sudo python3-pip openmpi-bin curl tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
+
+RUN sudo apt purge -y openjdk* && sudo apt purge -y default-jre* && \
+    apt-get update && apt-get install -y openjdk-8-jdk && \
+    update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope
 

@@ -963,6 +963,13 @@ class OperationExecutor:
             # loader is type of attr_value_pb2.Chunk
             protocol = loader.attr[types_pb2.PROTOCOL].s.decode()
             source = loader.attr[types_pb2.SOURCE].s.decode()
+            if loader.attr[types_pb2.CHUNK_NAME]:
+                chunk_name = loader.attr[types_pb2.CHUNK_NAME].s.decode()
+            if chunk_name == "vertex":
+                input_format = loader.attr[types_pb2.VFORMAT].s.decode()
+            elif chunk_name == "edge":
+                input_format = loader.attr[types_pb2.EFORMAT].s.decode()
+            print(f"chunk_name = {chunk_name}, _format = {input_format}")
             try:
                 storage_options = json.loads(
                     loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
@@ -975,6 +982,14 @@ class OperationExecutor:
                 read_options = {}
             filetype = read_options.get("filetype", None)
             filetype = str(filetype).upper()
+            # giraph app support reading from hdfs
+            if chunk_name and input_format:
+                if chunk_name == "vertex" and input_format.startswith('giraph') and protocol in ("hdfs"):
+                    print("No need to spawn vineyard stream for giraph vertex")
+                    return
+                if chunk_name == "edge" and input_format.startswith('giraph') and protocol in ("hdfs"):
+                    print("No need to spawn vineyard stream for giraph edge")
+                    return
             if (
                 protocol in ("hdfs", "hive", "oss", "s3")
                 or protocol == "file"
@@ -1003,6 +1018,7 @@ class OperationExecutor:
 
         for loader in op.large_attr.chunk_meta_list.items:
             # handle vertex or edge loader
+            print("loader attr: ", loader.attr)
             if loader.attr[types_pb2.CHUNK_TYPE].s.decode() == "loader":
                 # set op bodies, this is for loading graph from numpy/pandas
                 op_bodies = []

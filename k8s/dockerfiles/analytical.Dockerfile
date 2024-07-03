@@ -62,6 +62,12 @@ FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder-java
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
+RUN sudo apt purge -y openjdk* && sudo apt purge -y default-jre* && \
+    sudo apt-get update && sudo apt-get install -y openjdk-8-jdk && sudo ln -s /usr/lib/jvm/java-8-openjdk-amd64/ /usr/lib/jvm/default-java && \
+    sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version && \
+    sudo apt-get install -y maven
+
+
 RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" = "true" ]; then \
         cp -r artifacts/analytical-java /home/graphscope/install; \
@@ -90,7 +96,10 @@ ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 
 USER root
-RUN apt-get update && apt-get install -y default-jdk
+RUN apt purge -y openjdk* && apt purge -y default-jre* && \
+    apt-get update && apt-get install -y openjdk-8-jdk && sudo ln -s /usr/lib/jvm/java-8-openjdk-amd64/ /usr/lib/jvm/default-java && \
+    update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version && \
+    sudo apt-get install -y maven
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 COPY --from=builder-java /home/graphscope/install /opt/graphscope/
 RUN mkdir -p /tmp/gs && (mv /opt/graphscope/builtin /tmp/gs/builtin || true) && chown -R graphscope:graphscope /tmp/gs

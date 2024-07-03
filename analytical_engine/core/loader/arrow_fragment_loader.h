@@ -479,7 +479,8 @@ class ArrowFragmentLoader : public vineyard::ArrowFragmentLoader<OID_T, VID_T> {
               client_, sourceId, table, comm_spec_.local_id(),
               comm_spec_.local_num()));
 #ifdef ENABLE_JAVA_SDK
-        } else if (vertices[i]->protocol == "file" &&
+        } else if ((vertices[i]->protocol == "file" ||
+                    vertices[i]->protocol == "hdfs") &&
                    vertices[i]->vformat.find("giraph") != std::string::npos) {
           BOOST_LEAF_ASSIGN(
               table, readTableFromGiraph(
@@ -597,7 +598,8 @@ class ArrowFragmentLoader : public vineyard::ArrowFragmentLoader<OID_T, VID_T> {
                       << table->schema()->ToString();
             }
 #ifdef ENABLE_JAVA_SDK
-          } else if (sub_labels[j].protocol == "file" &&
+          } else if ((sub_labels[j].protocol == "file" ||
+                      sub_labels[j].protocol == "hdfs") &&
                      sub_labels[j].eformat.find("giraph") !=
                          std::string::npos) {
             BOOST_LEAF_ASSIGN(

@@ -354,63 +354,63 @@ endif ()
 
 # An executable workaround for graphx pregel.
 if (ENABLE_JAVA_SDK)
-    add_executable(graphx_runner core/java/graphx_runner.cc core/java/javasdk.cc)
-    target_include_directories(graphx_runner PRIVATE core utils apps)
-    target_compile_definitions(graphx_runner PUBLIC ENABLE_JAVA_SDK)
-    target_link_libraries(graphx_runner PRIVATE ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES} ${JNI_LIBRARIES})
+    # add_executable(graphx_runner core/java/graphx_runner.cc core/java/javasdk.cc)
+    # target_include_directories(graphx_runner PRIVATE core utils apps)
+    # target_compile_definitions(graphx_runner PUBLIC ENABLE_JAVA_SDK)
+    # target_link_libraries(graphx_runner PRIVATE ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES} ${JNI_LIBRARIES})
 
-    if (${LIBUNWIND_FOUND})
-        target_link_libraries(graphx_runner PRIVATE ${LIBUNWIND_LIBRARIES})
-    endif()
+    # if (${LIBUNWIND_FOUND})
+    #     target_link_libraries(graphx_runner PRIVATE ${LIBUNWIND_LIBRARIES})
+    # endif()
 endif()
 
 
 # Test targets
 if (BUILD_TESTS)
-    add_executable(run_app test/run_app.cc core/object/dynamic.cc)
-    target_include_directories(run_app PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps utils apps)
-    target_link_libraries(run_app ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
-    target_link_libraries(run_app OpenMP::OpenMP_CXX)
+    # add_executable(run_app test/run_app.cc core/object/dynamic.cc)
+    # target_include_directories(run_app PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps utils apps)
+    # target_link_libraries(run_app ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
+    # target_link_libraries(run_app OpenMP::OpenMP_CXX)
 
     if (ENABLE_JAVA_SDK)
-        add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc core/object/dynamic.cc)
-        target_include_directories(run_java_app PRIVATE core utils apps)
-        target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
-        target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
+        # add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc core/object/dynamic.cc)
+        # target_include_directories(run_java_app PRIVATE core utils apps)
+        # target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
+        # target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
+        #                                ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
 
-        # java app benchmark
-        add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
-        target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
-        target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
-        target_link_libraries(property_graph_java_app_benchmarks gs_proto ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}  ${VINEYARD_LIBRARIES})
+        # # java app benchmark
+        # add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
+        # target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
+        # target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
+        # target_link_libraries(property_graph_java_app_benchmarks gs_proto ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}  ${VINEYARD_LIBRARIES})
 
-        # giraph runner
+        # # giraph runner
         add_executable(giraph_runner test/giraph_runner.cc core/java/javasdk.cc)
         target_include_directories(giraph_runner PRIVATE core utils apps)
         target_compile_definitions(giraph_runner PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(giraph_runner ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES}  ${JNI_LIBRARIES})
 
-        # graphx related test
-        add_executable(projected_fragment_mapper_test test/projected_fragment_mapper_test.cc)
-        target_include_directories(projected_fragment_mapper_test PRIVATE core utils apps)
-        target_link_libraries(projected_fragment_mapper_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+        # # graphx related test
+        # add_executable(projected_fragment_mapper_test test/projected_fragment_mapper_test.cc)
+        # target_include_directories(projected_fragment_mapper_test PRIVATE core utils apps)
+        # target_link_libraries(projected_fragment_mapper_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
 
-        add_executable(graphx_loader_test test/graphx_loader_test.cc)
-        target_include_directories(graphx_loader_test PRIVATE core utils apps)
-        target_compile_definitions(graphx_loader_test PUBLIC ENABLE_JAVA_SDK)
-        target_link_libraries(graphx_loader_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+        # add_executable(graphx_loader_test test/graphx_loader_test.cc)
+        # target_include_directories(graphx_loader_test PRIVATE core utils apps)
+        # target_compile_definitions(graphx_loader_test PUBLIC ENABLE_JAVA_SDK)
+        # target_link_libraries(graphx_loader_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
 
-        add_executable(run_java_string_app test/run_java_string_app.cc core/java/javasdk.cc)
-        target_include_directories(run_java_string_app PRIVATE core utils apps)
-        target_compile_definitions(run_java_string_app PUBLIC ENABLE_JAVA_SDK)
-        target_link_libraries(run_java_string_app ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} ${JNI_LIBRARIES})
+        # add_executable(run_java_string_app test/run_java_string_app.cc core/java/javasdk.cc)
+        # target_include_directories(run_java_string_app PRIVATE core utils apps)
+        # target_compile_definitions(run_java_string_app PUBLIC ENABLE_JAVA_SDK)
+        # target_link_libraries(run_java_string_app ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} ${JNI_LIBRARIES})
 
         if (${LIBUNWIND_FOUND})
-            target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
-            target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})
+            # target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
+            # target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})
             target_link_libraries(giraph_runner ${LIBUNWIND_LIBRARIES})
-            target_link_libraries(projected_fragment_mapper_test ${LIBUNWIND_LIBRARIES})
+            # target_link_libraries(projected_fragment_mapper_test ${LIBUNWIND_LIBRARIES})
         endif ()
     endif()
 
@@ -428,43 +428,43 @@ if (BUILD_TESTS)
         target_link_libraries(${target} OpenMP::OpenMP_CXX)
     endmacro()
 
-    add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
-    add_vineyard_app(run_vy_app_compact SRCS test/run_vy_app_compact.cc)
-    add_vineyard_app(run_vy_app_local_vm SRCS test/run_vy_app_local_vm.cc)
+    # add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
+    # add_vineyard_app(run_vy_app_compact SRCS test/run_vy_app_compact.cc)
+    # add_vineyard_app(run_vy_app_local_vm SRCS test/run_vy_app_local_vm.cc)
 
-    add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
+    # add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
 
-    add_vineyard_app(run_vy_ldbc SRCS test/run_vy_ldbc.cc)
-    target_include_directories(run_vy_ldbc PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # add_vineyard_app(run_vy_ldbc SRCS test/run_vy_ldbc.cc)
+    # target_include_directories(run_vy_ldbc PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
 
-    add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
-    target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-    target_link_libraries(run_ctx gs_proto)
+    # add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
+    # target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # target_link_libraries(run_ctx gs_proto)
 
-    add_vineyard_app(run_property_ctx SRCS test/run_property_ctx.cc)
-    target_include_directories(run_property_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-    target_link_libraries(run_property_ctx gs_proto)
+    # add_vineyard_app(run_property_ctx SRCS test/run_property_ctx.cc)
+    # target_include_directories(run_property_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # target_link_libraries(run_property_ctx gs_proto)
 
-    add_vineyard_app(run_pregel_app SRCS test/run_pregel_app.cc)
+    # add_vineyard_app(run_pregel_app SRCS test/run_pregel_app.cc)
 
-    add_vineyard_app(run_string_oid SRCS test/run_string_oid.cc)
-    target_include_directories(run_string_oid PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # add_vineyard_app(run_string_oid SRCS test/run_string_oid.cc)
+    # target_include_directories(run_string_oid PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
 
-    add_vineyard_app(run_empty_property SRCS test/run_empty_property.cc)
-    target_include_directories(run_empty_property PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # add_vineyard_app(run_empty_property SRCS test/run_empty_property.cc)
+    # target_include_directories(run_empty_property PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
 
-    add_vineyard_app(test_project_string SRCS test/test_project_string.cc)
+    # add_vineyard_app(test_project_string SRCS test/test_project_string.cc)
 
-    add_vineyard_app(basic_graph_benchmarks SRCS benchmarks/basic_graph_benchmarks.cc)
+    # add_vineyard_app(basic_graph_benchmarks SRCS benchmarks/basic_graph_benchmarks.cc)
 
-    add_vineyard_app(property_graph_loader SRCS benchmarks/property_graph_loader.cc)
+    # add_vineyard_app(property_graph_loader SRCS benchmarks/property_graph_loader.cc)
 
-    add_vineyard_app(property_graph_benchmarks SRCS benchmarks/property_graph_benchmarks.cc)
+    # add_vineyard_app(property_graph_benchmarks SRCS benchmarks/property_graph_benchmarks.cc)
 
-    add_vineyard_app(projected_graph_benchmarks SRCS benchmarks/projected_graph_benchmarks.cc)
+    # add_vineyard_app(projected_graph_benchmarks SRCS benchmarks/projected_graph_benchmarks.cc)
 
     if (NETWORKX)
-        add_vineyard_app(test_convert SRCS test/test_convert.cc)
+        # add_vineyard_app(test_convert SRCS test/test_convert.cc)
     endif ()
 endif ()
 
@@ -511,7 +511,7 @@ if(ENABLE_JAVA_SDK)
 
     add_custom_command(
         OUTPUT "${GAE_JAVA_RUNTIME_JAR}"
-        COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} clean install -DskipTests --quiet
+        COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} install -DskipTests --quiet
         DEPENDS gs_proto
         WORKING_DIRECTORY ${GAE_JAVA_DIR}
         COMMENT "Building GAE-java..."
@@ -578,7 +578,7 @@ install_gsa_binary(gs_proto)
 install_gsa_binary(gs_util)
 
 if (ENABLE_JAVA_SDK)
-    install_gsa_binary(graphx_runner)
+    # install_gsa_binary(graphx_runner)
 endif()
 
 install_gsa_headers("${PROJECT_SOURCE_DIR}/apps")
