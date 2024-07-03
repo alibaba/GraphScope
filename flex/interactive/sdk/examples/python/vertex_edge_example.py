@@ -179,7 +179,6 @@ class EdgeSDK:
                 ),
             ]
             try:
-                # Add edge to the graph
                 api_response = api_instance.add_edge(graph_id, edge_request)
                 print("The response of GraphServiceEdgeManagementApi->add_edge:", api_response)
             except Exception as e:
@@ -209,10 +208,9 @@ if __name__ == "__main__":
     parser.add_argument("--func", "-f", type=str, help="The function to call", required=True, choices=["get", "update", "add"])
     parser.add_argument("--type", "-t", type=str, help="The type of the operation", required=True, choices=["vertex", "edge"])
     args = parser.parse_args()
-    # 调用相应的函数
     try:
         operation = func_map[args.type][args.func]
-        operation()  # 调用对应的方法
+        operation()
     except KeyError:
         print("Invalid operation type or function")
 
