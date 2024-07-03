@@ -9,13 +9,17 @@ Here, we provide two options: installing all dependencies on the local machine o
 
 ### Install Deps on Local
 
+Interactive source code should be compatible with and installable on most modern Linux distributions, including Debian, RedHat, and Ubuntu (tested on Ubuntu 22.04), on both x86 and ARM platforms. If you encounter any issues during compilation or installation on your system, please open an issue on our [Github Repo](https://github.com/alibaba/graphscope).
+
+```{note}
+Interactive currently cannot be compiled from source on macOS, mainly due to some dependencies (seastar) being incompatible with macOS.
+```
+
 To install all dependencies on your local machine, run the following code with the command-line utility script `gsctl.py`.
 
 ```bash
 python3 gsctl.py install-deps dev
 ```
-
-> Currently, Interactive cannot be built from source on macOS. However, you can attempt to build Interactive on the Docker image, as our Docker image supports the 'arm64' platform.
 
 ### Develop on Docker Container
 
@@ -93,7 +97,7 @@ git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gste
 
 export GITHUB_WORKSPACE=/path/to/GraphScope
 export FLEX_DATA_DIR=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph
-export TMP_INTERACTIVE_WORKSPACE=/tmp/temp_workspace
+export TMP_INTERACTIVE_WORKSPACE=/tmp/interactive_workspace
 cd ${GITHUB_WORKSPACE}/flex/build/
 
 # Create interactive workspace
@@ -126,20 +130,58 @@ A workspace is akin to the data directory for a database, housing metadata and g
     └── RUNNING_GRAPH
 ```
 
-
-
-In the `${GITHUB_WORKSPACE}/flex/tests/hqps` directory, there is an `engine_config_test.yaml` file.
-Modify the `default_graph` field to `modern_graph` for testing purposes on `modern_graph`.
-
-```bash
-cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
-```
-
 Subsequently, execute the `hqps_admin_test.sh` script to test the of the interactive admin service.
 
 ```bash
 cd ${GITHUB_WORKSPACE}/flex/tests/hqps
 # Change the default_graph field to 
 bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
+```
+
+The `engine_config_test.yaml` specifies the configuration for interactive services. 
+
+```yaml 
+directories:
+  workspace: /tmp/interactive_workspace # The workspace to start service on.
+log_level: INFO
+default_graph: modern_graph # The graph to serve at the beginning
+compute_engine:
+  type: hiactor
+  workers:
+    - localhost:10000
+  thread_num_per_worker: 1
+  store:
+    type: cpp-mcsr
+  metadata_store:
+    type: file 
+compiler: # Configurations for the Graph Compiler
+  planner: 
+    is_on: true
+    opt: RBO
+    rules:
+      - FilterIntoJoinRule
+      - FilterMatchRule
+      - NotMatchToAntiJoinRule
+  meta:
+    reader:
+      schema:
+        uri: http://localhost:7777/v1/service/status
+        interval: 1000 # ms
+      statistics:
+        uri: http://localhost:7777/v1/graph/%s/statistics
+        interval: 86400000 # ms
+  endpoint:
+    default_listen_address: localhost
+    bolt_connector:
+      disabled: false
+      port: 7687
+    gremlin_connector:
+      disabled: false
+      port: 8182
+  query_timeout: 40000
+  gremlin_script_language_name: antlr_gremlin_calcite
+http_service:
+  default_listen_address: localhost
+  admin_port: 7777
+  query_port: 10000
 ```
