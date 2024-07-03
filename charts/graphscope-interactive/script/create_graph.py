@@ -411,7 +411,7 @@ def loading_graph(sess: Session, graph_id: str, ds: str):
             import_option="init",
             format=SchemaMappingLoadingConfigFormat(
                 type="arrow",
-                metadata={"batch_reader": False},
+                metadata={"batch_reader": True},
             ),
         ),
         vertex_mappings=[
