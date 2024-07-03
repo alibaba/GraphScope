@@ -59,6 +59,15 @@ static const std::unordered_set<std::string> CSV_META_KEY_WORDS = {
 
 }  // namespace reader_options
 
+namespace loader_options {
+static constexpr const char* PARALLELISM = "parallelism";
+static constexpr const char* BUILD_CSR_IN_MEM = "build_csr_in_mem";
+static constexpr const char* USE_MMAP_VECTOR = "use_mmap_vector";
+static constexpr const int32_t DEFAULT_PARALLELISM = 1;
+static constexpr const bool DEFAULT_BUILD_CSR_IN_MEM = false;
+static constexpr const bool DEFAULT_USE_MMAP_VECTOR = false;
+}  // namespace loader_options
+
 class LoadingConfig;
 
 namespace config_parsing {
@@ -146,11 +155,27 @@ class LoadingConfig {
   GetEdgeSrcDstCol(label_t src_label_id, label_t dst_label_id,
                    label_t edge_label_id) const;
 
+  inline void SetParallelism(int32_t parallelism) {
+    parallelism_ = parallelism;
+  }
+  inline void SetBuildCsrInMem(bool build_csr_in_mem) {
+    build_csr_in_mem_ = build_csr_in_mem;
+  }
+  inline void SetUseMmapVector(bool use_mmap_vector) {
+    use_mmap_vector_ = use_mmap_vector;
+  }
+  inline int32_t GetParallelism() const { return parallelism_; }
+  inline bool GetBuildCsrInMem() const { return build_csr_in_mem_; }
+  inline bool GetUseMmapVector() const { return use_mmap_vector_; }
+
  private:
   const Schema& schema_;
   std::string scheme_;     // "file", "hdfs", "oss", "s3"
   BulkLoadMethod method_;  // init, append, overwrite
   std::string format_;     // csv, tsv, json, parquet
+  int32_t parallelism_;    // Number of thread should be used in loading
+  bool build_csr_in_mem_;  // Whether to build csr in memory
+  bool use_mmap_vector_;   // Whether to use mmap vector
 
   // meta_data, stores all the meta info about loading
   std::unordered_map<std::string, std::string> metadata_;
