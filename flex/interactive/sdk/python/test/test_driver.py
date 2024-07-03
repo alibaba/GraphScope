@@ -97,7 +97,7 @@ class TestDriver(unittest.TestCase):
         self._graph_id = self.createGraph()
         self.bulkLoading()
         self.bulkLoadingUploading()
-        self.waitJobFinish()
+        self.bulkLoadingFailure()
         self.list_graph()
         self.runCypherQuery()
         self.runGremlinQuery()
@@ -186,7 +186,8 @@ class TestDriver(unittest.TestCase):
         )
         resp = self._sess.bulk_loading(self._graph_id, schema_mapping)
         assert resp.is_ok()
-        self._job_id = resp.get_value().job_id
+        job_id = resp.get_value().job_id
+        assert self.waitJobFinish(job_id)
 
 
     def bulkLoadingUploading(self):
@@ -220,22 +221,59 @@ class TestDriver(unittest.TestCase):
         )
         resp = self._sess.bulk_loading(self._graph_id, schema_mapping)
         assert resp.is_ok()
-        self._job_id = resp.get_value().job_id
+        job_id = resp.get_value().job_id
+        assert self.waitJobFinish(job_id)
 
-    def waitJobFinish(self):
-        assert self._job_id is not None
+    def waitJobFinish(self, job_id: str):
+        assert job_id is not None
         while True:
-            resp = self._sess.get_job(self._job_id)
+            resp = self._sess.get_job(job_id)
             assert resp.is_ok()
             status = resp.get_value().status
             print("job status: ", status)
             if status == "SUCCESS":
-                break
+                return True
             elif status == "FAILED":
-                raise Exception("job failed")
+                return False
             else:
                 time.sleep(1)
-        print("job finished")
+    
+    def bulkLoadingFailure(self):
+        """
+        Submit a bulk loading job with invalid data, and expect the job to fail.
+        """
+        assert os.environ.get("FLEX_DATA_DIR") is not None
+        person_csv_path = os.path.join(os.environ.get("FLEX_DATA_DIR"), "person.csv")
+        knows_csv_path = os.path.join(
+            os.environ.get("FLEX_DATA_DIR"), "person_knows_person.csv"
+        )
+        print("test bulk loading: ", self._graph_id)
+        schema_mapping = SchemaMapping(
+            loading_config=SchemaMappingLoadingConfig(
+                import_option="init",
+                format=SchemaMappingLoadingConfigFormat(type="csv"),
+            ),
+            vertex_mappings=[
+                # Intentionally use the wrong file for the vertex mapping
+                VertexMapping(type_name="person", inputs=[knows_csv_path])
+            ],
+            edge_mappings=[
+                EdgeMapping(
+                    type_triplet=EdgeMappingTypeTriplet(
+                        edge="knows",
+                        source_vertex="person",
+                        destination_vertex="person",
+                    ),
+                    # Intentionally use the wrong file for the edge mapping
+                    inputs=[person_csv_path],
+                )
+            ],
+        )
+        resp = self._sess.bulk_loading(self._graph_id, schema_mapping)
+        assert resp.is_ok()
+        job_id = resp.get_value().job_id
+        # Expect to fail
+        assert self.waitJobFinish(job_id) == False
 
     def list_graph(self):
         resp = self._sess.list_graphs()
