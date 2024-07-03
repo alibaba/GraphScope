@@ -99,7 +99,9 @@ void HQPSService::init(const ServiceConfig& config) {
     }
   }
   if (config.start_compiler) {
-    start_compiler_subprocess();
+    if (!start_compiler_subprocess()) {
+      LOG(FATAL) << "Failed to start compiler subprocess! exiting...";
+    }
   }
   start_time_.store(gs::GetCurrentTimeStamp());
 }
