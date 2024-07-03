@@ -48,11 +48,14 @@ GraphDB::~GraphDB() {
     compact_thread_running_ = false;
     compact_thread_.join();
   }
-  showAppMetrics();
-  for (int i = 0; i < thread_num_; ++i) {
-    contexts_[i].~SessionLocalContext();
+  if (contexts_ != nullptr) {
+    showAppMetrics();
+    for (int i = 0; i < thread_num_; ++i) {
+      contexts_[i].~SessionLocalContext();
+    }
+
+    free(contexts_);
   }
-  free(contexts_);
 }
 
 GraphDB& GraphDB::get() {
@@ -245,6 +248,7 @@ void GraphDB::Close() {
       contexts_[i].~SessionLocalContext();
     }
     free(contexts_);
+    contexts_ = nullptr;
   }
   std::fill(app_paths_.begin(), app_paths_.end(), "");
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);

@@ -197,7 +197,7 @@ void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
     LOG(FATAL) << "Only support one primary key for vertex.";
   }
   auto type = std::get<0>(primary_keys[0]);
-  if (type != PropertyType::kInt64 && type != PropertyType::kString &&
+  if (type != PropertyType::kInt64 && type != PropertyType::kStringView &&
       type != PropertyType::kInt32 && type != PropertyType::kUInt32 &&
       type != PropertyType::kUInt64) {
     LOG(FATAL)
@@ -377,7 +377,8 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       }
     } else if (property_types[0].type_enum ==
                    impl::PropertyTypeImpl::kVarChar ||
-               property_types[0].type_enum == impl::PropertyTypeImpl::kString) {
+               property_types[0].type_enum ==
+                   impl::PropertyTypeImpl::kStringView) {
       // Both varchar and string are treated as string. For String, we use the
       // default max length defined in PropertyType::STRING_DEFAULT_MAX_LENGTH
       const auto& prop =

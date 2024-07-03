@@ -239,7 +239,7 @@ class LFIndexer {
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       keys_ = new StringColumn(StorageStrategy::kMem,
                                type.additional_type_info.max_length);
-    } else if (type.type_enum == impl::PropertyTypeImpl::kString) {
+    } else if (type.type_enum == impl::PropertyTypeImpl::kStringView) {
       LOG(WARNING) << "String type is a deprecated type, use varchar instead.";
       LOG(WARNING) << "Use default max length"
                    << PropertyType::STRING_DEFAULT_MAX_LENGTH

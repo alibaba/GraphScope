@@ -11,8 +11,8 @@ GRIN_DATATYPE _get_data_type(const gs::PropertyType& type) {
     return GRIN_DATATYPE::Int64;
   } else if (type == gs::PropertyType::kUInt64) {
     return GRIN_DATATYPE::UInt64;
-  } else if (type == gs::PropertyType::kString) {
-    return GRIN_DATATYPE::String;
+  } else if (type == gs::PropertyType::kStringView) {
+    return GRIN_DATATYPE::StringView;
   } else if (type == gs::PropertyType::kDate) {
     return GRIN_DATATYPE::Timestamp64;
   } else if (type == gs::PropertyType::kDouble) {
@@ -52,7 +52,7 @@ void init_cache(GRIN_GRAPH_T* g) {
         tmp.emplace_back(std::dynamic_pointer_cast<gs::BoolColumn>(
                              table.get_column_by_id(idx))
                              .get());
-      } else if (type == gs::PropertyType::kString) {
+      } else if (type == gs::PropertyType::kStringView) {
         tmp.emplace_back(std::dynamic_pointer_cast<gs::StringColumn>(
                              table.get_column_by_id(idx))
                              .get());

@@ -52,7 +52,7 @@ class TestMultiplePropertiesEdge {
     auto data = oe->get_data().AsRecordView();
     CHECK(data.size() == 2)
         << "Inconsistent size, Except: 2, Got " << data.size();
-    CHECK(data[0].type == PropertyType::kString)
+    CHECK(data[0].type == PropertyType::kStringView)
         << "Inconsistent type, Except: string, Got " << data[0].type;
     CHECK(data[1].type == PropertyType::kInt32)
         << "Inconsistent type, Except: int, Got " << data[1].type;
@@ -60,7 +60,7 @@ class TestMultiplePropertiesEdge {
     LOG(INFO) << "Finish test get edge\n";
   }
 
-  void test_get_graph_view(int64_t src, const std::string& dst) {
+  void test_get_graph_view(int64_t src, const std::string_view& dst) {
     auto txn = db_.GetReadTransaction();
     vid_t src_lid, dst_lid;
 
@@ -109,7 +109,7 @@ class TestMultiplePropertiesEdge {
 
     {
       auto txn = db_.GetSingleEdgeInsertTransaction();
-      std::string str = "test";
+      std::string_view str = "test";
       CHECK(txn.AddEdge(src_label_, src, dst_label_, dst, edge_label_,
                         {Any::From(str), Any::From(2012)}))
           << "Add edge failed\n";

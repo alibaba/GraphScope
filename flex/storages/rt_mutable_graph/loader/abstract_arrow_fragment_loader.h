@@ -256,7 +256,7 @@ static void append_edges(std::shared_ptr<arrow::Array> src_col,
                                  const std::shared_ptr<arrow::Array>& cur_col) {
     if (cur_indexer.get_type() == PropertyType::kInt64) {
       CHECK(cur_col->type()->Equals(arrow::int64()));
-    } else if (cur_indexer.get_type() == PropertyType::kString) {
+    } else if (cur_indexer.get_type() == PropertyType::kStringView) {
       CHECK(cur_col->type()->Equals(arrow::utf8()) ||
             cur_col->type()->Equals(arrow::large_utf8()));
     } else if (cur_indexer.get_type() == PropertyType::kInt32) {
@@ -331,14 +331,12 @@ static void append_edges(std::shared_ptr<arrow::Array> src_col,
 class AbstractArrowFragmentLoader : public IFragmentLoader {
  public:
   AbstractArrowFragmentLoader(const std::string& work_dir, const Schema& schema,
-                              const LoadingConfig& loading_config,
-                              int32_t thread_num, bool build_csr_in_mem,
-                              bool use_mmap_vector)
+                              const LoadingConfig& loading_config)
       : loading_config_(loading_config),
         schema_(schema),
-        thread_num_(thread_num),
-        build_csr_in_mem_(build_csr_in_mem),
-        use_mmap_vector_(use_mmap_vector),
+        thread_num_(loading_config_.GetParallelism()),
+        build_csr_in_mem_(loading_config_.GetBuildCsrInMem()),
+        use_mmap_vector_(loading_config_.GetUseMmapVector()),
         basic_fragment_loader_(schema_, work_dir) {
     vertex_label_num_ = schema_.vertex_label_num();
     edge_label_num_ = schema_.edge_label_num();
