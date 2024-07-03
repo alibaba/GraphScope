@@ -63,6 +63,8 @@ For more detail information about compiler, please check [this documentation](..
 First, build the Interactive Query Engine.
 
 ```bash
+git clone https://github.com/alibaba/GraphScope # or replace with your own forked repo
+cd GraphScope 
 git submodule update --init
 cd flex
 mkdir build && cd build
@@ -123,50 +125,13 @@ Workspace is like the data directory for a database, where the metadata and grap
 ```
 
 
-Then create a `engine_config.yaml` to define the configuration of interactive.
 
-```yaml
-log_level: INFO
-default_graph: modern_graph
-compute_engine:
-  type: hiactor
-  workers:
-    - localhost:10000
-  thread_num_per_worker: 1
-  store:
-    type: cpp-mcsr
-  metadata_store:
-    type: file
-compiler:
-  planner:
-    is_on: true
-    opt: RBO
-    rules:
-      - FilterIntoJoinRule
-      - FilterMatchRule
-      - NotMatchToAntiJoinRule
-  meta:
-    reader:
-      schema:
-        uri: http://localhost:7777/v1/service/status
-        interval: 1000 # ms
-      statistics:
-        uri: http://localhost:7777/v1/graph/%s/statistics
-        interval: 86400000 # ms
-  endpoint:
-    default_listen_address: localhost
-    bolt_connector:
-      disabled: false
-      port: 7687
-    gremlin_connector:
-      disabled: false
-      port: 8182
-  query_timeout: 40000
-  gremlin_script_language_name: antlr_gremlin_calcite
-http_service:
-  default_listen_address: localhost
-  admin_port: 7777
-  query_port: 10000
+There is an `engine_config_test.yaml` file in the `${GITHUB_WORKSPACE}/flex/tests/hqps` directory, 
+change the `default_graph` field to `modern_graph` as we intend to test on `modern_graph`.
+
+```bash
+cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
 ```
 
 Then we run a script `hqps_admin_test.sh` to verify the correctness of interactive admin service.
@@ -174,5 +139,5 @@ Then we run a script `hqps_admin_test.sh` to verify the correctness of interacti
 ```bash
 cd ${GITHUB_WORKSPACE}/flex/tests/hqps
 # Change the default_graph field to 
-bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config.yaml ${GS_TEST_DIR}
+bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
 ```
