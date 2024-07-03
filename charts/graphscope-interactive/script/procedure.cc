@@ -20,7 +20,7 @@ namespace gs {
 // TODO: make sure the max vid is less than 2^30
 inline vid_t encode_vid(label_t v_label, vid_t vid) {
   // vid_t is uint32_t, use the first 4 bits to store label id
-  return ((vid_t)v_label << 30) | vid;
+  return ((vid_t)v_label << 31) | vid;
 }
 
 inline label_t decode_label(vid_t encoded_vid) { return encoded_vid >> 30; }

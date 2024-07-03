@@ -120,6 +120,7 @@ void ODPSReadClient::CreateReadSession(
   while (resp.status_ != apsara::odps::sdk::storage_api::Status::OK &&
          resp.status_ != apsara::odps::sdk::storage_api::Status::WAIT) {
     LOG(ERROR) << "CreateReadSession failed" << resp.error_message_;
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     resp = createReadSession(table_identifier, selected_cols, partition_cols,
                              selected_partitions);
   }
@@ -323,6 +324,10 @@ ODPSTableRecordBatchSupplier::ODPSTableRecordBatchSupplier(
   // Read the table.
   table_ = odps_read_client_.ReadTable(session_id, split_count,
                                        table_identifier, thread_num);
+
+  LOG(INFO) << "Successfully read table: " << table_identifier.table_
+            << " with " << table_->num_rows() << " rows, "
+            << table_->num_columns() << " columns";
   reader_ = std::make_shared<arrow::TableBatchReader>(*table_);
 }
 
@@ -451,8 +456,8 @@ void ODPSFragmentLoader::loadVertices() {
          ++iter) {
       vertex_files.emplace_back(iter->first, iter->second);
     }
-    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, " << " "
-              << vertex_files.size() << " vertex files, ";
+    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, "
+              << " " << vertex_files.size() << " vertex files, ";
     std::atomic<size_t> v_ind(0);
     std::vector<std::thread> threads(thread_num_);
     for (int i = 0; i < thread_num_; ++i) {
