@@ -41,7 +41,13 @@ def parse_version(root, **kwargs):
 
 NAME = "gsctl"
 PYTHON_REQUIRES = ">=3.7"
-REQUIRES = ["click >= 8.1.6", "graphscope-flex >= 0.27.0", "treelib"]
+REQUIRES = [
+    "click >= 8.1.6",
+    "graphscope-flex >= 0.27.0",
+    "treelib",
+    "packaging",
+    "pyyaml",
+]
 
 setup(
     name=NAME,
@@ -55,16 +61,14 @@ setup(
         "parse": parse_version,
     },
     install_requires=REQUIRES,
-    packages=find_packages(
-        include=["graphscope.gsctl", "graphscope.gsctl.*", "VERSION"]
-    ),
+    packages=find_packages(include=["graphscope.gsctl", "graphscope.gsctl.*"]),
     include_package_data=True,
     license="Apache 2.0",
     long_description_content_type="text/markdown",
     long_description="""\
     gsctl is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope. These functionalities include building and testing binaries, managing sessions and resources, and more.
     """,  # noqa: E501
-    package_data={"graphscope.gsctl": ["scripts/*.sh", "scripts/lib/*.sh"]},
+    package_data={"graphscope.gsctl": ["scripts/*.sh", "scripts/lib/*.sh", "VERSION"]},
     entry_points={
         "console_scripts": [
             "gsctl = graphscope.gsctl.gsctl:cli",

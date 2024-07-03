@@ -115,6 +115,8 @@ impl RecordSinkEncoder {
             _ => {
                 if let Some(map_pb) = self.try_map_to_pb(e) {
                     Some(result_pb::entry::Inner::Map(map_pb))
+                } else if let Some(collection_pb) = self.try_collection_to_pb(e) {
+                    Some(result_pb::entry::Inner::Collection(collection_pb))
                 } else {
                     let element_pb = self.element_to_pb(e);
                     Some(result_pb::entry::Inner::Element(element_pb))
@@ -122,6 +124,24 @@ impl RecordSinkEncoder {
             }
         };
         Ok(result_pb::Entry { inner })
+    }
+
+    // return if the given entry is a collection entry result from PathValueProjector eval, etc.
+    fn try_collection_to_pb(&self, e: &DynEntry) -> Option<result_pb::Collection> {
+        if let EntryType::Object = e.get_type() {
+            if let Object::Vector(vec) = e.as_object().unwrap() {
+                let mut collection_pb = Vec::with_capacity(vec.len());
+                for obj in vec {
+                    let obj_pb = self.object_to_pb(obj.clone());
+                    let element_pb =
+                        result_pb::Element { inner: Some(result_pb::element::Inner::Object(obj_pb)) };
+                    collection_pb.push(element_pb);
+                }
+                return Some(result_pb::Collection { collection: collection_pb });
+            }
+        }
+
+        None
     }
 
     // return if the given entry is a map entry result from Map eval.
@@ -140,9 +160,11 @@ impl RecordSinkEncoder {
                     let val_pb: common_pb::Value = val.clone().into();
                     key_values.push(result_pb::key_values::KeyValue {
                         key: Some(key_pb),
-                        value: Some(result_pb::key_values::key_value::Value::Element(result_pb::Element {
-                            inner: Some(result_pb::element::Inner::Object(val_pb)),
-                        })),
+                        value: Some(result_pb::Entry {
+                            inner: Some(result_pb::entry::Inner::Element(result_pb::Element {
+                                inner: Some(result_pb::element::Inner::Object(val_pb)),
+                            })),
+                        }),
                     })
                 }
                 return Some(result_pb::KeyValues { key_values });
@@ -167,17 +189,31 @@ impl RecordSinkEncoder {
                         .as_any_ref()
                         .downcast_ref::<CollectionEntry>()
                         .unwrap();
-                    let inner_collection_pb = self.collection_map_to_pb(inner_collection.clone())?;
+                    let inner_map_pb = self.collection_map_to_pb(inner_collection.clone())?;
                     key_values.push(result_pb::key_values::KeyValue {
                         key: Some(key_pb),
-                        value: Some(result_pb::key_values::key_value::Value::Nested(inner_collection_pb)),
+                        value: Some(result_pb::Entry {
+                            inner: Some(result_pb::entry::Inner::Map(inner_map_pb)),
+                        }),
                     })
                 } else {
-                    let val_pb = self.element_to_pb(pair.get_right());
-                    key_values.push(result_pb::key_values::KeyValue {
-                        key: Some(key_pb),
-                        value: Some(result_pb::key_values::key_value::Value::Element(val_pb)),
-                    })
+                    let right = pair.get_right();
+                    if let Some(collection) = self.try_collection_to_pb(right) {
+                        key_values.push(result_pb::key_values::KeyValue {
+                            key: Some(key_pb),
+                            value: Some(result_pb::Entry {
+                                inner: Some(result_pb::entry::Inner::Collection(collection)),
+                            }),
+                        });
+                    } else {
+                        let val_pb = self.element_to_pb(right);
+                        key_values.push(result_pb::key_values::KeyValue {
+                            key: Some(key_pb),
+                            value: Some(result_pb::Entry {
+                                inner: Some(result_pb::entry::Inner::Element(val_pb)),
+                            }),
+                        })
+                    }
                 }
             } else {
                 Err(FnExecError::unsupported_error(&format!(

@@ -19,7 +19,6 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::config::BlockMode;
 use crate::receive::start_net_receiver;
 use crate::send::start_net_sender;
 use crate::transport::ConnectionParams;
@@ -56,14 +55,6 @@ pub fn listen_on<A: ToSocketAddrs>(
                                     let remote = Server { id: remote_id, addr };
                                     if params.is_nonblocking {
                                         stream.set_nonblocking(true).ok();
-                                    } else {
-                                        if let BlockMode::Blocking(Some(write_timelout)) =
-                                            params.get_write_params().mode
-                                        {
-                                            stream
-                                                .set_write_timeout(Some(write_timelout))
-                                                .ok();
-                                        }
                                     }
                                     let recv_poisoned = Arc::new(AtomicBool::new(false));
                                     start_net_sender(
@@ -136,11 +127,6 @@ pub fn connect(
                 let remote = Server { id: remote_id, addr };
                 if params.is_nonblocking {
                     conn.set_nonblocking(true).ok();
-                } else {
-                    if let BlockMode::Blocking(Some(write_timelout)) = params.get_write_params().mode {
-                        conn.set_write_timeout(Some(write_timelout))
-                            .ok();
-                    }
                 }
                 let read_half = conn
                     .try_clone()

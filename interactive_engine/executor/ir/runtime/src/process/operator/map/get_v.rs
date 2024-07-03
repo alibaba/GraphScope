@@ -25,7 +25,7 @@ use ir_common::{KeyId, LabelId};
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
-use crate::process::entry::{DynEntry, Entry, EntryType};
+use crate::process::entry::{DynEntry, Entry};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
@@ -169,71 +169,83 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 }
             }
             // 2. Otherwise, filter after query store, e.g., the case of filter by columns.
-            match entry.get_type() {
-                EntryType::Vertex => {
-                    let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
-                    let id = entry.id();
-                    if let Some(vertex) = graph
-                        .get_vertex(&[id], &self.query_params)?
-                        .next()
-                        .map(|vertex| DynEntry::new(vertex))
-                    {
-                        if let Some(alias) = self.alias {
-                            // append without moving head
-                            input
-                                .get_columns_mut()
-                                .insert(alias as usize, vertex.into());
-                        } else {
-                            input.append(vertex, self.alias.clone());
-                        }
-                    } else {
-                        return Ok(None);
-                    }
-                }
-                EntryType::Edge => {
-                    // TODO: This is a little bit tricky. Modify this logic to query store once query by eid is supported.
-                    // Currently, we support two cases:
-                    // 1. use auxilia to rename the edge to a new alias;
-                    // 2. use auxilia to filter the edge by predicates, where the necessary properties of the edge is assumed to be already pre-cached.
-                    let entry = entry.clone();
-                    if let Some(predicate) = &self.query_params.filter {
-                        let res = predicate
-                            .eval_bool(Some(&input))
-                            .map_err(|e| FnExecError::from(e))?;
-                        if !res {
-                            return Ok(None);
-                        }
-                    }
+            let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
+            if let Some(v) = entry.as_vertex() {
+                let id = v.id();
+                if let Some(vertex) = graph
+                    .get_vertex(&[id], &self.query_params)?
+                    .next()
+                    .map(|vertex| DynEntry::new(vertex))
+                {
                     if let Some(alias) = self.alias {
                         // append without moving head
                         input
                             .get_columns_mut()
-                            .insert(alias as usize, entry);
+                            .insert(alias as usize, vertex.into());
                     } else {
-                        input.append_arc_entry(entry, self.alias.clone());
+                        input.append(vertex, self.alias.clone());
                     }
+                } else {
+                    return Ok(None);
                 }
-                EntryType::Path => {
-                    // Auxilia for vertices in Path is for filtering.
-                    let graph_path = entry
-                        .as_graph_path()
-                        .ok_or_else(|| FnExecError::Unreachable)?;
-                    let path_end = graph_path.get_path_end();
-                    let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
-                    let id = path_end.id();
-                    if graph
-                        .get_vertex(&[id], &self.query_params)?
-                        .next()
-                        .is_none()
-                    {
+            } else if let Some(_edge) = entry.as_edge() {
+                // TODO: This is a little bit tricky. Modify this logic to query store once query by eid is supported.
+                // Currently, we support two cases:
+                // 1. use auxilia to rename the edge to a new alias;
+                // 2. use auxilia to filter the edge by predicates, where the necessary properties of the edge is assumed to be already pre-cached.
+                let entry = entry.clone();
+                if let Some(predicate) = &self.query_params.filter {
+                    let res = predicate
+                        .eval_bool(Some(&input))
+                        .map_err(|e| FnExecError::from(e))?;
+                    if !res {
                         return Ok(None);
                     }
                 }
-                _ => Err(FnExecError::unexpected_data_error(&format!(
+                if let Some(alias) = self.alias {
+                    // append without moving head
+                    input
+                        .get_columns_mut()
+                        .insert(alias as usize, entry);
+                } else {
+                    input.append_arc_entry(entry, self.alias.clone());
+                }
+            } else if let Some(graph_path) = entry.as_graph_path() {
+                // 1. Auxilia for vertices in Path for filtering.
+                // 2. Auxilia for vertices in Path for property caching.
+                let path_end = graph_path.get_path_end();
+                if let Some(v) = graph
+                    .get_vertex(&[path_end.id()], &self.query_params)?
+                    .next()
+                {
+                    if self.query_params.has_columns() {
+                        // for property caching
+                        let mut_graph_path = input
+                            .get_mut(self.tag)
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!(
+                                    "get_mut of GraphPath failed in {:?}",
+                                    self
+                                ))
+                            })?
+                            .as_any_mut()
+                            .downcast_mut::<GraphPath>()
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!("entry is not a path in GetV"))
+                            })?;
+                        let path_end = mut_graph_path.get_path_end_mut();
+                        *path_end = v.into();
+                    }
+                    return Ok(Some(input));
+                } else {
+                    return Ok(None);
+                }
+            } else {
+                Err(FnExecError::unexpected_data_error(&format!(
                     "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
                     entry
-                )))?,
-            };
+                )))?
+            }
             Ok(Some(input))
         } else {
             Ok(None)

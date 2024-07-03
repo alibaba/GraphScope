@@ -1117,6 +1117,9 @@ fn preprocess_expression(
                                 common_pb::variable_key_value::Value::Nested(_) => {
                                     return Err(IrError::Unsupported("nested value in Map".to_string()));
                                 }
+                                common_pb::variable_key_value::Value::PathFunc(_) => {
+                                    return Err(IrError::Unsupported("PathFunc in Map".to_string()));
+                                }
                             }
                         }
                     }

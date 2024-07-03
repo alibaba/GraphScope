@@ -99,7 +99,7 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
         dynamic_cast<const TypedColumn<uint32_t>&>(
             db_.graph().lf_indexers_[label].get_keys()));
   } else if (db_.graph().lf_indexers_[label].get_type() ==
-             PropertyType::kString) {
+             PropertyType::kStringView) {
     return std::make_shared<TypedRefColumn<std::string_view>>(
         dynamic_cast<const TypedColumn<std::string_view>&>(
             db_.graph().lf_indexers_[label].get_keys()));

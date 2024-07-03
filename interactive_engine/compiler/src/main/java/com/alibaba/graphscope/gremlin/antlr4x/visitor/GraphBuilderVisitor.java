@@ -23,14 +23,12 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
-import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.TraversalEnumParser;
@@ -46,7 +44,6 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
@@ -62,7 +59,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     private final GraphBuilder builder;
@@ -409,15 +405,8 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     public GraphBuilder visitTraversalMethod_valueMap(
             GremlinGSParser.TraversalMethod_valueMapContext ctx) {
         RexNode expr =
-                builder.call(
-                        GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                        getProperties(ctx, null).stream()
-                                .flatMap(
-                                        k ->
-                                                Stream.of(
-                                                        builder.literal(k),
-                                                        builder.variable(null, k)))
-                                .collect(Collectors.toList()));
+                new ExpressionVisitor(builder, builder.variable((String) null))
+                        .visitTraversalMethod_valueMap(ctx);
         return builder.project(ImmutableList.of(expr), ImmutableList.of(), true);
     }
 
@@ -426,8 +415,8 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             GremlinGSParser.TraversalMethod_valuesContext ctx) {
         if (ctx.getChildCount() == 4 && ctx.StringLiteral() != null) {
             RexNode expr =
-                    builder.variable(
-                            null, (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
+                    new ExpressionVisitor(builder, builder.variable((String) null))
+                            .visitTraversalMethod_values(ctx);
             return builder.project(ImmutableList.of(expr), ImmutableList.of(), true);
         }
         throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [values('..')]");
@@ -437,15 +426,8 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     public GraphBuilder visitTraversalMethod_elementMap(
             GremlinGSParser.TraversalMethod_elementMapContext ctx) {
         RexNode expr =
-                builder.call(
-                        GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                        getProperties(ctx, null).stream()
-                                .flatMap(
-                                        k ->
-                                                Stream.of(
-                                                        builder.literal(k),
-                                                        builder.variable(null, k)))
-                                .collect(Collectors.toList()));
+                new ExpressionVisitor(builder, builder.variable((String) null))
+                        .visitTraversalMethod_elementMap(ctx);
         return builder.project(ImmutableList.of(expr), ImmutableList.of(), true);
     }
 
@@ -931,40 +913,8 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             return builder.variable(tag);
         }
         GremlinGSParser.TraversalMethod_selectbyContext byCtx = byCtxs.get(i % ctxCnt);
-        int byChildCount = byCtx.getChildCount();
-        if (byChildCount == 3) { // select(..).by()
-            return builder.variable(tag);
-        } else if (byChildCount == 4 && byCtx.StringLiteral() != null) { // select(..).by('name')
-            return builder.variable(
-                    tag, (String) LiteralVisitor.INSTANCE.visit(byCtx.StringLiteral()));
-        } else if (byChildCount == 4
-                && byCtx.traversalToken() != null) { // select(..).by(T.label/T.id)
-            T token =
-                    TraversalEnumParser.parseTraversalEnumFromContext(
-                            T.class, byCtx.traversalToken());
-            return builder.variable(tag, token.getAccessor());
-        } else if (byCtx.traversalMethod_valueMap() != null) { // select(..).by(valueMap('name'))
-            return builder.call(
-                    GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                    getProperties(byCtx.traversalMethod_valueMap(), tag).stream()
-                            .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
-                            .collect(Collectors.toList()));
-        } else if (byCtx.traversalMethod_elementMap()
-                != null) { // select(..).by(elementMap('name'))
-            return builder.call(
-                    GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                    getProperties(byCtx.traversalMethod_elementMap(), tag).stream()
-                            .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
-                            .collect(Collectors.toList()));
-        } else if (byCtx.nestedTraversal() != null) {
-            return Utils.convertExprToPair(
-                            (new NestedTraversalRexVisitor(this.builder, tag, byCtx))
-                                    .visitNestedTraversal(byCtx.nestedTraversal()))
-                    .getValue0();
-        }
-        throw new UnsupportedEvalException(
-                GremlinGSParser.TraversalMethod_selectbyContext.class,
-                byCtx.getText() + " is unsupported yet in select");
+        return new ExpressionVisitor(builder, builder.variable(tag))
+                .visitTraversalMethod_selectby(byCtx);
     }
 
     private boolean pathExpandPattern(
@@ -989,33 +939,6 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             labels.forEach(labelConfig::addLabel);
             return labelConfig;
         }
-    }
-
-    private List<String> getProperties(
-            GremlinGSParser.TraversalMethod_valueMapContext ctx, @Nullable String tag) {
-        List<String> properties =
-                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
-        return properties.isEmpty() ? getAllProperties(tag) : properties;
-    }
-
-    private List<String> getProperties(
-            GremlinGSParser.TraversalMethod_elementMapContext ctx, @Nullable String tag) {
-        List<String> properties =
-                new LiteralList(ctx.oC_ListLiteral(), ctx.oC_Expression()).toList(String.class);
-        if (properties.isEmpty()) {
-            properties.addAll(getAllProperties(tag));
-        }
-        properties.add(0, GraphProperty.LABEL_KEY);
-        properties.add(1, GraphProperty.ID_KEY);
-        return properties;
-    }
-
-    private List<String> getAllProperties(@Nullable String tag) {
-        RexGraphVariable curVar = builder.variable(tag);
-        RelDataType dataType = curVar.getType();
-        Preconditions.checkArgument(
-                dataType instanceof GraphSchemaType, "can not get property from type=", dataType);
-        return dataType.getFieldList().stream().map(k -> k.getName()).collect(Collectors.toList());
     }
 
     private GraphBuilder appendTailProject() {

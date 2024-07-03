@@ -52,7 +52,8 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
     } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
       added_vertices_.emplace_back(
           std::make_shared<IdIndexer<uint32_t, vid_t>>());
-    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kString) {
+    } else if (graph_.lf_indexers_[idx].get_type() ==
+               PropertyType::kStringView) {
       added_vertices_.emplace_back(
           std::make_shared<IdIndexer<std::string_view, vid_t>>());
     } else {
@@ -125,7 +126,7 @@ bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
   for (int col_i = 0; col_i != col_num; ++col_i) {
     if (props[col_i].type != types[col_i]) {
       if (types[col_i] == PropertyType::kStringMap &&
-          props[col_i].type == PropertyType::kString) {
+          props[col_i].type == PropertyType::kStringView) {
         continue;
       }
       return false;
@@ -186,10 +187,38 @@ bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
       return false;
     }
   }
-  PropertyType type =
-      graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (type != value.type) {
-    return false;
+
+  if (value.type != PropertyType::kRecord) {
+    const PropertyType& type =
+        graph_.schema().get_edge_property(src_label, dst_label, edge_label);
+    if (value.type != type) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " type not match, expected " << type << ", got "
+                 << value.type;
+      return false;
+    }
+  } else {
+    const auto& types =
+        graph_.schema().get_edge_properties(src_label, dst_label, edge_label);
+    if (value.AsRecord().size() != types.size()) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " size not match, expected " << types.size() << ", got "
+                 << value.AsRecord().size();
+      return false;
+    }
+    auto r = value.AsRecord();
+    for (size_t i = 0; i < r.size(); ++i) {
+      if (r[i].type != types[i]) {
+        std::string label_name =
+            graph_.schema().get_edge_label_name(edge_label);
+        LOG(ERROR) << "Edge property " << label_name
+                   << " type not match, expected " << types[i] << ", got "
+                   << r[i].type;
+        return false;
+      }
+    }
   }
 
   size_t in_csr_index = get_in_csr_index(src_label, dst_label, edge_label);
@@ -456,9 +485,9 @@ void UpdateTransaction::set_edge_data_with_offset(
     label_t edge_label, const Any& value, size_t offset) {
   size_t csr_index = dir ? get_out_csr_index(label, neighbor_label, edge_label)
                          : get_in_csr_index(neighbor_label, label, edge_label);
-  if (value.type == PropertyType::kString) {
+  if (value.type == PropertyType::kStringView) {
     size_t loc = sv_vec_.size();
-    sv_vec_.emplace_back(std::string(value.value.s));
+    sv_vec_.emplace_back(value.AsStringView());
     Any dup_value;
     dup_value.set_string(sv_vec_[loc]);
     updated_edge_data_[csr_index][v].emplace(
@@ -527,7 +556,8 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
       added_vertices.emplace_back(
           std::make_shared<IdIndexer<uint32_t, vid_t>>());
-    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kString) {
+    } else if (graph.lf_indexers_[idx].get_type() ==
+               PropertyType::kStringView) {
       added_vertices.emplace_back(
           std::make_shared<IdIndexer<std::string_view, vid_t>>());
     } else {

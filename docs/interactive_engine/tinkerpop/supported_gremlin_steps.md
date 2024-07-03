@@ -692,6 +692,36 @@ g.V().out("1..10").with('RESULT_OPT', 'ALL_V')
 # unfold vertices in the path collection
 g.V().out("1..10").with('RESULT_OPT', 'ALL_V').endV()
 ```
+#### Getting Properites
+The properties of the elements (vertices and/or edges) in the path can be projected by `values()`-step or `valueMap()`-step.
+It is important to note that the specific elements targeted for property projection are determined by the `RESULT_OPT` setting. 
+For instance, if you configure `RESULT_OPT` as `ALL_V`,  `values()` or `valueMap()` will then project the properties of all vertices present in the path.
+```bash
+# get properties of each vertex in the path
+gremlin> g.V().both("1..3","knows").with('RESULT_OPT', 'ALL_V').values("name")
+==>[vadas, marko]
+==>[josh, marko]
+==>[marko, vadas]
+==>[marko, josh]
+==>[vadas, marko, vadas]
+==>[vadas, marko, josh]
+==>[josh, marko, vadas]
+==>[josh, marko, josh]
+==>[marko, vadas, marko]
+==>[marko, josh, marko]
+gremlin> g.V().both("1..3","knows").with('RESULT_OPT', 'ALL_V').valueMap("name","age")
+==>[{age=27, name=vadas}, {age=29, name=marko}]
+==>[{age=32, name=josh}, {age=29, name=marko}]
+==>[{age=29, name=marko}, {age=27, name=vadas}, {age=29, name=marko}]
+==>[{age=29, name=marko}, {age=32, name=josh}, {age=29, name=marko}]
+==>[{age=29, name=marko}, {age=27, name=vadas}]
+==>[{age=29, name=marko}, {age=32, name=josh}]
+==>[{age=27, name=vadas}, {age=29, name=marko}, {age=27, name=vadas}]
+==>[{age=27, name=vadas}, {age=29, name=marko}, {age=32, name=josh}]
+==>[{age=32, name=josh}, {age=29, name=marko}, {age=27, name=vadas}]
+==>[{age=32, name=josh}, {age=29, name=marko}, {age=32, name=josh}]
+```
+
 ### Expression
 
 Expressions, expressed via the `expr()` syntactic sugar, have been introduced to facilitate writing expressions directly within steps such as `select()`, `project()`, `where()`, and `group()`. This update is part of an ongoing effort to standardize Gremlin's expression syntax, making it more aligned with [SQL expression syntax](https://www.w3schools.com/sql/sql_operators.asp). The updated syntax, effective from version 0.27.0, streamlines user operations and enhances readability. Below, we detail the updated syntax definitions and point out key distinctions from the syntax used prior to version 0.26.0.

@@ -271,9 +271,7 @@ class HQPSClient(object):
             )
             response = api_instance.get_service_status()
             if CLUSTER_TYPE == "HOSTS":
-                host = get_public_ip()
-                if host is None:
-                    host = get_internal_ip()
+                host = get_internal_ip()
                 if response.status == "Running" and response.graph is not None:
                     g = response.graph.to_dict()
                     serving_graph_id = g["id"]
@@ -283,9 +281,9 @@ class HQPSClient(object):
                     status = {
                         "status": response.status,
                         "sdk_endpoints": {
-                            "cypher": f"neo4j://{host}:{response.bolt_port}",
-                            "hqps": f"http://{host}:{response.hqps_port}",
-                            "gremlin": f"ws://{host}:{response.gremlin_port}/gremlin",
+                            "cypher": f"neo4j://{host}:{response.bolt_port} (internal)",
+                            "hqps": f"http://{host}:{response.hqps_port} (internal)",
+                            "gremlin": f"ws://{host}:{response.gremlin_port}/gremlin (internal)",
                         },
                         "start_time": service_start_time,
                         "graph_id": g["id"],

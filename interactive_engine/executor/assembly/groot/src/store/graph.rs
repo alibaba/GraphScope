@@ -21,8 +21,18 @@ use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
 use crate::store::jna_response::JnaResponse;
 
 pub type GraphHandle = *const c_void;
+
+#[cfg(feature = "mimalloc")]
+use mimalloc_rust::*;
+
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
+
+#[cfg(not(feature = "mimalloc"))]
 use tikv_jemallocator::Jemalloc;
 
+#[cfg(not(feature = "mimalloc"))]
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 

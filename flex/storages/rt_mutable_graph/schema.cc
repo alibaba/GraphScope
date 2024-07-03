@@ -616,6 +616,20 @@ static Status parse_edge_properties(YAML::Node node,
                     "type of edge-" + label_name + " prop-" +
                         std::to_string(i - 1) + " is not specified...");
     }
+    // For edge properties, we have some constrains on the property type. We
+    // currently only support var_char. long_text string are not supported.
+    if (prop_type == PropertyType::StringMap()) {
+      LOG(ERROR) << "Please use varchar as the type of edge-" << label_name
+                 << " prop-" << i - 1
+                 << ", if you want to use string property: " << prop_type
+                 << ", prop_type.enum" << prop_type.type_enum;
+      return Status(StatusCode::InvalidSchema,
+                    "Please use varchar as the type of edge-" + label_name +
+                        " prop-" + std::to_string(i - 1) +
+                        ", if you want to "
+                        "use string property.");
+    }
+
     if (!get_scalar(node[i], "property_name", prop_name_str)) {
       LOG(ERROR) << "name of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
@@ -703,7 +717,7 @@ static Status parse_vertex_schema(YAML::Node node, Schema& schema) {
           "Primary key " + primary_key_name + " is not found in properties");
     }
     if (property_types[primary_key_inds[i]] != PropertyType::kInt64 &&
-        property_types[primary_key_inds[i]] != PropertyType::kString &&
+        property_types[primary_key_inds[i]] != PropertyType::kStringView &&
         property_types[primary_key_inds[i]] != PropertyType::kUInt64 &&
         property_types[primary_key_inds[i]] != PropertyType::kInt32 &&
         property_types[primary_key_inds[i]] != PropertyType::kUInt32 &&
@@ -769,16 +783,6 @@ static Status parse_edge_schema(YAML::Node node, Schema& schema) {
   RETURN_IF_NOT_OK(parse_edge_properties(node["properties"], edge_label_name,
                                          property_types, prop_names,
                                          schema.GetVersion()));
-
-  // TODO(zhanglei): Remove this check after multiple edge properties are
-  // supported.
-  if (property_types.size() > 1) {
-    LOG(ERROR) << "Currently edge can not have "
-                  "more than one property";
-    return Status(StatusCode::InvalidSchema,
-                  "Currently edge can not have "
-                  "more than one property");
-  }
 
   if (node["description"]) {
     description = node["description"].as<std::string>();

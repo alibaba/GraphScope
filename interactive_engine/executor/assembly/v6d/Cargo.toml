@@ -22,4 +22,9 @@ pegasus_server = { path = "../../engine/pegasus/server" }
 runtime = {path = "../../ir/runtime", features = ["with_v6d"]}
 graph_proxy = {path = "../../ir/graph_proxy", features = ["with_global_query", "with_v6d"]}
 libz-sys= "1.1.9"  # temporary fix for 'could not find native static library "`z`', perhaps an -L flag is missing?' in graphscope-dev:wheel
+# from https://github.com/lemonhx/mimalloc-rust
+mimalloc-rust = {version = "0.2.1", optional = true}
 
+[features]
+default = []
+mimalloc = ["mimalloc-rust"]

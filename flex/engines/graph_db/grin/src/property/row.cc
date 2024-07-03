@@ -161,7 +161,7 @@ const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt,
     return static_cast<const float*>((*_r)[idx]);
   case GRIN_DATATYPE::Double:
     return static_cast<const double*>((*_r)[idx]);
-  case GRIN_DATATYPE::String:
+  case GRIN_DATATYPE::StringView:
     return static_cast<const char*>((*_r)[idx]);
   case GRIN_DATATYPE::Date32:
     return static_cast<const int32_t*>((*_r)[idx]);
@@ -244,7 +244,7 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
       }
       break;
     }
-    case GRIN_DATATYPE::String: {
+    case GRIN_DATATYPE::StringView: {
       auto _col = static_cast<const gs::StringColumn*>(col);
       auto s = _col->get_view(vid);
       auto len = s.size() + 1;
@@ -317,7 +317,7 @@ GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
     r->emplace_back(new uint64_t(_e->data.value.ul));
     break;
   }
-  case GRIN_DATATYPE::String: {
+  case GRIN_DATATYPE::StringView: {
     auto s = _e->data.value.s;
     auto len = s.size() + 1;
     char* out = new char[len];
