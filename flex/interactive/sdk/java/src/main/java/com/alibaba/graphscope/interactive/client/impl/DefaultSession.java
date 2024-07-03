@@ -56,7 +56,7 @@ public class DefaultSession implements Session {
      *
      * @param uri should be in the format "http://host:port"
      */
-    private DefaultSession(String uri) {
+    private DefaultSession(String uri, String storedProcUri) {
         client = new ApiClient();
         client.setBasePath(uri);
         client.setReadTimeout(DEFAULT_READ_TIMEOUT);
@@ -71,30 +71,32 @@ public class DefaultSession implements Session {
 
         utilsApi = new UtilsApi(client);
 
-        Result<ServiceStatus> status = getServiceStatus();
-        if (!status.isOk()) {
-            throw new RuntimeException(
-                    "Failed to connect to the server: " + status.getStatusMessage());
-        }
-        // TODO: should construct queryService from a endpoint, not a port
-        Integer queryPort = status.getValue().getHqpsPort();
+        if (storedProcUri == null) {
+            Result<ServiceStatus> status = getServiceStatus();
+            if (!status.isOk()) {
+                throw new RuntimeException(
+                        "Failed to connect to the server: " + status.getStatusMessage());
+            }
+            // TODO: should construct queryService from a endpoint, not a port
+            Integer queryPort = status.getValue().getHqpsPort();
 
-        // Replace the port with the query port, http:://host:port -> http:://host:queryPort
-        String queryUri = uri.replaceFirst(":[0-9]+", ":" + queryPort);
-        System.out.println("Query URI: " + queryUri);
+            // Replace the port with the query port, http:://host:port -> http:://host:queryPort
+            storedProcUri = uri.replaceFirst(":[0-9]+", ":" + queryPort);
+            System.out.println("Query URI: " + storedProcUri);
+        }
         queryClient = new ApiClient();
-        queryClient.setBasePath(queryUri);
+        queryClient.setBasePath(storedProcUri);
         queryClient.setReadTimeout(DEFAULT_READ_TIMEOUT);
         queryClient.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
         queryApi = new QueryServiceApi(queryClient);
     }
 
-    public static DefaultSession newInstance(String uri) {
-        return new DefaultSession(uri);
+    public static DefaultSession newInstance(String adminUri) {
+        return new DefaultSession(adminUri, null);
     }
 
-    public static DefaultSession newInstance(String host, int port) {
-        return new DefaultSession("http://" + host + ":" + port);
+    public static DefaultSession newInstance(String adminUri, String storedProcUri) {
+        return new DefaultSession(adminUri, storedProcUri);
     }
 
     /**
