@@ -341,11 +341,9 @@ ODPSTableRecordBatchSupplier::GetNextBatch() {
 
 std::shared_ptr<IFragmentLoader> ODPSFragmentLoader::Make(
     const std::string& work_dir, const Schema& schema,
-    const LoadingConfig& loading_config, int32_t thread_num,
-    bool build_csr_in_mem, bool use_mmap_vector) {
+    const LoadingConfig& loading_config) {
   return std::shared_ptr<IFragmentLoader>(
-      new ODPSFragmentLoader(work_dir, schema, loading_config, thread_num,
-                             build_csr_in_mem, use_mmap_vector));
+      new ODPSFragmentLoader(work_dir, schema, loading_config));
 }
 void ODPSFragmentLoader::init() { odps_read_client_.init(); }
 
@@ -451,8 +449,8 @@ void ODPSFragmentLoader::loadVertices() {
          ++iter) {
       vertex_files.emplace_back(iter->first, iter->second);
     }
-    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, " << " "
-              << vertex_files.size() << " vertex files, ";
+    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, "
+              << " " << vertex_files.size() << " vertex files, ";
     std::atomic<size_t> v_ind(0);
     std::vector<std::thread> threads(thread_num_);
     for (int i = 0; i < thread_num_; ++i) {

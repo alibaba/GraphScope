@@ -64,8 +64,7 @@ int main(int argc, char** argv) {
    *
    */
   desc.add_options()("help", "Display help message")(
-      "version,v", "Display version")("parallelism,p",
-                                      bpo::value<uint32_t>()->default_value(1),
+      "version,v", "Display version")("parallelism,p", bpo::value<uint32_t>(),
                                       "parallelism of bulk loader")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
@@ -90,7 +89,6 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  uint32_t parallelism = vm["parallelism"].as<uint32_t>();
   std::string data_path = "";
   std::string bulk_load_config_path = "";
   std::string graph_schema_path = "";
@@ -110,17 +108,6 @@ int main(int argc, char** argv) {
     return -1;
   }
   bulk_load_config_path = vm["bulk-load"].as<std::string>();
-  bool build_csr_in_mem = false;
-  if (vm.count("build-csr-in-mem")) {
-    build_csr_in_mem = vm["build-csr-in-mem"].as<bool>();
-    LOG(INFO) << "batch init in memory: " << static_cast<int>(build_csr_in_mem);
-  }
-
-  bool use_mmap_vector = false;
-  if (vm.count("use-mmap-vector")) {
-    use_mmap_vector = vm["use-mmap-vector"].as<bool>();
-    LOG(INFO) << "use mmap vector: " << static_cast<int>(use_mmap_vector);
-  }
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -139,6 +126,19 @@ int main(int argc, char** argv) {
     LOG(ERROR) << "Fail to parse loading config file: "
                << loading_config_res.status().error_message();
     return -1;
+  }
+
+  // check whether parallelism, build_csr_in_mem, use_mmap_vector are overriden
+  if (vm.count("parallelism")) {
+    loading_config_res.value().SetParallelism(vm["parallelism"].as<uint32_t>());
+  }
+  if (vm.count("build-csr-in-mem")) {
+    loading_config_res.value().SetBuildCsrInMem(
+        vm["build-csr-in-mem"].as<bool>());
+  }
+  if (vm.count("use-mmap-vector")) {
+    loading_config_res.value().SetUseMmapVector(
+        vm["use-mmap-vector"].as<bool>());
   }
 
   std::filesystem::path data_dir_path(data_path);
@@ -163,8 +163,7 @@ int main(int argc, char** argv) {
   std::signal(SIGABRT, signal_handler);
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
-      data_dir_path.string(), schema_res.value(), loading_config_res.value(),
-      parallelism, build_csr_in_mem, use_mmap_vector);
+      data_dir_path.string(), schema_res.value(), loading_config_res.value());
   loader->LoadFragment();
 
   t += grape::GetCurrentTime();
