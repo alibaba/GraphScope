@@ -81,7 +81,10 @@ const std::vector<bool>& HeartBeatChecker::get_endpoint_status() const {
 HttpForwardingResponse to_response(const httplib::Result& res) {
   if (res.error() != httplib::Error::Success) {
     LOG(ERROR) << "Failed to send request: " << res.error()
-               << ", response: " << res.value();
+               << ", response body: " << res.value().body;
+    for (auto& header : res.value().headers) {
+      LOG(ERROR) << "Header: " << header.first << ", " << header.second;
+    }
     return std::make_pair(static_cast<int32_t>(res.error()),
                           httplib::to_string(res.error()));
   }
