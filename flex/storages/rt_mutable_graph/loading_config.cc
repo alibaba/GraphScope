@@ -835,6 +835,9 @@ int32_t LoadingConfig::GetBatchSize() const {
 }
 
 bool LoadingConfig::GetIsBatchReader() const {
+  if (metadata_.find(reader_options::BATCH_READER) == metadata_.end()) {
+    return reader_options::DEFAULT_BATCH_READER;
+  }
   auto str = metadata_.at(reader_options::BATCH_READER);
   return str == "true" || str == "True" || str == "TRUE";
 }
