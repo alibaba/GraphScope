@@ -34,6 +34,10 @@ To illustrate, let's examine the `examples/modern_import_full.yaml` file. This c
 
 ``` yaml
 loading_config: 
+  x_csr_params:
+    parallelism: 1
+    build_csr_in_mem: true
+    use_mmap_vector: true
   data_source:
     scheme: file
     location: /home/modern_graph/ 
@@ -227,6 +231,9 @@ The table below offers a detailed breakdown of each configuration item. In this 
 | loading_config.format.metadata.escaping | false | Whether escaping is used | No |
 | loading_config.format.metadata.escape_char | '\\' | Escaping character (if `escaping` is true) | No |
 | loading_config.format.metadata.batch_size | 4MB | The size of batch for reading from files | No |
+| loading_config.x_csr_params.parallelism | 1 | Number of threads used for bulk loading | No |
+| loading_config.x_csr_params.build_csr_in_mem | false | Whether to build csr fully in memory | No |
+| loading_config.x_csr_params.use_mmap_vector | false | Whether to use mmap_vector rather than mmap_array for building | No |
 | |  |  |  |
 | **vertex_mappings** | N/A | Define how to map the raw data into a graph vertex in the schema | Yes |
 | vertex_mappings.type_name |	N/A |	Name of the vertex type |	Yes |

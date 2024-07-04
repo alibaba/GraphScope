@@ -24,43 +24,8 @@ import unittest
 import pytest
 
 from gs_interactive.client.driver import Driver
-from gs_interactive.models.base_edge_type_vertex_type_pair_relations_inner import (
-    BaseEdgeTypeVertexTypePairRelationsInner,
-)
-from gs_interactive.models.create_edge_type import CreateEdgeType
-from gs_interactive.models.create_graph_request import CreateGraphRequest
-from gs_interactive.models.create_graph_schema_request import (
-    CreateGraphSchemaRequest,
-)
-from gs_interactive.models.create_procedure_request import (
-    CreateProcedureRequest,
-)
-from gs_interactive.models.create_property_meta import CreatePropertyMeta
-from gs_interactive.models.create_vertex_type import CreateVertexType
-from gs_interactive.models.edge_mapping import EdgeMapping
-from gs_interactive.models.edge_mapping_type_triplet import (
-    EdgeMappingTypeTriplet,
-)
-from gs_interactive.models.gs_data_type import GSDataType
-from gs_interactive.models.typed_value import TypedValue
-from gs_interactive.models.job_status import JobStatus
-from gs_interactive.models.long_text import LongText
-from gs_interactive.models.primitive_type import PrimitiveType
-from gs_interactive.models.schema_mapping import SchemaMapping
-from gs_interactive.models.schema_mapping_loading_config import (
-    SchemaMappingLoadingConfig,
-)
-from gs_interactive.models.schema_mapping_loading_config_format import (
-    SchemaMappingLoadingConfigFormat,
-)
-from gs_interactive.models.schema_mapping_loading_config_data_source import (
-    SchemaMappingLoadingConfigDataSource,
-)
-from gs_interactive.models.start_service_request import StartServiceRequest
-from gs_interactive.models.string_type import StringType
-from gs_interactive.models.string_type_string import StringTypeString
-from gs_interactive.models.vertex_mapping import VertexMapping
-from gs_interactive.models.query_request import QueryRequest
+from gs_interactive.models import *
+
 
 class TestDriver(unittest.TestCase):
     """Test usage of driver"""
@@ -97,7 +62,7 @@ class TestDriver(unittest.TestCase):
         self._graph_id = self.createGraph()
         self.bulkLoading()
         self.bulkLoadingUploading()
-        self.waitJobFinish()
+        self.bulkLoadingFailure()
         self.list_graph()
         self.runCypherQuery()
         self.runGremlinQuery()
@@ -109,6 +74,7 @@ class TestDriver(unittest.TestCase):
         self.callProcedure()
         self.callProcedureWithHttp()
         self.callProcedureWithHttpCurrent()
+        self.createDriver()
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
@@ -169,6 +135,11 @@ class TestDriver(unittest.TestCase):
                 data_source=SchemaMappingLoadingConfigDataSource(scheme="file", location=location),
                 import_option="init",
                 format=SchemaMappingLoadingConfigFormat(type="csv"),
+                x_csr_params=SchemaMappingLoadingConfigXCsrParams(
+                    parallelism=1,
+                    build_csr_in_mem=True,
+                    use_mmap_vector=True
+                ),
             ),
             vertex_mappings=[
                 VertexMapping(type_name="person", inputs=[person_csv_path])
@@ -186,7 +157,8 @@ class TestDriver(unittest.TestCase):
         )
         resp = self._sess.bulk_loading(self._graph_id, schema_mapping)
         assert resp.is_ok()
-        self._job_id = resp.get_value().job_id
+        job_id = resp.get_value().job_id
+        assert self.waitJobFinish(job_id)
 
 
     def bulkLoadingUploading(self):
@@ -220,22 +192,59 @@ class TestDriver(unittest.TestCase):
         )
         resp = self._sess.bulk_loading(self._graph_id, schema_mapping)
         assert resp.is_ok()
-        self._job_id = resp.get_value().job_id
+        job_id = resp.get_value().job_id
+        assert self.waitJobFinish(job_id)
 
-    def waitJobFinish(self):
-        assert self._job_id is not None
+    def waitJobFinish(self, job_id: str):
+        assert job_id is not None
         while True:
-            resp = self._sess.get_job(self._job_id)
+            resp = self._sess.get_job(job_id)
             assert resp.is_ok()
             status = resp.get_value().status
             print("job status: ", status)
             if status == "SUCCESS":
-                break
+                return True
             elif status == "FAILED":
-                raise Exception("job failed")
+                return False
             else:
                 time.sleep(1)
-        print("job finished")
+    
+    def bulkLoadingFailure(self):
+        """
+        Submit a bulk loading job with invalid data, and expect the job to fail.
+        """
+        assert os.environ.get("FLEX_DATA_DIR") is not None
+        person_csv_path = os.path.join(os.environ.get("FLEX_DATA_DIR"), "person.csv")
+        knows_csv_path = os.path.join(
+            os.environ.get("FLEX_DATA_DIR"), "person_knows_person.csv"
+        )
+        print("test bulk loading: ", self._graph_id)
+        schema_mapping = SchemaMapping(
+            loading_config=SchemaMappingLoadingConfig(
+                import_option="init",
+                format=SchemaMappingLoadingConfigFormat(type="csv"),
+            ),
+            vertex_mappings=[
+                # Intentionally use the wrong file for the vertex mapping
+                VertexMapping(type_name="person", inputs=[knows_csv_path])
+            ],
+            edge_mappings=[
+                EdgeMapping(
+                    type_triplet=EdgeMappingTypeTriplet(
+                        edge="knows",
+                        source_vertex="person",
+                        destination_vertex="person",
+                    ),
+                    # Intentionally use the wrong file for the edge mapping
+                    inputs=[person_csv_path],
+                )
+            ],
+        )
+        resp = self._sess.bulk_loading(self._graph_id, schema_mapping)
+        assert resp.is_ok()
+        job_id = resp.get_value().job_id
+        # Expect to fail
+        assert self.waitJobFinish(job_id) == False
 
     def list_graph(self):
         resp = self._sess.list_graphs()
@@ -399,6 +408,11 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.call_procedure_current(params = req)
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
+    
+    def createDriver(self):
+        driver = Driver()
+        sess = driver.getDefaultSession()
+        print("create driver: ", sess)     
 
 if __name__ == "__main__":
     unittest.main()

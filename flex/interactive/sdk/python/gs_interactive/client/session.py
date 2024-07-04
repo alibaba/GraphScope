@@ -320,8 +320,8 @@ class DefaultSession(Session):
     PROTOCOL_FORMAT = "proto"
     JSON_FORMAT = "json"
     ENCODER_FORMAT = "encoder"
-    def __init__(self, uri: str):
-        self._client = ApiClient(Configuration(host=uri))
+    def __init__(self, admin_uri: str, stored_proc_uri: str = None):
+        self._client = ApiClient(Configuration(host=admin_uri))
 
         self._graph_api = AdminServiceGraphManagementApi(self._client)
         self._job_api = AdminServiceJobManagementApi(self._client)
@@ -330,18 +330,16 @@ class DefaultSession(Session):
         self._edge_api = GraphServiceEdgeManagementApi(self._client)
         self._vertex_api = GraphServiceVertexManagementApi(self._client)
         self._utils_api = UtilsApi(self._client)
-        # TODO(zhanglei): Get endpoint from service, current implementation is adhoc.
-        # get service port
-        service_status = self.get_service_status()
-        if not service_status.is_ok():
-            raise Exception("Failed to get service status: ", service_status.get_status_message())
-        service_port = service_status.get_value().hqps_port
-        # replace the port in uri
-        uri = uri.split(":")
-        uri[-1] = str(service_port)
-        uri = ":".join(uri)
-        self._query_client = ApiClient(Configuration(host=uri))
-
+        if stored_proc_uri is None:
+            service_status = self.get_service_status()
+            if not service_status.is_ok():
+                raise Exception("Failed to get service status: ", service_status.get_status_message())
+            service_port = service_status.get_value().hqps_port
+            # replace the port in uri
+            splitted = admin_uri.split(":")
+            splitted[-1] = str(service_port)
+            stored_proc_uri = ":".join(splitted)
+        self._query_client = ApiClient(Configuration(host=stored_proc_uri))
         self._query_api = QueryServiceApi(self._query_client)
 
     def __enter__(self):
