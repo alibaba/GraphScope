@@ -94,7 +94,7 @@ COPY --from=builder /home/graphscope/GraphScope/flex/interactive/docker/entrypoi
 COPY --from=builder /home/graphscope/GraphScope/flex/third_party/nlohmann-json/single_include/* /opt/flex/include/
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml
 # change the default graph name.
-RUN sed -i 's/default_graph: ldbc/default_graph: gs_interactive_default_graph/g' /opt/flex/share/engine_config.yaml
+RUN sed -i 's/default_graph: modern_graph/default_graph: gs_interactive_default_graph/g' /opt/flex/share/engine_config.yaml
 
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
