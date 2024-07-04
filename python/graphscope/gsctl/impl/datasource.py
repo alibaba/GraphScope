@@ -35,6 +35,10 @@ def bind_datasource_in_batch(graph_identifier: str, datasource: dict) -> str:
             if location.startswith("@"):
                 location = location[1:]
                 mapping["inputs"][index] = upload_file(location)
+
+    print(datasource)
+    a = SchemaMapping.from_dict(datasource)
+    print(a)
     # bind data source
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(

@@ -78,14 +78,14 @@ engine:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
-    tag: "v0.2.4"
+    tag: "0.27.0"
 
 # docker artifacts for frontend
 frontend:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
-    tag: "v0.2.4"
+    tag: "v0.27.0"
 ```
 
 - pvc

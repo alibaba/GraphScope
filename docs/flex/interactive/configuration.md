@@ -1,9 +1,11 @@
 # Engine Configuration
 
+> TODO: Currently `gsctl` doesn't support the following command!
+
 Starting your GraphScope Interactive service can be straightforward, as demonstrated in our [getting_started](./getting_started.md) guide. By default, executing the command:
 
 ```bash
-bin/gs_interactive service start
+gsctl use GRAPH <name>
 ```
 
 will initialize the service with its default settings. However, GraphScope is designed to be flexible and adaptable to your specific needs. This means you can tailor the service's behavior using custom configurations.
@@ -12,7 +14,7 @@ will initialize the service with its default settings. However, GraphScope is de
 To customize the service's settings, you can provide a YAML configuration file. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
 
 ```bash
-bin/gs_interactive service start -c ./conf/engine_config.yaml
+gsctl use GRAPH <name> -c ./engine_config.yaml
 ```
 
 Note: Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the sections that follow.
@@ -22,7 +24,7 @@ If you already have an Interactive service running and wish to apply a new set o
 
 To restart the service with your custom configuration, use the following command:
 ```bash
-bin/gs_interactive service restart -c ./conf/engine_config.yaml
+gsctl service restart -c ./conf/engine_config.yaml
 ```
 Remember, any changes made in the configuration file will only take effect after the service has been restarted with the updated file.
 

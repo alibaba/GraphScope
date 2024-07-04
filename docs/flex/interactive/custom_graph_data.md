@@ -9,45 +9,20 @@ We'll use the [`movies`](https://github.com/neo4j-graph-examples/movies/) graph 
 
 ## Step 1: Create a New Graph
 
-Before starting, please make sure you are in the initial environment. If not, please destroy the currently running database first.
+Before starting, please make sure you are in the GLOBAL context.
 ```bash
-bin/gs_interactive service stop
-bin/gs_interactive destroy
+gsctl use GLOBAL
 ```
 
-To create a new graph, you will need the original data of the graph. We currently support files in CSV format. Fortunately, we have prepared it for you, and you can find it in the directory `{INTERACTIVE_HOME}/examples/movies/`. 
+To create a new graph, you will need the original data of the graph. We currently support files in CSV format. Fortunately, we have prepared it for you, and you can find it here [movie-graph](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/movies). 
 
-To begin, ensure you've adjusted the settings in the `{INTERACTIVE_HOME}/conf/interactive.yaml` file. By utilizing Docker's volume mount feature, you can map an external folder containing the CSV files of `movies` to the internal directory at `/home/graphscope/movies`. It's crucial that the internal data path starts with `/home/graphscope` and concludes with `movies`, reflecting the name of your graph. If you're looking to import custom data, you can do volume mapping in a similar way.
-
-```yaml
-version: v0.3
-volume:
-  # replace INTERACTIVE_HOME with actual path.
-  - {INTERACTIVE_HOME}/examples/movies:/home/graphscope/movies 
-```
-
-Now init the database.
-```bash
-./bin/gs_interactive init -c ./conf/interactive.yaml
-```
-
-To create a new graph "movies", execute the following command:
-```bash
-bin/gs_interactive database create -g movies -c ./examples/movies/graph.yaml
-```
-
-The `./examples/movies/graph.yaml` file defines the graph schema. In this file:
-
-- For each vertex type, specify its name, allowed properties, primary keys (if any), and other relevant details.
-- For each edge type, define the source/destination vertex types and their associated properties.
-
-Ensure that each graph in the file has a unique name and an associated schema. Here's a sample schema for the "movies" graph:
+The schema of movie-graph is defined in `movie_graph.yaml`.
 ```yaml
 name: movies
 schema:
   vertex_types:
     - type_name: Movie
-      properties:
+      properties: 
         - property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
@@ -57,11 +32,11 @@ schema:
         - property_name: tagline
           property_type:
             string:
-              long_text:
+              long_text: ""
         - property_name: title
           property_type:
             string:
-              long_text:
+              long_text: ""
       primary_keys:
         - id
     - type_name: Person
@@ -75,7 +50,21 @@ schema:
         - property_name: name
           property_type:
             string:
-              long_text:
+              long_text: ""
+      primary_keys:
+        - id
+    - type_name: User
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: born
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+        - property_name: name
+          property_type:
+            string:
+              long_text: ""
       primary_keys:
         - id
   edge_types:
@@ -91,7 +80,7 @@ schema:
           relation: MANY_TO_MANY
     - type_name: REVIEW
       vertex_type_pair_relations:
-        - source_vertex: Person
+        - source_vertex: User
           destination_vertex: Movie
           relation: MANY_TO_MANY
       properties:
@@ -100,7 +89,7 @@ schema:
             primitive_type: DT_SIGNED_INT32
     - type_name: FOLLOWS
       vertex_type_pair_relations:
-        - source_vertex: Person
+        - source_vertex: User
           destination_vertex: Person
           relation: MANY_TO_MANY
     - type_name: WROTE
@@ -115,68 +104,60 @@ schema:
           relation: MANY_TO_MANY
 ```
 
-Supported primitive data types for properties include:
-- DT_SIGNED_INT32
-- DT_UNSIGNED_INT32
-- DT_SIGNED_INT64
-- DT_UNSIGNED_INT64
-- DT_BOOL
-- DT_FLOAT
-- DT_DOUBLE
+In this file:
+
+- For each vertex type, specify its name, allowed properties, primary keys (if any), and other relevant details.
+- For each edge type, define the source/destination vertex types and their associated properties.
+
+
+To create a new graph "movies", execute the following command:
+```bash
+gsctl create graph -f ./movie_graph.yaml
+```
 
 For a comprehensive list of supported types, please refer to the [data model](./data_model) page.
 
 ## Step 2: Import Graph Data
-To import your data, utilize the `import` functionality of the administrative tool:
-```bash
-bin/gs_interactive database import -g movies -c examples/movies/import.yaml
-```
 
-The `import.yaml` file maps raw data fields to the schema of the "modern" graph created in Step 1. Here's an illustrative example:
+To import your data, you need to two configuration files, `movie_import.yaml` and `job_config.yaml`
+
+#### Bind Data Source
+
+The `import.yaml` file maps raw data fields to the schema of the "modern" graph created in Step 1. Here's an illustrative example `movie_import.yaml`:
 
 ```yaml
-graph: movies
-loading_config:
-  data_source:
-    scheme: file  # only file and odps is supported now
-    location: /home/graphscope/movies/
-  import_option: init # append, overwrite, only init is supported now
-  format:
-    type: csv
-    metadata:
-      delimiter: "|"  # other loading configuration places here
 vertex_mappings:
   - type_name: Person  # must align with the schema
     inputs:
-      - Person.csv
+      - "@/path/to/Person.csv"
   - type_name: Movie
     inputs:
-      - Movie.csv
+      - "@/path/to/Movie.csv"
 edge_mappings:
   - type_triplet:
       edge: ACTED_IN
       source_vertex:  Person
       destination_vertex:  Movie
     inputs:
-      - ACTED_IN.csv
+      - "@/path/to/ACTED_IN.csv"
   - type_triplet:
       edge: DIRECTED
       source_vertex:  Person
       destination_vertex:  Movie
     inputs:
-      - DIRECTED.csv
+      - "@/path/to/DIRECTED.csv"
   - type_triplet:
       edge: FOLLOWS
       source_vertex:  Person
       destination_vertex:  Person
     inputs:
-      - FOLLOWS.csv
+      - "@/path/to/FOLLOWS.csv"
   - type_triplet:
       edge: PRODUCED
       source_vertex:  Person
       destination_vertex:  Movie
     inputs:
-      - PRODUCED.csv
+      - "@/path/to/PRODUCED.csv"
   - type_triplet:
       edge: REVIEW
       source_vertex:  Person
@@ -187,25 +168,74 @@ edge_mappings:
           name: rating
         property: rating
     inputs:
-      - REVIEWED.csv
+      - "@/path/to/REVIEWED.csv"
   - type_triplet:
       edge: WROTE
       source_vertex:  Person
       destination_vertex:  Movie
     inputs:
-      - WROTE.csv
+      - "@/path/to/WROTE.csv"
 ```
 
-Note: The provided yaml file above offers a basic configuration for data importing. For a comprehensive understanding of data import configurations, please consult the [data import](./data_import) page.
+Note: The provided yaml file above offers a basic configuration for data importing. For a comprehensive understanding of data import configurations, please consult the [data import](./data_import) page. Remember to replace `@/path/to/xxx.csv` with the actual path to files.
+
+Now bind the datasource to `movie_graph` with following command
+
+```bash
+gsctl create datasource -f ./movie_import.yaml -g movies
+```
+
+#### Create Data Loading Job
+
+A `job_config.yaml` is  also needed to specify the configuration for bulk loading.
+
+```yaml
+loading_config:
+  import_option: overwrite
+  format:
+    type: csv
+    metadata:
+      delimiter: "|"
+      header_row: "true"
+
+vertices:
+  - type_name: Person
+  - type_name: Movie
+
+edges:
+  - type_name: ACTED_IN
+    source_vertex:  Person
+    destination_vertex:  Movie
+  - type_name: DIRECTED
+    source_vertex:  Person
+    destination_vertex:  Movie
+  - type_name: FOLLOWS
+    source_vertex:  Person
+    destination_vertex:  Person
+  - type_name: PRODUCED
+    source_vertex:  Person
+    destination_vertex:  Movie
+  - type_name: REVIEW
+    source_vertex:  Person
+    destination_vertex:  Movie
+  - type_name: WROTE
+    source_vertex:  Person
+    destination_vertex:  Movie
+```
+
+Now create a bulk loading job  with following command
+
+```bash
+gsctl create loaderjob -f ./job_config.yaml -g movies
+```
 
 ## Step 3: Start the Service with the New Graph
+
 To start the service using the new graph, run:
+
 ```bash
-bin/gs_interactive service start -g movies
+gsctl use GRAPH movies
 ```
-
-Note: Stopping a prior service is necessary to start a new service with an alternative graph.
-
 
 Now you can move to [Stored Procedure](./stored_procedures) to explore querying via stored procedures.
 
