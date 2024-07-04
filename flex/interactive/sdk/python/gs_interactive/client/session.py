@@ -19,10 +19,8 @@
 from abc import ABCMeta, abstractmethod
 from typing import Annotated, Any, Dict, List, Optional, Union
 
+from pydantic import Field, StrictBytes, StrictStr
 
-from pydantic import Field, StrictStr, StrictBytes
-
-from gs_interactive.client.status import Status, StatusCode
 from gs_interactive.api.admin_service_graph_management_api import (
     AdminServiceGraphManagementApi,
 )
@@ -41,38 +39,34 @@ from gs_interactive.api.graph_service_edge_management_api import (
 from gs_interactive.api.graph_service_vertex_management_api import (
     GraphServiceVertexManagementApi,
 )
-from gs_interactive.api.utils_api import UtilsApi
 from gs_interactive.api.query_service_api import QueryServiceApi
+from gs_interactive.api.utils_api import UtilsApi
 from gs_interactive.api_client import ApiClient
+from gs_interactive.client.generated.results_pb2 import CollectiveResults
 from gs_interactive.client.result import Result
+from gs_interactive.client.status import Status, StatusCode
 from gs_interactive.configuration import Configuration
 from gs_interactive.models.create_graph_request import CreateGraphRequest
 from gs_interactive.models.create_graph_response import CreateGraphResponse
-from gs_interactive.models.create_procedure_request import (
-    CreateProcedureRequest,
-)
-from gs_interactive.models.create_procedure_response import (
-    CreateProcedureResponse,
-)
+from gs_interactive.models.create_procedure_request import CreateProcedureRequest
+from gs_interactive.models.create_procedure_response import CreateProcedureResponse
 from gs_interactive.models.edge_request import EdgeRequest
 from gs_interactive.models.get_graph_response import GetGraphResponse
-from gs_interactive.models.get_graph_schema_response import (
-    GetGraphSchemaResponse,
+from gs_interactive.models.get_graph_schema_response import GetGraphSchemaResponse
+from gs_interactive.models.get_graph_statistics_response import (
+    GetGraphStatisticsResponse,
 )
-from gs_interactive.models.get_graph_statistics_response import GetGraphStatisticsResponse
 from gs_interactive.models.get_procedure_response import GetProcedureResponse
 from gs_interactive.models.job_response import JobResponse
 from gs_interactive.models.job_status import JobStatus
+from gs_interactive.models.query_request import QueryRequest
 from gs_interactive.models.schema_mapping import SchemaMapping
 from gs_interactive.models.service_status import ServiceStatus
 from gs_interactive.models.start_service_request import StartServiceRequest
-from gs_interactive.models.update_procedure_request import (
-    UpdateProcedureRequest,
-)
-from gs_interactive.models.query_request import QueryRequest
-from gs_interactive.models.vertex_request import VertexRequest
-from gs_interactive.client.generated.results_pb2 import CollectiveResults
+from gs_interactive.models.update_procedure_request import UpdateProcedureRequest
 from gs_interactive.models.upload_file_response import UploadFileResponse
+from gs_interactive.models.vertex_request import VertexRequest
+
 
 class EdgeInterface(metaclass=ABCMeta):
     @abstractmethod
@@ -167,33 +161,25 @@ class GraphInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def get_graph_schema(
-        graph_id: Annotated[
-            StrictStr, Field(description="The id of graph to get")
-        ],
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphSchemaResponse]:
         raise NotImplementedError
 
     @abstractmethod
     def get_graph_meta(
-        graph_id: Annotated[
-            StrictStr, Field(description="The id of graph to get")
-        ],
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphResponse]:
         raise NotImplementedError
 
     @abstractmethod
     def get_graph_statistics(
-        graph_id: Annotated[
-            StrictStr, Field(description="The id of graph to get")
-        ],
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphStatisticsResponse]:
         raise NotImplementedError
 
     @abstractmethod
     def delete_graph(
-        graph_id: Annotated[
-            StrictStr, Field(description="The id of graph to delete")
-        ],
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to delete")],
     ) -> Result[str]:
         raise NotImplementedError
 
@@ -248,9 +234,7 @@ class ProcedureInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def call_procedure_current(
-        self, params: QueryRequest
-    ) -> Result[CollectiveResults]:
+    def call_procedure_current(self, params: QueryRequest) -> Result[CollectiveResults]:
         raise NotImplementedError
 
     @abstractmethod
@@ -260,6 +244,7 @@ class ProcedureInterface(metaclass=ABCMeta):
     @abstractmethod
     def call_procedure_current_raw(self, params: str) -> Result[str]:
         raise NotImplementedError
+
 
 class QueryServiceInterface:
     @abstractmethod
@@ -298,9 +283,12 @@ class JobInterface(metaclass=ABCMeta):
     def cancel_job(self, job_id: StrictStr) -> Result[str]:
         raise NotImplementedError
 
+
 class UiltsInterface(metaclass=ABCMeta):
     @abstractmethod
-    def upload_file(self, filestorage: Optional[Union[StrictBytes, StrictStr]]) -> Result[UploadFileResponse]:
+    def upload_file(
+        self, filestorage: Optional[Union[StrictBytes, StrictStr]]
+    ) -> Result[UploadFileResponse]:
         raise NotImplementedError
 
 
@@ -320,6 +308,7 @@ class DefaultSession(Session):
     PROTOCOL_FORMAT = "proto"
     JSON_FORMAT = "json"
     ENCODER_FORMAT = "encoder"
+
     def __init__(self, admin_uri: str, stored_proc_uri: str = None):
         self._client = ApiClient(Configuration(host=admin_uri))
 
@@ -333,7 +322,10 @@ class DefaultSession(Session):
         if stored_proc_uri is None:
             service_status = self.get_service_status()
             if not service_status.is_ok():
-                raise Exception("Failed to get service status: ", service_status.get_status_message())
+                raise Exception(
+                    "Failed to get service status: ",
+                    service_status.get_status_message(),
+                )
             service_port = service_status.get_value().hqps_port
             # replace the port in uri
             splitted = admin_uri.split(":")
@@ -453,7 +445,7 @@ class DefaultSession(Session):
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)
-    
+
     def get_graph_statistics(
         self,
         graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
@@ -466,9 +458,7 @@ class DefaultSession(Session):
 
     def delete_graph(
         self,
-        graph_id: Annotated[
-            StrictStr, Field(description="The id of graph to delete")
-        ],
+        graph_id: Annotated[StrictStr, Field(description="The id of graph to delete")],
     ) -> Result[str]:
         try:
             response = self._graph_api.delete_graph_with_http_info(graph_id)
@@ -564,9 +554,9 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_with_http_info(
-                graph_id = graph_id, 
-                x_interactive_request_format = self.JSON_FORMAT,
-                body=params.to_json()
+                graph_id=graph_id,
+                x_interactive_request_format=self.JSON_FORMAT,
+                body=params.to_json(),
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -577,15 +567,12 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
-    def call_procedure_current(
-        self, params: QueryRequest
-    ) -> Result[CollectiveResults]:
+    def call_procedure_current(self, params: QueryRequest) -> Result[CollectiveResults]:
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_current_with_http_info(
-                x_interactive_request_format = self.JSON_FORMAT,
-                body = params.to_json()
+                x_interactive_request_format=self.JSON_FORMAT, body=params.to_json()
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -601,21 +588,20 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_with_http_info(
-                graph_id = graph_id, 
-                x_interactive_request_format = self.ENCODER_FORMAT, 
-                body = params
+                graph_id=graph_id,
+                x_interactive_request_format=self.ENCODER_FORMAT,
+                body=params,
             )
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)
-        
+
     def call_procedure_current_raw(self, params: str) -> Result[str]:
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_current_with_http_info(
-                x_interactive_request_format = self.ENCODER_FORMAT, 
-                body = params
+                x_interactive_request_format=self.ENCODER_FORMAT, body=params
             )
             return Result.from_response(response)
         except Exception as e:
@@ -679,8 +665,10 @@ class DefaultSession(Session):
             return Result.from_response(response)
         except Exception as e:
             return Result.from_exception(e)
-    
-    def upload_file(self, filestorage: Optional[Union[StrictBytes, StrictStr]]) -> Result[UploadFileResponse]:
+
+    def upload_file(
+        self, filestorage: Optional[Union[StrictBytes, StrictStr]]
+    ) -> Result[UploadFileResponse]:
         try:
             print("uploading file: ", filestorage)
             response = self._utils_api.upload_file_with_http_info(filestorage)
@@ -696,17 +684,19 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def trim_path(self, path: str) -> str:
-        return path[1:] if path.startswith('@') else path
-    
+        return path[1:] if path.startswith("@") else path
+
     def check_file_mixup(self, schema_mapping: SchemaMapping) -> Result[SchemaMapping]:
-        root_dir_marked_with_at = False # Can not mix uploading file and not uploading file
-        location=None
+        root_dir_marked_with_at = (
+            False  # Can not mix uploading file and not uploading file
+        )
+        location = None
         if schema_mapping.loading_config and schema_mapping.loading_config.data_source:
-            if schema_mapping.loading_config.data_source.scheme != 'file':
+            if schema_mapping.loading_config.data_source.scheme != "file":
                 print("Only check mixup for file scheme")
                 return Result.ok(schema_mapping)
             location = schema_mapping.loading_config.data_source.location
-        if location and location.startswith('@'):
+        if location and location.startswith("@"):
             root_dir_marked_with_at = True
         extracted_files = []
         if schema_mapping.vertex_mappings:
@@ -715,28 +705,52 @@ class DefaultSession(Session):
                     for i, input in enumerate(vertex_mapping.inputs):
                         # First check whether input is valid
                         if location and not root_dir_marked_with_at:
-                            if input.startswith('@'):
-                                print("Root location given without @, but the input file starts with @" + input)
-                                return Result.error(Status(StatusCode.BAD_REQUEST, "Root location given without @, but the input file starts with @" + input), schema_mapping)
+                            if input.startswith("@"):
+                                print(
+                                    "Root location given without @, but the input file starts with @"
+                                    + input
+                                )
+                                return Result.error(
+                                    Status(
+                                        StatusCode.BAD_REQUEST,
+                                        "Root location given without @, but the input file starts with @"
+                                        + input,
+                                    ),
+                                    schema_mapping,
+                                )
                         if location:
-                            vertex_mapping.inputs[i] = location + '/' + self.trim_path(input)
+                            vertex_mapping.inputs[i] = (
+                                location + "/" + self.trim_path(input)
+                            )
                         extracted_files.append(vertex_mapping.inputs[i])
         if schema_mapping.edge_mappings:
             for edge_mapping in schema_mapping.edge_mappings:
                 if edge_mapping.inputs:
                     for i, input in enumerate(edge_mapping.inputs):
                         if location and not root_dir_marked_with_at:
-                            if input.startswith('@'):
-                                print("Root location given without @, but the input file starts with @" + input)
-                                return Result.error(Status(StatusCode.BAD_REQUEST, "Root location given without @, but the input file starts with @" + input), schema_mapping)
+                            if input.startswith("@"):
+                                print(
+                                    "Root location given without @, but the input file starts with @"
+                                    + input
+                                )
+                                return Result.error(
+                                    Status(
+                                        StatusCode.BAD_REQUEST,
+                                        "Root location given without @, but the input file starts with @"
+                                        + input,
+                                    ),
+                                    schema_mapping,
+                                )
                         if location:
-                            edge_mapping.inputs[i] = location + '/' + self.trim_path(input)
+                            edge_mapping.inputs[i] = (
+                                location + "/" + self.trim_path(input)
+                            )
                         extracted_files.append(edge_mapping.inputs[i])
         if extracted_files:
-            #count the number of files start with @
+            # count the number of files start with @
             count = 0
             for file in extracted_files:
-                if file.startswith('@'):
+                if file.startswith("@"):
                     count += 1
             if count == 0:
                 print("No file to upload")
@@ -746,7 +760,9 @@ class DefaultSession(Session):
                 return Result.error("Can not mix uploading file and not uploading file")
         return Result.ok(schema_mapping)
 
-    def upload_and_replace_input_inplace(self, schema_mapping: SchemaMapping) -> Result[SchemaMapping]:
+    def upload_and_replace_input_inplace(
+        self, schema_mapping: SchemaMapping
+    ) -> Result[SchemaMapping]:
         """
         For each input file in schema_mapping, if the file starts with @, upload the file to the server
         and replace the path with the path returned from the server.
@@ -755,7 +771,7 @@ class DefaultSession(Session):
             for vertex_mapping in schema_mapping.vertex_mappings:
                 if vertex_mapping.inputs:
                     for i, input in enumerate(vertex_mapping.inputs):
-                        if input.startswith('@'):
+                        if input.startswith("@"):
                             res = self.upload_file(input[1:])
                             if not res.is_ok():
                                 return Result.error(res.status, schema_mapping)
@@ -764,13 +780,13 @@ class DefaultSession(Session):
             for edge_mapping in schema_mapping.edge_mappings:
                 if edge_mapping.inputs:
                     for i, input in enumerate(edge_mapping.inputs):
-                        if input.startswith('@'):
+                        if input.startswith("@"):
                             res = self.upload_file(input[1:])
                             if not res.is_ok():
                                 return Result.error(res.status, schema_mapping)
                             edge_mapping.inputs[i] = res.get_value().file_path
         return Result.ok(schema_mapping)
-    
+
     def try_upload_files(self, schema_mapping: SchemaMapping) -> Result[SchemaMapping]:
         """
         Try to upload the input files if they are specified with a starting @
@@ -781,28 +797,28 @@ class DefaultSession(Session):
         or added to each file in vertex_mappings and edge_mappings.
 
         1. location: @/path/to/dir
-            inputs: 
+            inputs:
                 - @/path/to/file1
                 - @/path/to/file2
         2. location: /path/to/dir
-            inputs: 
+            inputs:
                 - @/path/to/file1
                 - @/path/to/file2
         3. location: @/path/to/dir
-            inputs: 
+            inputs:
                 - /path/to/file1
                 - /path/to/file2
         4. location: /path/to/dir
-            inputs: 
+            inputs:
                 - /path/to/file1
                 - /path/to/file2
         4. location: None
-            inputs: 
+            inputs:
                 - @/path/to/file1
                 - @/path/to/file2
         Among the above 4 cases, only the 1, 3, 5 case are valid, for 2,4 the file will not be uploaded
         """
-        
+
         check_mixup_res = self.check_file_mixup(schema_mapping)
         if not check_mixup_res.is_ok():
             return check_mixup_res
@@ -814,4 +830,3 @@ class DefaultSession(Session):
             return upload_res
         print("new schema_mapping: ", upload_res.get_value())
         return Result.ok(upload_res.get_value())
-        

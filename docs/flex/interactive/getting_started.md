@@ -17,210 +17,39 @@ Make sure `GraphScope Interactive` is installed before proceeding on. If not, pl
 
 ## Install Interactive
 
-We offer a command line tool called `gsctl`, which allows you to install, start, and manage Interactive services.
-
-The Interactive service is deployed in a docker container, ensuring compatibility across different runtime environments.
-
-```{note}
-Docker is required.
-```
-
-```bash
-pip3 install gsctl
-```
+See [Installation Guide](./installation.md) for instructions on how to install and deploy Interactive.
 
 
-## Deploy in Local Mode
-
-You can deploy the Interactive service locally with the following command.
-```bash
-gsctl instance deploy --type interactive 
-# Or you can customize the port number
-gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001 --gremlin-port 8183
-```
-
-```{note}
-1. Beside from the interactive server, a coordinator server is also launched. The coordinator server acts like the `ApiServer` for k8s,
-allowing users to interact with the GraphScope platform through a simplified and consistent set of API.
-2. Gremlin service is disabled by default, To enable it, try specifying the Gremlin port.
-```
-
-The following message will display on your screen to inform you about the available services:
-
-```txt
-Coordinator is listening on {coordinator_port} port, you can connect to coordinator by:
-    gsctl connect --coordinator-endpoint http://127.0.0.1:{coordinator_port}
-
-Interactive service is ready, you can connect to the interactive service with interactive sdk:
-Interactive Admin service is listening at
-    http://127.0.0.1{admin_port},
-You can connect to admin service with Interactive SDK, with following environment variables declared.
-
-############################################################################################
-    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
-    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
-    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
-    export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
-############################################################################################
-```
-
-Remember to copy the environment exporting commands and execute them.
+## Connect to Interactive Service
 
 You could connect the `coordinator` via `gsctl`. 
 
 ```bash
-gsctl connect --coordinator-endpoint http://127.0.0.1:8081
+gsctl connect --coordinator-endpoint http://127.0.0.1:8080
+# change the port number if you have customized the coordinator port.
 ```
 
-For the detail usage of gsctl, please refer to the documentation of `gsctl`(TODO). In this document, 
-we will give you a quick guide of using `gsctl` to mange the Interactive Service.
 
-## Create a New Graph.
+## Check Service Status
 
-Although a builtin graph named `modern_graph` is already serving after the service is launched, you may want to create you own graph.
-First you need to define the vertex types and edge types of your graph, i.e. here is a sample definition of a graph containing only one kind of vertex,
-`person`, and one edge type `knows` between `person` and `person`. Save the file to disk with name `test_graph.yaml`. 
-
-```yaml
-name: test_graph
-description: "This is a test graph"
-schema:
-  vertex_types:
-    - type_name: person
-      properties:
-        - property_name: id
-          property_type:
-            primitive_type: DT_SIGNED_INT64
-        - property_name: name
-          property_type:
-            string:
-              long_text: ""
-        - property_name: age
-          property_type:
-            primitive_type: DT_SIGNED_INT32
-      primary_keys:
-        - id
-  edge_types:
-    - type_name: knows
-      vertex_type_pair_relations:
-        - source_vertex: person
-          destination_vertex: person
-          relation: MANY_TO_MANY
-      properties:
-        - property_name: weight
-          property_type:
-            primitive_type: DT_DOUBLE
-```
-
-Please refer to [DataModel](./data_model.md) for more details about defining a graph.
-
-Now you can create a new graph with gsctl
+After connecting to the Interactive Service, you can now view what we have initially for you.
 
 ```bash
-gsctl create graph -f ./test_graph.yaml
+gsctl ls -l
 ```
 
-## Import Data
-
-To import data to the new graph, another configuration file is needed, let's say `import.yaml`. 
-Each vertex/edge type need at least one input for bulk loading. 
-In the following example, we will import data to the new graph from local file
-`person.csv` and `person_knows_person.csv`. You can download the files from [GitHub](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph).
-Remember to replace `@/path/to/person.csv` and `@/path/to/person_knows_person.csv` with the actual path to files.
-
-```{note}
-`@` means the file is a local file and need to be uploaded.
-```
-
-```yaml
-vertex_mappings:
-  - type_name: person
-    inputs:
-      - "@/path/to/person.csv"
-    column_mappings:
-      - column:
-          index: 0
-          name: id
-        property: id
-      - column:
-          index: 1
-          name: name
-        property: name
-      - column:
-          index: 2
-          name: age
-        property: age
-edge_mappings:
-  - type_triplet:
-      edge: knows
-      source_vertex: person
-      destination_vertex: person
-    inputs:
-      - "@/path/to/person_knows_person.csv"
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: person.id
-        property: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: person.id
-        property: id
-    column_mappings:
-      - column:
-          index: 2
-          name: weight
-        property: weight
-```
-
-Now create a data bind via `gsctl`. 
+Actually, a builtin graph is provided with name `gs_interactive_default_graph`. Now you can switch to the graph context:
 
 ```bash
-gsctl create datasource -f ./import.yaml -g test_graph
+gsctl use GRAPH gs_interactive_default_graph
+gsctl service status # show current service status
 ```
 
-So far, we have only created the dataource, a job config `job_config.yaml` is also needed to data import.
-
-```yaml
-loading_config:
-  import_option: overwrite
-  format:
-    type: csv
-    metadata:
-      delimiter: "|"
-      header_row: "true"
-
-vertices:
-  - type_name: person
-
-edges:
-  - type_name: knows
-    source_vertex: person
-    destination_vertex: person
-```
-
-Now create a bulk loading job via `gsctl`.
-
-```bash
-gsctl create loaderjob -f ./job_config.yaml -g test_graph
-```
-
-A job id will be returned, and you can check the loading progress/result by
-```bash
-gsctl desc job xxx
-```
-
+As seen from the output, the Interactive service is already running on the built-in graph.
 
 ## Create a Stored Procedure
 
-Currently Interactive is only able to provide query service on one graph at a time. So we need to switch the query service by
-
-```bash
-gsctl use GRAPH test_graph
-```
-
-Now as query service is running on `test_graph`, we proceed on to create a stored procedure by define a procedure with a yaml configuration: `procedure.yaml`.
+We proceed to create a stored procedure by defining a procedure with a YAML configuration: `procedure.yaml`.
 
 ```yaml
 name: test_procedure
@@ -243,7 +72,7 @@ you can display the detail of the stored procedure with the following command.
 gsctl desc storedproc test_procedure
 ```
 
-### Start Service on the New Graph
+### Restart the service
 
 The stored procedure will not be able to serve requests until we restart the service.
 

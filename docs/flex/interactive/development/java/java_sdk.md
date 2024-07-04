@@ -57,7 +57,7 @@ Then manually install the following JARs:
 First, install and start the interactive service via [Interactive Getting Started](https://graphscope.io/docs/flex/interactive/getting_started), and you will get the all the endpoints for the Interactive service.
 
 ```bash
-You can connect to admin service with Interactive SDK, with following environment variables declared.
+You can connect to Interactive service with Interactive SDK, with following environment variables declared.
 
 ############################################################################################
     export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
