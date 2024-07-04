@@ -998,6 +998,38 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+  /v1/file/upload:
+    post:
+      tags: [Utils]
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filestorage:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+                # metadata:
+                #   datasource: file
+                #   file_type: csv
+        500:
+          description: Server Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
 components:
   schemas:
     AnyValue: {}
@@ -1298,6 +1330,8 @@ components:
               type: boolean
             creation_time:
               type: integer
+            update_time:
+              type: integer
     UpdateProcedureRequest:
       x-body-name: update_procedure_request
       type: object
@@ -1568,6 +1602,16 @@ components:
         loading_config:
           type: object
           properties:
+            x_csr_params:
+              type: object
+              description: mutable_csr specific parameters
+              properties:
+                parallelism: # how many thread used for bulk loading
+                  type: integer
+                build_csr_in_mem: # whether to build csr in memory
+                  type: boolean
+                use_mmap_vector: # whether to use mmap vector
+                  type: boolean
             data_source:
               type: object
               properties:
@@ -1742,5 +1786,15 @@ components:
           type: string
           description: URL or log string
         detail:
+          type: object
+          additionalProperties: true
+    UploadFileResponse:
+      required:
+        - file_path
+        # - metadata
+      properties:
+        file_path:
+          type: string
+        metadata:
           type: object
           additionalProperties: true

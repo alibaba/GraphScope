@@ -84,6 +84,13 @@ jobs:
         # TODO: add ut in global_query
         # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/global_query && cargo test
 
+    - name: Ir With Features Test
+      run: |
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/integrated
+        cargo test --features=mimalloc
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/groot
+        cargo test --features=mimalloc
+
     - name: Ir Integration Test on Experimental Store
       run: |
         . ${HOME}/.graphscope_env

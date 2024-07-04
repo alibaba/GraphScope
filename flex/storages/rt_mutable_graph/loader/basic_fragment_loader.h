@@ -125,8 +125,13 @@ class BasicFragmentLoader {
     if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
       const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
                                                      edge_label_id);
-      dual_csr_list_[index] = new DualCsr<std::string_view>(
-          oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
+
+      size_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH;
+      if (prop[0].IsVarchar()) {
+        max_length = prop[0].additional_type_info.max_length;
+      }
+      dual_csr_list_[index] =
+          new DualCsr<std::string_view>(oe_strategy, ie_strategy, max_length);
     } else {
       bool oe_mutable = schema_.outgoing_edge_mutable(
           src_label_name, dst_label_name, edge_label_name);
@@ -144,6 +149,18 @@ class BasicFragmentLoader {
         tmp_dir(work_dir_), {}, {});
   }
 
+  template <typename EDATA_T>
+  static decltype(auto) get_casted_dual_csr(DualCsrBase* dual_csr) {
+    if constexpr (std::is_same_v<EDATA_T, RecordView>) {
+      auto casted_dual_csr = dynamic_cast<DualCsr<RecordView>*>(dual_csr);
+      CHECK(casted_dual_csr != NULL);
+      return casted_dual_csr;
+    } else {
+      auto casted_dual_csr = dynamic_cast<DualCsr<EDATA_T>*>(dual_csr);
+      CHECK(casted_dual_csr != NULL);
+      return casted_dual_csr;
+    }
+  }
   template <typename EDATA_T, typename VECTOR_T>
   void PutEdges(label_t src_label_id, label_t dst_label_id,
                 label_t edge_label_id, const std::vector<VECTOR_T>& edges_vec,
@@ -151,27 +168,19 @@ class BasicFragmentLoader {
                 const std::vector<int32_t>& oe_degree, bool build_csr_in_mem) {
     size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
                    dst_label_id * edge_label_num_ + edge_label_id;
+    auto dual_csr = dual_csr_list_[index];
+    CHECK(dual_csr != NULL);
+    auto casted_dual_csr = get_casted_dual_csr<EDATA_T>(dual_csr);
+    CHECK(casted_dual_csr != NULL);
     auto& src_indexer = lf_indexers_[src_label_id];
     auto& dst_indexer = lf_indexers_[dst_label_id];
-    CHECK(ie_[index] == NULL);
-    CHECK(oe_[index] == NULL);
     auto src_label_name = schema_.get_vertex_label_name(src_label_id);
     auto dst_label_name = schema_.get_vertex_label_name(dst_label_id);
     auto edge_label_name = schema_.get_edge_label_name(edge_label_id);
-    EdgeStrategy oe_strategy = schema_.get_outgoing_edge_strategy(
-        src_label_name, dst_label_name, edge_label_name);
-    EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
-        src_label_name, dst_label_name, edge_label_name);
+
     auto INVALID_VID = std::numeric_limits<vid_t>::max();
     std::atomic<size_t> edge_count(0);
     if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
-      const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
-                                                     edge_label_id);
-      auto dual_csr = new DualCsr<std::string_view>(
-          oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
-      dual_csr_list_[index] = dual_csr;
-      ie_[index] = dual_csr_list_[index]->GetInCsr();
-      oe_[index] = dual_csr_list_[index]->GetOutCsr();
       CHECK(ie_degree.size() == dst_indexer.size());
       CHECK(oe_degree.size() == src_indexer.size());
       if (build_csr_in_mem) {
@@ -197,8 +206,8 @@ class BasicFragmentLoader {
                            << std::get<1>(edge);
                   continue;
                 }
-                dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
-                                       std::get<2>(edge));
+                casted_dual_csr->BatchPutEdge(
+                    std::get<0>(edge), std::get<1>(edge), std::get<2>(edge));
               }
             },
             i);
@@ -219,17 +228,6 @@ class BasicFragmentLoader {
           edata_prefix(src_label_name, dst_label_name, edge_label_name),
           snapshot_dir(work_dir_, 0));
     } else {
-      bool oe_mutable = schema_.outgoing_edge_mutable(
-          src_label_name, dst_label_name, edge_label_name);
-      bool ie_mutable = schema_.incoming_edge_mutable(
-          src_label_name, dst_label_name, edge_label_name);
-
-      auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy, oe_mutable,
-                                           ie_mutable);
-
-      dual_csr_list_[index] = dual_csr;
-      ie_[index] = dual_csr_list_[index]->GetInCsr();
-      oe_[index] = dual_csr_list_[index]->GetOutCsr();
       CHECK(ie_degree.size() == dst_indexer.size());
       CHECK(oe_degree.size() == src_indexer.size());
 
@@ -257,8 +255,8 @@ class BasicFragmentLoader {
                            << std::get<1>(edge);
                   continue;
                 }
-                dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
-                                       std::get<2>(edge));
+                casted_dual_csr->BatchPutEdge(
+                    std::get<0>(edge), std::get<1>(edge), std::get<2>(edge));
               }
             },
             i);
@@ -294,6 +292,15 @@ class BasicFragmentLoader {
   IndexerType& GetLFIndexer(label_t v_label);
 
   const std::string& work_dir() const { return work_dir_; }
+
+  void set_csr(label_t src_label_id, label_t dst_label_id,
+               label_t edge_label_id, DualCsrBase* dual_csr);
+
+  DualCsrBase* get_csr(label_t src_label_id, label_t dst_label_id,
+                       label_t edge_label_id);
+
+  void init_edge_table(label_t src_label_id, label_t dst_label_id,
+                       label_t edge_label_id);
 
  private:
   // create status files for each vertex label and edge triplet pair.

@@ -23,6 +23,22 @@ import os
 import subprocess
 
 import click
+from packaging import version
+
+version_file_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "VERSION"
+)
+
+with open(version_file_path, "r", encoding="utf-8") as fp:
+    sv = version.parse(fp.read().strip())
+    __is_prerelease__ = sv.is_prerelease
+    __version__ = str(sv)
+
+
+# Interactive docker container config
+INTERACTIVE_DOCKER_CONTAINER_NAME = "gs-interactive-instance"
+INTERACTIVE_DOCKER_CONTAINER_LABEL = "flex=interactive"
+
 
 scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "scripts")
 install_deps_script = os.path.join(scripts_dir, "install_deps_command.sh")
@@ -57,6 +73,12 @@ def cli():
 @cli.group()
 def flexbuild():
     """Build docker image for Interactive, Insight product."""
+    pass
+
+
+@cli.group()
+def instance():
+    """Deploy, destroy Interactive instance."""
     pass
 
 
@@ -116,6 +138,194 @@ def interactive(app, graphscope_repo):
         return
     cmd = ["make", "interactive-runtime", "ENABLE_COORDINATOR=true"]
     run_shell_cmd(cmd, os.path.join(graphscope_repo, interactive_build_dir))
+
+
+@instance.command
+@click.option(
+    "--type",
+    type=click.Choice(["interactive"], case_sensitive=False),
+    help="Instance type, e.g. Interactive",
+    required=True,
+)
+@click.option(
+    "--coordinator-port",
+    help="Mapping port of Coordinator [docker only]",
+    default=8080,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--cypher-port",
+    help="Mapping port of cypher query [docker only]",
+    default=7687,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--storedproc-port",
+    help="Mapping port of stored procedure query [docker only]",
+    default=10000,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--gremlin-port",
+    help="Mapping port of gremlin query, -1 means disable mapping [docker only]",
+    default=-1,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--container-name",
+    help="Docker container name [docker only]",
+    default=INTERACTIVE_DOCKER_CONTAINER_NAME,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--image-registry",
+    help="Docker image registry used to launch instance",
+    default="registry.cn-hongkong.aliyuncs.com/graphscope",
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--image-tag",
+    help="Docker image tag used to launch instance",
+    default=__version__,
+    show_default=True,
+    required=False,
+)
+def deploy(
+    type,
+    container_name,
+    image_registry,
+    image_tag,
+    coordinator_port=8081,
+    admin_port=7778,
+    storedproc_port=10001,
+    cypher_port=7688,
+    gremlin_port=8183,
+):  # noqa: F811
+    """Deploy Flex Interactive instance"""
+    cmd = []
+    if type == "interactive":
+        cmd = [
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            container_name,
+            "--label",
+            INTERACTIVE_DOCKER_CONTAINER_LABEL,
+            "-p",
+            f"{coordinator_port}:8080",
+            "-p",
+            f"{admin_port}:7777",
+            "-p",
+            f"{storedproc_port}:10000",
+            "-p",
+            f"{cypher_port}:7687",
+            "-p",
+            f"{gremlin_port}:8182",
+        ]
+        image = f"{image_registry}/{type}:{image_tag}"
+        cmd.extend([image, "--enable-coordinator"])
+    click.secho("Run command: {0}".format(" ".join(cmd)))
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode == 0:
+        click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
+        click.secho(result.stdout, bold=False)
+
+        message = f"""
+Coordinator is listening on {coordinator_port} port, you can connect to coordinator by:
+    gsctl connect --coordinator-endpoint http://127.0.0.1:{coordinator_port}
+
+Interactive service is ready, you can connect to the interactive service with interactive sdk:
+Interactive Admin service is listening at
+    http://127.0.0.1{admin_port},
+You can connect to admin service with Interactive SDK, with following environment variables declared.
+
+############################################################################################
+    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
+    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
+    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
+    export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+############################################################################################
+
+See https://graphscope.io/docs/latest/flex/interactive/development/java/java_sdk and
+https://graphscope.io/docs/latest/flex/interactive/development/python/python_sdk for more details
+about the usage of Interactive SDK.
+
+Apart from interactive sdk, you can also use neo4j native tools(like cypher-shell) to connect to cypher endpoint,
+and gremlin console to connect to gremlin endpoint.
+        """
+        click.secho(message, bold=False)
+    else:
+        click.secho("[FAILED] ", nl=False, fg="red", bold=True)
+        click.secho(result.stderr, bold=False)
+
+
+@instance.command
+@click.option(
+    "--type",
+    type=click.Choice(["interactive"], case_sensitive=False),
+    help="Instance type, e.g. Interactive",
+    required=True,
+)
+@click.option(
+    "--container-name",
+    help="Docker container name [docker only]",
+    default=INTERACTIVE_DOCKER_CONTAINER_NAME,
+    show_default=True,
+    required=False,
+)
+def destroy(type, container_name):
+    """Destroy Flex Interactive instance"""
+    if click.confirm(f"Do you want to destroy {container_name} instance?"):
+        cmd = []
+        if type == "interactive":
+            cmd = [
+                "docker",
+                "rm",
+                "-f",
+                container_name,
+            ]
+        click.secho("Run command: {0}".format(" ".join(cmd)))
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            click.secho("[SUCCESS] ", nl=False, fg="green", bold=True)
+            click.secho(result.stdout, bold=False)
+        else:
+            click.secho("[FAILED] ", nl=False, fg="red", bold=True)
+            click.secho(result.stderr, bold=False)
+
+
+@instance.command
+@click.option(
+    "--type",
+    type=click.Choice(["interactive"], case_sensitive=False),
+    help="Instance type, e.g. Interactive",
+    required=True,
+)
+def status(type):
+    """Display instance status"""
+    cmd = []
+    if type == "interactive":
+        cmd = [
+            "docker",
+            "ps",
+            "-a",
+            "--filter",
+            f"label={INTERACTIVE_DOCKER_CONTAINER_LABEL}",
+        ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode == 0:
+        click.secho("[SUCCESS]\n", fg="green", bold=True)
+        click.secho(result.stdout, bold=False)
+    else:
+        click.secho("[FAILED] ", nl=False, fg="red", bold=True)
+        click.secho(result.stderr, bold=False)
 
 
 @click.command()

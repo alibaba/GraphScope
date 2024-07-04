@@ -20,7 +20,7 @@ spec:
   ports:
     - name: port
       port: {{ .Values.frontend.service.port }}
-      targetPort: port
+      targetPort: inner-rpc
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
 {{- end -}}

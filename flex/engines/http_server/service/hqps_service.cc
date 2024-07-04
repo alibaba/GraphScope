@@ -99,7 +99,9 @@ void HQPSService::init(const ServiceConfig& config) {
     }
   }
   if (config.start_compiler) {
-    start_compiler_subprocess();
+    if (!start_compiler_subprocess()) {
+      LOG(FATAL) << "Failed to start compiler subprocess! exiting...";
+    }
   }
   start_time_.store(gs::GetCurrentTimeStamp());
 }
@@ -252,7 +254,8 @@ bool HQPSService::start_compiler_subprocess(
   std::stringstream ss;
   ss << "java -cp " << interactive_class_path;
   if (!graph_schema_path.empty()) {
-    ss << " -Dgraph.schema=" << graph_schema_path;
+    ss << " -Dgraph.schema=http://localhost:" << service_config_.admin_port
+       << "/v1/service/status";
   }
   ss << " " << COMPILER_SERVER_CLASS_NAME;
   ss << " " << service_config_.engine_config_path;

@@ -855,7 +855,8 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.OTHER
                         && (operator.getName().equals("IN")
                                 || operator.getName().equals("DATETIME_MINUS")
-                                || operator.getName().equals("PATH_CONCAT")))
+                                || operator.getName().equals("PATH_CONCAT")
+                                || operator.getName().equals("PATH_FUNCTION")))
                 || sqlKind == SqlKind.ARRAY_CONCAT;
     }
 

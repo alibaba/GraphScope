@@ -29,6 +29,10 @@
 
 namespace server {
 
+std::string to_message_json(const std::string& message) {
+  return "{\"message\":\"" + message + "\"}";
+}
+
 gs::GraphStatistics get_graph_statistics(const gs::GraphDBSession& sess) {
   gs::GraphStatistics stat;
   const auto& graph = sess.graph();
@@ -485,7 +489,13 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
         add_runnable_info(plugin_meta);
       }
       auto& graph_meta = meta_res.value();
-      graph_meta.plugin_metas = all_plugin_metas;
+      // There can also be procedures that builtin in the graph meta.
+      for (auto& plugin_meta : graph_meta.plugin_metas) {
+        add_runnable_info(plugin_meta);
+      }
+      graph_meta.plugin_metas.insert(graph_meta.plugin_metas.end(),
+                                     all_plugin_metas.begin(),
+                                     all_plugin_metas.end());
       return seastar::make_ready_future<admin_query_result>(
           gs::Result<seastar::sstring>(std::move(graph_meta.ToJson())));
     } else {
@@ -563,8 +573,8 @@ seastar::future<admin_query_result> admin_actor::run_delete_graph(
     }
     WorkDirManipulator::DeleteGraph(query_param.content);
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>("Successfully delete graph: " +
-                                     query_param.content));
+        gs::Result<seastar::sstring>(to_message_json(
+            "Successfully delete graph: " + query_param.content)));
   } else {
     LOG(ERROR) << "Fail to delete graph: "
                << delete_res.status().error_message();
@@ -694,6 +704,12 @@ seastar::future<admin_query_result> admin_actor::get_procedures_by_graph_name(
     for (auto& plugin_meta : all_plugin_metas) {
       add_runnable_info(plugin_meta);
     }
+    for (auto& plugin_meta : graph_meta_res.value().plugin_metas) {
+      add_runnable_info(plugin_meta);
+    }
+    all_plugin_metas.insert(all_plugin_metas.end(),
+                            graph_meta_res.value().plugin_metas.begin(),
+                            graph_meta_res.value().plugin_metas.end());
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(to_json_str(all_plugin_metas)));
   } else {
@@ -797,8 +813,8 @@ seastar::future<admin_query_result> admin_actor::delete_procedure(
 
   VLOG(10) << "Successfully delete procedure: " << procedure_id;
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>("Successfully delete procedure: " +
-                                   procedure_id));
+      gs::Result<seastar::sstring>(
+          to_message_json("Successfully delete procedure: " + procedure_id)));
 }
 
 // update a procedure by graph name and procedure name
@@ -855,8 +871,8 @@ seastar::future<admin_query_result> admin_actor::update_procedure(
   if (update_res.ok()) {
     VLOG(10) << "Successfully update procedure: " << procedure_id;
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>("Successfully update procedure: " +
-                                     procedure_id));
+        gs::Result<seastar::sstring>(
+            to_message_json("Successfully update procedure: " + procedure_id)));
   } else {
     LOG(ERROR) << "Fail to create procedure: "
                << update_res.status().error_message();
@@ -1061,7 +1077,8 @@ seastar::future<admin_query_result> admin_actor::start_service(
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
     hqps_service.reset_start_time();
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>("Successfully start service"));
+        gs::Result<seastar::sstring>(
+            to_message_json("Successfully start service")));
   });
 }
 
@@ -1099,7 +1116,8 @@ seastar::future<admin_query_result> admin_actor::stop_service(
       if (hqps_service.stop_compiler_subprocess()) {
         LOG(INFO) << "Successfully stop compiler";
         return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>("Successfully stop service"));
+            gs::Result<seastar::sstring>(
+                to_message_json("Successfully stop service")));
       } else {
         LOG(ERROR) << "Fail to stop compiler";
         return seastar::make_ready_future<admin_query_result>(
@@ -1123,13 +1141,49 @@ seastar::future<admin_query_result> admin_actor::service_status(
     res["bolt_port"] = hqps_service.get_service_config().bolt_port;
     res["gremlin_port"] = hqps_service.get_service_config().gremlin_port;
     if (running_graph_res.ok()) {
-      auto graph_meta =
+      auto graph_meta_res =
           metadata_store_->GetGraphMeta(running_graph_res.value());
-      if (graph_meta.ok()) {
-        res["graph"] = nlohmann::json::parse(graph_meta.value().ToJson());
+      if (graph_meta_res.ok()) {
+        auto& graph_meta = graph_meta_res.value();
+        // Add the plugin meta.
+        auto get_all_procedure_res =
+            metadata_store_->GetAllPluginMeta(running_graph_res.value());
+        if (get_all_procedure_res.ok()) {
+          VLOG(10) << "Successfully get all procedures: "
+                   << get_all_procedure_res.value().size();
+          auto& all_plugin_metas = get_all_procedure_res.value();
+          VLOG(10) << "original all plugins : " << all_plugin_metas.size();
+          for (auto& plugin_meta : all_plugin_metas) {
+            add_runnable_info(plugin_meta);
+          }
+          for (auto& plugin_meta : graph_meta.plugin_metas) {
+            add_runnable_info(plugin_meta);
+          }
+
+          VLOG(10) << "original graph meta: " << graph_meta.plugin_metas.size();
+          for (auto& plugin_meta : all_plugin_metas) {
+            if (plugin_meta.runnable) {
+              graph_meta.plugin_metas.emplace_back(plugin_meta);
+            }
+          }
+          VLOG(10) << "got graph meta: " << graph_meta.ToJson();
+          res["graph"] = nlohmann::json::parse(graph_meta.ToJson());
+        } else {
+          LOG(ERROR) << "Fail to get all procedures: "
+                     << get_all_procedure_res.status().error_message();
+          return seastar::make_exception_future<admin_query_result>(
+              get_all_procedure_res.status());
+        }
+      } else {
+        LOG(ERROR) << "Fail to get graph meta: "
+                   << graph_meta_res.status().error_message();
+        res["graph"] = {};
+        return seastar::make_exception_future<admin_query_result>(
+            graph_meta_res.status());
       }
     } else {
       res["graph"] = {};
+      LOG(INFO) << "No graph is running";
     }
     res["start_time"] = hqps_service.get_start_time();
   } else {
@@ -1253,7 +1307,8 @@ seastar::future<admin_query_result> admin_actor::cancel_job(
   if (cancel_meta_res.ok()) {
     VLOG(10) << "Successfully cancel job: " << job_id;
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>("Successfully cancel job: " + job_id));
+        gs::Result<seastar::sstring>(
+            to_message_json("Successfully cancel job: " + job_id)));
   } else {
     LOG(ERROR) << "Fail to cancel job: " << job_id << ", error message: "
                << cancel_meta_res.status().error_message();
@@ -1286,6 +1341,21 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_statistic(
       gs::GraphDB::get().GetSession(hiactor::local_shard_id()));
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(statistics.ToJson()));
+}
+
+seastar::future<admin_query_result> admin_actor::upload_file(
+    query_param&& query_param) {
+  auto& content = query_param.content;
+  auto upload_res = WorkDirManipulator::CreateFile(content);
+  if (upload_res.ok()) {
+    auto value = upload_res.value();
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(
+            seastar::sstring(value.data(), value.size())));
+  } else {
+    return seastar::make_ready_future<admin_query_result>(
+        gs::Result<seastar::sstring>(upload_res.status()));
+  }
 }
 
 }  // namespace server

@@ -99,7 +99,7 @@ public class Utils {
             Configs configs =
                     new Configs(
                             ImmutableMap.of(
-                                    GraphConfig.GRAPH_SCHEMA.getKey(),
+                                    GraphConfig.GRAPH_META_SCHEMA_URI.getKey(),
                                     schemaResource.toURI().getPath()));
             return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), null).fetch().get();
         } catch (Exception e) {
@@ -117,9 +117,9 @@ public class Utils {
             Configs configs =
                     new Configs(
                             ImmutableMap.of(
-                                    GraphConfig.GRAPH_SCHEMA.getKey(),
+                                    GraphConfig.GRAPH_META_SCHEMA_URI.getKey(),
                                     schemaResource.toURI().getPath(),
-                                    GraphConfig.GRAPH_STATISTICS.getKey(),
+                                    GraphConfig.GRAPH_META_STATISTICS_URI.getKey(),
                                     statisticsResource.toURI().getPath()));
             return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker).fetch().get();
         } catch (Exception e) {

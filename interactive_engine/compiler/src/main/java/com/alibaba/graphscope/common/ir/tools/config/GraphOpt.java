@@ -67,4 +67,10 @@ public abstract class GraphOpt {
         ALL_V,
         ALL_V_E
     }
+
+    public enum PathExpandFunction {
+        VERTEX,
+        EDGE,
+        VERTEX_EDGE
+    }
 }
