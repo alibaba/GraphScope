@@ -18,7 +18,7 @@
 
 
 GENERATED_ENDPOINT="https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
-ENDPOINT_PLACE_HOLDER="{INTERACTIVE_ENDPOINT}"
+ENDPOINT_PLACE_HOLDER="{INTERACTIVE_ADMIN_ENDPOINT}"
 
 function usage() {
   echo "Usage: $0 [options]"

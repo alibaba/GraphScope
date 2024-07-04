@@ -36,7 +36,6 @@ Add this dependency to your project's POM:
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>interactive-sdk</artifactId>
   <version>0.3</version>
-  <scope>compile</scope>
 </dependency>
 ```
 
@@ -55,11 +54,20 @@ Then manually install the following JARs:
 
 ## Getting Started
 
-First, install and start the interactive service via [Interactive Getting Started](https://graphscope.io/docs/flex/interactive/getting_started), and you will get the endpoint for the Interactive service.
+First, install and start the interactive service via [Interactive Getting Started](https://graphscope.io/docs/flex/interactive/getting_started), and you will get the all the endpoints for the Interactive service.
 
 ```bash
-Interactive Service is listening at ${INTERACTIVE_ENDPOINT}.
+You can connect to admin service with Interactive SDK, with following environment variables declared.
+
+############################################################################################
+    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
+    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
+    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
+    export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+############################################################################################
 ```
+
+Remember to export these environment variables.
 
 ### Connect and submit a query
 
@@ -74,13 +82,7 @@ import com.alibaba.graphscope.interactive.models.*;
 
 public class GettingStarted {
     public static void main(String[] args) {
-        //get endpoint from command line
-        if (args.length != 1) {
-            System.out.println("Usage: <endpoint>");
-            return;
-        }
-        String endpoint = args[0];
-        Driver driver = Driver.connect(endpoint);
+        Driver driver = Driver.connect();
         Session session = driver.session();
 
         // start a query
@@ -418,7 +420,7 @@ The APIs in interactive SDK are divided into five categories.
 
 
 
-All URIs are relative to `${INTERACTIVE_ENDPOINT}`
+All URIs are relative to `${INTERACTIVE_ADMIN_ENDPOINT}`
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------

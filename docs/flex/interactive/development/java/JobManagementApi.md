@@ -1,6 +1,6 @@
 # JobManagementApi
 
-All URIs are relative to *{INTERACTIVE_ENDPOINT}*
+All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
@@ -25,13 +25,7 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     String jobId = "2";  // See GraphManagementAPI#bulkLoading about how to submit a bulk loading job
@@ -84,13 +78,7 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     String jobId = "2";  // See GraphManagementAPI#bulkLoading about how to submit a bulk loading job
@@ -143,13 +131,7 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     Result<List<JobStatus>> getJobsRes = session.listJobs();

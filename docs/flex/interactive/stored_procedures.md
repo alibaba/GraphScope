@@ -21,6 +21,9 @@ Then create the procedure with `gsctl`:
 gsctl create storedproc -f ./procedure.yaml
 ```
 
+This will invoke the compilation procedure to convert the cypher query to a physical plan, then generate C++ code and compile it, so it may take some time.
+
+
 Note:
 - `name` is required.
 - `description` is optional.
@@ -42,9 +45,15 @@ To delete a single stored procedures, simply using:
 gsctl delete storedproc test_procedure
 ```
 
-## Viewing All Stored Procedures
+## Viewing Stored Procedures
 
-To view all stored procedures of the given graph after starting the service, execute:
+To view a single stored procedure, 
+
+```bash
+gsctl desc test_procedure
+```
+
+(TODO, currently not supprted)To view all stored procedures of the given graph after starting the service, execute:
 
 ```bash
 gsctl list storedproc
@@ -71,8 +80,6 @@ export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
 ```
 
 ```python
-import os
-
 from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import *

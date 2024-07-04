@@ -36,13 +36,13 @@ You can deploy the Interactive service locally with the following command.
 ```bash
 gsctl instance deploy --type interactive 
 # Or you can customize the port number
-gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001 \ 
-                        --gremlin-port 8183
+gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001 --gremlin-port 8183
 ```
 
 ```{note}
-Beside from the interactive server, a coordinator server is also launched. The coordinator server acts like the `ApiServer` for k8s,
+1. Beside from the interactive server, a coordinator server is also launched. The coordinator server acts like the `ApiServer` for k8s,
 allowing users to interact with the GraphScope platform through a simplified and consistent set of API.
+2. Gremlin service is disabled by default, To enable it, try specifying the Gremlin port.
 ```
 
 The following message will display on your screen to inform you about the available services:

@@ -1,6 +1,6 @@
 # GraphManagementApi
 
-All URIs are relative to *{INTERACTIVE_ENDPOINT}*
+All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
@@ -31,12 +31,7 @@ import com.alibaba.graphscope.interactive.models.GetGraphResponse;
 
 public class Example {
     public static void main(String[] args) {
-        if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-                System.err.print("INTERACTIVE_ENDPOINT is not set");
-                return;
-        }
-        String endpoint = String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-        Driver driver = Driver.connect(endpoint);
+        Driver driver = Driver.connect();
         Session session = driver.session();
 
         Result<List<GetGraphResponse>> getRes = session.getAllGraphs();
@@ -137,12 +132,7 @@ public class Example {
           "}";
 
   public static void main(String[] args) {
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     // First create graph
@@ -286,13 +276,7 @@ public class Example {
           "    ],\n" +
           "}";
   public static void main(String[] args) throws IOException {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     // First create graph
@@ -362,13 +346,7 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     String graphId = "2"; // Replace with the graph id you want to delete
@@ -427,12 +405,7 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 
 public class Example {
   public static void main(String[] args) {
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     Result<GetGraphResponse> getGraphResponseResult = session.getGraphMeta("1");
@@ -489,14 +462,8 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.models.GetGraphStatisticsResponse;
 
 public class Example {
-  public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+  public static void main(String[] args) {    
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     Result<GetGraphStatisticsResponse> getRes = session.getGraphStatistics("2");
@@ -554,13 +521,7 @@ import com.alibaba.graphscope.interactive.models.GetGraphSchemaResponse;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     Result<GetGraphSchemaResponse> getRes = session.getGraphSchema("2");

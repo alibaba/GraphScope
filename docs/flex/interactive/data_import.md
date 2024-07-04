@@ -32,7 +32,9 @@ You just need to specify the name of the `column`, since the name is guaranteed 
 
 To illustrate, let's examine the `modern_graph_import.yaml` file. This configuration is designed for importing the "modern" graph and showcases the full range of configuration possibilities. We'll dissect each configuration item in the sections that follow.
 
-> Note that a `@` is prepend to the location, which means all files will be uploaded from local.
+```{note}
+Note that a `@` is prepend to the location, which means all files will be uploaded from local.
+```
 
 ``` yaml
 loading_config: 

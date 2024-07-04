@@ -33,7 +33,6 @@ from graphscope.gsctl.impl import list_service_status
 from graphscope.gsctl.impl import list_stored_procedures
 from graphscope.gsctl.impl import start_service
 from graphscope.gsctl.impl import submit_dataloading_job
-from graphscope.flex.rest import SchemaMapping
 from graphscope.gsctl.impl import switch_context
 from graphscope.gsctl.impl import unbind_edge_datasource
 from graphscope.gsctl.impl import unbind_vertex_datasource
@@ -173,9 +172,8 @@ def datasource(graph_identifier, filename):  # noqa: F811
         err(f"Invalid file: {filename}")
         return
     graph_identifier = get_graph_id_by_name(graph_identifier)
-    datasource = read_yaml_file(filename)
-    SchemaMapping.from_dict(datasource)
     try:
+        datasource = read_yaml_file(filename)
         bind_datasource_in_batch(graph_identifier, datasource)
     except Exception as e:
         err(f"Failed to bind data source: {str(e)}")

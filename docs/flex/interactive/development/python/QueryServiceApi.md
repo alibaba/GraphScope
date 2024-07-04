@@ -1,6 +1,6 @@
 # gs_interactive.QueryServiceApi
 
-All URIs are relative to *{INTERACTIVE_ENDPOINT}*
+All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 Although Interactive supports multiple graphs in storage level, the query service currently could only runs on a single graph. 
 This means that at any given time, only one graph can provide query services. 

@@ -1,6 +1,6 @@
 # ServiceManagementApi
 
-All URIs are relative to *{INTERACTIVE_ENDPOINT}*
+All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
@@ -28,13 +28,7 @@ import com.alibaba.graphscope.interactive.models.ServiceStatus;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-      System.err.print("INTERACTIVE_ENDPOINT is not set");
-      return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     //get service status
@@ -87,13 +81,7 @@ import com.alibaba.graphscope.interactive.models.ServiceStatus;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-      System.err.print("INTERACTIVE_ENDPOINT is not set");
-      return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     Result<String> restart = session.restartService();
@@ -146,13 +134,7 @@ import com.alibaba.graphscope.interactive.models.StartServiceRequest;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-      System.err.print("INTERACTIVE_ENDPOINT is not set");
-      return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     Result<String> start = session.startService(new StartServiceRequest().graphId("1"));
@@ -208,13 +190,7 @@ import com.alibaba.graphscope.interactive.models.StartServiceRequest;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-      System.err.print("INTERACTIVE_ENDPOINT is not set");
-      return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     Result<String> stop = session.stopService();

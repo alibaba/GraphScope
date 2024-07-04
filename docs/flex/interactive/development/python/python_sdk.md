@@ -39,19 +39,26 @@ Execute `pytest` to run the tests.
 
 ## Getting Started
 
-First, install and start the interactive service via [Interactive Getting Started](https://graphscope.io/docs/flex/interactive/getting_started), and you will get the endpoint for the Interactive service.
+First, install and start the interactive service via [Interactive Getting Started](https://graphscope.io/docs/flex/interactive/getting_started), and you will get the all the endpoints for the Interactive service.
 
 ```bash
-Interactive Service is listening at ${INTERACTIVE_ENDPOINT}.
+You can connect to admin service with Interactive SDK, with following environment variables declared.
+
+############################################################################################
+    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
+    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
+    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
+    export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+############################################################################################
 ```
+
+Remember to export these environment variables.
 
 ### Connect and submit a query
 
 Interactive provide you with a default graph, `modern_graph`. You can connect to the interactive endpoint, and try to run a simple query with following code.
 
 ```python
-import os
-
 from gs_interactive.client.driver import Driver
 from gs_interactive.client.session import Session
 from gs_interactive.models import *
@@ -122,7 +129,7 @@ test_graph_def = {
 sess = driver.session()
 
 # construct the request from json string
-create_graph_request = CreateGraphRequest.from_json(test_graph_def)
+create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
 resp = sess.create_graph(create_graph_request)
 assert resp.is_ok()
 graph_id = resp.get_value().graph_id
@@ -141,10 +148,19 @@ For example, you can import the local csv files into the `test_graph`. Note that
 
 ```python
 test_graph_datasource = {
+     "loading_config":{
+        "data_source":{
+            "scheme": "file"
+        },
+        "import_option": "init",
+        "format":{
+            "type": "csv"
+        },
+     },
     "vertex_mappings": [
         {
             "type_name": "person",
-            "inputs": ["@/path/to/person.csv"],
+            "inputs": ["@/workspaces/GraphScope/flex/interactive/examples/modern_graph/person.csv"],
             "column_mappings": [
                 {"column": {"index": 0, "name": "id"}, "property": "id"},
                 {"column": {"index": 1, "name": "name"}, "property": "name"},
@@ -160,7 +176,7 @@ test_graph_datasource = {
                 "destination_vertex": "person",
             },
             "inputs": [
-                "@/path/to/person_knows_person.csv"
+                "@/workspaces/GraphScope/flex/interactive/examples/modern_graph/person_knows_person.csv"
             ],
             "source_vertex_mappings": [
                 {"column": {"index": 0, "name": "person.id"}, "property": "id"}
@@ -182,7 +198,7 @@ job_id = resp.get_value().job_id
 print('The bulkloading job id is ', job_id)
 
 # wait until the job has completed successfully.
- while True:
+while True:
     resp = sess.get_job(job_id)
     assert resp.is_ok()
     status = resp.get_value().status
@@ -237,6 +253,16 @@ After starting query service on the new graph, we are now able to submit queries
 
 #### Submit gremlin queries
 
+````{note}
+By default, the Gremlin service is disabled. To enable it, try specifying the Gremlin port when creating an interactive instance.
+
+
+```bash
+gsctl instance deploy --type interactive --gremlin-port 8183**
+```
+
+````
+
 ```python
 query = "g.V().count();"
 ret = []
@@ -286,7 +312,7 @@ The APIs in interactive SDK are divided into five categories.
 - ServiceManagementApi
 - QueryServiceApi
 
-All URIs are relative to `${INTERACTIVE_ENDPOINT}`
+All URIs are relative to `${INTERACTIVE_ADMIN_ENDPOINT}`
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------

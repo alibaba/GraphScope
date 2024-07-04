@@ -1,6 +1,6 @@
 # QueryServiceApi
 
-All URIs are relative to *{INTERACTIVE_ENDPOINT}*
+All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 Although Interactive supports multiple graphs in storage level, the query service currently could only runs on a single graph. 
 This means that at any given time, only one graph can provide query services. 
@@ -32,13 +32,7 @@ import com.alibaba.graphscope.interactive.api.QueryServiceApi;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     //Create the graph and register procedure first, and start service on this graph.
@@ -109,13 +103,7 @@ import com.alibaba.graphscope.interactive.api.QueryServiceApi;
 
 public class Example {
   public static void main(String[] args) {
-    // get endpoint from command line
-    if (System.getenv("INTERACTIVE_ENDPOINT") == null) {
-        System.err.print("INTERACTIVE_ENDPOINT is not set");
-        return;
-    }
-    String endpoint = System.getenv("INTERACTIVE_ENDPOINT");
-    Driver driver = Driver.connect(endpoint);
+    Driver driver = Driver.connect();
     Session session = driver.session();
 
     //Create the graph and register procedure first, and start service on this graph.

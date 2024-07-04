@@ -6,7 +6,7 @@ GraphScope Interactive offers a seamless way for users to transform Cypher queri
 ## Crafting a Cypher Stored Procedure
 For optimal organization and clarity, we mandate that each Cypher stored procedure be encapsulated within a distinct file. This file should exclusively house one Cypher query, although line breaks can be employed for readability.
 
-For instance, if you aim to retrieve the count of nodes labeled "person" with a personId that matches a runtime-specified value, you can draft the query as shown below and save it as `query1.cypher`:
+For instance, if you aim to retrieve the count of nodes labeled "person" with a personId that matches a runtime-specified value, you can draft the query as shown below:
 
 ```cypher
 MATCH (p :PERSON {id: $personId })
@@ -14,25 +14,32 @@ RETURN p.firstName, p.lastName
 ```
 
 ## Compiling and Enabling the Stored Procedure
-To compile the aforementioned Cypher query and activate it as a stored procedure, utilize the `gs_interactive procedure` command:
+To compile the aforementioned Cypher query and activate it as a stored procedure, utilize the `gsctl create procedure` command:
 
-```bash
-bin/gs_interactive procedure compile 
-	-g modern  
-	-n "query1" \
-	-d "a sample test query" \
-	-i ./examples/modern/query1.cypher
+Before proceeding, make sure you are within the context of your desired graph, for which we are creating the stored procedure. 
+
+```{note}
+It's crucial to note that each stored procedure is intrinsically linked to a specific graph. This graph must pre-exist.
 ```
 
-It's crucial to note that each stored procedure is intrinsically linked to a specific graph, as indicated by the `-g` option. This graph must pre-exist. In the absence of a specified graph, the system will prompt you to utilize the default graph.
+```bash
+gsctl use GRAPH movies
+```
 
+A stored procedure should be defined via a yaml file, for example `procedure.yaml`
 
+```yaml
+name: test_procedure
+description: "Ths is a test procedure"
+query: "MATCH (p :PERSON {id: $personId }) RETURN p.firstName, p.lastName"
+type: cypher
+```
 
 ## Invoking the Cypher Stored Procedure
 Once the stored procedure is activated, a service restart is imperative:
 
 ```bash
-./bin/gs_interactive service restart
+gsctl service restart
 ```
 
 Subsequently, from the cypher-shell, you can invoke the stored procedure as follows:

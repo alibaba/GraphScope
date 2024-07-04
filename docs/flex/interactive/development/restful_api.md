@@ -48,7 +48,7 @@ This API lists all graphs currently managed by the Interactive service, providin
 
 #### Curl Command Example
 ```bash
-curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph"
+curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph"
 ```
 
 #### Expected Response
@@ -194,7 +194,7 @@ If at the time of the request, no graph is in service, the service will respond 
 
 #### Curl Command Example
 ```bash
-curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/statistics"
+curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}/statistics"
 ```
 
 #### Expected Response
@@ -371,7 +371,7 @@ This API create a new graph according to the specified schema in request body.
 
 #### Curl Command Example
 ```bash
-curl -X POST  -H "Content-Type: application/json" -d @path/to/yourfile.json  "http://{INTERACTIVE_ENDPOINT}/v1/graph"
+curl -X POST  -H "Content-Type: application/json" -d @path/to/yourfile.json  "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph"
 ```
 
 #### Expected Response
@@ -402,7 +402,7 @@ Delete a graph by name, including schema, indices and stored procedures.
 
 #### Curl Command Example
 ```bash
-curl -X DELETE  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}"
+curl -X DELETE  -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}"
 ```
 
 #### Expected Response
@@ -430,7 +430,7 @@ Get the schema for the specified graph.
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/schema"
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}/schema"
 ```
 
 
@@ -571,7 +571,7 @@ Get the schema for the specified graph.
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}"
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}"
 ```
 
 
@@ -903,7 +903,7 @@ Client can use the returned job_id to [query the status of job](#getjobbyid-jobm
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" -d @path/to/json "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/dataloading"
+curl -X POST -H "Content-Type: application/json" -d @path/to/json "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}/dataloading"
 ```
 
 #### Expected Response
@@ -945,7 +945,7 @@ Create a new stored procedure.
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" -d @/path/to/json "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/procedure"
+curl -X POST -H "Content-Type: application/json" -d @/path/to/json "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}/procedure"
 ```
 
 
@@ -976,7 +976,7 @@ List all procedures bound to a graph.
 
 #### Curl Command Example
 ```bash
-curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/procedure"
+curl -X GET -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}/procedure"
 ```
 
 #### Expected Response
@@ -1034,7 +1034,7 @@ Get a single procedure's metadata.
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/procedure/{procedure_id}"
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 
@@ -1099,7 +1099,7 @@ Update a procedure's metadata, enable/disable status, description. The procedure
 
 #### Curl Command Example
 ```bash
-curl -X PUT  -H "Content-Type: application/json" -d @/path/to/json "http://{INTERACTIVE_ENDPOINT}//v1/graph/{graph_id}/procedure/{procedure_id}"
+curl -X PUT  -H "Content-Type: application/json" -d @/path/to/json "http://{INTERACTIVE_ADMIN_ENDPOINT}//v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 #### Expected Response
@@ -1156,7 +1156,7 @@ Delete a procedure bound to the graph.
 
 #### Curl Command Example
 ```bash
-curl -X DELETE -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/graph/{graph_id}/procedure/{procedure_id}"
+curl -X DELETE -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/graph/{graph_id}/procedure/{procedure_id}"
 ```
 
 #### Expected Response
@@ -1205,7 +1205,7 @@ The response of the http request will be like
 
 #### Curl Command Example
 ```bash
-curl -X POST -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/service/start"
+curl -X POST -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/service/start"
 ```
 
 #### Expected Response
@@ -1236,7 +1236,7 @@ Restart the graph query service on current running graph.
 
 #### Curl Command Example
 ```bash
-curl -X POST "http://{INTERACTIVE_ENDPOINT}/v1/service/restart"
+curl -X POST "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/service/restart"
 ```
 
 #### Expected Response
@@ -1272,7 +1272,7 @@ but you will receive the following error message to each request:
 
 #### Curl Command Example
 ```bash
-curl -X POST "http://{INTERACTIVE_ENDPOINT}/v1/service/stop"
+curl -X POST "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/service/stop"
 ```
 
 #### Expected Response
@@ -1325,7 +1325,7 @@ Get node status.
 
 #### Curl Command Example
 ```bash
-curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ENDPOINT}/v1/node/status"
+curl -X GET  -H "Content-Type: application/json" "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/node/status"
 ```
 
 #### Expected Response
@@ -1358,7 +1358,7 @@ The job id is received when you [launch a bulk loading job](#importgraph-graphma
 
 #### Curl Command Example
 ```bash
-curl -X GET "http://{INTERACTIVE_ENDPOINT}/v1/job/{job_id}"
+curl -X GET "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/job/{job_id}"
 ```
 
 #### Expected Response
@@ -1397,7 +1397,7 @@ Get the metadata of all running/cancelled/success/failed jobs.
 
 #### Curl Command Example
 ```bash
-curl -X GET "http://{INTERACTIVE_ENDPOINT}/v1/job/"
+curl -X GET "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/job/"
 ```
 
 #### Expected Response
@@ -1437,7 +1437,7 @@ Cancel a job according to the give job_id.
 
 #### Curl Command Example
 ```bash
-curl -X DELETE "http://{INTERACTIVE_ENDPOINT}/v1/job/{job_id}"
+curl -X DELETE "http://{INTERACTIVE_ADMIN_ENDPOINT}/v1/job/{job_id}"
 ```
 
 #### Expected Response

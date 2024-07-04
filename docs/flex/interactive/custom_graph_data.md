@@ -229,6 +229,14 @@ Now create a bulk loading job  with following command
 gsctl create loaderjob -f ./job_config.yaml -g movies
 ```
 
+a message like `Create job xxx successfully` will be printed.
+
+Wait the job to finish by checking the job status with following command
+
+```bash
+gsctl desc job <job_id>
+```
+
 ## Step 3: Start the Service with the New Graph
 
 To start the service using the new graph, run:

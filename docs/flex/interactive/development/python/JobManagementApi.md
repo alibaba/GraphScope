@@ -1,6 +1,6 @@
 # gs_interactive.AdminServiceJobManagementApi
 
-All URIs are relative to *{INTERACTIVE_ENDPOINT}*
+All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
