@@ -39,7 +39,6 @@ import com.google.protobuf.util.JsonFormat;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.junit.Assert;
@@ -1776,12 +1775,5 @@ public class GraphBuilderTest {
                     + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[_], opt=[VERTEX])",
                 rel.explain().trim());
-    }
-
-    @Test
-    public void g_V_path_expand_elementMap() {
-        RelNode rel = eval("g.V().out('2..3').with('RESULT_OPT', 'ALL_V').elementMap('age')");
-        RelDataType type = rel.getRowType().getFieldList().get(0).getType();
-        System.out.println(type.toString());
     }
 }
