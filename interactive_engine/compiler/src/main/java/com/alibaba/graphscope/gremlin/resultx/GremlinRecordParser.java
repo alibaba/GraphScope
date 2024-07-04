@@ -32,6 +32,7 @@ import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -121,9 +122,7 @@ public class GremlinRecordParser implements RecordParser<Object> {
             case MAP:
                 if (type instanceof ArbitraryMapType) {
                     return parseKeyValues(
-                            entry.getMap(),
-                            ((ArbitraryMapType) type).getKeyTypes(),
-                            ((ArbitraryMapType) type).getValueTypes());
+                            entry.getMap(), ((ArbitraryMapType) type).getKeyValueTypeMap());
                 } else {
                     return parseKeyValues(entry.getMap(), type.getKeyType(), type.getValueType());
                 }
@@ -172,22 +171,16 @@ public class GremlinRecordParser implements RecordParser<Object> {
 
     private Map<Object, Object> parseKeyValues(
             IrResult.KeyValues keyValues,
-            List<RelDataType> keyTypes,
-            List<RelDataType> valueTypes) {
-        List<IrResult.KeyValues.KeyValue> entries = keyValues.getKeyValuesList();
-        Preconditions.checkArgument(
-                entries.size() == valueTypes.size(),
-                "KeyValues entry size="
-                        + entries.size()
-                        + " is not consistent with value type size="
-                        + valueTypes.size());
+            Map<RexNode, ArbitraryMapType.KeyValueType> keyValueTypeMap) {
         Map<Object, Object> valueMap = Maps.newLinkedHashMap();
-        for (int i = 0; i < entries.size(); ++i) {
-            IrResult.KeyValues.KeyValue entry = entries.get(i);
-            Object value = parseEntry(entry.getValue(), valueTypes.get(i));
-            if (value != null) {
-                valueMap.put(parseMapKey(entry.getKey().getStr()), value);
-            }
+        for (IrResult.KeyValues.KeyValue entry : keyValues.getKeyValuesList()) {
+            ArbitraryMapType.KeyValueType keyValueType =
+                    Utils.getKeyValueType(entry.getKey(), keyValueTypeMap);
+            valueMap.put(
+                    parseMapKey(entry.getKey().getStr()),
+                    parseEntry(
+                            entry.getValue(),
+                            keyValueType == null ? null : keyValueType.getValue()));
         }
         return valueMap;
     }
@@ -296,20 +289,28 @@ public class GremlinRecordParser implements RecordParser<Object> {
                                             k -> parseValue(k.getKey(), dataType.getKeyType()),
                                             v -> parseValue(v.getVal(), dataType.getValueType())));
                 } else if (dataType instanceof ArbitraryMapType) {
-                    List<Common.Pair> pairArray = value.getPairArray().getItemList();
-                    List<RelDataType> keyTypes = ((ArbitraryMapType) dataType).getKeyTypes();
-                    List<RelDataType> valueTypes = ((ArbitraryMapType) dataType).getValueTypes();
                     Map map = Maps.newLinkedHashMap();
-                    for (int i = 0; i < pairArray.size(); ++i) {
-                        Common.Pair pair = pairArray.get(i);
-                        map.put(
-                                parseValue(
-                                        pair.getKey(),
-                                        i < keyTypes.size() ? keyTypes.get(i) : null),
-                                parseValue(
-                                        pair.getVal(),
-                                        i < valueTypes.size() ? valueTypes.get(i) : null));
-                    }
+                    Map<RexNode, ArbitraryMapType.KeyValueType> keyValueTypeMap =
+                            ((ArbitraryMapType) dataType).getKeyValueTypeMap();
+                    value.getPairArray()
+                            .getItemList()
+                            .forEach(
+                                    pair -> {
+                                        ArbitraryMapType.KeyValueType keyValueType =
+                                                Utils.getKeyValueType(
+                                                        pair.getKey(), keyValueTypeMap);
+                                        map.put(
+                                                parseValue(
+                                                        pair.getKey(),
+                                                        keyValueType == null
+                                                                ? null
+                                                                : keyValueType.getKey()),
+                                                parseValue(
+                                                        pair.getVal(),
+                                                        keyValueType == null
+                                                                ? null
+                                                                : keyValueType.getValue()));
+                                    });
                     return map;
                 }
             case NONE:
