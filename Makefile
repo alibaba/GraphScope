@@ -82,8 +82,7 @@ gsctl:
 	python3 ./setup_gsctl.py develop --user
 
 
-# client: learning
-client:
+client: learning
 	cd $(CLIENT_DIR) && \
 	python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 	python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
