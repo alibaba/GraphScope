@@ -262,7 +262,7 @@ You can connect to admin service with Interactive SDK, with following environmen
             message += f"""
     export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
 """
-        message += f"""
+        message += """
 ############################################################################################
 
 See https://graphscope.io/docs/latest/flex/interactive/development/java/java_sdk and

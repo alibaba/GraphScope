@@ -22,9 +22,7 @@ import com.alibaba.graphscope.interactive.models.*;
 
 import org.apache.tinkerpop.gremlin.driver.Client;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,87 +30,99 @@ import java.util.List;
  */
 public class BasicExample {
 
-    private static final String MODERN_GRAPH_SCHEMA_JSON = "{\n" +
-            "    \"name\": \"modern_graph\",\n" +
-            "    \"description\": \"This is a test graph\",\n" +
-            "    \"schema\": {\n" +
-            "        \"vertex_types\": [\n" +
-            "            {\n" +
-            "                \"type_name\": \"person\",\n" +
-            "                \"properties\": [\n" +
-            "                    {\n" +
-            "                        \"property_name\": \"id\",\n" +
-            "                        \"property_type\": {\"primitive_type\": \"DT_SIGNED_INT64\"},\n" +
-            "                    },\n" +
-            "                    {\n" +
-            "                        \"property_name\": \"name\",\n" +
-            "                        \"property_type\": {\"string\": {\"long_text\": \"\"}},\n" +
-            "                    },\n" +
-            "                    {\n" +
-            "                        \"property_name\": \"age\",\n" +
-            "                        \"property_type\": {\"primitive_type\": \"DT_SIGNED_INT32\"},\n" +
-            "                    },\n" +
-            "                ],\n" +
-            "                \"primary_keys\": [\"id\"],\n" +
-            "            }\n" +
-            "        ],\n" +
-            "        \"edge_types\": [\n" +
-            "            {\n" +
-            "                \"type_name\": \"knows\",\n" +
-            "                \"vertex_type_pair_relations\": [\n" +
-            "                    {\n" +
-            "                        \"source_vertex\": \"person\",\n" +
-            "                        \"destination_vertex\": \"person\",\n" +
-            "                        \"relation\": \"MANY_TO_MANY\",\n" +
-            "                    }\n" +
-            "                ],\n" +
-            "                \"properties\": [\n" +
-            "                    {\n" +
-            "                        \"property_name\": \"weight\",\n" +
-            "                        \"property_type\": {\"primitive_type\": \"DT_DOUBLE\"},\n" +
-            "                    }\n" +
-            "                ],\n" +
-            "                \"primary_keys\": [],\n" +
-            "            }\n" +
-            "        ],\n" +
-            "    },\n" +
-            "}";
+    private static final String MODERN_GRAPH_SCHEMA_JSON =
+            "{\n"
+                    + "    \"name\": \"modern_graph\",\n"
+                    + "    \"description\": \"This is a test graph\",\n"
+                    + "    \"schema\": {\n"
+                    + "        \"vertex_types\": [\n"
+                    + "            {\n"
+                    + "                \"type_name\": \"person\",\n"
+                    + "                \"properties\": [\n"
+                    + "                    {\n"
+                    + "                        \"property_name\": \"id\",\n"
+                    + "                        \"property_type\": {\"primitive_type\":"
+                    + " \"DT_SIGNED_INT64\"},\n"
+                    + "                    },\n"
+                    + "                    {\n"
+                    + "                        \"property_name\": \"name\",\n"
+                    + "                        \"property_type\": {\"string\": {\"long_text\":"
+                    + " \"\"}},\n"
+                    + "                    },\n"
+                    + "                    {\n"
+                    + "                        \"property_name\": \"age\",\n"
+                    + "                        \"property_type\": {\"primitive_type\":"
+                    + " \"DT_SIGNED_INT32\"},\n"
+                    + "                    },\n"
+                    + "                ],\n"
+                    + "                \"primary_keys\": [\"id\"],\n"
+                    + "            }\n"
+                    + "        ],\n"
+                    + "        \"edge_types\": [\n"
+                    + "            {\n"
+                    + "                \"type_name\": \"knows\",\n"
+                    + "                \"vertex_type_pair_relations\": [\n"
+                    + "                    {\n"
+                    + "                        \"source_vertex\": \"person\",\n"
+                    + "                        \"destination_vertex\": \"person\",\n"
+                    + "                        \"relation\": \"MANY_TO_MANY\",\n"
+                    + "                    }\n"
+                    + "                ],\n"
+                    + "                \"properties\": [\n"
+                    + "                    {\n"
+                    + "                        \"property_name\": \"weight\",\n"
+                    + "                        \"property_type\": {\"primitive_type\":"
+                    + " \"DT_DOUBLE\"},\n"
+                    + "                    }\n"
+                    + "                ],\n"
+                    + "                \"primary_keys\": [],\n"
+                    + "            }\n"
+                    + "        ],\n"
+                    + "    },\n"
+                    + "}";
 
-    //Remember to replace the path with your own file path
-    private static final String MODERN_GRAPH_BULK_LOADING_JSON = "{\n" +
-            "    \"vertex_mappings\": [\n" +
-            "        {\n" +
-            "            \"type_name\": \"person\",\n" +
-            "            \"inputs\": [\"@/tmp/person.csv\"],\n" +
-            "            \"column_mappings\": [\n" +
-            "                {\"column\": {\"index\": 0, \"name\": \"id\"}, \"property\": \"id\"},\n" +
-            "                {\"column\": {\"index\": 1, \"name\": \"name\"}, \"property\": \"name\"},\n" +
-            "                {\"column\": {\"index\": 2, \"name\": \"age\"}, \"property\": \"age\"},\n" +
-            "            ],\n" +
-            "        }\n" +
-            "    ],\n" +
-            "    \"edge_mappings\": [\n" +
-            "        {\n" +
-            "            \"type_triplet\": {\n" +
-            "                \"edge\": \"knows\",\n" +
-            "                \"source_vertex\": \"person\",\n" +
-            "                \"destination_vertex\": \"person\",\n" +
-            "            },\n" +
-            "            \"inputs\": [\n" +
-            "                \"@/tmp/person_knows_person.csv\"\n" +
-            "            ],\n" +
-            "            \"source_vertex_mappings\": [\n" +
-            "                {\"column\": {\"index\": 0, \"name\": \"person.id\"}, \"property\": \"id\"}\n" +
-            "            ],\n" +
-            "            \"destination_vertex_mappings\": [\n" +
-            "                {\"column\": {\"index\": 1, \"name\": \"person.id\"}, \"property\": \"id\"}\n" +
-            "            ],\n" +
-            "            \"column_mappings\": [\n" +
-            "                {\"column\": {\"index\": 2, \"name\": \"weight\"}, \"property\": \"weight\"}\n" +
-            "            ],\n" +
-            "        }\n" +
-            "    ],\n" +
-            "}";
+    // Remember to replace the path with your own file path
+    private static final String MODERN_GRAPH_BULK_LOADING_JSON =
+            "{\n"
+                + "    \"vertex_mappings\": [\n"
+                + "        {\n"
+                + "            \"type_name\": \"person\",\n"
+                + "            \"inputs\": [\"@/tmp/person.csv\"],\n"
+                + "            \"column_mappings\": [\n"
+                + "                {\"column\": {\"index\": 0, \"name\": \"id\"}, \"property\":"
+                + " \"id\"},\n"
+                + "                {\"column\": {\"index\": 1, \"name\": \"name\"}, \"property\":"
+                + " \"name\"},\n"
+                + "                {\"column\": {\"index\": 2, \"name\": \"age\"}, \"property\":"
+                + " \"age\"},\n"
+                + "            ],\n"
+                + "        }\n"
+                + "    ],\n"
+                + "    \"edge_mappings\": [\n"
+                + "        {\n"
+                + "            \"type_triplet\": {\n"
+                + "                \"edge\": \"knows\",\n"
+                + "                \"source_vertex\": \"person\",\n"
+                + "                \"destination_vertex\": \"person\",\n"
+                + "            },\n"
+                + "            \"inputs\": [\n"
+                + "                \"@/tmp/person_knows_person.csv\"\n"
+                + "            ],\n"
+                + "            \"source_vertex_mappings\": [\n"
+                + "                {\"column\": {\"index\": 0, \"name\": \"person.id\"},"
+                + " \"property\": \"id\"}\n"
+                + "            ],\n"
+                + "            \"destination_vertex_mappings\": [\n"
+                + "                {\"column\": {\"index\": 1, \"name\": \"person.id\"},"
+                + " \"property\": \"id\"}\n"
+                + "            ],\n"
+                + "            \"column_mappings\": [\n"
+                + "                {\"column\": {\"index\": 2, \"name\": \"weight\"}, \"property\":"
+                + " \"weight\"}\n"
+                + "            ],\n"
+                + "        }\n"
+                + "    ],\n"
+                + "}";
 
     public static String createGraph(Session session) throws IOException {
         CreateGraphRequest graph = CreateGraphRequest.fromJson(MODERN_GRAPH_SCHEMA_JSON);
@@ -255,7 +265,8 @@ public class BasicExample {
         if (deleteGraphResponse.isOk()) {
             System.out.println("delete graph success");
         } else {
-            throw new RuntimeException("delete graph failed: " + deleteGraphResponse.getStatusMessage());
+            throw new RuntimeException(
+                    "delete graph failed: " + deleteGraphResponse.getStatusMessage());
         }
     }
 }
