@@ -176,11 +176,13 @@ public class GremlinRecordParser implements RecordParser<Object> {
         for (IrResult.KeyValues.KeyValue entry : keyValues.getKeyValuesList()) {
             ArbitraryMapType.KeyValueType keyValueType =
                     Utils.getKeyValueType(entry.getKey(), keyValueTypeMap);
-            valueMap.put(
-                    parseMapKey(entry.getKey().getStr()),
+            Object value =
                     parseEntry(
                             entry.getValue(),
-                            keyValueType == null ? null : keyValueType.getValue()));
+                            keyValueType == null ? null : keyValueType.getValue());
+            if (value != null) {
+                valueMap.put(parseMapKey(entry.getKey().getStr()), value);
+            }
         }
         return valueMap;
     }
