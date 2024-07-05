@@ -26,6 +26,197 @@
 
 namespace gs {
 
+namespace igraph {
+
+template <typename LabelT>
+// Base interface for edge iterator
+class EdgeIter {
+ public:
+  using label_id_t = LabelT;
+
+  virtual void Next() const = 0;
+  virtual vid_t GetDstId() const = 0;
+
+  virtual Any GetData() const = 0;
+  virtual bool IsValid() const = 0;
+
+  virtual label_id_t GetDstLabel() const = 0;
+
+  virtual label_id_t GetSrcLabel() const = 0;
+
+  virtual Direction GetDirection() const = 0;
+
+  virtual std::vector<std::string> GetPropNames() const = 0;
+
+  size_t Size() const = 0;
+};
+
+template <typename LabelT, typename VID_T>
+class SubGraph {
+ public:
+  using iterator = EdgeIter<LabelT>;
+  using label_id_t = LabelT;
+
+  virtual iterator get_edges(VID_T vid) const = 0;
+
+  // here the src, dst, refer the src, dst of the csr, not the direction.
+  virtual label_id_t GetSrcLabel() const = 0;
+  virtual label_id_t GetEdgeLabel() const = 0;
+  virtual label_id_t GetDstLabel() const = 0;
+  virtual Direction GetDirection() const = 0;
+
+  virtual std::vector<std::string> GetPropNames() const;
+};
+
+template <typename T>
+class SinglePropGetter {
+ public:
+  using value_type = T;
+  static constexpr size_t prop_num = 1;
+
+  virtual value_type get_view(vid_t vid) const = 0;
+};
+
+template <typename... T>
+class MultiPropGetter {
+ public:
+  using result_tuple_t = std::tuple<T...>;
+  static constexpr size_t prop_num = sizeof...(T);
+
+  virtual result_tuple_t get_view(vid_t vid) const = 0;
+};
+
+class Nbr {
+ public:
+  Nbr() = default;
+  explicit Nbr(vid_t neighbor) : neighbor_(neighbor) {}
+  ~Nbr() = default;
+
+  inline vid_t neighbor() const { return neighbor_; }
+
+ private:
+  vid_t neighbor_;
+};
+
+class NbrList {
+ public:
+  NbrList(const Nbr* b, const Nbr* e) : begin_(b), end_(e) {}
+  NbrList() : begin_(nullptr), end_(nullptr) {}
+  ~NbrList() = default;
+
+  const Nbr* begin() const { return begin_; }
+  const Nbr* end() const { return end_; }
+  inline size_t size() const { return end_ - begin_; }
+
+ private:
+  const Nbr* begin_;
+  const Nbr* end_;
+};
+
+class NbrListArray {
+ public:
+  NbrListArray() {}
+  ~NbrListArray() = default;
+
+  NbrList get(size_t index) const {
+    auto& list = nbr_lists_[index];
+    return NbrList(list.data(), list.data() + list.size());
+  }
+
+  void put(std::vector<Nbr>&& list) { nbr_lists_.push_back(std::move(list)); }
+
+  size_t size() const { return nbr_lists_.size(); }
+
+  void resize(size_t size) { nbr_lists_.resize(size); }
+
+  std::vector<Nbr>& get_vector(size_t index) { return nbr_lists_[index]; }
+
+ private:
+  std::vector<std::vector<Nbr>> nbr_lists_;
+};
+
+class NbrListArray {
+ public:
+  NbrListArray() {}
+  ~NbrListArray() = default;
+
+  NbrList get(size_t index) const {
+    auto& list = nbr_lists_[index];
+    return NbrList(list.data(), list.data() + list.size());
+  }
+
+  void put(std::vector<Nbr>&& list) { nbr_lists_.push_back(std::move(list)); }
+
+  size_t size() const { return nbr_lists_.size(); }
+
+  void resize(size_t size) { nbr_lists_.resize(size); }
+
+  std::vector<Nbr>& get_vector(size_t index) { return nbr_lists_[index]; }
+
+ private:
+  std::vector<std::vector<Nbr>> nbr_lists_;
+};
+
+template <typename T>
+class Adj<T> {
+ public:
+  Adj() = default;
+  ~Adj() = default;
+
+  Adj(const Adj<T>& other) : neighbor_(other.neighbor_), prop_(other.prop_) {}
+
+  Adj(Adj<T>&& other)
+      : neighbor_(other.neighbor_), prop_(std::move(other.prop_)) {}
+
+  inline Adj<T>& operator=(const Adj<T>& from) {
+    this->neighbor_ = from.neighbor_;
+    this->prop_ = from.prop_;
+    return *this;
+  }
+
+  vid_t neighbor() const { return neighbor_; }
+  const std::tuple<T>& properties() const { return prop_; }
+
+  vid_t neighbor_;
+  std::tuple<T> prop_;
+};
+
+template <typename T>
+class AdjList<T> {
+  // // Do we need a virtual Iterator?
+  // class Iterator {
+  //  public:
+  //   bool valid() const = 0;
+  //   const Adj<T>& operator*() const = 0;
+  //   const Adj<T>* operator->() const = 0;
+
+  //   vid_t neighbor() const = 0;
+  //   const std::tuple<T>& properties() const;
+
+  //   Iterator& operator++();
+  //   Iterator operator++(int);
+
+  //   bool operator==(const Iterator& rhs) const;
+
+  //   bool operator!=(const Iterator& rhs) const;
+  // };
+
+ public:
+  // virtual Iterator begin() const = 0;
+  // virtual Iterator end() const = 0;
+  size_t size() const = 0;
+};
+
+template <typename T>
+class AdjListArray<T> {
+ public:
+  virtual size_t size() const = 0;
+
+  virtual AdjList<T> get(size_t i) const = 0;
+};
+
+};  // namespace igraph
+
 namespace mutable_csr_graph_impl {
 
 template <typename LabelT>
