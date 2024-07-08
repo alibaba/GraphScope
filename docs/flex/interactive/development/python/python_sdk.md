@@ -7,6 +7,11 @@ The Interactive Python SDK Reference is a comprehensive guide designed to assist
 Python 3.7+
 
 ## Installation & Usage
+
+```{note}
+If you want to isolate the installation from your local Python environment, you might consider using a virtual environment [virtualenv](https://virtualenv.pypa.io/) to create a new one."
+```
+
 ### pip install
 
 ```bash
@@ -24,7 +29,7 @@ Install via [Setuptools](http://pypi.python.org/pypi/setuptools).
 
 ```sh
 python3 setup.py build_proto
-python setup.py install --user
+python3 setup.py install --user
 ```
 (or `sudo python3 setup.py install` to install the package for all users)
 
@@ -89,6 +94,7 @@ In this example, we will create a simple graph with only one vertex type `persso
 
 ```python
 def create_graph(sess : Session):
+    # Define the graph schema via a python dict.
     test_graph_def = {
         "name": "test_graph",
         "description": "This is a test graph",
@@ -146,7 +152,35 @@ graph_id = create_graph(sess)
 print("Created graph, id is ", graph_id)
 ```
 
-In the above example, a graph with name `test_graph` is defined via a json string. You can also define the graph with programmatic interface provided by [CreateGraphRequest](./CreateGraphRequest.md). So you call the method `createGraph`, a string reprensents the unique identifier of the graph is returned.
+In the aforementioned example, a graph named `test_graph` is defined using a python dictionaly. You can also define the graph using the programmatic interface provided by [CreateGraphRequest](./CreateGraphRequest.md). Upon calling the `createGraph` method, a string representing the unique identifier of the graph is returned.
+
+````{note}
+You might observe that we define the graph schema in YAML with `gsctl`, but switch to using `dict` in Python code. You may encounter challenges when converting between different formats.
+However, converting `YAML` to a Python `dict` is quite convenient.
+
+First, install pyYAML
+
+```bash
+pip3 install pyYAML
+```
+
+Then use pyYAML to convert the YAML string to a Python dict
+
+```python
+import yaml
+
+yaml_string = """
+...
+"""
+
+python_dict = yaml.safe_load(yaml_string)
+
+print(python_dict)
+```
+
+Afterwards, you can create a `CreateGraphRequest` from the Python dict.
+````
+
 
 
 ### Import data to the graph
@@ -154,7 +188,7 @@ In the above example, a graph with name `test_graph` is defined via a json strin
 After a new graph is created, you may want to import data into the newly created graph. 
 For the detail configuration of data import, please refer to [Data Import Configuration](../../data_import).
 
-For example, you can import the local csv files into the `test_graph`. Note that, currently only csv files are supported now. The raw data of `test_graph` is available at [GraphScope Interactive Github reop](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph), and you can download them with the following command.
+For example, you can import the local csv files into the `test_graph`. Note that, currently only csv files are supported now. The raw data of `test_graph` is available at [GraphScope Interactive Github repo](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph), and you can download them with the following command.
 
 ```bash
 wget https://raw.githubusercontent.com/alibaba/GraphScope/main/flex/interactive/examples/modern_graph/person.csv
@@ -239,14 +273,14 @@ def bulk_loading(sess: Session, graph_id : str):
 bulk_loading(sess, graph_id)
 ```
 
-For each vertex/edge types, you need to provide the input data source and column mapping infomation.
-Remember to add `@` at the begining of the local file path. 
-`Session.bulkLoading()` will submit an dataloading job to the service, and we can query the status of the job via `Session.getJobStatus()`, and wait until the job has compleleted successfully.
+For each vertex/edge types, you need to provide the input data source and column mapping information.
+Remember to add `@` at the beginning of the local file path. 
+`Session.bulkLoading()` will submit an data loading job to the service, and we can query the status of the job via `Session.getJobStatus()`, and wait until the job has compleleted successfully.
 
 ### Create a stored procedure
 
 Stored procedures can be registered into GraphScope Interactive to encapsulate and reuse complex graph operations. Interactive support both `cypher` and `c++` queries as stored procedures. 
-With the following code, you will create a procedure named `testProcedure` which is definied via a `cypher` query.
+With the following code, you will create a procedure named `testProcedure` which is defined via a `cypher` query.
 
 ```python
 # Create Graph 
@@ -267,7 +301,7 @@ assert resp.is_ok()
 print("successfully create procedure: ", proc_name)
 ```
 
-The procedure could not be invokded now, since currently interactive service has not been switched to the newly created `modern_graph`. We need to start the service on `modern_graph`.
+The procedure could not be invoked now, since currently interactive service has not been switched to the newly created `modern_graph`. We need to start the service on `modern_graph`.
 
 ### Start the query service on the new graph
 
