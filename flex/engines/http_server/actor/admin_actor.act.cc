@@ -1384,9 +1384,9 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
     graph_management_param&& param) {
   std::string graph_id = param.content.first;
   nlohmann::json input_json;
-  try{
+  try {
     input_json = nlohmann::json::parse(param.content.second);
-  }catch(...){
+  } catch (...) {
     return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
   }
 
@@ -1744,9 +1744,9 @@ seastar::future<admin_query_result> admin_actor::create_edge(
     graph_management_param&& param) {
   std::string graph_id = param.content.first;
   nlohmann::json input_json;
-  try{
+  try {
     input_json = nlohmann::json::parse(param.content.second);
-  }catch(...){
+  } catch (...) {
     return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
   }
   // 检查当前运行的图是否为 graph_id
@@ -1989,9 +1989,9 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
     graph_management_param&& param) {
   std::string graph_id = param.content.first;
   nlohmann::json input_json;
-  try{
+  try {
     input_json = nlohmann::json::parse(param.content.second);
-  }catch(...){
+  } catch (...) {
     return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
   }
   // input value
@@ -2131,9 +2131,9 @@ seastar::future<admin_query_result> admin_actor::update_edge(
   // input values
   const std::string& graph_id = param.content.first;
   nlohmann::json input_json;
-  try{
+  try {
     input_json = nlohmann::json::parse(param.content.second);
-  }catch(...){
+  } catch (...) {
     return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
   }
   std::unordered_map<std::string, std::string> input_props;
