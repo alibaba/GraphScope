@@ -1762,12 +1762,9 @@ seastar::future<admin_query_result> admin_actor::create_edge(
   int edge_num = input_json.size();
 
   std::vector<std::unordered_map<std::string, std::string>> input_props;
-  std::vector<std::string> properties_array = {"src_label",
-                                               "dst_label",
-                                               "edge_label",
-                                               "src_primary_key_value",
-                                               "dst_primary_key_value",
-                                               "properties"};
+  std::vector<std::string> properties_array = {
+              "src_label", "dst_label", "edge_label", 
+              "src_primary_key_value", "dst_primary_key_value", "properties"};
   // compute value
   std::vector<gs::Any> src_pk_value_any(edge_num), dst_pk_value_any(edge_num),
       property_new_value_any(edge_num);
@@ -1953,9 +1950,9 @@ seastar::future<admin_query_result> admin_actor::create_edge(
       txn2.Commit();
     }
   } catch (std::exception& e) {
-    LOG(ERROR) << "Fail to get edge: " << e.what();
+    LOG(ERROR) << "Fail to add edge : " << e.what() << " All inserts are not committed.";
     return error_response(gs::StatusCode::InternalError,
-                          "Fail to get edge: " + std::string(e.what()));
+                          "Fail to add edge : " + std::string(e.what()) + " All inserts are not committed.");
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
@@ -2248,9 +2245,9 @@ seastar::future<admin_query_result> admin_actor::update_edge(
                      edge_label_id, property_new_value_any);
     txn2.Commit();
   } catch (std::exception& e) {
-    LOG(ERROR) << "Fail to get edge: " << e.what();
+    LOG(ERROR) << "Fail to update edge: " << e.what();
     return error_response(gs::StatusCode::InternalError,
-                          "Fail to get edge: " + std::string(e.what()));
+                          "Fail to update edge: " + std::string(e.what()));
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
