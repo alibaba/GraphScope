@@ -185,3 +185,48 @@ http_service:
   admin_port: 7777
   query_port: 10000
 ```
+
+## Starting Service Manually
+
+The main entrance for Interactive is `interactive_server`.
+
+### Enable AdminService
+
+To start admin service in development, use the command line argument `--enable-admin-service true`. `${ENGINE_CONFIG}` specifies the configuration for interactive query engine, see [engine-configuration](https://graphscope.io/docs/flex/interactive/configuration). `${WORKSPACE}` points to the directory where interactive related data is maintaned.
+
+```bash
+./bin/interactive_server -c ${ENGINE_CONFIG} -w ${WORKSPACE} --enable-admin-service true
+```
+
+### Start Compiler Service
+The Compiler service could be started as a subprocess of the AdminService. This ensures that when switching graphs in the AdminService, the Compiler service also switches to the corresponding graph's schema. This is the default behavior in the current Interactive.
+
+```bash
+./bin/interactive_server -c ${ENGINE_CONFIG} -w ${WORKSPACE} --enable-admin-service true --start-compiler true
+```
+
+
+### Mapping of Internal Code to Http Error Code
+
+
+Internally we use [`StatusCode`](https://github.com/alibaba/GraphScope/blob/main/flex/utils/result.h) to record the runtime errors.
+The mapping between statusCode and http code is shown in the following table.
+
+| Code                                | HTTP Code   |
+| ----------------------------------- | ----------- |
+| gs::StatusCode::OK                  | 200         |
+| gs::StatusCode::InValidArgument     | 400         |
+| gs::StatusCode::UnsupportedOperator | 400         |
+| gs::StatusCode::AlreadyExists       | 409         |
+| gs::StatusCode::NotExists           | 404         |
+| gs::StatusCode::CodegenError        | 500         |
+| gs::StatusCode::UninitializedStatus | 500         |
+| gs::StatusCode::InvalidSchema       | 400         |
+| gs::StatusCode::PermissionError     | 403         |
+| gs::StatusCode::IllegalOperation    | 400         |
+| gs::StatusCode::InternalError       | 500         |
+| gs::StatusCode::InvalidImportFile   | 400         |
+| gs::StatusCode::IOError             | 500         |
+| gs::StatusCode::NotFound            | 404         |
+| gs::StatusCode::QueryFailed         | 500         |
+| default                             | 500         |

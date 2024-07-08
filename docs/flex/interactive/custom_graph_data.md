@@ -70,7 +70,15 @@ To create a new graph, you will need the original data of the graph. We currentl
 The `import.yaml` file maps raw data fields to the schema of the "modern" graph created in Step 1. Here's an illustrative example `import.yaml`, 
 note that each vertex/edge type need at least one input for bulk loading. 
 In the following example, we will import data to the new graph from local file
-`person.csv` and `person_knows_person.csv`. You can download the files from [GitHub](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph), remember to replace `@/path/to/person.csv` and `@/path/to/person_knows_person.csv` with the actual path to files.
+`person.csv` and `person_knows_person.csv`. 
+You can download the files from [GitHub](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph), with following commands.
+
+```bash
+wget https://raw.githubusercontent.com/alibaba/GraphScope/main/flex/interactive/examples/modern_graph/person.csv
+wget https://raw.githubusercontent.com/alibaba/GraphScope/main/flex/interactive/examples/modern_graph/person_knows_person.csv
+```
+ 
+After successfully downloading them, remember to replace `@/path/to/person.csv` and `@/path/to/person_knows_person.csv` with the actual path to files.
 
 ```{note}
 `@` means the file is a local file and need to be uploaded.
@@ -124,7 +132,7 @@ Note: The provided yaml file above offers a basic configuration for data importi
 Now bind the datasource to `test_graph` with following command
 
 ```bash
-gsctl create datasource -f ./movie_import.yaml -g test_graph
+gsctl create datasource -f ./import.yaml -g test_graph
 ```
 
 #### Create Data Loading Job
@@ -177,7 +185,11 @@ gsctl use GRAPH test_graph
 ## Step 4: A More Complicated Movies Graph(optional)
 
 The above graph is very simple, which only contains one kind vertices and one kind edges. 
-For a more complicated example, We'll use the [`movies`](https://github.com/neo4j-graph-examples/movies/) graph as an example, with the necessary sample files located in `{INTERACTIVE_HOME}/examples/movies/`.
+For a more complicated example, We'll use the [`movies`](https://github.com/neo4j-graph-examples/movies/) graph as an example, you can download the files from our [Github Repo](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/movies).
+
+```bash
+wget https://interactive-release.oss-cn-hangzhou.aliyuncs.com/dataset/movies/movies.zip
+```
 
 Try to use the following configuration files to create `movie_graph`!
 

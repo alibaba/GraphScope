@@ -60,11 +60,14 @@ First, install and start the interactive service via [Interactive Getting Starte
 You can connect to Interactive service with Interactive SDK, with following environment variables declared.
 
 ############################################################################################
-    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
-    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
-    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
-    export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:7777
+    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:10000
+    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:7687
 ############################################################################################
+```
+
+```{note}
+If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.
 ```
 
 Remember to export these environment variables.

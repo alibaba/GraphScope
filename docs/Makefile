@@ -38,13 +38,13 @@ clean:
 
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
-	cd ${WORKING_DIR}/../analytical_engine/java && \
-	mvn -P javadoc javadoc:aggregate \
-		-Dmaven.antrun.skip=true \
-		-DskipTests \
-		-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
-		-Djavadoc.output.destDir=gae_java \
-		--quiet
+	# cd ${WORKING_DIR}/../analytical_engine/java && \
+	# mvn -P javadoc javadoc:aggregate \
+	# 	-Dmaven.antrun.skip=true \
+	# 	-DskipTests \
+	# 	-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
+	# 	-Djavadoc.output.destDir=gae_java \
+	# 	--quiet
 
 	# sphinx will append the `flex/` part to the output directory
 	@echo "Building Flex doc to $(BUILDDIR)/${TAG}/$@/reference/"
@@ -58,6 +58,9 @@ interactive-sdk:
 
 	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && bash generate_sdk_doc.sh -o ${WORKING_DIR}/flex/interactive/development/
 
-doxygen: interactive-sdk
+interactive-restful-api:
+	@cd ${WORKING_DIR}/../flex/interactive/ && bash generate_restful_api_doc.sh -o ${WORKING_DIR}/flex/interactive/development/restful_api.html
+
+doxygen: interactive-sdk interactive-restful-api
 	@mkdir -p _build
 	@doxygen Doxyfile

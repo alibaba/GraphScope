@@ -38,17 +38,20 @@ Coordinator is listening on {coordinator_port} port, you can connect to coordina
 
 Interactive service is ready, you can connect to the interactive service with interactive sdk:
 Interactive Admin service is listening at
-    http://127.0.0.1{admin_port},
+    http://127.0.0.1:7777,
 You can connect to Interactive service with Interactive SDK on this host, with following environment variables declared.
 
 ############################################################################################
-    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
-    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
-    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
-    export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:7777
+    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:10000
+    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:7687
 ############################################################################################
 
 To access the service from another host via the network, replace `127.0.0.1` with the public IP address and ensure that the ports are exposed to the public network.
+```
+
+```{note}
+If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.
 ```
 
 Remember to copy the environment exporting commands and execute them, the Interactive SDKs relies on these environment variables to establish connections to Interactive Services.

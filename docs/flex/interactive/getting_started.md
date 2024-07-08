@@ -72,12 +72,20 @@ you can display the detail of the stored procedure with the following command.
 gsctl desc storedproc test_procedure
 ```
 
+You may notice that the value of`runnable` field is `false`, we need to restart service to enable it.
+
 ### Restart the service
 
 The stored procedure will not be able to serve requests until we restart the service.
 
 ```bash
 gsctl service restart 
+```
+
+After the service is restarted, check the runnable field; it should be set to true.
+
+```bash
+gsctl desc storedproc test_procedure
 ```
 
 ## Call the Stored Procedure
@@ -89,11 +97,22 @@ You have two options to call the stored procedure, one is through Interactive SD
 You can call the stored procedure via Interactive Python SDK. (Make sure environment variables are set correctly, see [above session](#deploy-in-local-mode)).
 
 ```bash
-export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
-export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
-export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
-export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:7777
+export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:10000
+export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:7687
 ```
+
+```{note}
+If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.
+```
+
+Install Interactive python SDK
+
+```bash
+pip3 install gs_interactive
+```
+
+and try to call the stored procedure.
 
 ```python
 from gs_interactive.client.driver import Driver
@@ -107,7 +126,7 @@ with driver.getNeo4jSession() as session:
         print(record)
 ```
 
-### Call the Stored Procedure via Neo4j Ecosystem
+### Call the Stored Procedure via Neo4j-native Tools
 
 You can also call the stored procedure via neo4j-native tools, like `cypher-shell`, `neo4j-driver`. Please refer to [this document](../../interactive_engine/neo4j/cypher_sdk) for connecting to cypher service.
 
@@ -120,14 +139,8 @@ You can also call the stored procedure via neo4j-native tools, like `cypher-shel
 CALL test_procedure() YIELD *;
 ```
 
-Note that you can not call stored procedure via `Tinkpop Gremlin` tools, since stored procedure is not supported in `Gremlin`.
 
-
-## Submit Adhoc Queries
-
-Both `cypher` and `gremlin` queries are supported by Interactive.
-
-### Running Cypher Queries
+## Submit Cypher Queries
 
 GraphScope Interactive seamlessly integrates with the Neo4j ecosystem. You can establish a connection to the Interactive service using Neo4j's Bolt connector and execute Cypher queries. Our implementation of Cypher queries aligns with the standards set by the [openCypher](http://www.opencypher.org/) project. For a detailed overview of the supported Cypher queries, please visit [supported_cypher](https://graphscope.io/docs/latest/interactive_engine/neo4j/supported_cypher).
 
@@ -135,11 +148,6 @@ Follow the instructions in [Connect-to-cypher-service](../../interactive_engine/
 
 
 Note: Cypher queries submitted to GraphScope Interactive are compiled into a dynamic library for execution. While the initial compilation might take some time, the execution for subsequent uses (of the **same** query) will be much faster since it is cached by Interactive.
-
-### Running Gremlin Queries
-
-GraphScope Interactive supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
-Please refer to the following link to connect to the Tinkerpop Gremlin service provided by GraphScope Interactive: [Connect-to-gremlin-service](../../interactive_engine/tinkerpop/tinkerpop_gremlin)
 
 ## Close the connection
 
@@ -149,7 +157,7 @@ If you want to disconnect to coordinator, just type
 gsctl close
 ```
 
-## Close the Interactive Instance
+## Destroy the Interactive Instance
 
 If you want to shutdown and uninstall the Interactive instance,
 
@@ -157,4 +165,4 @@ If you want to shutdown and uninstall the Interactive instance,
 gsctl instance destroy --type interactive
 ```
 
-This will remove all the graph and data for the Interactive instance.
+**This will remove all the graph and data for the Interactive instance.**

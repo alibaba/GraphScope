@@ -39,24 +39,34 @@ Execute `pytest` to run the tests.
 
 ## Getting Started
 
-First, install and start the interactive service via [Interactive Getting Started](https://graphscope.io/docs/flex/interactive/getting_started), and you will get the all the endpoints for the Interactive service.
+First, install and start the interactive service via [Interactive Getting Started](../../getting_started.md), and you will get the all the endpoints for the Interactive service.
 
 ```bash
 You can connect to Interactive service with Interactive SDK, with following environment variables declared.
 
 ############################################################################################
-    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
-    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
-    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
-    export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+    export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:7777
+    export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:10000
+    export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:7687
 ############################################################################################
+```
+
+```{note}
+If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.
 ```
 
 Remember to export these environment variables.
 
 ### Connect and submit a query
 
-Interactive provide you with a default graph, `modern_graph`. You can connect to the interactive endpoint, and try to run a simple query with following code.
+Before connecting to the Interactive Service and submitting queries via the Python SDK, ensure that the service is running on the intended graph.
+
+```bash
+gsctl use GRAPH <graph_name>
+gsctl service status
+```
+
+Now submit query via Interactive Python SDK.
 
 ```python
 from gs_interactive.client.driver import Driver
@@ -78,62 +88,62 @@ For the detail data model of the graph, please refer to [Data Model](../../data_
 In this example, we will create a simple graph with only one vertex type `persson`, and one edge type named `knows`.
 
 ```python
-# Graph schema is defined by a json string.
-test_graph_def = {
-    "name": "test_graph",
-    "description": "This is a test graph",
-    "schema": {
-        "vertex_types": [
-            {
-                "type_name": "person",
-                "properties": [
-                    {
-                        "property_name": "id",
-                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
-                    },
-                    {
-                        "property_name": "name",
-                        "property_type": {"string": {"long_text": ""}},
-                    },
-                    {
-                        "property_name": "age",
-                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
-                    },
-                ],
-                "primary_keys": ["id"],
-            }
-        ],
-        "edge_types": [
-            {
-                "type_name": "knows",
-                "vertex_type_pair_relations": [
-                    {
-                        "source_vertex": "person",
-                        "destination_vertex": "person",
-                        "relation": "MANY_TO_MANY",
-                    }
-                ],
-                "properties": [
-                    {
-                        "property_name": "weight",
-                        "property_type": {"primitive_type": "DT_DOUBLE"},
-                    }
-                ],
-                "primary_keys": [],
-            }
-        ],
-    },
-}
+def create_graph(sess : Session):
+    test_graph_def = {
+        "name": "test_graph",
+        "description": "This is a test graph",
+        "schema": {
+            "vertex_types": [
+                {
+                    "type_name": "person",
+                    "properties": [
+                        {
+                            "property_name": "id",
+                            "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                        },
+                        {
+                            "property_name": "name",
+                            "property_type": {"string": {"long_text": ""}},
+                        },
+                        {
+                            "property_name": "age",
+                            "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                        },
+                    ],
+                    "primary_keys": ["id"],
+                }
+            ],
+            "edge_types": [
+                {
+                    "type_name": "knows",
+                    "vertex_type_pair_relations": [
+                        {
+                            "source_vertex": "person",
+                            "destination_vertex": "person",
+                            "relation": "MANY_TO_MANY",
+                        }
+                    ],
+                    "properties": [
+                        {
+                            "property_name": "weight",
+                            "property_type": {"primitive_type": "DT_DOUBLE"},
+                        }
+                    ],
+                    "primary_keys": [],
+                }
+            ],
+        },
+    }
+    create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
+    resp = sess.create_graph(create_graph_request)
+    assert resp.is_ok()
+    return resp.get_value().graph_id
 
-# get the interactive session
+driver = Driver()
 sess = driver.session()
 
-# construct the request from json string
-create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
-resp = sess.create_graph(create_graph_request)
-assert resp.is_ok()
-graph_id = resp.get_value().graph_id
-print("Graph id: ", graph_id)
+graph_id = create_graph(sess)
+print("Created graph, id is ", graph_id)
 ```
 
 In the above example, a graph with name `test_graph` is defined via a json string. You can also define the graph with programmatic interface provided by [CreateGraphRequest](./CreateGraphRequest.md). So you call the method `createGraph`, a string reprensents the unique identifier of the graph is returned.
@@ -144,71 +154,89 @@ In the above example, a graph with name `test_graph` is defined via a json strin
 After a new graph is created, you may want to import data into the newly created graph. 
 For the detail configuration of data import, please refer to [Data Import Configuration](../../data_import).
 
-For example, you can import the local csv files into the `test_graph`. Note that, currently only csv files are supported now. Remember to replase `/path/to/person.csv` and `/path/to/person_knows_person.csv` with the actual local path. You can download them from [GraphScope Interactive Github reop](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph).
+For example, you can import the local csv files into the `test_graph`. Note that, currently only csv files are supported now. The raw data of `test_graph` is available at [GraphScope Interactive Github reop](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph), and you can download them with the following command.
+
+```bash
+wget https://raw.githubusercontent.com/alibaba/GraphScope/main/flex/interactive/examples/modern_graph/person.csv
+wget https://raw.githubusercontent.com/alibaba/GraphScope/main/flex/interactive/examples/modern_graph/person_knows_person.csv
+```
+
+Now run the following code in python Interpreter, remember to replace `/path/to/person.csv` and `/path/to/person_knows_person.csv` with the actual local path.
 
 ```python
-test_graph_datasource = {
-     "loading_config":{
-        "data_source":{
-            "scheme": "file"
-        },
-        "import_option": "init",
-        "format":{
-            "type": "csv"
-        },
-     },
-    "vertex_mappings": [
-        {
-            "type_name": "person",
-            "inputs": ["@/workspaces/GraphScope/flex/interactive/examples/modern_graph/person.csv"],
-            "column_mappings": [
-                {"column": {"index": 0, "name": "id"}, "property": "id"},
-                {"column": {"index": 1, "name": "name"}, "property": "name"},
-                {"column": {"index": 2, "name": "age"}, "property": "age"},
-            ],
-        }
-    ],
-    "edge_mappings": [
-        {
-            "type_triplet": {
-                "edge": "knows",
-                "source_vertex": "person",
-                "destination_vertex": "person",
+def bulk_loading(sess: Session, graph_id : str):
+    test_graph_datasource = {
+        "loading_config":{
+            "data_source":{
+                "scheme": "file"
             },
-            "inputs": [
-                "@/workspaces/GraphScope/flex/interactive/examples/modern_graph/person_knows_person.csv"
-            ],
-            "source_vertex_mappings": [
-                {"column": {"index": 0, "name": "person.id"}, "property": "id"}
-            ],
-            "destination_vertex_mappings": [
-                {"column": {"index": 1, "name": "person.id"}, "property": "id"}
-            ],
-            "column_mappings": [
-                {"column": {"index": 2, "name": "weight"}, "property": "weight"}
-            ],
-        }
-    ],
-}
-
-bulk_load_request = SchemaMapping.from_dict(test_graph_datasource)
-resp = sess.bulk_loading(graph_id, bulk_load_request)
-assert resp.is_ok()
-job_id = resp.get_value().job_id
-print('The bulkloading job id is ', job_id)
-
-# wait until the job has completed successfully.
-while True:
-    resp = sess.get_job(job_id)
+            "import_option": "init",
+            "format":{
+                "type": "csv"
+            },
+        },
+        "vertex_mappings": [
+            {
+                "type_name": "person",
+                "inputs": ["@/path/to/person.csv"],
+                "column_mappings": [
+                    {"column": {"index": 0, "name": "id"}, "property": "id"},
+                    {"column": {"index": 1, "name": "name"}, "property": "name"},
+                    {"column": {"index": 2, "name": "age"}, "property": "age"},
+                ],
+            }
+        ],
+        "edge_mappings": [
+            {
+                "type_triplet": {
+                    "edge": "knows",
+                    "source_vertex": "person",
+                    "destination_vertex": "person",
+                },
+                "inputs": [
+                    "@/path/to/person_knows_person.csv"
+                ],
+                "source_vertex_mappings": [
+                    {"column": {"index": 0, "name": "person.id"}, "property": "id"}
+                ],
+                "destination_vertex_mappings": [
+                    {"column": {"index": 1, "name": "person.id"}, "property": "id"}
+                ],
+                "column_mappings": [
+                    {"column": {"index": 2, "name": "weight"}, "property": "weight"}
+                ],
+            }
+        ],
+    }
+    bulk_load_request = SchemaMapping.from_dict(test_graph_datasource)
+    resp = sess.bulk_loading(graph_id, bulk_load_request)
     assert resp.is_ok()
-    status = resp.get_value().status
-    print("job status: ", status)
-    if status == "SUCCESS":
-        break
-    elif status == "FAILED":
-        raise Exception("job failed")
-    else:
-        time.sleep(1)
+    job_id = resp.get_value().job_id
+    print('The bulkloading job id is ', job_id)
+
+    # wait until the job has completed successfully.
+    while True:
+        resp = sess.get_job(job_id)
+        assert resp.is_ok()
+        status = resp.get_value().status
+        print("job status: ", status)
+        if status == "SUCCESS":
+            break
+        elif status == "FAILED":
+            raise Exception("job failed")
+        else:
+            time.sleep(1)
+
+# We assume you have created the graph, uncomment 
+# following code if you haven't create the new graph yet.
+# 
+# driver = Driver()
+# sess = driver.session()
+# graph_id = create_graph(sess)
+# print("Created graph, id is ", graph_id)
+# 
+
+bulk_loading(sess, graph_id)
 ```
 
 For each vertex/edge types, you need to provide the input data source and column mapping infomation.
@@ -221,6 +249,12 @@ Stored procedures can be registered into GraphScope Interactive to encapsulate a
 With the following code, you will create a procedure named `testProcedure` which is definied via a `cypher` query.
 
 ```python
+# Create Graph 
+# ...
+
+# Bulk loading
+# ...
+
 proc_name="test_procedure"
 create_proc_request = CreateProcedureRequest(
     name=proc_name,

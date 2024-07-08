@@ -19,7 +19,7 @@ If you attempt to submit a query to a graph that is not currently running, we wi
 Submit procedure call queries to the specified graph.
 The output format for the query is define by the [results.proto](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/results.proto).
 
-For the creation of stored procedure please refer to [CypherStoredProcedure](../cypher_procedure.md) and [CppStoredProcedure](../cpp_procedure.md).
+For the creation of stored procedure please refer to [CypherStoredProcedure](../stored_procedure/cypher_procedure.md) and [CppStoredProcedure](../stored_procedure/cpp_procedure.md).
 
 ### Example
 ```java
