@@ -38,18 +38,21 @@ clean:
 
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
-	# cd ${WORKING_DIR}/../analytical_engine/java && \
-	# mvn -P javadoc javadoc:aggregate \
-	# 	-Dmaven.antrun.skip=true \
-	# 	-DskipTests \
-	# 	-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
-	# 	-Djavadoc.output.destDir=gae_java \
-	# 	--quiet
+	cd ${WORKING_DIR}/../analytical_engine/java && \
+	mvn -P javadoc javadoc:aggregate \
+		-Dmaven.antrun.skip=true \
+		-DskipTests \
+		-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
+		-Djavadoc.output.destDir=gae_java \
+		--quiet
 
 	# sphinx will append the `flex/` part to the output directory
 	@echo "Building Flex doc to $(BUILDDIR)/${TAG}/$@/reference/"
 	@mkdir -p "$(BUILDDIR)/${TAG}/$@/reference/"
 	@cat Doxyfile-flex | sed 's/_build\/latest\/html\/reference\//$(BUILDDIR)\/${TAG}\/$@\/reference\//g' | doxygen -
+
+	# Generate the latest restful api doc and override the placeholder
+	@cd ${WORKING_DIR}/../flex/interactive/ && bash generate_restful_api_doc.sh -o ${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/flex/interactive/development/restful_api.html
 
 interactive-sdk:
 	@echo "Building interactive sdk doc to $(BUILDDIR)/${TAG}/interactive-sdk"
@@ -58,9 +61,6 @@ interactive-sdk:
 
 	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && bash generate_sdk_doc.sh -o ${WORKING_DIR}/flex/interactive/development/
 
-interactive-restful-api:
-	@cd ${WORKING_DIR}/../flex/interactive/ && bash generate_restful_api_doc.sh -o ${WORKING_DIR}/flex/interactive/development/restful_api.html
-
-doxygen: interactive-sdk interactive-restful-api
+doxygen: interactive-sdk
 	@mkdir -p _build
 	@doxygen Doxyfile
