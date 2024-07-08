@@ -452,6 +452,16 @@ jobs:
       run: |
         git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
 
+    - name: Test String primary key on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_string_pk.yaml 
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+
     - name: Test String edge property on modern graph
       env:
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
