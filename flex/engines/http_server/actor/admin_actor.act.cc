@@ -2448,8 +2448,7 @@ seastar::future<admin_query_result> admin_actor::get_edge(
       "src_label", "dst_label", "edge_label", "src_primary_key_value",
       "dst_primary_key_value"};
   // compute values
-  std::string src_primary_key_type, dst_primary_key_type, src_primary_key_name,
-      dst_primary_key_name;
+  gs::PropertyType src_primary_key_type, dst_primary_key_type;
   std::vector<seastar::sstring> column_names;
   //  Check if the currently running graph is graph_id
   if (!check_graph_id(graph_id))
@@ -2517,31 +2516,20 @@ seastar::future<admin_query_result> admin_actor::get_edge(
         sod = src_or_dst::dst;
       } else
         continue;
-      std::string& primary_key_name =
-          (sod == src_or_dst::src ? src_primary_key_name
-                                  : dst_primary_key_name);
-      std::string& primary_key_type =
+      auto& primary_key_type =
           (sod == src_or_dst::src ? src_primary_key_type
                                   : dst_primary_key_type);
       const std::string& label =
           (sod == src_or_dst::src ? input_props["src_label"]
                                   : input_props["dst_label"]);
-      primary_key_name = vertex_types["primary_keys"][0];
+      std::string primary_key_name = vertex_types["primary_keys"][0];
       for (auto& property : vertex_types["properties"]) {
-        if (property["property_name"] != primary_key_name)
-          continue;
-        if (property["property_type"].contains("primitive_type")) {
-          primary_key_type = property["property_type"]["primitive_type"];
-        } else if (property["property_type"].contains("string")) {
-          primary_key_type = "String";
-        } else {
-          error_response(gs::StatusCode::NotFound,
-                         "Primary key type not found");
+        if (property["property_name"] == primary_key_name) {
+          gs::from_json(property["property_type"], primary_key_type);
+          break;
         }
-        break;
       }
       if (src_dst_same) {
-        dst_primary_key_name = primary_key_name;
         dst_primary_key_type = primary_key_type;
       }
     }
@@ -2566,27 +2554,20 @@ seastar::future<admin_query_result> admin_actor::get_edge(
     auto edge_label_id =
         db.schema().get_edge_label_id(input_props["edge_label"]);
     auto src_pk_value_any = gs::ConvertStringToAny(
-        input_props["src_primary_key_value"],
-        gs::config_parsing::StringToPrimitivePropertyType(
-            src_primary_key_type));
+        input_props["src_primary_key_value"], src_primary_key_type);
     auto dst_pk_value_any = gs::ConvertStringToAny(
-        input_props["dst_primary_key_value"],
-        gs::config_parsing::StringToPrimitivePropertyType(
-            dst_primary_key_type));
+        input_props["dst_primary_key_value"], dst_primary_key_type);
     auto txn = db.GetReadTransaction();
     gs::vid_t src_vid, dst_vid;
     if (txn.GetVertexIndex(src_label_id, src_pk_value_any, src_vid) == false ||
         txn.GetVertexIndex(dst_label_id, dst_pk_value_any, dst_vid) == false) {
       txn.Abort();
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::Status(gs::StatusCode::NotFound, "Vertex not found")));
+      return error_response(gs::StatusCode::NotFound, "Vertex not found");
     }
     for (auto edgeIt = txn.GetOutEdgeIterator(src_label_id, src_vid,
                                               dst_label_id, edge_label_id);
          edgeIt.IsValid(); edgeIt.Next()) {
-      if (edgeIt.GetNeighbor() != dst_vid)
-        continue;
+      if (edgeIt.GetNeighbor() != dst_vid) continue;
       nlohmann::json push_json;
       push_json["name"] = column_names[0];
       push_json["value"] = edgeIt.GetData().to_string();
