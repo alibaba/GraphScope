@@ -1382,7 +1382,6 @@ struct temp<gs::InsertTransaction> {
 
 seastar::future<admin_query_result> admin_actor::create_vertex(
     graph_management_param&& param) {
-  LOG(INFO) << "create_vertex";
   std::string graph_id = param.content.first;
   nlohmann::json input_json = nlohmann::json::parse(param.content.second);
 
@@ -1738,7 +1737,6 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
 
 seastar::future<admin_query_result> admin_actor::create_edge(
     graph_management_param&& param) {
-  LOG(INFO) << "create_edge";
   std::string graph_id = param.content.first;
   nlohmann::json input_json = nlohmann::json::parse(param.content.second);
   // 检查当前运行的图是否为 graph_id
@@ -1979,7 +1977,6 @@ seastar::future<admin_query_result> admin_actor::create_edge(
 
 seastar::future<admin_query_result> admin_actor::update_vertex(
     graph_management_param&& param) {
-  LOG(INFO) << "update_vertex";
   std::string graph_id = param.content.first;
   nlohmann::json input_json = nlohmann::json::parse(param.content.second);
   // input value
@@ -2116,7 +2113,6 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
 }
 seastar::future<admin_query_result> admin_actor::update_edge(
     graph_management_param&& param) {
-  LOG(INFO) << "update_edge";
   std::string graph_id = param.content.first;
   std::string src_label, dst_label, edge_label, src_primary_key_value,
       dst_primary_key_value;
@@ -2302,145 +2298,105 @@ seastar::future<admin_query_result> admin_actor::update_edge(
 
 seastar::future<admin_query_result> admin_actor::get_vertex(
     graph_management_query_param&& param) {
-  LOG(INFO) << "get_vertex";
-  std::string graph_id = param.content.first;
-  std::string label, primary_key_value, primary_keys_type, primary_keys_name;
+  const std::string& graph_id = param.content.first;
+  // input values
+  std::unordered_map<std::string, std::string> input_props;
+  std::vector<std::string> properties_array = {"label", "primary_key_value"};
+  LOG(INFO) << param.content.second;
+  // compute values
+  std::string primary_keys_name;
+  gs::PropertyType primary_keys_type;
   std::vector<seastar::sstring> column_names;
-  // 检查当前运行的图是否为 graph_id
-  if (!check_graph_id(graph_id)) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(
-            gs::StatusCode::NotFound, "Graph not running: " + graph_id)));
-  }
-  // 检查参数里有没有 label 和 primary_key_value
-  {
-    auto label_iter = param.content.second.find("label");
-    auto primary_key_value_iter =
-        param.content.second.find("primary_key_value");
-    if (label_iter == param.content.second.end() ||
-        primary_key_value_iter == param.content.second.end()) {
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::Status(gs::StatusCode::InvalidSchema,
-                         "Bad Request: Bad input parameter, missing label or "
-                         "primary_key_value")));
+  //  Check if the currently running graph is graph_id
+  if (!check_graph_id(graph_id))
+    return error_response(gs::StatusCode::NotFound,
+                          "Graph not running: " + graph_id);
+  // Check that all parameters in the parameter
+  for (auto& input_property : properties_array) {
+    auto iter = param.content.second.find(input_property);
+    if (iter == param.content.second.end()) {
+      return error_response(
+          gs::StatusCode::InvalidSchema,
+          " Bad Request: Bad input parameter, missing " + input_property);
     } else {
-      label = label_iter->second;
-      primary_key_value = primary_key_value_iter->second;
+      input_props[input_property] = iter->second;
     }
   }
-  // 检查 metadata 里面有没有 graph_id 这张图
+  // Extract the graph_id from the metadata.
   auto graph_meta_res = metadata_store_->GetGraphMeta(graph_id);
-  if (!graph_meta_res.ok()) {
-    LOG(ERROR) << "Graph not exists: " << graph_id;
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(
-            gs::StatusCode::NotFound, "Graph not exists: " + graph_id)));
-  }
-  LOG(INFO) << "Get vertex: " << label
-            << " with primary_key_value: " << primary_key_value
-            << " for graph: " << graph_id;
-  // 检查 label 在 schema 里面有没有
+  if (!graph_meta_res.ok())
+    return error_response(gs::StatusCode::NotFound,
+                          "Graph not exists: " + graph_id);
+  auto& schema = graph_meta_res.value().schema;
+  auto schema_json = nlohmann::json::parse(schema);
+  LOG(INFO) << "Get vertex: " << input_props["label"] << "{"
+            << input_props["primary_key_value"] << "} for graph: " << graph_id;
   try {
-    auto& schema = graph_meta_res.value().schema;
-    auto schema_json = nlohmann::json::parse(schema);
     auto vertex_types_all = schema_json["vertex_types"];
     bool label_exists_in_schema = false;
+    // Check if the vertex label exists
     for (auto& vertex_types : vertex_types_all) {
-      if (vertex_types["type_name"] != label)
+      if (vertex_types["type_name"] != input_props["label"])
         continue;
-      LOG(INFO) << "Label" << label << "exists in schema";
       label_exists_in_schema = true;
-      // 找到这个 label 的 primary_key
+      // Find the primary_key for this label
       primary_keys_name = vertex_types["primary_keys"][0];
       for (auto& property : vertex_types["properties"]) {
-        // 如果不是 primary key
-        // 还需要根据 metadata 的顺序输出列名
-        if (property["property_name"] != primary_keys_name) {
-          column_names.push_back(property["property_name"]);
-          continue;
-        }
-        // 如果是 primary key
-        // 如果是 int32/int64/uin32/uint64
-        if (property["property_type"].find("primitive_type") !=
-            property["property_type"].end()) {
-          primary_keys_type = property["property_type"]["primitive_type"];
-        } else if (property["property_type"].find("string") !=
-                   property["property_type"].end()) {
-          // 如果是 string
-          primary_keys_type = "String";
+        if (property["property_name"] == primary_keys_name) {
+          gs::from_json(property["property_type"], primary_keys_type);
         } else {
-          LOG(ERROR) << "Primary key type not found";
-          return seastar::make_ready_future<admin_query_result>(
-              gs::Result<seastar::sstring>(gs::Status(
-                  gs::StatusCode::NotFound, "Primary key type not found")));
+          column_names.push_back(property["property_name"]);
         }
       }
       break;
     }
     if (!label_exists_in_schema) {
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::Status(gs::StatusCode::NotFound,
-                         "Label not exists in schema: " + label)));
+      return error_response(
+          gs::StatusCode::NotFound,
+          "Label not exists in schema: " + input_props["label"]);
     }
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to parse schema: " << e.what();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InternalError,
-                       "Fail to parse schema: " + std::string(e.what()))));
+    return error_response(gs::StatusCode::InternalError,
+                          "Fail to parse schema: " + std::string(e.what()));
   }
   nlohmann::json result;
-  result["label"] = label;
+  result["label"] = input_props["label"];
   // search label:primary_key_value on graph_id in graph db
   try {
     auto& db = gs::GraphDB::get().GetSession(hiactor::local_shard_id());
-    auto label_id = db.schema().get_vertex_label_id(label);
-    auto pk_type_property =
-        gs::config_parsing::StringToPrimitivePropertyType(primary_keys_type);
+    auto label_id = db.schema().get_vertex_label_id(input_props["label"]);
     auto pk_value_any =
-        gs::ConvertStringToAny(primary_key_value, pk_type_property);
+        gs::ConvertStringToAny(input_props["primary_key_value"], primary_keys_type);
     auto txn = db.GetReadTransaction();
     auto vertex = txn.FindVertex(label_id, pk_value_any);
-    // 如果找不到这个 vertex
     if (vertex.IsValid() == false) {
-      LOG(ERROR) << "Vertex not found";
       txn.Abort();
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::Status(gs::StatusCode::NotFound, "Vertex not found")));
+      return error_response(gs::StatusCode::NotFound, "Vertex not found");
     }
-    // 如果找到了这个 vertex
-    // 先把 primary key 的值放进去
     nlohmann::json primary_key;
     primary_key["name"] = primary_keys_name;
-    primary_key["value"] = primary_key_value;
+    primary_key["value"] = input_props["primary_key_value"];
     result["values"].push_back(primary_key);
     for (int i = 0; i < vertex.FieldNum(); i++) {
       nlohmann::json values;
       values["name"] = column_names[i];
       values["value"] = vertex.GetField(i).to_string();
       result["values"].push_back(values);
-      // LOG(INFO) << vertex.GetField(i).to_string();
     }
     txn.Commit();
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to get vertex: " << e.what();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InternalError,
-                       "Fail to get vertex: " + std::string(e.what()))));
+    return error_response(gs::StatusCode::InternalError,
+                          "Fail to get vertex: " + std::string(e.what()));
   }
   auto result_str = result.dump();
-  LOG(INFO) << result_str;
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(result_str));
 }
 
 seastar::future<admin_query_result> admin_actor::get_edge(
     graph_management_query_param&& param) {
-  LOG(INFO) << "get_edge";
   // input values
   const std::string& graph_id = param.content.first;
   std::unordered_map<std::string, std::string> input_props;
@@ -2460,8 +2416,7 @@ seastar::future<admin_query_result> admin_actor::get_edge(
     if (iter == param.content.second.end()) {
       return error_response(
           gs::StatusCode::InvalidSchema,
-          "Bad Request: you need to provide src_label, dst_label, edge_label, "
-          "src_primary_key_value, dst_primary_key_value");
+          " Bad Request: Bad input parameter, missing " + input_property);
     } else {
       input_props[input_property] = iter->second;
     }
