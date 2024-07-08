@@ -2426,71 +2426,54 @@ seastar::future<admin_query_result> admin_actor::get_vertex(
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(result_str));
 }
+
 seastar::future<admin_query_result> admin_actor::get_edge(
     graph_management_query_param&& param) {
   LOG(INFO) << "get_edge";
-  // input: graph_id, src_label, dst_label, edge_label, src_primary_key_value,
-  // dst_primary_key_value
+  // input values
   const std::string& graph_id = param.content.first;
-  std::string src_label, dst_label, edge_label, src_primary_key_value,
-      dst_primary_key_value;
-  // compute:
+  std::unordered_map<std::string, std::string> input_props;
+  std::vector<std::string> properties_array = {
+      "src_label", "dst_label", "edge_label", "src_primary_key_value",
+      "dst_primary_key_value"};
+  // compute values
   std::string src_primary_key_type, dst_primary_key_type, src_primary_key_name,
       dst_primary_key_name;
   std::vector<seastar::sstring> column_names;
-  // 检查当前运行的图是否为 graph_id
-  if (!check_graph_id(graph_id)) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(
-            gs::StatusCode::NotFound, "Graph not running: " + graph_id)));
-  }
-  // 检查参数里五个参数是否全部出现
-  {
-    auto src_label_iter = param.content.second.find("src_label");
-    auto dst_label_iter = param.content.second.find("dst_label");
-    auto edge_label_iter = param.content.second.find("edge_label");
-    auto src_primary_key_value_iter =
-        param.content.second.find("src_primary_key_value");
-    auto dst_primary_key_value_iter =
-        param.content.second.find("dst_primary_key_value");
-    if (src_label_iter == param.content.second.end() ||
-        dst_label_iter == param.content.second.end() ||
-        edge_label_iter == param.content.second.end() ||
-        src_primary_key_value_iter == param.content.second.end() ||
-        dst_primary_key_value_iter == param.content.second.end()) {
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::Status(gs::StatusCode::InvalidSchema,
-                         "Bad Request: Bad input parameter, you need to "
-                         "provide src_label, dst_label, edge_label, "
-                         "src_primary_key_value, dst_primary_key_value")));
+  //  Check if the currently running graph is graph_id
+  if (!check_graph_id(graph_id))
+    return error_response(gs::StatusCode::NotFound,
+                          "Graph not running: " + graph_id);
+  // Check that all parameters in the parameter
+  for (auto& input_property : properties_array) {
+    auto iter = param.content.second.find(input_property);
+    if (iter == param.content.second.end()) {
+      return error_response(
+          gs::StatusCode::InvalidSchema,
+          "Bad Request: you need to provide src_label, dst_label, edge_label, "
+          "src_primary_key_value, dst_primary_key_value");
     } else {
-      src_label = src_label_iter->second;
-      dst_label = dst_label_iter->second;
-      edge_label = edge_label_iter->second;
-      src_primary_key_value = src_primary_key_value_iter->second;
-      dst_primary_key_value = dst_primary_key_value_iter->second;
+      input_props[input_property] = iter->second;
     }
   }
-  // 检查 metadata 里面有没有 graph_id 这张图
+  // Extract the graph_id from the metadata.
   auto graph_meta_res = metadata_store_->GetGraphMeta(graph_id);
-  if (!graph_meta_res.ok()) {
-    LOG(ERROR) << "Graph not exists: " << graph_id;
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(
-            gs::StatusCode::NotFound, "Graph not exists: " + graph_id)));
-  }
-  LOG(INFO) << "Get Edge{" << edge_label << "} v{" << src_label
-            << "}:" << src_primary_key_value << " -> v{" << dst_label
-            << "}:" << dst_primary_key_value << " for graph:" << graph_id;
+  if (!graph_meta_res.ok())
+    return error_response(gs::StatusCode::NotFound,
+                          "Graph not exists: " + graph_id);
+  auto& schema = graph_meta_res.value().schema;
+  auto schema_json = nlohmann::json::parse(schema);
+  LOG(INFO) << "Get Edge{" << input_props["edge_label"] << "} v{"
+            << input_props["src_label"]
+            << "}:" << input_props["src_primary_key_value"] << " -> v{"
+            << input_props["dst_label"]
+            << "}:" << input_props["dst_primary_key_value"]
+            << " for graph:" << graph_id;
   try {
-    auto& schema = graph_meta_res.value().schema;
-    auto schema_json = nlohmann::json::parse(schema);
-    auto edge_types_all = schema_json["edge_types"];
     bool edge_label_exists_in_schema = false;
-    // 检查 edge label 是否存在
-    for (auto& edge_types : edge_types_all) {
-      if (edge_types["type_name"] != edge_label)
+    // Check if the edge label exists
+    for (auto& edge_types : schema_json["edge_types"]) {
+      if (edge_types["type_name"] != input_props["edge_label"])
         continue;
       edge_label_exists_in_schema = true;
       for (auto& property : edge_types["properties"]) {
@@ -2499,32 +2482,30 @@ seastar::future<admin_query_result> admin_actor::get_edge(
       break;
     }
     if (!edge_label_exists_in_schema) {
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::Status(gs::StatusCode::NotFound,
-                         "Edge Label not exists in schema: " + edge_label)));
+      return error_response(
+          gs::StatusCode::NotFound,
+          "Edge Label not exists in schema: " + input_props["edge_label"]);
     }
     int vertex_label_exist = 0;
     enum src_or_dst { src, dst };
     src_or_dst sod;
-    // 检查 src_label 和 dst_label 是否存在
+    // Check for the existence of src_label and dst_label.
     for (auto& vertex_types : schema_json["vertex_types"]) {
       if (vertex_label_exist == 2)
         break;
       bool src_dst_same = false;
-      if (vertex_types["type_name"] == src_label) {
+      if (vertex_types["type_name"] == input_props["src_label"]) {
         vertex_label_exist++;
         sod = src_or_dst::src;
-        if (src_label == dst_label) {
+        if (input_props["src_label"] == input_props["dst_label"]) {
           vertex_label_exist++;
           src_dst_same = true;
         }
-      } else if (vertex_types["type_name"] == dst_label) {
+      } else if (vertex_types["type_name"] == input_props["dst_label"]) {
         vertex_label_exist++;
         sod = src_or_dst::dst;
-      } else {
+      } else
         continue;
-      }
       std::string& primary_key_name =
           (sod == src_or_dst::src ? src_primary_key_name
                                   : dst_primary_key_name);
@@ -2532,24 +2513,20 @@ seastar::future<admin_query_result> admin_actor::get_edge(
           (sod == src_or_dst::src ? src_primary_key_type
                                   : dst_primary_key_type);
       const std::string& label =
-          (sod == src_or_dst::src ? src_label : dst_label);
+          (sod == src_or_dst::src ? input_props["src_label"]
+                                  : input_props["dst_label"]);
       primary_key_name = vertex_types["primary_keys"][0];
       for (auto& property : vertex_types["properties"]) {
         if (property["property_name"] != primary_key_name)
           continue;
-        if (property["property_type"].find("primitive_type") !=
-            property["property_type"].end()) {
+        if (property["property_type"].contains("primitive_type")) {
           primary_key_type = property["property_type"]["primitive_type"];
-        } else if (property["property_type"].find("string") !=
-                   property["property_type"].end()) {
+        } else if (property["property_type"].contains("string")) {
           primary_key_type = "String";
         } else {
-          LOG(ERROR) << "Primary key type not found";
-          return seastar::make_ready_future<admin_query_result>(
-              gs::Result<seastar::sstring>(gs::Status(
-                  gs::StatusCode::NotFound, "Primary key type not found")));
+          error_response(gs::StatusCode::NotFound,
+                         "Primary key type not found");
         }
-        // LOG(INFO) << "Primary key type: " << primary_key_type;
         break;
       }
       if (src_dst_same) {
@@ -2557,49 +2534,34 @@ seastar::future<admin_query_result> admin_actor::get_edge(
         dst_primary_key_type = primary_key_type;
       }
     }
-    if (vertex_label_exist != 2) {
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(gs::Status(
-              gs::StatusCode::NotFound, "Vertex Label not exists in schema")));
-    }
+    if (vertex_label_exist != 2)
+      return error_response(gs::StatusCode::NotFound,
+                            "Vertex Label not exists in schema");
   } catch (std::exception& e) {
-    LOG(ERROR) << "Fail to parse schema: " << e.what();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InternalError,
-                       "Fail to parse schema: " + std::string(e.what()))));
+    return error_response(gs::StatusCode::InternalError,
+                          "Fail to parse schema: " + std::string(e.what()));
   }
-  // LOG(INFO) << "src_primary_key_type: " << src_primary_key_type;
-  // LOG(INFO) << "dst_primary_key_type: " << dst_primary_key_type;
-  // LOG(INFO) << "src_primary_key_name: " << src_primary_key_name;
-  // LOG(INFO) << "dst_primary_key_name: " << dst_primary_key_name;
-  // for (auto &column_name : column_names){
-  //   LOG(INFO) << "column_name: " << column_name;
-  // }
   nlohmann::json result;
-  result["src_label"] = src_label;
-  result["dst_label"] = dst_label;
-  result["edge_label"] = edge_label;
-  result["src_primary_key_value"] = src_primary_key_value;
-  result["dst_primary_key_value"] = dst_primary_key_value;
+  for (auto& input_property : input_props) {
+    result[input_property.first] = input_property.second;
+  }
   result["properties"] = nlohmann::json::array();
   try {
     auto& db = gs::GraphDB::get().GetSession(hiactor::local_shard_id());
-    // 一定存在
-    auto src_label_id = db.schema().get_vertex_label_id(src_label);
-    auto dst_label_id = db.schema().get_vertex_label_id(dst_label);
-    auto edge_label_id = db.schema().get_edge_label_id(edge_label);
+    auto src_label_id =
+        db.schema().get_vertex_label_id(input_props["src_label"]);
+    auto dst_label_id =
+        db.schema().get_vertex_label_id(input_props["dst_label"]);
+    auto edge_label_id =
+        db.schema().get_edge_label_id(input_props["edge_label"]);
     auto src_pk_value_any = gs::ConvertStringToAny(
-        src_primary_key_value,
+        input_props["src_primary_key_value"],
         gs::config_parsing::StringToPrimitivePropertyType(
             src_primary_key_type));
     auto dst_pk_value_any = gs::ConvertStringToAny(
-        dst_primary_key_value,
+        input_props["dst_primary_key_value"],
         gs::config_parsing::StringToPrimitivePropertyType(
             dst_primary_key_type));
-    // LOG(INFO) << "src_label_id: " << int(src_label_id);
-    // LOG(INFO) << "dst_label_id: " << int(dst_label_id);
-    // LOG(INFO) << "edge_label_id: " << int(edge_label_id);
     auto txn = db.GetReadTransaction();
     gs::vid_t src_vid, dst_vid;
     if (txn.GetVertexIndex(src_label_id, src_pk_value_any, src_vid) == false ||
@@ -2609,33 +2571,26 @@ seastar::future<admin_query_result> admin_actor::get_edge(
           gs::Result<seastar::sstring>(
               gs::Status(gs::StatusCode::NotFound, "Vertex not found")));
     }
-    // LOG(INFO) << "src_vid: " << src_vid << " dst_vid: " << dst_vid;
-    bool edge_exists = false;
     for (auto edgeIt = txn.GetOutEdgeIterator(src_label_id, src_vid,
                                               dst_label_id, edge_label_id);
          edgeIt.IsValid(); edgeIt.Next()) {
-      if (edgeIt.GetNeighbor() == dst_vid) {
-        edge_exists = true;
-        nlohmann::json push_json;
-        push_json["name"] = column_names[0];
-        push_json["value"] = edgeIt.GetData().to_string();
-        result["properties"].push_back(push_json);
-        break;
-      }
+      if (edgeIt.GetNeighbor() != dst_vid)
+        continue;
+      nlohmann::json push_json;
+      push_json["name"] = column_names[0];
+      push_json["value"] = edgeIt.GetData().to_string();
+      result["properties"].push_back(push_json);
+      break;
     }
-    if (!edge_exists) {
+    if (result["properties"].empty()) {
       txn.Abort();
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::Status(gs::StatusCode::NotFound, "Edge not found")));
+      return error_response(gs::StatusCode::NotFound, "Edge not found");
     }
     txn.Commit();
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to get edge: " << e.what();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InternalError,
-                       "Fail to get edge: " + std::string(e.what()))));
+    error_response(gs::StatusCode::InternalError,
+                   "Fail to get edge: " + std::string(e.what()));
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(result.dump()));
@@ -2643,24 +2598,27 @@ seastar::future<admin_query_result> admin_actor::get_edge(
 
 seastar::future<admin_query_result> admin_actor::delete_vertex(
     graph_management_param&& param) {
-  // 404 unimplemented
-  return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(gs::Status(
-          gs::StatusCode::NotFound, "Delete vertex is not implemented")));
+  return error_response(gs::StatusCode::NotFound,
+                        "Delete vertex is not implemented");
 }
+
 seastar::future<admin_query_result> admin_actor::delete_edge(
     graph_management_param&& param) {
-  return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(gs::Status(
-          gs::StatusCode::NotFound, "Delete edge is not implemented")));
+  return error_response(gs::StatusCode::NotFound,
+                        "Delete edge is not implemented");
 }
 
 bool admin_actor::check_graph_id(const std::string& graph_id) {
   auto running_graph_res = metadata_store_->GetRunningGraph();
-  // LOG(INFO) << "Running graph: " << running_graph_res.value();
-  if (!running_graph_res.ok() || running_graph_res.value() != graph_id) {
+  if (!running_graph_res.ok() || running_graph_res.value() != graph_id)
     return false;
-  }
   return true;
 }
+
+seastar::future<admin_query_result> admin_actor::error_response(
+    gs::StatusCode error_code, std::string error_message) {
+  return seastar::make_ready_future<admin_query_result>(
+      gs::Result<seastar::sstring>(gs::Status(error_code, error_message)));
+}
+
 }  // namespace server

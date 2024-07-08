@@ -94,6 +94,8 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
   ACTOR_DO_WORK()
 
   bool check_graph_id(const std::string &graph_id);
+  seastar::future<admin_query_result> error_response(gs::StatusCode error_code,
+                                                     std::string error_message);
 
  private:
   std::mutex mtx_;
