@@ -17,9 +17,11 @@ from pydantic import validate_call, Field, StrictFloat, StrictStr, StrictInt
 from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
-from pydantic import StrictStr
+from pydantic import StrictBool, StrictStr
+from typing import Optional
 from graphscope.flex.rest.models.create_dataloading_job_response import CreateDataloadingJobResponse
 from graphscope.flex.rest.models.dataloading_job_config import DataloadingJobConfig
+from graphscope.flex.rest.models.dataloading_mr_job_config import DataloadingMRJobConfig
 from graphscope.flex.rest.models.job_status import JobStatus
 
 from graphscope.flex.rest.api_client import ApiClient, RequestSerialized
@@ -44,6 +46,7 @@ class JobApi:
     def delete_job_by_id(
         self,
         job_id: StrictStr,
+        delete_scheduler: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -63,6 +66,8 @@ class JobApi:
 
         :param job_id: (required)
         :type job_id: str
+        :param delete_scheduler:
+        :type delete_scheduler: bool
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -87,6 +92,7 @@ class JobApi:
 
         _param = self._delete_job_by_id_serialize(
             job_id=job_id,
+            delete_scheduler=delete_scheduler,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -112,6 +118,7 @@ class JobApi:
     def delete_job_by_id_with_http_info(
         self,
         job_id: StrictStr,
+        delete_scheduler: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -131,6 +138,8 @@ class JobApi:
 
         :param job_id: (required)
         :type job_id: str
+        :param delete_scheduler:
+        :type delete_scheduler: bool
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -155,6 +164,7 @@ class JobApi:
 
         _param = self._delete_job_by_id_serialize(
             job_id=job_id,
+            delete_scheduler=delete_scheduler,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -180,6 +190,7 @@ class JobApi:
     def delete_job_by_id_without_preload_content(
         self,
         job_id: StrictStr,
+        delete_scheduler: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -199,6 +210,8 @@ class JobApi:
 
         :param job_id: (required)
         :type job_id: str
+        :param delete_scheduler:
+        :type delete_scheduler: bool
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -223,6 +236,7 @@ class JobApi:
 
         _param = self._delete_job_by_id_serialize(
             job_id=job_id,
+            delete_scheduler=delete_scheduler,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -243,6 +257,7 @@ class JobApi:
     def _delete_job_by_id_serialize(
         self,
         job_id,
+        delete_scheduler,
         _request_auth,
         _content_type,
         _headers,
@@ -265,6 +280,10 @@ class JobApi:
         if job_id is not None:
             _path_params['job_id'] = job_id
         # process the query parameters
+        if delete_scheduler is not None:
+            
+            _query_params.append(('delete_scheduler', delete_scheduler))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
@@ -304,6 +323,7 @@ class JobApi:
     def get_dataloading_job_config(
         self,
         graph_id: StrictStr,
+        dataloading_job_config: DataloadingJobConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -316,13 +336,15 @@ class JobApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> DataloadingJobConfig:
+    ) -> DataloadingMRJobConfig:
         """get_dataloading_job_config
 
-        Get the data loading configuration
+        Post to get the data loading configuration for MapReduce Task
 
         :param graph_id: (required)
         :type graph_id: str
+        :param dataloading_job_config: (required)
+        :type dataloading_job_config: DataloadingJobConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -347,6 +369,7 @@ class JobApi:
 
         _param = self._get_dataloading_job_config_serialize(
             graph_id=graph_id,
+            dataloading_job_config=dataloading_job_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -354,7 +377,7 @@ class JobApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "DataloadingJobConfig",
+            '200': "DataloadingMRJobConfig",
             '500': "Error",
         }
         response_data = self.api_client.call_api(
@@ -372,6 +395,7 @@ class JobApi:
     def get_dataloading_job_config_with_http_info(
         self,
         graph_id: StrictStr,
+        dataloading_job_config: DataloadingJobConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -384,13 +408,15 @@ class JobApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[DataloadingJobConfig]:
+    ) -> ApiResponse[DataloadingMRJobConfig]:
         """get_dataloading_job_config
 
-        Get the data loading configuration
+        Post to get the data loading configuration for MapReduce Task
 
         :param graph_id: (required)
         :type graph_id: str
+        :param dataloading_job_config: (required)
+        :type dataloading_job_config: DataloadingJobConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -415,6 +441,7 @@ class JobApi:
 
         _param = self._get_dataloading_job_config_serialize(
             graph_id=graph_id,
+            dataloading_job_config=dataloading_job_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -422,7 +449,7 @@ class JobApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "DataloadingJobConfig",
+            '200': "DataloadingMRJobConfig",
             '500': "Error",
         }
         response_data = self.api_client.call_api(
@@ -440,6 +467,7 @@ class JobApi:
     def get_dataloading_job_config_without_preload_content(
         self,
         graph_id: StrictStr,
+        dataloading_job_config: DataloadingJobConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -455,10 +483,12 @@ class JobApi:
     ) -> RESTResponseType:
         """get_dataloading_job_config
 
-        Get the data loading configuration
+        Post to get the data loading configuration for MapReduce Task
 
         :param graph_id: (required)
         :type graph_id: str
+        :param dataloading_job_config: (required)
+        :type dataloading_job_config: DataloadingJobConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -483,6 +513,7 @@ class JobApi:
 
         _param = self._get_dataloading_job_config_serialize(
             graph_id=graph_id,
+            dataloading_job_config=dataloading_job_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -490,7 +521,7 @@ class JobApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "DataloadingJobConfig",
+            '200': "DataloadingMRJobConfig",
             '500': "Error",
         }
         response_data = self.api_client.call_api(
@@ -503,6 +534,7 @@ class JobApi:
     def _get_dataloading_job_config_serialize(
         self,
         graph_id,
+        dataloading_job_config,
         _request_auth,
         _content_type,
         _headers,
@@ -528,6 +560,8 @@ class JobApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if dataloading_job_config is not None:
+            _body_params = dataloading_job_config
 
 
         # set the HTTP header `Accept`
@@ -537,13 +571,26 @@ class JobApi:
             ]
         )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
         ]
 
         return self.api_client.param_serialize(
-            method='GET',
+            method='POST',
             resource_path='/api/v1/graph/{graph_id}/dataloading/config',
             path_params=_path_params,
             query_params=_query_params,

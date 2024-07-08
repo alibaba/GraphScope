@@ -45,13 +45,13 @@ def list_jobs() -> List[JobStatus]:
         return api_instance.list_jobs()
 
 
-def delete_job_by_id(job_identifier: str) -> str:
+def delete_job_by_id(job_identifier: str, delete_scheduler=False) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.JobApi(api_client)
-        return api_instance.delete_job_by_id(job_identifier)
+        return api_instance.delete_job_by_id(job_identifier, delete_scheduler)
 
 
 def get_job_by_id(job_identifier: str) -> JobStatus:

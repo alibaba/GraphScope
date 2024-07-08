@@ -16,9 +16,14 @@
 # limitations under the License.
 #
 
+import base64
 import datetime
+
+imoprt logging
 import os
 import tempfile
+
+logger = logging.getLogger("graphscope")
 
 
 def str_to_bool(s):
@@ -55,11 +60,21 @@ os.makedirs(DATASET_WORKSPACE, exist_ok=True)
 # and business scenarios, e.g. "INTERACTIVE",
 # "GRAPHSCOPE INSIGHT".
 SOLUTION = os.environ.get("SOLUTION", "GRAPHSCOPE_ONE")
-FRONTEND_TYPE = "Cypher/Gremlin"
-STORAGE_TYPE = "MutableCSR"
-ENGINE_TYPE = "Hiactor"
+if SOLUTION == "INTERACTIVE":
+    FRONTEND_TYPE = "Cypher/Gremlin"
+    STORAGE_TYPE = "MutableCSR"
+    ENGINE_TYPE = "Hiactor"
+elif SOLUTION == "GRAPHSCOPE_INSIGHT":
+    FRONTEND_TYPE = "Cypher/Gremlin"
+    STORAGE_TYPE = "MutablePersistent"
+    ENGINE_TYPE = "Gaia"
+else:
+    FRONTEND_TYPE = ""
+    STORAGE_TYPE = ""
+    ENGINE_TYPE = ""
 
-# cluster type, optional from "K8S", "HOSTS"
+
+# cluster type, optional from "KUBERNETES", "HOSTS"
 CLUSTER_TYPE = os.environ.get("CLUSTER_TYPE", "HOSTS")
 
 
@@ -89,6 +104,12 @@ GROOT_GRPC_PORT = os.environ.get("GROOT_GRPC_PORT", 55556)
 GROOT_GREMLIN_PORT = os.environ.get("GROOT_GREMLIN_PORT", 12312)
 GROOT_USERNAME = os.environ.get("GROOT_USERNAME", "")
 GROOT_PASSWORD = os.environ.get("GROOT_PASSWORD", "")
+try:
+    GROOT_PASSWORD = base64.b64decode(GROOT_PASSWORD).decode('utf-8')
+except Exception as e:
+    logger.warn("Invalid base64-encoded string found, use original value: %s", str(e))
+
+
 # dataloading service for groot
 STUDIO_WRAPPER_ENDPOINT = os.environ.get("STUDIO_WRAPPER_ENDPOINT", None)
 
@@ -102,7 +123,8 @@ BATCHSIZE = 4096
 # odps
 BASEID = os.environ.get("BASEID", None)
 PROJECT = os.environ.get("PROJECT", "graphscope")
-# enable dns
-ENABLE_DNS = (
-    str_to_bool(os.environ["ENABLE_DNS"]) if "ENABLE_DNS" in os.environ else False
+STUDIO_WRAPPER_ENDPOINT = os.environ.get("STUDIO_WRAPPER_ENDPOINT", None)
+# treat pod ip as accessible ip
+POD_ACCESSIBLE = (
+    str_to_bool(os.environ["POD_ACCESSIBLE"]) if "POD_ACCESSIBLE" in os.environ else False
 )

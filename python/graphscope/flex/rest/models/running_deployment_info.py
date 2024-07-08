@@ -60,8 +60,8 @@ class RunningDeploymentInfo(BaseModel):
     @field_validator('storage')
     def storage_validate_enum(cls, value):
         """Validates the enum"""
-        if value not in set(['MutableCSR']):
-            raise ValueError("must be one of enum values ('MutableCSR')")
+        if value not in set(['MutableCSR', 'MutablePersistent']):
+            raise ValueError("must be one of enum values ('MutableCSR', 'MutablePersistent')")
         return value
 
     model_config = {
