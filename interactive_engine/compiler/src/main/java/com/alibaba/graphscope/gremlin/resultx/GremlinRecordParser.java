@@ -267,14 +267,7 @@ public class GremlinRecordParser implements RecordParser<Object> {
 
     protected @Nullable Object parseValue(Common.Value value, @Nullable RelDataType dataType) {
         if (dataType instanceof GraphLabelType) {
-            try {
-                // TODO: there's a bug here, refer to #issue 3991.
-                // A temporally solution is to ignore the exception and further parse the value
-                // (since it should not be a label value)
-                return Utils.parseLabelValue(value, (GraphLabelType) dataType);
-            } catch (Exception e) {
-                // temporally ignore this, and further parse the value
-            }
+            return Utils.parseLabelValue(value, (GraphLabelType) dataType);
         }
         switch (value.getItemCase()) {
             case BOOLEAN:
