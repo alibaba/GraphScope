@@ -1701,14 +1701,25 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
       }
     }
     for (int i = 0; i < edge_num; i++) {
+      bool ret;
       if (vertex_num == 1) {
-        std::get<singleInsPtr>(txnWrite)->txn.AddEdge(
+        ret = std::get<singleInsPtr>(txnWrite)->txn.AddEdge(
             src_label_id[i], src_pk_value_any[i], dst_label_id[i],
             dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]);
-      } else
-        std::get<insPtr>(txnWrite)->txn.AddEdge(
+      } else {
+        ret = std::get<insPtr>(txnWrite)->txn.AddEdge(
             src_label_id[i], src_pk_value_any[i], dst_label_id[i],
             dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]);
+      }
+      if (ret == false) {
+        if (vertex_num == 1)
+          std::get<singleInsPtr>(txnWrite)->txn.Abort();
+        else
+          std::get<insPtr>(txnWrite)->txn.Abort();
+        return seastar::make_ready_future<admin_query_result>(
+            gs::Result<seastar::sstring>(gs::Status(
+                gs::StatusCode::InternalError, "Fail to create edge")));
+      }
     }
     if (vertex_num == 1)
       std::get<singleInsPtr>(txnWrite)->txn.Commit();
