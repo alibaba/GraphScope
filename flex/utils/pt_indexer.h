@@ -184,8 +184,8 @@ class PTIndexer {
       keys_ = new StringColumn(StorageStrategy::kMem,
                                type.additional_type_info.max_length);
     } else if (type == PropertyType::kStringView) {
-      keys_ = new StringViewColumn(StorageStrategy::kMem,
-                                   gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
+      keys_ = new StringColumn(StorageStrategy::kMem,
+                               gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
     } else {
       LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
     }
