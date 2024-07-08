@@ -1383,7 +1383,12 @@ struct temp<gs::InsertTransaction> {
 seastar::future<admin_query_result> admin_actor::create_vertex(
     graph_management_param&& param) {
   std::string graph_id = param.content.first;
-  nlohmann::json input_json = nlohmann::json::parse(param.content.second);
+  nlohmann::json input_json;
+  try{
+    input_json = nlohmann::json::parse(param.content.second);
+  }catch(...){
+    return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
+  }
 
   // 检查当前运行的图是否为 graph_id
   if (!check_graph_id(graph_id)) {
@@ -1738,7 +1743,12 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
 seastar::future<admin_query_result> admin_actor::create_edge(
     graph_management_param&& param) {
   std::string graph_id = param.content.first;
-  nlohmann::json input_json = nlohmann::json::parse(param.content.second);
+  nlohmann::json input_json;
+  try{
+    input_json = nlohmann::json::parse(param.content.second);
+  }catch(...){
+    return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
+  }
   // 检查当前运行的图是否为 graph_id
   if (!check_graph_id(graph_id)) {
     return seastar::make_ready_future<admin_query_result>(
@@ -1978,7 +1988,12 @@ seastar::future<admin_query_result> admin_actor::create_edge(
 seastar::future<admin_query_result> admin_actor::update_vertex(
     graph_management_param&& param) {
   std::string graph_id = param.content.first;
-  nlohmann::json input_json = nlohmann::json::parse(param.content.second);
+  nlohmann::json input_json;
+  try{
+    input_json = nlohmann::json::parse(param.content.second);
+  }catch(...){
+    return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
+  }
   // input value
   std::string label, primary_key_value;
   // compute value
@@ -2115,7 +2130,12 @@ seastar::future<admin_query_result> admin_actor::update_edge(
     graph_management_param&& param) {
   // input values
   const std::string& graph_id = param.content.first;
-  nlohmann::json input_json = nlohmann::json::parse(param.content.second);
+  nlohmann::json input_json;
+  try{
+    input_json = nlohmann::json::parse(param.content.second);
+  }catch(...){
+    return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
+  }
   std::unordered_map<std::string, std::string> input_props;
   std::vector<std::string> properties_array = {
       "src_label", "dst_label", "edge_label", "src_primary_key_value",
@@ -2190,7 +2210,7 @@ seastar::future<admin_query_result> admin_actor::update_edge(
     int vertex_label_exist = 0;
     enum src_or_dst { src, dst };
     src_or_dst sod;
-    // 检查 src_label 和 dst_label 是否存在
+    // Check for the existence of src_label and dst_label. 
     for (auto& vertex_types : schema_json["vertex_types"]) {
       if (vertex_label_exist == 2)
         break;
