@@ -1,0 +1,929 @@
+{
+  "vertex_table_to_type": {
+    "AKA_NAME.csv": "AKA_NAME",
+    "AKA_TITLE.csv": "AKA_TITLE",
+    "TITLE.csv": "TITLE",
+    "CHAR_NAME.csv": "CHAR_NAME",
+    "COMP_CAST_TYPE.csv": "COMP_CAST_TYPE",
+    "COMPANY_NAME.csv": "COMPANY_NAME",
+    "COMPANY_TYPE.csv": "COMPANY_TYPE",
+    "INFO_TYPE.csv": "INFO_TYPE",
+    "KEYWORD.csv": "KEYWORD",
+    "KIND_TYPE.csv": "KIND_TYPE",
+    "LINK_TYPE.csv": "LINK_TYPE",
+    "NAME.csv": "NAME",
+    "ROLE_TYPE.csv": "ROLE_TYPE",
+    "CAST_INFO.csv": "CAST_INFO",
+    "COMPLETE_CAST.csv": "COMPLETE_CAST",
+    "MOVIE_COMPANIES.csv": "MOVIE_COMPANIES",
+    "MOVIE_LINK.csv": "MOVIE_LINK"
+  },
+  "edge_table_to_type": {
+    "ALSO_KNOWN_AS_NAME.csv": {
+      "etype": "ALSO_KNOWN_AS_NAME",
+      "src_vertex_type": "AKA_NAME",
+      "dst_vertex_type": "NAME"
+    },
+    "ALSO_KNOWN_AS_TITLE.csv": {
+      "etype": "ALSO_KNOWN_AS_TITLE",
+      "src_vertex_type": "AKA_TITLE",
+      "dst_vertex_type": "TITLE"
+    },
+    "KIND_TYPE_TITLE.csv": {
+      "etype": "KIND_TYPE_TITLE",
+      "src_vertex_type": "KIND_TYPE",
+      "dst_vertex_type": "TITLE"
+    },
+    "MOVIE_INFO.csv": {
+      "etype": "MOVIE_INFO",
+      "src_vertex_type": "TITLE",
+      "dst_vertex_type": "INFO_TYPE"
+    },
+    "PERSON_INFO.csv": {
+      "etype": "PERSON_INFO",
+      "src_vertex_type": "NAME",
+      "dst_vertex_type": "INFO_TYPE"
+    },
+    "MOVIE_KEYWORD.csv": {
+      "etype": "MOVIE_KEYWORD",
+      "src_vertex_type": "TITLE",
+      "dst_vertex_type": "KEYWORD"
+    },
+    "CAST_INFO_NAME.csv": {
+      "etype": "CAST_INFO_NAME",
+      "src_vertex_type": "CAST_INFO",
+      "dst_vertex_type": "NAME"
+    },
+    "CAST_INFO_TITLE.csv": {
+      "etype": "CAST_INFO_TITLE",
+      "src_vertex_type": "CAST_INFO",
+      "dst_vertex_type": "TITLE"
+    },
+    "CAST_INFO_CHAR.csv": {
+      "etype": "CAST_INFO_CHAR",
+      "src_vertex_type": "CAST_INFO",
+      "dst_vertex_type": "CHAR_NAME"
+    },
+    "CAST_INFO_ROLE.csv": {
+      "etype": "CAST_INFO_ROLE",
+      "src_vertex_type": "CAST_INFO",
+      "dst_vertex_type": "ROLE_TYPE"
+    },
+    "COMPLETE_CAST_TITLE.csv": {
+      "etype": "COMPLETE_CAST_TITLE",
+      "src_vertex_type": "COMPLETE_CAST",
+      "dst_vertex_type": "TITLE"
+    },
+    "COMPLETE_CAST_SUBJECT.csv": {
+      "etype": "COMPLETE_CAST_SUBJECT",
+      "src_vertex_type": "COMPLETE_CAST",
+      "dst_vertex_type": "COMP_CAST_TYPE"
+    },
+    "COMPLETE_CAST_STATUS.csv": {
+      "etype": "COMPLETE_CAST_STATUS",
+      "src_vertex_type": "COMPLETE_CAST",
+      "dst_vertex_type": "COMP_CAST_TYPE"
+    },
+    "MOVIE_COMPANIES_TITLE.csv": {
+      "etype": "MOVIE_COMPANIES_TITLE",
+      "src_vertex_type": "MOVIE_COMPANIES",
+      "dst_vertex_type": "TITLE"
+    },
+    "MOVIE_COMPANIES_COMPANY_NAME.csv": {
+      "etype": "MOVIE_COMPANIES_COMPANY_NAME",
+      "src_vertex_type": "MOVIE_COMPANIES",
+      "dst_vertex_type": "COMPANY_NAME"
+    },
+    "MOVIE_COMPANIES_TYPE.csv": {
+      "etype": "MOVIE_COMPANIES_TYPE",
+      "src_vertex_type": "MOVIE_COMPANIES",
+      "dst_vertex_type": "COMPANY_TYPE"
+    },
+    "MOVIE_LINK_TITLE.csv": {
+      "etype": "MOVIE_LINK_TITLE",
+      "src_vertex_type": "MOVIE_LINK",
+      "dst_vertex_type": "TITLE"
+    },
+    "MOVIE_LINK_LINKED_TITLE.csv": {
+      "etype": "MOVIE_LINK_LINKED_TITLE",
+      "src_vertex_type": "MOVIE_LINK",
+      "dst_vertex_type": "TITLE"
+    },
+    "MOVIE_LINK_LINKED_TYPE.csv": {
+      "etype": "MOVIE_LINK_LINKED_TYPE",
+      "src_vertex_type": "MOVIE_LINK",
+      "dst_vertex_type": "LINK_TYPE"
+    },
+    "MOVIE_INFO_IDX.csv": {
+      "etype": "MOVIE_INFO_IDX",
+      "src_vertex_type": "TITLE",
+      "dst_vertex_type": "INFO_TYPE"
+    }
+  },
+  "vertex_columns": {
+    "AKA_NAME": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "name",
+        "String",
+        false
+      ],
+      [
+        "imdb_index",
+        "String",
+        false
+      ],
+      [
+        "name_pcode_cf",
+        "String",
+        false
+      ],
+      [
+        "name_pcode_nf",
+        "String",
+        false
+      ],
+      [
+        "surname_pcode",
+        "String",
+        false
+      ],
+      [
+        "md5sum",
+        "String",
+        false
+      ]
+    ],
+    "AKA_TITLE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "title",
+        "String",
+        false
+      ],
+      [
+        "imdb_index",
+        "String",
+        false
+      ],
+      [
+        "kind_id",
+        "Integer",
+        false
+      ],
+      [
+        "production_year",
+        "Integer",
+        false
+      ],
+      [
+        "phonetic_code",
+        "String",
+        false
+      ],
+      [
+        "episode_of_id",
+        "Integer",
+        false
+      ],
+      [
+        "season_nr",
+        "Integer",
+        false
+      ],
+      [
+        "episode_nr",
+        "Integer",
+        false
+      ],
+      [
+        "note",
+        "String",
+        false
+      ],
+      [
+        "md5sum",
+        "String",
+        false
+      ]
+    ],
+    "TITLE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "title",
+        "String",
+        false
+      ],
+      [
+        "imdb_index",
+        "String",
+        false
+      ],
+      [
+        "production_year",
+        "Integer",
+        false
+      ],
+      [
+        "imdb_id",
+        "Integer",
+        false
+      ],
+      [
+        "phonetic_code",
+        "String",
+        false
+      ],
+      [
+        "episode_of_id",
+        "Integer",
+        false
+      ],
+      [
+        "season_nr",
+        "Integer",
+        false
+      ],
+      [
+        "episode_nr",
+        "Integer",
+        false
+      ],
+      [
+        "series_years",
+        "String",
+        false
+      ],
+      [
+        "md5sum",
+        "String",
+        false
+      ]
+    ],
+    "CHAR_NAME": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "name",
+        "String",
+        false
+      ],
+      [
+        "imdb_index",
+        "String",
+        false
+      ],
+      [
+        "imdb_id",
+        "Integer",
+        false
+      ],
+      [
+        "name_pcode_nf",
+        "String",
+        false
+      ],
+      [
+        "surname_pcode",
+        "String",
+        false
+      ],
+      [
+        "md5sum",
+        "String",
+        false
+      ]
+    ],
+    "COMP_CAST_TYPE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "kind",
+        "String",
+        false
+      ]
+    ],
+    "COMPANY_NAME": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "name",
+        "String",
+        false
+      ],
+      [
+        "country_code",
+        "String",
+        false
+      ],
+      [
+        "imdb_id",
+        "Integer",
+        false
+      ],
+      [
+        "name_pcode_nf",
+        "String",
+        false
+      ],
+      [
+        "name_pcode_sf",
+        "String",
+        false
+      ],
+      [
+        "md5sum",
+        "String",
+        false
+      ]
+    ],
+    "COMPANY_TYPE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "kind",
+        "String",
+        false
+      ]
+    ],
+    "INFO_TYPE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "info",
+        "String",
+        false
+      ]
+    ],
+    "KEYWORD": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "keyword",
+        "String",
+        false
+      ],
+      [
+        "phonetic_code",
+        "String",
+        false
+      ]
+    ],
+    "KIND_TYPE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "kind",
+        "String",
+        false
+      ]
+    ],
+    "LINK_TYPE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "link",
+        "String",
+        false
+      ]
+    ],
+    "NAME": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "name",
+        "String",
+        false
+      ],
+      [
+        "imdb_index",
+        "String",
+        false
+      ],
+      [
+        "imdb_id",
+        "Integer",
+        false
+      ],
+      [
+        "gender",
+        "String",
+        false
+      ],
+      [
+        "name_pcode_cf",
+        "String",
+        false
+      ],
+      [
+        "name_pcode_nf",
+        "String",
+        false
+      ],
+      [
+        "surname_pcode",
+        "String",
+        false
+      ],
+      [
+        "md5sum",
+        "String",
+        false
+      ]
+    ],
+    "ROLE_TYPE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "role",
+        "String",
+        false
+      ]
+    ],
+    "CAST_INFO": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "person_id",
+        "Integer",
+        false
+      ],
+      [
+        "movie_id",
+        "Integer",
+        false
+      ],
+      [
+        "person_role_id",
+        "Integer",
+        false
+      ],
+      [
+        "note",
+        "String",
+        false
+      ],
+      [
+        "nr_order",
+        "Integer",
+        false
+      ],
+      [
+        "role_id",
+        "Integer",
+        false
+      ]
+    ],
+    "COMPLETE_CAST": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "movie_id",
+        "Integer",
+        false
+      ],
+      [
+        "subject_id",
+        "Integer",
+        false
+      ],
+      [
+        "status_id",
+        "Integer",
+        false
+      ]
+    ],
+    "MOVIE_COMPANIES": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "movie_id",
+        "Integer",
+        false
+      ],
+      [
+        "company_id",
+        "Integer",
+        false
+      ],
+      [
+        "company_type_id",
+        "Integer",
+        false
+      ],
+      [
+        "note",
+        "String",
+        false
+      ]
+    ],
+    "MOVIE_LINK": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "movie_id",
+        "Integer",
+        false
+      ],
+      [
+        "linked_movie_id",
+        "Integer",
+        false
+      ],
+      [
+        "link_type_id",
+        "Integer",
+        false
+      ]
+    ]
+  },
+  "edge_columns": {
+    "ALSO_KNOWN_AS_NAME": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "ALSO_KNOWN_AS_TITLE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "KIND_TYPE_TITLE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "MOVIE_INFO": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "info",
+        "String",
+        false
+      ],
+      [
+        "note",
+        "String",
+        false
+      ],
+      [
+        "id",
+        "Integer",
+        false
+      ]
+    ],
+    "PERSON_INFO": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "info",
+        "String",
+        false
+      ],
+      [
+        "note",
+        "String",
+        false
+      ],
+      [
+        "id",
+        "Integer",
+        false
+      ]
+    ],
+    "MOVIE_KEYWORD": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "id",
+        "ID",
+        false
+      ]
+    ],
+    "CAST_INFO_NAME": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "CAST_INFO_TITLE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "CAST_INFO_CHAR": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "CAST_INFO_ROLE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "COMPLETE_CAST_TITLE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "COMPLETE_CAST_SUBJECT": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "COMPLETE_CAST_STATUS": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "MOVIE_COMPANIES_TITLE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "MOVIE_COMPANIES_COMPANY_NAME": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "MOVIE_COMPANIES_TYPE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "MOVIE_LINK_TITLE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "MOVIE_LINK_LINKED_TITLE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "MOVIE_LINK_LINKED_TYPE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "MOVIE_INFO_IDX": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "info",
+        "String",
+        false
+      ],
+      [
+        "note",
+        "String",
+        false
+      ],
+      [
+        "id",
+        "Integer",
+        false
+      ]
+    ]
+  },
+  "vertex_type_to_id": {
+    "AKA_NAME": 0,
+    "AKA_TITLE": 1,
+    "TITLE": 2,
+    "CHAR_NAME": 3,
+    "COMP_CAST_TYPE": 4,
+    "COMPANY_NAME": 5,
+    "COMPANY_TYPE": 6,
+    "INFO_TYPE": 7,
+    "KEYWORD": 8,
+    "KIND_TYPE": 9,
+    "LINK_TYPE": 10,
+    "NAME": 11,
+    "ROLE_TYPE": 12,
+    "CAST_INFO": 13,
+    "COMPLETE_CAST": 14,
+    "MOVIE_COMPANIES": 15,
+    "MOVIE_LINK": 16
+  },
+  "edge_type_to_id": {
+    "ALSO_KNOWN_AS_NAME": 0,
+    "ALSO_KNOWN_AS_TITLE": 1,
+    "KIND_TYPE_TITLE": 2,
+    "MOVIE_INFO": 3,
+    "MOVIE_INFO_IDX": 4,
+    "PERSON_INFO": 5,
+    "MOVIE_KEYWORD": 6,
+    "CAST_INFO_NAME": 7,
+    "CAST_INFO_TITLE": 8,
+    "CAST_INFO_CHAR": 9,
+    "CAST_INFO_ROLE": 10,
+    "COMPLETE_CAST_TITLE": 11,
+    "COMPLETE_CAST_SUBJECT": 12,
+    "COMPLETE_CAST_STATUS": 13,
+    "MOVIE_COMPANIES_TITLE": 14,
+    "MOVIE_COMPANIES_COMPANY_NAME": 15,
+    "MOVIE_COMPANIES_TYPE": 16,
+    "MOVIE_LINK_LINKED_TITLE": 17,
+    "MOVIE_LINK_TITLE": 18,
+    "MOVIE_LINK_LINKED_TYPE": 19
+  },
+  "vertex_type_hierarchy": {},
+  "column_name_to_id": {}
+}
