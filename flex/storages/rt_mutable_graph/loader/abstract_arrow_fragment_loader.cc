@@ -95,12 +95,14 @@ void set_properties_column(gs::ColumnBase* col,
     set_column<double>(col, array, offset);
   } else if (col_type == PropertyType::kFloat) {
     set_column<float>(col, array, offset);
-  } else if (col_type == PropertyType::kStringMap) {
-    set_column_from_string_array(col, array, offset);
   } else if (col_type == PropertyType::kDate) {
     set_column_from_timestamp_array(col, array, offset);
   } else if (col_type == PropertyType::kDay) {
     set_column_from_timestamp_array_to_day(col, array, offset);
+  } else if (col_type == PropertyType::kStringMap) {
+    set_column_from_string_array(col, array, offset);
+  } else if (col_type == PropertyType::kStringView) {
+    set_column_from_string_array(col, array, offset);
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     set_column_from_string_array(col, array, offset);
   } else {
@@ -216,9 +218,13 @@ void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
     addVertexRecordBatchImpl<uint32_t>(v_label_id, v_files, supplier_creator);
   } else if (type == PropertyType::kUInt64) {
     addVertexRecordBatchImpl<uint64_t>(v_label_id, v_files, supplier_creator);
-  } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+  } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar ||
+             type.type_enum == impl::PropertyTypeImpl::kStringView) {
     addVertexRecordBatchImpl<std::string_view>(v_label_id, v_files,
                                                supplier_creator);
+  } else {
+    LOG(FATAL) << "Unsupported primary key type for vertex, type: " << type
+               << ", label: " << v_label_name;
   }
   VLOG(10) << "Finish init vertices for label " << v_label_name;
 }
