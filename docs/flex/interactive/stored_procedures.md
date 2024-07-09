@@ -104,5 +104,3 @@ You can also call the stored procedure via neo4j-native tools, like `cypher-shel
 ```cypher
 CALL test_procedure("marko") YIELD *;
 ```
-
-Note that you can not call stored procedure via `Tinkpop Gremlin` tools, since stored procedure is not supported in `Gremlin`.

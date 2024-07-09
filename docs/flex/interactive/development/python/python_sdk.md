@@ -319,7 +319,7 @@ print("start service ok", resp)
 
 After starting query service on the new graph, we are now able to submit queries to `modern_graph`.
 
-#### Submit gremlin queries
+<!-- #### Submit gremlin queries
 
 ````{note}
 By default, the Gremlin service is disabled. To enable it, try specifying the Gremlin port when creating an interactive instance.
@@ -342,14 +342,9 @@ while True:
     except StopIteration:
         break
 print(ret)
-```
+``` -->
 
 #### Submit cypher queries
-
-```python
-```
-
-#### Query the stored procedure
 
 ```python
 query = "MATCH (n) RETURN COUNT(n);"
@@ -362,9 +357,15 @@ with driver.getNeo4jSession() as session:
 ### Delete the graph
 
 Finally, we can delete the graph. The graph data and stored procedure bound to the graph will also be deleted.
+Currently Interactive forbid deleting a graph which is currently serving in the service, so to delete graph, stop the service first.
 
 ```python
-resp = self._sess.delete_graph(graph_id)
+# stop the service first
+resp = sess.stop_service()
+assert resp.is_ok()
+print("successfully stopped the service")
+
+resp = sess.delete_graph(graph_id)
 assert resp.is_ok()
 print("delete graph res: ", resp)
 ```

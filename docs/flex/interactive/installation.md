@@ -24,10 +24,11 @@ gsctl instance deploy --type interactive
 
 
 ```{note}
-1. Beside from the interactive server, a coordinator server is also launched. The coordinator server acts like the `ApiServer` for k8s,
-allowing users to interact with the GraphScope platform through a simplified and consistent set of API.
-2. Gremlin service is disabled by default, To enable it, try specifying the Gremlin port, see [Service-Accessibility](./installation.md#service-accessibility)
+In addition to the interactive server, a coordinator server is also deployed. The coordinator server functions similarly to the `ApiServer` for k8s, enabling users to engage with the GraphScope platform via a streamlined and standardized set of APIs.
 ```
+
+<!-- 2. Gremlin service is disabled by default, To enable it, try specifying the Gremlin port, see [Service-Accessibility](./installation.md#service-accessibility) -->
+
 
 
 The following message will display on your screen to inform you about the available services:
@@ -67,12 +68,12 @@ gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 77
                 --cypher-port 7688 --storedproc-port 10001
 ```
 
-By default, the gremlin service is disabled. To enable it, add the option `--gremlin-port 8183`.
+<!-- By default, the gremlin service is disabled. To enable it, add the option `--gremlin-port 8183`.
 
 ```bash
 gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 \ 
                 --cypher-port 7688 --storedproc-port 10001 --gremlin-port 8183
-```
+``` -->
 
 ## Service Accessibility
 

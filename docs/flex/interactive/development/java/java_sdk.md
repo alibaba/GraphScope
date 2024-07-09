@@ -339,7 +339,7 @@ public class GettingStarted{
 
 After starting query service on the new graph, we are now able to submit queries to `test_graph`.
 
-#### Submit gremlin queries
+<!-- #### Submit gremlin queries
 
 ```java
 public class GettingStarted{
@@ -357,7 +357,7 @@ public class GettingStarted{
         return ;
     }
 }
-```
+``` -->
 
 #### Submit cypher queries
 

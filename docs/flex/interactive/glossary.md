@@ -10,9 +10,9 @@ In GraphScope Interactive, a cypher query with parameters (denote with $ prefix)
 
 Cypher is a popular graph query language, used by [neo4j](https://neo4j.com/developer/cypher/).
 
-### Gremlin
+<!-- ### Gremlin
 
-[Gremlin](https://tinkerpop.apache.org/gremlin.html) is the graph traversal language of Apache TinkerPop. Gremlin is a functional, data-flow language that enables users to succinctly express complex traversals on (or queries of) their application's property graph. Every Gremlin traversal is composed of a sequence of (potentially nested) steps.
+[Gremlin](https://tinkerpop.apache.org/gremlin.html) is the graph traversal language of Apache TinkerPop. Gremlin is a functional, data-flow language that enables users to succinctly express complex traversals on (or queries of) their application's property graph. Every Gremlin traversal is composed of a sequence of (potentially nested) steps. -->
 
 ### Compile.
 

@@ -15,10 +15,10 @@ Below is a list of all configurable items:
 | admin-port       | 7777    | The port of the interactive admin service       | v0.3          |
 | storedproc-port   | 10000    | The port of the interactive stored procedure service      | v0.3          |
 | cypher-port       | 7687    | The port of the cypher service       | v0.3          |
-| gremlin-port       | None    | The port of the gremlin service       | v0.3          |
+<!-- | gremlin-port       | None    | The port of the gremlin service       | v0.3          | -->
 
 
-*Note: The default value for `gremlin-port` is `None`, meaning the Gremlin service will not be initiated by default.
+<!-- *Note: The default value for `gremlin-port` is `None`, meaning the Gremlin service will not be initiated by default. -->
 
 ### Default Ports
 
@@ -35,13 +35,13 @@ You can customize these ports as needed. For example:
 gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001
 ```
 
-### Enabling Gremlin Service
+<!-- ### Enabling Gremlin Service
 
 The Gremlin service is disabled by default. To enable it, add the `--gremlin-port` option:
 
 ```bash
 gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001 --gremlin-port 8183
-```
+``` -->
 
 
 <!-- Those content are commented but not deleted, since we will support those configurations later.
