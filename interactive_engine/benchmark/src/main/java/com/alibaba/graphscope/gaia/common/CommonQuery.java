@@ -16,9 +16,6 @@
 package com.alibaba.graphscope.gaia.common;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tinkerpop.gremlin.driver.Client;
-import org.apache.tinkerpop.gremlin.driver.Result;
-import org.apache.tinkerpop.gremlin.driver.ResultSet;
 import org.neo4j.driver.*;
 
 import java.io.BufferedReader;
@@ -49,7 +46,7 @@ public class CommonQuery {
     }
 
     public void processGremlinQuery(
-            Client client,
+            GraphClient client,
             HashMap<String, String> singleParameter,
             boolean printResult,
             boolean printQuery) {
@@ -57,7 +54,7 @@ public class CommonQuery {
             String gremlinQuery = generateGremlinQuery(singleParameter, queryPattern);
 
             long startTime = System.currentTimeMillis();
-            ResultSet resultSet = client.submit(gremlinQuery);
+            GraphResultSet resultSet = client.submit(gremlinQuery);
             Pair<Integer, String> result = processResult(resultSet);
             long endTime = System.currentTimeMillis();
             long executeTime = endTime - startTime;
@@ -130,13 +127,12 @@ public class CommonQuery {
         return gremlinQueryPattern;
     }
 
-    Pair<Integer, String> processResult(ResultSet resultSet) {
-        Iterator<Result> iterator = resultSet.iterator();
+    Pair<Integer, String> processResult(GraphResultSet resultSet) {
         int count = 0;
         String result = "";
-        while (iterator.hasNext()) {
+        while (resultSet.hasNext()) {
             count += 1;
-            result = String.format("%s\n%s", result, iterator.next().toString());
+            result = String.format("%s\n%s", result, resultSet.next().toString());
         }
         return Pair.of(count, result);
     }

@@ -16,9 +16,7 @@
 package com.alibaba.graphscope.gaia.common;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Result;
-import org.apache.tinkerpop.gremlin.driver.ResultSet;
 
 import java.util.HashMap;
 
@@ -31,7 +29,7 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
 
     @Override
     public void processGremlinQuery(
-            Client client,
+            GraphClient client,
             HashMap<String, String> singleParameter,
             boolean printResult,
             boolean printQuery) {
@@ -40,7 +38,7 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
             String gremlinQuery = generateGremlinQuery(singleParameter, queryPattern);
 
             long startTime = System.currentTimeMillis();
-            ResultSet resultSet = client.submit(gremlinQuery);
+            GraphResultSet resultSet = client.submit(gremlinQuery);
             int resultCount = 0;
             String resultStr = "";
 

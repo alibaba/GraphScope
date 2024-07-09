@@ -17,10 +17,10 @@ package com.alibaba.graphscope.gaia.benchmark;
 
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
+import com.alibaba.graphscope.gaia.common.GraphClient;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
 
-import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
 import org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0;
@@ -40,6 +40,8 @@ public class InteractiveBenchmark {
         Properties properties = PropertyUtil.getProperties(args[0], false);
         Configuration configuration = new Configuration(properties);
 
+        String queryLanguage = configuration.getString(Configuration.QUERY_LANGUAGE);
+
         String gremlinServerEndpoint =
                 configuration.getString(Configuration.GREMLIN_SERVER_ENDPOINT);
         int threadCount = configuration.getInt(Configuration.THREAD_COUNT, 1);
@@ -56,23 +58,27 @@ public class InteractiveBenchmark {
         AtomicInteger atomicParameterIndex = new AtomicInteger(0);
 
         class MyRunnable implements Runnable {
-            private Client client;
+            private GraphClient client;
 
             public MyRunnable(String endpoint, String username, String password) {
                 String[] address = endpoint.split(":");
                 try {
-                    Cluster.Builder cluster =
-                            Cluster.build()
-                                    .addContactPoint(address[0])
-                                    .port(Integer.parseInt(address[1]))
-                                    .serializer(initializeSerialize());
-                    if (!(username == null || username.isEmpty())
-                            && !(password == null || password.isEmpty())) {
-                        cluster.credentials(username, password);
-                    }
-                    client = cluster.create().connect();
+                    if ("gremlin".equalsIgnoreCase(queryLanguage)) {
 
-                    System.out.println("Connect success.");
+                        Cluster.Builder cluster =
+                                Cluster.build()
+                                        .addContactPoint(address[0])
+                                        .port(Integer.parseInt(address[1]))
+                                        .serializer(initializeSerialize());
+                        if (!(username == null || username.isEmpty())
+                                && !(password == null || password.isEmpty())) {
+                            cluster.credentials(username, password);
+                        }
+                        client = cluster.create().connect();
+                        System.out.println("Connect success.");
+                    } else {
+                        // todo: cypher
+                    }
                 } catch (Exception e) {
                     System.err.println("Connect failure, caused by : " + e);
                     throw new RuntimeException(e);
