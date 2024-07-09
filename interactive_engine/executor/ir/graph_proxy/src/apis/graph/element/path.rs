@@ -221,6 +221,22 @@ impl GraphPath {
             GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => {}
         }
     }
+
+    // get the element ids in the path, including both vertices and edges.
+    pub fn get_elem_ids(&self) -> Vec<ID> {
+        match self {
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => p.iter().map(|e| e.id()).collect(),
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => vec![e.id()],
+        }
+    }
+
+    // get the element labels in the path, including both vertices and edges.
+    pub fn get_elem_labels(&self) -> Vec<Option<LabelId>> {
+        match self {
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => p.iter().map(|e| e.label()).collect(),
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => vec![e.label()],
+        }
+    }
 }
 
 impl Element for VertexOrEdge {
