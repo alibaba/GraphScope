@@ -1681,7 +1681,7 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
       if (txnWrite.AddVertex(label_id, insert_id, insert_arr) == false) {
         txnWrite.Abort();
         return error_response(gs::StatusCode::InternalError,
-                              "Fail to create vertex: " + std::to_string(0) + "All inserts are rollbacked");
+                              "Fail to create vertex: " + std::to_string(0) + "; All inserts are rollbacked");
       }
       for (int i = 0; i < edge_num; i++) {
         if (txnWrite.AddEdge(
@@ -1689,7 +1689,7 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
               dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]) == false) {
           txnWrite.Abort();
           return error_response(gs::StatusCode::InternalError,
-                                "Fail to create edge: " + std::to_string(i) + "All inserts are rollbacked");
+                                "Fail to create edge: " + std::to_string(i) + "; All inserts are rollbacked");
         }
       }
       txnWrite.Commit();
@@ -1709,7 +1709,7 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
         if (txnWrite.AddVertex(label_id, insert_id, insert_arr) == false) {
           txnWrite.Abort();
           return error_response(gs::StatusCode::InternalError,
-                                "Fail to create vertex: " + std::to_string(i) + "All inserts are rollbacked");
+                                "Fail to create vertex: " + std::to_string(i) + "; All inserts are rollbacked");
         }
       }
       for (int i = 0; i < edge_num; i++) {
@@ -1718,7 +1718,7 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
               dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]) == false) {
           txnWrite.Abort();
           return error_response(gs::StatusCode::InternalError,
-                                "Fail to create edge: " + std::to_string(i) + "All inserts are rollbacked");
+                                "Fail to create edge: " + std::to_string(i) + "; All inserts are rollbacked");
         }
       }
       txnWrite.Commit();
@@ -1726,7 +1726,7 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to create vertex: " << e.what();
     return error_response(gs::StatusCode::InternalError,
-                          "Fail to create vertex: " + std::string(e.what()) + "All inserts are rollbacked");
+                          "Fail to create vertex: " + std::string(e.what()) + "; All inserts are rollbacked");
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
@@ -1941,9 +1941,9 @@ seastar::future<admin_query_result> admin_actor::create_edge(
       txn2.Commit();
     }
   } catch (std::exception& e) {
-    LOG(ERROR) << "Fail to add edge : " << e.what() << " All inserts are not committed.";
+    LOG(ERROR) << "Fail to add edge : " << e.what() << "; All inserts are not committed.";
     return error_response(gs::StatusCode::InternalError,
-                          "Fail to add edge : " + std::string(e.what()) + " All inserts are not committed.");
+                          "Fail to add edge : " + std::string(e.what()) + "; All inserts are not committed.");
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
