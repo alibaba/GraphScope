@@ -16,7 +16,7 @@
 # This script is used to generate the Java SDK from the Flex Interactive API
 # It uses the Swagger Codegen tool to generate the SDK
 
-CUR_DIR=$(cd `dirname $0`; pwd)
+CUR_DIR=$(cd $(dirname $0); pwd)
 OPENAPI_SPEC_PATH="${CUR_DIR}/../openapi/openapi_interactive.yaml"
 TMP_DIR=/tmp/interactive_api_doc/
 

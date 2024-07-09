@@ -685,67 +685,61 @@ class DefaultSession(Session):
 
     def trim_path(self, path: str) -> str:
         return path[1:] if path.startswith("@") else path
+    
+    def preprocess_inputs(self, location: str, inputs: List[str], schema_mapping: SchemaMapping):
+        root_dir_marked_with_at = False
+        if location and location.startswith("@"):
+            root_dir_marked_with_at = True
+        new_inputs = []
+        for i, input in enumerate(inputs):
+            # First check whether input is valid
+            if location and not root_dir_marked_with_at:
+                if input.startswith("@"):
+                    print(
+                        "Root location given without @, but the input file starts with @"
+                        + input + ", index: " + str(i),
+                    )
+                    return Result.error(
+                        Status(
+                            StatusCode.BAD_REQUEST,
+                            "Root location given without @, but the input file starts with @"
+                            + input + ", index: " + str(i),
+                        ),
+                        new_inputs,
+                    )
+            if location:
+                new_inputs.append(
+                    location + "/" + self.trim_path(input)
+                )
+            else:
+                new_inputs.append(input)
+        return Result.ok(new_inputs)
 
     def check_file_mixup(self, schema_mapping: SchemaMapping) -> Result[SchemaMapping]:
-        root_dir_marked_with_at = (
-            False  # Can not mix uploading file and not uploading file
-        )
         location = None
         if schema_mapping.loading_config and schema_mapping.loading_config.data_source:
             if schema_mapping.loading_config.data_source.scheme != "file":
                 print("Only check mixup for file scheme")
                 return Result.ok(schema_mapping)
             location = schema_mapping.loading_config.data_source.location
-        if location and location.startswith("@"):
-            root_dir_marked_with_at = True
+
         extracted_files = []
         if schema_mapping.vertex_mappings:
             for vertex_mapping in schema_mapping.vertex_mappings:
                 if vertex_mapping.inputs:
-                    for i, input in enumerate(vertex_mapping.inputs):
-                        # First check whether input is valid
-                        if location and not root_dir_marked_with_at:
-                            if input.startswith("@"):
-                                print(
-                                    "Root location given without @, but the input file starts with @"
-                                    + input
-                                )
-                                return Result.error(
-                                    Status(
-                                        StatusCode.BAD_REQUEST,
-                                        "Root location given without @, but the input file starts with @"
-                                        + input,
-                                    ),
-                                    schema_mapping,
-                                )
-                        if location:
-                            vertex_mapping.inputs[i] = (
-                                location + "/" + self.trim_path(input)
-                            )
-                        extracted_files.append(vertex_mapping.inputs[i])
+                    preprocess_result = self.preprocess_inputs(location, vertex_mapping.inputs, schema_mapping)
+                    if not preprocess_result.is_ok():
+                        return Result.error(preprocess_result.status, schema_mapping)
+                    vertex_mapping.inputs = preprocess_result.get_value()
+                    extracted_files.extend(vertex_mapping.inputs)
         if schema_mapping.edge_mappings:
             for edge_mapping in schema_mapping.edge_mappings:
                 if edge_mapping.inputs:
-                    for i, input in enumerate(edge_mapping.inputs):
-                        if location and not root_dir_marked_with_at:
-                            if input.startswith("@"):
-                                print(
-                                    "Root location given without @, but the input file starts with @"
-                                    + input
-                                )
-                                return Result.error(
-                                    Status(
-                                        StatusCode.BAD_REQUEST,
-                                        "Root location given without @, but the input file starts with @"
-                                        + input,
-                                    ),
-                                    schema_mapping,
-                                )
-                        if location:
-                            edge_mapping.inputs[i] = (
-                                location + "/" + self.trim_path(input)
-                            )
-                        extracted_files.append(edge_mapping.inputs[i])
+                    preprocess_result = self.preprocess_inputs(location, edge_mapping.inputs, schema_mapping)
+                    if not preprocess_result.is_ok():
+                        return Result.error(preprocess_result.status, schema_mapping)
+                    edge_mapping.inputs = preprocess_result.get_value()
+                    extracted_files.extend(edge_mapping.inputs)
         if extracted_files:
             # count the number of files start with @
             count = 0
