@@ -12,6 +12,9 @@ public class CypherGraphClient implements GraphClient {
         String uri = "bolt://" + endpoint;
         Driver driver = GraphDatabase.driver(uri, AuthTokens.basic(username, password));
         this.session = driver.session();
+        if (session == null) {
+            throw new RuntimeException("Failed to create session with neo4j server");
+        }
     }
 
     @Override

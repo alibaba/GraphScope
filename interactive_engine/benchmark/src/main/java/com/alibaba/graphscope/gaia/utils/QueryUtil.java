@@ -25,7 +25,8 @@ public class QueryUtil {
         String queryDir = configuration.getString(Configuration.QUERY_DIR);
         String parameterDir = configuration.getString(Configuration.PARAMETER_DIR);
         List<CommonQuery> queryList = new ArrayList<>();
-        String suffix = configuration.getString(Configuration.QUERY_SUFFIX, ".gremlin");
+        String defaultSuffix = configuration.getString(Configuration.QUERY_LANGUAGE);
+        String suffix = configuration.getString(Configuration.QUERY_SUFFIX, defaultSuffix);
 
         // for ldbc queries
         for (int index = 1; index <= 100; index++) {
