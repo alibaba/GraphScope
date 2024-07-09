@@ -1364,135 +1364,117 @@ std::string json_to_string(const nlohmann::json& json) {
     return json.dump();
   }
 }
-template <typename T>
-struct temp {
-  T txn;
-  temp(gs::GraphDBSession& db) { throw std::runtime_error("Not implemented"); }
-};
-template <>
-struct temp<gs::SingleVertexInsertTransaction> {
-  gs::SingleVertexInsertTransaction txn;
-  temp(gs::GraphDBSession& db) : txn(db.GetSingleVertexInsertTransaction()) {}
-};
-template <>
-struct temp<gs::InsertTransaction> {
-  gs::InsertTransaction txn;
-  temp(gs::GraphDBSession& db) : txn(db.GetInsertTransaction()) {}
-};
 
 seastar::future<admin_query_result> admin_actor::create_vertex(
     graph_management_param&& param) {
-  std::string graph_id = param.content.first;
+  // input values
+  const std::string& graph_id = param.content.first;
   nlohmann::json input_json;
   try {
     input_json = nlohmann::json::parse(param.content.second);
   } catch (...) {
     return error_response(gs::StatusCode::InvalidSchema, "Parsing json errors");
   }
+  //  Check if the currently running graph is graph_id
+  if (!check_graph_id(graph_id))
+    return error_response(gs::StatusCode::NotFound,
+                          "Graph not running: " + graph_id);
 
-  // 检查当前运行的图是否为 graph_id
-  if (!check_graph_id(graph_id)) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(
-            gs::StatusCode::NotFound, "Graph not running: " + graph_id)));
-  }
-  // 检查 metadata 里面有没有 graph_id 这张图
-  auto graph_meta_res = metadata_store_->GetGraphMeta(graph_id);
-  if (!graph_meta_res.ok()) {
-    LOG(ERROR) << "Graph not exists: " << graph_id;
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(gs::Status(
-            gs::StatusCode::NotFound, "Graph not exists: " + graph_id)));
-  }
-  auto& schema = graph_meta_res.value().schema;
-  auto schema_json = nlohmann::json::parse(schema);
-  // 检查输入的参数是否正确
+  // Check that the input parameters are correct
   if (input_json.contains("vertex_request") == false ||
       input_json["vertex_request"].is_array() == false ||
+      input_json["vertex_request"].size() == 0 ||
       (input_json.contains("edge_request") == true &&
        input_json["edge_request"].is_array() == false)) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InvalidSchema,
-                       "Bad Request: Bad input parameter, you need to "
-                       "provide an array of vertex and edge request")));
+    return error_response(gs::StatusCode::InvalidSchema,
+                          "Bad Request: Bad input parameter, you need to "
+                          "provide an array of vertex and edge request");
   }
   int vertex_num = input_json["vertex_request"].size();
-  int edge_num;
+  int edge_num = 0;
   if (input_json.contains("edge_request")) {
     edge_num = input_json["edge_request"].size();
-  } else {
-    edge_num = 0;
   }
-  // vertex相关的数据
-  std::vector<std::string> label, primary_key_value;
-  std::vector<std::unordered_map<std::string, gs::Any>> new_properties_map;
+  // vertex-related data
+  std::vector<std::unordered_map<std::string, std::string> > input_props_v;
+  std::vector<std::string> properties_array_v = {"label", "primary_key_value", "properties"};
   // compute value
+  std::vector<std::unordered_map<std::string, gs::Any>> new_properties_map;
   std::vector<std::string> primary_key_name(vertex_num);
   std::vector<std::vector<std::string>> colNames(vertex_num);
 
-  // edge相关的数据
-  std::vector<std::string> src_label, dst_label, edge_label,
-      src_primary_key_value, dst_primary_key_value;
-  std::vector<std::string> property_new_value;
-  // compute value
-  std::vector<std::string> src_primary_key_name(edge_num),
-      dst_primary_key_name(edge_num), src_primary_key_type(edge_num),
-      dst_primary_key_type(edge_num);
-  std::vector<gs::Any> property_new_value_any(edge_num);
-  // 输入顶点
+  // Input Vertex
   for (auto& vertex_insert : input_json["vertex_request"]) {
-    auto label_iter = vertex_insert.find("label");
-    auto primary_key_value_iter = vertex_insert.find("primary_key_value");
-    auto properties_iter = vertex_insert.find("properties");
-    if (label_iter == vertex_insert.end() ||
-        primary_key_value_iter == vertex_insert.end() ||
-        properties_iter == vertex_insert.end()) {
-      return seastar::make_ready_future<admin_query_result>(
-          gs::Result<seastar::sstring>(
-              gs::Status(gs::StatusCode::InvalidSchema,
-                         "Bad Request: Bad input parameter, you need to "
-                         "provide label, primary_key_value and properties")));
-    } else {
-      label.emplace_back(json_to_string(*label_iter));
-      primary_key_value.emplace_back(json_to_string(*primary_key_value_iter));
-      new_properties_map.emplace_back();
-      for (auto& property : (*properties_iter)["properties"]) {
-        auto name_string = json_to_string(property["name"]);
-        auto value_string = json_to_string(property["value"]);
-        new_properties_map.back().insert({name_string, gs::Any(value_string)});
+    new_properties_map.emplace_back();
+    input_props_v.emplace_back();
+    for (auto& input_property : properties_array_v) {
+      auto iter = vertex_insert.find(input_property);
+      if (iter == vertex_insert.end()) {
+        return error_response(
+            gs::StatusCode::InvalidSchema,
+            " Bad Request: Bad input parameter, missing " + input_property);
+      } 
+      if (input_property == "properties") {
+        if (iter->contains("properties") == false || (*iter)["properties"].is_array() == false) {
+          return error_response(gs::StatusCode::InvalidSchema,
+                                " Bad Request: Bad input parameter, properties "
+                                "should be an array");
+        }
+        for (auto& property : (*iter)["properties"]) {
+          try {
+            auto name_string = json_to_string(property["name"]);
+            auto value_string = json_to_string(property["value"]);
+            if (new_properties_map.back().find(name_string) != new_properties_map.back().end())
+              throw std::runtime_error(
+                  "property already exists in input properties: " +
+                  name_string);
+            new_properties_map.back().insert({name_string, gs::Any(value_string)});
+          } catch (std::exception& e) {
+            return error_response(gs::StatusCode::InvalidSchema,
+                                  " Bad Request: Bad input parameter");
+          }
+        }
+      } else {
+        input_props_v.back()[input_property] = json_to_string(*iter);
       }
     }
   }
-  // 输出参数
-  for (size_t i = 0; i < label.size(); i++) {
-    LOG(INFO) << "vertex_" << i << ": " << label[i] << "("
-              << primary_key_value[i] << ") properties: ";
+  for (int i = 0; i < vertex_num; i++) {
+    LOG(INFO) << "Insert Vertex{" << input_props_v[i]["label"]
+              << "}:" << input_props_v[i]["primary_key_value"]
+              << " for graph:" << graph_id;
     for (auto& property : new_properties_map[i]) {
       LOG(INFO) << property.first << ": " << property.second.to_string();
     }
   }
+  // Extract the graph_id from the metadata.
+  auto graph_meta_res = metadata_store_->GetGraphMeta(graph_id);
+  if (!graph_meta_res.ok())
+    return error_response(gs::StatusCode::NotFound,
+                          "Graph not exists: " + graph_id);
+  auto& schema = graph_meta_res.value().schema;
+  auto schema_json = nlohmann::json::parse(schema);
   try {
-    for (size_t i = 0; i < label.size(); i++) {
+    for (int i = 0; i < vertex_num; i++) {
       auto vertex_types_all = schema_json["vertex_types"];
       bool label_exists_in_schema = false;
-      // 检查 label 是否存在
+      // Check if the edge label exists
       for (auto& vertex_types : vertex_types_all) {
-        if (json_to_string(vertex_types["type_name"]) != label[i])
+        if (vertex_types["type_name"] != input_props_v[i]["label"])
           continue;
         label_exists_in_schema = true;
         primary_key_name[i] = vertex_types["primary_keys"][0];
         // compute colNames
         for (auto& property : vertex_types["properties"]) {
-          auto property_name = json_to_string(property["property_name"]);
+          auto property_name = property["property_name"];
           colNames[i].push_back(property_name);
           gs::PropertyType colType;
           gs::from_json(property["property_type"], colType);
           auto new_properties_map_iter =
               new_properties_map[i].find(property_name);
           if (property_name == primary_key_name[i]) {
-            new_properties_map[i][property_name] =
-                gs::ConvertStringToAny(primary_key_value[i], colType);
+            new_properties_map[i][property_name] = gs::ConvertStringToAny(
+                input_props_v[i]["primary_key_value"], colType);
             continue;
           }
           if (new_properties_map_iter == new_properties_map[i].end()) {
@@ -1506,235 +1488,245 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
         break;
       }
       if (!label_exists_in_schema) {
-        return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(
-                gs::Status(gs::StatusCode::NotFound,
-                           "Vertex Label not exists in schema: " + label[i])));
+        return error_response(
+            gs::StatusCode::NotFound,
+            "Vertex Label not exists in schema: " + input_props_v[i]["label"]);
       }
     }
   } catch (std::exception& e) {
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InternalError,
-                       "Fail to parse schema: " + std::string(e.what()))));
+    return error_response(gs::StatusCode::InternalError,
+                          "Fail to parse schema: " + std::string(e.what()));
   }
-  // 输入边
+  std::vector<std::unordered_map<std::string, std::string>> input_props_e;
+  std::vector<std::string> properties_array = {
+              "src_label", "dst_label", "edge_label", 
+              "src_primary_key_value", "dst_primary_key_value", "properties"};
+  // compute value
+  std::vector<gs::Any> src_pk_value_any(edge_num), dst_pk_value_any(edge_num),
+      property_new_value_any(edge_num);
+  // input edge
   if (input_json.contains("edge_request")) {
     for (auto& edge_insert : input_json["edge_request"]) {
-      auto src_label_iter = edge_insert.find("src_label");
-      auto dst_label_iter = edge_insert.find("dst_label");
-      auto edge_label_iter = edge_insert.find("edge_label");
-      auto src_primary_key_value_iter =
-          edge_insert.find("src_primary_key_value");
-      auto dst_primary_key_value_iter =
-          edge_insert.find("dst_primary_key_value");
-      auto properties_iter = edge_insert.find("properties");
-      if (src_label_iter == edge_insert.end() ||
-          dst_label_iter == edge_insert.end() ||
-          edge_label_iter == edge_insert.end() ||
-          src_primary_key_value_iter == edge_insert.end() ||
-          dst_primary_key_value_iter == edge_insert.end() ||
-          properties_iter == edge_insert.end()) {
-        return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(gs::Status(
-                gs::StatusCode::InvalidSchema,
-                "Bad Request: Bad input parameter, you need to provide "
-                "src_label, dst_label, edge_label, src_primary_key_value, "
-                "dst_primary_key_value and properties")));
-      } else {
-        src_label.emplace_back(*src_label_iter);
-        dst_label.emplace_back(*dst_label_iter);
-        edge_label.emplace_back(*edge_label_iter);
-        src_primary_key_value.emplace_back(
-            json_to_string(*src_primary_key_value_iter));
-        dst_primary_key_value.emplace_back(
-            json_to_string(*dst_primary_key_value_iter));
-        property_new_value.emplace_back(
-            json_to_string((*properties_iter)[0]["value"]));
+      input_props_e.emplace_back();
+      // Check that all parameters in the parameter
+      for (auto& input_property : properties_array) {
+        auto iter = edge_insert.find(input_property);
+        if (iter == edge_insert.end()) {
+          return error_response(
+              gs::StatusCode::InvalidSchema,
+              " Bad Request: Bad input parameter, missing " + input_property);
+        } 
+        if (input_property == "properties") {
+          if ((*iter).is_array() == false) {
+            return error_response(gs::StatusCode::InvalidSchema,
+                                  " Bad Request: Bad input parameter, "
+                                  "properties should be an array");
+          }
+          if ((*iter).size() != 1) {
+            return error_response(gs::StatusCode::InvalidSchema,
+                                  " Bad Request: size should be 1(only support "
+                                  "single property edge)");
+          }
+          if ((*iter)[0].contains("value") == false) {
+            return error_response(gs::StatusCode::InvalidSchema,
+                                  " Bad Request: Bad input parameter, "
+                                  "properties should contain value");
+          }
+          input_props_e.back()["property_new_value"] =
+              json_to_string((*iter)[0]["value"]);
+        } else {
+          input_props_e.back()[input_property] = json_to_string(*iter);
+        }
       }
     }
   }
-  // 输出参数
-  for (size_t i = 0; i < src_label.size(); i++) {
-    LOG(INFO) << "edge_" << i << ": " << src_label[i] << "("
-              << src_primary_key_value[i] << ") -> " << edge_label[i] << " -> "
-              << dst_label[i] << "(" << dst_primary_key_value[i] << ")"
-              << " properties: " << property_new_value[i];
+  for (int i = 0; i < edge_num; i++) {
+    LOG(INFO) << "edge_" << i << ": " << input_props_e[i]["src_label"] << "("
+              << input_props_e[i]["src_primary_key_value"] << ") -> "
+              << input_props_e[i]["edge_label"] << " -> "
+              << input_props_e[i]["dst_label"] << "("
+              << input_props_e[i]["dst_primary_key_value"] << ")"
+              << " properties: " << input_props_e[i]["property_new_value"];
   }
   try {
-    for (size_t i = 0; i < src_label.size(); i++) {
+    for (int i = 0; i < edge_num; i++) {
       auto edge_types_all = schema_json["edge_types"];
       bool edge_label_exists_in_schema = false;
-      // 检查 edge label 是否存在
+      // Check if the edge label exists
       for (auto& edge_types : edge_types_all) {
-        if (json_to_string(edge_types["type_name"]) != edge_label[i])
+        if (json_to_string(edge_types["type_name"]) !=
+            input_props_e[i]["edge_label"])
           continue;
         edge_label_exists_in_schema = true;
         gs::PropertyType colType =
             gs::config_parsing::StringToPrimitivePropertyType(
                 json_to_string(edge_types["properties"][0]["property_type"]
                                          ["primitive_type"]));
-        property_new_value_any[i] =
-            gs::ConvertStringToAny(property_new_value[i], colType);
+        property_new_value_any[i] = gs::ConvertStringToAny(
+            input_props_e[i]["property_new_value"], colType);
         break;
       }
       if (!edge_label_exists_in_schema) {
-        return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(gs::Status(
-                gs::StatusCode::NotFound,
-                "Edge Label not exists in schema: " + edge_label[i])));
+        return error_response(
+            gs::StatusCode::NotFound,
+            "Edge Label not exists in schema: " + input_props_e[i]["edge_label"]);
       }
       int vertex_label_exist = 0;
       enum src_or_dst { src, dst };
       src_or_dst sod;
-      // 检查 src_label 和 dst_label 是否存在
+      // Check for the exist of src_label and dst_label.
       for (auto& vertex_types : schema_json["vertex_types"]) {
         if (vertex_label_exist == 2)
           break;
         bool src_dst_same = false;
-        if (vertex_types["type_name"] == src_label[i]) {
+        if (vertex_types["type_name"] == input_props_e[i]["src_label"]) {
           vertex_label_exist++;
           sod = src_or_dst::src;
-          if (src_label[i] == dst_label[i]) {
+          if (input_props_e[i]["src_label"] == input_props_e[i]["dst_label"]) {
             vertex_label_exist++;
             src_dst_same = true;
           }
-        } else if (vertex_types["type_name"] == dst_label[i]) {
+        } else if (vertex_types["type_name"] == input_props_e[i]["dst_label"]) {
           vertex_label_exist++;
           sod = src_or_dst::dst;
         } else {
           continue;
         }
-        std::string& primary_key_name =
-            (sod == src_or_dst::src ? src_primary_key_name[i]
-                                    : dst_primary_key_name[i]);
-        std::string& primary_key_type =
-            (sod == src_or_dst::src ? src_primary_key_type[i]
-                                    : dst_primary_key_type[i]);
-        const std::string& label =
-            (sod == src_or_dst::src ? src_label[i] : dst_label[i]);
-        primary_key_name = vertex_types["primary_keys"][0];
+        gs::PropertyType primary_key_type;
+        auto& pk_value_any = (sod == src_or_dst::src ? src_pk_value_any[i]
+                                                     : dst_pk_value_any[i]);
+        const std::string& pk_value =
+            (sod == src_or_dst::src ? input_props_e[i]["src_primary_key_value"]
+                                    : input_props_e[i]["dst_primary_key_value"]);
+
+        std::string primary_key_name = vertex_types["primary_keys"][0];
         for (auto& property : vertex_types["properties"]) {
-          if (property["property_name"] != primary_key_name)
-            continue;
-          if (property["property_type"].find("primitive_type") !=
-              property["property_type"].end()) {
-            primary_key_type = property["property_type"]["primitive_type"];
-          } else if (property["property_type"].find("string") !=
-                     property["property_type"].end()) {
-            primary_key_type = "String";
-          } else {
-            LOG(ERROR) << "Primary key type not found";
-            return seastar::make_ready_future<admin_query_result>(
-                gs::Result<seastar::sstring>(gs::Status(
-                    gs::StatusCode::NotFound, "Primary key type not found")));
+          if (property["property_name"] == primary_key_name) {
+            gs::from_json(property["property_type"], primary_key_type);
+            pk_value_any = gs::ConvertStringToAny(pk_value, primary_key_type);
+            break;
           }
-          // LOG(INFO) << "Primary key type: " << primary_key_type;
-          break;
         }
         if (src_dst_same) {
-          dst_primary_key_name[i] = primary_key_name;
-          dst_primary_key_type[i] = primary_key_type;
+          dst_pk_value_any[i] = gs::ConvertStringToAny(
+              input_props_e[i]["dst_primary_key_value"], primary_key_type);
         }
       }
       if (vertex_label_exist != 2) {
-        return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(
-                gs::Status(gs::StatusCode::NotFound,
-                           "Vertex Label not exists in schema")));
+        return error_response(gs::StatusCode::NotFound,
+                              "Vertex Label not exists in schema");
       }
     }
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to parse schema: " << e.what();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InternalError,
-                       "Fail to parse schema: " + std::string(e.what()))));
+    return error_response(gs::StatusCode::InternalError,
+                          "Fail to parse schema: " + std::string(e.what()));
   }
   try {
     auto& db = gs::GraphDB::get().GetSession(hiactor::local_shard_id());
+    auto txn = db.GetReadTransaction();
     // solve edge insert
     std::vector<gs::label_t> src_label_id(edge_num), dst_label_id(edge_num),
         edge_label_id(edge_num);
-    std::vector<gs::Any> src_pk_value_any(edge_num), dst_pk_value_any(edge_num);
+    std::vector<gs::vid_t> src_vid(edge_num), dst_vid(edge_num);
     for (int i = 0; i < edge_num; i++) {
-      src_label_id[i] = db.schema().get_vertex_label_id(src_label[i]);
-      dst_label_id[i] = db.schema().get_vertex_label_id(dst_label[i]);
-      edge_label_id[i] = db.schema().get_edge_label_id(edge_label[i]);
-      src_pk_value_any[i] = gs::ConvertStringToAny(
-          src_primary_key_value[i],
-          gs::config_parsing::StringToPrimitivePropertyType(
-              src_primary_key_type[i]));
-      dst_pk_value_any[i] = gs::ConvertStringToAny(
-          dst_primary_key_value[i],
-          gs::config_parsing::StringToPrimitivePropertyType(
-              dst_primary_key_type[i]));
-    }
-    using singleInsTrans = temp<gs::SingleVertexInsertTransaction>;
-    using insTrans = temp<gs::InsertTransaction>;
-    using singleInsPtr = std::unique_ptr<singleInsTrans>;
-    using insPtr = std::unique_ptr<insTrans>;
-    std::variant<singleInsPtr, insPtr> txnWrite;
-    if (vertex_num == 1)
-      txnWrite = std::make_unique<singleInsTrans>(db);
-    else
-      txnWrite = std::make_unique<insTrans>(db);
-
-    for (int v_ins_id = 0; v_ins_id < vertex_num; v_ins_id++) {
-      auto label_id = db.schema().get_vertex_label_id(label[v_ins_id]);
-      std::vector<gs::Any> insert_arr;
-      gs::Any insert_id;
-      for (auto& col : colNames[v_ins_id]) {
-        if (col == primary_key_name[v_ins_id]) {
-          insert_id = new_properties_map[v_ins_id][col];
-        } else {
-          insert_arr.push_back(new_properties_map[v_ins_id][col]);
+      src_label_id[i] =
+          db.schema().get_vertex_label_id(input_props_e[i]["src_label"]);
+      dst_label_id[i] =
+          db.schema().get_vertex_label_id(input_props_e[i]["dst_label"]);
+      edge_label_id[i] =
+          db.schema().get_edge_label_id(input_props_e[i]["edge_label"]);
+      if (txn.GetVertexIndex(src_label_id[i], src_pk_value_any[i],
+                             src_vid[i]) == false ||
+          txn.GetVertexIndex(dst_label_id[i], dst_pk_value_any[i],
+                             dst_vid[i]) == false) {
+          // It could be that this point is about to be inserted
+          continue;
+      }
+      // If the edge already exists, just report the error
+      for (auto edgeIt = txn.GetOutEdgeIterator(
+               src_label_id[i], src_vid[i], dst_label_id[i], edge_label_id[i]);
+           edgeIt.IsValid(); edgeIt.Next()) {
+        if (edgeIt.GetNeighbor() == dst_vid[i]) {
+          txn.Abort();
+          return error_response(gs::StatusCode::AlreadyExists,
+                                "Edge already exists");
         }
       }
-      bool ret;
-      if (vertex_num == 1)
-        ret = std::get<singleInsPtr>(txnWrite)->txn.AddVertex(
-            label_id, insert_id, insert_arr);
-      else
-        ret = std::get<insPtr>(txnWrite)->txn.AddVertex(label_id, insert_id,
-                                                        insert_arr);
-      if (ret == false) {
-        return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(gs::Status(
-                gs::StatusCode::InternalError, "Fail to create vertex")));
+    }
+    // check vertex exists
+    for (int i = 0; i < vertex_num; i++) {
+      gs::vid_t vid;
+      if (txn.GetVertexIndex(
+              db.schema().get_vertex_label_id(input_props_v[i]["label"]),
+              new_properties_map[i][primary_key_name[i]], vid)) {
+        txn.Abort();
+        return error_response(gs::StatusCode::AlreadyExists,
+                              "Vertex already exists");
       }
     }
-    for (int i = 0; i < edge_num; i++) {
-      bool ret;
-      if (vertex_num == 1) {
-        ret = std::get<singleInsPtr>(txnWrite)->txn.AddEdge(
-            src_label_id[i], src_pk_value_any[i], dst_label_id[i],
-            dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]);
-      } else {
-        ret = std::get<insPtr>(txnWrite)->txn.AddEdge(
-            src_label_id[i], src_pk_value_any[i], dst_label_id[i],
-            dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]);
+    txn.Commit();
+    if (vertex_num == 1) {
+      auto txnWrite = db.GetSingleVertexInsertTransaction();
+      auto label_id = db.schema().get_vertex_label_id(input_props_v[0]["label"]);
+      std::vector<gs::Any> insert_arr;
+      gs::Any insert_id;
+      for (auto& col : colNames[0]) {
+        if (col == primary_key_name[0]) {
+          insert_id = new_properties_map[0][col];
+        } else {
+          insert_arr.push_back(new_properties_map[0][col]);
+        }
       }
-      if (ret == false) {
-        if (vertex_num == 1)
-          std::get<singleInsPtr>(txnWrite)->txn.Abort();
-        else
-          std::get<insPtr>(txnWrite)->txn.Abort();
-        return seastar::make_ready_future<admin_query_result>(
-            gs::Result<seastar::sstring>(gs::Status(
-                gs::StatusCode::InternalError, "Fail to create edge")));
+      if (txnWrite.AddVertex(label_id, insert_id, insert_arr) == false) {
+        txnWrite.Abort();
+        return error_response(gs::StatusCode::InternalError,
+                              "Fail to create vertex: " + std::to_string(0) + "All inserts are rollbacked");
       }
+      for (int i = 0; i < edge_num; i++) {
+        if (txnWrite.AddEdge(
+              src_label_id[i], src_pk_value_any[i], dst_label_id[i],
+              dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]) == false) {
+          txnWrite.Abort();
+          return error_response(gs::StatusCode::InternalError,
+                                "Fail to create edge: " + std::to_string(i) + "All inserts are rollbacked");
+        }
+      }
+      txnWrite.Commit();
+    } else {
+      auto txnWrite = db.GetInsertTransaction();
+      for (int i = 0; i < vertex_num; i++) {
+        auto label_id = db.schema().get_vertex_label_id(input_props_v[i]["label"]);
+        std::vector<gs::Any> insert_arr;
+        gs::Any insert_id;
+        for (auto& col : colNames[i]) {
+          if (col == primary_key_name[i]) {
+            insert_id = new_properties_map[i][col];
+          } else {
+            insert_arr.push_back(new_properties_map[i][col]);
+          }
+        }
+        if (txnWrite.AddVertex(label_id, insert_id, insert_arr) == false) {
+          txnWrite.Abort();
+          return error_response(gs::StatusCode::InternalError,
+                                "Fail to create vertex: " + std::to_string(i) + "All inserts are rollbacked");
+        }
+      }
+      for (int i = 0; i < edge_num; i++) {
+        if (txnWrite.AddEdge(
+              src_label_id[i], src_pk_value_any[i], dst_label_id[i],
+              dst_pk_value_any[i], edge_label_id[i], property_new_value_any[i]) == false) {
+          txnWrite.Abort();
+          return error_response(gs::StatusCode::InternalError,
+                                "Fail to create edge: " + std::to_string(i) + "All inserts are rollbacked");
+        }
+      }
+      txnWrite.Commit();
     }
-    if (vertex_num == 1)
-      std::get<singleInsPtr>(txnWrite)->txn.Commit();
-    else
-      std::get<insPtr>(txnWrite)->txn.Commit();
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to create vertex: " << e.what();
-    return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(
-            gs::Status(gs::StatusCode::InternalError,
-                       "Fail to create vertex: " + std::string(e.what()))));
+    return error_response(gs::StatusCode::InternalError,
+                          "Fail to create vertex: " + std::string(e.what()) + "All inserts are rollbacked");
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
@@ -1778,28 +1770,27 @@ seastar::future<admin_query_result> admin_actor::create_edge(
         return error_response(
             gs::StatusCode::InvalidSchema,
             " Bad Request: Bad input parameter, missing " + input_property);
-      } else {
-        if (input_property == "properties") {
-          if ((*iter).is_array() == false) {
-            return error_response(gs::StatusCode::InvalidSchema,
-                                  " Bad Request: Bad input parameter, "
-                                  "properties should be an array");
-          }
-          if ((*iter).size() != 1) {
-            return error_response(gs::StatusCode::InvalidSchema,
-                                  " Bad Request: size should be 1(only support "
-                                  "single property edge)");
-          }
-          if ((*iter)[0].contains("value") == false) {
-            return error_response(gs::StatusCode::InvalidSchema,
-                                  " Bad Request: Bad input parameter, "
-                                  "properties should contain value");
-          }
-          input_props.back()["property_new_value"] =
-              json_to_string((*iter)[0]["value"]);
-        } else {
-          input_props.back()[input_property] = json_to_string(*iter);
+      } 
+      if (input_property == "properties") {
+        if ((*iter).is_array() == false) {
+          return error_response(gs::StatusCode::InvalidSchema,
+                                " Bad Request: Bad input parameter, "
+                                "properties should be an array");
         }
+        if ((*iter).size() != 1) {
+          return error_response(gs::StatusCode::InvalidSchema,
+                                " Bad Request: size should be 1(only support "
+                                "single property edge)");
+        }
+        if ((*iter)[0].contains("value") == false) {
+          return error_response(gs::StatusCode::InvalidSchema,
+                                " Bad Request: Bad input parameter, "
+                                "properties should contain value");
+        }
+        input_props.back()["property_new_value"] =
+            json_to_string((*iter)[0]["value"]);
+      } else {
+        input_props.back()[input_property] = json_to_string(*iter);
       }
     }
   }
@@ -1971,8 +1962,8 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
   std::unordered_map<std::string, std::string> input_props;
   std::vector<std::string> properties_array = {"label", "primary_key_value",
                                                "properties"};
-  std::vector<std::string> colNames;
   // compute value
+  std::vector<std::string> colNames;
   std::string primary_key_name;
   std::unordered_map<std::string, gs::Any> new_properties_map;
   //  Check if the currently running graph is graph_id
@@ -1986,30 +1977,29 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
       return error_response(
           gs::StatusCode::InvalidSchema,
           " Bad Request: Bad input parameter, missing " + input_property);
-    } else {
-      if (input_property == "properties") {
-        if (iter->contains("properties") == false || (*iter)["properties"].is_array() == false) {
-          return error_response(gs::StatusCode::InvalidSchema,
-                                " Bad Request: Bad input parameter, properties "
-                                "should be an array");
-        }
-        for (auto& property : (*iter)["properties"]) {
-          try {
-            auto name_string = json_to_string(property["name"]);
-            auto value_string = json_to_string(property["value"]);
-            if (new_properties_map.find(name_string) != new_properties_map.end())
-              throw std::runtime_error(
-                  "property already exists in input properties: " +
-                  name_string);
-            new_properties_map.insert({name_string, gs::Any(value_string)});
-          } catch (std::exception& e) {
-            return error_response(gs::StatusCode::InvalidSchema,
-                                  " Bad Request: Bad input parameter");
-          }
-        }
-      } else {
-        input_props[input_property] = json_to_string(*iter);
+    } 
+    if (input_property == "properties") {
+      if (iter->contains("properties") == false || (*iter)["properties"].is_array() == false) {
+        return error_response(gs::StatusCode::InvalidSchema,
+                              " Bad Request: Bad input parameter, properties "
+                              "should be an array");
       }
+      for (auto& property : (*iter)["properties"]) {
+        try {
+          auto name_string = json_to_string(property["name"]);
+          auto value_string = json_to_string(property["value"]);
+          if (new_properties_map.find(name_string) != new_properties_map.end())
+            throw std::runtime_error(
+                "property already exists in input properties: " +
+                name_string);
+          new_properties_map.insert({name_string, gs::Any(value_string)});
+        } catch (std::exception& e) {
+          return error_response(gs::StatusCode::InvalidSchema,
+                                " Bad Request: Bad input parameter");
+        }
+      }
+    } else {
+      input_props[input_property] = json_to_string(*iter);
     }
   }
   // Extract the graph_id from the metadata.
