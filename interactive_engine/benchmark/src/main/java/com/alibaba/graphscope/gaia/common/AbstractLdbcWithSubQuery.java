@@ -28,14 +28,14 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
     }
 
     @Override
-    public void processGremlinQuery(
+    public void processGraphQuery(
             GraphClient client,
             HashMap<String, String> singleParameter,
             boolean printResult,
             boolean printQuery) {
 
         try {
-            String gremlinQuery = generateGremlinQuery(singleParameter, queryPattern);
+            String gremlinQuery = generateGraphQuery(singleParameter, queryPattern);
 
             long startTime = System.currentTimeMillis();
             GraphResultSet resultSet = client.submit(gremlinQuery);

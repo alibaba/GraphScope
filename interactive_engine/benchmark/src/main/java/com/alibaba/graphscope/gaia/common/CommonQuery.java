@@ -16,7 +16,6 @@
 package com.alibaba.graphscope.gaia.common;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.neo4j.driver.*;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -32,12 +31,12 @@ public class CommonQuery {
 
     public CommonQuery(String queryName, String queryFile) throws Exception {
         this.queryName = queryName;
-        this.queryPattern = getGremlinQueryPattern(queryFile);
+        this.queryPattern = getGraphQueryPattern(queryFile);
     }
 
     public CommonQuery(String queryName, String queryFile, String parameterFile) throws Exception {
         this.queryName = queryName;
-        this.queryPattern = getGremlinQueryPattern(queryFile);
+        this.queryPattern = getGraphQueryPattern(queryFile);
         this.parameters = getParameters(parameterFile);
     }
 
@@ -45,13 +44,13 @@ public class CommonQuery {
         return parameters.get(index % parameters.size());
     }
 
-    public void processGremlinQuery(
+    public void processGraphQuery(
             GraphClient client,
             HashMap<String, String> singleParameter,
             boolean printResult,
             boolean printQuery) {
         try {
-            String gremlinQuery = generateGremlinQuery(singleParameter, queryPattern);
+            String gremlinQuery = generateGraphQuery(singleParameter, queryPattern);
 
             long startTime = System.currentTimeMillis();
             GraphResultSet resultSet = client.submit(gremlinQuery);
@@ -81,43 +80,7 @@ public class CommonQuery {
         }
     }
 
-    public void processCypherQuery(
-            Session session,
-            HashMap<String, String> singleParameter,
-            boolean printResult,
-            boolean printQuery) {
-        try {
-            String cypherQuery = generateGremlinQuery(singleParameter, queryPattern);
-            long startTime = System.currentTimeMillis();
-            org.neo4j.driver.Result resultSet = session.run(cypherQuery);
-            Pair<Integer, String> result = processCypherResult(resultSet);
-            long endTime = System.currentTimeMillis();
-            long executeTime = endTime - startTime;
-            if (printQuery) {
-                String printInfo =
-                        String.format(
-                                "QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
-                                queryName,
-                                singleParameter.toString(),
-                                result.getLeft(),
-                                executeTime);
-                if (printResult) {
-                    printInfo = String.format("%s Result: { %s }", printInfo, result.getRight());
-                }
-                System.out.println(printInfo);
-            }
-
-        } catch (Exception e) {
-            System.out.println(
-                    String.format(
-                            "Timeout or failed: QueryName[%s], Parameter[%s].",
-                            queryName, singleParameter.toString()));
-            e.printStackTrace();
-        }
-    }
-
-    String generateGremlinQuery(
-            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
+    String generateGraphQuery(HashMap<String, String> singleParameter, String gremlinQueryPattern) {
         for (String parameter : singleParameter.keySet()) {
             gremlinQueryPattern =
                     gremlinQueryPattern.replace(
@@ -133,21 +96,12 @@ public class CommonQuery {
         while (resultSet.hasNext()) {
             count += 1;
             result = String.format("%s\n%s", result, resultSet.next().toString());
+            System.out.println(result);
         }
         return Pair.of(count, result);
     }
 
-    Pair<Integer, String> processCypherResult(org.neo4j.driver.Result cypherResult) {
-        int count = 0;
-        String result = "";
-        while (cypherResult.hasNext()) {
-            count += 1;
-            result = String.format("%s\n%s", result, cypherResult.next().asMap().toString());
-        }
-        return Pair.of(count, result);
-    }
-
-    private static String getGremlinQueryPattern(String gremlinQueryPath) throws Exception {
+    private static String getGraphQueryPattern(String gremlinQueryPath) throws Exception {
         FileInputStream fileInputStream = new FileInputStream(gremlinQueryPath);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
         String line;

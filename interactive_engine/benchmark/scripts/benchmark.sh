@@ -17,12 +17,6 @@ CURR_DIR=$(pwd)
 
 # Default class to run
 CLASS_TO_RUN=com.alibaba.graphscope.gaia.benchmark.InteractiveBenchmark
-if [ "$1" = "--cypher" ]; then
-    CLASS_TO_RUN=com.alibaba.graphscope.gaia.benchmark.CypherBenchmark
-elif [ "$1" = "--gremlin" ]; then
-    CLASS_TO_RUN=com.alibaba.graphscope.gaia.benchmark.InteractiveBenchmark
-fi
-
 cd "$(dirname "$0")"
 cd ../target
 tar -xf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz

@@ -17,13 +17,11 @@ package com.alibaba.graphscope.gaia.benchmark;
 
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
+import com.alibaba.graphscope.gaia.common.CypherGraphClient;
 import com.alibaba.graphscope.gaia.common.GraphClient;
+import com.alibaba.graphscope.gaia.common.GremlinGraphClient;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
-
-import org.apache.tinkerpop.gremlin.driver.Cluster;
-import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
-import org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -41,9 +39,7 @@ public class InteractiveBenchmark {
         Configuration configuration = new Configuration(properties);
 
         String queryLanguage = configuration.getString(Configuration.QUERY_LANGUAGE);
-
-        String gremlinServerEndpoint =
-                configuration.getString(Configuration.GREMLIN_SERVER_ENDPOINT);
+        String serverEndpoint = configuration.getString(Configuration.SERVER_ENDPOINT);
         int threadCount = configuration.getInt(Configuration.THREAD_COUNT, 1);
         int warmUpCount = configuration.getInt(Configuration.WARMUP_EVERY_QUERY, 0);
         int operationCount = configuration.getInt(Configuration.OPERATION_COUNT_EVERY_QUERY, 10);
@@ -61,24 +57,16 @@ public class InteractiveBenchmark {
             private GraphClient client;
 
             public MyRunnable(String endpoint, String username, String password) {
-                String[] address = endpoint.split(":");
                 try {
                     if ("gremlin".equalsIgnoreCase(queryLanguage)) {
-
-                        Cluster.Builder cluster =
-                                Cluster.build()
-                                        .addContactPoint(address[0])
-                                        .port(Integer.parseInt(address[1]))
-                                        .serializer(initializeSerialize());
-                        if (!(username == null || username.isEmpty())
-                                && !(password == null || password.isEmpty())) {
-                            cluster.credentials(username, password);
-                        }
-                        client = cluster.create().connect();
-                        System.out.println("Connect success.");
+                        this.client = new GremlinGraphClient(endpoint, username, password);
+                    } else if ("cypher".equalsIgnoreCase(queryLanguage)) {
+                        this.client = new CypherGraphClient(endpoint, username, password);
                     } else {
-                        // todo: cypher
+                        throw new IllegalArgumentException(
+                                "Unsupported query language: " + queryLanguage);
                     }
+                    System.out.println("Connect success.");
                 } catch (Exception e) {
                     System.err.println("Connect failure, caused by : " + e);
                     throw new RuntimeException(e);
@@ -92,7 +80,7 @@ public class InteractiveBenchmark {
                     CommonQuery commonQuery = ldbcQueryList.get(index % ldbcQueryList.size());
                     HashMap<String, String> queryParameter = commonQuery.getSingleParameter(index);
 
-                    commonQuery.processGremlinQuery(
+                    commonQuery.processGraphQuery(
                             client, queryParameter, printQueryResult, printQueryName);
                 }
                 System.out.println("Begin standard test...");
@@ -110,7 +98,7 @@ public class InteractiveBenchmark {
                         }
                         HashMap<String, String> queryParameter =
                                 commonQuery.getSingleParameter(parameterIndex);
-                        commonQuery.processGremlinQuery(
+                        commonQuery.processGraphQuery(
                                 client, queryParameter, printQueryResult, printQueryName);
                     } else {
                         break;
@@ -124,7 +112,7 @@ public class InteractiveBenchmark {
 
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < threadCount; i++) {
-            threadPool.submit(new MyRunnable(gremlinServerEndpoint, username, password));
+            threadPool.submit(new MyRunnable(serverEndpoint, username, password));
         }
 
         threadPool.shutdown();
@@ -146,9 +134,5 @@ public class InteractiveBenchmark {
             }
             Thread.sleep(10);
         }
-    }
-
-    private static MessageSerializer initializeSerialize() {
-        return new GryoMessageSerializerV1d0();
     }
 }
