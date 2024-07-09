@@ -64,6 +64,7 @@ class TestDriver(unittest.TestCase):
         self.bulkLoadingUploading()
         self.bulkLoadingFailure()
         self.list_graph()
+        self.get_graph_meta()
         self.runCypherQuery()
         self.runGremlinQuery()
         self.createCypherProcedure()
@@ -250,6 +251,15 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.list_graphs()
         assert resp.is_ok()
         print("list graph: ", resp.get_value())
+    
+    def get_graph_meta(self):
+        resp = self._sess.get_graph_meta(self._graph_id)
+        assert resp.is_ok()
+        print("get graph meta: ", resp.get_value())
+        # Now test calling with a int value, expect an exception raised
+        with self.assertRaises(Exception) as context:
+            resp = self._sess.get_graph_meta(1)
+
 
     def runCypherQuery(self):
         query = "MATCH (n) RETURN COUNT(n);"
