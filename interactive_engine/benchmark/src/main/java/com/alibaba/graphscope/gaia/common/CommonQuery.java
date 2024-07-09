@@ -48,7 +48,8 @@ public class CommonQuery {
             GraphClient client,
             HashMap<String, String> singleParameter,
             boolean printResult,
-            boolean printQuery) {
+            boolean printQuery,
+            BenchmarkResultComparator comparator) {
         try {
             String gremlinQuery = generateGraphQuery(singleParameter, queryPattern);
 
@@ -69,6 +70,9 @@ public class CommonQuery {
                     printInfo = String.format("%s Result: { %s }", printInfo, result.getRight());
                 }
                 System.out.println(printInfo);
+            }
+            if (!comparator.isEmpty()) {
+                comparator.compareResults(queryName, result.getRight());
             }
 
         } catch (Exception e) {

@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.benchmark;
 
+import com.alibaba.graphscope.gaia.common.BenchmarkResultComparator;
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
 import com.alibaba.graphscope.gaia.common.CypherGraphClient;
@@ -53,10 +54,19 @@ public class InteractiveBenchmark {
         AtomicInteger atomicQueryCount = new AtomicInteger(operationCount * threadCount);
         AtomicInteger atomicParameterIndex = new AtomicInteger(0);
 
+        String expectedResultsPath =
+                configuration.getString(Configuration.EXPECTED_RESULTS_PATH, null);
+        BenchmarkResultComparator comparator = new BenchmarkResultComparator(expectedResultsPath);
+
         class MyRunnable implements Runnable {
             private GraphClient client;
+            BenchmarkResultComparator comparator;
 
-            public MyRunnable(String endpoint, String username, String password) {
+            public MyRunnable(
+                    String endpoint,
+                    String username,
+                    String password,
+                    BenchmarkResultComparator comparator) {
                 try {
                     if ("gremlin".equalsIgnoreCase(queryLanguage)) {
                         this.client = new GremlinGraphClient(endpoint, username, password);
@@ -66,6 +76,7 @@ public class InteractiveBenchmark {
                         throw new IllegalArgumentException(
                                 "Unsupported query language: " + queryLanguage);
                     }
+                    this.comparator = comparator;
                     System.out.println("Connect success.");
                 } catch (Exception e) {
                     System.err.println("Connect failure, caused by : " + e);
@@ -81,7 +92,7 @@ public class InteractiveBenchmark {
                     HashMap<String, String> queryParameter = commonQuery.getSingleParameter(index);
 
                     commonQuery.processGraphQuery(
-                            client, queryParameter, printQueryResult, printQueryName);
+                            client, queryParameter, printQueryResult, printQueryName, comparator);
                 }
                 System.out.println("Begin standard test...");
                 while (true) {
@@ -99,7 +110,11 @@ public class InteractiveBenchmark {
                         HashMap<String, String> queryParameter =
                                 commonQuery.getSingleParameter(parameterIndex);
                         commonQuery.processGraphQuery(
-                                client, queryParameter, printQueryResult, printQueryName);
+                                client,
+                                queryParameter,
+                                printQueryResult,
+                                printQueryName,
+                                comparator);
                     } else {
                         break;
                     }
@@ -112,7 +127,7 @@ public class InteractiveBenchmark {
 
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < threadCount; i++) {
-            threadPool.submit(new MyRunnable(serverEndpoint, username, password));
+            threadPool.submit(new MyRunnable(serverEndpoint, username, password, comparator));
         }
 
         threadPool.shutdown();

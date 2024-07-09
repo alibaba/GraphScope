@@ -42,6 +42,8 @@ public class Configuration {
     public static final String PRINT_QUERY_NAME = "printQueryNames";
     public static final String PRINT_QUERY_RESULT = "printQueryResults";
 
+    public static final String EXPECTED_RESULTS_PATH = "expected_results.path";
+
     public Optional<String> getOption(String key) {
         String value = settings.get(key);
         if (value == null) {

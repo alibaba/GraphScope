@@ -34,10 +34,10 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>data/substitution_parameters</directory>
-            <outputDirectory>/data/substitution_parameters</outputDirectory>
+            <directory>data</directory>
+            <outputDirectory>/data/</outputDirectory>
             <includes>
-                <include>*</include>
+                <include>**/*</include>
             </includes>
         </fileSet>
     </fileSets>

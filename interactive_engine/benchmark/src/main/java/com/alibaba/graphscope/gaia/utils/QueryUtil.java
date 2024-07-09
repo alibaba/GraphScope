@@ -35,7 +35,7 @@ public class QueryUtil {
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
-                String queryName = String.format("LDBC_QUERY_%d", index);
+                String queryName = String.format("ldbc_query_%d", index);
                 if (index == 1) {
                     queryList.add(new LdbcQuery1(queryName, queryFilePath, parameterFilePath));
                 } else if (index == 2) {
@@ -66,7 +66,7 @@ public class QueryUtil {
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
-                String queryName = String.format("BI_QUERY_%d", index);
+                String queryName = String.format("bi_query_%d", index);
                 if (index == 1) {
                     queryList.add(new BiQuery1(queryName, queryFilePath, parameterFilePath));
                 } else if (index == 2) {
@@ -91,7 +91,7 @@ public class QueryUtil {
             String queryFileName = String.format("lsqb_query_%d.%s", index, suffix);
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
-                String queryName = String.format("LSQB_QUERY_%d", index);
+                String queryName = String.format("lsqb_query_%d", index);
                 queryList.add(new QueryWithoutParameter(queryName, queryFilePath));
             }
         }
@@ -105,7 +105,7 @@ public class QueryUtil {
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
-                String queryName = String.format("%d_HOP_QUERY", index);
+                String queryName = String.format("%d_hop_query", index);
 
                 queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
             }
@@ -118,7 +118,7 @@ public class QueryUtil {
         if (configuration.getBoolean(enableEsQuery, false)) {
             String queryFilePath = String.format("%s/%s", queryDir, esQueryFileName);
             String parameterFilePath = String.format("%s/%s", parameterDir, esParameterFileName);
-            String queryName = "EARLY_STOP_QUERY";
+            String queryName = "early_stop_query";
             queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
         }
 
@@ -130,7 +130,7 @@ public class QueryUtil {
             String queryFilePath = String.format("%s/%s", queryDir, subtaskQueryFileName);
             String parameterFilePath =
                     String.format("%s/%s", parameterDir, subtaskParameterFileName);
-            String queryName = "SUBTASK_QUERY";
+            String queryName = "subtask_query";
             queryList.add(new SubtaskQuery(queryName, queryFilePath, parameterFilePath));
         }
 
@@ -141,7 +141,7 @@ public class QueryUtil {
 
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
-                String queryName = String.format("CUSTOM_QUERY_WITHOUT_PARAMETER_%d", index);
+                String queryName = String.format("custom_constant_query_%d", index);
 
                 queryList.add(new QueryWithoutParameter(queryName, queryFilePath));
             }
@@ -156,7 +156,7 @@ public class QueryUtil {
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
-                String queryName = String.format("CUSTOM_QUERY_%d", index);
+                String queryName = String.format("custom_query_%d", index);
 
                 queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
             }

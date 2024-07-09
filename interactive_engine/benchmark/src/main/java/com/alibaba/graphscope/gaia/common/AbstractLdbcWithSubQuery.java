@@ -32,7 +32,8 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
             GraphClient client,
             HashMap<String, String> singleParameter,
             boolean printResult,
-            boolean printQuery) {
+            boolean printQuery,
+            BenchmarkResultComparator comparator) {
 
         try {
             String gremlinQuery = generateGraphQuery(singleParameter, queryPattern);
@@ -42,10 +43,10 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
             int resultCount = 0;
             String resultStr = "";
 
-            Pair<Integer, String> resultPair = processResult(resultSet);
-            resultCount += resultPair.getLeft();
-            if (printResult && !resultPair.getRight().isEmpty()) {
-                resultStr = String.format("%s%s", resultStr, resultPair.getValue());
+            Pair<Integer, String> result = processResult(resultSet);
+            resultCount += result.getLeft();
+            if (printResult && !result.getRight().isEmpty()) {
+                resultStr = String.format("%s%s", resultStr, result.getValue());
             }
 
             long endTime = System.currentTimeMillis();
@@ -59,6 +60,9 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
                     printInfo = String.format("%s Result: { %s }", printInfo, resultStr);
                 }
                 System.out.println(printInfo);
+            }
+            if (!comparator.isEmpty()) {
+                comparator.compareResults(queryName, result.getRight());
             }
         } catch (Exception e) {
             System.out.println(

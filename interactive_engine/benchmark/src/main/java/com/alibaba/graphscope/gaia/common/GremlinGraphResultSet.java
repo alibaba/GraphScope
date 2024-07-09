@@ -1,21 +1,29 @@
 package com.alibaba.graphscope.gaia.common;
 
+import org.apache.tinkerpop.gremlin.driver.Result;
 import org.apache.tinkerpop.gremlin.driver.ResultSet;
 
+import java.util.Iterator;
+
 public class GremlinGraphResultSet implements GraphResultSet {
-    private final ResultSet resultSet;
+    private final Iterator<Result> resultIterator;
 
     public GremlinGraphResultSet(ResultSet gremlinResultSet) {
-        this.resultSet = gremlinResultSet;
+        this.resultIterator = gremlinResultSet.iterator();
     }
 
     @Override
     public boolean hasNext() {
-        return resultSet.iterator().hasNext();
+        return resultIterator.hasNext();
     }
 
     @Override
     public Object next() {
-        return resultSet.iterator().next();
+        return resultIterator.next();
+    }
+
+    @Override
+    public Object get() {
+        return resultIterator;
     }
 }
