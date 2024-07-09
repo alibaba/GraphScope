@@ -3,21 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="GraphAr: Standard Graph Data File Format" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="storage_engine/graphar.html" />
-<meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="GraphAr is a file format for storing graph data that provides a standard format for different applications and systems to communicate with each other efficiently. With GraphAr, graph data can be im..." />
-<meta name="description" content="GraphAr is a file format for storing graph data that provides a standard format for different applications and systems to communicate with each other efficiently. With GraphAr, graph data can be im..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="GART: Bridging the Gap between Relational OLTP and Graph Workloads" href="gart.html" /><link rel="prev" title="In-memory immutable graphs on Vineyard" href="vineyard.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>GraphAr: Standard Graph Data File Format - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -121,7 +115,7 @@ MathJax = {
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -136,7 +130,7 @@ MathJax = {
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -144,7 +138,7 @@ MathJax = {
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -152,6 +146,60 @@ MathJax = {
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -164,6 +212,8 @@ MathJax = {
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -182,7 +232,8 @@ MathJax = {
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -233,23 +284,33 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">GraphScope Flex</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/coordinator.html">Coordinator</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Coordinator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../flex/coordinator/restful_api.html">Coordinator RESTFul API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/custom_graph_data.html">Using Custom Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/stored_procedures.html">Stored Procedures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/configuration.html">Engine Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/data_import.html">Data Import Configuration</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/restful_api.html">RESTful API Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/glossary.html">Glossary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/tools/admin_tool.html">The Administrative tool</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -257,7 +318,7 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine/deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -277,14 +338,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/llm_assistant.html">Using LLM as an Assistant in GIE</a></li>
@@ -325,8 +386,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -337,13 +398,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -387,18 +448,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -433,7 +494,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -582,6 +643,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.28.0/index.html">
+                
+                  v0.28.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.27.0/index.html">
                 
                   v0.27.0
@@ -609,18 +682,6 @@ MathJax = {
               <dd><a href="../v0.25.0/index.html">
                 
                   v0.25.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.24.0/index.html">
-                
-                  v0.24.0
                 
               </a></dd>
             
@@ -661,19 +722,21 @@ MathJax = {
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="edit-this-page">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/blob/main/docs/storage_engine/graphar.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
   <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/storage_engine/graphar.md" title="Edit this page">
-    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
-      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
-    </svg>
+    <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
 </div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -683,25 +746,25 @@ MathJax = {
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="graphar-standard-graph-data-file-format">
-<h1>GraphAr: Standard Graph Data File Format<a class="headerlink" href="#graphar-standard-graph-data-file-format" title="Permalink to this heading">#</a></h1>
+<h1>GraphAr: Standard Graph Data File Format<a class="headerlink" href="#graphar-standard-graph-data-file-format" title="Permalink to this heading">¶</a></h1>
 <p>GraphAr is a file format for storing graph data that provides a standard format for different applications and systems to communicate with each other efficiently. With GraphAr, graph data can be imported/exported, stored persistently, and used as a direct data source for graph processing applications. GraphAr is highly compatible with multiple data processing frameworks such as Apache Spark, Apache Hive, Neo4j.</p>
 <section id="the-graphar-file-format">
-<h2>The GraphAr File Format<a class="headerlink" href="#the-graphar-file-format" title="Permalink to this heading">#</a></h2>
+<h2>The GraphAr File Format<a class="headerlink" href="#the-graphar-file-format" title="Permalink to this heading">¶</a></h2>
 <section id="features">
-<h3>Features<a class="headerlink" href="#features" title="Permalink to this heading">#</a></h3>
+<h3>Features<a class="headerlink" href="#features" title="Permalink to this heading">¶</a></h3>
 <p>GraphAr supports the property graph data model and different representations for the graph structure such as COO, CSR and CSC. It is also compatible with existing widely-used file types including CSV, ORC and Parquet. Apache Spark can be utilized to generate, load and transform the GraphAr files efficiently. GraphAr is also flexible enough to modify the topology structure or the properties of the graph, or to construct a new graph with a set of selected vertices/edges.</p>
 </section>
 <section id="file-format">
-<h3>File Format<a class="headerlink" href="#file-format" title="Permalink to this heading">#</a></h3>
+<h3>File Format<a class="headerlink" href="#file-format" title="Permalink to this heading">¶</a></h3>
 <p>GraphAr consists of two types of files:</p>
 <ul class="simple">
 <li><p>YAML files to describe the meta information;</p></li>
 <li><p>data files to store the vertex and edge data.</p></li>
 </ul>
 <section id="information-files">
-<h4>Information files<a class="headerlink" href="#information-files" title="Permalink to this heading">#</a></h4>
+<h4>Information files<a class="headerlink" href="#information-files" title="Permalink to this heading">¶</a></h4>
 <p>GraphAr uses two kinds of files to store a graph: a group of Yaml files to describe meta information; and data files to store actual data for vertices and edges.
 A graph information file which named “<name>.graph.yml” describes the meta information for a graph whose name is <name>. The content of this file includes:</p>
 <ul class="simple">
@@ -715,49 +778,175 @@ A graph information file which named “<name>.graph.yml” describes the meta i
 <p>Please note that GraphAr supports the storage of multiple types of adjLists for a given group of edges, e.g., a group of edges could be accessed in both CSR and CSC way when two copies (one is <em>ordered_by_source</em> and the other is <em>ordered_by_dest</em>) of the relevant data are present in GraphAr.</p>
 </section>
 <section id="data-files">
-<h4>Data files<a class="headerlink" href="#data-files" title="Permalink to this heading">#</a></h4>
+<h4>Data files<a class="headerlink" href="#data-files" title="Permalink to this heading">¶</a></h4>
 <p>As previously mentioned, each logical vertex/edge table is divided into multiple physical tables stored in one of the following file formats:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://orc.apache.org/">Apache ORC</a></p></li>
 <li><p><a class="reference external" href="https://parquet.apache.org/">Apache Parquet</a></p></li>
 <li><p>CSV</p></li>
 </ul>
-<p>See <a class="reference external" href="https://alibaba.github.io/GraphAr/user-guide/getting-started.html#gar-information-files">Gar Information Files</a> and <a class="reference external" href="https://alibaba.github.io/GraphAr/user-guide/getting-started.html#gar-data-files">Gar Data Files</a> for an example.</p>
-<p>More details about the GraphAr file format can be found in the <a class="reference external" href="https://alibaba.github.io/GraphAr/user-guide/file-format.html">GraphAr File Format</a>.</p>
+<p>See <a class="reference external" href="https://graphar.apache.org/docs/specification/format#information-files">Information Files</a> and <a class="reference external" href="https://graphar.apache.org/docs/specification/format#data-files">Data Files</a> for an example.</p>
+<p>More details about the GraphAr file format can be found in the <a class="reference external" href="https://graphar.apache.org/docs/specification/format">GraphAr File Format</a>.</p>
+</section>
+<section id="data-types">
+<h4>Data Types<a class="headerlink" href="#data-types" title="Permalink to this heading">¶</a></h4>
 </section>
 </section>
+</section>
+<section id="property-data-types">
+<h2>Property Data Types<a class="headerlink" href="#property-data-types" title="Permalink to this heading">¶</a></h2>
+<p>GraphAr support a set of built-in property data types that are common in real use cases and supported by most file types (CSV, ORC, Parquet), includes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">Boolean</span> 
+<span class="o">-</span> <span class="n">Int32</span><span class="p">:</span> <span class="n">Integer</span> <span class="k">with</span> <span class="mi">32</span> <span class="n">bits</span>
+<span class="o">-</span> <span class="n">Int64</span><span class="p">:</span> <span class="n">Integer</span> <span class="k">with</span> <span class="mi">64</span> <span class="n">bits</span>
+<span class="o">-</span> <span class="n">Float</span><span class="p">:</span> <span class="mi">32</span><span class="o">-</span><span class="n">bit</span> <span class="n">floating</span> <span class="n">point</span> <span class="n">values</span>
+<span class="o">-</span> <span class="n">Double</span><span class="p">:</span> <span class="mi">64</span><span class="o">-</span><span class="n">bit</span> <span class="n">floating</span> <span class="n">point</span> <span class="n">values</span>
+<span class="o">-</span> <span class="n">String</span><span class="p">:</span> <span class="n">Textual</span> <span class="n">data</span>
+<span class="o">-</span> <span class="n">Date</span><span class="p">:</span> <span class="n">days</span> <span class="n">since</span> <span class="n">the</span> <span class="n">Unix</span> <span class="n">epoch</span>
+<span class="o">-</span> <span class="n">Timestamp</span><span class="p">:</span> <span class="n">milliseconds</span> <span class="n">since</span> <span class="n">the</span> <span class="n">Unix</span> <span class="n">epoch</span>
+<span class="o">-</span> <span class="n">List</span><span class="p">:</span> <span class="n">A</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">values</span> <span class="n">of</span> <span class="n">the</span> <span class="n">same</span> <span class="nb">type</span>
+</pre></div>
+</div>
 </section>
 <section id="graphar-in-graphscope">
-<h2>GraphAr in GraphScope<a class="headerlink" href="#graphar-in-graphscope" title="Permalink to this heading">#</a></h2>
-<p>GraphScope can read, store GraphAr formatted graph data.</p>
-<section id="loading-graphar-data-into-graphscope">
-<h3>Loading GraphAr Data into GraphScope<a class="headerlink" href="#loading-graphar-data-into-graphscope" title="Permalink to this heading">#</a></h3>
-<p>To load GraphAr formatted data into GraphScope:</p>
-<ol class="arabic simple">
-<li><p>Define the graph meta files with YAML. The meta files describe the properties of vertices and edges, and where the data files are stored.</p></li>
-<li><p>Load the graph data using the GraphScope client (Python) with graphscope.load_from_gar(graph_yaml_path) function. Here’s an example:</p></li>
-</ol>
+<h2>GraphAr in GraphScope<a class="headerlink" href="#graphar-in-graphscope" title="Permalink to this heading">¶</a></h2>
+<p>GraphScope provides a set of APIs to load and archive graph data in GraphAr format. The GraphScope client (Python) can be used to load and archive graph data in GraphAr format through the <code class="docutils literal notranslate"><span class="pre">save_to</span></code> and <code class="docutils literal notranslate"><span class="pre">load_from</span></code> functions.</p>
+<section id="saving-graph-data-in-graphar">
+<h3>Saving Graph Data in GraphAr<a class="headerlink" href="#saving-graph-data-in-graphar" title="Permalink to this heading">¶</a></h3>
+<p>You can save a graph in GraphAr format using the <code class="docutils literal notranslate"><span class="pre">save_to</span></code> function.</p>
+<p><code class="docutils literal notranslate"><span class="pre">save_to</span></code> supports the following GraphAr related parameters:</p>
+<ul class="simple">
+<li><p><strong>graphar_graph_name</strong>: The name of the graph, default is “graph”.</p></li>
+<li><p><strong>graphar_file_type</strong>: The file type of the graph data, including “csv”, “orc”, “parquet”. default is “parquet”.</p></li>
+<li><p><strong>graphar_vertex_chunk_size</strong>: The chunk size of the vertex data in graphar format, default is 2^18.</p></li>
+<li><p><strong>graphar_edge_chunk_size</strong>: The chunk size of the edge data in graphar format, default is 2^22.</p></li>
+<li><p><strong>graphar_store_in_local</strong>: Whether to make each worker store the part of the graph data in local file system, default is False.</p></li>
+<li><p><strong>selector</strong>: The selector to select the subgraph to save, if not specified, the whole graph will be saved.</p></li>
+</ul>
+<p>Here’s an example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscoped.dataset</span> <span class="kn">import</span> <span class="n">load_ldbc</span>
 
-<span class="n">graph_yaml_path</span> <span class="o">=</span> <span class="s2">&quot;file:///path-yaml/demo.graph.yml&quot;</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">load_from_gar</span><span class="p">(</span><span class="n">graph_yaml_path</span><span class="p">)</span>
-<span class="n">g</span><span class="o">.</span><span class="n">schema</span><span class="p">()</span>
+<span class="c1"># initialize a session</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">)</span>
+<span class="c1"># load ldbc graph</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">load_ldbc</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+
+<span class="c1"># save the ldbc graph to GraphAr format</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">save_to</span><span class="p">(</span>
+    <span class="s2">&quot;/tmp/ldbc_graphar/&quot;</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;graphar&quot;</span><span class="p">,</span>
+    <span class="n">graphar_graph_name</span><span class="o">=</span><span class="s2">&quot;ldbc&quot;</span><span class="p">,</span>  <span class="c1"># the name of the graph</span>
+    <span class="n">graphar_file_type</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>  <span class="c1"># the file type of the graph data</span>
+    <span class="n">graphar_vertex_chunk_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>  <span class="c1"># the chunk size of the vertex data</span>
+    <span class="n">graphar_edge_chunk_size</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>  <span class="c1"># the chunk size of the edge data</span>
+<span class="p">)</span>
+<span class="c1"># the result is a dictionary that contains the format and the URI path of the saved graph</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="p">{</span> <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;graphar&quot;</span><span class="p">,</span> <span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="s2">&quot;graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>You can also save a subgraph in GraphAr format using the <code class="docutils literal notranslate"><span class="pre">save_to</span></code> function with the <code class="docutils literal notranslate"><span class="pre">selector</span></code> parameter. Here’s an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscoped.dataset</span> <span class="kn">import</span> <span class="n">load_ldbc</span>
+
+<span class="c1"># initialize a session</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">)</span>
+<span class="c1"># load ldbc graph</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">load_ldbc</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+
+<span class="c1"># define the selector</span>
+<span class="c1"># we only want to save the &quot;person&quot; and &quot;comment&quot; vertices and the &quot;knows&quot; and &quot;replyOf&quot; edges</span>
+<span class="c1"># with the specified properties</span>
+<span class="n">selector</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;vertices&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;firstName&quot;</span><span class="p">,</span> <span class="s2">&quot;lastName&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;comment&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># None means all properties</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;edges&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;creationDate&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;likes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;creationDate&quot;</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># save the subgraph to GraphAr format</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">save_to</span><span class="p">(</span>
+    <span class="s2">&quot;/tmp/ldbc_subgraph_graphar/&quot;</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;graphar&quot;</span><span class="p">,</span>
+    <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">,</span>
+    <span class="n">graphar_graph_name</span><span class="o">=</span><span class="s2">&quot;ldbc_subgraph&quot;</span><span class="p">,</span>  <span class="c1"># the name of the graph</span>
+    <span class="n">graphar_file_type</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>  <span class="c1"># the file type of the graph data</span>
+    <span class="n">graphar_vertex_chunk_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>  <span class="c1"># the chunk size of the vertex data</span>
+    <span class="n">graphar_edge_chunk_size</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>  <span class="c1"># the chunk size of the edge data</span>
+<span class="p">)</span>
+<span class="c1"># the result is a dictionary that contains the format and the URI path of the saved graph</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="p">{</span> <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;graphar&quot;</span><span class="p">,</span> <span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="s2">&quot;graphar+file:///tmp/ldbc_graphar/ldbc_subgraph.graph.yaml&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
-<section id="archiving-the-graph-data-in-graphar">
-<h3>Archiving the Graph Data in GraphAr<a class="headerlink" href="#archiving-the-graph-data-in-graphar" title="Permalink to this heading">#</a></h3>
-<p>To archive the graph data in GraphAr format:</p>
-<ol class="arabic simple">
-<li><p>Define the graph meta files with YAML.</p></li>
-<li><p>Call the g.archive(graph_yaml_path) function, where g is the GraphScope graph object, and graph_yaml_path is the graph info file path. Here’s an example:</p></li>
-</ol>
+<section id="loading-graphar-data-into-graphscope">
+<h3>Loading GraphAr Data into GraphScope<a class="headerlink" href="#loading-graphar-data-into-graphscope" title="Permalink to this heading">¶</a></h3>
+<p>You can load a graph from GraphAr format data using the <code class="docutils literal notranslate"><span class="pre">load_from</span></code> function.</p>
+<p><code class="docutils literal notranslate"><span class="pre">load_from</span></code> supports the following GraphAr related parameters:</p>
+<ul class="simple">
+<li><p><strong>graphar_store_in_local</strong>: Whether the graph data is stored in the local file system of each worker, default is False.</p></li>
+<li><p><strong>selector</strong>: The selector to select the subgraph to load, if not specified, the whole graph will be loaded.</p></li>
+</ul>
+<p>Here’s an example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">pagerank</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">Graph</span> 
 
-<span class="n">graph_yaml_path</span> <span class="o">=</span> <span class="s2">&quot;file:///path-yaml/demo.graph.yml&quot;</span>
-<span class="n">g</span><span class="o">.</span><span class="n">archive</span><span class="p">(</span><span class="n">graph_yaml_path</span><span class="p">)</span>
+<span class="c1"># initialize a session</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">)</span>
+
+<span class="c1"># assume the graph data is saved in the &quot;/tmp/ldbc_graphar/&quot; directory and it&#39;s graph information file is &quot;ldbc.graph.yaml&quot;, that the URI is &quot;graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml&quot;</span>
+<span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml&quot;</span>
+
+<span class="c1"># load the graph from GraphAr format</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">sess</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+
+<span class="c1"># do some graph processing</span>
+<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="p">[]})</span>
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">pagerank</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;v.data&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>You can also load a subgraph from the whole ldbc dataset with GraphAr format data using the <code class="docutils literal notranslate"><span class="pre">load_from</span></code> function with the <code class="docutils literal notranslate"><span class="pre">selector</span></code> parameter. Here’s an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
+
+<span class="c1"># initialize a session</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">)</span>
+
+<span class="c1"># assume the ldbc data is saved in the &quot;/tmp/ldbc__graphar/&quot; directory and it&#39;s graph information file is &quot;ldbc.graph.yaml&quot;, that the URI is &quot;graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml&quot;</span>
+<span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml&quot;</span>
+
+<span class="c1"># define the selector, you want to only load the &quot;person&quot; and &quot;comment&quot; vertices and the &quot;knows&quot; and &quot;replyOf&quot; edges</span>
+<span class="n">selector</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;vertices&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;comment&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># None means all properties</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;edges&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;likes&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+
+<span class="c1"># do some graph processing</span>
+<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="p">[]})</span>
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">pagerank</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;v.data&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>More examples about how to use GraphAr in GraphScope can be found in the <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/unittest/test_graphar.py">test_graphar</a>.</p>
 </section>
 </section>
 </section>
@@ -826,13 +1015,15 @@ A graph information file which named “<name>.graph.yml” describes the meta i
 <li><a class="reference internal" href="#file-format">File Format</a><ul>
 <li><a class="reference internal" href="#information-files">Information files</a></li>
 <li><a class="reference internal" href="#data-files">Data files</a></li>
+<li><a class="reference internal" href="#data-types">Data Types</a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li><a class="reference internal" href="#property-data-types">Property Data Types</a></li>
 <li><a class="reference internal" href="#graphar-in-graphscope">GraphAr in GraphScope</a><ul>
+<li><a class="reference internal" href="#saving-graph-data-in-graphar">Saving Graph Data in GraphAr</a></li>
 <li><a class="reference internal" href="#loading-graphar-data-into-graphscope">Loading GraphAr Data into GraphScope</a></li>
-<li><a class="reference internal" href="#archiving-the-graph-data-in-graphar">Archiving the Graph Data in GraphAr</a></li>
 </ul>
 </li>
 </ul>
@@ -849,7 +1040,7 @@ A graph information file which named “<name>.graph.yml” describes the meta i
 </div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>

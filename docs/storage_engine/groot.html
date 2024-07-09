@@ -3,21 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Groot: Persistent Graph Store" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="storage_engine/groot.html" />
-<meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="Overview: In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, persistent graph store. While Vineyard focus..." />
-<meta name="description" content="Overview: In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, persistent graph store. While Vineyard focus..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="In-memory immutable graphs on Vineyard" href="vineyard.html" /><link rel="prev" title="GRIN: Graph Retrieval INterface" href="grin.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>Groot: Persistent Graph Store - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -121,7 +115,7 @@ MathJax = {
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -136,7 +130,7 @@ MathJax = {
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -144,7 +138,7 @@ MathJax = {
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -152,6 +146,60 @@ MathJax = {
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -164,6 +212,8 @@ MathJax = {
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -182,7 +232,8 @@ MathJax = {
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -233,23 +284,33 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">GraphScope Flex</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/coordinator.html">Coordinator</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Coordinator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../flex/coordinator/restful_api.html">Coordinator RESTFul API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/custom_graph_data.html">Using Custom Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/stored_procedures.html">Stored Procedures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/configuration.html">Engine Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/data_import.html">Data Import Configuration</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/restful_api.html">RESTful API Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/glossary.html">Glossary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/tools/admin_tool.html">The Administrative tool</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -257,7 +318,7 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine/deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -277,14 +338,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/llm_assistant.html">Using LLM as an Assistant in GIE</a></li>
@@ -325,8 +386,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -337,13 +398,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -387,18 +448,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -433,7 +494,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -582,6 +643,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.28.0/index.html">
+                
+                  v0.28.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.27.0/index.html">
                 
                   v0.27.0
@@ -609,18 +682,6 @@ MathJax = {
               <dd><a href="../v0.25.0/index.html">
                 
                   v0.25.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.24.0/index.html">
-                
-                  v0.24.0
                 
               </a></dd>
             
@@ -661,19 +722,21 @@ MathJax = {
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="edit-this-page">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/blob/main/docs/storage_engine/groot.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
   <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/storage_engine/groot.md" title="Edit this page">
-    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
-      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
-    </svg>
+    <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
 </div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -683,23 +746,23 @@ MathJax = {
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="groot-persistent-graph-store">
-<h1>Groot: Persistent Graph Store<a class="headerlink" href="#groot-persistent-graph-store" title="Permalink to this heading">#</a></h1>
+<h1>Groot: Persistent Graph Store<a class="headerlink" href="#groot-persistent-graph-store" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">#</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, persistent graph store. While Vineyard focuses on great support for in-memory whole graph analytics workloads, the persistent graph store is geared towards better supporting continuous graph data management services that frequently update the graph and answer traversal queries.</p>
 <p>The store is a distributed graph store built on top of the popular RocksDB key-value store. It adopts a row-oriented design to support frequent small updates to the graph. Each row is tagged with a snapshot ID as its version. A query reads the most recent version of rows relative to the snapshot ID when it starts and is hence not blocked by writes. For writes, we take a compromise between consistency and higher throughput. In our design, writes in the same session can be grouped and executed atomically as a unit, and the persistent store assigns a snapshot ID (which is a low-resolution timestamp of the current time) to each group and executes groups of writes by the order of their snapshot IDs and by a deterministic (though arbitrary) order for groups of writes that occur in the same snapshot ID. It provides high write throughput while still maintaining some degree of order and isolation, although it provides less consistency than strict snapshot isolation common in databases. We hope our design choice provides an interesting trade-off for practical usage.</p>
 </section>
 <section id="known-limitation">
-<h2>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this heading">#</a></h2>
+<h2>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this heading">¶</a></h2>
 <p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going forward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.</p>
 </section>
 <section id="deploy-groot">
-<h2>Deploy Groot<a class="headerlink" href="#deploy-groot" title="Permalink to this heading">#</a></h2>
+<h2>Deploy Groot<a class="headerlink" href="#deploy-groot" title="Permalink to this heading">¶</a></h2>
 <p>We use <a class="reference external" href="https://helm.sh">Helm</a> to deploy Groot on <a class="reference external" href="http://kubernetes.io">Kubernetes</a> Cluster.</p>
 <section id="prerequisites">
-<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h3>
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Kubernetes 1.21+</p></li>
 <li><p>Helm 3.2.0+</p></li>
@@ -709,9 +772,9 @@ MathJax = {
 <p>Refer to <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html"><span class="std std-doc">deploy graphscope on self managed k8s cluster</span></a> for more details guide.</p>
 </section>
 <section id="installation">
-<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h3>
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h3>
 <section id="install-from-artifacthub">
-<h4>Install from ArtifactHub<a class="headerlink" href="#install-from-artifacthub" title="Permalink to this heading">#</a></h4>
+<h4>Install from ArtifactHub<a class="headerlink" href="#install-from-artifacthub" title="Permalink to this heading">¶</a></h4>
 <p>The latest stable version of <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope-store">Groot</a> can be installed from ArtifactHub by using the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>graphscope<span class="w"> </span>https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
 helm<span class="w"> </span>repo<span class="w"> </span>update
@@ -720,7 +783,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </div>
 </section>
 <section id="installing-from-a-local-directory">
-<h4>Installing from a local directory<a class="headerlink" href="#installing-from-a-local-directory" title="Permalink to this heading">#</a></h4>
+<h4>Installing from a local directory<a class="headerlink" href="#installing-from-a-local-directory" title="Permalink to this heading">¶</a></h4>
 <p>If you want to apply the latest updates or modify some files, you can clone the <a class="reference external" href="https://github.com/alibaba/GraphScope">GraphScope</a> repository and install Groot from a local directory by using the following commands:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>GraphScope/charts/graphscope-store
 helm<span class="w"> </span>dependency<span class="w"> </span>update<span class="w">  </span><span class="c1"># fetch the dependency charts</span>
@@ -740,7 +803,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </section>
 </section>
 <section id="common-configurations">
-<h3>Common Configurations<a class="headerlink" href="#common-configurations" title="Permalink to this heading">#</a></h3>
+<h3>Common Configurations<a class="headerlink" href="#common-configurations" title="Permalink to this heading">¶</a></h3>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -790,6 +853,10 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 <td><p>the maximum qps can be handled by frontend service</p></td>
 <td><p>2147483647 (without limitation)</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference external" href="http://query.execution.timeout.ms">query.execution.timeout.ms</a></p></td>
+<td><p>the total execution time for a query</p></td>
+<td><p>3000000</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -817,10 +884,10 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 <p>It will specify the image tag to be pulled as latest while setting the username and password.</p>
 </section>
 <section id="connecting-to-groot">
-<h3>Connecting to Groot<a class="headerlink" href="#connecting-to-groot" title="Permalink to this heading">#</a></h3>
+<h3>Connecting to Groot<a class="headerlink" href="#connecting-to-groot" title="Permalink to this heading">¶</a></h3>
 <p>Upon installing Groot, an empty graph is created by default. We can execute connections, define graph models, load data, and perform queries using the <a class="reference external" href="https://tinkerpop.apache.org/gremlin.html">Gremlin Query Language</a>.</p>
 <section id="connection">
-<h4>Connection<a class="headerlink" href="#connection" title="Permalink to this heading">#</a></h4>
+<h4>Connection<a class="headerlink" href="#connection" title="Permalink to this heading">¶</a></h4>
 <p>In the previous step, upon executing the command to obtain connection information as printed by Helm, the said information is set to environment variables. The following statement can be used to obtain and connect to Groot:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">graphscope</span>
@@ -839,7 +906,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </div>
 </section>
 <section id="building-and-modifying-graph-models">
-<h4>Building and Modifying Graph Models<a class="headerlink" href="#building-and-modifying-graph-models" title="Permalink to this heading">#</a></h4>
+<h4>Building and Modifying Graph Models<a class="headerlink" href="#building-and-modifying-graph-models" title="Permalink to this heading">¶</a></h4>
 <p>The graph object can be obtained through the <code class="docutils literal notranslate"><span class="pre">conn</span></code> object.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="c1"># Create schema</span>
@@ -848,7 +915,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </div>
 </section>
 <section id="using-built-in-datasets">
-<h4>Using Built-in Datasets<a class="headerlink" href="#using-built-in-datasets" title="Permalink to this heading">#</a></h4>
+<h4>Using Built-in Datasets<a class="headerlink" href="#using-built-in-datasets" title="Permalink to this heading">¶</a></h4>
 <p>If <code class="docutils literal notranslate"><span class="pre">dataset.modern=true</span></code> is set during installation, Groot will load a simple example dataset for quick start.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -856,7 +923,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </div>
 </section>
 <section id="customizing-models-and-datasets">
-<h4>Customizing Models and Datasets<a class="headerlink" href="#customizing-models-and-datasets" title="Permalink to this heading">#</a></h4>
+<h4>Customizing Models and Datasets<a class="headerlink" href="#customizing-models-and-datasets" title="Permalink to this heading">¶</a></h4>
 <p>Users can also customize models and load their own datasets.</p>
 <p>Common statements used to define graph models are as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">add_vertex_label</span><span class="p">(</span><span class="s1">&#39;v_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">add_primary_key</span><span class="p">(</span><span class="s1">&#39;pk_name&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;prop_name_1&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;prop_name_2&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">)</span>
@@ -883,9 +950,9 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </section>
 </section>
 <section id="querying-data">
-<h3>Querying Data<a class="headerlink" href="#querying-data" title="Permalink to this heading">#</a></h3>
+<h3>Querying Data<a class="headerlink" href="#querying-data" title="Permalink to this heading">¶</a></h3>
 <section id="python">
-<h4>Python<a class="headerlink" href="#python" title="Permalink to this heading">#</a></h4>
+<h4>Python<a class="headerlink" href="#python" title="Permalink to this heading">¶</a></h4>
 <p>Using the connection information obtained earlier, we can perform Gremlin queries in Python.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">gremlin</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">toList</span><span class="p">())</span>
@@ -920,7 +987,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </div>
 </section>
 <section id="java">
-<h4>Java<a class="headerlink" href="#java" title="Permalink to this heading">#</a></h4>
+<h4>Java<a class="headerlink" href="#java" title="Permalink to this heading">¶</a></h4>
 <ol class="arabic simple">
 <li><p>Create a directory structure as follows, where pom.xml and Main.java are files</p></li>
 </ol>
@@ -1024,7 +1091,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </div>
 </section>
 <section id="node-js">
-<h4>Node.js<a class="headerlink" href="#node-js" title="Permalink to this heading">#</a></h4>
+<h4>Node.js<a class="headerlink" href="#node-js" title="Permalink to this heading">¶</a></h4>
 <ol class="arabic simple">
 <li><p>Install package <code class="docutils literal notranslate"><span class="pre">gremlin</span></code> for javascript</p></li>
 </ol>
@@ -1059,13 +1126,13 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </section>
 </section>
 <section id="data-import">
-<h2>Data Import<a class="headerlink" href="#data-import" title="Permalink to this heading">#</a></h2>
+<h2>Data Import<a class="headerlink" href="#data-import" title="Permalink to this heading">¶</a></h2>
 <p>There are two methods for importing data. One method is to batch import data from external storage (such as HDFS) using an offline import tool, and the other is to perform real-time writing using statements provided by the SDK.</p>
 <p>Note: Offline import will *<em>overwrite</em> the full data of the imported label.</p>
 <section id="offline-import">
-<h3>Offline Import<a class="headerlink" href="#offline-import" title="Permalink to this heading">#</a></h3>
+<h3>Offline Import<a class="headerlink" href="#offline-import" title="Permalink to this heading">¶</a></h3>
 <section id="prerequisite">
-<h4>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this heading">#</a></h4>
+<h4>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this heading">¶</a></h4>
 <ul class="simple">
 <li><p>Hadoop Cluster</p></li>
 <li><p>Data import tool <a class="reference external" href="https://github.com/alibaba/GraphScope/releases/download/v0.20.0/data_load.tar.gz">data_load.tar.gz</a></p></li>
@@ -1076,7 +1143,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </div>
 </section>
 <section id="data-format">
-<h4>Data Format<a class="headerlink" href="#data-format" title="Permalink to this heading">#</a></h4>
+<h4>Data Format<a class="headerlink" href="#data-format" title="Permalink to this heading">¶</a></h4>
 <p>Source data needs to be stored in HDFS in a certain format. Each file includes data related to a type of vertex or edge label.</p>
 <p>The following is an example of the data related to the <code class="docutils literal notranslate"><span class="pre">person</span></code> vertex label and the <code class="docutils literal notranslate"><span class="pre">knows</span></code> edge label, which contains the <code class="docutils literal notranslate"><span class="pre">person</span></code>-&gt;<code class="docutils literal notranslate"><span class="pre">knows</span></code>&lt;-<code class="docutils literal notranslate"><span class="pre">person</span></code> relationship.</p>
 <ul class="simple">
@@ -1099,7 +1166,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 <p>All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field cannot be parsed correctly, data building process would be failed with corresponding errors.</p>
 </section>
 <section id="loading-process">
-<h4>Loading Process<a class="headerlink" href="#loading-process" title="Permalink to this heading">#</a></h4>
+<h4>Loading Process<a class="headerlink" href="#loading-process" title="Permalink to this heading">¶</a></h4>
 <p>The loading process contains three steps:</p>
 <ol class="arabic simple">
 <li><p>A partitioned graph is built from the source files and stored in the same HDFS using a MapReduce job</p></li>
@@ -1107,7 +1174,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 <li><p>Commit to the online service so that data is ready for serving queries</p></li>
 </ol>
 <section id="build-building-a-partitioned-graph">
-<h5>Build: Building a partitioned graph<a class="headerlink" href="#build-building-a-partitioned-graph" title="Permalink to this heading">#</a></h5>
+<h5>Build: Building a partitioned graph<a class="headerlink" href="#build-building-a-partitioned-graph" title="Permalink to this heading">¶</a></h5>
 <p>Build data by running the hadoop map-reduce job with following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./load_tool.sh build &lt;path/to/config/file&gt;
 </pre></div>
@@ -1201,7 +1268,7 @@ Else, please proceed to ingest and commit.</p>
 </section>
 </section>
 <section id="loading-graph-partitions">
-<h4>2. Loading graph partitions<a class="headerlink" href="#loading-graph-partitions" title="Permalink to this heading">#</a></h4>
+<h4>2. Loading graph partitions<a class="headerlink" href="#loading-graph-partitions" title="Permalink to this heading">¶</a></h4>
 <p>Now ingest the offline built data into the graph storage. Run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./load_data.sh ingest &lt;path/to/config/file&gt;
 </pre></div>
@@ -1209,7 +1276,7 @@ Else, please proceed to ingest and commit.</p>
 <p>The offline built data can be ingested successfully only once, otherwise errors will occur.</p>
 </section>
 <section id="commit-to-store-service">
-<h4>3. Commit to store service<a class="headerlink" href="#commit-to-store-service" title="Permalink to this heading">#</a></h4>
+<h4>3. Commit to store service<a class="headerlink" href="#commit-to-store-service" title="Permalink to this heading">¶</a></h4>
 <p>After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully. Run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./load_data.sh commit &lt;path/to/config/file&gt;
 </pre></div>
@@ -1218,10 +1285,10 @@ Else, please proceed to ingest and commit.</p>
 </section>
 </section>
 <section id="realtime-write">
-<h3>Realtime Write<a class="headerlink" href="#realtime-write" title="Permalink to this heading">#</a></h3>
+<h3>Realtime Write<a class="headerlink" href="#realtime-write" title="Permalink to this heading">¶</a></h3>
 <p>Groot graph have several methods for realtime write as follows:</p>
 <section id="id1">
-<h4>Python<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h4>
+<h4>Python<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h4>
 <p>Refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/kubernetes/test_store_service.py">test_store_service.py</a> for examples.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inserts one vertex</span>
 <span class="k">def</span> <span class="nf">insert_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
@@ -1282,7 +1349,7 @@ Else, please proceed to ingest and commit.</p>
 </div>
 </section>
 <section id="id2">
-<h4>Java<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h4>
+<h4>Java<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h4>
 <p>We also have a java sdk for realtime write and schema management.</p>
 <p>APIs including:</p>
 <ul class="simple">
@@ -1295,7 +1362,7 @@ Else, please proceed to ingest and commit.</p>
 </section>
 </section>
 <section id="other-features">
-<h3>Other features<a class="headerlink" href="#other-features" title="Permalink to this heading">#</a></h3>
+<h3>Other features<a class="headerlink" href="#other-features" title="Permalink to this heading">¶</a></h3>
 <p>Groot could enable user to replay realtime write records from a specific offset, or a timestamp, this is useful when you want to restore some records before
 a offline load finished, since offload will overwrite all records.</p>
 <p>You can only specify one of <code class="docutils literal notranslate"><span class="pre">offset</span></code> and <code class="docutils literal notranslate"><span class="pre">timestamp</span></code>. The other unused one must be set to -1. If not, <code class="docutils literal notranslate"><span class="pre">offset</span></code> will take precedence.</p>
@@ -1322,9 +1389,9 @@ a offline load finished, since offload will overwrite all records.</p>
 </section>
 </section>
 <section id="uninstalling-and-restarting">
-<h2>Uninstalling and Restarting<a class="headerlink" href="#uninstalling-and-restarting" title="Permalink to this heading">#</a></h2>
+<h2>Uninstalling and Restarting<a class="headerlink" href="#uninstalling-and-restarting" title="Permalink to this heading">¶</a></h2>
 <section id="uninstall-groot">
-<h3>Uninstall Groot<a class="headerlink" href="#uninstall-groot" title="Permalink to this heading">#</a></h3>
+<h3>Uninstall Groot<a class="headerlink" href="#uninstall-groot" title="Permalink to this heading">¶</a></h3>
 <p>To uninstall/delete the <code class="docutils literal notranslate"><span class="pre">demo</span></code> Groot cluster deployment, use</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>delete<span class="w"> </span>demo
 </pre></div>
@@ -1339,7 +1406,7 @@ kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w"> </
 </div>
 </section>
 <section id="restart-groot">
-<h3>Restart Groot<a class="headerlink" href="#restart-groot" title="Permalink to this heading">#</a></h3>
+<h3>Restart Groot<a class="headerlink" href="#restart-groot" title="Permalink to this heading">¶</a></h3>
 <p>To relaunch Groot on the original PV with the same command used for the initial installation. At this point, Groot can access the data from before the uninstallation, and all other operations are the same as before the uninstallation. This can facilitate seamless version updates, or when using cloud provider services, you can uninstall Groot on demand to release elastic computing resources and keep only the block storage to save costs.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Note that if the node count is configured during installation, it should be exactly the same when reinstalling.</span>
 helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> </span>graphscope/graphscope-store
@@ -1347,7 +1414,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </div>
 </section>
 <section id="destroy-groot">
-<h3>Destroy Groot<a class="headerlink" href="#destroy-groot" title="Permalink to this heading">#</a></h3>
+<h3>Destroy Groot<a class="headerlink" href="#destroy-groot" title="Permalink to this heading">¶</a></h3>
 <p>Destroying Groot means releasing all resources used by Groot, including StatefulSets, Services, PVCs, and PVs.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>delete<span class="w"> </span>demo
 kubectl<span class="w"> </span>delete<span class="w"> </span>pvc<span class="w"> </span>-lapp.kubernetes.io/instance<span class="o">=</span>demo
@@ -1363,9 +1430,9 @@ kubectl<span class="w"> </span>delete<span class="w"> </span>pvc<span class="w">
 </section>
 </section>
 <section id="developing-guide">
-<h2>Developing Guide<a class="headerlink" href="#developing-guide" title="Permalink to this heading">#</a></h2>
+<h2>Developing Guide<a class="headerlink" href="#developing-guide" title="Permalink to this heading">¶</a></h2>
 <section id="build-image">
-<h3>Build image<a class="headerlink" href="#build-image" title="Permalink to this heading">#</a></h3>
+<h3>Build image<a class="headerlink" href="#build-image" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>GraphScope/k8s
 make<span class="w"> </span>graphscope-store<span class="w"> </span><span class="nv">VERSION</span><span class="o">=</span>latest
 </pre></div>
@@ -1373,13 +1440,13 @@ make<span class="w"> </span>graphscope-store<span class="w"> </span><span class=
 <p>This would produce an image named <code class="docutils literal notranslate"><span class="pre">graphscope/graphscope-store:latest</span></code>.</p>
 </section>
 <section id="persistence">
-<h3>Persistence<a class="headerlink" href="#persistence" title="Permalink to this heading">#</a></h3>
+<h3>Persistence<a class="headerlink" href="#persistence" title="Permalink to this heading">¶</a></h3>
 <p>Groot stores the graph data in <code class="docutils literal notranslate"><span class="pre">/var/lib/graphscope-store</span></code> directory in the Store Pod and the metadata in <code class="docutils literal notranslate"><span class="pre">/etc/groot/my.meta</span></code> directory in the Coordinator Pod.</p>
 </section>
 <section id="troubleshooting">
-<h3>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading">#</a></h3>
+<h3>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading">¶</a></h3>
 <section id="viewing-logs">
-<h4>Viewing logs<a class="headerlink" href="#viewing-logs" title="Permalink to this heading">#</a></h4>
+<h4>Viewing logs<a class="headerlink" href="#viewing-logs" title="Permalink to this heading">¶</a></h4>
 <p>You can view the logs of each Pod using the command
 <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">${POD_NAME}</span></code>.</p>
 <p>It is common to check the logs of Frontend and Store roles. When debugging, it is often necessary to check the logs of Coordinator as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. For example,</p>
@@ -1389,7 +1456,7 @@ kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store
 </div>
 </section>
 <section id="configuring-logs">
-<h4>Configuring logs<a class="headerlink" href="#configuring-logs" title="Permalink to this heading">#</a></h4>
+<h4>Configuring logs<a class="headerlink" href="#configuring-logs" title="Permalink to this heading">¶</a></h4>
 <p>Groot uses <code class="docutils literal notranslate"><span class="pre">logback</span></code> as the logging library for the Java part, and <code class="docutils literal notranslate"><span class="pre">log4rs</span></code> as the logging library for the Rust part.</p>
 <p>Both of these logging libraries support automatic periodic reloading of configuration, which means that the logging configuration file can be changed and will take effect after a short time (up to 30 seconds).</p>
 <p>The location of the logging configuration file in the container is:</p>
@@ -1400,7 +1467,7 @@ kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store
 </section>
 </section>
 <section id="secondary-instance">
-<h3>Secondary Instance<a class="headerlink" href="#secondary-instance" title="Permalink to this heading">#</a></h3>
+<h3>Secondary Instance<a class="headerlink" href="#secondary-instance" title="Permalink to this heading">¶</a></h3>
 <p>Groot support open secondary instance along with primary instances. It leverages the <a class="reference external" href="https://github.com/facebook/rocksdb/wiki/Read-only-and-Secondary-instances">Secondary Instance</a> of RocksDB
 to provide the ability to serve the querying requests as well as catching up the schema and data updates.</p>
 <p>To use it, just set the <code class="docutils literal notranslate"><span class="pre">secondary.enabled=true</span></code> in the helm charts.
@@ -1409,8 +1476,12 @@ And use a different <code class="docutils literal notranslate"><span class="pre"
 <p><code class="docutils literal notranslate"><span class="pre">storeGcIntervalMs</span></code> controls how often should the secondary perform a <code class="docutils literal notranslate"><span class="pre">try_catch_up_with_primary</span></code> call, default to <code class="docutils literal notranslate"><span class="pre">5000</span></code> which is 5 seconds.</p>
 </section>
 <section id="traces">
-<h3>Traces<a class="headerlink" href="#traces" title="Permalink to this heading">#</a></h3>
+<h3>Traces<a class="headerlink" href="#traces" title="Permalink to this heading">¶</a></h3>
 <p>use <code class="docutils literal notranslate"><span class="pre">--set</span> <span class="pre">otel.enabled=true</span></code> to enable trace export.</p>
+</section>
+<section id="write-high-availability">
+<h3>Write High-availability<a class="headerlink" href="#write-high-availability" title="Permalink to this heading">¶</a></h3>
+<p>use <code class="docutils literal notranslate"><span class="pre">--set</span> <span class="pre">write.ha.enabled=True</span></code> in multi-pod deployment mode to open a backup store pod.</p>
 </section>
 </section>
 </section>
@@ -1535,6 +1606,7 @@ And use a different <code class="docutils literal notranslate"><span class="pre"
 </li>
 <li><a class="reference internal" href="#secondary-instance">Secondary Instance</a></li>
 <li><a class="reference internal" href="#traces">Traces</a></li>
+<li><a class="reference internal" href="#write-high-availability">Write High-availability</a></li>
 </ul>
 </li>
 </ul>
@@ -1551,7 +1623,7 @@ And use a different <code class="docutils literal notranslate"><span class="pre"
 </div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>

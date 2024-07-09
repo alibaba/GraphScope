@@ -3,21 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="载图" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="zh/loading_graph.html" />
-<meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="GraphScope 以 属性图 建模图数据。 图上的点/边都带有标签（label），每个标签都可能带有许多属性（property）。 载入内置数据集: GraphScope 内置了一组流行的数据集，以及载入他们的工具函数，帮助用户更容易的上手。 来看一个例子： 在单机模式下，GraphScope 会将数据文件下载到~/.graphscope/dataset ，并且会保留以供将来使用。 在 ..." />
-<meta name="description" content="GraphScope 以 属性图 建模图数据。 图上的点/边都带有标签（label），每个标签都可能带有许多属性（property）。 载入内置数据集: GraphScope 内置了一组流行的数据集，以及载入他们的工具函数，帮助用户更容易的上手。 来看一个例子： 在单机模式下，GraphScope 会将数据文件下载到~/.graphscope/dataset ，并且会保留以供将来使用。 在 ..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="图的变换操作" href="graph_transformation.html" /><link rel="prev" title="入门教程" href="tutorials.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>载图 - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -121,7 +115,7 @@ MathJax = {
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -136,7 +130,7 @@ MathJax = {
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -144,7 +138,7 @@ MathJax = {
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -152,6 +146,60 @@ MathJax = {
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -164,6 +212,8 @@ MathJax = {
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -182,7 +232,8 @@ MathJax = {
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -277,6 +328,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.28.0/zh/index.html">
+                
+                  v0.28.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.27.0/zh/index.html">
                 
                   v0.27.0
@@ -304,18 +367,6 @@ MathJax = {
               <dd><a href="../v0.25.0/zh/index.html">
                 
                   v0.25.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.24.0/zh/index.html">
-                
-                  v0.24.0
                 
               </a></dd>
             
@@ -356,19 +407,21 @@ MathJax = {
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="edit-this-page">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/blob/main/docs/zh/loading_graph.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
   <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/zh/loading_graph.rst" title="Edit this page">
-    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
-      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
-    </svg>
+    <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
 </div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -378,14 +431,14 @@ MathJax = {
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="loading-graphs">
-<span id="id1"></span><h1>载图<a class="headerlink" href="#loading-graphs" title="Permalink to this heading">#</a></h1>
+<span id="id1"></span><h1>载图<a class="headerlink" href="#loading-graphs" title="Permalink to this heading">¶</a></h1>
 <p>GraphScope 以
 <a class="reference external" href="https://github.com/tinkerpop/blueprints/wiki/Property-Graph-Model">属性图</a> 建模图数据。
 图上的点/边都带有标签（label），每个标签都可能带有许多属性（property）。</p>
 <section id="id3">
-<h2>载入内置数据集<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h2>
+<h2>载入内置数据集<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
 <p>GraphScope 内置了一组流行的数据集，以及载入他们的工具函数，帮助用户更容易的上手。</p>
 <p>来看一个例子：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
@@ -405,7 +458,7 @@ MathJax = {
 <p>你可以在 <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset">https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset</a> 找到所有目前支持的数据集，文件中包括详细的介绍和用法。</p>
 </section>
 <section id="id4">
-<h2>手动配置图<a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h2>
+<h2>手动配置图<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
 <p>然而，更常见的情况是用户需要使用自己的数据集，并做一些数据分析的工作。</p>
 <p>我们提供了一个函数用来定义一个属性图的模型（schema），并以将属性图载入 GraphScope：</p>
 <p>首先，我们创建一个会话，然后在此会话内创建图。</p>
@@ -426,10 +479,10 @@ MathJax = {
 <p>这些方法可以增量的构建一个属性图。</p>
 <p>我们将使用 <code class="file docutils literal notranslate"><span class="pre">ldbc_sample</span></code> 里的文件做完此篇教程的示例。你可以在 <a class="reference external" href="https://github.com/GraphScope/gstest/tree/master/ldbc_sample">这里</a> 找到源数据。你可以随时使用 <cite>print(graph.schema)</cite> 来查看图的模型.</p>
 <section id="build-vertex">
-<h3>Build Vertex<a class="headerlink" href="#build-vertex" title="Permalink to this heading">#</a></h3>
+<h3>Build Vertex<a class="headerlink" href="#build-vertex" title="Permalink to this heading">¶</a></h3>
 <p>我们可以向图内添加一个点标签。相关的参数含义如下：</p>
 <section id="vertices">
-<h4>vertices<a class="headerlink" href="#vertices" title="Permalink to this heading">#</a></h4>
+<h4>vertices<a class="headerlink" href="#vertices" title="Permalink to this heading">¶</a></h4>
 <p><a class="reference internal" href="../reference/graph.html#loader-object"><span class="std std-ref">Loader object</span></a>，代表数据源，指示 <cite>graphscope</cite> 可以在哪里找到源数据，可以为文件路径，或者 numpy 数组等；</p>
 <p>一个简单的例子：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
@@ -439,7 +492,7 @@ MathJax = {
 <p>这将会从文件 <code class="file docutils literal notranslate"><span class="pre">/home/ldbc_sample/person_0_0.csv</span></code> 载入数据，并且创建一个名为 <cite>_</cite> 的边，但是有不同的起始点标签和终点标签。</p>
 </section>
 <section id="label">
-<h4>Label<a class="headerlink" href="#label" title="Permalink to this heading">#</a></h4>
+<h4>Label<a class="headerlink" href="#label" title="Permalink to this heading">¶</a></h4>
 <p>点标签的名字，默认为 <cite>_</cite>.</p>
 <p>一张图中不能含有同名的标签，所以若有两个或以上的标签，用户必须指定标签名字。另外，总是给标签一个有意义的名字也有好处。</p>
 <p>可以为任何标识符 (identifier)。</p>
@@ -451,7 +504,7 @@ MathJax = {
 <p>结果与上一步结果除了标签名完全一致。</p>
 </section>
 <section id="properties">
-<h4>properties<a class="headerlink" href="#properties" title="Permalink to this heading">#</a></h4>
+<h4>properties<a class="headerlink" href="#properties" title="Permalink to this heading">¶</a></h4>
 <p>一组属性名字。可选项，默认为 <cite>None</cite>。</p>
 <p>属性名应当与数据中的首行表头中的名字相一致。</p>
 <p>如果省略或为 <cite>None</cite>，除ID列之外的所有列都将会作为属性载入；如果为空列表 <cite>[]</cite>，那么将不会载入任何属性；其他情况下，只会载入指定了的列作为属性。</p>
@@ -471,7 +524,7 @@ MathJax = {
 </div>
 </section>
 <section id="vid-field">
-<h4>vid_field<a class="headerlink" href="#vid-field" title="Permalink to this heading">#</a></h4>
+<h4>vid_field<a class="headerlink" href="#vid-field" title="Permalink to this heading">¶</a></h4>
 <p>作为 ID 列的列名，默认为 0。此列将在载入边时被用做起始点 ID 或目标点 ID。</p>
 <p>其值可以是一个字符串，此时指代列名；</p>
 <p>或者可以是一个正整数，代表第几列 （从0开始）。</p>
@@ -486,10 +539,10 @@ MathJax = {
 </section>
 </section>
 <section id="build-edge">
-<h3>Build Edge<a class="headerlink" href="#build-edge" title="Permalink to this heading">#</a></h3>
+<h3>Build Edge<a class="headerlink" href="#build-edge" title="Permalink to this heading">¶</a></h3>
 <p>现在我们可以向图中添加一个边标签。</p>
 <section id="edges">
-<h4>edges<a class="headerlink" href="#edges" title="Permalink to this heading">#</a></h4>
+<h4>edges<a class="headerlink" href="#edges" title="Permalink to this heading">¶</a></h4>
 <p>与构建点标签一节中的 <cite>vertices</cite> 类似，为指示去哪里读数据的路径。</p>
 <p>让我们来看一个例子：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
@@ -501,7 +554,7 @@ MathJax = {
 <p>这将会载入一个标签名为 <cite>_e</cite> 的边，源节点标签和终点节点标签都为 <cite>person</cite>，第一列作为起点的点ID，第二列作为终点的点ID。其他列都作为属性。</p>
 </section>
 <section id="id6">
-<h4>label<a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h4>
+<h4>label<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h4>
 <p>边的标签名，默认为 <cite>_e</cite>。推荐总是使用一个有意义的标签名。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
@@ -510,11 +563,11 @@ MathJax = {
 </div>
 </section>
 <section id="id7">
-<h4>properties<a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h4>
+<h4>properties<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h4>
 <p>一列属性，默认为 <cite>None</cite>。 意义与行为都和点中的一致。</p>
 </section>
 <section id="src-label-and-dst-label">
-<h4>src_label and dst_label<a class="headerlink" href="#src-label-and-dst-label" title="Permalink to this heading">#</a></h4>
+<h4>src_label and dst_label<a class="headerlink" href="#src-label-and-dst-label" title="Permalink to this heading">¶</a></h4>
 <p>起点的标签名与终点的标签名。我们在上面的例子中已经看到过了，在那里将其赋值为 <cite>person</cite>。这两者可以取不同的值。举例来说：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
@@ -525,7 +578,7 @@ MathJax = {
 </div>
 </section>
 <section id="src-field-and-dst-field">
-<h4>src_field and dst_field<a class="headerlink" href="#src-field-and-dst-field" title="Permalink to this heading">#</a></h4>
+<h4>src_field and dst_field<a class="headerlink" href="#src-field-and-dst-field" title="Permalink to this heading">¶</a></h4>
 <p>起点的 ID 列名与终点的 ID 列名。 默认分别为 0 和 1。</p>
 <p>意义和表现与点中的 <cite>vid_field</cite> 类似，不同的是需要两列，一列为起点 ID， 一列为终点 ID。 以下是个例子：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Steps to init a graph and add vertices are omitted</span>
@@ -538,10 +591,10 @@ MathJax = {
 </section>
 </section>
 <section id="id8">
-<h2>高级用法<a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h2>
+<h2>高级用法<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h2>
 <p>这是一些用来处理特别简单或特别复杂的高级一些的用法。</p>
 <section id="id9">
-<h3>没有歧义时，自动推断点标签<a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
+<h3>没有歧义时，自动推断点标签<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
 <p>如果图中只存在一个点标签，那么可以省略指定点标签。
 GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
@@ -552,7 +605,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </div>
 </section>
 <section id="id10">
-<h3>从边中推断点<a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
+<h3>从边中推断点<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h3>
 <p>如果用户的 <cite>add_edges</cite> 中 <cite>src_label</cite> 或者 <cite>dst_label</cite> 取值为图中不存在的点标签，graphscope 会从边的端点中聚合出点表。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="c1"># Deduce vertex label `person` from the source and destination endpoints of edges.</span>
@@ -566,7 +619,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </div>
 </section>
 <section id="id11">
-<h3>多种边关系<a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
+<h3>多种边关系<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h3>
 <p>在一些情况下，一种边的标签可能连接了两种及以上的点。例如，在下面的属性图中，有一个名为 <cite>likes</cite> 的边标签，
 连接了两种点标签，i.e., <cite>person</cite> -&gt; <cite>likes</cite> &lt;- <cite>comment</cite> and <cite>person</cite> -&gt; <cite>likes</cite> &lt;- <cite>post</cite>。
 在这种情况下，可以添加两次名为 <cite>likes</cite> 的边，但是有不同的起始点标签和终点标签。</p>
@@ -584,7 +637,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </div>
 </section>
 <section id="id12">
-<h3>指定属性的数据类型<a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
+<h3>指定属性的数据类型<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h3>
 <p>GraphScope 可以从输入文件中推断点的类型，大部分情况下工作的很好。</p>
 <p>然而，用户有时需要更多的自定义能力。为了满足此种需求，可以在属性名之后加入一个额外类型的参数。像这样：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
@@ -595,7 +648,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 <p>在这里，属性 <cite>length</cite> 的类型将会是 <cite>int</cite>，而默认不指定的话为 <cite>int64_t</cite>。 常见的使用场景是指定 <cite>int</cite>, <cite>int64</cite>, <cite>float</cite>, <cite>double</cite>, ‘str` 等类型。</p>
 </section>
 <section id="id13">
-<h3>图的其他参数<a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
+<h3>图的其他参数<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h3>
 <p>类 <cite>Graph</cite> 有三个配置元信息的参数，分别为：</p>
 <ul class="simple">
 <li><dl class="simple">
@@ -610,7 +663,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </ul>
 </section>
 <section id="id14">
-<h3>完整的示例<a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
+<h3>完整的示例<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h3>
 <p>让我们写一个完整的图的定义。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">oid_type</span><span class="o">=</span><span class="s1">&#39;int64_t&#39;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">retain_oid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
@@ -628,12 +681,12 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </section>
 </section>
 <section id="pandas-numpy">
-<h2>从 Pandas 或 Numpy 中载图<a class="headerlink" href="#pandas-numpy" title="Permalink to this heading">#</a></h2>
+<h2>从 Pandas 或 Numpy 中载图<a class="headerlink" href="#pandas-numpy" title="Permalink to this heading">¶</a></h2>
 <p>上文提到的数据源是一个 <a class="reference internal" href="../reference/graph.html#loader-object"><span class="std std-ref">Loader object</span></a> 的类。<cite>Loader</cite> 包含文件路径或者数据本身。
 <cite>graphscope</cite> 支持从 <cite>pandas.DataFrame</cite> 或 <cite>numpy.ndarray</cite> 中载图，这可以使用户仅通过 Python 控制台便可以创建图。</p>
 <p>除了 Loader 外，其他属性，ID列，标签设置等都和之前提到的保持一致。</p>
 <section id="pandas">
-<h3>从 Pandas 中载图<a class="headerlink" href="#pandas" title="Permalink to this heading">#</a></h3>
+<h3>从 Pandas 中载图<a class="headerlink" href="#pandas" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="n">df_v</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
@@ -647,7 +700,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </div>
 </section>
 <section id="numpy">
-<h3>从 Numpy 中载图<a class="headerlink" href="#numpy" title="Permalink to this heading">#</a></h3>
+<h3>从 Numpy 中载图<a class="headerlink" href="#numpy" title="Permalink to this heading">¶</a></h3>
 <p>注意每个数组都代表一列，我们将其以 COO 矩阵的方式传入。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span>
 
@@ -660,7 +713,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </section>
 </section>
 <section id="loader">
-<h2>Loader 的变种<a class="headerlink" href="#loader" title="Permalink to this heading">#</a></h2>
+<h2>Loader 的变种<a class="headerlink" href="#loader" title="Permalink to this heading">¶</a></h2>
 <p>当 <cite>loader</cite> 包含文件路径时，它可能仅包含一个字符串。
 文件路径应遵循 URI 标准。当收到包含文件路径的载图请求时， <cite>graphscope</cite> 将会解析 URI，调用相应的载图模块。</p>
 <p>目前, <cite>graphscope</cite> 支持多种数据源：本地, OSS，S3，和 HDFS:
@@ -786,7 +839,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>

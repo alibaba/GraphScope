@@ -83,8 +83,8 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:aa14f11be65ef9f3add3dc46194044a1d"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#aa14f11be65ef9f3add3dc46194044a1d">loader_initializer_t</a> = std::shared_ptr&lt; <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a> &gt;(*)(const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int thread_num, bool build_csr_in_mem, bool use_mmap_vector)</td></tr>
-<tr class="separator:aa14f11be65ef9f3add3dc46194044a1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21b6f87cd4e5a1235420988b7d0e002d"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#a21b6f87cd4e5a1235420988b7d0e002d">loader_initializer_t</a> = std::shared_ptr&lt; <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a> &gt;(*)(const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config)</td></tr>
+<tr class="separator:a21b6f87cd4e5a1235420988b7d0e002d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -92,27 +92,27 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:aaccb591299ff02a3c3c907ad307db975"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a141109ee894c69031b0d7ed9f60f3a88"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#a141109ee894c69031b0d7ed9f60f3a88">Finalize</a> ()</td></tr>
 <tr class="separator:a141109ee894c69031b0d7ed9f60f3a88"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac98b1b6280f526f9d8b8610b7da5926f"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#ac98b1b6280f526f9d8b8610b7da5926f">CreateFragmentLoader</a> (const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int thread_num, bool build_csr_in_mem, bool use_mmap_vector)</td></tr>
-<tr class="separator:ac98b1b6280f526f9d8b8610b7da5926f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a929e747f1ad61bcd7f3374c6ac208597"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#a929e747f1ad61bcd7f3374c6ac208597">Register</a> (const std::string &amp;scheme_type, const std::string &amp;format_type, <a class="el" href="classgs_1_1LoaderFactory.html#aa14f11be65ef9f3add3dc46194044a1d">loader_initializer_t</a> initializer)</td></tr>
+<tr class="memitem:a48dd6806833a0b455c2fb6738c612220"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#a48dd6806833a0b455c2fb6738c612220">CreateFragmentLoader</a> (const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config)</td></tr>
+<tr class="separator:a48dd6806833a0b455c2fb6738c612220"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a929e747f1ad61bcd7f3374c6ac208597"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#a929e747f1ad61bcd7f3374c6ac208597">Register</a> (const std::string &amp;scheme_type, const std::string &amp;format_type, <a class="el" href="classgs_1_1LoaderFactory.html#a21b6f87cd4e5a1235420988b7d0e002d">loader_initializer_t</a> initializer)</td></tr>
 <tr class="separator:a929e747f1ad61bcd7f3374c6ac208597"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-static-methods"></a>
 Static Private Member Functions</h2></td></tr>
-<tr class="memitem:aa6d75c9abcb03a0c4bd45b836a6e49e2"><td class="memItemLeft" align="right" valign="top">static std::unordered_map&lt; std::string, <a class="el" href="classgs_1_1LoaderFactory.html#aa14f11be65ef9f3add3dc46194044a1d">loader_initializer_t</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#aa6d75c9abcb03a0c4bd45b836a6e49e2">getKnownLoaders</a> ()</td></tr>
+<tr class="memitem:aa6d75c9abcb03a0c4bd45b836a6e49e2"><td class="memItemLeft" align="right" valign="top">static std::unordered_map&lt; std::string, <a class="el" href="classgs_1_1LoaderFactory.html#a21b6f87cd4e5a1235420988b7d0e002d">loader_initializer_t</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html#aa6d75c9abcb03a0c4bd45b836a6e49e2">getKnownLoaders</a> ()</td></tr>
 <tr class="separator:aa6d75c9abcb03a0c4bd45b836a6e49e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classgs_1_1LoaderFactory.html" title="LoaderFactory is a factory class to create IFragmentLoader. Support Using dynamically built library a...">LoaderFactory</a> is a factory class to create <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a>. Support Using dynamically built library as plugin. </p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="aa14f11be65ef9f3add3dc46194044a1d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa14f11be65ef9f3add3dc46194044a1d">&#9670;&nbsp;</a></span>loader_initializer_t</h2>
+<a id="a21b6f87cd4e5a1235420988b7d0e002d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a21b6f87cd4e5a1235420988b7d0e002d">&#9670;&nbsp;</a></span>loader_initializer_t</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="classgs_1_1LoaderFactory.html#aa14f11be65ef9f3add3dc46194044a1d">gs::LoaderFactory::loader_initializer_t</a> =  std::shared_ptr&lt;<a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a>&gt; (*)( const std::string&amp; work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a>&amp; schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a>&amp; loading_config, int thread_num, bool build_csr_in_mem, bool use_mmap_vector)</td>
+          <td class="memname">using <a class="el" href="classgs_1_1LoaderFactory.html#a21b6f87cd4e5a1235420988b7d0e002d">gs::LoaderFactory::loader_initializer_t</a> =  std::shared_ptr&lt;<a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a>&gt; (*)( const std::string&amp; work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a>&amp; schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a>&amp; loading_config)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -120,8 +120,8 @@ Static Private Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac98b1b6280f526f9d8b8610b7da5926f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac98b1b6280f526f9d8b8610b7da5926f">&#9670;&nbsp;</a></span>CreateFragmentLoader()</h2>
+<a id="a48dd6806833a0b455c2fb6738c612220"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48dd6806833a0b455c2fb6738c612220">&#9670;&nbsp;</a></span>CreateFragmentLoader()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -145,25 +145,7 @@ Static Private Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td>
-          <td class="paramname"><em>loading_config</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>thread_num</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>build_csr_in_mem</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>use_mmap_vector</em>&#160;</td>
+          <td class="paramname"><em>loading_config</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -215,7 +197,7 @@ Static Private Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::unordered_map&lt; std::string, <a class="el" href="classgs_1_1LoaderFactory.html#aa14f11be65ef9f3add3dc46194044a1d">LoaderFactory::loader_initializer_t</a> &gt; &amp; gs::LoaderFactory::getKnownLoaders </td>
+          <td class="memname">std::unordered_map&lt; std::string, <a class="el" href="classgs_1_1LoaderFactory.html#a21b6f87cd4e5a1235420988b7d0e002d">LoaderFactory::loader_initializer_t</a> &gt; &amp; gs::LoaderFactory::getKnownLoaders </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -279,7 +261,7 @@ Static Private Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1LoaderFactory.html#aa14f11be65ef9f3add3dc46194044a1d">LoaderFactory::loader_initializer_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="classgs_1_1LoaderFactory.html#a21b6f87cd4e5a1235420988b7d0e002d">LoaderFactory::loader_initializer_t</a>&#160;</td>
           <td class="paramname"><em>initializer</em>&#160;</td>
         </tr>
         <tr>

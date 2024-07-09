@@ -1,0 +1,8 @@
+<map id="/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/abstract_arrow_fragment_loader.h" name="/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/abstract_arrow_fragment_loader.h">
+<area shape="rect" id="node1" title=" " alt="" coords="264,5,507,76"/>
+<area shape="rect" id="node2" href="$abstract__arrow__fragment__loader_8cc.html" title=" " alt="" coords="5,124,248,195"/>
+<area shape="rect" id="node3" href="$csv__fragment__loader_8h.html" title=" " alt="" coords="272,124,499,195"/>
+<area shape="rect" id="node5" href="$odps__fragment__loader_8h.html" title=" " alt="" coords="523,124,749,195"/>
+<area shape="rect" id="node4" href="$csv__fragment__loader_8cc.html" title=" " alt="" coords="272,243,499,313"/>
+<area shape="rect" id="node6" href="$odps__fragment__loader_8cc.html" title=" " alt="" coords="523,243,749,313"/>
+</map>

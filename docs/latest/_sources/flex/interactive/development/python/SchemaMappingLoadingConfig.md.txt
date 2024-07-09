@@ -5,6 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**x_csr_params** | [**SchemaMappingLoadingConfigXCsrParams**](SchemaMappingLoadingConfigXCsrParams.md) |  | [optional] 
 **data_source** | [**SchemaMappingLoadingConfigDataSource**](SchemaMappingLoadingConfigDataSource.md) |  | [optional] 
 **import_option** | **str** |  | [optional] 
 **format** | [**SchemaMappingLoadingConfigFormat**](SchemaMappingLoadingConfigFormat.md) |  | [optional] 

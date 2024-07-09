@@ -3,21 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Key Concepts" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="analytical_engine/key_concepts.html" />
-<meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="In this document, we introduce some important concepts in GraphScope analytical engine, which defines the graph loading strategies, inner/outer vertices, and message passing and synchronization str..." />
-<meta name="description" content="In this document, we introduce some important concepts in GraphScope analytical engine, which defines the graph loading strategies, inner/outer vertices, and message passing and synchronization str..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Vertex-Centric Model" href="vertex_centric_models.html" /><link rel="prev" title="Overview and Architecture" href="overview_and_architecture.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>Key Concepts - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
@@ -121,7 +115,7 @@ MathJax = {
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -136,7 +130,7 @@ MathJax = {
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -144,7 +138,7 @@ MathJax = {
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -152,6 +146,60 @@ MathJax = {
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -164,6 +212,8 @@ MathJax = {
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -182,7 +232,8 @@ MathJax = {
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -233,23 +284,33 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">GraphScope Flex</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/coordinator.html">Coordinator</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Coordinator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../flex/coordinator/restful_api.html">Coordinator RESTFul API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/custom_graph_data.html">Using Custom Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/stored_procedures.html">Stored Procedures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/configuration.html">Engine Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/data_import.html">Data Import Configuration</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/restful_api.html">RESTful API Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/glossary.html">Glossary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/tools/admin_tool.html">The Administrative tool</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -257,7 +318,7 @@ MathJax = {
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="design_of_gae.html">Design of Analytical Engine</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="design_of_gae.html">Design of Analytical Engine</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -277,14 +338,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/llm_assistant.html">Using LLM as an Assistant in GIE</a></li>
@@ -325,8 +386,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -337,13 +398,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -387,18 +448,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -433,7 +494,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -582,6 +643,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.28.0/index.html">
+                
+                  v0.28.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.27.0/index.html">
                 
                   v0.27.0
@@ -609,18 +682,6 @@ MathJax = {
               <dd><a href="../v0.25.0/index.html">
                 
                   v0.25.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.24.0/index.html">
-                
-                  v0.24.0
                 
               </a></dd>
             
@@ -661,19 +722,21 @@ MathJax = {
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="edit-this-page">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/blob/main/docs/analytical_engine/key_concepts.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
   <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/analytical_engine/key_concepts.rst" title="Edit this page">
-    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
-      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
-    </svg>
+    <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
 </div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -683,98 +746,98 @@ MathJax = {
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="key-concepts">
-<h1>Key Concepts<a class="headerlink" href="#key-concepts" title="Permalink to this heading">#</a></h1>
+<h1>Key Concepts<a class="headerlink" href="#key-concepts" title="Permalink to this heading">¶</a></h1>
 <p>In this document, we introduce some important concepts in GraphScope analytical engine, which defines the
 graph loading strategies, inner/outer vertices, and message passing and synchronization strategies.</p>
 <section id="loadstrategy">
-<h2>LoadStrategy<a class="headerlink" href="#loadstrategy" title="Permalink to this heading">#</a></h2>
+<h2>LoadStrategy<a class="headerlink" href="#loadstrategy" title="Permalink to this heading">¶</a></h2>
 <p>There are three ways to maintain the nodes crossing different fragments in GraphScope analytical engine.</p>
 <section id="onlyout">
-<h3>OnlyOut<a class="headerlink" href="#onlyout" title="Permalink to this heading">#</a></h3>
+<h3>OnlyOut<a class="headerlink" href="#onlyout" title="Permalink to this heading">¶</a></h3>
 <p>Each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’). For instance, in addition to local nodes {4, 5, 6, 7}, $F_{1}$ in graph G also stores a “mirror” node 3 and the edge (5, 3) when using OnlyOut strategy, as shown below.</p>
 <img alt="OnlyOut" src="../_images/onlyout.png" />
 </section>
 <section id="onlyin">
-<h3>OnlyIn<a class="headerlink" href="#onlyin" title="Permalink to this heading">#</a></h3>
+<h3>OnlyIn<a class="headerlink" href="#onlyin" title="Permalink to this heading">¶</a></h3>
 <p>Under this case, each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v’, v). In graph G, $F_{1}$ maintains “mirror” nodes {1, 9, 12} besides its local nodes.</p>
 <img alt="OnlyIn" src="../_images/onlyin.png" />
 </section>
 <section id="bothinout">
-<h3>BothInOut<a class="headerlink" href="#bothinout" title="Permalink to this heading">#</a></h3>
+<h3>BothInOut<a class="headerlink" href="#bothinout" title="Permalink to this heading">¶</a></h3>
 <p>Each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’) or (v’, v). Hence, in graph G, “mirror” nodes {1, 3, 9, 12} are stored in $F_{1}$ when BothInOut is applied.</p>
 <img alt="BothInOut" src="../_images/inandout.png" />
 </section>
 </section>
 <section id="partitionstrategy">
-<h2>PartitionStrategy<a class="headerlink" href="#partitionstrategy" title="Permalink to this heading">#</a></h2>
+<h2>PartitionStrategy<a class="headerlink" href="#partitionstrategy" title="Permalink to this heading">¶</a></h2>
 <section id="edge-cut">
-<h3>Edge Cut<a class="headerlink" href="#edge-cut" title="Permalink to this heading">#</a></h3>
+<h3>Edge Cut<a class="headerlink" href="#edge-cut" title="Permalink to this heading">¶</a></h3>
 <p>An <em>edge cut</em> partitioning splits vertices of a graph into roughly equal size clusters. The edges are stored in the same cluster as one or both of its endpoints. Edges with endpoints distributed across different clusters are <em>crossing edges</em>.</p>
 <img alt="Edge Cut" src="../_images/ecut.png" />
 </section>
 <section id="vertex-cut">
-<h3>Vertex Cut<a class="headerlink" href="#vertex-cut" title="Permalink to this heading">#</a></h3>
+<h3>Vertex Cut<a class="headerlink" href="#vertex-cut" title="Permalink to this heading">¶</a></h3>
 <p>A <em>vertex-cut</em> partitioning divides edges of a graph into roughly equal size fragments. The vertices that hold the endpoints of an edge are also placed in the same fragment as the edge itself. A vertex has to be replicated when its adjacent edges are distributed across different fragments.</p>
 <img alt="Vertex Cut" src="../_images/vcut.png" />
 </section>
 </section>
 <section id="vertices-on-graphscope-analytical-engine">
-<h2>Vertices on GraphScope analytical engine<a class="headerlink" href="#vertices-on-graphscope-analytical-engine" title="Permalink to this heading">#</a></h2>
+<h2>Vertices on GraphScope analytical engine<a class="headerlink" href="#vertices-on-graphscope-analytical-engine" title="Permalink to this heading">¶</a></h2>
 <p>A node v is referred to as an</p>
 <section id="outervertex">
-<h3>OuterVertex<a class="headerlink" href="#outervertex" title="Permalink to this heading">#</a></h3>
+<h3>OuterVertex<a class="headerlink" href="#outervertex" title="Permalink to this heading">¶</a></h3>
 <p>OuterVertex of fragment $F_{i}$ if it resides at another fragment $F_{j}$ and there exists a node v’ in $F_{i}$ such that (v, v’) or (v’, v) is an edge; e.g., nodes {1, 3, 9, 12} are OuterVertex of fragment $F_{1}$ in graph G;</p>
 <img alt="OuterVertex" src="../_images/outvertex.png" />
 </section>
 <section id="innervertex">
-<h3>InnerVertex<a class="headerlink" href="#innervertex" title="Permalink to this heading">#</a></h3>
+<h3>InnerVertex<a class="headerlink" href="#innervertex" title="Permalink to this heading">¶</a></h3>
 <p>InnerVertex of fragment $F_{i}$ if it is distributed to $F_{i}$; e.g. nodes {4, 5, 6, 7} are InnerVertex of fragment $F_{1}$ in G;</p>
 <img alt="InnerVertex" src="../_images/invertex.png" />
 </section>
 <section id="innervertexwithoutgoingedge">
-<h3>InnerVertexWithOutgoingEdge<a class="headerlink" href="#innervertexwithoutgoingedge" title="Permalink to this heading">#</a></h3>
+<h3>InnerVertexWithOutgoingEdge<a class="headerlink" href="#innervertexwithoutgoingedge" title="Permalink to this heading">¶</a></h3>
 <p>InnerVertexWithOutgoingEdge of fragment $F_{i}$ if it is stored in $F_{i}$ and has an adjacent edge (v, v’) outcoming to a node v’ in another fragment $F_{j}$; e.g., node 5 is an InnerVertexWithOutgoingEdge of $F_{1}$ in G with the outgoing edge (5, 3);</p>
 <img alt="InnerVertexWithOutgoingEdge" src="../_images/invertexout.png" />
 </section>
 <section id="innervertexwithincomingedge">
-<h3>InnerVertexWithIncomingEdge<a class="headerlink" href="#innervertexwithincomingedge" title="Permalink to this heading">#</a></h3>
+<h3>InnerVertexWithIncomingEdge<a class="headerlink" href="#innervertexwithincomingedge" title="Permalink to this heading">¶</a></h3>
 <p>InnerVertexWithIncomingEdge of fragment $F_{i}$ if it is maintained in $F_{i}$ has an adjacent edge (v’, v) incoming from a node v’ in another fragment $F_{j}$; e.g., nodes {4, 5, 7} are InnerVertexWithIncomingEdge of $F_{1}$ in G, and (1, 4), (9, 5), and (12, 7) are corresponding incoming edges.</p>
 <img alt="InnerVertexWithIncomingEdge" src="../_images/invertexin.png" />
 </section>
 </section>
 <section id="messagemanager-and-messagestrategy">
-<h2>MessageManager and MessageStrategy<a class="headerlink" href="#messagemanager-and-messagestrategy" title="Permalink to this heading">#</a></h2>
+<h2>MessageManager and MessageStrategy<a class="headerlink" href="#messagemanager-and-messagestrategy" title="Permalink to this heading">¶</a></h2>
 <p>In each graph application in GAE, a MessageManager is created to manage the messages passed between different fragments. Considering the diversity of graph applications, we provide many message passing strategies, which are defined in MessageStrategy.</p>
 <p>Below are message passing and synchronization strategies supported by GAE.</p>
 <section id="alongoutgoingedgetooutervertex">
-<h3>AlongOutgoingEdgeToOuterVertex<a class="headerlink" href="#alongoutgoingedgetooutervertex" title="Permalink to this heading">#</a></h3>
+<h3>AlongOutgoingEdgeToOuterVertex<a class="headerlink" href="#alongoutgoingedgetooutervertex" title="Permalink to this heading">¶</a></h3>
 <p>Here the message is passed along crossing edges from InnerVertexWithOutgoingEdge to OuterVertex. For instance, the message is passed from node 5 to 3 in graph G.</p>
 <img alt="AlongOutgoingEdgeToOuterVertex" src="../_images/intoout.png" />
 </section>
 <section id="alongincomingedgetooutervertex">
-<h3>AlongIncomingEdgeToOuterVertex<a class="headerlink" href="#alongincomingedgetooutervertex" title="Permalink to this heading">#</a></h3>
+<h3>AlongIncomingEdgeToOuterVertex<a class="headerlink" href="#alongincomingedgetooutervertex" title="Permalink to this heading">¶</a></h3>
 <p>Under this case, the message is passed along crossing edges from InnerVertexWithIncomingEdge to OuterVertex. For example, the message is passed from node 5 to 9 in graph G.</p>
 <img alt="AlongIncomingEdgeToOuterVertex" src="../_images/intoout2.png" />
 </section>
 <section id="alongedgetooutervertex">
-<h3>AlongEdgeToOuterVertex<a class="headerlink" href="#alongedgetooutervertex" title="Permalink to this heading">#</a></h3>
+<h3>AlongEdgeToOuterVertex<a class="headerlink" href="#alongedgetooutervertex" title="Permalink to this heading">¶</a></h3>
 <p>Each message is passed along crossing edges from nodes that are both  InnerVertexWithIncomingEdge and InnerVertexWithOutgoingEdge to OuterVertex, e.g., messages are passed from node 5 to 3 and 9 and vice versa in graph G.</p>
 <img alt="AlongEdgeToOuterVertex" src="../_images/intoout3.png" />
 </section>
 <section id="synconoutervertexastarget">
-<h3>SyncOnOuterVertexAsTarget<a class="headerlink" href="#synconoutervertexastarget" title="Permalink to this heading">#</a></h3>
+<h3>SyncOnOuterVertexAsTarget<a class="headerlink" href="#synconoutervertexastarget" title="Permalink to this heading">¶</a></h3>
 <p>It is applied in company with the OnlyOut loading strategy. Here each fragment $F_{i}$ sends the states of its “mirror” node of OuterVertex v to $F_{j}$ that v resides, if there exists edge (v’, v) and v’ is “local” node of $F_{i}$, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from $F_{1}$ to $F_{0}$ for synchronization at $F_{0}$.</p>
 <img alt="SyncOnOuterVertexAsTarget" src="../_images/sync1.png" />
 </section>
 <section id="synconoutervertexassource">
-<h3>SyncOnOuterVertexAsSource<a class="headerlink" href="#synconoutervertexassource" title="Permalink to this heading">#</a></h3>
+<h3>SyncOnOuterVertexAsSource<a class="headerlink" href="#synconoutervertexassource" title="Permalink to this heading">¶</a></h3>
 <p>It is applied together with the OnlyIn loading strategy. Similar to <strong>SyncStateOnOuterVertexAsTarget</strong>, each fragment $F_{i}$ sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v’) to certain “local” node v’ of $F_{i}$. For example, the states of “mirror” nodes 1, 9, and 12 are sent from $F_{1}$ to $F_{0}$ and $F_{2}$ for synchronization with other states.</p>
 <img alt="SyncOnOuterVertexAsSource" src="../_images/sync2.png" />
 </section>
 <section id="synconoutervertex">
-<h3>SyncOnOuterVertex<a class="headerlink" href="#synconoutervertex" title="Permalink to this heading">#</a></h3>
+<h3>SyncOnOuterVertex<a class="headerlink" href="#synconoutervertex" title="Permalink to this heading">¶</a></h3>
 <p>This is applied together with the BothInOut loading strategy. Under this case, each fragment $F_{i}$ sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from $F_{1}$ to $F_{0}$ and $F_{2}$ for further synchronization.</p>
 <img alt="SyncOnOuterVertex" src="../_images/sync3.png" />
 </section>
@@ -881,7 +944,7 @@ graph loading strategies, inner/outer vertices, and message passing and synchron
 </div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>

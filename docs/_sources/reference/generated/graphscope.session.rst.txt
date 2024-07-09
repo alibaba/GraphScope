@@ -28,7 +28,6 @@
       ~session.interactive
       ~session.learning
       ~session.load_from
-      ~session.load_from_gar
       ~session.nx
       ~session.restore_from_pvc
       ~session.run

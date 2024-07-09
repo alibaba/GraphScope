@@ -3,21 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Introduction to ArrowFragment" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="frag_intro.html" />
-<meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="0. 术语: 标签(LABEL)：表示某一类顶点或者边, 属性(PROPERTY)：表示顶点或边所关联的数据, 原始ID(OID)：原始数据集中的id，不同标签的顶点允许有相同的OID, 子图ID(FID)：子图的唯一编号, 分区器(Partitioner)：能够确定顶点oid到分区id（FID）的映射, 子图(Fragment): 通过切边得到的子图，存储了顶点、边、顶点数据、边数据等信息..." />
-<meta name="description" content="0. 术语: 标签(LABEL)：表示某一类顶点或者边, 属性(PROPERTY)：表示顶点或边所关联的数据, 原始ID(OID)：原始数据集中的id，不同标签的顶点允许有相同的OID, 子图ID(FID)：子图的唯一编号, 分区器(Partitioner)：能够确定顶点oid到分区id（FID）的映射, 子图(Fragment): 通过切边得到的子图，存储了顶点、边、顶点数据、边数据等信息..." />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>Introduction to ArrowFragment - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e72d9a73" />
@@ -121,7 +115,7 @@ MathJax = {
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -136,7 +130,7 @@ MathJax = {
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -144,7 +138,7 @@ MathJax = {
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -152,6 +146,60 @@ MathJax = {
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -164,6 +212,8 @@ MathJax = {
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -182,7 +232,8 @@ MathJax = {
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -233,23 +284,33 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">GraphScope Flex</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="flex/coordinator.html">Coordinator</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Coordinator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="flex/coordinator/restful_api.html">Coordinator RESTFul API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex/interactive/deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/custom_graph_data.html">Using Custom Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/stored_procedures.html">Stored Procedures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/configuration.html">Engine Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/data_import.html">Data Import Configuration</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/restful_api.html">RESTful API Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="flex/interactive/glossary.html">Glossary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="flex/interactive/tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="flex/interactive/tools/admin_tool.html">The Administrative tool</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -257,7 +318,7 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="analytical_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytical_engine/deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -277,14 +338,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine/neo4j/llm_assistant.html">Using LLM as an Assistant in GIE</a></li>
@@ -325,8 +386,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -337,13 +398,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -387,18 +448,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -433,7 +494,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -582,6 +643,18 @@ MathJax = {
         
           
             
+              <dd><a href="v0.28.0/index.html">
+                
+                  v0.28.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="v0.27.0/index.html">
                 
                   v0.27.0
@@ -609,18 +682,6 @@ MathJax = {
               <dd><a href="v0.25.0/index.html">
                 
                   v0.25.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="v0.24.0/index.html">
-                
-                  v0.24.0
                 
               </a></dd>
             
@@ -661,19 +722,21 @@ MathJax = {
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="edit-this-page">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/blob/main/docs/frag_intro.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
   <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/frag_intro.md" title="Edit this page">
-    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
-      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
-    </svg>
+    <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
 </div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -683,12 +746,12 @@ MathJax = {
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="introduction-to-arrowfragment">
-<h1>Introduction to ArrowFragment<a class="headerlink" href="#introduction-to-arrowfragment" title="Permalink to this heading">#</a></h1>
+<h1>Introduction to ArrowFragment<a class="headerlink" href="#introduction-to-arrowfragment" title="Permalink to this heading">¶</a></h1>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="id1">
-<h1>0. 术语<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h1>
+<h1>0. 术语<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h1>
 <ul class="simple">
 <li><p>标签(LABEL)：表示某一类顶点或者边</p></li>
 <li><p>属性(PROPERTY)：表示顶点或边所关联的数据</p></li>
@@ -709,14 +772,14 @@ MathJax = {
 <li><p>LID编码：0 填充 | VERTEX LABEL ID | OFFSET，<strong>其中 fid 总是 0</strong></p></li>
 </ul>
 <section id="id2">
-<h2>1. 载图<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h2>
+<h2>1. 载图<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
 <p>按照执行流程编号，描述了载图的主要逻辑：</p>
 <section id="partitioner">
-<h3>1.1 初始化partitioner<a class="headerlink" href="#partitioner" title="Permalink to this heading">#</a></h3>
+<h3>1.1 初始化partitioner<a class="headerlink" href="#partitioner" title="Permalink to this heading">¶</a></h3>
 <p>分为HashPartitioner和SegmentedPartitioner, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。</p>
 </section>
 <section id="arrow-table">
-<h3>1.2 构建原始arrow table<a class="headerlink" href="#arrow-table" title="Permalink to this heading">#</a></h3>
+<h3>1.2 构建原始arrow table<a class="headerlink" href="#arrow-table" title="Permalink to this heading">¶</a></h3>
 <p>每个进程读取一部分点、边文件，得到多个vertex arrow table(vtable)和edge arrow table(etable)，其中vtable按照顶点标签(vertex label)分组，etable先按照边标签(edge label)分组，同一个边标签下面又按照src和dst的顶点标签分组</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// 原始的顶点表、边表，每个进程持有部分的数据</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">Table</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">partial_v_tables</span><span class="p">;</span>
@@ -732,11 +795,11 @@ MathJax = {
 edge arrow table包括src和dst的oid、属性</p>
 </section>
 <section id="shuffle-vtable">
-<h3>1.3. Shuffle vtable<a class="headerlink" href="#shuffle-vtable" title="Permalink to this heading">#</a></h3>
+<h3>1.3. Shuffle vtable<a class="headerlink" href="#shuffle-vtable" title="Permalink to this heading">¶</a></h3>
 <p>访问vtable的oid列，根据oid查询partition id,将表中的记录分发给顶点的拥有者</p>
 </section>
 <section id="vertex-map-basicarrowvertexmapbuilder">
-<h3>1.4. 构建Vertex map(BasicArrowVertexMapBuilder)<a class="headerlink" href="#vertex-map-basicarrowvertexmapbuilder" title="Permalink to this heading">#</a></h3>
+<h3>1.4. 构建Vertex map(BasicArrowVertexMapBuilder)<a class="headerlink" href="#vertex-map-basicarrowvertexmapbuilder" title="Permalink to this heading">¶</a></h3>
 <p>从shuffle后的vtable取出oid执行all gather操作，使得每个进程都能够获取的所有oid
 根据frag数量、vertex label数量和全部oid，每个进程构建vertex map</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">fid_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">fnum_</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -757,9 +820,9 @@ edge arrow table包括src和dst的oid、属性</p>
 </div>
 </section>
 <section id="fragment">
-<h3>1.5. 构建Fragment准备<a class="headerlink" href="#fragment" title="Permalink to this heading">#</a></h3>
+<h3>1.5. 构建Fragment准备<a class="headerlink" href="#fragment" title="Permalink to this heading">¶</a></h3>
 <section id="edge-table-basicevfragmentloader">
-<h4>1.5.1. 处理edge table(BasicEVFragmentLoader)<a class="headerlink" href="#edge-table-basicevfragmentloader" title="Permalink to this heading">#</a></h4>
+<h4>1.5.1. 处理edge table(BasicEVFragmentLoader)<a class="headerlink" href="#edge-table-basicevfragmentloader" title="Permalink to this heading">¶</a></h4>
 <ul class="simple">
 <li><p>按照elabel遍历每一张edge table，获取到src和dst的label</p></li>
 <li><p>访问每个src的oid，根据partitioner获取fid。根据fid，src label id和oid查询gid，生成gid数组；处理dst的逻辑同理</p></li>
@@ -769,7 +832,7 @@ edge arrow table包括src和dst的oid、属性</p>
 </ul>
 </section>
 <section id="fragmentbuilder-basicarrowfragmentbuilder">
-<h4>1.5.2 FragmentBuilder数据初始化 (BasicArrowFragmentBuilder)<a class="headerlink" href="#fragmentbuilder-basicarrowfragmentbuilder" title="Permalink to this heading">#</a></h4>
+<h4>1.5.2 FragmentBuilder数据初始化 (BasicArrowFragmentBuilder)<a class="headerlink" href="#fragmentbuilder-basicarrowfragmentbuilder" title="Permalink to this heading">¶</a></h4>
 <ul>
 <li><p>处理顶点：</p>
 <ul class="simple">
@@ -966,7 +1029,7 @@ edge arrow table包括src和dst的oid、属性</p>
 </section>
 </section>
 <section id="id3">
-<h3>1.6 Fragment构建<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
+<h3>1.6 Fragment构建<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
 <p>根据Metadata从Vineyard查询和构建以下数据结构作为ArrowFragment的成员：
 也就是说，以下数据都是存储在vineyard中的</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">fid_t</span><span class="w"> </span><span class="n">fid_</span><span class="p">,</span><span class="w"> </span><span class="n">fnum_</span><span class="p">;</span><span class="w"> </span><span class="c1">// 当前fragment id，fragment总数</span>
@@ -1001,12 +1064,12 @@ edge arrow table包括src和dst的oid、属性</p>
 </section>
 </section>
 <section id="id4">
-<h2>2. 访问Fragment<a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h2>
+<h2>2. 访问Fragment<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
 <p>以下内容描述了访问顶点、边、顶点数据和边数据的API和实现</p>
 <section id="id5">
-<h3>2.1 访问顶点<a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
+<h3>2.1 访问顶点<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
 <section id="id6">
-<h4>2.1.1 访问内部点<a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h4>
+<h4>2.1.1 访问内部点<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h4>
 <p>内部点范围由起始lid和终止lid构成，lid的编码包含了顶点label id和顶点序号。内部点的顶点序号范围为[0, ivnum)；外部点序号范围为[ivnum, tvnum)；全部顶点序号为[0, tvnum)。</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">vertex_range_t</span><span class="w"> </span><span class="nf">InnerVertices</span><span class="p">(</span><span class="n">label_id_t</span><span class="w"> </span><span class="n">label_id</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// 生成lid的起始和结束范围，结束范围是开区间</span>
@@ -1018,7 +1081,7 @@ edge arrow table包括src和dst的oid、属性</p>
 </div>
 </section>
 <section id="id7">
-<h4>2.1.2 范围外部点<a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h4>
+<h4>2.1.2 范围外部点<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">vertex_range_t</span><span class="w"> </span><span class="nf">OuterVertices</span><span class="p">(</span><span class="n">label_id_t</span><span class="w"> </span><span class="n">label_id</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">vertex_range_t</span><span class="p">(</span>
 <span class="w">        </span><span class="n">vid_parser_</span><span class="p">.</span><span class="n">GenerateId</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">label_id</span><span class="p">,</span><span class="w"> </span><span class="n">ivnums_</span><span class="p">[</span><span class="n">label_id</span><span class="p">]),</span>
@@ -1028,7 +1091,7 @@ edge arrow table包括src和dst的oid、属性</p>
 </div>
 </section>
 <section id="id8">
-<h4>2.1.3 访问全部点<a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h4>
+<h4>2.1.3 访问全部点<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">vertex_range_t</span><span class="w"> </span><span class="nf">Vertices</span><span class="p">(</span><span class="n">label_id_t</span><span class="w"> </span><span class="n">label_id</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">vertex_range_t</span><span class="p">(</span>
 <span class="w">        </span><span class="n">vid_parser_</span><span class="p">.</span><span class="n">GenerateId</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">label_id</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span>
@@ -1038,7 +1101,7 @@ edge arrow table包括src和dst的oid、属性</p>
 </div>
 </section>
 <section id="id9">
-<h4>2.1.4 访问顶点数据<a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h4>
+<h4>2.1.4 访问顶点数据<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h4>
 <p>根据顶点lid获取顶点类型，属性id（列号）获取到列指针，然后从lid获取到顶点序号（行号）即可访问到顶点的某个属性。</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="n">T</span><span class="w"> </span><span class="n">GetData</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">vertex_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">prop_id_t</span><span class="w"> </span><span class="n">prop_id</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
@@ -1051,9 +1114,9 @@ edge arrow table包括src和dst的oid、属性</p>
 </section>
 </section>
 <section id="id10">
-<h3>2.2 访问边<a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
+<h3>2.2 访问边<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h3>
 <section id="id11">
-<h4>2.2.1 访问出边<a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h4>
+<h4>2.2.1 访问出边<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h4>
 <p>访问出边需要给出源顶点lid和某一种边的类型。而源顶点的类型已经被lid编码所包含，所以不用给出。</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">adj_list_t</span><span class="w"> </span><span class="nf">GetOutgoingAdjList</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">vertex_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">label_id_t</span><span class="w"> </span><span class="n">e_label</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">vid_t</span><span class="w"> </span><span class="n">vid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">GetValue</span><span class="p">();</span><span class="w"> </span><span class="c1">// 获取源顶点lid</span>
@@ -1069,7 +1132,7 @@ edge arrow table包括src和dst的oid、属性</p>
 </div>
 </section>
 <section id="id12">
-<h4>2.2.2 访问入边<a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h4>
+<h4>2.2.2 访问入边<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h4>
 <p>和出边同理，只需要把oe相关变量名换成ie即可</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">adj_list_t</span><span class="w"> </span><span class="nf">GetIncomingAdjList</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">vertex_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">label_id_t</span><span class="w"> </span><span class="n">e_label</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">vid_t</span><span class="w"> </span><span class="n">vid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">GetValue</span><span class="p">();</span>
@@ -1085,7 +1148,7 @@ edge arrow table包括src和dst的oid、属性</p>
 </div>
 </section>
 <section id="id13">
-<h4>2.2.3 访问边上的数据<a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h4>
+<h4>2.2.3 访问边上的数据<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h4>
 <p>因为在AdjList中已经包含了出边属性表的起始地址，每条出边还包含了边id（对应到行号），因此再给出属性的列号就能够去得到具体的数据。例如：</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// sssp，获取edge weight</span>
 <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">label_id_t</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">e_label_num</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -1148,7 +1211,7 @@ edge arrow table包括src和dst的oid、属性</p>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ccbe24c1"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
     </body>

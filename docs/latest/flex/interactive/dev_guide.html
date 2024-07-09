@@ -3,15 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Turning Cypher Queries into Stored Procedures with GraphScope Interactive" href="development/cypher_procedure.html" /><link rel="prev" title="Data Import Configuration" href="data_import.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Dev and Test" href="development/dev_and_test.html" /><link rel="prev" title="Data Import Configuration" href="data_import.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
-        <title>GraphScope Interactive Development guide - GraphScope documentation</title>
+        <title>Development guide - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
@@ -298,7 +298,8 @@ MathJax = {
 <li class="toctree-l2"><a class="reference internal" href="configuration.html">Engine Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_import.html">Data Import Configuration</a></li>
-<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">GraphScope Interactive Development guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">Development guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">RESTful API Documentation</a></li>
@@ -643,6 +644,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.28.0/index.html">
+                
+                  v0.28.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.27.0/index.html">
                 
                   v0.27.0
@@ -670,18 +683,6 @@ MathJax = {
               <dd><a href="../../../v0.25.0/index.html">
                 
                   v0.25.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.24.0/index.html">
-                
-                  v0.24.0
                 
               </a></dd>
             
@@ -747,12 +748,27 @@ MathJax = {
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="graphscope-interactive-development-guide">
-<h1>GraphScope Interactive Development guide<a class="headerlink" href="#graphscope-interactive-development-guide" title="Permalink to this heading">¶</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="development-guide">
+<h1>Development guide<a class="headerlink" href="#development-guide" title="Permalink to this heading">¶</a></h1>
 <p>Users can develop C++ stored procedures and Cypher stored procedures based on <code class="docutils literal notranslate"><span class="pre">GraphScope</span> <span class="pre">Interactive</span></code>.
 Interactive also provides an Admin Service for managing graph data and stored procedures at runtime, and it can also retrieve the running status of the service.</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="development/dev_and_test.html">Dev and Test</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/dev_and_test.html#dev-environment">Dev Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html#install-deps-on-local">Install Deps on Local</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html#develop-on-docker-container">Develop on Docker Container</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development/dev_and_test.html#understanding-the-codebase">Understanding the Codebase</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html#interactive-query-engine">Interactive Query Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html#compiler">Compiler</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development/dev_and_test.html#build-interactive">Build Interactive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/dev_and_test.html#testing">Testing</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="development/cypher_procedure.html#crafting-a-cypher-stored-procedure">Crafting a Cypher Stored Procedure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development/cypher_procedure.html#compiling-and-enabling-the-stored-procedure">Compiling and Enabling the Stored Procedure</a></li>
@@ -968,12 +984,12 @@ Interactive also provides an Admin Service for managing graph data and stored pr
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="development/cypher_procedure.html">
+          <a class="next-page" href="development/dev_and_test.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</div>
+                <div class="title">Dev and Test</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

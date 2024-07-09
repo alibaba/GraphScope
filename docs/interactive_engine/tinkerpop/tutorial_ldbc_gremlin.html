@@ -3,21 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Tutorial: LDBC Gremlin" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="interactive_engine/tinkerpop/tutorial_ldbc_gremlin.html" />
-<meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="Prior to beginning, it is important to note that LDBC is a highly regarded organization in the realm of graph databases/systems benchmark standards and audit testing. LDBC has developed several ben..." />
-<meta name="description" content="Prior to beginning, it is important to note that LDBC is a highly regarded organization in the realm of graph databases/systems benchmark standards and audit testing. LDBC has developed several ben..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Supported Gremlin Steps" href="supported_gremlin_steps.html" /><link rel="prev" title="Guide and Examples" href="guide_and_examples.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>Tutorial: LDBC Gremlin - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
@@ -121,7 +115,7 @@ MathJax = {
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -136,7 +130,7 @@ MathJax = {
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -144,7 +138,7 @@ MathJax = {
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -152,6 +146,60 @@ MathJax = {
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -164,6 +212,8 @@ MathJax = {
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -182,7 +232,8 @@ MathJax = {
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -233,23 +284,33 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">GraphScope Flex</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../flex/coordinator.html">Coordinator</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Coordinator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../flex/coordinator/restful_api.html">Coordinator RESTFul API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../flex/interactive_intro.html">GraphScope Interactive</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/custom_graph_data.html">Using Custom Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/stored_procedures.html">Stored Procedures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/configuration.html">Engine Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/data_import.html">Data Import Configuration</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/restful_api.html">RESTful API Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/java/java_sdk.html">Java SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/python/python_sdk.html">Python SDK Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/glossary.html">Glossary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/tools/admin_tool.html">The Administrative tool</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -257,7 +318,7 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -277,14 +338,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../neo4j/supported_cypher.html">Cypher Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../neo4j/llm_assistant.html">Using LLM as an Assistant in GIE</a></li>
@@ -325,8 +386,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -337,13 +398,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -387,18 +448,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -433,7 +494,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -582,6 +643,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.28.0/index.html">
+                
+                  v0.28.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.27.0/index.html">
                 
                   v0.27.0
@@ -609,18 +682,6 @@ MathJax = {
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.24.0/index.html">
-                
-                  v0.24.0
                 
               </a></dd>
             
@@ -661,19 +722,21 @@ MathJax = {
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="edit-this-page">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/tutorial_ldbc_gremlin.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
   <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/interactive_engine/tinkerpop/tutorial_ldbc_gremlin.md" title="Edit this page">
-    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
-      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
-    </svg>
+    <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
 </div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -683,9 +746,9 @@ MathJax = {
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="tutorial-ldbc-gremlin">
-<h1>Tutorial: LDBC Gremlin<a class="headerlink" href="#tutorial-ldbc-gremlin" title="Permalink to this heading">#</a></h1>
+<h1>Tutorial: LDBC Gremlin<a class="headerlink" href="#tutorial-ldbc-gremlin" title="Permalink to this heading">¶</a></h1>
 <p>Prior to beginning, it is important to note that <a class="reference external" href="https://ldbcouncil.org/">LDBC</a> is a highly
 regarded organization in the realm of graph databases/systems benchmark standards and audit testing.
 LDBC has developed several benchmark toolsuits, with GIE primarily focusing on the
@@ -697,7 +760,7 @@ social network utilized in SNB. By the conclusion of this tutorial, we are confi
 you will be proficient in constructing Gremlin queries that are just as intricate as the
 business intelligence workloads found in SNB.</p>
 <section id="load-the-ldbc-graph">
-<h2>Load the LDBC Graph<a class="headerlink" href="#load-the-ldbc-graph" title="Permalink to this heading">#</a></h2>
+<h2>Load the LDBC Graph<a class="headerlink" href="#load-the-ldbc-graph" title="Permalink to this heading">¶</a></h2>
 <p>For this tutorial, we will use the <a class="reference external" href="https://ldbcouncil.org/">LDBC social network</a> as the graph data, which has the following entities:</p>
 <ul class="simple">
 <li><p>vertex/edge labels(types) in the graph</p></li>
@@ -707,7 +770,7 @@ business intelligence workloads found in SNB.</p>
 <figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../../_images/LDBC_Schema.png"><img alt="The schema of the LDBC graph" src="../../_images/LDBC_Schema.png" style="width: 65%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 1. The schema of the LDBC graph (referred to LDBC <a class="reference external" href="https://ldbcouncil.org/benchmarks/snb/">SNB</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 1. The schema of the LDBC graph (referred to LDBC <a class="reference external" href="https://ldbcouncil.org/benchmarks/snb/">SNB</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>LDBC graph is one of the built-in dataset of GraphScope, so it can be easily loaded through:</p>
@@ -751,10 +814,10 @@ After loading the LDBC graph and initializing the engine, we can submit Gremlin 
 <p>It suggests that there are 190376 vertices and 787074 edges in the LDBC sf1 graph.</p>
 </section>
 <section id="basic-vertex-edge-query">
-<h2>Basic Vertex/Edge Query<a class="headerlink" href="#basic-vertex-edge-query" title="Permalink to this heading">#</a></h2>
+<h2>Basic Vertex/Edge Query<a class="headerlink" href="#basic-vertex-edge-query" title="Permalink to this heading">¶</a></h2>
 <p>It is very common to use SQL sentences to retrieve data from relational databases. In graph, vertices can be regarded as entities, and edges can be regarded as the connecting relationship among entities. Similarly, we can easily retrieve data from graph with GIE and corresponding graph query sentences.</p>
 <section id="retrieve-vertices-and-edges">
-<h3>Retrieve Vertices and Edges<a class="headerlink" href="#retrieve-vertices-and-edges" title="Permalink to this heading">#</a></h3>
+<h3>Retrieve Vertices and Edges<a class="headerlink" href="#retrieve-vertices-and-edges" title="Permalink to this heading">¶</a></h3>
 <p>As shown in the last tutorial, we can easily retrieve vertices and edges from graph through <code class="docutils literal notranslate"><span class="pre">g.V()</span></code> and <code class="docutils literal notranslate"><span class="pre">g.E()</span></code> Gremlin steps.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># then `execute` any supported gremlin query.</span>
 <span class="c1"># Retrieve all vertices</span>
@@ -779,7 +842,7 @@ After loading the LDBC graph and initializing the engine, we can submit Gremlin 
 <p>For edges, still the number inside the first <code class="docutils literal notranslate"><span class="pre">[]</span></code> represents its id. The content inside the second <code class="docutils literal notranslate"><span class="pre">[]</span></code> is of the format <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">vertex</span> <span class="pre">id</span> <span class="pre">-edge</span> <span class="pre">label(type)-&gt;</span> <span class="pre">destination</span> <span class="pre">vertex</span> <span class="pre">id</span></code>，indicating the edge’s two end vertices’ id and the connection type (edge label).</p>
 </section>
 <section id="apply-some-filters">
-<h3>Apply Some Filters<a class="headerlink" href="#apply-some-filters" title="Permalink to this heading">#</a></h3>
+<h3>Apply Some Filters<a class="headerlink" href="#apply-some-filters" title="Permalink to this heading">¶</a></h3>
 <p>In most cases, we don’t need to retrieve all the vertices and edges from the graph, as we may only care about a small portion of them. Therefore, GIE with Gremlin provides you with some filtering operations to help find the data you are interested in.</p>
 <p>If you only want to extract a vertex/edge with the given id, you can write Gremlin sentence <code class="docutils literal notranslate"><span class="pre">g.V(id)</span></code> in GIE. (<code class="docutils literal notranslate"><span class="pre">g.E(id)</span></code> will be supported in the future)</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve vertex with id 1</span>
@@ -852,7 +915,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <p>Here are more <a class="reference external" href="https://tinkerpop.apache.org/docs/3.6.2/reference/#has-step">references</a> about <code class="docutils literal notranslate"><span class="pre">has(...)</span></code> step in Gremlin.</p>
 </section>
 <section id="extract-property-values">
-<h3>Extract Property Values<a class="headerlink" href="#extract-property-values" title="Permalink to this heading">#</a></h3>
+<h3>Extract Property Values<a class="headerlink" href="#extract-property-values" title="Permalink to this heading">¶</a></h3>
 <p>Sometimes, you may more curious about the property values of the vertices/edges. With GIE, you can easily  use <code class="docutils literal notranslate"><span class="pre">values(PROPERTY_NAME)</span></code> Gremlin step to extract the vertices/edges’ property value.</p>
 <p>For example, you have already known that vertex(id=38416) is a comment, and you are interested in its content, then you can write the following codes in GIE:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract comment vertex(id=38416)&#39;s content</span>
@@ -867,7 +930,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="real-applications">
-<h3>Real Applications<a class="headerlink" href="#real-applications" title="Permalink to this heading">#</a></h3>
+<h3>Real Applications<a class="headerlink" href="#real-applications" title="Permalink to this heading">¶</a></h3>
 <p>Since GIE provides python interface, it is very convenient to do some further data analytics on the retrieved data.</p>
 <p>Here is an example about the statistics of the comment content’s length (word count) in the LDBC Graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -897,7 +960,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id3">
 <a class="reference internal image-reference" href="../../_images/comments_length_histogram.png"><img alt="The_histogram" src="../../_images/comments_length_histogram.png" style="width: 65%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 2. The histogram of the comments’ length in the ldbc social network.</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 2. The histogram of the comments’ length in the ldbc social network.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>We can also draw a pie chart about the gender ratio in the social network.</p>
@@ -932,18 +995,18 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id4">
 <a class="reference internal image-reference" href="../../_images/gender_ratio.png"><img alt="The_pie_chart" src="../../_images/gender_ratio.png" style="width: 60%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 3. The pie chart of person’s gender in the ldbc social network.</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 3. The pie chart of person’s gender in the ldbc social network.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 </section>
 <section id="basic-traversal-query">
-<h2>Basic Traversal Query<a class="headerlink" href="#basic-traversal-query" title="Permalink to this heading">#</a></h2>
+<h2>Basic Traversal Query<a class="headerlink" href="#basic-traversal-query" title="Permalink to this heading">¶</a></h2>
 <p>The main difference between Property Graph and Relational Database is that Property Graph treats the relationship(edges) among entities(vertices) at the first class. Therefore, it is easy to walk through vertices and edges in the Property Graph according to some pre-defined paths.</p>
 <p>In GIE, we call such walk as  <strong>Graph Traversal</strong>: This type of workload involves traversing the graph from a set of source vertices while satisfying the constraints on the vertices and edges that the traversal passes. Graph traversal differs from the <a class="reference external" href="https://graphscope.io/docs/latest/graph_analytics_workloads.html">analytics</a> workload as it typically accesses a small portion of the graph rather than the whole graph.</p>
 <p>In this tutorial, we would like to discuss how to use Gremlin steps to traverse the Property Graph. Furthermore, we will show some examples about how to apply graph traversals in real world data analytics.</p>
 <section id="expansion">
-<h3>Expansion<a class="headerlink" href="#expansion" title="Permalink to this heading">#</a></h3>
+<h3>Expansion<a class="headerlink" href="#expansion" title="Permalink to this heading">¶</a></h3>
 <p>The most basic unit in Graph Traversal is Expansion, which means starting from a vertex/edge and reaching its adjacencies. GIE currently supports the following expansion steps in Gremlin:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">out()</span></code>: Map the vertex to its outgoing adjacent vertices given the edge labels.</p></li>
@@ -961,11 +1024,11 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id5">
 <a class="reference internal image-reference" href="../../_images/local_graph_example.png"><img alt="local_graph_example" src="../../_images/local_graph_example.png" style="width: 33%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 5. A local graph around a given person vertex.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 5. A local graph around a given person vertex.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <section id="out-in-and-both">
-<h4>out(), in() and both()<a class="headerlink" href="#out-in-and-both" title="Permalink to this heading">#</a></h4>
+<h4>out(), in() and both()<a class="headerlink" href="#out-in-and-both" title="Permalink to this heading">¶</a></h4>
 <p>All of these three steps start traverse from source vertices to their adjacent vertices. The differences between them are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">out()</span></code> traverse through the <strong>outgoing</strong> edges to the adjacent vertices</p></li>
@@ -988,7 +1051,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id6">
 <a class="reference internal image-reference" href="../../_images/out_in_both.png"><img alt="out_in_both" src="../../_images/out_in_both.png" style="width: 95%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 6. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps.</span><a class="headerlink" href="#id6" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 6. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps.</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Therefore, the output of the above codes should be like:</p>
@@ -1016,7 +1079,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id7">
 <a class="reference internal image-reference" href="../../_images/out_in_both_labels.png"><img alt="out_in_both_labels" src="../../_images/out_in_both_labels.png" style="width: 95%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 7. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps from given labels.</span><a class="headerlink" href="#id7" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 7. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps from given labels.</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Therefore, the output of the above codes should be like:</p>
@@ -1030,7 +1093,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="oute-ine-and-bothe">
-<h4>outE(), inE() and bothE()<a class="headerlink" href="#oute-ine-and-bothe" title="Permalink to this heading">#</a></h4>
+<h4>outE(), inE() and bothE()<a class="headerlink" href="#oute-ine-and-bothe" title="Permalink to this heading">¶</a></h4>
 <p>All of these three steps start traverse from source vertices to their <strong>adjacent edges</strong>. Similar to <code class="docutils literal notranslate"><span class="pre">out()</span></code>, <code class="docutils literal notranslate"><span class="pre">in()</span></code> and <code class="docutils literal notranslate"><span class="pre">both()</span></code>, the differences between them are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">outE()</span></code> can only traverse to the <strong>outgoing</strong>  adjacent edges of the source vertices</p></li>
@@ -1053,7 +1116,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id8">
 <a class="reference internal image-reference" href="../../_images/outE_inE_bothE.png"><img alt="The current states of graph queries" src="../../_images/outE_inE_bothE.png" style="width: 95%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 8. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps.</span><a class="headerlink" href="#id8" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 8. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps.</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Therefore, the output of the above codes should be like:</p>
@@ -1081,7 +1144,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id9">
 <a class="reference internal image-reference" href="../../_images/outE_inE_bothE_labels.png"><img alt="outE_inE_bothE_labels" src="../../_images/outE_inE_bothE_labels.png" style="width: 95%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 9. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps from given labels.</span><a class="headerlink" href="#id9" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 9. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps from given labels.</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Therefore, the output of the above codes should like:</p>
@@ -1095,12 +1158,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="outv-inv-bothv-and-otherv">
-<h4>outV(), inV(), bothV() and otherV()<a class="headerlink" href="#outv-inv-bothv-and-otherv" title="Permalink to this heading">#</a></h4>
+<h4>outV(), inV(), bothV() and otherV()<a class="headerlink" href="#outv-inv-bothv-and-otherv" title="Permalink to this heading">¶</a></h4>
 <p>When reaching an edge during the traversal, you may be interested in its incident vertices. Therefore, GIE supports Gremlin steps that traverse from source edges to their incident vertices.</p>
 <figure class="align-default" id="id10">
 <a class="reference internal image-reference" href="../../_images/out_in_vertices.png"><img alt="out_in_vertices" src="../../_images/out_in_vertices.png" style="width: 50%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 10. The examples of outgoing/incoming vertex of an edge.</span><a class="headerlink" href="#id10" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 10. The examples of outgoing/incoming vertex of an edge.</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>For en edge <code class="docutils literal notranslate"><span class="pre">e1</span></code> whose direction is from <code class="docutils literal notranslate"><span class="pre">v1</span></code> to <code class="docutils literal notranslate"><span class="pre">v2</span></code>, we call <code class="docutils literal notranslate"><span class="pre">v1</span></code> as ‘outgoing vertex’ and <code class="docutils literal notranslate"><span class="pre">v2</span></code> as ‘incoming’ vertices.</p>
@@ -1126,7 +1189,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id11">
 <a class="reference internal image-reference" href="../../_images/outV_inV_bothV.png"><img alt="outV_inV_bothV" src="../../_images/outV_inV_bothV.png" style="width: 95%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 11. The examples of outV/inV/bothV steps.</span><a class="headerlink" href="#id11" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 11. The examples of outV/inV/bothV steps.</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Therefore, the output of the above codes should like:</p>
@@ -1151,13 +1214,13 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="multiple-expansion-steps">
-<h4>Multiple Expansion Steps<a class="headerlink" href="#multiple-expansion-steps" title="Permalink to this heading">#</a></h4>
+<h4>Multiple Expansion Steps<a class="headerlink" href="#multiple-expansion-steps" title="Permalink to this heading">¶</a></h4>
 <p>You may have already noticed that graph traversal supports multiple expansion steps. For example, in Gremlin sentence<code class="docutils literal notranslate"><span class="pre">g.V(216172782113784483).outE('isLocatedIn').inV()</span></code>, <code class="docutils literal notranslate"><span class="pre">outE('isLocatedIn')</span></code> is first expansion and <code class="docutils literal notranslate"><span class="pre">inV()</span></code> is the second expansion.</p>
 <p>The figure illustrates the execution process of this Gremlin sentence:</p>
 <figure class="align-default" id="id12">
 <a class="reference internal image-reference" href="../../_images/outE_then_inV.png"><img alt="outE_then_inV" src="../../_images/outE_then_inV.png" style="width: 70%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 12. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code> followed by <code class="docutils literal notranslate"><span class="pre">inV</span></code>.</span><a class="headerlink" href="#id12" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 12. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code> followed by <code class="docutils literal notranslate"><span class="pre">inV</span></code>.</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>During the traversal, it firstly start from the source vertex ‘person’, and get to the ‘isLocatedIn’ edge. Then it starts from the ‘isLocatedIn’ edge, and get to the ‘place’ vertex. Thus the traversal ends, the ‘place’ vertex is the end of this traversal, and the ‘isLocatedIn’ edge can be regarded as the intermediate process of the traversal.</p>
@@ -1177,7 +1240,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id13">
 <a class="reference internal image-reference" href="../../_images/out_out_predicate.png"><img alt="out_out_predicate" src="../../_images/out_out_predicate.png" style="width: 40%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 13. The examples of two-hop outgoing vertices.</span><a class="headerlink" href="#id13" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 13. The examples of two-hop outgoing vertices.</span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Therefore, the output of the Gremlin sentence should be like:</p>
@@ -1205,13 +1268,13 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="expansion-from-many-starting-points">
-<h4>Expansion from many starting points<a class="headerlink" href="#expansion-from-many-starting-points" title="Permalink to this heading">#</a></h4>
+<h4>Expansion from many starting points<a class="headerlink" href="#expansion-from-many-starting-points" title="Permalink to this heading">¶</a></h4>
 <p>Currently, we only discuss the expansion from only one vertex/edges. However, it is very common to write Gremlin sentence like <code class="docutils literal notranslate"><span class="pre">g.V().out()</span></code> in GIE. In previous tutorials we have known that <code class="docutils literal notranslate"><span class="pre">g.V()</span></code> will get all the vertices in the graph. Then how to understand the meaning of <code class="docutils literal notranslate"><span class="pre">g.V().out()</span></code>?</p>
 <p>The explain it more clear, let’s firstly look at a much simpler situation: starting from only two vertices. This is a subgraph of LDBC Graph formed by two person vertices’ local graphs, where the two person vertices’ ids are 216172782113784483 and 216172782113784555.</p>
 <figure class="align-default" id="id14">
 <a class="reference internal image-reference" href="../../_images/two_local_graphs.png"><img alt="two_local_graphs" src="../../_images/two_local_graphs.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 14. The examples of two local graphs.</span><a class="headerlink" href="#id14" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 14. The examples of two local graphs.</span><a class="headerlink" href="#id14" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>In addition, we further limit the starting points of the traversal to be exactly the two person vertices. Therefore, we can write the following Gremlin sentence in GIE:</p>
@@ -1224,7 +1287,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id15">
 <a class="reference internal image-reference" href="../../_images/out_two_starting_points.png"><img alt="two_local_graphs" src="../../_images/out_two_starting_points.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 15. The results of outgoing neighbors from two given vertices.</span><a class="headerlink" href="#id15" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 15. The results of outgoing neighbors from two given vertices.</span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>The traversal starts from the two person vertices, and then the <code class="docutils literal notranslate"><span class="pre">out()</span></code> step map the two source vertices both to their outgoing adjacent vertices. Therefore, the output should be like:</p>
@@ -1261,22 +1324,22 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id16">
 <a class="reference internal image-reference" href="../../_images/traversers_transformation_overview.png"><img alt="traversers_transformation_overview" src="../../_images/traversers_transformation_overview.png" style="width: 50%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 16. The overview of traversers’ transformation.</span><a class="headerlink" href="#id16" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 16. The overview of traversers’ transformation.</span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>In addition, this figure shows the details of the traverser’s change after every expansion step and <code class="docutils literal notranslate"><span class="pre">as(TAG)</span></code> step during the execution of Gremlin sentence <code class="docutils literal notranslate"><span class="pre">g.V().as('a').out().as('b').in().as('c')</span></code>.</p>
 <figure class="align-default" id="id17">
 <a class="reference internal image-reference" href="../../_images/traversers_transformation_details.png"><img alt="traversers_transformation_details" src="../../_images/traversers_transformation_details.png" style="width: 70%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 17. The mapping details of the above traversers’ transformation.</span><a class="headerlink" href="#id17" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 17. The mapping details of the above traversers’ transformation.</span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 </section>
 <section id="filter-expansion">
-<h3>Filter &amp; Expansion<a class="headerlink" href="#filter-expansion" title="Permalink to this heading">#</a></h3>
+<h3>Filter &amp; Expansion<a class="headerlink" href="#filter-expansion" title="Permalink to this heading">¶</a></h3>
 <section id="apply-filters-after-expansion">
-<h4>Apply filters after expansion<a class="headerlink" href="#apply-filters-after-expansion" title="Permalink to this heading">#</a></h4>
+<h4>Apply filters after expansion<a class="headerlink" href="#apply-filters-after-expansion" title="Permalink to this heading">¶</a></h4>
 <p>In last tutorial, we have discussed that we can use <code class="docutils literal notranslate"><span class="pre">has(...)</span></code> series of steps to apply filters to the extracted vertices and edges. Actually, these steps can be applied after expansion steps either that filter on the current traversers.</p>
 <p>Still using <code class="docutils literal notranslate"><span class="pre">g.V().out().in()</span></code> as the example, if we hope that:</p>
 <ul class="simple">
@@ -1324,7 +1387,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="expansion-as-filters">
-<h4>Expansion as filters<a class="headerlink" href="#expansion-as-filters" title="Permalink to this heading">#</a></h4>
+<h4>Expansion as filters<a class="headerlink" href="#expansion-as-filters" title="Permalink to this heading">¶</a></h4>
 <p>In addition, not only can we add filters after expansion steps, but also we can use expansion step as the filtering predicate with <code class="docutils literal notranslate"><span class="pre">where(...)</span></code> step. For example, if we want to extract all the vertices having at least 5 outgoing incident edges, we can write a Gremlin sentence with <code class="docutils literal notranslate"><span class="pre">where(...)</span></code> step as following:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve vertices having at least 5 outgoing incident edges</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().where(outE().count().is(gte(5)))&#39;</span><span class="p">)</span>
@@ -1334,7 +1397,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </section>
 </section>
 <section id="path-expansion-syntactic-sugar">
-<h3>Path Expansion (Syntactic Sugar)<a class="headerlink" href="#path-expansion-syntactic-sugar" title="Permalink to this heading">#</a></h3>
+<h3>Path Expansion (Syntactic Sugar)<a class="headerlink" href="#path-expansion-syntactic-sugar" title="Permalink to this heading">¶</a></h3>
 <p>Until now, we can use expansion steps, filter steps and auxiliary steps like <code class="docutils literal notranslate"><span class="pre">as(TAG)</span></code> to write complicated Gremlin sentences to traverse the graph. However, there are still two shortcomings:</p>
 <ul class="simple">
 <li><p>If we want to find a vertex which is 10-hop(edges) away from the current vertex, we need to write expansion step 10 times, which is very cost-ineffective.</p></li>
@@ -1351,12 +1414,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id18">
 <a class="reference internal image-reference" href="../../_images/path_expansion_explanation.png"><img alt="path_expansion_explanation" src="../../_images/path_expansion_explanation.png" style="width: 70%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 18. The examples of path expansion.</span><a class="headerlink" href="#id18" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 18. The examples of path expansion.</span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="id1">
-<h3>Real Applications<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
+<h3>Real Applications<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
 <p>Graph traversal enables us to conduct more complicated data analytics on the graph.</p>
 <p>For example, the path <code class="docutils literal notranslate"><span class="pre">comment-hasCreator-&gt;person-&gt;isLocatedIn-&gt;city-isPartOf-&gt;country</span></code> can help to determine the nationality of <code class="docutils literal notranslate"><span class="pre">comments</span></code>. Therefore,  we can calculate the histogram of comment length for comments from China easily with GIE:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -1385,7 +1448,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id19">
 <a class="reference internal image-reference" href="../../_images/comments_length_histogram_china.png"><img alt="comments_length_histogram_china" src="../../_images/comments_length_histogram_china.png" style="width: 50%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 19. Comments length histogram in China.</span><a class="headerlink" href="#id19" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 19. Comments length histogram in China.</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Or we can estimate the browser market share in Japan:</p>
@@ -1416,13 +1479,13 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id20">
 <a class="reference internal image-reference" href="../../_images/estimated_japan_browser_market_share.png"><img alt="estimated_japan_browser_market_share" src="../../_images/estimated_japan_browser_market_share.png" style="width: 50%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 20. Estimated Japan Browser Market Share</span><a class="headerlink" href="#id20" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 20. Estimated Japan Browser Market Share</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 </section>
 <section id="pattern-match">
-<h2>Pattern Match<a class="headerlink" href="#pattern-match" title="Permalink to this heading">#</a></h2>
+<h2>Pattern Match<a class="headerlink" href="#pattern-match" title="Permalink to this heading">¶</a></h2>
 <p>Suppose you want to find two <code class="docutils literal notranslate"><span class="pre">persons</span></code> and the <code class="docutils literal notranslate"><span class="pre">universities</span></code> they <code class="docutils literal notranslate"><span class="pre">studyAt</span></code> in the graph that:</p>
 <ol class="arabic simple">
 <li><p>The two <code class="docutils literal notranslate"><span class="pre">person</span></code> <code class="docutils literal notranslate"><span class="pre">know</span></code> each other</p></li>
@@ -1486,7 +1549,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id21">
 <a class="reference internal image-reference" href="../../_images/pattern_person_person_university.png"><img alt="pattern_person_person_university" src="../../_images/pattern_person_person_university.png" style="width: 35%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 21. Pattern: two person know each other and study at the same university.</span><a class="headerlink" href="#id21" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 21. Pattern: two person know each other and study at the same university.</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Then you aim to find all the matched subgraphs that are <a class="reference external" href="https://en.wikipedia.org/wiki/Graph_isomorphism">isomorphic</a> to the pattern. Under graph isomorphism, a subgraph and the pattern are matched if, when there is an edge between vertices in the pattern, there is an equivalent edge between two matched vertices in the subgraph. In addition, a vertex in the subgraph cannot match multiple pattern vertices.</p>
@@ -1494,14 +1557,14 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id22">
 <a class="reference internal image-reference" href="../../_images/local_person_person_university.png"><img alt="local_person_person_university" src="../../_images/local_person_person_university.png" style="width: 50%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 22. Local graph of a university vertex.</span><a class="headerlink" href="#id22" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 22. Local graph of a university vertex.</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>and here are the matched subgraphs in this local graph:</p>
 <figure class="align-default" id="id23">
 <a class="reference internal image-reference" href="../../_images/matched_person_person_university.png"><img alt="matched_person_person_university" src="../../_images/matched_person_person_university.png" style="width: 50%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 23. Three matched subgraphs in the local graph.</span><a class="headerlink" href="#id23" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 23. Three matched subgraphs in the local graph.</span><a class="headerlink" href="#id23" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>The matched instances in the local graph are:</p>
@@ -1578,7 +1641,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <figure class="align-default" id="id24">
 <a class="reference internal image-reference" href="../../_images/bi19_right_lower_corner.png"><img alt="bi19_right_lower_corner" src="../../_images/bi19_right_lower_corner.png" style="width: 50%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other.</span><a class="headerlink" href="#id24" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other.</span><a class="headerlink" href="#id24" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>We can easily match this pattern with Gremlin <code class="docutils literal notranslate"><span class="pre">match(...)</span></code> step:</p>
@@ -1611,12 +1674,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="relational-operations">
-<h2>Relational Operations<a class="headerlink" href="#relational-operations" title="Permalink to this heading">#</a></h2>
+<h2>Relational Operations<a class="headerlink" href="#relational-operations" title="Permalink to this heading">¶</a></h2>
 <p>Then we would like to introduce more relational operations of Gremlin steps that GIE supports.</p>
 <section id="filter-steps">
-<h3>Filter Steps<a class="headerlink" href="#filter-steps" title="Permalink to this heading">#</a></h3>
+<h3>Filter Steps<a class="headerlink" href="#filter-steps" title="Permalink to this heading">¶</a></h3>
 <section id="hasid">
-<h4><code class="docutils literal notranslate"><span class="pre">hasId()</span></code><a class="headerlink" href="#hasid" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">hasId()</span></code><a class="headerlink" href="#hasid" title="Permalink to this heading">¶</a></h4>
 <p>In previous tutorial, we have introduced that you can use <code class="docutils literal notranslate"><span class="pre">g.V(id)</span></code> to pick out the vertex having specific required global id from the graph. But, what if we want to apply filters based on global id during the traversal?</p>
 <p>You can use the <code class="docutils literal notranslate"><span class="pre">hasId(id)</span></code> step to achieve the purpose. For example, if you want the expanded vertex exactly having global id 144115188075861858, you can write the following codes in GIE:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().out().hasId(144115188075861858)&#39;</span><span class="p">)</span>
@@ -1643,7 +1706,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <p>which are all the vertices whose local id is 0.</p>
 </section>
 <section id="where">
-<h4><code class="docutils literal notranslate"><span class="pre">where()</span></code><a class="headerlink" href="#where" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">where()</span></code><a class="headerlink" href="#where" title="Permalink to this heading">¶</a></h4>
 <p>In previous tutorial, we have introduced that <code class="docutils literal notranslate"><span class="pre">where()</span></code> step in Gremlin sentences having <code class="docutils literal notranslate"><span class="pre">as()</span></code> steps can be used to filter traversers based on the tagged values:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># vertex tagged as &#39;a&#39; should be the same as vertex &#39;tagged&#39; as b</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V(216172782113783808).as(&quot;a&quot;)</span><span class="se">\</span>
@@ -1682,7 +1745,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="dedup">
-<h4><code class="docutils literal notranslate"><span class="pre">dedup()</span></code><a class="headerlink" href="#dedup" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">dedup()</span></code><a class="headerlink" href="#dedup" title="Permalink to this heading">¶</a></h4>
 <p>Suppose that you are interested in how many forums having members from India, and you may write the following Gremlin sentence in GIE:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Aim to count how may forums have members from India</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(&quot;place&quot;).has(&quot;name&quot;, &quot;India&quot;)</span><span class="se">\</span>
@@ -1733,9 +1796,9 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </section>
 </section>
 <section id="project-steps">
-<h3>Project Steps<a class="headerlink" href="#project-steps" title="Permalink to this heading">#</a></h3>
+<h3>Project Steps<a class="headerlink" href="#project-steps" title="Permalink to this heading">¶</a></h3>
 <section id="id-and-label">
-<h4><code class="docutils literal notranslate"><span class="pre">id()</span></code> and <code class="docutils literal notranslate"><span class="pre">label()</span></code><a class="headerlink" href="#id-and-label" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">id()</span></code> and <code class="docutils literal notranslate"><span class="pre">label()</span></code><a class="headerlink" href="#id-and-label" title="Permalink to this heading">¶</a></h4>
 <p>In previous tutorial, we have taught to use <code class="docutils literal notranslate"><span class="pre">values(PROPERTY)</span></code> to project an entity (vertex or edge) to its property’s value. However, to extract the global id and label, we may need to separate steps: <code class="docutils literal notranslate"><span class="pre">id()</span></code> and <code class="docutils literal notranslate"><span class="pre">label()</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get vertex(id=72057594037927936) ’s id</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V(72057594037927936).id()&#39;</span><span class="p">)</span>
@@ -1762,7 +1825,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <p>The output is <code class="docutils literal notranslate"><span class="pre">[0]</span></code></p>
 </section>
 <section id="constant">
-<h4><code class="docutils literal notranslate"><span class="pre">constant()</span></code><a class="headerlink" href="#constant" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">constant()</span></code><a class="headerlink" href="#constant" title="Permalink to this heading">¶</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">constant()</span></code> step is meant to map any object to a fixed object value. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Map all the vertices to 1</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().constant(1)&#39;</span><span class="p">)</span>
@@ -1786,7 +1849,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="valuemap">
-<h4><code class="docutils literal notranslate"><span class="pre">valueMap()</span></code><a class="headerlink" href="#valuemap" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">valueMap()</span></code><a class="headerlink" href="#valuemap" title="Permalink to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">value(PROPERTY)</span></code> step can only map an entity(vertex or edge) to one of its property’s value. What if we want to extract many properties’s value at the same time?</p>
 <p><code class="docutils literal notranslate"><span class="pre">valueMap(PROPERTY1,</span> <span class="pre">PROPERTY2,</span> <span class="pre">...)</span></code> step provides such ability. For example, the following code extracts <code class="docutils literal notranslate"><span class="pre">person</span></code> vertices’ <code class="docutils literal notranslate"><span class="pre">firstName</span></code> and <code class="docutils literal notranslate"><span class="pre">lastName</span></code> together by <code class="docutils literal notranslate"><span class="pre">valueMap(...)</span></code> step.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract person vertices&#39; firstName and lastName</span>
@@ -1802,7 +1865,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="select">
-<h4><code class="docutils literal notranslate"><span class="pre">select()</span></code><a class="headerlink" href="#select" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">select()</span></code><a class="headerlink" href="#select" title="Permalink to this heading">¶</a></h4>
 <p>As introduced previously, for a Gremlin sentence containing <code class="docutils literal notranslate"><span class="pre">as()</span></code> step, we can use <code class="docutils literal notranslate"><span class="pre">select(TAG1,</span> <span class="pre">TAG2,</span> <span class="pre">...)</span></code> step to extract the tagged entities we want. Just as <code class="docutils literal notranslate"><span class="pre">where()</span></code> and <code class="docutils literal notranslate"><span class="pre">dedup()</span></code> step, we can add a <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> step after it to further extract the property’s value of the tagged entities.</p>
 <p>For example, the following Gremlin sentence picked the tagged ‘a’ vertex’s <code class="docutils literal notranslate"><span class="pre">firstName</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract tagged &#39;a&#39; vertex&#39;s firstName</span>
@@ -1859,9 +1922,9 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </section>
 </section>
 <section id="aggregate-steps">
-<h3>Aggregate Steps<a class="headerlink" href="#aggregate-steps" title="Permalink to this heading">#</a></h3>
+<h3>Aggregate Steps<a class="headerlink" href="#aggregate-steps" title="Permalink to this heading">¶</a></h3>
 <section id="fold">
-<h4><code class="docutils literal notranslate"><span class="pre">fold()</span></code><a class="headerlink" href="#fold" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">fold()</span></code><a class="headerlink" href="#fold" title="Permalink to this heading">¶</a></h4>
 <p>Gremlin sentences always generate output containing many traversers. <code class="docutils literal notranslate"><span class="pre">fold()</span></code> step can roll up these traversers into an aggregate list. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Roll up the TagClass vertices into an aggregate list</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(&quot;tagClass&quot;).fold()&#39;</span><span class="p">)</span>
@@ -1874,7 +1937,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="sum-min-max-and-mean">
-<h4><code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">min()</span></code>, <code class="docutils literal notranslate"><span class="pre">max()</span></code> and  <code class="docutils literal notranslate"><span class="pre">mean()</span></code><a class="headerlink" href="#sum-min-max-and-mean" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">min()</span></code>, <code class="docutils literal notranslate"><span class="pre">max()</span></code> and  <code class="docutils literal notranslate"><span class="pre">mean()</span></code><a class="headerlink" href="#sum-min-max-and-mean" title="Permalink to this heading">¶</a></h4>
 <p>Assume you have already projected the traversers into a series of numbers, you can use <code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">min()</span></code>, <code class="docutils literal notranslate"><span class="pre">max()</span></code> and <code class="docutils literal notranslate"><span class="pre">mean()</span></code> step to conduct some further analysis on these values. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the sum of all vertex&#39;s out degree</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().as(&quot;a&quot;).select(&quot;a&quot;).by(out().count()).sum()&#39;</span><span class="p">)</span>
@@ -1900,7 +1963,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="group">
-<h4><code class="docutils literal notranslate"><span class="pre">group()</span></code><a class="headerlink" href="#group" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">group()</span></code><a class="headerlink" href="#group" title="Permalink to this heading">¶</a></h4>
 <p>It is a very common need to divide traversers into different groups according to some values or conditions, called group keys.  Gremlin provides <code class="docutils literal notranslate"><span class="pre">group()</span></code> step to achieve this purpose.</p>
 <p>The group key should be contained in the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step following the <code class="docutils literal notranslate"><span class="pre">group()</span></code> step. The group key can be either a:</p>
 <ul class="simple">
@@ -1942,7 +2005,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <p>Therefore, it is strongly suggested to add meaningful group key in the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step following <code class="docutils literal notranslate"><span class="pre">group()</span></code> step.</p>
 </section>
 <section id="groupcount">
-<h4><code class="docutils literal notranslate"><span class="pre">groupCount()</span></code><a class="headerlink" href="#groupcount" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">groupCount()</span></code><a class="headerlink" href="#groupcount" title="Permalink to this heading">¶</a></h4>
 <p>Sometimes, we only care about there are how many entities in the group. Therefore, it is unnecessary to use <code class="docutils literal notranslate"><span class="pre">group()</span></code> step to get the complete group with every entities inside it.</p>
 <p>We can simply use <code class="docutils literal notranslate"><span class="pre">groupCount()</span></code> step to achieve this purpose. The usage of <code class="docutils literal notranslate"><span class="pre">groupCount()</span></code> step is almost the same as <code class="docutils literal notranslate"><span class="pre">group()</span></code> step, but it will return the count instead of the complete group. For example, the following code calculates there are how many males and females in the graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Count the number of males and females</span>
@@ -1957,7 +2020,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </section>
 </section>
 <section id="order-step">
-<h3>Order Step<a class="headerlink" href="#order-step" title="Permalink to this heading">#</a></h3>
+<h3>Order Step<a class="headerlink" href="#order-step" title="Permalink to this heading">¶</a></h3>
 <p>By default, the output of Gremlin’s sentence in GIE is not ordered. Therefore, Gremlin provides <code class="docutils literal notranslate"><span class="pre">order()</span></code> step to order all the objects in the traversal up to this point and then emit them one-by-one in their ordered sequence.</p>
 <p>As the same as <code class="docutils literal notranslate"><span class="pre">group()</span></code> step, the order key should be placed in the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step following <code class="docutils literal notranslate"><span class="pre">order()</span></code> step. If there’s no <code class="docutils literal notranslate"><span class="pre">by()</span></code> step or the content of <code class="docutils literal notranslate"><span class="pre">by()</span></code> step is empty, it will use the default setting of order:</p>
 <ul class="simple">
@@ -2005,7 +2068,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="limit-step">
-<h3>Limit Step<a class="headerlink" href="#limit-step" title="Permalink to this heading">#</a></h3>
+<h3>Limit Step<a class="headerlink" href="#limit-step" title="Permalink to this heading">¶</a></h3>
 <p>Gremlin sentences always generate a lot of traversers, but sometimes we only need some of them. Therefore, Gremlin provides <code class="docutils literal notranslate"><span class="pre">limit()</span></code> step to filter the objects in the traversal by the number of them to pass through the stream, where only the first n objects are allowed as defined by the limit argument.</p>
 <p>For example, if you want to extract 10 person vertices from the graph, you can write:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract 10 person vertices</span>
@@ -2029,7 +2092,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </div>
 </section>
 <section id="expression-syntax-sugar">
-<h3>Expression(Syntax Sugar)<a class="headerlink" href="#expression-syntax-sugar" title="Permalink to this heading">#</a></h3>
+<h3>Expression(Syntax Sugar)<a class="headerlink" href="#expression-syntax-sugar" title="Permalink to this heading">¶</a></h3>
 <p>Currently, it is still kind of complicated when we need to apply many predicates together to the traversers.</p>
 <p>For example, if you want to find all <code class="docutils literal notranslate"><span class="pre">male</span></code> <code class="docutils literal notranslate"><span class="pre">persons</span></code> that are <code class="docutils literal notranslate"><span class="pre">created</span></code> after <code class="docutils literal notranslate"><span class="pre">2012-01-01</span></code>, you may need two <code class="docutils literal notranslate"><span class="pre">has(...)</span></code> steps. The first <code class="docutils literal notranslate"><span class="pre">has()</span></code> step keeps all the <code class="docutils literal notranslate"><span class="pre">persons</span></code> whose <code class="docutils literal notranslate"><span class="pre">gender</span></code> property has value <code class="docutils literal notranslate"><span class="pre">male</span></code>, and the second <code class="docutils literal notranslate"><span class="pre">has()</span></code> step filters out all the <code class="docutils literal notranslate"><span class="pre">persons</span></code> whose <code class="docutils literal notranslate"><span class="pre">creationDate</span></code> property has value earlier than <code class="docutils literal notranslate"><span class="pre">2012-01-01</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find all male persons that are created after 2012-01-01</span>
@@ -2114,14 +2177,14 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 </section>
 </section>
 <section id="complex-queries">
-<h2>Complex Queries<a class="headerlink" href="#complex-queries" title="Permalink to this heading">#</a></h2>
+<h2>Complex Queries<a class="headerlink" href="#complex-queries" title="Permalink to this heading">¶</a></h2>
 <p>In this tutorial, we will mainly discuss how to use GIE with Gremlin sentences to make some complex queries. The queries we choose are mainly from LDBC BI Workload.</p>
 <section id="ldbc-bi2">
-<h3>LDBC BI2<a class="headerlink" href="#ldbc-bi2" title="Permalink to this heading">#</a></h3>
+<h3>LDBC BI2<a class="headerlink" href="#ldbc-bi2" title="Permalink to this heading">¶</a></h3>
 <figure class="align-default" id="id25">
 <a class="reference internal image-reference" href="../../_images/bi2.png"><img alt="bi2" src="../../_images/bi2.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 25. LDBC BI Query2.</span><a class="headerlink" href="#id25" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 25. LDBC BI Query2.</span><a class="headerlink" href="#id25" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>This figure illustrates LDBC BI2 query. This query aims to find the <code class="docutils literal notranslate"><span class="pre">Tags</span></code> under a given <code class="docutils literal notranslate"><span class="pre">TagClass</span></code> that were used in <code class="docutils literal notranslate"><span class="pre">Messages</span></code> during in the 100-day time window starting at date and compare it with the 100-day time window that follows. For the <code class="docutils literal notranslate"><span class="pre">Tags</span></code> and for both time windows, compute the count of <code class="docutils literal notranslate"><span class="pre">Messages</span></code>.</p>
@@ -2167,11 +2230,11 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 </div>
 </section>
 <section id="ldbc-bi3">
-<h3>LDBC BI3<a class="headerlink" href="#ldbc-bi3" title="Permalink to this heading">#</a></h3>
+<h3>LDBC BI3<a class="headerlink" href="#ldbc-bi3" title="Permalink to this heading">¶</a></h3>
 <figure class="align-default" id="id26">
 <a class="reference internal image-reference" href="../../_images/bi3.png"><img alt="bi3" src="../../_images/bi3.png" style="width: 65%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 26. LDBC BI Query3.</span><a class="headerlink" href="#id26" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 26. LDBC BI Query3.</span><a class="headerlink" href="#id26" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>This figure illustrates LDBC BI3 query. Given a <code class="docutils literal notranslate"><span class="pre">TagClass</span></code> and <code class="docutils literal notranslate"><span class="pre">Country</span></code>, this query aims to find all the <code class="docutils literal notranslate"><span class="pre">Forums</span></code> created in the given <code class="docutils literal notranslate"><span class="pre">Country</span></code>, containing at least one <code class="docutils literal notranslate"><span class="pre">Message</span></code> with <code class="docutils literal notranslate"><span class="pre">Tags</span></code> belonging directly to the given <code class="docutils literal notranslate"><span class="pre">TagClass</span></code>, and count the <code class="docutils literal notranslate"><span class="pre">Messages</span></code> by the <code class="docutils literal notranslate"><span class="pre">Forum</span></code> which contains them.</p>
@@ -2229,11 +2292,11 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 </div>
 </section>
 <section id="ldbc-bi4-left-part">
-<h3>LDBC BI4(Left Part)<a class="headerlink" href="#ldbc-bi4-left-part" title="Permalink to this heading">#</a></h3>
+<h3>LDBC BI4(Left Part)<a class="headerlink" href="#ldbc-bi4-left-part" title="Permalink to this heading">¶</a></h3>
 <figure class="align-default" id="id27">
 <a class="reference internal image-reference" href="../../_images/bi4(left_part).png"><img alt="bi4(left_part)" src="../../_images/bi4%28left_part%29.png" style="width: 30%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 27. LDBC BI Query4(Left Part).</span><a class="headerlink" href="#id27" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 27. LDBC BI Query4(Left Part).</span><a class="headerlink" href="#id27" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>This figure illustrates the left part of the LDBC BI4 query. The query aims to find the top 100 forum of every country based on the memberCount, and the forum should be created after the given date.</p>
@@ -2304,11 +2367,11 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 </div>
 </section>
 <section id="ldbc-bi11">
-<h3>LDBC BI11<a class="headerlink" href="#ldbc-bi11" title="Permalink to this heading">#</a></h3>
+<h3>LDBC BI11<a class="headerlink" href="#ldbc-bi11" title="Permalink to this heading">¶</a></h3>
 <figure class="align-default" id="id28">
 <a class="reference internal image-reference" href="../../_images/bi11.png"><img alt="bi11" src="../../_images/bi11.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 28. LDBC BI Query11.</span><a class="headerlink" href="#id28" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 28. LDBC BI Query11.</span><a class="headerlink" href="#id28" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>This figure illustrates LDBC BI11 query. This query aims to find three persons tagged as a, b, c, where:</p>
@@ -2343,11 +2406,11 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 </div>
 </section>
 <section id="ldbc-bi14">
-<h3>LDBC BI14<a class="headerlink" href="#ldbc-bi14" title="Permalink to this heading">#</a></h3>
+<h3>LDBC BI14<a class="headerlink" href="#ldbc-bi14" title="Permalink to this heading">¶</a></h3>
 <figure class="align-default" id="id29">
 <a class="reference internal image-reference" href="../../_images/bi14.png"><img alt="bi14" src="../../_images/bi14.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Figure 29. LDBC BI Query14.</span><a class="headerlink" href="#id29" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Figure 29. LDBC BI Query14.</span><a class="headerlink" href="#id29" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>This figure illustrates LDBC BI14 query. Here is its purpose:</p>
@@ -2536,7 +2599,7 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>

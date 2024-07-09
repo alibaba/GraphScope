@@ -151,6 +151,18 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:afa6c9f25b76eed0b95bad3e7f4c29410"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac81289eefc3f1da68a260229f449ee8a"><td class="memItemLeft" align="right" valign="top">const std::pair&lt; std::vector&lt; std::pair&lt; std::string, size_t &gt; &gt;, std::vector&lt; std::pair&lt; std::string, size_t &gt; &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#ac81289eefc3f1da68a260229f449ee8a">GetEdgeSrcDstCol</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label_id) const</td></tr>
 <tr class="separator:ac81289eefc3f1da68a260229f449ee8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01336b0a3ca417c3425ec51d0393bbf7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a01336b0a3ca417c3425ec51d0393bbf7">SetParallelism</a> (int32_t parallelism)</td></tr>
+<tr class="separator:a01336b0a3ca417c3425ec51d0393bbf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b2db72220253cdccf336b9f963a3cec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a2b2db72220253cdccf336b9f963a3cec">SetBuildCsrInMem</a> (bool build_csr_in_mem)</td></tr>
+<tr class="separator:a2b2db72220253cdccf336b9f963a3cec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af95b67c2a70e0d9a0610da5ce9212898"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#af95b67c2a70e0d9a0610da5ce9212898">SetUseMmapVector</a> (bool use_mmap_vector)</td></tr>
+<tr class="separator:af95b67c2a70e0d9a0610da5ce9212898"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca0720eaea20eddbac88b3b704df8658"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#aca0720eaea20eddbac88b3b704df8658">GetParallelism</a> () const</td></tr>
+<tr class="separator:aca0720eaea20eddbac88b3b704df8658"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefa8170678a0428f398f1e69f99e83f6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#aefa8170678a0428f398f1e69f99e83f6">GetBuildCsrInMem</a> () const</td></tr>
+<tr class="separator:aefa8170678a0428f398f1e69f99e83f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb3d0413008f21893ce9492edfaf1465"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#adb3d0413008f21893ce9492edfaf1465">GetUseMmapVector</a> () const</td></tr>
+<tr class="separator:adb3d0413008f21893ce9492edfaf1465"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -169,6 +181,12 @@ Private Attributes</h2></td></tr>
 <tr class="separator:ab9bd1f508451c2f5a14deb81faea46fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b915c3f250d2f5de6c90a8674d34700"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a9b915c3f250d2f5de6c90a8674d34700">format_</a></td></tr>
 <tr class="separator:a9b915c3f250d2f5de6c90a8674d34700"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaee34f8b8b8e1930b9acd21dcdb6d78d"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#aaee34f8b8b8e1930b9acd21dcdb6d78d">parallelism_</a></td></tr>
+<tr class="separator:aaee34f8b8b8e1930b9acd21dcdb6d78d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78151040a85d074479ed5be10b02f1a5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a78151040a85d074479ed5be10b02f1a5">build_csr_in_mem_</a></td></tr>
+<tr class="separator:a78151040a85d074479ed5be10b02f1a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e77bda0c34ca87563fc2cfd67f52ebf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a9e77bda0c34ca87563fc2cfd67f52ebf">use_mmap_vector_</a></td></tr>
+<tr class="separator:a9e77bda0c34ca87563fc2cfd67f52ebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3af76d1d684972934ca2e12e0d5fb0c0"><td class="memItemLeft" align="right" valign="top">std::unordered_map&lt; std::string, std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a3af76d1d684972934ca2e12e0d5fb0c0">metadata_</a></td></tr>
 <tr class="separator:a3af76d1d684972934ca2e12e0d5fb0c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adae6512efeba424510ecb916e0923127"><td class="memItemLeft" align="right" valign="top">std::unordered_map&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a9f995d0f77a0cafa2944219b3e439a86">schema_label_type</a>, std::vector&lt; std::string &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#adae6512efeba424510ecb916e0923127">vertex_loading_meta_</a></td></tr>
@@ -377,6 +395,31 @@ Friends</h2></td></tr>
           <td> const</td>
         </tr>
       </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aefa8170678a0428f398f1e69f99e83f6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aefa8170678a0428f398f1e69f99e83f6">&#9670;&nbsp;</a></span>GetBuildCsrInMem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::LoadingConfig::GetBuildCsrInMem </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -637,6 +680,31 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="aca0720eaea20eddbac88b3b704df8658"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca0720eaea20eddbac88b3b704df8658">&#9670;&nbsp;</a></span>GetParallelism()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int32_t gs::LoadingConfig::GetParallelism </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a8e85e4122ba9728ea1a50dc54020d3e7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8e85e4122ba9728ea1a50dc54020d3e7">&#9670;&nbsp;</a></span>GetQuotingChar()</h2>
 
@@ -667,6 +735,31 @@ Friends</h2></td></tr>
           <td> const</td>
         </tr>
       </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="adb3d0413008f21893ce9492edfaf1465"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb3d0413008f21893ce9492edfaf1465">&#9670;&nbsp;</a></span>GetUseMmapVector()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::LoadingConfig::GetUseMmapVector </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -778,6 +871,32 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="a2b2db72220253cdccf336b9f963a3cec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b2db72220253cdccf336b9f963a3cec">&#9670;&nbsp;</a></span>SetBuildCsrInMem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::LoadingConfig::SetBuildCsrInMem </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>build_csr_in_mem</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a78cee80aa226d37873a8ad9ade24fead"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a78cee80aa226d37873a8ad9ade24fead">&#9670;&nbsp;</a></span>SetDelimiter()</h2>
 
@@ -814,6 +933,32 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="a01336b0a3ca417c3425ec51d0393bbf7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a01336b0a3ca417c3425ec51d0393bbf7">&#9670;&nbsp;</a></span>SetParallelism()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::LoadingConfig::SetParallelism </td>
+          <td>(</td>
+          <td class="paramtype">int32_t&#160;</td>
+          <td class="paramname"><em>parallelism</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ade8035c124c9c7412915a4f456b7b0ef"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ade8035c124c9c7412915a4f456b7b0ef">&#9670;&nbsp;</a></span>SetScheme()</h2>
 
@@ -828,6 +973,32 @@ Friends</h2></td></tr>
           <td></td>
         </tr>
       </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af95b67c2a70e0d9a0610da5ce9212898"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af95b67c2a70e0d9a0610da5ce9212898">&#9670;&nbsp;</a></span>SetUseMmapVector()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::LoadingConfig::SetUseMmapVector </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>use_mmap_vector</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -918,6 +1089,28 @@ Friends</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="a78151040a85d074479ed5be10b02f1a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78151040a85d074479ed5be10b02f1a5">&#9670;&nbsp;</a></span>build_csr_in_mem_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::LoadingConfig::build_csr_in_mem_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a557349d604c687665b4633a590282db5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a557349d604c687665b4633a590282db5">&#9670;&nbsp;</a></span>edge_column_mappings_</h2>
 
@@ -1050,6 +1243,28 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="aaee34f8b8b8e1930b9acd21dcdb6d78d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaee34f8b8b8e1930b9acd21dcdb6d78d">&#9670;&nbsp;</a></span>parallelism_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int32_t gs::LoadingConfig::parallelism_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="afbcaad0966cc64a654e88237aac952fe"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afbcaad0966cc64a654e88237aac952fe">&#9670;&nbsp;</a></span>schema_</h2>
 
@@ -1083,6 +1298,28 @@ Friends</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">std::string gs::LoadingConfig::scheme_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9e77bda0c34ca87563fc2cfd67f52ebf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9e77bda0c34ca87563fc2cfd67f52ebf">&#9670;&nbsp;</a></span>use_mmap_vector_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::LoadingConfig::use_mmap_vector_</td>
         </tr>
       </table>
   </td>

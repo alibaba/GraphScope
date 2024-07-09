@@ -3,15 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="GraphScope Interactive Development guide" href="dev_guide.html" /><link rel="prev" title="Data Model" href="data_model.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Development guide" href="dev_guide.html" /><link rel="prev" title="Data Model" href="data_model.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>Data Import Configuration - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
@@ -298,7 +298,8 @@ MathJax = {
 <li class="toctree-l2"><a class="reference internal" href="configuration.html">Engine Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Data Import Configuration</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">RESTful API Documentation</a></li>
@@ -643,6 +644,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.28.0/index.html">
+                
+                  v0.28.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.27.0/index.html">
                 
                   v0.27.0
@@ -670,18 +683,6 @@ MathJax = {
               <dd><a href="../../../v0.25.0/index.html">
                 
                   v0.25.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.24.0/index.html">
-                
-                  v0.24.0
                 
               </a></dd>
             
@@ -778,6 +779,10 @@ This can be done using a YAML configuration, as shown:</p>
 <h2>Sample Configuration for loading “Modern” Graph from csv files<a class="headerlink" href="#sample-configuration-for-loading-modern-graph-from-csv-files" title="Permalink to this heading">¶</a></h2>
 <p>To illustrate, let’s examine the <code class="docutils literal notranslate"><span class="pre">examples/modern_import_full.yaml</span></code> file. This configuration is designed for importing the “modern” graph and showcases the full range of configuration possibilities. We’ll dissect each configuration item in the sections that follow.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">loading_config</span><span class="p">:</span><span class="w"> </span>
+<span class="w">  </span><span class="nt">x_csr_params</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">parallelism</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">build_csr_in_mem</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">use_mmap_vector</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">  </span><span class="nt">data_source</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file</span>
 <span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/modern_graph/</span><span class="w"> </span>
@@ -1036,127 +1041,142 @@ This can be done using a YAML configuration, as shown:</p>
 <td><p>The size of batch for reading from files</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p></p></td>
+<tr class="row-even"><td><p>loading_config.x_csr_params.parallelism</p></td>
+<td><p>1</p></td>
+<td><p>Number of threads used for bulk loading</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>loading_config.x_csr_params.build_csr_in_mem</p></td>
+<td><p>false</p></td>
+<td><p>Whether to build csr fully in memory</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>loading_config.x_csr_params.use_mmap_vector</p></td>
+<td><p>false</p></td>
+<td><p>Whether to use mmap_vector rather than mmap_array for building</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>vertex_mappings</strong></p></td>
+<tr class="row-even"><td><p><strong>vertex_mappings</strong></p></td>
 <td><p>N/A</p></td>
 <td><p>Define how to map the raw data into a graph vertex in the schema</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.type_name</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.type_name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the vertex type</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.inputs</p></td>
+<tr class="row-even"><td><p>vertex_mappings.inputs</p></td>
 <td><p>N/A</p></td>
 <td><p>List of files containing raw data for the vertex type, relative to <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.location</span></code></p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.column_mappings</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.column_mappings</p></td>
 <td><p>The columns in the raw data will be automatically mapped to the properties, in given order</p></td>
 <td><p>Define which column of the vertex data maps to a given property</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.column_mappings.column.index</p></td>
+<tr class="row-even"><td><p>vertex_mappings.column_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.column_mappings.column.name</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.column_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.column_mappings.property</p></td>
+<tr class="row-even"><td><p>vertex_mappings.column_mappings.property</p></td>
 <td><p>N/A</p></td>
 <td><p>Property in the schema to which the column maps.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p></p></td>
+<tr class="row-odd"><td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>edge_mappings</strong></p></td>
+<tr class="row-even"><td><p><strong>edge_mappings</strong></p></td>
 <td><p>N/A</p></td>
 <td><p>Define how to map the raw data into a graph edge in the schema</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.type_triplet</p></td>
+<tr class="row-odd"><td><p>edge_mappings.type_triplet</p></td>
 <td><p>N/A</p></td>
 <td><p>A triplet that uniquely defines an edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.type_triplet.edge</p></td>
+<tr class="row-even"><td><p>edge_mappings.type_triplet.edge</p></td>
 <td><p>N/A</p></td>
 <td><p>The type of the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.type_triplet.source_vertex</p></td>
+<tr class="row-odd"><td><p>edge_mappings.type_triplet.source_vertex</p></td>
 <td><p>N/A</p></td>
 <td><p>Type of the source vertex for the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.type_triplet.destination_vertex</p></td>
+<tr class="row-even"><td><p>edge_mappings.type_triplet.destination_vertex</p></td>
 <td><p>N/A</p></td>
 <td><p>Type of the destination vertex for the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.inputs</p></td>
+<tr class="row-odd"><td><p>edge_mappings.inputs</p></td>
 <td><p>N/A</p></td>
 <td><p>List of files containing raw data for the edge type, relative to <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.location</span></code></p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings</p></td>
+<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings</p></td>
 <td><p>The first column of the edge data</p></td>
 <td><p>Define which columns of the edge data map to its source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings.column.index</p></td>
+<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data representing the source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings.column.name</p></td>
+<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data representing the source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings</p></td>
+<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings</p></td>
 <td><p>The second column of the edge data</p></td>
 <td><p>Define which columns of the edge data map to its source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings.column.index</p></td>
+<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data representing the destination vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings.column.name</p></td>
+<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data representing the destination vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.column_mappings</p></td>
+<tr class="row-even"><td><p>edge_mappings.column_mappings</p></td>
 <td><p>The columns in the raw data will be automatically mapped to the properties, in given order</p></td>
 <td><p>Define which column of the edge data maps to a given property.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.column_mappings.column.index</p></td>
+<tr class="row-odd"><td><p>edge_mappings.column_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.column_mappings.column.name</p></td>
+<tr class="row-even"><td><p>edge_mappings.column_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.column_mappings.property</p></td>
+<tr class="row-odd"><td><p>edge_mappings.column_mappings.property</p></td>
 <td><p>N/A</p></td>
 <td><p>Property in the schema to which the column maps.</p></td>
 <td><p>No (but must present if column presents)</p></td>
@@ -1248,7 +1268,7 @@ This can be done using a YAML configuration, as shown:</p>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">GraphScope Interactive Development guide</div>
+                <div class="title">Development guide</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
