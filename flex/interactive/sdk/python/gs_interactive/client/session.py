@@ -493,7 +493,6 @@ class DefaultSession(Session):
         schema_mapping: SchemaMapping,
     ) -> Result[JobResponse]:
         graph_id = self.ensure_param_str("graph_id", graph_id)
-        print("graph id,", graph_id, ", isinstance, " , isinstance(graph_id, str))
         # First try to upload the input files if they are specified with a starting @
         # return a new schema_mapping with the uploaded files
         upload_res = self.try_upload_files(schema_mapping)
@@ -836,6 +835,7 @@ class DefaultSession(Session):
         Ensure the param is a string, otherwise raise an exception
         """
         if not isinstance(param, str):
+            # User may input the graph_id as int, convert it to string
             if isinstance(param, int):
                 return str(param)
             raise Exception("param should be a string, param_name: " + param_name + ", param: " + str(param))
