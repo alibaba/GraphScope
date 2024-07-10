@@ -400,7 +400,7 @@ size_t MutablePropertyFragment::edge_num(label_t src_label, label_t edge_label,
   size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                  dst_label * edge_label_num_ + edge_label;
   if (dual_csr_list_[index] != NULL) {
-    return dual_csr_list_[index]->Size();
+    return dual_csr_list_[index]->EdgeNum();
   } else {
     return 0;
   }

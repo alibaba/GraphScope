@@ -78,13 +78,13 @@ class DualCsrBase {
     GetOutCsr()->warmup(thread_num);
   }
 
-  size_t Size() const {
+  size_t EdgeNum() const {
     const CsrBase* oe_csr = GetOutCsr();
     const CsrBase* ie_csr = GetInCsr();
     if (oe_csr) {
-      return oe_csr->size();
+      return oe_csr->edge_num();
     } else if (ie_csr) {
-      return ie_csr->size();
+      return ie_csr->edge_num();
     } else {
       return 0;
     }
