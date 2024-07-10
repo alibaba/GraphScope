@@ -65,7 +65,7 @@ class Result(Generic[T]):
 
     @staticmethod
     def from_exception(exception: ApiException):
-        return Result(Status.from_exception(exception), str(exception))
+        return Result(Status.from_exception(exception), None)
 
     @staticmethod
     def from_response(response: ApiResponse):

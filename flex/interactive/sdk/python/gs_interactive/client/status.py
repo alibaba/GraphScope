@@ -70,15 +70,15 @@ class Status:
     def from_exception(exception: ApiException):
         # mapping from ApiException to StatusCode
         if isinstance(exception, BadRequestException):
-            return Status(StatusCode.BAD_REQUEST, exception.reason)
+            return Status(StatusCode.BAD_REQUEST, str(exception))
         elif isinstance(exception, ForbiddenException):
-            return Status(StatusCode.FORBIDDEN, exception.reason)
+            return Status(StatusCode.FORBIDDEN, str(exception))
         elif isinstance(exception, NotFoundException):
-            return Status(StatusCode.NOT_FOUND, exception.reason)
+            return Status(StatusCode.NOT_FOUND, str(exception))
         elif isinstance(exception, UnauthorizedException):
-            return Status(StatusCode.BAD_REQUEST, exception.reason)
+            return Status(StatusCode.BAD_REQUEST, str(exception))
         elif isinstance(exception, ServiceException):
-            return Status(StatusCode.SERVER_INTERNAL_ERROR, exception.reason)
+            return Status(StatusCode.SERVER_INTERNAL_ERROR, str(exception))
         return Status(
             StatusCode.UNKNOWN, "Unknown Error from exception " + str(exception)
         )
