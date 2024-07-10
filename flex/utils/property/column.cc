@@ -132,6 +132,9 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<DayEmptyColumn>();
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringEmptyColumn>();
+    } else if (type == PropertyType::kStringView) {
+      return std::make_shared<StringEmptyColumn>(
+          gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       return std::make_shared<StringEmptyColumn>(
           type.additional_type_info.max_length);

@@ -320,8 +320,8 @@ class DefaultSession(Session):
     PROTOCOL_FORMAT = "proto"
     JSON_FORMAT = "json"
     ENCODER_FORMAT = "encoder"
-    def __init__(self, uri: str):
-        self._client = ApiClient(Configuration(host=uri))
+    def __init__(self, admin_uri: str, stored_proc_uri: str = None):
+        self._client = ApiClient(Configuration(host=admin_uri))
 
         self._graph_api = AdminServiceGraphManagementApi(self._client)
         self._job_api = AdminServiceJobManagementApi(self._client)
@@ -330,18 +330,16 @@ class DefaultSession(Session):
         self._edge_api = GraphServiceEdgeManagementApi(self._client)
         self._vertex_api = GraphServiceVertexManagementApi(self._client)
         self._utils_api = UtilsApi(self._client)
-        # TODO(zhanglei): Get endpoint from service, current implementation is adhoc.
-        # get service port
-        service_status = self.get_service_status()
-        if not service_status.is_ok():
-            raise Exception("Failed to get service status: ", service_status.get_status_message())
-        service_port = service_status.get_value().hqps_port
-        # replace the port in uri
-        uri = uri.split(":")
-        uri[-1] = str(service_port)
-        uri = ":".join(uri)
-        self._query_client = ApiClient(Configuration(host=uri))
-
+        if stored_proc_uri is None:
+            service_status = self.get_service_status()
+            if not service_status.is_ok():
+                raise Exception("Failed to get service status: ", service_status.get_status_message())
+            service_port = service_status.get_value().hqps_port
+            # replace the port in uri
+            splitted = admin_uri.split(":")
+            splitted[-1] = str(service_port)
+            stored_proc_uri = ":".join(splitted)
+        self._query_client = ApiClient(Configuration(host=stored_proc_uri))
         self._query_api = QueryServiceApi(self._query_client)
 
     def __enter__(self):
@@ -440,6 +438,7 @@ class DefaultSession(Session):
         self,
         graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphSchemaResponse]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._graph_api.get_schema_with_http_info(graph_id)
             return Result.from_response(response)
@@ -450,6 +449,7 @@ class DefaultSession(Session):
         self,
         graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphResponse]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._graph_api.get_graph_with_http_info(graph_id)
             return Result.from_response(response)
@@ -460,6 +460,7 @@ class DefaultSession(Session):
         self,
         graph_id: Annotated[StrictStr, Field(description="The id of graph to get")],
     ) -> Result[GetGraphStatisticsResponse]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._graph_api.get_graph_statistic_with_http_info(graph_id)
             return Result.from_response(response)
@@ -472,6 +473,7 @@ class DefaultSession(Session):
             StrictStr, Field(description="The id of graph to delete")
         ],
     ) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._graph_api.delete_graph_with_http_info(graph_id)
             return Result.from_response(response)
@@ -490,6 +492,7 @@ class DefaultSession(Session):
         graph_id: Annotated[StrictStr, Field(description="The id of graph to load")],
         schema_mapping: SchemaMapping,
     ) -> Result[JobResponse]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         # First try to upload the input files if they are specified with a starting @
         # return a new schema_mapping with the uploaded files
         upload_res = self.try_upload_files(schema_mapping)
@@ -509,6 +512,7 @@ class DefaultSession(Session):
     def create_procedure(
         self, graph_id: StrictStr, procedure: CreateProcedureRequest
     ) -> Result[CreateProcedureResponse]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._procedure_api.create_procedure_with_http_info(
                 graph_id, procedure
@@ -520,6 +524,8 @@ class DefaultSession(Session):
     def delete_procedure(
         self, graph_id: StrictStr, procedure_id: StrictStr
     ) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        procedure_id = self.ensure_param_str("procedure_id", procedure_id)
         try:
             response = self._procedure_api.delete_procedure_with_http_info(
                 graph_id, procedure_id
@@ -531,6 +537,7 @@ class DefaultSession(Session):
     def list_procedures(
         self, graph_id: StrictStr
     ) -> Result[List[GetProcedureResponse]]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._procedure_api.list_procedures_with_http_info(graph_id)
             return Result.from_response(response)
@@ -540,6 +547,7 @@ class DefaultSession(Session):
     def update_procedure(
         self, graph_id: StrictStr, procedure: UpdateProcedureRequest
     ) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._procedure_api.update_procedure_with_http_info(
                 graph_id, procedure
@@ -551,6 +559,7 @@ class DefaultSession(Session):
     def get_procedure(
         self, graph_id: StrictStr, procedure_id: StrictStr
     ) -> Result[GetProcedureResponse]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             response = self._procedure_api.get_procedure_with_http_info(
                 graph_id, procedure_id
@@ -562,6 +571,7 @@ class DefaultSession(Session):
     def call_procedure(
         self, graph_id: StrictStr, params: QueryRequest
     ) -> Result[CollectiveResults]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
@@ -599,6 +609,7 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def call_procedure_raw(self, graph_id: StrictStr, params: str) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
@@ -662,6 +673,7 @@ class DefaultSession(Session):
 
     ################ Job Interfaces ##########
     def get_job(self, job_id: StrictStr) -> Result[JobStatus]:
+        job_id = self.ensure_param_str("job_id", job_id)
         try:
             response = self._job_api.get_job_by_id_with_http_info(job_id)
             return Result.from_response(response)
@@ -676,6 +688,7 @@ class DefaultSession(Session):
             return Result.from_exception(e)
 
     def cancel_job(self, job_id: StrictStr) -> Result[str]:
+        job_id = self.ensure_param_str("job_id", job_id)
         try:
             response = self._job_api.delete_job_by_id_with_http_info(job_id)
             return Result.from_response(response)
@@ -816,4 +829,14 @@ class DefaultSession(Session):
             return upload_res
         print("new schema_mapping: ", upload_res.get_value())
         return Result.ok(upload_res.get_value())
-        
+
+    def ensure_param_str(self, param_name : str, param):
+        """
+        Ensure the param is a string, otherwise raise an exception
+        """
+        if not isinstance(param, str):
+            # User may input the graph_id as int, convert it to string
+            if isinstance(param, int):
+                return str(param)
+            raise Exception("param should be a string, param_name: " + param_name + ", param: " + str(param))
+        return param

@@ -131,9 +131,7 @@ jobs:
         cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
         bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
-        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
 
     - name: Build and test Interactive Java/Python SDK
       env: 
@@ -161,11 +159,9 @@ jobs:
         cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
         sed -i 's/interactive_workspace/temp_workspace/g' ./engine_config_test.yaml
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml java
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml python
-        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
         sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
 
     - name: Sample Query test
@@ -187,11 +183,9 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
         pip3 install argparse
         pip3 install neo4j
         bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
-        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
 
     - name: Run codegen test.
       env:
@@ -200,6 +194,7 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/bin
+        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
 
         for i in 1 2 3 4 5 6 7 8 9 10 11 12;
         do
@@ -456,6 +451,16 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest/
       run: |
         git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+
+    - name: Test String primary key on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_string_pk.yaml 
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
 
     - name: Test String edge property on modern graph
       env:

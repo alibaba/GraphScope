@@ -151,8 +151,7 @@ static bool parse_column_mappings(
     int32_t column_id = -1;
     if (!get_scalar(column_mapping, "index", column_id)) {
       VLOG(10) << "Column index for column mapping is not set, skip";
-    }
-    else {
+    } else {
       if (column_id < 0) {
         LOG(ERROR) << "Column index for column mapping should be non-negative";
         return false;
@@ -270,11 +269,16 @@ static Status parse_vertex_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
+      if (file_path.empty()) {
+        LOG(ERROR) << "file path is empty";
+        return Status(StatusCode::InvalidImportFile,
+                      "The input for vertex [" + label_name + "] is empty");
+      }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
-          LOG(ERROR) << "vertex file - " << file_path << " file not found...";
+          LOG(ERROR) << "vertex file - [" << file_path << "] file not found...";
           return Status(StatusCode::InvalidImportFile,
-                        "vertex file - " + file_path + " file not found...");
+                        "vertex file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
         files[label_id].emplace_back(std::filesystem::canonical(path));
@@ -458,11 +462,16 @@ static Status parse_edge_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
+      if (file_path.empty()) {
+        LOG(ERROR) << "file path is empty";
+        return Status(StatusCode::InvalidImportFile,
+                      "The input for edge [" + edge_label + "] is empty");
+      }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
-          LOG(ERROR) << "edge file - " << file_path << " file not found...";
+          LOG(ERROR) << "edge file - [" << file_path << "] file not found...";
           return Status(StatusCode::InvalidImportFile,
-                        "edge file - " + file_path + " file not found...");
+                        "edge file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
         VLOG(10) << "src " << src_label << " dst " << dst_label << " edge "
@@ -553,6 +562,25 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
       auto data_source_node = loading_config_node["data_source"];
       get_scalar(data_source_node, "scheme", load_config.scheme_);
       get_scalar(data_source_node, "location", data_location);
+    }
+
+    if (loading_config_node["x_csr_params"]) {
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::PARALLELISM, load_config.parallelism_)) {
+        VLOG(10) << "Parallelism is set to: " << load_config.parallelism_;
+      }
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::BUILD_CSR_IN_MEM,
+                     load_config.build_csr_in_mem_)) {
+        VLOG(10) << "Build csr in memory is set to: "
+                 << load_config.build_csr_in_mem_;
+      }
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::USE_MMAP_VECTOR,
+                     load_config.use_mmap_vector_)) {
+        VLOG(10) << "Use mmap vector is set to: "
+                 << load_config.use_mmap_vector_;
+      }
     }
 
     RETURN_IF_NOT_OK(
@@ -717,14 +745,23 @@ LoadingConfig::LoadingConfig(const Schema& schema)
     : schema_(schema),
       scheme_("file"),
       method_(BulkLoadMethod::kInit),
-      format_("csv") {}
+      format_("csv"),
+      parallelism_(loader_options::DEFAULT_PARALLELISM),
+      build_csr_in_mem_(loader_options::DEFAULT_BUILD_CSR_IN_MEM),
+      use_mmap_vector_(loader_options::DEFAULT_USE_MMAP_VECTOR) {}
 
 LoadingConfig::LoadingConfig(const Schema& schema,
                              const std::string& data_source,
                              const std::string& delimiter,
                              const BulkLoadMethod& method,
                              const std::string& format)
-    : schema_(schema), scheme_(data_source), method_(method), format_(format) {
+    : schema_(schema),
+      scheme_(data_source),
+      method_(method),
+      format_(format),
+      parallelism_(loader_options::DEFAULT_PARALLELISM),
+      build_csr_in_mem_(loader_options::DEFAULT_BUILD_CSR_IN_MEM),
+      use_mmap_vector_(loader_options::DEFAULT_USE_MMAP_VECTOR) {
   metadata_[reader_options::DELIMITER] = delimiter;
 }
 
@@ -808,6 +845,9 @@ int32_t LoadingConfig::GetBatchSize() const {
 }
 
 bool LoadingConfig::GetIsBatchReader() const {
+  if (metadata_.find(reader_options::BATCH_READER) == metadata_.end()) {
+    return reader_options::DEFAULT_BATCH_READER;
+  }
   auto str = metadata_.at(reader_options::BATCH_READER);
   return str == "true" || str == "True" || str == "TRUE";
 }
