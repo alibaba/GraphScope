@@ -100,16 +100,17 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
 
 // base class for vertex and edge manager
 class VertexEdgeManagerBase {
-public:
-  VertexEdgeManagerBase(std::string &&graph_id);
+ public:
+  VertexEdgeManagerBase(std::string&& graph_id);
   ~VertexEdgeManagerBase();
-  void parseJson(std::string &&json_str);
+  void parseJson(std::string&& json_str);
   struct DBSession {
-    gs::GraphDBSession &db;
-    DBSession() : db(gs::GraphDB::get().GetSession(hiactor::local_shard_id())) {}
+    gs::GraphDBSession& db;
+    DBSession()
+        : db(gs::GraphDB::get().GetSession(hiactor::local_shard_id())) {}
   };
   bool ok() const;
-  void setError(gs::StatusCode code, const std::string &message);
+  void setError(gs::StatusCode code, const std::string& message);
   seastar::future<admin_query_result> errorResponse() const;
   bool checkGraphId(std::shared_ptr<gs::IGraphMetaStore> metadata_store_);
   bool getMetaSchema(std::shared_ptr<gs::IGraphMetaStore> metadata_store_);
@@ -120,23 +121,25 @@ public:
       return json.dump();
     }
   }
-protected:
+
+ protected:
   std::string graph_id;
   gs::StatusCode error_code;
   std::string error_message;
   nlohmann::json schema_json;
-  DBSession *db_session;
+  DBSession* db_session;
   nlohmann::json input_json;
 };
 
 // VertexEdgeManagerBase->VertexEdgeManagerInsert
 class VertexEdgeManagerInsert : public VertexEdgeManagerBase {
-public:
-  VertexEdgeManagerInsert(graph_management_param && param);
+ public:
+  VertexEdgeManagerInsert(graph_management_param&& param);
   ~VertexEdgeManagerInsert() = default;
   bool checkEdgeLabelExists();
   void logEdgeInfo();
-protected:
+
+ protected:
   int edge_num;
   // edge-related data
   std::vector<std::string> properties_array_e = {
@@ -153,7 +156,7 @@ protected:
 // VertexEdgeManagerBase->VertexEdgeManagerInsert->CreateVertexManager
 class CreateVertexManager : public VertexEdgeManagerInsert {
  public:
-  CreateVertexManager(graph_management_param && param);
+  CreateVertexManager(graph_management_param&& param);
   ~CreateVertexManager() = default;
   bool checkContainsVertexArray();
   bool inputVertex();
@@ -164,11 +167,13 @@ class CreateVertexManager : public VertexEdgeManagerInsert {
   void singleInsert();
   void multiInsert();
   bool insert();
-protected:
+
+ protected:
   int vertex_num;
   // vertex-related data
-  std::vector<std::unordered_map<std::string, std::string> > input_props_v;
-  std::vector<std::string> properties_array_v = {"label", "primary_key_value", "properties"};
+  std::vector<std::unordered_map<std::string, std::string>> input_props_v;
+  std::vector<std::string> properties_array_v = {"label", "primary_key_value",
+                                                 "properties"};
   // compute value
   std::vector<std::unordered_map<std::string, gs::Any>> new_properties_map;
   std::vector<std::string> primary_key_name;
@@ -177,8 +182,8 @@ protected:
 
 // VertexEdgeManagerBase->VertexEdgeManagerInsert->CreateEdgeManager
 class CreateEdgeManager : public VertexEdgeManagerInsert {
-public:
-  CreateEdgeManager(graph_management_param && param);
+ public:
+  CreateEdgeManager(graph_management_param&& param);
   ~CreateEdgeManager() = default;
   bool checkContainsEdgeArray();
   bool inputEdge();
@@ -190,22 +195,23 @@ public:
 
 // VertexEdgeManagerBase->VertexManager
 class VertexManager : public VertexEdgeManagerBase {
-public:
-  VertexManager(std::string &&graph_id);
+ public:
+  VertexManager(std::string&& graph_id);
   ~VertexManager() = default;
 };
 
 // VertexEdgeManagerBase->VertexManager->GetVertexManager
 class GetVertexManager : public VertexManager {
-public:
-  GetVertexManager(graph_management_query_param && param);
+ public:
+  GetVertexManager(graph_management_query_param&& param);
   ~GetVertexManager() = default;
   bool checkParams();
   void logVertexInfo();
   bool checkVertexLabelExists();
   std::string query();
-protected:
-  const std::unordered_map<seastar::sstring, seastar::sstring> &&query_params;
+
+ protected:
+  const std::unordered_map<seastar::sstring, seastar::sstring>&& query_params;
   // input values
   std::unordered_map<std::string, std::string> input_props;
   std::vector<std::string> properties_array = {"label", "primary_key_value"};
@@ -217,14 +223,15 @@ protected:
 
 // VertexEdgeManagerBase->VertexManager->UpdateVertexManager
 class UpdateVertexManager : public VertexManager {
-public:
-  UpdateVertexManager(graph_management_param && param);
+ public:
+  UpdateVertexManager(graph_management_param&& param);
   ~UpdateVertexManager() = default;
   bool checkContainsVertex();
   void logVertexInfo();
   bool checkVertexLabelExists();
   bool update();
-protected:
+
+ protected:
   std::unordered_map<std::string, std::string> input_props;
   std::vector<std::string> properties_array = {"label", "primary_key_value",
                                                "properties"};
@@ -232,17 +239,17 @@ protected:
   std::vector<std::string> colNames;
   std::string primary_key_name;
   std::unordered_map<std::string, gs::Any> new_properties_map;
-
 };
 
 // VertexEdgeManagerBase->EdgeManager
 class EdgeManager : public VertexEdgeManagerBase {
-public:
-  EdgeManager(std::string &&graph_id);
+ public:
+  EdgeManager(std::string&& graph_id);
   ~EdgeManager() = default;
   virtual void logEdgeInfo() = 0;
   bool checkEdgeLabelExists();
-protected:
+
+ protected:
   std::unordered_map<std::string, std::string> input_props;
   gs::Any property_new_value_any, src_pk_value_any, dst_pk_value_any;
   std::string pk_name;
@@ -250,14 +257,15 @@ protected:
 
 // VertexEdgeManagerBase->EdgeManager->GetEdgeManager
 class GetEdgeManager : public EdgeManager {
-public:
-  GetEdgeManager(graph_management_query_param && param);
+ public:
+  GetEdgeManager(graph_management_query_param&& param);
   ~GetEdgeManager() = default;
   bool checkParams();
   void logEdgeInfo();
   std::string query();
-protected:
-  const std::unordered_map<seastar::sstring, seastar::sstring> &&query_params;
+
+ protected:
+  const std::unordered_map<seastar::sstring, seastar::sstring>&& query_params;
   std::vector<std::string> properties_array = {
       "src_label", "dst_label", "edge_label", "src_primary_key_value",
       "dst_primary_key_value"};
@@ -265,12 +273,13 @@ protected:
 
 // VertexEdgeManagerBase->EdgeManager->UpdateEdgeManager
 class UpdateEdgeManager : public EdgeManager {
-public:
-  UpdateEdgeManager(graph_management_param && param);
+ public:
+  UpdateEdgeManager(graph_management_param&& param);
   ~UpdateEdgeManager() = default;
   bool checkContainsVertex();
   void logEdgeInfo();
   bool update();
+
 protected:
   std::vector<std::string> properties_array = {
       "src_label", "dst_label", "edge_label", "src_primary_key_value",
@@ -279,22 +288,22 @@ protected:
 
 // VertexEdgeManagerBase->VertexEdgeManagerOther
 class VertexEdgeManagerOther : public VertexEdgeManagerBase {
-public:
-  VertexEdgeManagerOther(graph_management_param && param);
+ public:
+  VertexEdgeManagerOther(graph_management_param&& param);
   ~VertexEdgeManagerOther() = default;
 };
 
 // VertexEdgeManagerBase->VertexEdgeManagerOther->DeleteVertexManager
 class DeleteVertexManager : public VertexEdgeManagerOther {
-public:
-  DeleteVertexManager(graph_management_param && param);
+ public:
+  DeleteVertexManager(graph_management_param&& param);
   ~DeleteVertexManager() = default;
 };
 
 // VertexEdgeManagerBase->VertexEdgeManagerOther->DeleteEdgeManager
 class DeleteEdgeManager : public VertexEdgeManagerOther {
-public:
-  DeleteEdgeManager(graph_management_param && param);
+ public:
+  DeleteEdgeManager(graph_management_param&& param);
   ~DeleteEdgeManager() = default;
 };
 

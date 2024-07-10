@@ -1350,7 +1350,7 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
     return manager.errorResponse();
   manager.logVertexInfo();
   // Extract the graph_id from the metadata.
-  if (manager.getMetaSchema(metadata_store_) == false) 
+  if (manager.getMetaSchema(metadata_store_) == false)
     return manager.errorResponse();
   // Check if the vertex label exists
   if (manager.checkVertexLabelExists() == false)
@@ -1383,7 +1383,7 @@ seastar::future<admin_query_result> admin_actor::create_edge(
     return manager.errorResponse();
   manager.logEdgeInfo();
   // Extract the graph_id from the metadata.
-  if (manager.getMetaSchema(metadata_store_) == false) 
+  if (manager.getMetaSchema(metadata_store_) == false)
     return manager.errorResponse();
   // Check if the edge label exists
   if (manager.checkEdgeLabelExists() == false)
@@ -1408,7 +1408,7 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
   if (manager.checkContainsVertex() == false)
     return manager.errorResponse();
   // Extract the graph_id from the metadata.
-  if (manager.getMetaSchema(metadata_store_) == false) 
+  if (manager.getMetaSchema(metadata_store_) == false)
     return manager.errorResponse();
   manager.logVertexInfo();
   if (manager.checkVertexLabelExists() == false)
@@ -1430,7 +1430,7 @@ seastar::future<admin_query_result> admin_actor::update_edge(
   if (manager.checkContainsVertex() == false)
     return manager.errorResponse();
   // Extract the graph_id from the metadata.
-  if (manager.getMetaSchema(metadata_store_) == false) 
+  if (manager.getMetaSchema(metadata_store_) == false)
     return manager.errorResponse();
   manager.logEdgeInfo();
   if (manager.checkEdgeLabelExists() == false)
@@ -1518,15 +1518,18 @@ void VertexEdgeManagerBase::parseJson(std::string&& json_str) {
   input_json = nlohmann::json::parse(json_str);
 }
 
-bool VertexEdgeManagerBase::ok() const { return error_code == gs::StatusCode::OK; }
+bool VertexEdgeManagerBase::ok() const {
+  return error_code == gs::StatusCode::OK;
+}
 
 void VertexEdgeManagerBase::setError(gs::StatusCode code,
-                                 const std::string& message) {
+                                     const std::string& message) {
   error_code = code;
   error_message = message;
 }
 
-seastar::future<admin_query_result> VertexEdgeManagerBase::errorResponse() const {
+seastar::future<admin_query_result> VertexEdgeManagerBase::errorResponse()
+    const {
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>(gs::Status(error_code, error_message)));
 }
@@ -1637,7 +1640,6 @@ bool VertexEdgeManagerInsert::checkEdgeLabelExists() {
   }
   return true;
 }
-
 
 void VertexEdgeManagerInsert::logEdgeInfo() {
   for (int i = 0; i < edge_num; i++) {
@@ -1954,17 +1956,18 @@ bool CreateVertexManager::insert() {
   return true;
 }
 
-CreateEdgeManager::CreateEdgeManager(graph_management_param && param) : VertexEdgeManagerInsert(std::move(param)) {}
-
+CreateEdgeManager::CreateEdgeManager(graph_management_param&& param)
+    : VertexEdgeManagerInsert(std::move(param)) {}
 
 bool CreateEdgeManager::checkContainsEdgeArray() {
   if (input_json.is_array() == false || input_json.size() == 0) {
     setError(gs::StatusCode::InvalidSchema,
-              "Bad Request: Bad input parameter, you need to provide an array of edges");
+             "Bad Request: Bad input parameter, you need to provide an array "
+             "of edges");
     return false;
   }
   edge_num = input_json.size();
-  src_pk_value_any.resize(edge_num); 
+  src_pk_value_any.resize(edge_num);
   dst_pk_value_any.resize(edge_num);
   property_new_value_any.resize(edge_num);
   return true;
@@ -1988,7 +1991,8 @@ bool CreateEdgeManager::inputEdge() {
           throw std::runtime_error("properties should be an array");
         }
         if ((*iter).size() != 1) {
-          throw std::runtime_error("size should be 1(only support single property edge)");
+          throw std::runtime_error(
+              "size should be 1(only support single property edge)");
         }
         if ((*iter)[0].contains("value") == false) {
           throw std::runtime_error("properties should contain value");
@@ -1999,7 +2003,7 @@ bool CreateEdgeManager::inputEdge() {
     }
   } catch (std::exception& e) {
     setError(gs::StatusCode::InvalidSchema,
-              "Fail to parse schema: " + std::string(e.what()));
+             "Fail to parse schema: " + std::string(e.what()));
     return false;
   }
   return true;
@@ -2088,20 +2092,20 @@ bool CreateEdgeManager::insert() {
     }
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to add edge : " << e.what()
-                << "; All inserts are not committed.";
+               << "; All inserts are not committed.";
     setError(gs::StatusCode::InternalError,
-              "Fail to add edge : " + std::string(e.what()) +
-                  "; All inserts are not committed.");
+             "Fail to add edge : " + std::string(e.what()) +
+                 "; All inserts are not committed.");
     return false;
   }
   return true;
 }
 
+VertexManager::VertexManager(std::string&& graph_id)
+    : VertexEdgeManagerBase(std::move(graph_id)) {}
 
-VertexManager::VertexManager(std::string &&graph_id) : VertexEdgeManagerBase(std::move(graph_id)) {}
-
-
-GetVertexManager::GetVertexManager(graph_management_query_param && param) : VertexManager(std::move(param.content.first)),
+GetVertexManager::GetVertexManager(graph_management_query_param&& param)
+    : VertexManager(std::move(param.content.first)),
       query_params(std::move(param.content.second)) {}
 
 bool GetVertexManager::checkParams() {
@@ -2109,7 +2113,7 @@ bool GetVertexManager::checkParams() {
     auto iter = query_params.find(input_property);
     if (iter == query_params.end()) {
       setError(gs::StatusCode::InvalidSchema,
-                " Bad Request: Bad input parameter, missing " + input_property);
+               " Bad Request: Bad input parameter, missing " + input_property);
       return false;
     } else {
       input_props[input_property] = iter->second;
@@ -2119,7 +2123,7 @@ bool GetVertexManager::checkParams() {
 }
 void GetVertexManager::logVertexInfo() {
   LOG(INFO) << "Get vertex: " << input_props["label"] << "{"
-        << input_props["primary_key_value"] << "} for graph: " << graph_id;
+            << input_props["primary_key_value"] << "} for graph: " << graph_id;
 }
 bool GetVertexManager::checkVertexLabelExists() {
   try {
@@ -2136,7 +2140,8 @@ bool GetVertexManager::checkVertexLabelExists() {
         if (property["property_name"] == primary_keys_name) {
           gs::PropertyType primary_keys_type;
           gs::from_json(property["property_type"], primary_keys_type);
-          pk_value_any = gs::ConvertStringToAny(input_props["primary_key_value"], primary_keys_type);
+          pk_value_any = gs::ConvertStringToAny(
+              input_props["primary_key_value"], primary_keys_type);
         } else {
           column_names.push_back(property["property_name"]);
         }
@@ -2144,12 +2149,13 @@ bool GetVertexManager::checkVertexLabelExists() {
       break;
     }
     if (!label_exists_in_schema) {
-      throw std::runtime_error("Label not exists in schema: " + input_props["label"]);
+      throw std::runtime_error("Label not exists in schema: " +
+                               input_props["label"]);
     }
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to parse schema: " << e.what();
     setError(gs::StatusCode::InternalError,
-              "Fail to parse schema: " + std::string(e.what()));
+             "Fail to parse schema: " + std::string(e.what()));
     return false;
   }
   return true;
@@ -2181,13 +2187,14 @@ std::string GetVertexManager::query() {
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to get vertex: " << e.what();
     setError(gs::StatusCode::InternalError,
-              "Fail to get vertex: " + std::string(e.what()));
-    return "";               
+             "Fail to get vertex: " + std::string(e.what()));
+    return "";
   }
   return result.dump();
 }
 
-UpdateVertexManager::UpdateVertexManager(graph_management_param && param) : VertexManager(std::move(param.content.first)) {
+UpdateVertexManager::UpdateVertexManager(graph_management_param&& param)
+    : VertexManager(std::move(param.content.first)) {
   try {
     parseJson(std::move(param.content.second));
   } catch (const std::exception& e) {
@@ -2200,19 +2207,22 @@ bool UpdateVertexManager::checkContainsVertex() {
     for (auto& input_property : properties_array) {
       auto iter = input_json.find(input_property);
       if (iter == input_json.end()) {
-        throw std::runtime_error("Bad Request: Bad input parameter, missing " + input_property);
-      } 
+        throw std::runtime_error("Bad Request: Bad input parameter, missing " +
+                                 input_property);
+      }
       if (input_property == "properties") {
-        if (iter->contains("properties") == false || (*iter)["properties"].is_array() == false) {
-          throw std::runtime_error("Bad Request: Bad input parameter, properties should be an array");
+        if (iter->contains("properties") == false ||
+            (*iter)["properties"].is_array() == false) {
+          throw std::runtime_error(
+              "Bad Request: Bad input parameter, properties should be an "
+              "array");
         }
         for (auto& property : (*iter)["properties"]) {
           auto name_string = jsonToString(property["name"]);
           auto value_string = jsonToString(property["value"]);
           if (new_properties_map.find(name_string) != new_properties_map.end())
             throw std::runtime_error(
-                "property already exists in input properties: " +
-                name_string);
+                "property already exists in input properties: " + name_string);
           new_properties_map.insert({name_string, gs::Any(value_string)});
         }
       } else {
@@ -2220,7 +2230,8 @@ bool UpdateVertexManager::checkContainsVertex() {
       }
     }
   } catch (std::exception& e) {
-    setError(gs::StatusCode::InvalidSchema, "Fail to parse schema: " + std::string(e.what()));      
+    setError(gs::StatusCode::InvalidSchema,
+             "Fail to parse schema: " + std::string(e.what()));
     return false;
   }
   return true;
@@ -2254,7 +2265,7 @@ bool UpdateVertexManager::checkVertexLabelExists() {
         }
         if (new_properties_map_iter == new_properties_map.end()) {
           throw std::runtime_error("property not exists in input properties: " +
-                                  property_name);
+                                   property_name);
         }
         new_properties_map[property_name] = gs::ConvertStringToAny(
             new_properties_map[property_name].to_string(), colType);
@@ -2262,10 +2273,12 @@ bool UpdateVertexManager::checkVertexLabelExists() {
       break;
     }
     if (!label_exists_in_schema) {
-      throw std::runtime_error("Vertex Label not exists in schema: " + input_props["label"]);
+      throw std::runtime_error("Vertex Label not exists in schema: " +
+                               input_props["label"]);
     }
   } catch (std::exception& e) {
-    setError(gs::StatusCode::InternalError, "Fail to parse schema: " + std::string(e.what()));
+    setError(gs::StatusCode::InternalError,
+             "Fail to parse schema: " + std::string(e.what()));
     return false;
   }
   return true;
@@ -2277,7 +2290,7 @@ bool UpdateVertexManager::update() {
     auto txnRead = db.GetReadTransaction();
     gs::vid_t vertex_lid;
     if (txnRead.GetVertexIndex(label_id, new_properties_map[primary_key_name],
-                              vertex_lid) == false) {
+                               vertex_lid) == false) {
       txnRead.Abort();
       throw std::runtime_error("Vertex not exists");
     }
@@ -2298,13 +2311,14 @@ bool UpdateVertexManager::update() {
     txnWrite.Commit();
   } catch (std::exception& e) {
     setError(gs::StatusCode::InternalError,
-            "Fail to update vertex: " + std::string(e.what()));
+             "Fail to update vertex: " + std::string(e.what()));
     return false;
   }
   return true;
 }
 
-EdgeManager::EdgeManager(std::string &&graph_id) : VertexEdgeManagerBase(std::move(graph_id)) {}
+EdgeManager::EdgeManager(std::string&& graph_id)
+    : VertexEdgeManagerBase(std::move(graph_id)) {}
 
 bool EdgeManager::checkEdgeLabelExists() {
   try {
@@ -2320,14 +2334,16 @@ bool EdgeManager::checkEdgeLabelExists() {
       } else {
         // UpdateEdgeManager
         gs::PropertyType property_type;
-        gs::from_json(edge_types["properties"][0]["property_type"], property_type);
+        gs::from_json(edge_types["properties"][0]["property_type"],
+                      property_type);
         property_new_value_any = gs::ConvertStringToAny(
             input_props["property_new_value"], property_type);
       }
       break;
     }
     if (!edge_label_exists_in_schema) {
-      throw std::runtime_error("Edge Label not exists in schema: " + input_props["edge_label"]);
+      throw std::runtime_error("Edge Label not exists in schema: " +
+                               input_props["edge_label"]);
     }
     int vertex_label_exist = 0;
     enum src_or_dst { src, dst };
@@ -2350,7 +2366,8 @@ bool EdgeManager::checkEdgeLabelExists() {
       } else
         continue;
       gs::PropertyType primary_key_type;
-      auto & pk_value_any = (sod == src_or_dst::src ? src_pk_value_any : dst_pk_value_any);
+      auto& pk_value_any =
+          (sod == src_or_dst::src ? src_pk_value_any : dst_pk_value_any);
       const std::string& pk_value =
           (sod == src_or_dst::src ? input_props["src_primary_key_value"]
                                   : input_props["dst_primary_key_value"]);
@@ -2372,13 +2389,14 @@ bool EdgeManager::checkEdgeLabelExists() {
     }
   } catch (std::exception& e) {
     setError(gs::StatusCode::InternalError,
-              "Fail to parse schema: " + std::string(e.what()));
+             "Fail to parse schema: " + std::string(e.what()));
     return false;
-    }
+  }
   return true;
 }
 
-GetEdgeManager::GetEdgeManager(graph_management_query_param && param) : EdgeManager(std::move(param.content.first)),
+GetEdgeManager::GetEdgeManager(graph_management_query_param&& param)
+    : EdgeManager(std::move(param.content.first)),
       query_params(std::move(param.content.second)) {}
 
 bool GetEdgeManager::checkParams() {
@@ -2386,7 +2404,7 @@ bool GetEdgeManager::checkParams() {
     auto iter = query_params.find(input_property);
     if (iter == query_params.end()) {
       setError(gs::StatusCode::InvalidSchema,
-                " Bad Request: Bad input parameter, missing " + input_property);
+               " Bad Request: Bad input parameter, missing " + input_property);
       return false;
     } else {
       input_props[input_property] = iter->second;
@@ -2426,8 +2444,9 @@ std::string GetEdgeManager::query() {
     }
     for (auto edgeIt = txn.GetOutEdgeIterator(src_label_id, src_vid,
                                               dst_label_id, edge_label_id);
-        edgeIt.IsValid(); edgeIt.Next()) {
-      if (edgeIt.GetNeighbor() != dst_vid) continue;
+         edgeIt.IsValid(); edgeIt.Next()) {
+      if (edgeIt.GetNeighbor() != dst_vid)
+        continue;
       nlohmann::json push_json;
       push_json["name"] = pk_name;
       push_json["value"] = edgeIt.GetData().to_string();
@@ -2442,13 +2461,14 @@ std::string GetEdgeManager::query() {
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to get edge: " << e.what();
     setError(gs::StatusCode::InternalError,
-              "Fail to get edge: " + std::string(e.what()));
+             "Fail to get edge: " + std::string(e.what()));
     return "";
   }
   return result.dump();
 }
 
-UpdateEdgeManager::UpdateEdgeManager(graph_management_param && param) : EdgeManager(std::move(param.content.first)) {
+UpdateEdgeManager::UpdateEdgeManager(graph_management_param&& param)
+    : EdgeManager(std::move(param.content.first)) {
   try {
     parseJson(std::move(param.content.second));
   } catch (const std::exception& e) {
@@ -2468,7 +2488,8 @@ bool UpdateEdgeManager::checkContainsVertex() {
           throw std::runtime_error("properties should be an array");
         }
         if ((*iter).size() != 1) {
-          throw std::runtime_error("size should be 1(only support single property edge)");
+          throw std::runtime_error(
+              "size should be 1(only support single property edge)");
         }
         if ((*iter)[0].contains("value") == false) {
           throw std::runtime_error("properties should contain value");
@@ -2479,7 +2500,8 @@ bool UpdateEdgeManager::checkContainsVertex() {
       }
     }
   } catch (std::exception& e) {
-    setError(gs::StatusCode::InvalidSchema, "Fail to parse schema: " + std::string(e.what()));
+    setError(gs::StatusCode::InvalidSchema,
+             "Fail to parse schema: " + std::string(e.what()));
     return false;
   }
   return true;
@@ -2511,12 +2533,12 @@ bool UpdateEdgeManager::update() {
     txn.Commit();
     auto txn2 = db.GetUpdateTransaction();
     txn2.SetEdgeData(true, src_label_id, src_vid, dst_label_id, dst_vid,
-                    edge_label_id, property_new_value_any);
+                     edge_label_id, property_new_value_any);
     txn2.Commit();
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to update edge: " << e.what();
     setError(gs::StatusCode::InternalError,
-              "Fail to update edge: " + std::string(e.what()));
+             "Fail to update edge: " + std::string(e.what()));
     return false;
   }
   return true;
@@ -2531,11 +2553,13 @@ VertexEdgeManagerOther::VertexEdgeManagerOther(graph_management_param&& param)
   }
 }
 
-DeleteVertexManager::DeleteVertexManager(graph_management_param && param) : VertexEdgeManagerOther(std::move(param)) {
+DeleteVertexManager::DeleteVertexManager(graph_management_param&& param)
+    : VertexEdgeManagerOther(std::move(param)) {
   setError(gs::StatusCode::NotFound, "Delete vertex is not implemented.");
 }
 
-DeleteEdgeManager::DeleteEdgeManager(graph_management_param && param) : VertexEdgeManagerOther(std::move(param)) {
+DeleteEdgeManager::DeleteEdgeManager(graph_management_param&& param)
+    : VertexEdgeManagerOther(std::move(param)) {
   setError(gs::StatusCode::NotFound, "Delete edge is not implemented.");
 }
 
