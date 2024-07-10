@@ -451,16 +451,14 @@ auto rowSetFlatImpl(
 
 // if num_labels == 0, we deem it as take all labels.
 template <typename lid_t, typename EXPRESSION, size_t num_labels,
-          typename LabelT, typename PROP_GETTER,
+          typename LabelT, typename PROP_GETTER_TUPLE,
           typename RES_T = std::pair<std::vector<lid_t>, std::vector<offset_t>>>
-RES_T row_project_vertices_impl(const std::vector<lid_t>& lids,
-                                LabelT cur_label,
-                                std::array<LabelT, num_labels>& labels,
-                                EXPRESSION& expr,
-                                std::array<PROP_GETTER, 1>& prop_getters) {
+RES_T row_project_vertices_impl(
+    const std::vector<lid_t>& lids, LabelT cur_label,
+    std::array<LabelT, num_labels>& labels, EXPRESSION& expr,
+    std::array<PROP_GETTER_TUPLE, 1>& prop_getters) {
   std::vector<offset_t> offsets;
   std::vector<lid_t> new_lids;
-  size_t cnt = 0;
   offsets.reserve(lids.size() + 1);
   int label_ind = -1;
 
@@ -479,22 +477,26 @@ RES_T row_project_vertices_impl(const std::vector<lid_t>& lids,
     // for current set, we don't need.
     auto size = lids.size();
     for (size_t i = 0; i < size; ++i) {
-      offsets.emplace_back(cnt);
+      offsets.emplace_back(new_lids.size());
     }
   } else {
     // VLOG(10) << "Found label in query params";
-    auto& cur_prop_getter = prop_getters[0];
-    for (size_t i = 0; i < lids.size(); ++i) {
-      offsets.emplace_back(cnt);
-      auto cur_lid = lids[i];
-      auto prop = cur_prop_getter.get_view(cur_lid);
-      if (std::apply(expr, prop)) {
-        // if (expr(eles[i])) {
-        new_lids.emplace_back(cur_lid);
-        cnt += 1;
+    if constexpr (std::tuple_size_v<PROP_GETTER_TUPLE> == 0) {
+      for (size_t i = 0; i < lids.size(); ++i) {
+        offsets.emplace_back(new_lids.size());
+        new_lids.emplace_back(lids[i]);
+      }
+    } else {
+      auto& cur_prop_getter = prop_getters[0];
+      for (size_t i = 0; i < lids.size(); ++i) {
+        offsets.emplace_back(new_lids.size());
+        auto prop = cur_prop_getter.get_view(lids[i]);
+        if (std::apply(expr, prop)) {
+          new_lids.emplace_back(lids[i]);
+        }
       }
     }
-    offsets.emplace_back(cnt);
+    offsets.emplace_back(new_lids.size());
   }
   VLOG(10) << "Project vertices, new lids" << new_lids.size()
            << ", offset size: " << offsets.size();
@@ -1400,7 +1402,8 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   RES_T project_vertices(std::array<LabelT, num_labels>& labels,
                          EXPRESSION& exprs,
                          std::array<PROP_GETTER, 1>& prop_getter) const {
-    // TODO: vector-based cols should be able to be selected with certain rows.
+    // TODO: vector-based cols should be able to be selected with certain
+    // rows.
 
     auto new_lids_and_offsets =
         row_project_vertices_impl(vids_, v_label_, labels, exprs, prop_getter);
@@ -1414,7 +1417,8 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   template <size_t num_labels, typename RES_SET_T = self_type_t,
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
   RES_T project_vertices(std::array<LabelT, num_labels>& labels) const {
-    // TODO: vector-based cols should be able to be selected with certain rows.
+    // TODO: vector-based cols should be able to be selected with certain
+    // rows.
 
     auto new_lids_datas_and_offset = select_labels(vids_, v_label_, labels);
     self_type_t res_set(std::move(new_lids_datas_and_offset.first), v_label_);

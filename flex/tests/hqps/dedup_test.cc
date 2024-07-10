@@ -23,7 +23,7 @@
 #include "flex/engines/hqps_db/structures/multi_vertex_set/multi_label_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
 
-#include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "flex/engines/hqps_db/database/mutable_csr_interface_v2.h"
 
 #include "grape/types.h"
 

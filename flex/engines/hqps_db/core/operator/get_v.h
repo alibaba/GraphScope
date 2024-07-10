@@ -189,8 +189,8 @@ class GetVertex {
     for (size_t i = 0; i < num_labels; ++i) {
       auto& cur_set = multi_set.GetSet(i);
       VLOG(10) << "set: " << i << ", size: " << cur_set.Size();
-      res_data_tuples[i] = graph.template GetVertexPropsFromVid<T...>(
-          cur_set.GetLabel(), cur_set.GetVertices(), props);
+      res_data_tuples[i] = get_vertex_props_from_vids<GRAPH_INTERFACE, T...>(
+          graph, cur_set.GetLabel(), cur_set.GetVertices(), props);
     }
     VLOG(10) << "Finish get data tuples";
     auto set_array = std::array<res_set_t, num_labels>{make_row_vertex_set(
@@ -301,9 +301,9 @@ class GetVertex {
       const GRAPH_INTERFACE& graph, std::array<LabelT, num_labels>& labels,
       Filter<EXPRESSION, SELECTOR...>& filter,
       const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& set) {
-    // TODO: support for multiple selectors
-    auto property_getters_array = std::array{get_prop_getter_from_selectors(
-        graph, set.GetLabel(), filter.selectors_)};
+    auto property_getters_array =
+        std::array{get_prop_getters_from_selectors_single_label(
+            graph, set.GetLabel(), filter.selectors_)};
     return set.project_vertices(labels, filter.expr_, property_getters_array);
   }
 

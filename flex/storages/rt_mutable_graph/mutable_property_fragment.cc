@@ -395,6 +395,13 @@ vid_t MutablePropertyFragment::vertex_num(label_t vertex_label) const {
   return static_cast<vid_t>(lf_indexers_[vertex_label].size());
 }
 
+size_t MutablePropertyFragment::edge_num(label_t src_label, label_t edge_label,
+                                         label_t dst_label) const {
+  size_t index = src_label * vertex_label_num_ * edge_label_num_ +
+                 dst_label * edge_label_num_ + edge_label;
+  return oe_[index]->size();
+}
+
 bool MutablePropertyFragment::get_lid(label_t label, const Any& oid,
                                       vid_t& lid) const {
   return lf_indexers_[label].get_index(oid, lid);

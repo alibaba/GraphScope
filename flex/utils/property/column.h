@@ -749,6 +749,9 @@ class TypedRefColumn<GlobalId> : public RefColumnBase {
   label_t label_key_;
 };
 
+std::shared_ptr<RefColumnBase> create_ref_column(
+    std::shared_ptr<ColumnBase> column);
+
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_PROPERTY_COLUMN_H_

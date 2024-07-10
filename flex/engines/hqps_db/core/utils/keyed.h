@@ -17,7 +17,7 @@
 #define ENGINES_HQPS_ENGINE_KEYED_UTILS_H_
 
 #include "flex/engines/hqps_db/core/utils/props.h"
-#include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "flex/engines/hqps_db/database/mutable_csr_interface_v2.h"
 #include "flex/engines/hqps_db/structures/collection.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/adj_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
@@ -245,7 +245,7 @@ struct KeyedAggT<GI, RowVertexSet<LabelT, VID_T, T...>, AggFunc::COUNT,
   using index_ele_t =
       typename RowVertexSet<LabelT, VID_T, T...>::index_ele_tuple_t;
   using prop_getter_t = RowVertexSetPropGetter<
-      tag_id, gs::mutable_csr_graph_impl::SinglePropGetter<PropT>, index_ele_t>;
+      tag_id, gs::mutable_csr_graph_impl::PropertyGetter<PropT>, index_ele_t>;
   // build a counter array.
   using aggregate_res_builder_t = PropCountBuilder<tag_id, prop_getter_t>;
 
@@ -318,7 +318,7 @@ struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, T...>, AggFunc::COUNT,
       typename TwoLabelVertexSet<VID_T, LabelT, T...>::index_ele_tuple_t;
   // build a counter array.
   using prop_getter_t = TwoLabelVertexSetImplPropGetter<
-      tag_id, gs::mutable_csr_graph_impl::SinglePropGetter<PropT>, index_ele_t>;
+      tag_id, gs::mutable_csr_graph_impl::PropertyGetter<PropT>, index_ele_t>;
   using aggregate_res_builder_t = PropCountBuilder<tag_id, prop_getter_t>;
 
   static aggregate_res_builder_t create_agg_builder(
@@ -373,7 +373,7 @@ struct KeyedAggT<GI, GeneralVertexSet<VID_T, LabelT, SET_T...>, AggFunc::COUNT,
   using index_ele_t =
       typename GeneralVertexSet<VID_T, LabelT, SET_T...>::index_ele_tuple_t;
   using prop_getter_t = GeneralVertexSetPropGetter<
-      tag_id, gs::mutable_csr_graph_impl::SinglePropGetter<PropT>, index_ele_t>;
+      tag_id, gs::mutable_csr_graph_impl::PropertyGetter<PropT>, index_ele_t>;
 
   // build a counter array.
   using aggregate_res_builder_t = PropCountBuilder<tag_id, prop_getter_t>;
@@ -427,7 +427,7 @@ struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, SET_T...>, AggFunc::SUM,
   using index_ele_t =
       typename TwoLabelVertexSet<VID_T, LabelT, SET_T...>::index_ele_tuple_t;
   using prop_getter_t = TwoLabelVertexSetImplPropGetter<
-      tag_id, gs::mutable_csr_graph_impl::SinglePropGetter<PropT>, index_ele_t>;
+      tag_id, gs::mutable_csr_graph_impl::PropertyGetter<PropT>, index_ele_t>;
   using aggregate_res_builder_t = SumBuilder<prop_getter_t, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
@@ -567,7 +567,7 @@ struct KeyedAggT<GI, RowVertexSet<LabelT, VID_T, SET_T...>, AggFunc::MIN,
   using index_ele_t =
       typename RowVertexSet<LabelT, VID_T, SET_T...>::index_ele_tuple_t;
   using prop_getter_t = RowVertexSetPropGetter<
-      tag_id, gs::mutable_csr_graph_impl::SinglePropGetter<PropT>, index_ele_t>;
+      tag_id, gs::mutable_csr_graph_impl::PropertyGetter<PropT>, index_ele_t>;
   using aggregate_res_builder_t = MinBuilder<GI, prop_getter_t, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
@@ -586,7 +586,7 @@ struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, SET_T...>, AggFunc::MIN,
   using index_ele_t =
       typename TwoLabelVertexSet<VID_T, LabelT, SET_T...>::index_ele_tuple_t;
   using prop_getter_t = TwoLabelVertexSetImplPropGetter<
-      tag_id, gs::mutable_csr_graph_impl::SinglePropGetter<PropT>, index_ele_t>;
+      tag_id, gs::mutable_csr_graph_impl::PropertyGetter<PropT>, index_ele_t>;
   using aggregate_res_builder_t = MinBuilder<GI, prop_getter_t, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
@@ -620,7 +620,7 @@ struct KeyedAggT<GI, RowVertexSet<LabelT, VID_T, SET_T...>, AggFunc::MAX,
   using index_ele_t =
       typename RowVertexSet<LabelT, VID_T, SET_T...>::index_ele_tuple_t;
   using prop_getter_t = RowVertexSetPropGetter<
-      tag_id, gs::mutable_csr_graph_impl::SinglePropGetter<PropT>, index_ele_t>;
+      tag_id, gs::mutable_csr_graph_impl::PropertyGetter<PropT>, index_ele_t>;
   using aggregate_res_builder_t = MaxBuilder<GI, prop_getter_t, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
@@ -639,7 +639,7 @@ struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, SET_T...>, AggFunc::MAX,
   using index_ele_t =
       typename TwoLabelVertexSet<VID_T, LabelT, SET_T...>::index_ele_tuple_t;
   using prop_getter_t = TwoLabelVertexSetImplPropGetter<
-      tag_id, gs::mutable_csr_graph_impl::SinglePropGetter<PropT>, index_ele_t>;
+      tag_id, gs::mutable_csr_graph_impl::PropertyGetter<PropT>, index_ele_t>;
   using aggregate_res_builder_t = MaxBuilder<GI, prop_getter_t, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(

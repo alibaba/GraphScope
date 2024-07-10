@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "flex/engines/hqps_db/core/params.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
-#include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "flex/engines/hqps_db/database/mutable_csr_interface_v2.h"
 #include "flex/tests/hqps/match_query.h"
 #include "flex/tests/hqps/sample_query.h"
 
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
     gs::MutableCSRInterface interface(sess);
     std::array<std::string, 1> prop_names{"creationDate"};
     auto edges =
-        interface.GetEdges<int64_t>(1, 1, 8, vids, "Both", INT_MAX, prop_names);
+        interface.GetEdges<int64_t>(1, 1, 8, vids, gs::Direction::Both);
     double t = -grape::GetCurrentTime();
     size_t cnt = 0;
     for (size_t i = 0; i < vids.size(); ++i) {
@@ -63,11 +64,11 @@ int main(int argc, char** argv) {
     LOG(INFO) << "visiting edges: cost: " << t << ", num edges: " << cnt;
 
     // visiting vertices properties
-    auto vertex_prop =
-        interface.GetVertexPropsFromVid<int64_t>(1, vids, {"id"});
+    auto vertex_prop_getter =
+        interface.GetVertexPropertyGetter<int64_t>(1, "id");
     for (size_t i = 0; i < 10; ++i) {
-      VLOG(10) << "vid: " << vids[i]
-               << ", prop: " << gs::to_string(vertex_prop[i]);
+      VLOG(10) << "vid: " << vids[i] << ", prop: "
+               << gs::to_string(vertex_prop_getter.get_view(vids[i]));
     }
   }
 

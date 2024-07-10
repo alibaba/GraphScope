@@ -75,8 +75,6 @@ void get_tuple_from_column_tuple(size_t index, std::tuple<T...>& t,
  */
 class MutableCSRInterface {
  public:
-  const GraphDBSession& GetDBSession() const { return db_session_; }
-
   using vertex_id_t = vid_t;
   using gid_t = uint64_t;
   using label_id_t = uint8_t;
@@ -104,7 +102,7 @@ class MutableCSRInterface {
 
   using sub_graph_t = mutable_csr_graph_impl::SubGraph<label_id_t, vertex_id_t>;
 
-  static constexpr bool is_grape = true;
+  const GraphDBSession& GetDBSession() const { return db_session_; }
 
   MutableCSRInterface(const MutableCSRInterface&) = delete;
 
@@ -123,9 +121,6 @@ class MutableCSRInterface {
    * @return label_id_t
    */
   label_id_t GetVertexLabelId(const std::string& label) const {
-    LOG(INFO) << "GetVertexLabelId: " << label;
-    LOG(INFO) << "label num: " << db_session_.schema().vertex_label_num();
-    LOG(INFO) << "edge labelnum: " << db_session_.schema().edge_label_num();
     return db_session_.schema().get_vertex_label_id(label);
   }
 
@@ -860,6 +855,140 @@ class MutableCSRInterface {
     return get_tuple_column_from_graph_with_property_impl(
         label, selectors, std::make_index_sequence<sizeof...(SELECTOR)>());
   }
+
+  /**
+   * @brief Scans all vertices with the given label and calls the
+   * given function on each vertex for filtering.
+   * @tparam FUNC_T
+   * @tparam SELECTOR
+   * @param label_id
+   * @param selectors The Property selectors. The selected properties will be
+   * fed to the filtering function
+   * @param func The lambda function for filtering.
+   * @param filter_null If true, then if null presents in the properties, will
+   * skip the vertex.
+   */
+  template <typename FUNC_T, typename... SELECTOR>
+  void ScanVertices(const label_id_t& label_id,
+                    const std::tuple<SELECTOR...>& selectors,
+                    const FUNC_T& func, bool filter_null = false) const;
+
+  /**
+   * @brief ScanVertices scans all vertices with the given label with give
+   * original id.
+   * @param label_id The label id.
+   * @param oid The original id.
+   * @param vid The result internal id.
+   */
+  template <typename OID_T>
+  bool ScanVerticesWithOid(const label_id_t& label_id, OID_T oid,
+                           vertex_id_t& vid) const;
+
+  /**
+   * @brief GetVertexProps gets the properties of single label vertices.
+   * @tparam T The property types.
+   * @param label
+   * @param vids
+   * @param prop_names
+   */
+  template <typename... T>
+  std::vector<std::tuple<T...>> GetVertexPropsFromVid(
+      const label_id_t& label_id, const std::vector<vertex_id_t>& vids,
+      const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
+          prop_names) const;
+
+  /**
+   * @brief GetVertexProps gets the properties of vertices from multiple labels.
+   * @tparam T
+   * @param vids The vertex ids.
+   * @param label_ids The label ids.
+   * @param vid_inds The indices of the vertex ids in the input vids.
+   * @param prop_names The property names.
+   */
+  template <typename... T>
+  std::vector<std::tuple<T...>> GetVertexPropsFromVid(
+      const std::vector<vertex_id_t>& vids,
+      const std::vector<label_id_t>& label_ids,
+      const std::vector<std::vector<int32_t>>& vid_inds,
+      const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
+          prop_names) const;
+
+  /**
+   * @brief GetSubGraph gets the subgraph with the given label and edge label.
+   * @param src_label_id The source label id.
+   * @param dst_label_id The destination label id.
+   * @param edge_label_id The edge label id.
+   * @param direction_str The direction string.
+   * @param prop_names The property names.
+   */
+  std::vector<mutable_csr_graph_impl::SubGraph<label_id_t, vertex_id_t>>
+  GetSubGraph(const label_id_t src_label_id, const label_id_t dst_label_id,
+              const label_id_t edge_label_id, const std::string& direction_str,
+              const std::vector<std::string>& prop_names) const;
+
+  /**
+   * @brief GetEdges gets the edges with the given label and edge label, and
+   * with the starting vertex internal ids.
+   * When the direction is "out", the edges are from the source label to the
+   * destination label, and vice versa when the direction is "in". When the
+   * direction is "both", the src and dst labels SHOULD be the same.
+   * @tparam T The property types.
+   * @param src_label_id The source label id.
+   * @param dst_label_id The destination label id.
+   * @param edge_label_id The edge label id.
+   * @param vids The starting vertex internal ids.
+   * @param direction_str The direction string.
+   * @param limit The limit of the edges.
+   * @param prop_names The property names.
+   */
+  template <typename... T>
+  mutable_csr_graph_impl::AdjListArray<T...> GetEdges(
+      const label_id_t& src_label_id, const label_id_t& dst_label_id,
+      const label_id_t& edge_label_id, const std::vector<vertex_id_t>& vids,
+      const std::string& direction_str, size_t limit,
+      const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
+          prop_names) const;
+
+  /**
+   * @brief Get vertices on the other side of edges, via the given edge label
+   * and the starting vertex internal ids.
+   * When the direction is "out", the vertices are on the destination label side
+   * of the edges, and vice versa when the direction is "in". When the direction
+   * is "both", the src and dst labels SHOULD be the same.
+   * @param src_label_id The source label id.
+   * @param dst_label_id The destination label id.
+   * @param edge_label_id The edge label id.
+   * @param vids The starting vertex internal ids.
+   * @param direction_str The direction string.
+   * @param limit The limit of the vertices.
+   */
+  mutable_csr_graph_impl::NbrListArray GetOtherVertices(
+      const label_id_t& src_label_id, const label_id_t& dst_label_id,
+      const label_id_t& edge_label_id, const std::vector<vertex_id_t>& vids,
+      const std::string& direction_str, size_t limit) const;
+
+  /**
+   * @brief Great a prop getter which can get multiple properties for a vertex
+   * within one call.
+   * @tparam T The property types.
+   * @param label_id The label id.
+   * @param prop_names The property names.
+   */
+  template <typename... T>
+  mutable_csr_graph_impl::MultiPropGetter<T...> GetMultiPropGetter(
+      const label_id_t& label_id,
+      const std::array<std::string, sizeof...(T)>& prop_names) const;
+
+  /**
+   * @brief Get a prop getter which can get a single property for a vertex
+   * within one call.
+   * @tparam T The property type.
+   * @param label_id The label id.
+   * @param prop_name The property name.
+   */
+  template <typename T>
+  mutable_csr_graph_impl::SinglePropGetter<T> GetSinglePropGetter(
+      const label_id_t& label_id, const std::string& prop_name) const;
 
  private:
   std::shared_ptr<RefColumnBase> create_ref_column(

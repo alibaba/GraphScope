@@ -1335,13 +1335,18 @@ bool Schema::has_edge_label(const std::string& src_label,
                             const std::string& dst_label,
                             const std::string& label) const {
   label_t edge_label_id;
+  // TODO: check if src_label and dst_label exists
   auto src_label_id = get_vertex_label_id(src_label);
   auto dst_label_id = get_vertex_label_id(dst_label);
   if (!elabel_indexer_.get_index(label, edge_label_id)) {
     return false;
   }
-  auto e_label_id =
-      generate_edge_label(src_label_id, dst_label_id, edge_label_id);
+  return has_edge_label(src_label_id, dst_label_id, edge_label_id);
+}
+
+bool Schema::has_edge_label(label_t src_label, label_t dst_label,
+                            label_t edge_label) const {
+  label_t e_label_id = generate_edge_label(src_label, dst_label, edge_label);
   return eprop_names_.find(e_label_id) != eprop_names_.end();
 }
 

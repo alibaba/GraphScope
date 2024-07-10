@@ -27,7 +27,7 @@ static constexpr const char* time_stamp = "time_stamp";
 static constexpr const char* graph_var = "graph";
 static constexpr const char* GRAPE_INTERFACE_CLASS = "gs::MutableCSRInterface";
 static constexpr const char* GRAPE_INTERFACE_HEADER =
-    "flex/engines/hqps_db/database/mutable_csr_interface.h";
+    "flex/engines/hqps_db/database/mutable_csr_interface_v2.h";
 static constexpr const char* EDGE_EXPAND_OPT_NAME = "edge_expand_opt";
 static constexpr const char* SORT_OPT_NAME = "sort_opt";
 static constexpr const char* GET_V_OPT_NAME = "get_v_opt";
@@ -126,9 +126,7 @@ struct TagIndMapping {
            tag_id_2_tag_inds_[tag_id] != -1;
   }
 
-  int32_t GetMaxTagId() const {
-    return tag_id_2_tag_inds_.size() - 1;
-  }
+  int32_t GetMaxTagId() const { return tag_id_2_tag_inds_.size() - 1; }
 
   // convert tag_ind (us) to tag ids
   std::vector<int32_t> tag_ind_2_tag_ids_;
