@@ -78,6 +78,18 @@ class DualCsrBase {
     GetOutCsr()->warmup(thread_num);
   }
 
+  size_t Size() const {
+    const CsrBase* oe_csr = GetOutCsr();
+    const CsrBase* ie_csr = GetInCsr();
+    if (oe_csr) {
+      return oe_csr->size();
+    } else if (ie_csr) {
+      return ie_csr->size();
+    } else {
+      return 0;
+    }
+  }
+
   virtual CsrBase* GetInCsr() = 0;
   virtual CsrBase* GetOutCsr() = 0;
   virtual const CsrBase* GetInCsr() const = 0;

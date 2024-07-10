@@ -399,7 +399,11 @@ size_t MutablePropertyFragment::edge_num(label_t src_label, label_t edge_label,
                                          label_t dst_label) const {
   size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                  dst_label * edge_label_num_ + edge_label;
-  return oe_[index]->size();
+  if (dual_csr_list_[index] != NULL) {
+    return dual_csr_list_[index]->Size();
+  } else {
+    return 0;
+  }
 }
 
 bool MutablePropertyFragment::get_lid(label_t label, const Any& oid,
