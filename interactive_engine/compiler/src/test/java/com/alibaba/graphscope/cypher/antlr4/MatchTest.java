@@ -19,6 +19,7 @@ package com.alibaba.graphscope.cypher.antlr4;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.google.common.collect.ImmutableMap;
 
@@ -503,5 +504,22 @@ public class MatchTest {
                     + " person]}], alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
+    }
+
+    @Test
+    public void property_exist_after_type_inference_test() {
+        GraphBuilder builder =
+                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(
+                        "schema/ldbc_schema_exp_hierarchy.json");
+        // check property 'creationDate' still exists after type inference has updated the type of
+        // 'HASCREATOR'
+        RelNode rel =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a:PERSON)<-[h:HASCREATOR]-(b:COMMENT) Return h;", builder)
+                        .build();
+        Assert.assertEquals(
+                "RecordType(Graph_Schema_Type(labels=[EdgeLabel(HASCREATOR, COMMENT, PERSON)],"
+                    + " properties=[BIGINT creationDate]) h)",
+                rel.getRowType().toString());
     }
 }
