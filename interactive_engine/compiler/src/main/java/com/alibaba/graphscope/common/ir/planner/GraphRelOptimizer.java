@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
+import com.alibaba.graphscope.common.ir.meta.schema.foreign.ForeignKeyMeta;
 import com.alibaba.graphscope.common.ir.planner.rules.*;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
@@ -61,6 +62,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Optimize graph relational tree which consists of match and other relational operators
  */
 public class GraphRelOptimizer {
+    private final Configs graphConfig;
     private final PlannerConfig config;
     private final RelOptPlanner relPlanner;
     private final RelOptPlanner matchPlanner;
@@ -69,6 +71,7 @@ public class GraphRelOptimizer {
     private final GlogueHolder glogueHolder;
 
     public GraphRelOptimizer(Configs graphConfig) {
+        this.graphConfig = graphConfig;
         this.config = new PlannerConfig(graphConfig);
         this.relBuilderFactory = new GraphBuilderFactory(graphConfig);
         this.relPlanner = createRelPlanner();
@@ -259,8 +262,19 @@ public class GraphRelOptimizer {
                                                             config.getGlogueSize());
                                 } else if (k.equals(JoinDecompositionRule.class.getSimpleName())) {
                                     ruleConfig =
-                                            JoinDecompositionRule.Config.DEFAULT.withMinPatternSize(
-                                                    config.getJoinMinPatternSize());
+                                            JoinDecompositionRule.Config.DEFAULT
+                                                    .withMinPatternSize(
+                                                            config.getJoinMinPatternSize())
+                                                    .withJoinQueueCapacity(
+                                                            config.getJoinQueueCapacity())
+                                                    .withJoinByEdgeEnabled(
+                                                            config.isJoinByEdgeEnabled());
+                                    if (!config.getJoinByForeignKeyUri().isEmpty()) {
+                                        ((JoinDecompositionRule.Config) ruleConfig)
+                                                .withForeignKeyMeta(
+                                                        new ForeignKeyMeta(
+                                                                config.getJoinByForeignKeyUri()));
+                                    }
                                 }
                                 if (ruleConfig != null) {
                                     planner.addRule(

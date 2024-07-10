@@ -20,6 +20,10 @@ public class PlannerConfig {
             Config.intConfig("graph.planner.join.cost.factor.1", 1);
     public static final Config<Integer> JOIN_COST_FACTOR_2 =
             Config.intConfig("graph.planner.join.cost.factor.2", 1);
+    public static final Config<Integer> JOIN_QUEUE_CAPACITY =
+            Config.intConfig("graph.planner.join.queue.capacity", 3);
+    public static final Config<Boolean> JOIN_BY_EDGE_ENABLED =
+            Config.boolConfig("graph.planner.join.by.edge.enabled", false);
 
     private final Configs configs;
     private final List<String> rules;
@@ -60,6 +64,18 @@ public class PlannerConfig {
 
     public int getJoinCostFactor2() {
         return JOIN_COST_FACTOR_2.get(configs);
+    }
+
+    public boolean isJoinByEdgeEnabled() {
+        return JOIN_BY_EDGE_ENABLED.get(configs);
+    }
+
+    public int getJoinQueueCapacity() {
+        return JOIN_QUEUE_CAPACITY.get(configs);
+    }
+
+    public String getJoinByForeignKeyUri() {
+        return GraphConfig.GRAPH_FOREIGN_KEY_URI.get(configs);
     }
 
     @Override

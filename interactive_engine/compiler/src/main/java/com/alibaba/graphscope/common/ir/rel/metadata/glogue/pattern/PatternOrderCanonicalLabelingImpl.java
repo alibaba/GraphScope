@@ -216,6 +216,6 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
     @Override
     public int hashCode() {
-        return Objects.hash(initColoring, mapCheckerToGroup);
+        return Objects.hash(mapCheckerToGroup);
     }
 }
