@@ -177,9 +177,6 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
   }
 }
 
-// Create a reference column from a ColumnBase that contains a const reference
-// to the actual column storage, offering a column-based store interface for
-// vertex properties.
 std::shared_ptr<RefColumnBase> CreateRefColumn(
     std::shared_ptr<ColumnBase> column) {
   auto type = column->type();
