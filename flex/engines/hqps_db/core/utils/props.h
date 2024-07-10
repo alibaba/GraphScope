@@ -58,96 +58,90 @@ class TwoLabelVertexSetImpl;
 template <typename VID_T, typename LabelT, typename... SET_T>
 class GeneralVertexSet;
 
-template <typename GI, typename PropTupleT>
-struct MultiPropGetterT;
-
-template <typename GI, typename... T>
-struct MultiPropGetterT<GI, std::tuple<T...>> {};
-
 template <typename T>
 class Collection;
 
-template <typename GRAPH_INTERFACE, typename LabelT, typename... T>
-static auto get_prop_getter_from_named_property(
-    const GRAPH_INTERFACE& graph, const LabelT& label,
-    const std::tuple<NamedProperty<T>...>& named_property) {
-  std::array<std::string, sizeof...(T)> prop_names;
-  int i = 0;
-  std::apply(
-      [&prop_names, &i](auto&... named_prop) {
-        ((prop_names[i++] = named_prop.name), ...);
-      },
-      named_property);
-  return graph.template GetMultiPropGetter<T...>(label, prop_names);
-}
-
-//// Get one property getter for one label
-template <typename GRAPH_INTERFACE, typename LabelT, typename... PropT>
-static auto get_prop_getter_from_selectors(
-    const GRAPH_INTERFACE& graph, const LabelT& label,
-    const std::tuple<PropertySelector<PropT>...>& selectors) {
-  std::array<std::string, sizeof...(PropT)> prop_names;
-  int i = 0;
-  std::apply(
-      [&prop_names, &i](auto&... named_prop) {
-        ((prop_names[i++] = named_prop.prop_name_), ...);
-      },
-      selectors);
-  return graph.template GetMultiPropGetter<PropT...>(label, prop_names);
-}
 /// get single property getter for one label
 template <typename GRAPH_INTERFACE, typename LabelT, typename PropT>
 static auto get_single_prop_getter_from_selector(
     const GRAPH_INTERFACE& graph, const LabelT& label,
     const PropertySelector<PropT>& selector) {
   auto prop_name = selector.prop_name_;
-  return graph.template GetSinglePropGetter<PropT>(label, prop_name);
+  return graph.template GetVertexPropertyGetter<PropT>(label, prop_name);
+}
+
+//// Get one property getter for one label
+template <typename GRAPH_INTERFACE, typename LabelT, typename... PropT,
+          size_t... Is>
+static auto get_prop_getter_from_selectors_impl(
+    const GRAPH_INTERFACE& graph, const LabelT& label,
+    const std::tuple<PropertySelector<PropT>...>& selectors,
+    std::index_sequence<Is...>) {
+  return std::make_tuple(get_single_prop_getter_from_selector(
+      graph, label, std::get<Is>(selectors))...);
 }
 
 // Get prop getters from Selector.
 template <typename GRAPH_INTERFACE, typename LabelT, size_t num_labels,
           typename... SELECTOR, size_t... Is>
-static auto get_prop_getters_from_selectors_impl(
+static auto get_prop_getters_from_selectors_impl_label_array(
     const GRAPH_INTERFACE& graph, const std::array<LabelT, num_labels>& labels,
     std::tuple<SELECTOR...> selectors, std::index_sequence<Is...>) {
-  using prop_getter_t = typename GRAPH_INTERFACE::template multi_prop_getter_t<
-      typename SELECTOR::prop_t...>;
-  std::array<prop_getter_t, num_labels> prop_getter_array{
-      get_prop_getter_from_selectors(graph, labels[Is], selectors)...};
+  using prop_getter_tuple_t =
+      std::tuple<typename GRAPH_INTERFACE::template prop_getter_t<
+          typename SELECTOR::prop_t>...>;
+  std::array<prop_getter_tuple_t, num_labels> prop_getter_array{
+      get_prop_getter_from_selectors_impl(
+          graph, labels[Is], selectors,
+          std::index_sequence_for<SELECTOR...>{})...};
   return prop_getter_array;
 }
 
 // Get prop getters from Selector, with label vector.
-template <typename GRAPH_INTERFACE, typename LabelT, typename... SELECTOR,
-          size_t... Is>
+template <typename GRAPH_INTERFACE, typename LabelT, typename... SELECTOR>
 static auto get_prop_getters_from_selectors_impl_label_vec(
     const GRAPH_INTERFACE& graph, const std::vector<LabelT>& labels,
     std::tuple<SELECTOR...> selectors) {
-  using prop_getter_t = typename GRAPH_INTERFACE::template multi_prop_getter_t<
-      typename SELECTOR::prop_t...>;
-  std::vector<prop_getter_t> prop_getter_array;
+  using prop_getter_tuple_t =
+      std::tuple<typename GRAPH_INTERFACE::template prop_getter_t<
+          typename SELECTOR::prop_t>...>;
+  std::vector<prop_getter_tuple_t> prop_getter_array;
+  auto index_seq = std::index_sequence_for<SELECTOR...>{};
   for (size_t i = 0; i < labels.size(); ++i) {
-    prop_getter_array.emplace_back(
-        get_prop_getter_from_selectors(graph, labels[i], selectors));
+    prop_getter_array.emplace_back(get_prop_getter_from_selectors_impl(
+        graph, labels[i], selectors, index_seq));
   };
   return prop_getter_array;
 }
 
+///////////////////////// prop getter for vertex set//////////////////////
+
+// Get Property Getters from selectors, with label array.
 template <typename GRAPH_INTERFACE, typename LabelT, size_t num_labels,
           typename... SELECTOR>
 static auto get_prop_getters_from_selectors(
     const GRAPH_INTERFACE& graph, const std::array<LabelT, num_labels>& labels,
-    std::tuple<SELECTOR...> named_property) {
-  return get_prop_getters_from_selectors_impl(
-      graph, labels, named_property, std::make_index_sequence<num_labels>{});
+    std::tuple<SELECTOR...> selectors) {
+  return get_prop_getters_from_selectors_impl_label_array(
+      graph, labels, selectors, std::make_index_sequence<num_labels>{});
 }
 
+// Get Property Getters from selectors, with label vector.
 template <typename GRAPH_INTERFACE, typename LabelT, typename... SELECTOR>
-static auto get_prop_getters_from_selectors(
-    const GRAPH_INTERFACE& graph, const std::vector<LabelT>& labels,
-    std::tuple<SELECTOR...> named_property) {
+static auto get_prop_getters_from_selectors(const GRAPH_INTERFACE& graph,
+                                            const std::vector<LabelT>& labels,
+                                            std::tuple<SELECTOR...> selectors) {
   return get_prop_getters_from_selectors_impl_label_vec(graph, labels,
-                                                        named_property);
+                                                        selectors);
+}
+
+// Get Property Getters from selectors, with only one label
+template <typename GRAPH_INTERFACE, typename LabelT, typename... PropT>
+static auto get_prop_getters_from_selectors_single_label(
+    const GRAPH_INTERFACE& graph, const LabelT& label,
+    const std::tuple<PropertySelector<PropT>...>& selectors) {
+  return get_prop_getter_from_selectors_impl(
+      graph, label, selectors, std::index_sequence_for<PropT...>{});
 }
 
 ///////////////////////// prop getter for vertex set
@@ -853,13 +847,13 @@ static auto create_prop_getter_impl(
     const RowVertexSetImpl<LabelT, VID_T, T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
   using prop_getter_t =
-      typename GRAPH_INTERFACE::template single_prop_getter_t<prop_t>;
-  // const std::array<std::string, 2>& labels = set.GetLabels();
+      typename GRAPH_INTERFACE::template prop_getter_t<prop_t>;
 
   auto label = set.GetLabel();
   VLOG(10) << "getting getter for " << prop_name << " for label "
            << gs::to_string(label);
-  auto getter = graph.template GetSinglePropGetter<prop_t>(label, prop_name);
+  auto getter =
+      graph.template GetVertexPropertyGetter<prop_t>(label, prop_name);
   return RowVertexSetPropGetter<
       tag_id, prop_getter_t,
       typename RowVertexSetImpl<LabelT, VID_T, T...>::index_ele_tuple_t>(
@@ -901,14 +895,14 @@ static auto create_prop_getter_impl(
     const TwoLabelVertexSetImpl<VID_T, LabelT, T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
   using prop_getter_t =
-      typename GRAPH_INTERFACE::template single_prop_getter_t<prop_t>;
+      typename GRAPH_INTERFACE::template prop_getter_t<prop_t>;
   auto& labels = set.GetLabels();
   std::array<std::string, 1> names{prop_name};
   VLOG(10) << "Getting prop labels for " << prop_name << " for labels "
            << std::to_string(labels[0]) << ", " << std::to_string(labels[1]);
   std::array<prop_getter_t, 2> prop_getter{
-      graph.template GetSinglePropGetter<prop_t>(labels[0], prop_name),
-      graph.template GetSinglePropGetter<prop_t>(labels[1], prop_name)};
+      graph.template GetVertexPropertyGetter<prop_t>(labels[0], prop_name),
+      graph.template GetVertexPropertyGetter<prop_t>(labels[1], prop_name)};
 
   return TwoLabelVertexSetImplPropGetter<
       tag_id, prop_getter_t,
@@ -926,11 +920,11 @@ static auto create_prop_getter_impl(
     const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
   using prop_getter_t =
-      typename GRAPH_INTERFACE::template single_prop_getter_t<prop_t>;
-  // const std::array<std::string, 2>& labels = set.GetLabels();
+      typename GRAPH_INTERFACE::template prop_getter_t<prop_t>;
   auto label = set.GetLabel();
 
-  auto getter = graph.template GetSinglePropGetter<prop_t>(label, prop_name);
+  auto getter =
+      graph.template GetVertexPropertyGetter<prop_t>(label, prop_name);
   return KeyedRowVertexSetPropGetter<
       tag_id, prop_getter_t,
       typename KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T,
@@ -947,13 +941,12 @@ static auto create_prop_getter_impl(
     const GeneralVertexSet<VID_T, LabelT, SET_T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
   using prop_getter_t =
-      typename GRAPH_INTERFACE::template single_prop_getter_t<prop_t>;
-  // const std::array<std::string, 2>& labels = set.GetLabels();
+      typename GRAPH_INTERFACE::template prop_getter_t<prop_t>;
   auto labels = set.GetLabels();
   std::vector<prop_getter_t> prop_getters;
   for (size_t i = 0; i < labels.size(); ++i) {
     prop_getters.emplace_back(
-        graph.template GetSinglePropGetter<prop_t>(labels[i], prop_name));
+        graph.template GetVertexPropertyGetter<prop_t>(labels[i], prop_name));
   }
 
   return GeneralVertexSetPropGetter<

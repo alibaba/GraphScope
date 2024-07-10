@@ -346,9 +346,8 @@ class ProjectOp {
       const GRAPH_INTERFACE& graph, NODE_T& node, const std::string& prop_name,
       const std::vector<size_t>& repeat_array) {
     // Get property from storage.
-    auto prop_tuple_vec = graph.template GetVertexPropsFromVid<T>(
-        node.GetLabel(), node.GetVertices(), {prop_name});
-    // VLOG(10) << "Finish fetching properties";
+    auto prop_tuple_vec = get_vertex_props_from_vids<GRAPH_INTERFACE, T>(
+        graph, node.GetLabel(), node.GetVertices(), {prop_name});
     node.fillBuiltinProps(prop_tuple_vec, {prop_name}, repeat_array);
     std::vector<T> res_prop_vec;
     for (size_t i = 0; i < repeat_array.size(); ++i) {
@@ -356,9 +355,6 @@ class ProjectOp {
         res_prop_vec.push_back(std::get<0>(prop_tuple_vec[i]));
       }
     }
-    // check builtin properties.
-    // Found if there is any builtin properties need.
-
     return Collection<T>(std::move(res_prop_vec));
   }
 
@@ -370,8 +366,9 @@ class ProjectOp {
       const GRAPH_INTERFACE& graph,
       TwoLabelVertexSetImpl<VID_T, LabelT, SET_T...>& node,
       const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    auto selector_tuple = std::make_tuple(PropertySelector<T>(prop_name));
     auto tmp_prop_vec =
-        get_property_tuple_two_label<T>(graph, node, {prop_name});
+        get_property_tuple_two_label(graph, node, selector_tuple);
 
     // make_repeat;
     size_t sum = 0;
@@ -410,10 +407,11 @@ class ProjectOp {
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph,
       GeneralVertexSet<VID_T, LabelT, SET_T...>& node,
-      const std::string& prop_name_, const std::vector<size_t>& repeat_array) {
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
     VLOG(10) << "start fetching properties";
-    auto tmp_prop_vec = get_property_tuple_general<T>(
-        graph, node, std::array<std::string, 1>{prop_name_});
+    auto prop_selector_tuple = std::make_tuple(PropertySelector<T>(prop_name));
+    auto tmp_prop_vec =
+        get_property_tuple_general(graph, node, prop_selector_tuple);
     VLOG(10) << "Got properties for general vertex set: "
              << gs::to_string(tmp_prop_vec);
     std::vector<T> res_prop_vec;

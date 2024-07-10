@@ -25,7 +25,8 @@
 #include "flex/engines/hqps_db/core/base_engine.h"
 
 #include "flex/engines/hqps_db/core/operator/project.h"
-#include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "flex/engines/hqps_db/database/mutable_csr_interface_v2.h"
+#include "flex/engines/hqps_db/database/nbr_list.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/column.h"
 #include "glog/logging.h"
@@ -176,7 +177,7 @@ int main() {
 
     {
       auto ref_col = std::make_shared<gs::TypedRefColumn<int32_t>>(*col1);
-      gs::mutable_csr_graph_impl::SinglePropGetter<int32_t> getter(ref_col);
+      gs::mutable_csr_graph_impl::PropertyGetter<int32_t> getter(ref_col);
       double t1 = -grape::GetCurrentTime();
       int32_t res = 0;
       for (auto ind : indices) {
@@ -231,8 +232,8 @@ int main() {
     {
       auto ref_col1 = std::make_shared<gs::TypedRefColumn<int32_t>>(*col1);
       auto ref_col2 = std::make_shared<gs::TypedRefColumn<int64_t>>(*col2);
-      gs::mutable_csr_graph_impl::SinglePropGetter<int32_t> getter1(ref_col1);
-      gs::mutable_csr_graph_impl::SinglePropGetter<int64_t> getter2(ref_col2);
+      gs::mutable_csr_graph_impl::PropertyGetter<int32_t> getter1(ref_col1);
+      gs::mutable_csr_graph_impl::PropertyGetter<int64_t> getter2(ref_col2);
 
       double t1 = -grape::GetCurrentTime();
       int32_t res = 0;
@@ -306,10 +307,10 @@ int main() {
       // test two label vertex set prop getter.
       auto ref_col1 = std::make_shared<gs::TypedRefColumn<int32_t>>(*col1);
       auto ref_col2 = std::make_shared<gs::TypedRefColumn<int32_t>>(*col2);
-      gs::mutable_csr_graph_impl::SinglePropGetter<int32_t> getter1(ref_col1);
-      gs::mutable_csr_graph_impl::SinglePropGetter<int32_t> getter2(ref_col2);
-      std::array<gs::mutable_csr_graph_impl::SinglePropGetter<int32_t>, 2>
-          array{getter1, getter2};
+      gs::mutable_csr_graph_impl::PropertyGetter<int32_t> getter1(ref_col1);
+      gs::mutable_csr_graph_impl::PropertyGetter<int32_t> getter2(ref_col2);
+      std::array<gs::mutable_csr_graph_impl::PropertyGetter<int32_t>, 2> array{
+          getter1, getter2};
 
       // generate index ele
       std::vector<std::tuple<size_t, size_t>> index_eles;

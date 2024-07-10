@@ -44,7 +44,6 @@ template <typename GRAPH_INTERFACE>
 class SyncEngine : public BaseEngine {
   using label_id_t = typename GRAPH_INTERFACE::label_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
-  using gid_t = typename GRAPH_INTERFACE::gid_t;
   using default_vertex_set_t = DefaultRowVertexSet<label_id_t, vertex_id_t>;
   using two_label_set_t =
       TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>;
@@ -850,7 +849,8 @@ class SyncEngine : public BaseEngine {
       for (auto j = cur_begin; j < limit; ++j) {
         auto vid = vertices[j];
         if (bitset.get_bit(j)) {
-          if (std::apply(expr, prop_getter_tuple[0].get_view(vid))) {
+          if (std::apply(expr, get_view_from_prop_getters(prop_getter_tuple[0],
+                                                          vid))) {
             new_bitset.set_bit(cur);
             if (cur < j) {
               vertices[cur++] = vid;
@@ -859,7 +859,8 @@ class SyncEngine : public BaseEngine {
             }
           }
         } else {
-          if (std::apply(expr, prop_getter_tuple[1].get_view(vid))) {
+          if (std::apply(expr, get_view_from_prop_getters(prop_getter_tuple[1],
+                                                          vid))) {
             if (cur < j) {
               vertices[cur++] = vid;
             } else {
@@ -898,9 +899,8 @@ class SyncEngine : public BaseEngine {
 
     auto& head = ctx.GetMutableHead();
     auto label = head.GetLabel();
-    auto prop_getter_tuple =
-        std::array{get_prop_getter_from_selectors(graph, label, selectors)};
-    // TODO: implement
+    auto prop_getter_tuple = std::array{
+        get_prop_getters_from_selectors_single_label(graph, label, selectors)};
     SelectRowVertexSetImpl(ctx, head, prop_getter_tuple, expr,
                            std::make_index_sequence<sizeof...(SELECTOR)>());
 

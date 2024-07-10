@@ -21,6 +21,7 @@ limitations under the License.
 
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 
+#include "flex/engines/hqps_db/core/utils/graph_utils.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/adj_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/flat_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/general_edge_set.h"
@@ -182,7 +183,7 @@ class EdgeExpand {
       if (state.direction_ == Direction::In ||
           state.direction_ == Direction::Both) {
         auto tmp_nbr_list_array = state.graph_.GetOtherVertices(
-            src_label, dst_label, state.edge_label_, cur_vids, "In",
+            src_label, dst_label, state.edge_label_, cur_vids, Direction::In,
             state.limit_);
 
         CHECK(tmp_nbr_list_array.size() == active_inds.size());
@@ -196,7 +197,7 @@ class EdgeExpand {
       if (state.direction_ == Direction::Out ||
           state.direction_ == Direction::Both) {
         auto tmp_nbr_list_array = state.graph_.GetOtherVertices(
-            src_label, dst_label, state.edge_label_, cur_vids, "Out",
+            src_label, dst_label, state.edge_label_, cur_vids, Direction::Out,
             state.limit_);
 
         CHECK(tmp_nbr_list_array.size() == active_inds.size());
@@ -284,8 +285,8 @@ class EdgeExpand {
                << ",dst: " << std::to_string(dst_label)
                << ",dire: " << state.direction_;
       auto tmp_nbr_list_array = state.graph_.GetOtherVertices(
-          src_label, dst_label, state.edge_label_, cur_vids,
-          gs::to_string(state.direction_), state.limit_);
+          src_label, dst_label, state.edge_label_, cur_vids, state.direction_,
+          state.limit_);
       // nbr_lists.emplace_back(std::move(nbr_list_array));
 
       CHECK(tmp_nbr_list_array.size() == active_inds.size());
@@ -627,9 +628,9 @@ class EdgeExpand {
                  << ", src label: " << gs::to_string(raw_src_label)
                  << ", dst label: " << gs::to_string(raw_dst_label)
                  << ", direction: " << gs::to_string(direction);
-        auto vid_and_offset1 = graph.GetOtherVerticesV2(
-            raw_src_label, raw_dst_label, edge_label,
-            cur_vertex_set.GetVertices(), gs::to_string(direction), INT_MAX);
+        auto vid_and_offset1 = get_other_vertices_in_batch(
+            graph, raw_src_label, raw_dst_label, edge_label,
+            cur_vertex_set.GetVertices(), direction);
         VLOG(10) << ", vid_and_offset1 size: " << vid_and_offset1.first.size()
                  << ", vid_and_offset1 offset size: "
                  << vid_and_offset1.second.size();
@@ -649,7 +650,7 @@ class EdgeExpand {
           auto [vids, active_inds] = cur_vertex_set.GetVertices(j);
           auto tmp_nbr_list_array =
               graph.GetOtherVertices(raw_src_label, raw_dst_label, edge_label,
-                                     vids, gs::to_string(direction), INT_MAX);
+                                     vids, direction, INT_MAX);
           for (size_t k = 0; k < active_inds.size(); ++k) {
             auto dst_ind = active_inds[k];
             CHECK(nbr_list_array.get(dst_ind).size() == 0);
@@ -887,12 +888,11 @@ class EdgeExpand {
     for (size_t i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
       // return a handler to get edges
-      auto sub_graph_vec = graph.GetSubGraph(
-          edge_labels[i][0], edge_labels[i][1], edge_labels[i][2],
-          gs::to_string(direction), prop_names_vec[i]);
-      for (auto sub_graph : sub_graph_vec) {
-        sub_graphs.emplace_back(sub_graph);
-      }
+      auto sub_graph = graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
+                                         edge_labels[i][2], direction);
+      // for (auto sub_graph : sub_graph_vec) {
+      sub_graphs.emplace_back(sub_graph);
+      // }
     }
 
     std::vector<std::array<label_t, 3>> label_triplets;
@@ -1003,12 +1003,9 @@ class EdgeExpand {
     for (size_t i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
       // return a handler to get edges
-      auto sub_graph_vec = graph.GetSubGraph(
-          edge_labels[i][0], edge_labels[i][1], edge_labels[i][2],
-          gs::to_string(direction), prop_names_vec[i]);
-      for (auto sub_graph : sub_graph_vec) {
-        sub_graphs.emplace_back(sub_graph);
-      }
+      auto sub_graph = graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
+                                         edge_labels[i][2], direction);
+      sub_graphs.emplace_back(sub_graph);
     }
 
     std::vector<std::array<label_t, 3>> label_triplets;
@@ -1156,27 +1153,6 @@ class EdgeExpand {
     return std::make_pair(std::move(new_set), std::move(old_offset));
   }
 
-  // for input vertex set with only one label.
-  template <typename... T, typename... SET_T, typename EDGE_FILTER_T,
-            typename std::enable_if<sizeof...(T) == 0>::type* = nullptr,
-            typename RES_T = std::pair<AdjEdgeSet<GRAPH_INTERFACE, vertex_id_t,
-                                                  label_id_t, grape::EmptyType>,
-                                       std::vector<offset_t>>>
-  static RES_T EdgeExpandE(
-      const GRAPH_INTERFACE& graph,
-      RowVertexSet<label_id_t, vertex_id_t, SET_T...>& cur_vertex_set,
-      Direction direction, label_id_t edge_label, label_id_t other_label,
-      EDGE_FILTER_T& edge_filter, PropNameArray<T...>& props,
-      size_t limit = INT_MAX) {
-    auto state =
-        EdgeExpandEState<GRAPH_INTERFACE,
-                         RowVertexSet<label_id_t, vertex_id_t, SET_T...>,
-                         EDGE_FILTER_T>(graph, cur_vertex_set, direction,
-                                        edge_label, other_label, props,
-                                        edge_filter, limit);
-
-    return EdgeExpandENoPropImpl(state);
-  }
   // EdgeExpandE when input vertex are single label. and get multiple props
   // Currently only support one edge property
   template <typename T, typename... SET_T, typename EDGE_FILTER_T,
@@ -1318,8 +1294,7 @@ class EdgeExpand {
              << ",direction: " << state.direction_;
     auto nbr_list_array = state.graph_.GetOtherVertices(
         src_label, dst_label, state.edge_label_,
-        state.cur_vertex_set_.GetVertices(), gs::to_string(state.direction_),
-        state.limit_);
+        state.cur_vertex_set_.GetVertices(), state.direction_, state.limit_);
     std::vector<vertex_id_t> vids;
     std::vector<offset_t> offset;
     offset.reserve(state.cur_vertex_set_.Size() + 1);
@@ -1339,15 +1314,14 @@ class EdgeExpand {
     return pair;
   }
 
-  template <typename VERTEX_SET_T, typename... EDATA_T>
+  template <typename VERTEX_SET_T, typename EDATA_T>
   static void fetch_adj_list_array_from_graph(
       const GRAPH_INTERFACE& graph, const VERTEX_SET_T& vertex_set,
       Direction direction, label_id_t edge_label, label_id_t other_label,
-      PropNameArray<EDATA_T...>& prop_names, int32_t limit,
-      typename GRAPH_INTERFACE::template adj_list_array_t<EDATA_T...>&
+      PropNameArray<EDATA_T>& prop_names, int32_t limit,
+      typename GRAPH_INTERFACE::template adj_list_array_t<EDATA_T>&
           res_adj_list_arrays) {
     auto num_labels = vertex_set.GetLabels().size();
-    auto direction_str = gs::to_string(direction);
     label_id_t src_label, dst_label;
     for (size_t i = 0; i < num_labels; ++i) {
       if (direction == Direction::In) {
@@ -1371,9 +1345,8 @@ class EdgeExpand {
       std::vector<vertex_id_t> cur_vids;
       std::vector<int32_t> cur_active_inds;
       std::tie(cur_vids, cur_active_inds) = vertex_set.GetVertices(i);
-      auto tmp = graph.template GetEdges<EDATA_T...>(
-          src_label, dst_label, edge_label, cur_vids, direction_str, limit,
-          prop_names);
+      auto tmp = graph.template GetEdges<EDATA_T>(
+          src_label, dst_label, edge_label, cur_vids, direction, limit);
       CHECK(tmp.size() == cur_active_inds.size());
       if (i == 0) {
         // first time, update flag field.
@@ -1576,8 +1549,7 @@ class EdgeExpand {
         state.direction_ == Direction::Both) {
       auto adj_list_array = state.graph_.template GetEdges<T>(
           src_label, dst_label, state.edge_label_,
-          state.cur_vertex_set_.GetVertices(), gs::to_string(Direction::Out),
-          state.limit_, prop_names);
+          state.cur_vertex_set_.GetVertices(), Direction::Out, state.limit_);
       adj_list_array_vec.emplace_back(
           std::make_pair(std::move(adj_list_array), Direction::Out));
     }
@@ -1585,8 +1557,7 @@ class EdgeExpand {
         state.direction_ == Direction::Both) {
       auto adj_list_array = state.graph_.template GetEdges<T>(
           src_label, dst_label, state.edge_label_,
-          state.cur_vertex_set_.GetVertices(), gs::to_string(Direction::In),
-          state.limit_, prop_names);
+          state.cur_vertex_set_.GetVertices(), Direction::In, state.limit_);
       adj_list_array_vec.emplace_back(
           std::make_pair(std::move(adj_list_array), Direction::In));
     }
@@ -1646,51 +1617,6 @@ class EdgeExpand {
     return filter(std::get<Is>(props)...);
   }
 
-  // EdgeExpandE for single label input vertex set.
-  template <typename... SET_T, typename EDGE_FILTER_T>
-  static auto EdgeExpandENoPropImpl(
-      EdgeExpandEState<GRAPH_INTERFACE,
-                       RowVertexSet<label_id_t, vertex_id_t, SET_T...>,
-                       EDGE_FILTER_T>& state) {
-    // no prop.
-    auto prop_names = state.prop_names_;
-    label_id_t src_label, dst_label;
-    if (state.direction_ == Direction::In) {
-      src_label = state.other_label_;
-      dst_label = state.cur_vertex_set_.GetLabel();
-    } else {
-      src_label = state.cur_vertex_set_.GetLabel();
-      dst_label = state.other_label_;
-    }
-    LOG(INFO) << "[EdgeExpandENoPropImpl] for single label vertex set. "
-              << (int) src_label << " " << (int) dst_label;
-    auto adj_list_array = state.graph_.template GetEdges<>(
-        src_label, dst_label, state.edge_label_,
-        state.cur_vertex_set_.GetVertices(), gs::to_string(state.direction_),
-        state.limit_, prop_names);
-    LOG(INFO) << "after get edges";
-    std::vector<offset_t> offset;
-    offset.reserve(state.cur_vertex_set_.Size() + 1);
-    size_t size = 0;
-    size_t adj_list_ind = 0;
-    offset.emplace_back(size);
-    // Construct offset from adj_list.
-    for (auto iter : state.cur_vertex_set_) {
-      auto edges = adj_list_array.get(adj_list_ind);
-      size += edges.size();  // number of edges in this AdjList
-      offset.emplace_back(size);
-      adj_list_ind++;
-    }
-    LOG(INFO) << "total size of edges: " << size;
-    auto copied_vids(state.cur_vertex_set_.GetVertices());
-    auto edge_set =
-        AdjEdgeSet<GRAPH_INTERFACE, vertex_id_t, label_id_t, grape::EmptyType>(
-            std::move(copied_vids), std::move(adj_list_array),
-            state.edge_label_, state.cur_vertex_set_.GetLabel(),
-            state.other_label_, array_to_vec(prop_names), state.direction_);
-    return std::make_pair(std::move(edge_set), std::move(offset));
-  }
-
   // only support one property
   template <typename LabelT, typename VERTEX_SET_T, typename EDGE_FILTER_T,
             typename T>
@@ -1711,8 +1637,7 @@ class EdgeExpand {
     std::array<std::string, 1> prop_names = {selector.prop_name_};
     auto adj_list_array = state.graph_.template GetEdges<T>(
         src_label, dst_label, state.edge_label_,
-        state.cur_vertex_set_.GetVertices(), gs::to_string(state.direction_),
-        state.limit_, prop_names);
+        state.cur_vertex_set_.GetVertices(), state.direction_, state.limit_);
     return adj_list_array;
   }
 
@@ -1726,9 +1651,8 @@ class EdgeExpand {
     CHECK(direction != Direction::Both);
     std::vector<vertex_id_t> dst_vertices;
     std::vector<size_t> tmp_offset;
-    std::tie(dst_vertices, tmp_offset) =
-        graph.GetOtherVerticesV2(src_label_id, dst_label_id, edge_label_id,
-                                 src_v, gs::to_string(direction), INT_MAX);
+    std::tie(dst_vertices, tmp_offset) = get_other_vertices_in_batch(
+        graph, src_label_id, dst_label_id, edge_label_id, src_v, direction);
     // put these vertices into tmp_nbr_vertices
     label_id_t label_id;
     if (direction == Direction::Out) {

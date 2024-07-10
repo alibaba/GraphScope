@@ -25,20 +25,22 @@
 #include "grape/utils/bitset.h"
 
 #include "flex/engines/hqps_db/core/null_record.h"
+#include "flex/engines/hqps_db/core/utils/graph_utils.h"
 #include "flex/engines/hqps_db/core/utils/hqps_type.h"
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 
 namespace gs {
 
 // return the old labels, that are active in filter.
-template <typename VID_T, typename LabelT, typename EXPR, typename PROP_GETTER,
-          size_t filter_num_labels>
+template <typename VID_T, typename LabelT, typename EXPR,
+          typename... PropGetterT, size_t filter_num_labels>
 auto general_project_vertices_impl(
     const std::vector<VID_T>& old_vec,
     const std::vector<grape::Bitset>& old_bit_sets,
     const std::vector<LabelT>& old_labels,
     const std::array<LabelT, filter_num_labels>& filter_labels,
-    const EXPR& expr, const std::vector<PROP_GETTER>& prop_getters) {
+    const EXPR& expr,
+    const std::vector<std::tuple<PropGetterT...>>& prop_getters) {
   std::vector<VID_T> res_vec;
   CHECK(old_bit_sets.size() == old_labels.size());
   CHECK(prop_getters.size() == old_labels.size());
@@ -79,14 +81,15 @@ auto general_project_vertices_impl(
       ++j;
     }
     CHECK(j < old_num_labels) << "no label is active at ind: " << i;
-    if constexpr (PROP_GETTER::prop_num == 0) {
+    if constexpr (sizeof...(PropGetterT) == 0) {
       if (expr()) {
         res_bitsets[j].set_bit(res_vec.size());
         res_vec.push_back(old_vec[i]);
       }
     } else {
       if (label_ind_set.find(j) != label_ind_set.end()) {
-        if (std::apply(expr, prop_getters[j].get_view(old_vec[i]))) {
+        if (std::apply(expr, get_view_from_prop_getters(prop_getters[j],
+                                                        old_vec[i]))) {
           res_bitsets[j].set_bit(res_vec.size());
           res_vec.push_back(old_vec[i]);
         }
@@ -121,14 +124,15 @@ auto general_project_vertices_impl(
 }
 
 template <typename VID_T, typename DATA_TUPLE, typename LabelT, typename EXPR,
-          typename PROP_GETTER, size_t filter_num_labels>
+          typename... PropGetterT, size_t filter_num_labels>
 auto general_project_vertices_impl(
     const std::vector<VID_T>& old_vec,
     const std::vector<DATA_TUPLE>& old_data_vec,
     const std::vector<grape::Bitset>& old_bit_sets,
     const std::vector<LabelT>& old_labels,
     const std::array<LabelT, filter_num_labels>& filter_labels,
-    const EXPR& expr, const std::vector<PROP_GETTER>& prop_getters) {
+    const EXPR& expr,
+    const std::vector<std::tuple<PropGetterT...>>& prop_getters) {
   std::vector<VID_T> res_vec;
   std::vector<DATA_TUPLE> res_data_vec;
   CHECK(old_bit_sets.size() == old_labels.size());
@@ -163,8 +167,7 @@ auto general_project_vertices_impl(
   for (size_t i = 0; i < old_vec.size(); ++i) {
     for (auto label_id : select_label_id) {
       if (old_bit_sets[label_id].get_bit(i)) {
-        auto eles = prop_getters[label_id].get_view(old_vec[i]);
-        if constexpr (PROP_GETTER::prop_num == 0) {
+        if constexpr (sizeof...(PropGetterT) == 0) {
           if (expr()) {
             res_bitsets[label_id].set_bit(res_vec.size());
             res_vec.push_back(old_vec[i]);
@@ -172,6 +175,8 @@ auto general_project_vertices_impl(
             break;
           }
         } else {
+          auto eles =
+              get_view_from_prop_getters(prop_getters[label_id], old_vec[i]);
           if (std::apply(expr, eles)) {
             res_bitsets[label_id].set_bit(res_vec.size());
             res_vec.push_back(old_vec[i]);
@@ -1689,20 +1694,34 @@ std::vector<std::vector<int32_t>> bitsets_to_vids_inds(
 }
 
 template <typename... T, typename GRAPH_INTERFACE, typename LabelT,
-          typename... SET_T>
-static auto get_property_tuple_general(
+          typename... SET_T, size_t... Is>
+static auto get_property_tuple_general_impl(
     const GRAPH_INTERFACE& graph,
     const GeneralVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                            SET_T...>& general_set,
-    const std::array<std::string, sizeof...(T)>& prop_names) {
+    const std::tuple<PropertySelector<T>...>& selectors,
+    std::index_sequence<Is...>) {
   auto label_vec = general_set.GetLabels();
-  VLOG(10) << "general set label vec: " << gs::to_string(label_vec)
-           << ", vid size: " << general_set.Size();
-  auto vids_inds = bitsets_to_vids_inds(general_set.GetBitsets());
-
-  auto data_tuples = graph.template GetVertexPropsFromVid<T...>(
-      general_set.GetVertices(), label_vec, vids_inds, prop_names);
-
+  const auto& vids = general_set.GetVertices();
+  const auto& bitset = general_set.GetBitsets();
+  using prop_getter_tuple =
+      std::tuple<typename GRAPH_INTERFACE::prop_getter_t<T>...>;
+  std::vector<prop_getter_tuple> prop_getters;
+  for (size_t i = 0; i < label_vec.size(); ++i) {
+    prop_getters.emplace_back(get_prop_getters_from_selectors_single_label(
+        graph, label_vec[i], selectors));
+  }
+  std::vector<std::tuple<T...>> data_tuples;
+  data_tuples.reserve(vids.size());
+  for (size_t i = 0; i < vids.size(); ++i) {
+    for (size_t j = 0; j < label_vec.size(); ++j) {
+      if (bitset[j].get_bit(i)) {
+        data_tuples.emplace_back(
+            get_view_from_prop_getters(prop_getters[j], vids[i]));
+        break;
+      }
+    }
+  }
   return data_tuples;
 }
 
@@ -1712,13 +1731,9 @@ static auto get_property_tuple_general(
     const GRAPH_INTERFACE& graph,
     const GeneralVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                            SET_T...>& general_set,
-    const std::tuple<NamedProperty<T>...>& named_prop) {
-  std::array<std::string, sizeof...(T)> prop_names;
-  int ind = 0;
-  std::apply([&prop_names,
-              &ind](auto&&... args) { ((prop_names[ind++] = args.name), ...); },
-             named_prop);
-  return get_property_tuple_general<T...>(graph, general_set, prop_names);
+    const std::tuple<PropertySelector<T>...>& selectors) {
+  return get_property_tuple_general_impl(
+      graph, general_set, selectors, std::make_index_sequence<sizeof...(T)>());
 }
 
 }  // namespace gs

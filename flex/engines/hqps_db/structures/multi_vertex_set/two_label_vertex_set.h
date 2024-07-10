@@ -1446,38 +1446,41 @@ two_label_bitset_to_vids_indsV2(const grape::Bitset& bitset,
   return std::make_pair(std::move(res_vids), std::move(res));
 }
 
-template <typename... T, typename GRAPH_INTERFACE, typename LabelT,
-          typename... VERTEX_SET_PROP_T>
-static auto get_property_tuple_two_label(
+template <typename GRAPH_INTERFACE, typename LabelT,
+          typename... VERTEX_SET_PROP_T, typename... T>
+static auto get_property_tuple_two_label_impl(
     const GRAPH_INTERFACE& graph,
-    const TwoLabelVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
-                            VERTEX_SET_PROP_T...>& general_set,
-    const std::array<std::string, sizeof...(T)>& prop_names) {
-  auto& label_array = general_set.GetLabels();
-
-  // Get data for multilabel vertices, mixed
-  // double t1 = -grape::GetCurrentTime();
-  auto data_tuples = graph.template GetVertexPropsFromVidV2<T...>(
-      general_set.GetVertices(), label_array, general_set.GetBitset(),
-      prop_names);
-
-  return data_tuples;
+    const TwoLabelVertexSetImpl<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
+                                VERTEX_SET_PROP_T...>& set,
+    const std::tuple<PropertySelector<T>...>& selectors) {
+  auto labels = set.GetLabels();
+  const auto& bitset = set.GetBitset();
+  const auto& vids = set.GetVertices();
+  CHECK(labels.size() == 2) << "Two label set should have two labels";
+  auto prop_getters0 =
+      get_prop_getters_from_selectors_single_label(graph, labels[0], selectors);
+  auto prop_getters1 =
+      get_prop_getters_from_selectors_single_label(graph, labels[1], selectors);
+  std::vector<std::tuple<T...>> res;
+  res.reserve(set.Size());
+  for (size_t i = 0; i < vids.size(); ++i) {
+    if (bitset.get_bit(i)) {
+      res.emplace_back(get_view_from_prop_getters(prop_getters0, vids[i]));
+    } else {
+      res.emplace_back(get_view_from_prop_getters(prop_getters1, vids[i]));
+    }
+  }
+  return res;
 }
 
 template <typename GRAPH_INTERFACE, typename LabelT,
-          typename... VERTEX_SET_PROP_T, typename... NamedProp>
+          typename... VERTEX_SET_PROP_T, typename... T>
 static auto get_property_tuple_two_label(
     const GRAPH_INTERFACE& graph,
     const TwoLabelVertexSetImpl<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
-                                VERTEX_SET_PROP_T...>& general_set,
-    const std::tuple<NamedProp...>& named_prop) {
-  std::array<std::string, sizeof...(NamedProp)> prop_names;
-  size_t ind = 0;
-  std::apply([&prop_names,
-              &ind](auto&... args) { ((prop_names[ind++] = args.name), ...); },
-             named_prop);
-  return get_property_tuple_two_label<typename NamedProp::prop_t...>(
-      graph, general_set, prop_names);
+                                VERTEX_SET_PROP_T...>& set,
+    const std::tuple<PropertySelector<T>...>& selector) {
+  return get_property_tuple_two_label_impl(graph, set, selector);
 }
 
 }  // namespace gs

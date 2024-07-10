@@ -23,7 +23,7 @@
 #include "flex/engines/hqps_db/core/params.h"
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/engines/hqps_db/core/utils/props.h"
-#include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "flex/engines/hqps_db/database/mutable_csr_interface_v2.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/flat_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/general_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
@@ -114,9 +114,8 @@ void template_set_value(common::Value* value, T v) {
 }
 
 template <typename T,
-          typename std::enable_if<
-              (std::is_same_v<T, uint64_t>) &&
-              (!std::is_same_v<uint64_t, unsigned long>)>::type* = nullptr>
+          typename std::enable_if<(std::is_same_v<T, uint64_t>) &&(
+              !std::is_same_v<uint64_t, unsigned long>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
   value->set_i64(v);
 }
@@ -432,14 +431,15 @@ class SinkOp {
     prop_names[0] = schema.get_vertex_property_names(labels[0]);
     prop_names[1] = schema.get_vertex_property_names(labels[1]);
     // get all properties
-    std::array<std::vector<std::shared_ptr<RefColumnBase>>, 2> column_ptrs;
+    using prop_getter_t = typename GRAPH_INTERFACE::untyped_prop_getter_t;
+    std::array<std::vector<prop_getter_t>, 2> prop_getters;
     for (size_t i = 0; i < prop_names[0].size(); ++i) {
-      column_ptrs[0].emplace_back(
-          graph.GetRefColumnBase(labels[0], prop_names[0][i]));
+      prop_getters[0].emplace_back(
+          graph.GetUntypedVertexPropertyGetter(labels[0], prop_names[0][i]));
     }
     for (size_t i = 0; i < prop_names[1].size(); ++i) {
-      column_ptrs[1].emplace_back(
-          graph.GetRefColumnBase(labels[1], prop_names[1][i]));
+      prop_getters[1].emplace_back(
+          graph.GetUntypedVertexPropertyGetter(labels[1], prop_names[1][i]));
     }
 
     label_t label;
@@ -460,14 +460,14 @@ class SinkOp {
         vertex->mutable_label()->set_id(label);
         vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         // set properties.
-        auto columns = column_ptrs[label];
+        auto columns = prop_getters[label];
         for (size_t j = 0; j < columns.size(); ++j) {
           auto& column_ptr = columns[j];
           // Only set non-none properties.
-          if (column_ptr) {
+          if (column_ptr.IsValid()) {
             auto new_prop = vertex->add_properties();
             new_prop->mutable_key()->set_name(prop_names[label][j]);
-            set_any_to_common_value(column_ptr->get(vids[i]),
+            set_any_to_common_value(column_ptr.Get(vids[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -500,14 +500,14 @@ class SinkOp {
           vertex->set_id(encode_unique_vertex_id(label, vids[i]));
           vertex->mutable_label()->set_id(label);
           // set properties.
-          auto columns = column_ptrs[label];
+          auto columns = prop_getters[label];
           for (size_t j = 0; j < columns.size(); ++j) {
             auto& column_ptr = columns[j];
             // Only set non-none properties.
-            if (column_ptr) {
+            if (column_ptr.IsValid()) {
               auto new_prop = vertex->add_properties();
               new_prop->mutable_key()->set_name(prop_names[label][j]);
-              set_any_to_common_value(column_ptr->get(vids[i]),
+              set_any_to_common_value(column_ptr.Get(vids[i]),
                                       new_prop->mutable_value());
             }
           }
@@ -528,9 +528,12 @@ class SinkOp {
     auto& schema = graph.schema();
     auto prop_names = schema.get_vertex_property_names(label);
     // get all properties
-    std::vector<std::shared_ptr<RefColumnBase>> column_ptrs;
+    using untyped_prop_getter_t =
+        typename GRAPH_INTERFACE::untyped_prop_getter_t;
+    std::vector<untyped_prop_getter_t> column_ptrs;
     for (size_t i = 0; i < prop_names.size(); ++i) {
-      column_ptrs.emplace_back(graph.GetRefColumnBase(label, prop_names[i]));
+      column_ptrs.emplace_back(
+          graph.GetUntypedVertexPropertyGetter(label, prop_names[i]));
     }
     VLOG(10) << "PropNames: " << prop_names.size();
     if (repeat_offsets.empty()) {
@@ -547,10 +550,10 @@ class SinkOp {
         for (size_t j = 0; j < column_ptrs.size(); ++j) {
           auto& column_ptr = column_ptrs[j];
           // Only set non-none properties.
-          if (column_ptr) {
+          if (column_ptr.IsValid()) {
             auto new_prop = vertex->add_properties();
             new_prop->mutable_key()->set_name(prop_names[j]);
-            set_any_to_common_value(column_ptr->get(vids[i]),
+            set_any_to_common_value(column_ptr.Get(vids[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -579,10 +582,10 @@ class SinkOp {
           for (size_t j = 0; j < column_ptrs.size(); ++j) {
             auto& column_ptr = column_ptrs[j];
             // Only set non-none properties.
-            if (column_ptr) {
+            if (column_ptr.IsValid()) {
               auto new_prop = vertex->add_properties();
               new_prop->mutable_key()->set_name(prop_names[j]);
-              set_any_to_common_value(column_ptr->get(vids[i]),
+              set_any_to_common_value(column_ptr.Get(vids[i]),
                                       new_prop->mutable_value());
             }
           }
@@ -867,14 +870,14 @@ class SinkOp {
     for (size_t i = 0; i < labels_vec.size(); ++i) {
       prop_names.emplace_back(schema.get_vertex_property_names(labels_vec[i]));
     }
+    using prop_getter_t = typename GRAPH_INTERFACE::untyped_prop_getter_t;
     // get all properties
-    std::vector<std::vector<std::shared_ptr<RefColumnBase>>> column_ptrs(
-        labels_vec.size());
+    std::vector<std::vector<prop_getter_t>> column_ptrs(labels_vec.size());
     if (labels_vec.size() > 0) {
       for (size_t i = 0; i < labels_vec.size(); ++i) {
         for (size_t j = 0; j < prop_names[i].size(); ++j) {
-          column_ptrs[i].emplace_back(
-              graph.GetRefColumnBase(labels_vec[i], prop_names[i][j]));
+          column_ptrs[i].emplace_back(graph.GetUntypedVertexPropertyGetter(
+              labels_vec[i], prop_names[i][j]));
         }
       }
     }
@@ -916,10 +919,10 @@ class SinkOp {
         for (size_t j = 0; j < cur_column_ptrs.size(); ++j) {
           auto& column_ptr = cur_column_ptrs[j];
           // Only set non-none properties.
-          if (column_ptr) {
+          if (column_ptr.IsValid()) {
             auto new_prop = mutable_vertex->add_properties();
             new_prop->mutable_key()->set_name(prop_names[label_vec_ind][j]);
-            set_any_to_common_value(column_ptr->get(vertices_vec[i]),
+            set_any_to_common_value(column_ptr.Get(vertices_vec[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -954,10 +957,10 @@ class SinkOp {
           for (size_t j = 0; j < cur_column_ptrs.size(); ++j) {
             auto& column_ptr = cur_column_ptrs[j];
             // Only set non-none properties.
-            if (column_ptr) {
+            if (column_ptr.IsValid()) {
               auto new_prop = mutable_vertex->add_properties();
               new_prop->mutable_key()->set_name(prop_names[label_vec_ind][j]);
-              set_any_to_common_value(column_ptr->get(vertices_vec[i]),
+              set_any_to_common_value(column_ptr.Get(vertices_vec[i]),
                                       new_prop->mutable_value());
             }
           }

@@ -19,6 +19,7 @@ limitations under the License.
 #include <string>
 
 #include "flex/engines/hqps_db/core/params.h"
+#include "flex/engines/hqps_db/core/utils/graph_utils.h"
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps_db/structures/path.h"
@@ -186,8 +187,8 @@ class PathExpand {
         graph, cur_label, vertex_set.GetVertices(), range, edge_expand_opt);
 
     auto& vids_vec = std::get<0>(tuple);
-    auto tuple_vec = graph.template GetVertexPropsFromVid<T...>(
-        cur_label, vids_vec, get_v_opt.props_);
+    auto tuple_vec = get_vertex_props_from_vids<GRAPH_INTERFACE, T...>(
+        graph, cur_label, vids_vec, get_v_opt.props_);
     CHECK(tuple_vec.size() == vids_vec.size());
     // prepend dist info.
     auto new_tuple_vec =
@@ -488,9 +489,9 @@ class PathExpand {
     double visit_array_time = 0.0;
     for (size_t cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
       double t0 = -grape::GetCurrentTime();
-      auto pair = graph.GetOtherVerticesV2(
-          real_src_label, dst_label, edge_expand_opt.edge_label_,
-          gids[cur_hop - 1], gs::to_string(edge_expand_opt.dir_), INT_MAX);
+      auto pair = get_other_vertices_in_batch(
+          graph, real_src_label, dst_label, edge_expand_opt.edge_label_,
+          gids[cur_hop - 1], edge_expand_opt.dir_);
 
       gids[cur_hop].swap(pair.first);
       CHECK(gids[cur_hop - 1].size() + 1 == pair.second.size());
@@ -705,9 +706,9 @@ class PathExpand {
       auto& prev_other_vertices = other_vertices[i - 1];
 
       std::tie(cur_other_vertices, cur_other_offsets) =
-          graph.GetOtherVerticesV2(src_label, edge_opt.other_label_,
-                                   edge_opt.edge_label_, prev_other_vertices,
-                                   gs::to_string(edge_opt.dir_), INT_MAX);
+          get_other_vertices_in_batch(graph, src_label, edge_opt.other_label_,
+                                      edge_opt.edge_label_, prev_other_vertices,
+                                      edge_opt.dir_);
       VLOG(10) << "PathExpand at distance: " << i << ", got vertices: "
                << "size : " << cur_other_vertices.size();
     }
@@ -865,8 +866,7 @@ class PathExpand {
             }
             auto cur_nbr_list = graph.GetOtherVertices(
                 real_src_label, real_dst_label, cur_edge_label,
-                other_vertices_for_cur_label, gs::to_string(direction),
-                INT_MAX);
+                other_vertices_for_cur_label, direction, INT_MAX);
             {
               size_t tmp_sum = 0;
               for (size_t i = 0; i < cur_nbr_list.size(); ++i) {

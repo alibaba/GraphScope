@@ -68,14 +68,14 @@ class SubGraph {
   virtual std::vector<std::string> GetPropNames() const;
 };
 
-template <typename T>
-class SinglePropGetter {
- public:
-  using value_type = T;
-  static constexpr size_t prop_num = 1;
+// template <typename T>
+// class SinglePropGetter {
+//  public:
+//   using value_type = T;
+//   static constexpr size_t prop_num = 1;
 
-  virtual value_type get_view(vid_t vid) const = 0;
-};
+//   virtual value_type get_view(vid_t vid) const = 0;
+// };
 
 template <typename... T>
 class MultiPropGetter {
@@ -317,29 +317,29 @@ class SubGraph {
   Direction dir_;
 };
 
-template <typename T>
-class SinglePropGetter {
- public:
-  using value_type = T;
-  static constexpr size_t prop_num = 1;
-  SinglePropGetter() {}
-  SinglePropGetter(std::shared_ptr<TypedRefColumn<T>> c) : column(c) {}
+// template <typename T>
+// class SinglePropGetter {
+//  public:
+//   using value_type = T;
+//   static constexpr size_t prop_num = 1;
+//   SinglePropGetter() {}
+//   SinglePropGetter(std::shared_ptr<TypedRefColumn<T>> c) : column(c) {}
 
-  inline value_type get_view(vid_t vid) const {
-    if (vid == NONE || column == nullptr) {
-      return NullRecordCreator<value_type>::GetNull();
-    }
-    return column->get_view(vid);
-  }
+//   inline value_type get_view(vid_t vid) const {
+//     if (vid == NONE || column == nullptr) {
+//       return NullRecordCreator<value_type>::GetNull();
+//     }
+//     return column->get_view(vid);
+//   }
 
-  inline SinglePropGetter<T>& operator=(const SinglePropGetter<T>& d) {
-    column = d.column;
-    return *this;
-  }
+//   inline SinglePropGetter<T>& operator=(const SinglePropGetter<T>& d) {
+//     column = d.column;
+//     return *this;
+//   }
 
- private:
-  std::shared_ptr<TypedRefColumn<T>> column;
-};
+//  private:
+//   std::shared_ptr<TypedRefColumn<T>> column;
+// };
 
 // Property Getter hold the handle of the property column.
 

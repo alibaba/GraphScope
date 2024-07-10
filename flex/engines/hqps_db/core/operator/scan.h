@@ -45,7 +45,7 @@ class Scan {
  public:
   using label_id_t = typename GRAPH_INTERFACE::label_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
-  using gid_t = typename GRAPH_INTERFACE::gid_t;
+  using gid_t = uint64_t;
   using vertex_set_t = DefaultRowVertexSet<label_id_t, vertex_id_t>;
   using two_label_set_t =
       TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>;
@@ -374,19 +374,32 @@ class Scan {
       const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
       const FUNC& func, const std::tuple<SELECTOR...>& selectors) {
     std::vector<vertex_id_t> gids;
-    auto filter =
-        [&](vertex_id_t v,
-            const std::tuple<typename SELECTOR::prop_t...>& real_props) {
-          if (apply_on_tuple(func, real_props)) {
-            gids.push_back(v);
-          }
-        };
     // if FUNC has filter_null constexpr member, we can use it to filter
     // vertices
     if constexpr (FilterNull<FUNC>::value) {
-      graph.template ScanVertices(v_label_id, selectors, filter, true);
+      auto filter =
+          [&](vertex_id_t v,
+              const std::tuple<typename SELECTOR::prop_t...>& real_props) {
+            if (HasNull(real_props)) {
+              VLOG(10) << "When scanning for label "
+                       << std::to_string(v_label_id)
+                       << ", there is null column, using default NULL value";
+              return;
+            }
+            if (apply_on_tuple(func, real_props)) {
+              gids.push_back(v);
+            }
+          };
+      graph.template ScanVertices(v_label_id, selectors, filter);
     } else {
-      graph.template ScanVertices(v_label_id, selectors, filter, false);
+      auto filter =
+          [&](vertex_id_t v,
+              const std::tuple<typename SELECTOR::prop_t...>& real_props) {
+            if (apply_on_tuple(func, real_props)) {
+              gids.push_back(v);
+            }
+          };
+      graph.template ScanVertices(v_label_id, selectors, filter);
     }
     return gids;
   }
