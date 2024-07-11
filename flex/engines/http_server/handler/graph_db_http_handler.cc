@@ -111,6 +111,7 @@ graph_db_ic_handler::handle(const seastar::sstring& path,
           });
 }
 
+#ifdef BUILD_HQPS
 ////////////////////////////hqps_ic_handler////////////////////////////
 hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
                                  uint32_t group_inc_step,
@@ -571,6 +572,7 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
             std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
       });
 }
+#endif  // BUILD_HQPS
 
 ///////////////////////////graph_db_http_handler/////////////////////////////
 
@@ -582,10 +584,12 @@ graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
       running_(false),
       actors_running_(true) {
   graph_db_handlers_.resize(shard_num);
+#ifdef BUILD_HQPS
   if (enable_hqps_handlers_) {
     ic_handlers_.resize(shard_num);
     adhoc_query_handlers_.resize(shard_num);
   }
+#endif  // BUILD_HQPS
 }
 
 graph_db_http_handler::~graph_db_http_handler() {
@@ -605,6 +609,7 @@ bool graph_db_http_handler::is_actors_running() const {
 }
 
 seastar::future<> graph_db_http_handler::stop_query_actors() {
+#ifdef BUILD_HQPS
   if (enable_hqps_handlers_.load()) {
     // Only cancel the hqps-related actors
     return ic_handlers_[hiactor::local_shard_id()]
@@ -622,14 +627,19 @@ seastar::future<> graph_db_http_handler::stop_query_actors() {
   } else {
     return seastar::make_ready_future<>();
   }
+#else
+  return seastar::make_ready_future<>();
+#endif  // BUILD_HQPS
 }
 
 void graph_db_http_handler::start_query_actors() {
+#ifdef BUILD_HQPS
   if (enable_hqps_handlers_.load()) {
     ic_handlers_[hiactor::local_shard_id()]->create_actors();
     adhoc_query_handlers_[hiactor::local_shard_id()]->create_actors();
     actors_running_.store(true);
   }
+#endif  // BUILD_HQPS
 }
 
 void graph_db_http_handler::start() {
@@ -667,6 +677,7 @@ seastar::future<> graph_db_http_handler::set_routes() {
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/query"), graph_db_handler);
 
+#ifdef BUILD_HQPS
     if (enable_hqps_handlers_.load()) {
       auto ic_handler =
           new hqps_ic_handler(ic_query_group_id, max_group_id, group_inc_step,
@@ -689,6 +700,7 @@ seastar::future<> graph_db_http_handler::set_routes() {
             seastar::httpd::url("/interactive/adhoc_query"),
             adhoc_query_handler);
     }
+#endif  // BUILD_HQPS
 
     return seastar::make_ready_future<>();
   });

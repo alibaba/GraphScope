@@ -41,7 +41,7 @@ class query_dispatcher {
 #else
         shard_concurrency_(shard_concurrency),
         executor_idx_(0)
-#endif
+#endif  // RANDOM_DISPATCHER
   {
   }
 
@@ -52,7 +52,7 @@ class query_dispatcher {
     auto idx = executor_idx_;
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     return idx;
-#endif
+#endif  // RANDOM_DISPATCHER
   }
 
  private:
@@ -87,6 +87,7 @@ class graph_db_ic_handler : public seastar::httpd::handler_base {
   std::vector<executor_ref> executor_refs_;
 };
 
+#ifdef BUILD_HQPS
 class hqps_ic_handler : public seastar::httpd::handler_base {
  public:
   // extra headers
@@ -162,6 +163,7 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
       latency_histogram_;
 #endif
 };
+#endif  // BUILD_HQPS
 
 class graph_db_http_handler {
  public:
@@ -194,8 +196,10 @@ class graph_db_http_handler {
       actors_running_{false};
 
   std::vector<graph_db_ic_handler*> graph_db_handlers_;
+#ifdef BUILD_HQPS
   std::vector<hqps_ic_handler*> ic_handlers_;
   std::vector<hqps_adhoc_query_handler*> adhoc_query_handlers_;
+#endif  // BUILD_HQPS
 };
 
 }  // namespace server
