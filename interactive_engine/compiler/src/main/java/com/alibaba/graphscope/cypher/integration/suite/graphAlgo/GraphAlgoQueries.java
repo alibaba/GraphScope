@@ -184,7 +184,7 @@ public class GraphAlgoQueries {
                         + " category DESC LIMIT 5;";
         List expected =
                 Arrays.asList(
-                        "Record<{category: \"Pattern Matching\",count: 30}>",
+                        "Record<{category: \"Pattern Matching\", count: 30}>",
                         "Record<{category: \"Traversal\", count: 29}>",
                         "Record<{category: \"Centrality\", count: 18}>",
                         "Record<{category: \"Covering\", count: 14}>",
