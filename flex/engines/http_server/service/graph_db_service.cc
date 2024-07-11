@@ -20,7 +20,8 @@ namespace server {
 void GraphDBService::init(uint32_t num_shards, uint16_t http_port,
                           bool dpdk_mode) {
   actor_sys_ = std::make_unique<actor_system>(num_shards, dpdk_mode);
-  http_hdl_ = std::make_unique<graph_db_http_handler>(http_port);
+  http_hdl_ =
+      std::make_unique<graph_db_http_handler>(http_port, num_shards, false);
 }
 
 void GraphDBService::run_and_wait_for_exit() {
