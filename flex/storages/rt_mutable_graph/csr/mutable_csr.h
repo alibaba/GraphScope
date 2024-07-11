@@ -579,7 +579,7 @@ class MutableCsr<std::string_view>
 
   void resize(vid_t vnum) override { csr_.resize(vnum); }
 
-  size_t size() const override { return csr_.edge_num(); }
+  size_t size() const override { return csr_.size(); }
 
   size_t edge_num() const override {
     size_t ret = 0;
@@ -671,7 +671,7 @@ class MutableCsr<RecordView> : public TypedMutableCsrBase<RecordView> {
 
   void resize(vid_t vnum) override { csr_.resize(vnum); }
 
-  size_t size() const override { return csr_.edge_num(); }
+  size_t size() const override { return csr_.size(); }
 
   size_t edge_num() const override {
     size_t ret = 0;
@@ -971,7 +971,9 @@ class SingleMutableCsr<std::string_view>
 
   void resize(vid_t vnum) override { csr_.resize(vnum); }
 
-  size_t size() const override { return csr_.edge_num(); }
+  size_t size() const override { return csr_.size(); }
+
+  size_t edge_num() const override { return csr_.edge_num(); }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<std::string_view>>(
@@ -1073,9 +1075,9 @@ class SingleMutableCsr<RecordView> : public TypedMutableCsrBase<RecordView> {
 
   void resize(vid_t vnum) override { csr_.resize(vnum); }
 
-  size_t size() const override { return csr_.edge_num(); }
+  size_t size() const override { return csr_.size(); }
 
-  size_t edge_num() const override{return csr_.edge_num()}
+  size_t edge_num() const override { return csr_.edge_num(); }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<RecordView>>(get_edges(v));
