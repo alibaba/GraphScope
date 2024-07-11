@@ -66,6 +66,7 @@ class TestDriver(unittest.TestCase):
         self.bulkLoadingUploading()
         self.bulkLoadingFailure()
         self.list_graph()
+        self.get_graph_meta()
         self.runCypherQuery()
         self.runGremlinQuery()
         self.createCypherProcedure()
@@ -251,6 +252,18 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.list_graphs()
         assert resp.is_ok()
         print("list graph: ", resp.get_value())
+    
+    def get_graph_meta(self):
+        resp = self._sess.get_graph_meta(self._graph_id)
+        assert resp.is_ok()
+        print("get graph meta: ", resp.get_value())
+        # Now test calling with a int value, will be automatically converted to string
+        resp = self._sess.get_graph_meta(1)
+        assert resp.is_ok()
+        # Now test calling with a invalid value, will raise exception
+        with self.assertRaises(Exception) as context:
+            resp = self._sess.get_graph_meta([1,2,3])
+
 
     def runCypherQuery(self):
         query = "MATCH (n) RETURN COUNT(n);"
@@ -347,6 +360,14 @@ class TestDriver(unittest.TestCase):
         status_res = self._sess.get_service_status()
         assert status_res.is_ok()
         print("get service status: ", status_res.get_value().status)
+        # If we don't stop service, delete graph will fail
+        delete_res = self._sess.delete_graph(new_graph_id)
+        assert not delete_res.is_ok()
+        delete_failure_msg = delete_res.get_status_message()
+        # expect "Graph is runnning" in the error message
+        print("delete graph failed: ", delete_failure_msg)
+        assert "Graph is running" in delete_failure_msg
+
         # stop
         print("stop service: ")
         stop_res = self._sess.stop_service()
