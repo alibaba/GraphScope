@@ -159,6 +159,9 @@ class Schema {
                       const std::string& dst_label,
                       const std::string& edge_label) const;
 
+  bool has_edge_label(label_t src_label, label_t dst_label,
+                      label_t edge_label) const;
+
   bool valid_edge_property(const std::string& src_label,
                            const std::string& dst_label,
                            const std::string& label) const;
