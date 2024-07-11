@@ -387,10 +387,12 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
                    impl::PropertyTypeImpl::kStringView) {
       // Both varchar and string are treated as string. For String, we use the
       // default max length defined in PropertyType::STRING_DEFAULT_MAX_LENGTH
-      const auto& prop =
-          schema_.get_edge_property(src_label_i, dst_label_i, edge_label_i);
-      auto dual_csr = new DualCsr<std::string_view>(
-          oe_strategy, ie_strategy, prop.additional_type_info.max_length);
+      uint16_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH;
+      if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
+        max_length = property_types[0].additional_type_info.max_length;
+      }
+      auto dual_csr =
+          new DualCsr<std::string_view>(oe_strategy, ie_strategy, max_length);
       basic_fragment_loader_.set_csr(src_label_i, dst_label_i, edge_label_i,
                                      dual_csr);
       if (filenames.empty()) {

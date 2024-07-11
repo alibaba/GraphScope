@@ -269,11 +269,16 @@ static Status parse_vertex_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
+      if (file_path.empty()) {
+        LOG(ERROR) << "file path is empty";
+        return Status(StatusCode::InvalidImportFile,
+                      "The input for vertex [" + label_name + "] is empty");
+      }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
-          LOG(ERROR) << "vertex file - " << file_path << " file not found...";
+          LOG(ERROR) << "vertex file - [" << file_path << "] file not found...";
           return Status(StatusCode::InvalidImportFile,
-                        "vertex file - " + file_path + " file not found...");
+                        "vertex file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
         files[label_id].emplace_back(std::filesystem::canonical(path));
@@ -457,11 +462,16 @@ static Status parse_edge_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
+      if (file_path.empty()) {
+        LOG(ERROR) << "file path is empty";
+        return Status(StatusCode::InvalidImportFile,
+                      "The input for edge [" + edge_label + "] is empty");
+      }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
-          LOG(ERROR) << "edge file - " << file_path << " file not found...";
+          LOG(ERROR) << "edge file - [" << file_path << "] file not found...";
           return Status(StatusCode::InvalidImportFile,
-                        "edge file - " + file_path + " file not found...");
+                        "edge file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
         VLOG(10) << "src " << src_label << " dst " << dst_label << " edge "
