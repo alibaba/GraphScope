@@ -822,8 +822,12 @@ bool LoadingConfig::GetIsEscaping() const {
   return str == "true" || str == "True" || str == "TRUE";
 }
 
-const std::string& LoadingConfig::GetQuotingChar() const {
-  return metadata_.at(reader_options::QUOTE_CHAR);
+char LoadingConfig::GetQuotingChar() const {
+  const auto& quote_char = metadata_.at(reader_options::QUOTE_CHAR);
+  if (quote_char.size() != 1) {
+    throw std::runtime_error("Quoting char should be a single character");
+  }
+  return quote_char[0];
 }
 
 bool LoadingConfig::GetIsQuoting() const {

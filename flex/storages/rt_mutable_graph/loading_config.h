@@ -128,7 +128,7 @@ class LoadingConfig {
   bool GetHasHeaderRow() const;
   const std::string& GetEscapeChar() const;
   bool GetIsEscaping() const;
-  const std::string& GetQuotingChar() const;
+  char GetQuotingChar() const;
   bool GetIsQuoting() const;
   bool GetIsDoubleQuoting() const;
   int32_t GetBatchSize() const;

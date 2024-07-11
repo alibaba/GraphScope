@@ -97,9 +97,11 @@ CSVTableRecordBatchSupplier::GetNextBatch() {
 }
 
 static std::vector<std::string> read_header(const std::string& file_name,
-                                            char delimiter) {
+                                            char delimiter,
+                                            char quote_char = '\0') {
   // read the header line of the file, and split into vector to string by
-  // delimiter
+  // delimiter. If quote_char is not empty, then use it to parse the header
+  // line.
   std::vector<std::string> res_vec;
   std::ifstream file(file_name);
   std::string line;
@@ -110,6 +112,13 @@ static std::vector<std::string> read_header(const std::string& file_name,
       while (std::getline(ss, token, delimiter)) {
         // trim the token
         token.erase(token.find_last_not_of(" \n\r\t") + 1);
+        // trim the quote char at the beginning and end of the token
+        if (quote_char != '\0') {
+          if (token.size() >= 2 && token[0] == quote_char &&
+              token[token.size() - 1] == quote_char) {
+            token = token.substr(1, token.size() - 2);
+          }
+        }
         res_vec.push_back(token);
       }
     } else {
@@ -163,12 +172,10 @@ static void put_block_size_option(const LoadingConfig& loading_config,
 
 static void put_quote_char_option(const LoadingConfig& loading_config,
                                   arrow::csv::ParseOptions& parse_options) {
-  auto quoting_str = loading_config.GetQuotingChar();
-  if (quoting_str.size() != 1) {
-    LOG(FATAL) << "Quote char should be a single character";
-  }
-  parse_options.quote_char = quoting_str[0];
   parse_options.quoting = loading_config.GetIsQuoting();
+  if (parse_options.quoting) {
+    parse_options.quote_char = loading_config.GetQuotingChar();
+  }
   parse_options.double_quote = loading_config.GetIsDoubleQuoting();
 }
 
@@ -188,7 +195,12 @@ static void put_column_names_option(const LoadingConfig& loading_config,
                                     arrow::csv::ReadOptions& read_options) {
   std::vector<std::string> all_column_names;
   if (header_row) {
-    all_column_names = read_header(file_path, delimiter);
+    if (loading_config.GetIsQuoting()) {
+      all_column_names =
+          read_header(file_path, delimiter, loading_config.GetQuotingChar());
+    } else {
+      all_column_names = read_header(file_path, delimiter);
+    }
     // It is possible that there exists duplicate column names in the header,
     // transform them to unique names
     std::unordered_map<std::string, int> name_count;
@@ -215,8 +227,14 @@ static void put_column_names_option(const LoadingConfig& loading_config,
     // just get the number of columns.
     size_t num_cols = 0;
     {
-      auto tmp = read_header(file_path, delimiter);
-      num_cols = tmp.size();
+      if (loading_config.GetIsQuoting()) {
+        auto tmp =
+            read_header(file_path, delimiter, loading_config.GetQuotingChar());
+        num_cols = tmp.size();
+      } else {
+        auto tmp = read_header(file_path, delimiter);
+        num_cols = tmp.size();
+      }
     }
     all_column_names.resize(num_cols);
     for (size_t i = 0; i < all_column_names.size(); ++i) {
