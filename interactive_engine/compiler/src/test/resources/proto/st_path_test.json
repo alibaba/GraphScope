@@ -648,6 +648,9 @@
   }, {
     "opr": {
       "sink": {
+        "tags": [{
+          "tag": 1
+        }],
         "sinkTarget": {
           "sinkDefault": {
           }

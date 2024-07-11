@@ -17,39 +17,39 @@
 package com.alibaba.graphscope.common.ir.type;
 
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.AbstractSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.Pair;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 /**
  * introduce a new map type to allow different keys or value types in a single map,
  * to support {@code MapLiteral} in cypher, i.e. [name: a.name, a: a, age: b.age]
  */
 public class ArbitraryMapType extends AbstractSqlType {
-    private final List<RelDataType> keyTypes;
-    private final List<RelDataType> valueTypes;
+    private final Map<RexNode, KeyValueType> keyValueTypeMap;
 
-    protected ArbitraryMapType(
-            List<RelDataType> keyTypes, List<RelDataType> valueTypes, boolean isNullable) {
+    protected ArbitraryMapType(Map<RexNode, KeyValueType> keyValueTypeMap, boolean isNullable) {
         super(SqlTypeName.MAP, isNullable, null);
-        this.keyTypes = Objects.requireNonNull(keyTypes);
-        this.valueTypes = Objects.requireNonNull(valueTypes);
+        this.keyValueTypeMap = keyValueTypeMap;
         this.computeDigest();
     }
 
     @Override
     protected void generateTypeString(StringBuilder sb, boolean withDetail) {
-        sb.append("(" + keyTypes.toString() + ", " + valueTypes.toString() + ") MAP");
+        sb.append("(" + keyValueTypeMap + ") MAP");
     }
 
-    public List<RelDataType> getKeyTypes() {
-        return Collections.unmodifiableList(this.keyTypes);
+    public Map<RexNode, KeyValueType> getKeyValueTypeMap() {
+        return Collections.unmodifiableMap(this.keyValueTypeMap);
     }
 
-    public List<RelDataType> getValueTypes() {
-        return Collections.unmodifiableList(this.valueTypes);
+    public static class KeyValueType extends Pair<RelDataType, RelDataType> {
+        public KeyValueType(RelDataType left, RelDataType right) {
+            super(left, right);
+        }
     }
 }
