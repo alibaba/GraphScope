@@ -888,11 +888,16 @@ class EdgeExpand {
     for (size_t i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
       // return a handler to get edges
-      auto sub_graph = graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
-                                         edge_labels[i][2], direction);
-      // for (auto sub_graph : sub_graph_vec) {
-      sub_graphs.emplace_back(sub_graph);
-      // }
+      if (direction == Direction::Both || direction == Direction::Out) {
+        sub_graphs.emplace_back(
+            graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
+                              edge_labels[i][2], Direction::Out));
+      }
+      if (direction == Direction::Both || direction == Direction::In) {
+        sub_graphs.emplace_back(
+            graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
+                              edge_labels[i][2], Direction::In));
+      }
     }
 
     std::vector<std::array<label_t, 3>> label_triplets;
@@ -1003,9 +1008,16 @@ class EdgeExpand {
     for (size_t i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
       // return a handler to get edges
-      auto sub_graph = graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
-                                         edge_labels[i][2], direction);
-      sub_graphs.emplace_back(sub_graph);
+      if (direction == Direction::Both || direction == Direction::Out) {
+        sub_graphs.emplace_back(
+            graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
+                              edge_labels[i][2], Direction::Out));
+      }
+      if (direction == Direction::Both || direction == Direction::In) {
+        sub_graphs.emplace_back(
+            graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
+                              edge_labels[i][2], Direction::In));
+      }
     }
 
     std::vector<std::array<label_t, 3>> label_triplets;

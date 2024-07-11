@@ -74,51 +74,15 @@ class UnTypedEdgeSetIter {
 
   inline LabelT GetEdgeLabel() const { return cur_iter_.GetEdgeLabel(); }
 
-  inline VID_T GetSrc() const {
-    auto dir = get_cur_direction();
-    if (dir == Direction::Out) {
-      return src_vertices_[vid_ind_];
-    } else if (dir == Direction::In) {
-      return cur_iter_.GetDstId();
-    } else {
-      LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
-    }
-  }
+  inline VID_T GetSrc() const { return cur_iter_.GetSrcId(); }
 
-  inline VID_T GetDst() const {
-    auto dir = get_cur_direction();
-    if (dir == Direction::Out) {
-      return cur_iter_.GetDstId();
-    } else if (dir == Direction::In) {
-      return src_vertices_[vid_ind_];
-    } else {
-      LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
-    }
-  }
+  inline VID_T GetDst() const { return cur_iter_.GetDstId(); }
 
-  inline label_t GetDstLabel() const {
-    auto dir = get_cur_direction();
-    if (dir == Direction::Out) {
-      return cur_iter_.GetDstLabel();
-    } else if (dir == Direction::In) {
-      return cur_iter_.GetSrcLabel();
-    } else {
-      LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
-    }
-  }
+  inline label_t GetDstLabel() const { return cur_iter_.GetDstLabel(); }
 
-  inline label_t GetSrcLabel() const {
-    auto dir = get_cur_direction();
-    if (dir == Direction::Out) {
-      return cur_iter_.GetSrcLabel();
-    } else if (dir == Direction::In) {
-      return cur_iter_.GetDstLabel();
-    } else {
-      LOG(FATAL) << "Not supported direction " << gs::to_string(dir);
-    }
-  }
+  inline label_t GetSrcLabel() const { return cur_iter_.GetSrcLabel(); }
 
-  inline label_t GetOtherLabel() const { return cur_iter_.GetDstLabel(); }
+  inline label_t GetOtherLabel() const { return cur_iter_.GetOtherLabel(); }
 
   inline VID_T GetOther() const { return cur_iter_.GetDstId(); }
 

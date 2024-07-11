@@ -359,7 +359,7 @@ class MutableCSRInterface {
   mutable_csr_graph_impl::SubGraph GetSubGraph(
       const label_id_t src_label_id, const label_id_t dst_label_id,
       const label_id_t edge_label_id, const Direction& direction) const {
-    const CsrBase *csr = nullptr, *other_csr = nullptr;
+    const CsrBase *csr = nullptr;
     if (direction == Direction::Out) {
       csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                            edge_label_id);
@@ -370,16 +370,18 @@ class MutableCSRInterface {
                                            edge_label_id);
       return mutable_csr_graph_impl::SubGraph{
           csr, {dst_label_id, src_label_id, edge_label_id}, Direction::In};
-    } else if (direction == Direction::Both) {
-      csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
-                                           edge_label_id);
-      other_csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
-                                                 edge_label_id);
-      return mutable_csr_graph_impl::SubGraph{
-          csr,
-          other_csr,
-          {src_label_id, dst_label_id, edge_label_id},
-          Direction::Both};
+      // } else if (direction == Direction::Both) {
+      //   csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
+      //                                        edge_label_id);
+      //   other_csr = db_session_.graph().get_ie_csr(dst_label_id,
+      //   src_label_id,
+      //                                              edge_label_id);
+      //   return mutable_csr_graph_impl::SubGraph{
+      //       csr,
+      //       other_csr,
+      //       {src_label_id, dst_label_id, edge_label_id},
+      //       Direction::Both};
+      // }
     } else {
       throw std::runtime_error("Not implemented - " + gs::to_string(direction));
     }

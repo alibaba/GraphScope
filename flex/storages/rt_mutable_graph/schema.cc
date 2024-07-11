@@ -1346,7 +1346,7 @@ bool Schema::has_edge_label(const std::string& src_label,
 
 bool Schema::has_edge_label(label_t src_label, label_t dst_label,
                             label_t edge_label) const {
-  label_t e_label_id = generate_edge_label(src_label, dst_label, edge_label);
+  uint32_t e_label_id = generate_edge_label(src_label, dst_label, edge_label);
   return eprop_names_.find(e_label_id) != eprop_names_.end();
 }
 
