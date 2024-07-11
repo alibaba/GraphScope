@@ -331,8 +331,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/BaseEdgeType'
         - type: object
-          # required:
-            # - properties
           properties:
             properties:
               type: array
@@ -549,7 +547,6 @@ components:
       required:
         - type_name
         - inputs
-        # - column_mappings
       properties:
         type_name:
           type: string
@@ -568,8 +565,6 @@ components:
       required:
         - type_triplet
         - inputs
-        # - source_vertex_mappings
-        # - destination_vertex_mappings
       properties:
         type_triplet:
           required:
