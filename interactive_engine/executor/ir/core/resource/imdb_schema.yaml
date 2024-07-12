@@ -1,0 +1,667 @@
+name: imdb
+version: v0.1
+schema:
+  vertex_types:
+  - type_id: 0
+    type_name: AKA_NAME
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: name
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: imdb_index
+      property_type:
+        string:
+          long_text: 
+    - property_id: 3
+      property_name: name_pcode_cf
+      property_type:
+        string:
+          long_text: 
+    - property_id: 4
+      property_name: name_pcode_nf
+      property_type:
+        string:
+          long_text: 
+    - property_id: 5
+      property_name: surname_pcode
+      property_type:
+        string:
+          long_text: 
+    - property_id: 6
+      property_name: md5sum
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 1
+    type_name: AKA_TITLE
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: title
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: imdb_index
+      property_type:
+        string:
+          long_text: 
+    - property_id: 3
+      property_name: kind_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 4
+      property_name: production_year
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 5
+      property_name: phonetic_code
+      property_type:
+        string:
+          long_text: 
+    - property_id: 6
+      property_name: episode_of_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 7
+      property_name: season_nr
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 8
+      property_name: episode_nr
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 9
+      property_name: note
+      property_type:
+        string:
+          long_text: 
+    - property_id: 10
+      property_name: md5sum
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 2
+    type_name: TITLE
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: title
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: imdb_index
+      property_type:
+        string:
+          long_text: 
+    - property_id: 3
+      property_name: production_year
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 4
+      property_name: imdb_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 5
+      property_name: phonetic_code
+      property_type:
+        string:
+          long_text: 
+    - property_id: 6
+      property_name: episode_of_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 7
+      property_name: season_nr
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 8
+      property_name: episode_nr
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 9
+      property_name: series_years
+      property_type:
+        string:
+          long_text: 
+    - property_id: 10
+      property_name: md5sum
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 3
+    type_name: CHAR_NAME
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: name
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: imdb_index
+      property_type:
+        string:
+          long_text: 
+    - property_id: 3
+      property_name: imdb_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 4
+      property_name: name_pcode_nf
+      property_type:
+        string:
+          long_text: 
+    - property_id: 5
+      property_name: surname_pcode
+      property_type:
+        string:
+          long_text: 
+    - property_id: 6
+      property_name: md5sum
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 4
+    type_name: COMP_CAST_TYPE
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: kind
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 5
+    type_name: COMPANY_NAME
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: name
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: country_code
+      property_type:
+        string:
+          long_text: 
+    - property_id: 3
+      property_name: imdb_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 4
+      property_name: name_pcode_nf
+      property_type:
+        string:
+          long_text: 
+    - property_id: 5
+      property_name: name_pcode_sf
+      property_type:
+        string:
+          long_text: 
+    - property_id: 6
+      property_name: md5sum
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 6
+    type_name: COMPANY_TYPE
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: kind
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 7
+    type_name: INFO_TYPE
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: info
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 8
+    type_name: KEYWORD
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: keyword
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: phonetic_code
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 9
+    type_name: KIND_TYPE
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: kind
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 10
+    type_name: LINK_TYPE
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: link
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 11
+    type_name: NAME
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: name
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: imdb_index
+      property_type:
+        string:
+          long_text: 
+    - property_id: 3
+      property_name: imdb_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 4
+      property_name: gender
+      property_type:
+        string:
+          long_text: 
+    - property_id: 5
+      property_name: name_pcode_cf
+      property_type:
+        string:
+          long_text: 
+    - property_id: 6
+      property_name: name_pcode_nf
+      property_type:
+        string:
+          long_text: 
+    - property_id: 7
+      property_name: surname_pcode
+      property_type:
+        string:
+          long_text: 
+    - property_id: 8
+      property_name: md5sum
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 12
+    type_name: ROLE_TYPE
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: role
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 13
+    type_name: CAST_INFO
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: person_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 2
+      property_name: movie_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 3
+      property_name: person_role_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 4
+      property_name: note
+      property_type:
+        string:
+          long_text: 
+    - property_id: 5
+      property_name: nr_order
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 6
+      property_name: role_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    primary_keys:
+    - id
+  - type_id: 14
+    type_name: COMPLETE_CAST
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: movie_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 2
+      property_name: subject_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 3
+      property_name: status_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    primary_keys:
+    - id
+  - type_id: 15
+    type_name: MOVIE_COMPANIES
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: movie_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 2
+      property_name: company_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 3
+      property_name: company_type_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 4
+      property_name: note
+      property_type:
+        string:
+          long_text: 
+    primary_keys:
+    - id
+  - type_id: 16
+    type_name: MOVIE_LINK
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT64
+    - property_id: 1
+      property_name: movie_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 2
+      property_name: linked_movie_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    - property_id: 3
+      property_name: link_type_id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    primary_keys:
+    - id
+  edge_types:
+  - type_id: 0
+    type_name: ALSO_KNOWN_AS_NAME
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: NAME
+      relation: MANY_TO_MANY
+      source_vertex: AKA_NAME
+  - type_id: 1
+    type_name: ALSO_KNOWN_AS_TITLE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: TITLE
+      relation: MANY_TO_MANY
+      source_vertex: AKA_TITLE
+  - type_id: 2
+    type_name: KIND_TYPE_TITLE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: TITLE
+      relation: MANY_TO_MANY
+      source_vertex: KIND_TYPE
+  - type_id: 3
+    type_name: MOVIE_INFO
+    properties:
+    - property_id: 0
+      property_name: info
+      property_type:
+        string:
+          long_text: 
+    - property_id: 1
+      property_name: note
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    vertex_type_pair_relations:
+    - destination_vertex: INFO_TYPE
+      relation: MANY_TO_MANY
+      source_vertex: TITLE
+  - type_id: 4
+    type_name: MOVIE_INFO_IDX
+    properties:
+    - property_id: 0
+      property_name: info
+      property_type:
+        string:
+          long_text: 
+    - property_id: 1
+      property_name: note
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    vertex_type_pair_relations:
+    - destination_vertex: INFO_TYPE
+      relation: MANY_TO_MANY
+      source_vertex: TITLE
+  - type_id: 5
+    type_name: PERSON_INFO
+    properties:
+    - property_id: 0
+      property_name: info
+      property_type:
+        string:
+          long_text: 
+    - property_id: 1
+      property_name: note
+      property_type:
+        string:
+          long_text: 
+    - property_id: 2
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    vertex_type_pair_relations:
+    - destination_vertex: INFO_TYPE
+      relation: MANY_TO_MANY
+      source_vertex: NAME
+  - type_id: 6
+    type_name: MOVIE_KEYWORD
+    properties:
+    - property_id: 0
+      property_name: id
+      property_type:
+        primitive_type: DT_SIGNED_INT32
+    vertex_type_pair_relations:
+    - destination_vertex: KEYWORD
+      relation: MANY_TO_MANY
+      source_vertex: TITLE
+  - type_id: 7
+    type_name: CAST_INFO_NAME
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: NAME
+      relation: MANY_TO_MANY
+      source_vertex: CAST_INFO
+  - type_id: 8
+    type_name: CAST_INFO_TITLE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: TITLE
+      relation: MANY_TO_MANY
+      source_vertex: CAST_INFO
+  - type_id: 9
+    type_name: CAST_INFO_CHAR
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: CHAR_NAME
+      relation: MANY_TO_MANY
+      source_vertex: CAST_INFO
+  - type_id: 10
+    type_name: CAST_INFO_ROLE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: ROLE_TYPE
+      relation: MANY_TO_MANY
+      source_vertex: CAST_INFO
+  - type_id: 11
+    type_name: COMPLETE_CAST_TITLE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: TITLE
+      relation: MANY_TO_MANY
+      source_vertex: COMPLETE_CAST
+  - type_id: 12
+    type_name: COMPLETE_CAST_SUBJECT
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: COMP_CAST_TYPE
+      relation: MANY_TO_MANY
+      source_vertex: COMPLETE_CAST
+  - type_id: 13
+    type_name: COMPLETE_CAST_STATUS
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: COMP_CAST_TYPE
+      relation: MANY_TO_MANY
+      source_vertex: COMPLETE_CAST
+  - type_id: 14
+    type_name: MOVIE_COMPANIES_TITLE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: TITLE
+      relation: MANY_TO_MANY
+      source_vertex: MOVIE_COMPANIES
+  - type_id: 15
+    type_name: MOVIE_COMPANIES_COMPANY_NAME
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: COMPANY_NAME
+      relation: MANY_TO_MANY
+      source_vertex: MOVIE_COMPANIES
+  - type_id: 16
+    type_name: MOVIE_COMPANIES_TYPE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: COMPANY_TYPE
+      relation: MANY_TO_MANY
+      source_vertex: MOVIE_COMPANIES
+  - type_id: 17
+    type_name: MOVIE_LINK_LINKED_TITLE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: TITLE
+      relation: MANY_TO_MANY
+      source_vertex: MOVIE_LINK
+  - type_id: 18
+    type_name: MOVIE_LINK_TITLE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: TITLE
+      relation: MANY_TO_MANY
+      source_vertex: MOVIE_LINK
+  - type_id: 19
+    type_name: MOVIE_LINK_LINKED_TYPE
+    properties: []
+    vertex_type_pair_relations:
+    - destination_vertex: LINK_TYPE
+      relation: MANY_TO_MANY
+      source_vertex: MOVIE_LINK
