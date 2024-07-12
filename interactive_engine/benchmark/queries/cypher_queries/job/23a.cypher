@@ -10,7 +10,7 @@ MATCH
                        AND kt.kind IN ['movie']
                        AND mi.note CONTAINS 'internet'
                        AND mi.info IS NOT NULL
-                       AND (mi.info CONTAINS 'USA:% 199%' OR mi.info CONTAINS 'USA:% 200%')
+                       AND (mi.info CONTAINS 'USA:.* 199.*' OR mi.info CONTAINS 'USA:.* 200.*')
                        AND t.production_year > 2000
                      RETURN
                        MIN(kt.kind) AS movie_kind,

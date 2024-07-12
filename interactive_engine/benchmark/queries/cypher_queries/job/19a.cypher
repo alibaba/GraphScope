@@ -11,12 +11,12 @@ MATCH
                   AND mc.note IS NOT NULL
                   AND (mc.note CONTAINS '(USA)' OR mc.note CONTAINS '(worldwide)')
                   AND mi.info IS NOT NULL
-                  AND (mi.info CONTAINS 'Japan:%200%' OR mi.info CONTAINS 'USA:%200%')
+                  AND (mi.info CONTAINS 'Japan:.*200.*' OR mi.info CONTAINS 'USA:.*200.*')
                   AND n.gender = 'f'
                   AND n.name CONTAINS 'Ang'
                   AND rt.role = 'actress'
                   AND t.production_year >= 2005
                   AND t.production_year <= 2009
                 RETURN
-                  n.name AS voicing_actress,
-                  t.title AS voiced_movie;
+                  MIN(n.name) AS voicing_actress,
+                  MIN(t.title) AS voiced_movie;

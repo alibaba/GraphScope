@@ -1,7 +1,6 @@
 MATCH
                 (n:NAME)<-[:CAST_INFO_NAME]-(ci:CAST_INFO)-[:CAST_INFO_TITLE]->(t:TITLE)-[:MOVIE_KEYWORD]->(k:KEYWORD),
                 (t)<-[:MOVIE_COMPANIES_TITLE]-(mc:MOVIE_COMPANIES)-[:MOVIE_COMPANIES_COMPANY_NAME]->(cn:COMPANY_NAME),
-                (mc)-[:MOVIE_COMPANIES_TITLE]->(t),
                 (t)-[mi:MOVIE_INFO]->(it:INFO_TYPE),
                 (ci)-[:CAST_INFO_ROLE]->(rt:ROLE_TYPE),
                 (ci)-[:CAST_INFO_CHAR]->(chn:CHAR_NAME),
@@ -11,7 +10,7 @@ MATCH
                   AND it.info = 'release dates'
                   AND k.keyword IN ['hero', 'martial-arts', 'hand-to-hand-combat']
                   AND mi.info IS NOT NULL
-                  AND (mi.info CONTAINS 'Japan:%201%' OR mi.info CONTAINS 'USA:%201%')
+                  AND (mi.info CONTAINS 'Japan:.*201.*' OR mi.info CONTAINS 'USA:.*201.*')
                   AND n.gender = 'f'
                   AND n.name CONTAINS 'An'
                   AND rt.role = 'actress'

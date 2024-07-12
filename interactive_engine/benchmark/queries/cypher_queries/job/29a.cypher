@@ -18,7 +18,7 @@ WHERE cct1.kind = 'cast'
   AND it3.info = 'trivia'
   AND k.keyword = 'computer-animation'
   AND mi.info IS NOT NULL
-  AND (mi.info CONTAINS 'Japan:%200' OR mi.info CONTAINS 'USA:%200')
+  AND (mi.info CONTAINS 'Japan:.*200' OR mi.info CONTAINS 'USA:.*200')
   AND n.gender = 'f'
   AND n.name CONTAINS 'An'
   AND rt.role = 'actress'

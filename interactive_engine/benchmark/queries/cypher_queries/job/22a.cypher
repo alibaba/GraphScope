@@ -11,7 +11,7 @@ MATCH
                   AND k.keyword IN ['murder', 'murder-in-title', 'blood', 'violence']
                   AND kt.kind IN ['movie', 'episode']
                   AND NOT mc.note CONTAINS '(USA)'
-                  AND mc.note CONTAINS '(200%)'
+                  AND mc.note CONTAINS '(200.*)'
                   AND mi.info IN ['Germany', 'German', 'USA', 'American']
                   AND mi_idx.info < '7.0'
                   AND t.production_year > 2008

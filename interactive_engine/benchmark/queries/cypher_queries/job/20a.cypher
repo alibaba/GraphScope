@@ -13,4 +13,4 @@ MATCH
                   AND kt.kind = 'movie'
                   AND t.production_year > 1950
                 RETURN
-                  t.title AS complete_downey_ironman_movie;
+                  MIN(t.title) AS complete_downey_ironman_movie;
