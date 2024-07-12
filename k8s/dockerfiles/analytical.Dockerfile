@@ -87,7 +87,7 @@ RUN cd /home/graphscope/GraphScope/ && \
 
 FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 
-FROM $REGISTRY/graphscope/vineyard-dev:$RUNTIME_VERSION AS analytical-java
+FROM graphscope/vineyard-dev:main-x86_64 AS analytical-java
 COPY --from=llvm /opt/llvm11.0.0 /opt/llvm11
 ENV LLVM11_HOME=/opt/llvm11
 ENV LIBCLANG_PATH=$LLVM11_HOME/lib LLVM_CONFIG_PATH=$LLVM11_HOME/bin/llvm-config
