@@ -41,6 +41,7 @@ public class Configuration {
     public static final String OPERATION_COUNT_EVERY_QUERY = "operation.count.every.query";
     public static final String PRINT_QUERY_NAME = "printQueryNames";
     public static final String PRINT_QUERY_RESULT = "printQueryResults";
+    public static final String ALL_QUERIES_ENABLE = "all_queries.enable";
 
     public static final String EXPECTED_RESULTS_PATH = "expected_results.path";
 

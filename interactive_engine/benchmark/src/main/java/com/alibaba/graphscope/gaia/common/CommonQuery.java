@@ -100,7 +100,6 @@ public class CommonQuery {
         while (resultSet.hasNext()) {
             count += 1;
             result = String.format("%s\n%s", result, resultSet.next().toString());
-            System.out.println(result);
         }
         return Pair.of(count, result);
     }

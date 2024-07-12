@@ -17,6 +17,7 @@ package com.alibaba.graphscope.gaia.utils;
 
 import com.alibaba.graphscope.gaia.common.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,25 @@ public class QueryUtil {
         List<CommonQuery> queryList = new ArrayList<>();
         String defaultSuffix = configuration.getString(Configuration.QUERY_LANGUAGE);
         String suffix = configuration.getString(Configuration.QUERY_SUFFIX, defaultSuffix);
+
+        if (configuration.getBoolean(Configuration.ALL_QUERIES_ENABLE, false)) {
+            // New logic to automatically add all queries in the specified directory
+            File dir = new File(queryDir);
+            if (dir.isDirectory()) {
+                for (File file : dir.listFiles()) {
+                    if (file.isFile() && file.getName().endsWith(suffix)) {
+                        // infer query name from file name, assumption here is it's the same as file
+                        // name without extension
+                        String queryName = file.getName().replace(suffix, "");
+                        String queryFilePath = file.getAbsolutePath();
+                        queryList.add(new QueryWithoutParameter(queryName, queryFilePath));
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("queryDir is not a directory");
+            }
+            return queryList;
+        }
 
         // for ldbc queries
         for (int index = 1; index <= 100; index++) {
