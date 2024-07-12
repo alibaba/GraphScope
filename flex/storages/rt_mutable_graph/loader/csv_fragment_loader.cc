@@ -96,10 +96,42 @@ CSVTableRecordBatchSupplier::GetNextBatch() {
   return batch;
 }
 
-static std::vector<std::string> read_header(const std::string& file_name,
-                                            char delimiter) {
+static std::string process_header_row_token(const std::string& token,
+                                            const LoadingConfig& config) {
+  std::string new_token = token;
+  // trim the quote char at the beginning and end of the token
+  if (config.GetIsQuoting()) {
+    auto quote_char = config.GetQuotingChar();
+    if (token.size() >= 2 && token[0] == quote_char &&
+        token[token.size() - 1] == quote_char) {
+      new_token = token.substr(1, token.size() - 2);
+    }
+  }
+  // unescape the token
+  if (config.GetIsEscaping()) {
+    auto escape_char = config.GetEscapeChar();
+    std::string res;
+    for (size_t i = 0; i < new_token.size(); ++i) {
+      if (new_token[i] == escape_char) {
+        if (i + 1 < new_token.size()) {
+          res.push_back(new_token[i + 1]);
+          i++;
+        }
+      } else {
+        res.push_back(new_token[i]);
+      }
+    }
+    new_token = res;
+  }
+  return new_token;
+}
+
+static std::vector<std::string> read_header(
+    const std::string& file_name, char delimiter,
+    const LoadingConfig& loading_config) {
   // read the header line of the file, and split into vector to string by
-  // delimiter
+  // delimiter. If quote_char is not empty, then use it to parse the header
+  // line.
   std::vector<std::string> res_vec;
   std::ifstream file(file_name);
   std::string line;
@@ -110,6 +142,7 @@ static std::vector<std::string> read_header(const std::string& file_name,
       while (std::getline(ss, token, delimiter)) {
         // trim the token
         token.erase(token.find_last_not_of(" \n\r\t") + 1);
+        token = process_header_row_token(token, loading_config);
         res_vec.push_back(token);
       }
     } else {
@@ -144,12 +177,10 @@ static bool put_skip_rows_option(const LoadingConfig& loading_config,
 
 static void put_escape_char_option(const LoadingConfig& loading_config,
                                    arrow::csv::ParseOptions& parse_options) {
-  auto escape_str = loading_config.GetEscapeChar();
-  if (escape_str.size() != 1) {
-    LOG(FATAL) << "Escape char should be a single character";
-  }
-  parse_options.escape_char = escape_str[0];
   parse_options.escaping = loading_config.GetIsEscaping();
+  if (parse_options.escaping) {
+    parse_options.escape_char = loading_config.GetEscapeChar();
+  }
 }
 
 static void put_block_size_option(const LoadingConfig& loading_config,
@@ -163,12 +194,10 @@ static void put_block_size_option(const LoadingConfig& loading_config,
 
 static void put_quote_char_option(const LoadingConfig& loading_config,
                                   arrow::csv::ParseOptions& parse_options) {
-  auto quoting_str = loading_config.GetQuotingChar();
-  if (quoting_str.size() != 1) {
-    LOG(FATAL) << "Quote char should be a single character";
-  }
-  parse_options.quote_char = quoting_str[0];
   parse_options.quoting = loading_config.GetIsQuoting();
+  if (parse_options.quoting) {
+    parse_options.quote_char = loading_config.GetQuotingChar();
+  }
   parse_options.double_quote = loading_config.GetIsDoubleQuoting();
 }
 
@@ -188,7 +217,7 @@ static void put_column_names_option(const LoadingConfig& loading_config,
                                     arrow::csv::ReadOptions& read_options) {
   std::vector<std::string> all_column_names;
   if (header_row) {
-    all_column_names = read_header(file_path, delimiter);
+    all_column_names = read_header(file_path, delimiter, loading_config);
     // It is possible that there exists duplicate column names in the header,
     // transform them to unique names
     std::unordered_map<std::string, int> name_count;
@@ -215,7 +244,7 @@ static void put_column_names_option(const LoadingConfig& loading_config,
     // just get the number of columns.
     size_t num_cols = 0;
     {
-      auto tmp = read_header(file_path, delimiter);
+      auto tmp = read_header(file_path, delimiter, loading_config);
       num_cols = tmp.size();
     }
     all_column_names.resize(num_cols);
