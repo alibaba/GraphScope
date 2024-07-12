@@ -66,7 +66,7 @@ pub fn is_hidden_file(fname: &str) -> bool {
     fname.starts_with('.')
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 struct Columns {
     /// To record each column' name and data type sequentially in a row
     columns: Vec<ColumnMeta>,
@@ -84,7 +84,7 @@ impl Columns {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct LDBCMetaData {
     /// To map from a vertex type to the vertex metadata
     vertex_map: BTreeMap<String, Arc<Columns>>,
@@ -192,7 +192,7 @@ impl From<LDBCParserJsonSer> for LDBCParser {
 }
 
 /// `LDBCParser` defines parsing from the original LDBC-generated raw files.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LDBCParser {
     vertex_table_to_type: HashMap<String, String>,
     edge_table_to_type: HashMap<String, EdgeTypeTuple>,
@@ -338,7 +338,7 @@ impl LDBCParser {
 }
 
 /// Define parsing a LDBC vertex
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LDBCVertexParser<G = DefaultId> {
     vertex_type: LabelId,
     id_index: usize,
@@ -390,7 +390,6 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCVertex
         let label = [self.vertex_type, extra_label_id];
 
         let vertex_meta = VertexMeta { global_id, label };
-        debug!("Parse vertex_meta successfully: {:?}", vertex_meta);
 
         Ok(vertex_meta)
     }
@@ -407,6 +406,7 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCVertex
     }
 }
 
+#[derive(Debug)]
 /// Define parsing a LDBC edge
 pub struct LDBCEdgeParser<G = DefaultId> {
     src_id_index: usize,
@@ -453,8 +453,6 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCEdgePa
             dst_label_id: self.dst_vertex_type,
             label_id: self.edge_type,
         };
-
-        debug!("Parse edge_meta successfully: {:?}", edge_meta);
 
         Ok(edge_meta)
     }
@@ -508,6 +506,8 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
             .ldbc_parser
             .get_vertex_parser(vertex_type)
             .expect("Get vertex parser error!");
+        debug!("Vertex type: {:?}", vertex_type);
+        debug!("Vertex parser: {:?}", parser);
         let timer = Instant::now();
         let mut start;
         let mut end;
@@ -523,7 +523,7 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                             end = timer.elapsed().as_secs_f64();
                             self.perf_metrics.vertex_parse_time_s += end - start;
                             start = end;
-                            if !properties.len() > 0 {
+                            if properties.len() > 0 {
                                 let add_vertex_rst = graph_db.add_vertex_with_properties(
                                     vertex_meta.global_id,
                                     vertex_meta.label,
@@ -531,17 +531,16 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                                 );
                                 if add_vertex_rst.is_ok() {
                                     num_vertices += 1;
-                                } else {
-                                    error!("Error while adding the vertex {:?}", vertex_meta);
+                                    parse_error = false;
                                 }
                             } else {
                                 if graph_db.add_vertex(vertex_meta.global_id, vertex_meta.label) {
                                     num_vertices += 1;
                                 }
+                                parse_error = false;
                             }
                             end = timer.elapsed().as_secs_f64();
                             self.perf_metrics.vertex_to_db_time_s += end - start;
-                            parse_error = false;
                         }
                     } else {
                         parse_error = false;
@@ -571,7 +570,7 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
 
     /// Load edges recorded in the file of `edge_type` into the database.
     /// Return the number of edges that are successfully loaded.
-    fn load_edges_to_db<R: Read>(&mut self, edge_table: &str, mut rdr: Reader<R>) -> usize {
+    fn load_edges_to_db<R: Read>(&mut self, edge_table: &str, mut rdr: Reader<R>) -> GDBResult<usize> {
         let mut num_edges = 0_usize;
         let graph_db = &mut self.graph_builder;
         let edge_type = self
@@ -582,6 +581,8 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
             .ldbc_parser
             .get_edge_parser(edge_type)
             .expect("Get edge parser error!");
+        debug!("Edge type: {:?}", edge_type);
+        debug!("Edge parser: {:?}", parser);
         let timer = Instant::now();
         let mut start;
         let mut end;
@@ -609,16 +610,15 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                                 graph_db.add_corner_vertex(edge_meta.dst_global_id, edge_meta.dst_label_id);
                             }
                             if properties.len() > 0 {
-                                if graph_db
-                                    .add_edge_with_properties(
-                                        edge_meta.src_global_id,
-                                        edge_meta.dst_global_id,
-                                        edge_meta.label_id,
-                                        properties,
-                                    )
-                                    .is_ok()
-                                {
+                                let add_edge_rst = graph_db.add_edge_with_properties(
+                                    edge_meta.src_global_id,
+                                    edge_meta.dst_global_id,
+                                    edge_meta.label_id,
+                                    properties,
+                                );
+                                if add_edge_rst.is_ok() {
                                     num_edges += 1;
+                                    parse_error = false;
                                 }
                             } else {
                                 if graph_db.add_edge(
@@ -627,11 +627,11 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                                     edge_meta.label_id,
                                 ) {
                                     num_edges += 1;
+                                    parse_error = false;
                                 }
                             }
                             end = timer.elapsed().as_secs_f64();
                             self.perf_metrics.edge_to_db_time_s += end - start;
-                            parse_error = false;
                         }
                     } else {
                         parse_error = false;
@@ -652,7 +652,7 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
             num_edges
         );
 
-        num_edges
+        Ok(num_edges)
     }
 
     /// Load from raw data to a graph database.
