@@ -1,0 +1,313 @@
+{
+    "total_vertex_count": 50486838,
+    "total_edge_count": 162121663,
+    "vertex_type_statistics": [
+        {
+            "type_id": 0,
+            "type_name": "AKA_NAME",
+            "count": 901343
+        },
+        {
+            "type_id": 1,
+            "type_name": "AKA_TITLE",
+            "count": 361472
+        },
+        {
+            "type_id": 2,
+            "type_name": "TITLE",
+            "count": 2528312
+        },
+        {
+            "type_id": 3,
+            "type_name": "CHAR_NAME",
+            "count": 3140339
+        },
+        {
+            "type_id": 4,
+            "type_name": "COMP_CAST_TYPE",
+            "count": 4
+        },
+        {
+            "type_id": 5,
+            "type_name": "COMPANY_NAME",
+            "count": 234997
+        },
+        {
+            "type_id": 6,
+            "type_name": "COMPANY_TYPE",
+            "count": 4
+        },
+        {
+            "type_id": 7,
+            "type_name": "INFO_TYPE",
+            "count": 113
+        },
+        {
+            "type_id": 8,
+            "type_name": "KEYWORD",
+            "count": 134170
+        },
+        {
+            "type_id": 9,
+            "type_name": "KIND_TYPE",
+            "count": 7
+        },
+        {
+            "type_id": 10,
+            "type_name": "LINK_TYPE",
+            "count": 18
+        },
+        {
+            "type_id": 11,
+            "type_name": "NAME",
+            "count": 4167491
+        },
+        {
+            "type_id": 12,
+            "type_name": "ROLE_TYPE",
+            "count": 12
+        },
+        {
+            "type_id": 13,
+            "type_name": "CAST_INFO",
+            "count": 36244344
+        },
+        {
+            "type_id": 14,
+            "type_name": "COMPLETE_CAST",
+            "count": 135086
+        },
+        {
+            "type_id": 15,
+            "type_name": "MOVIE_COMPANIES",
+            "count": 2609129
+        },
+        {
+            "type_id": 16,
+            "type_name": "MOVIE_LINK",
+            "count": 29997
+        }
+    ],
+    "edge_type_statistics": [
+        {
+            "type_id": 0,
+            "type_name": "ALSO_KNOWN_AS_NAME",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "AKA_NAME",
+                    "destination_vertex": "NAME",
+                    "count": 901343
+                }
+            ]
+        },
+        {
+            "type_id": 1,
+            "type_name": "ALSO_KNOWN_AS_TITLE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "AKA_TITLE",
+                    "destination_vertex": "TITLE",
+                    "count": 361472
+                }
+            ]
+        },
+        {
+            "type_id": 2,
+            "type_name": "KIND_TYPE_TITLE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "KIND_TYPE",
+                    "destination_vertex": "TITLE",
+                    "count": 2528312
+                }
+            ]
+        },
+        {
+            "type_id": 3,
+            "type_name": "MOVIE_INFO",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "TITLE",
+                    "destination_vertex": "INFO_TYPE",
+                    "count": 14835720
+                }
+            ]
+        },
+        {
+            "type_id": 4,
+            "type_name": "MOVIE_INFO_IDX",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "TITLE",
+                    "destination_vertex": "INFO_TYPE",
+                    "count": 1380035
+                }
+            ]
+        },
+        {
+            "type_id": 5,
+            "type_name": "PERSON_INFO",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "NAME",
+                    "destination_vertex": "INFO_TYPE",
+                    "count": 2963664
+                }
+            ]
+        },
+        {
+            "type_id": 6,
+            "type_name": "MOVIE_KEYWORD",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "TITLE",
+                    "destination_vertex": "KEYWORD",
+                    "count": 4523930
+                }
+            ]
+        },
+        {
+            "type_id": 7,
+            "type_name": "CAST_INFO_NAME",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "CAST_INFO",
+                    "destination_vertex": "NAME",
+                    "count": 36244344
+                }
+            ]
+        },
+        {
+            "type_id": 8,
+            "type_name": "CAST_INFO_TITLE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "CAST_INFO",
+                    "destination_vertex": "TITLE",
+                    "count": 36244344
+                }
+            ]
+        },
+        {
+            "type_id": 9,
+            "type_name": "CAST_INFO_CHAR",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "CAST_INFO",
+                    "destination_vertex": "CHAR_NAME",
+                    "count": 17571519
+                }
+            ]
+        },
+        {
+            "type_id": 10,
+            "type_name": "CAST_INFO_ROLE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "CAST_INFO",
+                    "destination_vertex": "ROLE_TYPE",
+                    "count": 36244344
+                }
+            ]
+        },
+        {
+            "type_id": 11,
+            "type_name": "COMPLETE_CAST_TITLE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "COMPLETE_CAST",
+                    "destination_vertex": "TITLE",
+                    "count": 135086
+                }
+            ]
+        },
+        {
+            "type_id": 12,
+            "type_name": "COMPLETE_CAST_SUBJECT",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "COMPLETE_CAST",
+                    "destination_vertex": "COMP_CAST_TYPE",
+                    "count": 135086
+                }
+            ]
+        },
+        {
+            "type_id": 13,
+            "type_name": "COMPLETE_CAST_STATUS",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "COMPLETE_CAST",
+                    "destination_vertex": "COMP_CAST_TYPE",
+                    "count": 135086
+                }
+            ]
+        },
+        {
+            "type_id": 14,
+            "type_name": "MOVIE_COMPANIES_TITLE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "MOVIE_COMPANIES",
+                    "destination_vertex": "TITLE",
+                    "count": 2609129
+                }
+            ]
+        },
+        {
+            "type_id": 15,
+            "type_name": "MOVIE_COMPANIES_COMPANY_NAME",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "MOVIE_COMPANIES",
+                    "destination_vertex": "COMPANY_NAME",
+                    "count": 2609129
+                }
+            ]
+        },
+        {
+            "type_id": 16,
+            "type_name": "MOVIE_COMPANIES_TYPE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "MOVIE_COMPANIES",
+                    "destination_vertex": "COMPANY_TYPE",
+                    "count": 2609129
+                }
+            ]
+        },
+        {
+            "type_id": 17,
+            "type_name": "MOVIE_LINK_LINKED_TITLE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "MOVIE_LINK",
+                    "destination_vertex": "TITLE",
+                    "count": 29997
+                }
+            ]
+        },
+        {
+            "type_id": 18,
+            "type_name": "MOVIE_LINK_TITLE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "MOVIE_LINK",
+                    "destination_vertex": "TITLE",
+                    "count": 29997
+                }
+            ]
+        },
+        {
+            "type_id": 19,
+            "type_name": "MOVIE_LINK_LINKED_TYPE",
+            "vertex_type_pair_statistics": [
+                {
+                    "source_vertex": "MOVIE_LINK",
+                    "destination_vertex": "LINK_TYPE",
+                    "count": 29997
+                }
+            ]
+        }
+    ]
+}
