@@ -813,8 +813,12 @@ const std::string& LoadingConfig::GetFormat() const { return format_; }
 
 const BulkLoadMethod& LoadingConfig::GetMethod() const { return method_; }
 
-const std::string& LoadingConfig::GetEscapeChar() const {
-  return metadata_.at(reader_options::ESCAPE_CHAR);
+char LoadingConfig::GetEscapeChar() const {
+  const auto& escape_char = metadata_.at(reader_options::ESCAPE_CHAR);
+  if (escape_char.size() != 1) {
+    throw std::runtime_error("Escape char should be a single character");
+  }
+  return escape_char[0];
 }
 
 bool LoadingConfig::GetIsEscaping() const {

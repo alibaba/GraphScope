@@ -126,7 +126,7 @@ class LoadingConfig {
   const BulkLoadMethod& GetMethod() const;
   const std::string& GetFormat() const;
   bool GetHasHeaderRow() const;
-  const std::string& GetEscapeChar() const;
+  char GetEscapeChar() const;
   bool GetIsEscaping() const;
   char GetQuotingChar() const;
   bool GetIsQuoting() const;
