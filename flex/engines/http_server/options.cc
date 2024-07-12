@@ -25,5 +25,6 @@ uint32_t shard_admin_procedure_concurrency = 1;
 uint32_t shard_admin_node_concurrency = 1;
 uint32_t shard_admin_job_concurrency = 1;
 uint32_t shard_admin_service_concurrency = 1;
+uint32_t shard_proxy_concurrency = 16;  // same as shard_query_concurrency
 
 }  // namespace server

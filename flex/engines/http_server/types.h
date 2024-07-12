@@ -20,8 +20,10 @@
 #include <hiactor/net/serializable_queue.hh>
 #include <seastar/core/sstring.hh>
 #include <seastar/core/temporary_buffer.hh>
+#include <seastar/http/httpd.hh>
 #include "flex/utils/service_utils.h"
 
+#include <memory>
 #include <string>
 
 namespace server {
@@ -54,7 +56,9 @@ struct payload {
 };
 
 using query_param = payload<seastar::sstring>;
+using proxy_request = payload<std::unique_ptr<seastar::httpd::request>>;
 using query_result = payload<seastar::sstring>;
+using proxy_query_result = payload<gs::Result<seastar::sstring>>;
 using admin_query_result = payload<gs::Result<seastar::sstring>>;
 // url_path, query_param
 using graph_management_param =

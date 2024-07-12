@@ -804,6 +804,13 @@ struct to_string_impl<uint8_t> {
 };
 
 template <>
+struct to_string_impl<uint16_t> {
+  static inline std::string to_string(const uint16_t& empty) {
+    return std::to_string((int32_t) empty);
+  }
+};
+
+template <>
 struct to_string_impl<int64_t> {
   static inline std::string to_string(const int64_t& empty) {
     return std::to_string(empty);

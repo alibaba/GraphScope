@@ -15,6 +15,7 @@ option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" OFF)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 option(USE_PTHASH "Whether to use pthash" OFF)
+option(BUILD_PROXY "Whether to build proxy" ON)
 
 #print options
 message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")

@@ -40,7 +40,7 @@ void signal_handler(int signal) {
     exit(signal);
   } else {
     LOG(ERROR) << "Received unexpected signal " << signal << ", exiting...";
-    exit(1);
+    exit(signal);
   }
 }
 

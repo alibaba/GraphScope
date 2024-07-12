@@ -1,0 +1,443 @@
+---
+# Source: graphscope-interactive/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-graphscope-interactive-config
+  namespace: kubetask
+  labels:
+    helm.sh/chart: graphscope-interactive-0.0.2
+    app.kubernetes.io/name: graphscope-interactive
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: configmap
+data:
+  engine_config.yaml: |-
+    directories:
+      workspace: /tmp/interactive_workspace
+      subdirs:
+        data: data
+        logs: logs
+        conf: conf
+    log_level: INFO
+    default_graph: modern_graph
+    compute_engine:
+      type: hiactor
+      workers:
+        - localhost:10000
+      thread_num_per_worker: 1
+    compiler:
+      planner:
+        is_on: true
+        opt: RBO
+        rules:
+          - FilterIntoJoinRule
+          - FilterMatchRule
+          - NotMatchToAntiJoinRule
+      endpoint:
+        default_listen_address: localhost
+        bolt_connector:
+          disabled: false
+          port: 7687
+        gremlin_connector:
+          disabled: true
+          port: 8182
+      query_timeout: 30000
+    http_service:
+      default_listen_address: localhost
+      admin_port: 7777
+      query_port: 10000
+---
+# Source: graphscope-interactive/templates/primary/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-graphscope-interactive-primary
+  namespace: kubetask
+  labels:
+    helm.sh/chart: graphscope-interactive-0.0.2
+    app.kubernetes.io/name: graphscope-interactive
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: primary
+  annotations:
+spec:
+  type: NodePort
+  ports:
+    - name: admin-port
+      port: 7777
+      protocol: TCP
+      targetPort: 7777
+    - name: query-port
+      port: 10000
+      protocol: TCP
+      targetPort: 10000
+  selector:
+    app.kubernetes.io/name: graphscope-interactive
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/component: primary
+---
+# Source: graphscope-interactive/templates/secondary/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-graphscope-interactive-secondary
+  namespace: kubetask
+  labels:
+    helm.sh/chart: graphscope-interactive-0.0.2
+    app.kubernetes.io/name: graphscope-interactive
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: secondary
+  annotations:
+spec:
+  type: LoadBalancer
+  ports:
+    - name: admin-port
+      port: 7777
+      protocol: TCP
+      targetPort: 7777
+    - name: query-port
+      port: 10000
+      protocol: TCP
+      targetPort: 10000
+  selector:
+    app.kubernetes.io/name: graphscope-interactive
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/component: secondary
+---
+# Source: graphscope-interactive/templates/primary/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: release-name-graphscope-interactive-primary
+  namespace: kubetask
+  labels:
+    helm.sh/chart: graphscope-interactive-0.0.2
+    app.kubernetes.io/name: graphscope-interactive
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: primary
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: graphscope-interactive
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/component: primary
+  serviceName: release-name-graphscope-interactive-primary
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+      labels:
+        helm.sh/chart: graphscope-interactive-0.0.2
+        app.kubernetes.io/name: graphscope-interactive
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: primary
+    spec:
+      hostNetwork: 
+      hostIPC: false
+      serviceAccountName: default
+      initContainers:
+      containers:
+        - name: proxy-admin
+          image: registry.cn-hongkong.aliyuncs.com/graphscope/interactive:debug
+          imagePullPolicy: "Always"
+          # command: ["sleep", "infinity"]
+          command:
+            - /bin/bash
+            - -c
+            - |
+              POD_NAME=$MY_POD_NAME
+              if [ -z "$POD_NAME" ]; then
+                POD_NAME=$(hostname)
+              fi
+              echo "POD_NAME: $POD_NAME"
+              secondary_pod_dns_names=""
+              # cnt=1
+              # for i from 0 to $SECONDARY_REPLICAS
+              for ((i=0; i<SECONDARY_REPLICAS; i++)); do
+                secondary_pod_dns_names="$secondary_pod_dns_names,${SECONDARY_POD_NAME_PREFIX}-$i.${SECONDARY_SERVICE_NAME}:${SECONDARY_ADMIN_PORT}"
+              #   cnt=$((cnt+1))
+              done
+              # secondary_pod_dns_names="${SECONDARY_SERVICE_NAME}:${SECONDARY_ADMIN_PORT}"
+              echo "secondary_pod_dns_names: $secondary_pod_dns_names"
+              echo "cnt: $cnt"
+              sudo chown -R graphscope:graphscope $INTERACTIVE_WORKSPACE
+              cmd="/opt/flex/bin/entrypoint.sh -t proxy -e $secondary_pod_dns_names -p $PRIMARY_ADMIN_PORT --hang-until-success ${HANG_UNTIL_SUCCESS}"
+              echo "cmd: $cmd"
+              eval $cmd
+              # sleep infinity
+          env:
+            - name: INSTANCE_NAME
+              value: "release-name"
+            - name: INTERACTIVE_WORKSPACE
+              value: "/tmp/interactive_workspace"
+            - name: PRIMARY_SERVICE_HOST
+              value: release-name-graphscope-interactive-primary.kubetask.svc.cluster.local
+            - name: SECONDARY_POD_NAME_PREFIX
+              value: release-name-graphscope-interactive-secondary
+            - name: SECONDARY_SERVICE_NAME
+              value: release-name-graphscope-interactive-secondary.kubetask.svc.cluster.local
+            - name: SECONDARY_REPLICAS
+              value: "2"
+            - name: SECONDARY_QUERY_PORT
+              value: "10000"
+            - name: SECONDARY_ADMIN_PORT
+              value: "7777"
+            - name: PRIMARY_QUERY_PORT
+              value: "10000"
+            - name: PRIMARY_ADMIN_PORT
+              value: "7777"
+            - name: ENGINE_CONFIG_PATH
+              value: /etc/interactive/engine_config.yaml
+            - name: REAL_ENGINE_CONFIG_PATH
+              value: /etc/interactive/real_engine_config.yaml
+            - name: ENGINE_BINARY_PATH
+              value: /opt/flex/bin/interactive_server
+            - name: ENGINE_SHARD_NUM
+              value: "1"
+            - name: BULK_LOADER_BINARY_PATH
+              value: /opt/flex/bin/bulk_loader
+            - name: DEFAULT_GRAPH_NAME
+              value: modern_graph
+            - name: HANG_UNTIL_SUCCESS
+              value: "false"
+            - name: ODPS_ACCESS_ID
+              value: ""
+            - name: ODPS_ACCESS_KEY
+              value: ""
+            - name: ODPS_ENDPOINT
+              value: ""
+          ports:
+            - name: admin-port
+              containerPort: 7777
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 8Gi
+            requests:
+              cpu: 1000m
+              memory: 8Gi
+          volumeMounts:
+            - name: workspace
+              mountPath: /tmp/interactive_workspace
+            - name: config
+              mountPath: /etc/interactive/engine_config.yaml
+              subPath: engine_config.yaml
+        - name: proxy-query
+          image: registry.cn-hongkong.aliyuncs.com/graphscope/interactive:debug
+          imagePullPolicy: "Always"
+          # command: ["sleep", "infinity"]
+          command:
+            - /bin/bash
+            - -c
+            - |
+              POD_NAME=$MY_POD_NAME
+              if [ -z "$POD_NAME" ]; then
+                POD_NAME=$(hostname)
+              fi
+              echo "POD_NAME: $POD_NAME"
+              secondary_pod_dns_names=""
+              # cnt=1
+              # for i from 0 to $SECONDARY_REPLICAS
+              # for ((i=0; i<SECONDARY_REPLICAS; i++)); do
+              #   secondary_pod_dns_names="$secondary_pod_dns_names,${SECONDARY_POD_NAME_PREFIX}-$i.${SECONDARY_SERVICE_NAME}:${SECONDARY_QUERY_PORT}"
+              #   cnt=$((cnt+1))
+              # done
+              secondary_pod_dns_names="${SECONDARY_SERVICE_NAME}:${SECONDARY_QUERY_PORT}"
+              echo "secondary_pod_dns_names: $secondary_pod_dns_names"
+              echo "cnt: $cnt"
+              sudo chown -R graphscope:graphscope $INTERACTIVE_WORKSPACE
+              cmd="/opt/flex/bin/entrypoint.sh -t proxy -e $secondary_pod_dns_names -p $PRIMARY_QUERY_PORT --hang-until-success ${HANG_UNTIL_SUCCESS}"
+              echo "cmd: $cmd"
+              eval $cmd
+              # sleep infinity
+          env:
+            - name: INSTANCE_NAME
+              value: "release-name"
+            - name: INTERACTIVE_WORKSPACE
+              value: "/tmp/interactive_workspace"
+            - name: PRIMARY_SERVICE_HOST
+              value: release-name-graphscope-interactive-primary.kubetask.svc.cluster.local
+            - name: SECONDARY_POD_NAME_PREFIX
+              value: release-name-graphscope-interactive-secondary
+            - name: SECONDARY_SERVICE_NAME
+              value: release-name-graphscope-interactive-secondary.kubetask.svc.cluster.local
+            - name: SECONDARY_REPLICAS
+              value: "2"
+            - name: SECONDARY_QUERY_PORT
+              value: "10000"
+            - name: SECONDARY_ADMIN_PORT
+              value: "7777"
+            - name: PRIMARY_QUERY_PORT
+              value: "10000"
+            - name: ENGINE_CONFIG_PATH
+              value: /etc/interactive/engine_config.yaml
+            - name: REAL_ENGINE_CONFIG_PATH
+              value: /etc/interactive/real_engine_config.yaml
+            - name: ENGINE_BINARY_PATH
+              value: /opt/flex/bin/interactive_server
+            - name: ENGINE_SHARD_NUM
+              value: "1"
+            - name: BULK_LOADER_BINARY_PATH
+              value: /opt/flex/bin/bulk_loader
+            - name: DEFAULT_GRAPH_NAME
+              value: modern_graph
+            - name: ODPS_ACCESS_ID
+              value: ""
+            - name: ODPS_ACCESS_KEY
+              value: ""
+            - name: ODPS_ENDPOINT
+              value: ""
+            - name: HANG_UNTIL_SUCCESS
+              value: "false"
+          ports:
+            - name: query-port
+              containerPort: 10000
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 8Gi
+            requests:
+              cpu: 1000m
+              memory: 8Gi
+          volumeMounts:
+            - name: workspace
+              mountPath: /tmp/interactive_workspace
+            - name: config
+              mountPath: /etc/interactive/engine_config.yaml
+              subPath: engine_config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: release-name-graphscope-interactive-config
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "1Gi"
+---
+# Source: graphscope-interactive/templates/secondary/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: release-name-graphscope-interactive-secondary
+  namespace: kubetask
+  labels:
+    helm.sh/chart: graphscope-interactive-0.0.2
+    app.kubernetes.io/name: graphscope-interactive
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: secondary
+spec:
+  replicas: 2
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: graphscope-interactive
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/component: secondary
+  serviceName: release-name-graphscope-interactive-secondary
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+      labels:
+        helm.sh/chart: graphscope-interactive-0.0.2
+        app.kubernetes.io/name: graphscope-interactive
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: secondary
+    spec:
+      hostNetwork: 
+      hostIPC: false
+      serviceAccountName: default
+      initContainers:
+      containers:
+        - name: secondary
+          image: registry.cn-hongkong.aliyuncs.com/graphscope/interactive:debug
+          imagePullPolicy: "Always"
+          #command: ["sleep", "infinity"]
+          command:
+            - /bin/bash
+            - -c
+            - |
+              POD_NAME=$MY_POD_NAME
+              if [ -z "$POD_NAME" ]; then
+                POD_NAME=$(hostname)
+              fi
+              echo "POD_NAME: $POD_NAME"
+              sudo chown -R graphscope:graphscope $INTERACTIVE_WORKSPACE
+              cmd="/opt/flex/bin/entrypoint.sh -t engine -w $INTERACTIVE_WORKSPACE"
+              echo "CMD: $cmd"
+              eval $cmd
+              # sleep infinity
+          env:
+            - name: INTERACTIVE_WORKSPACE
+              value: "/tmp/interactive_workspace"
+            - name: primary_SERVICE_HOST
+              value: release-name-graphscope-interactive-secondary.kubetask.svc.cluster.local
+            - name: ENGINE_CONFIG_PATH
+              value: /etc/interactive/engine_config.yaml
+            - name: REAL_ENGINE_CONFIG_PATH
+              value: /etc/interactive/real_engine_config.yaml
+            - name: SECONDARY_QUERY_PORT
+              value: "10000"
+            - name: ENGINE_BINARY_PATH
+              value: /opt/flex/bin/interactive_server
+            - name: ENGINE_SHARD_NUM
+              value: "1"
+            - name: BULK_LOADER_BINARY_PATH
+              value: /opt/flex/bin/bulk_loader
+            - name: DEFAULT_GRAPH_NAME
+              value: modern_graph
+            - name: ODPS_ACCESS_ID
+              value: ""
+            - name: ODPS_ACCESS_KEY
+              value: ""
+            - name: ODPS_ENDPOINT
+              value: ""
+          ports:
+            - name: admin-port
+              containerPort: 7777
+            - name: query-port
+              containerPort: 10000
+          resources:
+            limits:
+              cpu: 8000m
+              memory: 10Gi
+            requests:
+              cpu: 8000m
+              memory: 10Gi
+          volumeMounts:
+            - name: workspace
+              mountPath: /tmp/interactive_workspace
+            - name: config
+              mountPath: /etc/interactive/engine_config.yaml
+              subPath: engine_config.yaml
+            # - name: config
+            #   mountPath: /etc/interactive/setup.sh
+            #   subPath: setup.sh
+      volumes:
+        - name: config
+          configMap:
+            name: release-name-graphscope-interactive-config
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"

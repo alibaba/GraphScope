@@ -164,6 +164,20 @@ jobs:
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml python
         sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
 
+    - name: Proxy Server test
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_proxy_server_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+
+    - name: Proxy Server test
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_proxy_server_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+
     - name: Sample Query test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
