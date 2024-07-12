@@ -70,100 +70,14 @@ class query_dispatcher {
 
 namespace server {
 
-class graph_db_ic_handler : public seastar::httpd::handler_base {
+class StoppableHandler : public seastar::httpd::handler_base {
  public:
-  graph_db_ic_handler(uint32_t group_id, uint32_t shard_concurrency);
+  virtual seastar::future<> stop() = 0;
 
-  ~graph_db_ic_handler() override = default;
+  virtual bool is_stopped() const = 0;
 
-  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
-      const seastar::sstring& path,
-      std::unique_ptr<seastar::httpd::request> req,
-      std::unique_ptr<seastar::httpd::reply> rep) override;
-
- private:
-  const uint32_t shard_concurrency_;
-  query_dispatcher dispatcher_;
-  std::vector<executor_ref> executor_refs_;
+  virtual bool start() = 0;
 };
-
-#ifdef BUILD_HQPS
-class hqps_ic_handler : public seastar::httpd::handler_base {
- public:
-  // extra headers
-  static constexpr const char* INTERACTIVE_REQUEST_FORMAT =
-      "X-Interactive-Request-Format";
-  static constexpr const char* PROTOCOL_FORMAT = "proto";
-  static constexpr const char* JSON_FORMAT = "json";
-  static constexpr const char* ENCODER_FORMAT = "encoder";
-  hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
-                  uint32_t group_inc_step, uint32_t shard_concurrency);
-  ~hqps_ic_handler() override;
-
-  bool create_actors();
-
-  seastar::future<> cancel_current_scope();
-
-  bool is_current_scope_cancelled() const;
-
-  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
-      const seastar::sstring& path,
-      std::unique_ptr<seastar::httpd::request> req,
-      std::unique_ptr<seastar::httpd::reply> rep) override;
-
- private:
-  bool is_running_graph(const seastar::sstring& graph_id) const;
-
-  uint32_t cur_group_id_;
-  const uint32_t max_group_id_, group_inc_step_;
-  const uint32_t shard_concurrency_;
-  uint32_t executor_idx_;
-  std::vector<executor_ref> executor_refs_;
-  bool is_cancelled_;
-#ifdef HAVE_OPENTELEMETRY_CPP
-  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
-      total_counter_;
-  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
-      latency_histogram_;
-#endif
-};
-
-class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
- public:
-  hqps_adhoc_query_handler(uint32_t init_adhoc_group_id,
-                           uint32_t init_codegen_group_id,
-                           uint32_t max_group_id, uint32_t group_inc_step,
-                           uint32_t shard_concurrency);
-
-  ~hqps_adhoc_query_handler() override;
-
-  seastar::future<> cancel_current_scope();
-
-  bool is_current_scope_cancelled() const;
-
-  bool create_actors();
-
-  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
-      const seastar::sstring& path,
-      std::unique_ptr<seastar::httpd::request> req,
-      std::unique_ptr<seastar::httpd::reply> rep) override;
-
- private:
-  uint32_t cur_adhoc_group_id_, cur_codegen_group_id_;
-  const uint32_t max_group_id_, group_inc_step_;
-  const uint32_t shard_concurrency_;
-  uint32_t executor_idx_;
-  std::vector<executor_ref> executor_refs_;
-  std::vector<codegen_actor_ref> codegen_actor_refs_;
-  bool is_cancelled_;
-#ifdef HAVE_OPENTELEMETRY_CPP
-  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
-      total_counter_;
-  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
-      latency_histogram_;
-#endif
-};
-#endif  // BUILD_HQPS
 
 class graph_db_http_handler {
  public:
@@ -195,11 +109,9 @@ class graph_db_http_handler {
   std::atomic<bool> enable_hqps_handlers_{false}, running_{false},
       actors_running_{false};
 
-  std::vector<graph_db_ic_handler*> graph_db_handlers_;
-#ifdef BUILD_HQPS
-  std::vector<hqps_ic_handler*> ic_handlers_;
-  std::vector<hqps_adhoc_query_handler*> adhoc_query_handlers_;
-#endif  // BUILD_HQPS
+  std::vector<StoppableHandler*> graph_db_handlers_;
+  std::vector<StoppableHandler*> ic_handlers_;
+  std::vector<StoppableHandler*> adhoc_query_handlers_;
 };
 
 }  // namespace server

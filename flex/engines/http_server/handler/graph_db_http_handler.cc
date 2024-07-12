@@ -76,502 +76,505 @@ class optional_param_matcher : public matcher {
 
 namespace server {
 
-graph_db_ic_handler::graph_db_ic_handler(uint32_t group_id,
-                                         uint32_t shard_concurrency)
-    : shard_concurrency_(shard_concurrency), dispatcher_(shard_concurrency) {
-  executor_refs_.reserve(shard_concurrency_);
-  hiactor::scope_builder builder;
-  builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
-  for (unsigned i = 0; i < shard_concurrency_; ++i) {
-    executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-  }
-}
-
-seastar::future<std::unique_ptr<seastar::httpd::reply>>
-graph_db_ic_handler::handle(const seastar::sstring& path,
-                            std::unique_ptr<seastar::httpd::request> req,
-                            std::unique_ptr<seastar::httpd::reply> rep) {
-  auto dst_executor = dispatcher_.get_executor_idx();
-  req->content.append("\0", 1);
-  return executor_refs_[dst_executor]
-      .run_graph_db_query(query_param{std::move(req->content)})
-      .then_wrapped(
-          [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              return seastar::make_exception_future<
-                  std::unique_ptr<seastar::httpd::reply>>(fut.get_exception());
-            }
-            auto result = fut.get0();
-            rep->write_body("bin", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-          });
-}
-
 #ifdef BUILD_HQPS
 ////////////////////////////hqps_ic_handler////////////////////////////
-hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
-                                 uint32_t group_inc_step,
-                                 uint32_t shard_concurrency)
-    : cur_group_id_(init_group_id),
-      max_group_id_(max_group_id),
-      group_inc_step_(group_inc_step),
-      shard_concurrency_(shard_concurrency),
-      executor_idx_(0),
-      is_cancelled_(false) {
-  executor_refs_.reserve(shard_concurrency_);
-  hiactor::scope_builder builder;
-  builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-  for (unsigned i = 0; i < shard_concurrency_; ++i) {
-    executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-  }
+
+class hqps_ic_handler : public StoppableHandler {
+ public:
+  // extra headers
+  static constexpr const char* INTERACTIVE_REQUEST_FORMAT =
+      "X-Interactive-Request-Format";
+  static constexpr const char* PROTOCOL_FORMAT = "proto";
+  static constexpr const char* JSON_FORMAT = "json";
+  static constexpr const char* ENCODER_FORMAT = "encoder";
+  hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
+                  uint32_t group_inc_step, uint32_t shard_concurrency)
+      : cur_group_id_(init_group_id),
+        max_group_id_(max_group_id),
+        group_inc_step_(group_inc_step),
+        shard_concurrency_(shard_concurrency),
+        executor_idx_(0),
+        is_cancelled_(false) {
+    executor_refs_.reserve(shard_concurrency_);
+    hiactor::scope_builder builder;
+    builder.set_shard(hiactor::local_shard_id())
+        .enter_sub_scope(hiactor::scope<executor_group>(0))
+        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
+    for (unsigned i = 0; i < shard_concurrency_; ++i) {
+      executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
+    }
 #ifdef HAVE_OPENTELEMETRY_CPP
-  total_counter_ = otel::create_int_counter("hqps_procedure_query_total");
-  latency_histogram_ =
-      otel::create_double_histogram("hqps_procedure_query_latency");
+    total_counter_ = otel::create_int_counter("hqps_procedure_query_total");
+    latency_histogram_ =
+        otel::create_double_histogram("hqps_procedure_query_latency");
 #endif
-}
-
-hqps_ic_handler::~hqps_ic_handler() = default;
-
-seastar::future<> hqps_ic_handler::cancel_current_scope() {
-  if (is_cancelled_) {
-    LOG(INFO) << "The current scope has been already cancelled!";
-    return seastar::make_ready_future<>();
   }
-  hiactor::scope_builder builder;
-  builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-  return hiactor::actor_engine()
-      .cancel_scope_request(builder, false)
-      .then([this] {
-        LOG(INFO) << "Cancel IC scope successfully!";
-        // clear the actor refs
-        executor_refs_.clear();
-        is_cancelled_ = true;
-        return seastar::make_ready_future<>();
-      });
-}
+  ~hqps_ic_handler() override = default;
 
-bool hqps_ic_handler::is_current_scope_cancelled() const {
-  return is_cancelled_;
-}
-
-bool hqps_ic_handler::create_actors() {
-  if (executor_refs_.size() > 0) {
-    LOG(ERROR) << "The actors have been already created!";
-    return false;
+  seastar::future<> stop() override {
+    if (is_cancelled_) {
+      LOG(INFO) << "The current scope has been already cancelled!";
+      return seastar::make_ready_future<>();
+    }
+    hiactor::scope_builder builder;
+    builder.set_shard(hiactor::local_shard_id())
+        .enter_sub_scope(hiactor::scope<executor_group>(0))
+        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
+    return hiactor::actor_engine()
+        .cancel_scope_request(builder, false)
+        .then([this] {
+          LOG(INFO) << "Cancel IC scope successfully!";
+          // clear the actor refs
+          executor_refs_.clear();
+          is_cancelled_ = true;
+          return seastar::make_ready_future<>();
+        });
   }
 
-  VLOG(10) << "Create actors with a different sub scope id: " << cur_group_id_;
-  if (cur_group_id_ + group_inc_step_ > max_group_id_) {
-    LOG(ERROR) << "The max group id is reached, cannot create more actors!";
-    return false;
-  }
-  if (cur_group_id_ + group_inc_step_ < cur_group_id_) {
-    LOG(ERROR) << "overflow detected!";
-    return false;
-  }
-  cur_group_id_ += group_inc_step_;
-  hiactor::scope_builder builder;
-  builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-  for (unsigned i = 0; i < shard_concurrency_; ++i) {
-    executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-  }
-  is_cancelled_ = false;  // locked outside
-  return true;
-}
+  bool is_stopped() const override { return is_cancelled_; }
 
-bool hqps_ic_handler::is_running_graph(const seastar::sstring& graph_id) const {
-  std::string graph_id_str(graph_id.data(), graph_id.size());
-  auto running_graph_res =
-      HQPSService::get().get_metadata_store()->GetRunningGraph();
-  if (!running_graph_res.ok()) {
-    LOG(ERROR) << "Failed to get running graph: "
-               << running_graph_res.status().error_message();
-    return false;
-  }
-  return running_graph_res.value() == graph_id_str;
-}
+  bool start() override {
+    if (executor_refs_.size() > 0) {
+      LOG(ERROR) << "The actors have been already created!";
+      return false;
+    }
 
-// Handles both /v1/graph/{graph_id}/query and /v1/graph/current/query/
-seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
-    const seastar::sstring& path, std::unique_ptr<seastar::httpd::request> req,
-    std::unique_ptr<seastar::httpd::reply> rep) {
-  auto dst_executor = executor_idx_;
-  executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-  // TODO(zhanglei): choose read or write based on the request, after the
-  // read/write info is supported in physical plan
-  auto request_format = req->get_header(INTERACTIVE_REQUEST_FORMAT);
-  if (request_format.empty()) {
-    // If no format specfied, we use default format: proto
-    request_format = PROTOCOL_FORMAT;
+    VLOG(10) << "Create actors with a different sub scope id: "
+             << cur_group_id_;
+    if (cur_group_id_ + group_inc_step_ > max_group_id_) {
+      LOG(ERROR) << "The max group id is reached, cannot create more actors!";
+      return false;
+    }
+    if (cur_group_id_ + group_inc_step_ < cur_group_id_) {
+      LOG(ERROR) << "overflow detected!";
+      return false;
+    }
+    cur_group_id_ += group_inc_step_;
+    hiactor::scope_builder builder;
+    builder.set_shard(hiactor::local_shard_id())
+        .enter_sub_scope(hiactor::scope<executor_group>(0))
+        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
+    for (unsigned i = 0; i < shard_concurrency_; ++i) {
+      executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
+    }
+    is_cancelled_ = false;  // locked outside
+    return true;
   }
-  if (request_format == JSON_FORMAT) {
-    req->content.append(gs::GraphDBSession::kCypherJson, 1);
-  } else if (request_format == PROTOCOL_FORMAT) {
-    req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
-  } else if (request_format == ENCODER_FORMAT) {
-    req->content.append(gs::GraphDBSession::kCppEncoder, 1);
-  } else {
-    LOG(ERROR) << "Unsupported request format: " << request_format;
-    rep->set_status(seastar::httpd::reply::status_type::internal_server_error);
-    rep->write_body("bin", seastar::sstring("Unsupported request format!"));
-    rep->done();
-    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
-        std::move(rep));
-  }
-  if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
-    // TODO(zhanglei): get from graph_db.
-    if (!is_running_graph(req->param["graph_id"])) {
+  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
+      const seastar::sstring& path,
+      std::unique_ptr<seastar::httpd::request> req,
+      std::unique_ptr<seastar::httpd::reply> rep) override {
+    auto dst_executor = executor_idx_;
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    // TODO(zhanglei): choose read or write based on the request, after the
+    // read/write info is supported in physical plan
+    auto request_format = req->get_header(INTERACTIVE_REQUEST_FORMAT);
+    if (request_format.empty()) {
+      // If no format specfied, we use default format: proto
+      request_format = PROTOCOL_FORMAT;
+    }
+    if (request_format == JSON_FORMAT) {
+      req->content.append(gs::GraphDBSession::kCypherJson, 1);
+    } else if (request_format == PROTOCOL_FORMAT) {
+      req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
+    } else if (request_format == ENCODER_FORMAT) {
+      req->content.append(gs::GraphDBSession::kCppEncoder, 1);
+    } else {
+      LOG(ERROR) << "Unsupported request format: " << request_format;
       rep->set_status(
           seastar::httpd::reply::status_type::internal_server_error);
-      rep->write_body("bin",
-                      seastar::sstring("The querying query is not running:" +
-                                       req->param["graph_id"]));
+      rep->write_body("bin", seastar::sstring("Unsupported request format!"));
       rep->done();
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     }
-  }
+    if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
+      // TODO(zhanglei): get from graph_db.
+      if (!is_running_graph(req->param["graph_id"])) {
+        rep->set_status(
+            seastar::httpd::reply::status_type::internal_server_error);
+        rep->write_body("bin",
+                        seastar::sstring("The querying query is not running:" +
+                                         req->param["graph_id"]));
+        rep->done();
+        return seastar::make_ready_future<
+            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+      }
+    }
 #ifdef HAVE_OPENTELEMETRY_CPP
-  auto tracer = otel::get_tracer("hqps_procedure_query_handler");
-  // Extract context from headers. This copy is necessary to avoid access after
-  // header content been freed
-  std::map<std::string, std::string> headers(req->_headers.begin(),
-                                             req->_headers.end());
-  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
-  auto options = otel::get_parent_ctx(current_ctx, headers);
-  auto outer_span = tracer->StartSpan("procedure_query_handling", options);
-  auto scope = tracer->WithActiveSpan(outer_span);
-  auto start_ts = gs::GetCurrentTimeStamp();
+    auto tracer = otel::get_tracer("hqps_procedure_query_handler");
+    // Extract context from headers. This copy is necessary to avoid access
+    // after header content been freed
+    std::map<std::string, std::string> headers(req->_headers.begin(),
+                                               req->_headers.end());
+    auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+    auto options = otel::get_parent_ctx(current_ctx, headers);
+    auto outer_span = tracer->StartSpan("procedure_query_handling", options);
+    auto scope = tracer->WithActiveSpan(outer_span);
+    auto start_ts = gs::GetCurrentTimeStamp();
 #endif  // HAVE_OPENTELEMETRY_CPP
 
-  return executor_refs_[dst_executor]
-      .run_graph_db_query(query_param{std::move(req->content)})
-      .then([request_format
+    return executor_refs_[dst_executor]
+        .run_graph_db_query(query_param{std::move(req->content)})
+        .then([request_format
 #ifdef HAVE_OPENTELEMETRY_CPP
-             ,
-             this, outer_span = outer_span
+               ,
+               this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
-  ](auto&& output) {
-        if (request_format == ENCODER_FORMAT) {
-          return seastar::make_ready_future<query_param>(
-              std::move(output.content));
-        } else {
-          // For cypher input format, the results are written with
-          // output.put_string(), which will add extra 4 bytes. So we need to
-          // remove the first 4 bytes here.
-          if (output.content.size() < 4) {
-            LOG(ERROR) << "Invalid output size: " << output.content.size();
+    ](auto&& output) {
+          if (request_format == ENCODER_FORMAT) {
+            return seastar::make_ready_future<query_param>(
+                std::move(output.content));
+          } else {
+            // For cypher input format, the results are written with
+            // output.put_string(), which will add extra 4 bytes. So we need to
+            // remove the first 4 bytes here.
+            if (output.content.size() < 4) {
+              LOG(ERROR) << "Invalid output size: " << output.content.size();
+#ifdef HAVE_OPENTELEMETRY_CPP
+              outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                                    "Invalid output size");
+              outer_span->End();
+              std::map<std::string, std::string> labels = {{"status", "fail"}};
+              total_counter_->Add(1, labels);
+#endif  // HAVE_OPENTELEMETRY_CPP
+              return seastar::make_ready_future<query_param>(std::move(output));
+            }
+            return seastar::make_ready_future<query_param>(
+                std::move(output.content.substr(4)));
+          }
+        })
+        .then_wrapped([rep = std::move(rep)
+#ifdef HAVE_OPENTELEMETRY_CPP
+                           ,
+                       this, outer_span, start_ts
+#endif  // HAVE_OPENTELEMETRY_CPP
+    ](seastar::future<query_result>&& fut) mutable {
+          if (__builtin_expect(fut.failed(), false)) {
+            rep->set_status(
+                seastar::httpd::reply::status_type::internal_server_error);
+            try {
+              std::rethrow_exception(fut.get_exception());
+            } catch (std::exception& e) {
+              rep->write_body("bin", seastar::sstring(e.what()));
+            }
 #ifdef HAVE_OPENTELEMETRY_CPP
             outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
-                                  "Invalid output size");
+                                  "Internal Server Error");
             outer_span->End();
             std::map<std::string, std::string> labels = {{"status", "fail"}};
             total_counter_->Add(1, labels);
+#endif  // HAVE_OPENTELEMETRY_CPP
+            rep->done();
+            return seastar::make_ready_future<
+                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+          }
+          auto result = fut.get0();
+          rep->write_body("bin", std::move(result.content));
+#ifdef HAVE_OPENTELEMETRY_CPP
+          outer_span->End();
+          std::map<std::string, std::string> labels = {{"status", "success"}};
+          total_counter_->Add(1, labels);
+          auto end_ts = gs::GetCurrentTimeStamp();
+#if OPENTELEMETRY_ABI_VERSION_NO >= 2
+          latency_histogram_->Record(end_ts - start_ts);
+#else
+          latency_histogram_->Record(end_ts - start_ts,
+                                     opentelemetry::context::Context{});
+#endif
+#endif  // HAVE_OPENTELEMETRY_CPP
+          rep->done();
+          return seastar::make_ready_future<
+              std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+        });
+  }
+
+ private:
+  bool is_running_graph(const seastar::sstring& graph_id) const {
+    std::string graph_id_str(graph_id.data(), graph_id.size());
+    auto running_graph_res =
+        HQPSService::get().get_metadata_store()->GetRunningGraph();
+    if (!running_graph_res.ok()) {
+      LOG(ERROR) << "Failed to get running graph: "
+                 << running_graph_res.status().error_message();
+      return false;
+    }
+    return running_graph_res.value() == graph_id_str;
+  }
+
+  uint32_t cur_group_id_;
+  const uint32_t max_group_id_, group_inc_step_;
+  const uint32_t shard_concurrency_;
+  uint32_t executor_idx_;
+  std::vector<executor_ref> executor_refs_;
+  bool is_cancelled_;
+#ifdef HAVE_OPENTELEMETRY_CPP
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
+      total_counter_;
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
+      latency_histogram_;
+#endif
+};
+
+class hqps_adhoc_query_handler : public StoppableHandler {
+ public:
+  hqps_adhoc_query_handler(uint32_t init_adhoc_group_id,
+                           uint32_t init_codegen_group_id,
+                           uint32_t max_group_id, uint32_t group_inc_step,
+                           uint32_t shard_concurrency)
+      : cur_adhoc_group_id_(init_adhoc_group_id),
+        cur_codegen_group_id_(init_codegen_group_id),
+        max_group_id_(max_group_id),
+        group_inc_step_(group_inc_step),
+        shard_concurrency_(shard_concurrency),
+        executor_idx_(0),
+        is_cancelled_(false) {
+    executor_refs_.reserve(shard_concurrency_);
+    {
+      hiactor::scope_builder builder;
+      builder.set_shard(hiactor::local_shard_id())
+          .enter_sub_scope(hiactor::scope<executor_group>(0))
+          .enter_sub_scope(
+              hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
+      for (unsigned i = 0; i < shard_concurrency_; ++i) {
+        executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
+      }
+    }
+    {
+      hiactor::scope_builder builder;
+      builder.set_shard(hiactor::local_shard_id())
+          .enter_sub_scope(hiactor::scope<executor_group>(0))
+          .enter_sub_scope(
+              hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
+      codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
+    }
+#ifdef HAVE_OPENTELEMETRY_CPP
+    total_counter_ = otel::create_int_counter("hqps_adhoc_query_total");
+    latency_histogram_ =
+        otel::create_double_histogram("hqps_adhoc_query_latency");
+#endif  // HAVE_OPENTELEMETRY_CPP
+  }
+
+  ~hqps_adhoc_query_handler() override = default;
+
+  seastar::future<> stop() override {
+    if (is_cancelled_) {
+      LOG(INFO) << "The current scope has been already cancelled!";
+      return seastar::make_ready_future<>();
+    }
+    hiactor::scope_builder adhoc_builder;
+    adhoc_builder.set_shard(hiactor::local_shard_id())
+        .enter_sub_scope(hiactor::scope<executor_group>(0))
+        .enter_sub_scope(
+            hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
+    hiactor::scope_builder codegen_builder;
+    codegen_builder.set_shard(hiactor::local_shard_id())
+        .enter_sub_scope(hiactor::scope<executor_group>(0))
+        .enter_sub_scope(
+            hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
+    return hiactor::actor_engine()
+        .cancel_scope_request(adhoc_builder, false)
+        .then([codegen_builder] {
+          LOG(INFO) << "Cancel adhoc scope successfully!";
+          return hiactor::actor_engine().cancel_scope_request(codegen_builder,
+                                                              false);
+        })
+        .then([this] {
+          LOG(INFO) << "Cancel codegen scope successfully!";
+          // clear the actor refs
+          executor_refs_.clear();
+          codegen_actor_refs_.clear();
+          LOG(INFO) << "Clear actor refs successfully!";
+          is_cancelled_ = true;
+          return seastar::make_ready_future<>();
+        });
+  }
+
+  bool is_stopped() const override { return is_cancelled_; }
+
+  bool start() override {
+    if (executor_refs_.size() > 0 || codegen_actor_refs_.size() > 0) {
+      LOG(ERROR) << "The actors have been already created!";
+      return false;
+    }
+    // Check whether cur_adhoc_group_id + group_inc_step_ is larger than
+    // max_group_id_, considering overflow
+    if (cur_adhoc_group_id_ + group_inc_step_ > max_group_id_ ||
+        cur_codegen_group_id_ + group_inc_step_ > max_group_id_) {
+      LOG(ERROR) << "The max group id is reached, cannot create more actors!";
+      return false;
+    }
+    if (cur_adhoc_group_id_ + group_inc_step_ < cur_adhoc_group_id_ ||
+        cur_codegen_group_id_ + group_inc_step_ < cur_codegen_group_id_) {
+      LOG(ERROR) << "overflow detected!";
+      return false;
+    }
+
+    {
+      cur_adhoc_group_id_ += group_inc_step_;
+      hiactor::scope_builder builder;
+      builder.set_shard(hiactor::local_shard_id())
+          .enter_sub_scope(hiactor::scope<executor_group>(0))
+          .enter_sub_scope(
+              hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
+      for (unsigned i = 0; i < shard_concurrency_; ++i) {
+        executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
+      }
+    }
+    {
+      cur_codegen_group_id_ += group_inc_step_;
+      hiactor::scope_builder builder;
+      builder.set_shard(hiactor::local_shard_id())
+          .enter_sub_scope(hiactor::scope<executor_group>(0))
+          .enter_sub_scope(
+              hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
+      codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
+    }
+    is_cancelled_ = false;
+    return true;
+  }
+
+  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
+      const seastar::sstring& path,
+      std::unique_ptr<seastar::httpd::request> req,
+      std::unique_ptr<seastar::httpd::reply> rep) override {
+    auto dst_executor = executor_idx_;
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+    auto tracer = otel::get_tracer("hqps_adhoc_query_handler");
+    // Extract context from headers. This copy is necessary to avoid access
+    // after header content been freed
+    std::map<std::string, std::string> headers(req->_headers.begin(),
+                                               req->_headers.end());
+    auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+    auto options = otel::get_parent_ctx(current_ctx, headers);
+    auto outer_span = tracer->StartSpan("adhoc_query_handling", options);
+    auto scope = tracer->WithActiveSpan(outer_span);
+    // Start a new span for codegen
+    auto codegen_span = tracer->StartSpan("adhoc_codegen", options);
+    auto codegen_scope = tracer->WithActiveSpan(codegen_span);
+    // create a new span for query execution, not started.
+    auto start_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch())
+                        .count();
+#endif  // HAVE_OPENTELEMETRY_CPP
+    return codegen_actor_refs_[0]
+        .do_codegen(query_param{std::move(req->content)})
+        .then([this, dst_executor
+#ifdef HAVE_OPENTELEMETRY_CPP
+               ,
+               codegen_span = codegen_span, tracer = tracer, options = options,
+               codegen_scope = std::move(codegen_scope), outer_span = outer_span
+#endif  // HAVE_OPENTELEMETRY_CPP
+    ](auto&& param) mutable {
+#ifdef HAVE_OPENTELEMETRY_CPP
+          codegen_span->End();
+          options.parent = outer_span->GetContext();
+          auto query_span = tracer->StartSpan("adhoc_query_execution", options);
+          auto query_scope = tracer->WithActiveSpan(query_span);
+#endif  // HAVE_OPENTELEMETRY_CPP
+        // TODO(zhanglei): choose read or write based on the request, after the
+        //  read/write info is supported in physical plan
+        // The content contains the path to dynamic library
+          param.content.append(gs::Schema::HQPS_ADHOC_WRITE_PLUGIN_ID_STR, 1);
+          param.content.append(gs::GraphDBSession::kCypherInternalAdhoc, 1);
+          return executor_refs_[dst_executor]
+              .run_graph_db_query(query_param{std::move(param.content)})
+              .then([
+#ifdef HAVE_OPENTELEMETRY_CPP
+                        query_span = query_span,
+                        query_scope = std::move(query_scope)
+#endif  // HAVE_OPENTELEMETRY_CPP
+          ](auto&& output) {
+#ifdef HAVE_OPENTELEMETRY_CPP
+                query_span->End();
+#endif  // HAVE_OPENTELEMETRY_CPP
+                return seastar::make_ready_future<query_param>(
+                    std::move(output.content));
+              });
+        })
+        .then([
+#ifdef HAVE_OPENTELEMETRY_CPP
+                  this, outer_span = outer_span
+#endif  // HAVE_OPENTELEMETRY_CPP
+    ](auto&& output) {
+          if (output.content.size() < 4) {
+            LOG(ERROR) << "Invalid output size: " << output.content.size();
+#ifdef HAVE_OPENTELEMETRY_CPP
+            std::map<std::string, std::string> labels = {{"status", "fail"}};
+            total_counter_->Add(1, labels);
+            outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                                  "Internal output size");
+            outer_span->End();
 #endif  // HAVE_OPENTELEMETRY_CPP
             return seastar::make_ready_future<query_param>(std::move(output));
           }
           return seastar::make_ready_future<query_param>(
               std::move(output.content.substr(4)));
-        }
-      })
-      .then_wrapped([rep = std::move(rep)
+        })
+        .then_wrapped([rep = std::move(rep)
 #ifdef HAVE_OPENTELEMETRY_CPP
-                         ,
-                     this, outer_span, start_ts
+                           ,
+                       this, outer_span, start_ts
 #endif  // HAVE_OPENTELEMETRY_CPP
-  ](seastar::future<query_result>&& fut) mutable {
-        if (__builtin_expect(fut.failed(), false)) {
-          rep->set_status(
-              seastar::httpd::reply::status_type::internal_server_error);
-          try {
-            std::rethrow_exception(fut.get_exception());
-          } catch (std::exception& e) {
-            rep->write_body("bin", seastar::sstring(e.what()));
-          }
+    ](seastar::future<query_result>&& fut) mutable {
+          if (__builtin_expect(fut.failed(), false)) {
+            rep->set_status(
+                seastar::httpd::reply::status_type::internal_server_error);
+            try {
+              std::rethrow_exception(fut.get_exception());
+            } catch (std::exception& e) {
+              rep->write_body("bin", seastar::sstring(e.what()));
 #ifdef HAVE_OPENTELEMETRY_CPP
-          outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
-                                "Internal Server Error");
-          outer_span->End();
-          std::map<std::string, std::string> labels = {{"status", "fail"}};
+              std::map<std::string, std::string> labels = {{"status", "fail"}};
+              total_counter_->Add(1, labels);
+              outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                                    "Internal Server Error");
+              outer_span->SetAttribute(
+                  "exception", opentelemetry::common::AttributeValue(e.what()));
+              outer_span->End();
+#endif  // HAVE_OPENTELEMETRY_CPP
+            }
+            rep->done();
+            return seastar::make_ready_future<
+                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+          }
+          auto result = fut.get0();
+          rep->write_body("bin", std::move(result.content));
+#ifdef HAVE_OPENTELEMETRY_CPP
+          std::map<std::string, std::string> labels = {{"status", "success"}};
           total_counter_->Add(1, labels);
+          outer_span->End();
+          auto end_ts = gs::GetCurrentTimeStamp();
+#if OPENTELEMETRY_ABI_VERSION_NO >= 2
+          latency_histogram_->Record(end_ts - start_ts);
+#else
+          latency_histogram_->Record(end_ts - start_ts,
+                                     opentelemetry::context::Context{});
+#endif
 #endif  // HAVE_OPENTELEMETRY_CPP
           rep->done();
           return seastar::make_ready_future<
               std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-        }
-        auto result = fut.get0();
-        rep->write_body("bin", std::move(result.content));
+        });
+  }
+
+ private:
+  uint32_t cur_adhoc_group_id_, cur_codegen_group_id_;
+  const uint32_t max_group_id_, group_inc_step_;
+  const uint32_t shard_concurrency_;
+  uint32_t executor_idx_;
+  std::vector<executor_ref> executor_refs_;
+  std::vector<codegen_actor_ref> codegen_actor_refs_;
+  bool is_cancelled_;
 #ifdef HAVE_OPENTELEMETRY_CPP
-        outer_span->End();
-        std::map<std::string, std::string> labels = {{"status", "success"}};
-        total_counter_->Add(1, labels);
-        auto end_ts = gs::GetCurrentTimeStamp();
-#if OPENTELEMETRY_ABI_VERSION_NO >= 2
-        latency_histogram_->Record(end_ts - start_ts);
-#else
-        latency_histogram_->Record(end_ts - start_ts,
-                                   opentelemetry::context::Context{});
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
+      total_counter_;
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
+      latency_histogram_;
 #endif
-#endif  // HAVE_OPENTELEMETRY_CPP
-        rep->done();
-        return seastar::make_ready_future<
-            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-      });
-}
-
-////////////////////////////hqps_adhoc_query_handler////////////////////////////
-hqps_adhoc_query_handler::hqps_adhoc_query_handler(
-    uint32_t init_adhoc_group_id, uint32_t init_codegen_group_id,
-    uint32_t max_group_id, uint32_t group_inc_step, uint32_t shard_concurrency)
-    : cur_adhoc_group_id_(init_adhoc_group_id),
-      cur_codegen_group_id_(init_codegen_group_id),
-      max_group_id_(max_group_id),
-      group_inc_step_(group_inc_step),
-      shard_concurrency_(shard_concurrency),
-      executor_idx_(0),
-      is_cancelled_(false) {
-  executor_refs_.reserve(shard_concurrency_);
-  {
-    hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(
-            hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
-    for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-    }
-  }
-  {
-    hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(
-            hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
-    codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
-  }
-#ifdef HAVE_OPENTELEMETRY_CPP
-  total_counter_ = otel::create_int_counter("hqps_adhoc_query_total");
-  latency_histogram_ =
-      otel::create_double_histogram("hqps_adhoc_query_latency");
-#endif  // HAVE_OPENTELEMETRY_CPP
-}
-hqps_adhoc_query_handler::~hqps_adhoc_query_handler() = default;
-
-seastar::future<> hqps_adhoc_query_handler::cancel_current_scope() {
-  if (is_cancelled_) {
-    LOG(INFO) << "The current scope has been already cancelled!";
-    return seastar::make_ready_future<>();
-  }
-  hiactor::scope_builder adhoc_builder;
-  adhoc_builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(
-          hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
-  hiactor::scope_builder codegen_builder;
-  codegen_builder.set_shard(hiactor::local_shard_id())
-      .enter_sub_scope(hiactor::scope<executor_group>(0))
-      .enter_sub_scope(
-          hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
-  return hiactor::actor_engine()
-      .cancel_scope_request(adhoc_builder, false)
-      .then([codegen_builder] {
-        LOG(INFO) << "Cancel adhoc scope successfully!";
-        return hiactor::actor_engine().cancel_scope_request(codegen_builder,
-                                                            false);
-      })
-      .then([this] {
-        LOG(INFO) << "Cancel codegen scope successfully!";
-        // clear the actor refs
-        executor_refs_.clear();
-        codegen_actor_refs_.clear();
-        LOG(INFO) << "Clear actor refs successfully!";
-        is_cancelled_ = true;
-        return seastar::make_ready_future<>();
-      });
-}
-
-bool hqps_adhoc_query_handler::is_current_scope_cancelled() const {
-  return is_cancelled_;
-}
-
-bool hqps_adhoc_query_handler::create_actors() {
-  if (executor_refs_.size() > 0 || codegen_actor_refs_.size() > 0) {
-    LOG(ERROR) << "The actors have been already created!";
-    return false;
-  }
-  // Check whether cur_adhoc_group_id + group_inc_step_ is larger than
-  // max_group_id_, considering overflow
-  if (cur_adhoc_group_id_ + group_inc_step_ > max_group_id_ ||
-      cur_codegen_group_id_ + group_inc_step_ > max_group_id_) {
-    LOG(ERROR) << "The max group id is reached, cannot create more actors!";
-    return false;
-  }
-  if (cur_adhoc_group_id_ + group_inc_step_ < cur_adhoc_group_id_ ||
-      cur_codegen_group_id_ + group_inc_step_ < cur_codegen_group_id_) {
-    LOG(ERROR) << "overflow detected!";
-    return false;
-  }
-
-  {
-    cur_adhoc_group_id_ += group_inc_step_;
-    hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(
-            hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
-    for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-    }
-  }
-  {
-    cur_codegen_group_id_ += group_inc_step_;
-    hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(
-            hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
-    codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
-  }
-  is_cancelled_ = false;
-  return true;
-}
-
-seastar::future<std::unique_ptr<seastar::httpd::reply>>
-hqps_adhoc_query_handler::handle(const seastar::sstring& path,
-                                 std::unique_ptr<seastar::httpd::request> req,
-                                 std::unique_ptr<seastar::httpd::reply> rep) {
-  auto dst_executor = executor_idx_;
-  executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-
-#ifdef HAVE_OPENTELEMETRY_CPP
-  auto tracer = otel::get_tracer("hqps_adhoc_query_handler");
-  // Extract context from headers. This copy is necessary to avoid access
-  // after header content been freed
-  std::map<std::string, std::string> headers(req->_headers.begin(),
-                                             req->_headers.end());
-  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
-  auto options = otel::get_parent_ctx(current_ctx, headers);
-  auto outer_span = tracer->StartSpan("adhoc_query_handling", options);
-  auto scope = tracer->WithActiveSpan(outer_span);
-  // Start a new span for codegen
-  auto codegen_span = tracer->StartSpan("adhoc_codegen", options);
-  auto codegen_scope = tracer->WithActiveSpan(codegen_span);
-  // create a new span for query execution, not started.
-  auto start_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
-                      std::chrono::system_clock::now().time_since_epoch())
-                      .count();
-#endif  // HAVE_OPENTELEMETRY_CPP
-  return codegen_actor_refs_[0]
-      .do_codegen(query_param{std::move(req->content)})
-      .then([this, dst_executor
-#ifdef HAVE_OPENTELEMETRY_CPP
-             ,
-             codegen_span = codegen_span, tracer = tracer, options = options,
-             codegen_scope = std::move(codegen_scope), outer_span = outer_span
-#endif  // HAVE_OPENTELEMETRY_CPP
-  ](auto&& param) mutable {
-#ifdef HAVE_OPENTELEMETRY_CPP
-        codegen_span->End();
-        options.parent = outer_span->GetContext();
-        auto query_span = tracer->StartSpan("adhoc_query_execution", options);
-        auto query_scope = tracer->WithActiveSpan(query_span);
-#endif  // HAVE_OPENTELEMETRY_CPP
-        // TODO(zhanglei): choose read or write based on the request, after the
-        //  read/write info is supported in physical plan
-        // The content contains the path to dynamic library
-        param.content.append(gs::Schema::HQPS_ADHOC_WRITE_PLUGIN_ID_STR, 1);
-        param.content.append(gs::GraphDBSession::kCypherInternalAdhoc, 1);
-        return executor_refs_[dst_executor]
-            .run_graph_db_query(query_param{std::move(param.content)})
-            .then([
-#ifdef HAVE_OPENTELEMETRY_CPP
-                      query_span = query_span,
-                      query_scope = std::move(query_scope)
-#endif  // HAVE_OPENTELEMETRY_CPP
-        ](auto&& output) {
-#ifdef HAVE_OPENTELEMETRY_CPP
-              query_span->End();
-#endif  // HAVE_OPENTELEMETRY_CPP
-              return seastar::make_ready_future<query_param>(
-                  std::move(output.content));
-            });
-      })
-      .then([
-#ifdef HAVE_OPENTELEMETRY_CPP
-                this, outer_span = outer_span
-#endif  // HAVE_OPENTELEMETRY_CPP
-  ](auto&& output) {
-        if (output.content.size() < 4) {
-          LOG(ERROR) << "Invalid output size: " << output.content.size();
-#ifdef HAVE_OPENTELEMETRY_CPP
-          std::map<std::string, std::string> labels = {{"status", "fail"}};
-          total_counter_->Add(1, labels);
-          outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
-                                "Internal output size");
-          outer_span->End();
-#endif  // HAVE_OPENTELEMETRY_CPP
-          return seastar::make_ready_future<query_param>(std::move(output));
-        }
-        return seastar::make_ready_future<query_param>(
-            std::move(output.content.substr(4)));
-      })
-      .then_wrapped([rep = std::move(rep)
-#ifdef HAVE_OPENTELEMETRY_CPP
-                         ,
-                     this, outer_span, start_ts
-#endif  // HAVE_OPENTELEMETRY_CPP
-  ](seastar::future<query_result>&& fut) mutable {
-        if (__builtin_expect(fut.failed(), false)) {
-          rep->set_status(
-              seastar::httpd::reply::status_type::internal_server_error);
-          try {
-            std::rethrow_exception(fut.get_exception());
-          } catch (std::exception& e) {
-            rep->write_body("bin", seastar::sstring(e.what()));
-#ifdef HAVE_OPENTELEMETRY_CPP
-            std::map<std::string, std::string> labels = {{"status", "fail"}};
-            total_counter_->Add(1, labels);
-            outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
-                                  "Internal Server Error");
-            outer_span->SetAttribute(
-                "exception", opentelemetry::common::AttributeValue(e.what()));
-            outer_span->End();
-#endif  // HAVE_OPENTELEMETRY_CPP
-          }
-          rep->done();
-          return seastar::make_ready_future<
-              std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-        }
-        auto result = fut.get0();
-        rep->write_body("bin", std::move(result.content));
-#ifdef HAVE_OPENTELEMETRY_CPP
-        std::map<std::string, std::string> labels = {{"status", "success"}};
-        total_counter_->Add(1, labels);
-        outer_span->End();
-        auto end_ts = gs::GetCurrentTimeStamp();
-#if OPENTELEMETRY_ABI_VERSION_NO >= 2
-        latency_histogram_->Record(end_ts - start_ts);
-#else
-        latency_histogram_->Record(end_ts - start_ts,
-                                   opentelemetry::context::Context{});
-#endif
-#endif  // HAVE_OPENTELEMETRY_CPP
-        rep->done();
-        return seastar::make_ready_future<
-            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-      });
-}
+};
 #endif  // BUILD_HQPS
 
 ///////////////////////////graph_db_http_handler/////////////////////////////
@@ -613,11 +616,10 @@ seastar::future<> graph_db_http_handler::stop_query_actors() {
   if (enable_hqps_handlers_.load()) {
     // Only cancel the hqps-related actors
     return ic_handlers_[hiactor::local_shard_id()]
-        ->cancel_current_scope()
+        ->stop()
         .then([this] {
           LOG(INFO) << "Cancelled ic scope";
-          return adhoc_query_handlers_[hiactor::local_shard_id()]
-              ->cancel_current_scope();
+          return adhoc_query_handlers_[hiactor::local_shard_id()]->stop();
         })
         .then([this] {
           LOG(INFO) << "Cancelled proc scope";
@@ -635,8 +637,8 @@ seastar::future<> graph_db_http_handler::stop_query_actors() {
 void graph_db_http_handler::start_query_actors() {
 #ifdef BUILD_HQPS
   if (enable_hqps_handlers_.load()) {
-    ic_handlers_[hiactor::local_shard_id()]->create_actors();
-    adhoc_query_handlers_[hiactor::local_shard_id()]->create_actors();
+    ic_handlers_[hiactor::local_shard_id()]->start();
+    adhoc_query_handlers_[hiactor::local_shard_id()]->start();
     actors_running_.store(true);
   }
 #endif  // BUILD_HQPS
@@ -672,7 +674,8 @@ seastar::future<> graph_db_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     // Create handlers
     auto graph_db_handler =
-        new graph_db_ic_handler(ic_query_group_id, shard_query_concurrency);
+        new hqps_ic_handler(ic_query_group_id, max_group_id, group_inc_step,
+                            shard_query_concurrency);
     graph_db_handlers_[hiactor::local_shard_id()] = graph_db_handler;
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/query"), graph_db_handler);
