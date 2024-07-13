@@ -2212,8 +2212,6 @@ components:
             type: array
           description:
             type: string
-        required:
-        - properties
         type: object
       example:
         type_name: type_name
@@ -3038,7 +3036,6 @@ components:
           title: column_mappings
           type: array
       required:
-      - column_mappings
       - inputs
       - type_name
       title: VertexMapping
@@ -3103,9 +3100,7 @@ components:
           title: column_mappings
           type: array
       required:
-      - destination_vertex_mappings
       - inputs
-      - source_vertex_mappings
       - type_triplet
       title: EdgeMapping
       x-body-name: edge_mapping

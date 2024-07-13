@@ -13,11 +13,11 @@ schema:
         - property_name: tagline
           property_type:
             string:
-              long_text:
+              long_text: ""
         - property_name: title
           property_type:
             string:
-              long_text:
+              long_text: ""
       primary_keys:
         - id
     - type_name: Person
@@ -31,7 +31,7 @@ schema:
         - property_name: name
           property_type:
             string:
-              long_text:
+              long_text: ""
       primary_keys:
         - id
     - type_name: User
@@ -45,7 +45,7 @@ schema:
         - property_name: name
           property_type:
             string:
-              long_text:
+              long_text: ""
       primary_keys:
         - id
   edge_types:

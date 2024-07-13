@@ -48,7 +48,10 @@ public class Driver {
     public static Driver connect() {
         String adminUri = System.getenv("INTERACTIVE_ADMIN_ENDPOINT");
         if (adminUri == null) {
-            throw new IllegalArgumentException("INTERACTIVE_ADMIN_ENDPOINT is not set");
+            throw new IllegalArgumentException(
+                    "INTERACTIVE_ADMIN_ENDPOINT is not set, did you forget to export the"
+                            + " environment variable after deploying Interactive? see"
+                            + " https://graphscope.io/docs/latest/flex/interactive/installation");
         }
         String storedProcUri = System.getenv("INTERACTIVE_STORED_PROC_ENDPOINT");
         if (storedProcUri == null) {
