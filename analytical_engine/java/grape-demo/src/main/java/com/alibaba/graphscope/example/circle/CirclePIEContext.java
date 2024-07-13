@@ -17,7 +17,7 @@ public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Lo
         implements DefaultContextBase<Long, Long, Long, Long> {
     private static final Logger logger = LoggerFactory.getLogger(CirclePIEContext.class);
 
-    public int maxStep = 3;
+    public int maxStep = 4;
     public int curStep = 0;
     public List<List<Path>> curPaths; // Paths ending at vertex.
     public List<List<Path>> nextPaths; // New generated path end at vertex this round,
@@ -38,23 +38,28 @@ public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Lo
     @Override
     public void Init(IFragment<Long, Long, Long, Long> frag, DefaultMessageManager messageManager, JSONObject jsonObject) {
         long innerVertexNum = frag.getInnerVerticesNum();
+        createFFIContext(frag, Long.class, false);
+        if (jsonObject.containsKey("maxStep")) {
+            maxStep = jsonObject.getInteger("maxStep");
+            return;
+        }
         curPaths = new ArrayList<List<Path>>((int) innerVertexNum);
-        nextPaths = new ArrayList<>((int) innerVertexNum);
-        results = new ArrayList<>((int) innerVertexNum);
+        nextPaths = new ArrayList<List<Path>>((int) innerVertexNum);
+        results = new ArrayList<List<Path>>((int) innerVertexNum);
         for (int i = 0; i < innerVertexNum; ++i ){
-            curPaths.set(i, new ArrayList<>());
-            nextPaths.set(i, new ArrayList<>());
-            results.set(i, new ArrayList<>());
+            curPaths.add(new ArrayList<Path>());
+            nextPaths.add(new ArrayList<Path>());
+            results.add(new ArrayList<Path>());
         }
         parser = new LongIdParser(frag.fnum(), 1);
     }
 
     public void addToCurrentPath(Vertex<Long> vertex, Path path) {
-        curPaths.get(vertex.getValue().intValue()).add(path);
+        curPaths.get(vertex.getValue().intValue()).add(new Path(path));
     }
 
     public void addToNextPath(Vertex<Long> vertex, Path path) {
-        nextPaths.get(vertex.getValue().intValue()).add(path);
+        nextPaths.get(vertex.getValue().intValue()).add(new Path(path));
     }
 
     public void persistCirclePathInCurrent() {
@@ -71,7 +76,11 @@ public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Lo
         List<List<Path>> tmp = curPaths;
         curPaths = nextPaths;
         nextPaths = tmp;
+        int size = nextPaths.size();
         nextPaths.clear();
+        for (int i = 0; i < size; ++i) {
+            nextPaths.add(new ArrayList<Path>());
+        }
     }
 
     /**

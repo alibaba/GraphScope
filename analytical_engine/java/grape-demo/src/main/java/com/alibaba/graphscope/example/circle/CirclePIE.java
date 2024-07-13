@@ -43,6 +43,7 @@ public class CirclePIE implements DefaultAppBase<
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
         CirclePIEContext ctx = (CirclePIEContext) context;
         for (long i = 0; i < graph.getInnerVerticesNum(); ++i) {
+            logger.info("vertex {}" ,i);
             vertex.setValue(i);
             Long globalId = graph.getInnerVertexGid(vertex);
             Path path = new Path(globalId);
@@ -57,6 +58,7 @@ public class CirclePIE implements DefaultAppBase<
                         e.printStackTrace();
                     }
                 } else {
+                    logger.info("sending to inner vertex {}, path {}", nbr.neighbor().getValue(), path);
                     ctx.addToNextPath(nbr.neighbor(), path);
                 }
                 path.pop();
@@ -67,6 +69,7 @@ public class CirclePIE implements DefaultAppBase<
         logger.info("After PEval: cur_path: " + ctx.curPaths.toString());
         logger.info("After PEval: next_path: " + ctx.nextPaths.toString());
         messageManager.forceContinue();
+        ctx.curStep += 1;
     }
 
     /**
@@ -83,6 +86,9 @@ public class CirclePIE implements DefaultAppBase<
     @Override
     public void IncEval(IFragment<Long, Long, Long, Long> graph, DefaultContextBase<Long, Long, Long, Long> context, DefaultMessageManager messageManager) {
         CirclePIEContext ctx = (CirclePIEContext) context;
+        if (ctx.curStep >= ctx.maxStep){
+            return ;
+        }
         //Receive msg and merge
         try {
             receiveMessage(graph, messageManager, ctx);
@@ -114,8 +120,10 @@ public class CirclePIE implements DefaultAppBase<
     }
 
     void sendMessageThroughOE(IFragment<Long,Long,Long,Long> graph, CirclePIEContext ctx, DefaultMessageManager messageManager) {
+        logger.info("Send message through oe");
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
         for (long i = 0; i < graph.getInnerVerticesNum(); ++i) {
+            logger.info("vertex {}" ,i);
             vertex.setValue(i);
             Long globalId = graph.getInnerVertexGid(vertex);
             List<Path> paths = ctx.curPaths.get((int) i);
@@ -131,17 +139,22 @@ public class CirclePIE implements DefaultAppBase<
                     if (graph.isOuterVertex(nbr.neighbor())) {
                         // send path to outer vertex.
                         try {
-                            sendMessageToOuterVertex(graph, messageManager, nbr.neighbor(), path);
+                            if (!path.isCircle()){ // If circle path already found, skip.
+                                logger.info("send msg to outer vertex: {} , path {}",nbr.neighbor(), path);
+                                sendMessageToOuterVertex(graph, messageManager, nbr.neighbor(), path);
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     } else {
+                        logger.info("send msg to inner vertex: {} , path {}", nbr.neighbor().getValue(), path);
                         ctx.addToNextPath(nbr.neighbor(), path);
                     }
                     path.pop();
                 }
             }
         }
+        ctx.curStep += 1;
     }
 
     /**

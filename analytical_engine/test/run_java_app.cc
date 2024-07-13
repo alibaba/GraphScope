@@ -49,6 +49,7 @@
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/object/fragment_wrapper.h"
 #include "core/utils/transform_utils.h"
+#include "java_pie/java_pie_projected_default_app.h"
 #include "java_pie/java_pie_projected_parallel_app.h"
 #include "java_pie/java_pie_property_parallel_app.h"
 #include "proto/graph_def.pb.h"
@@ -59,7 +60,7 @@ using FragmentType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>;
 using ProjectedFragmentType =
-    gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+    gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
 void output_nd_array(const grape::CommSpec& comm_spec,
                      std::unique_ptr<grape::InArchive> arc,
                      const std::string& output_path, int data_type_expected) {
@@ -332,7 +333,8 @@ void QueryProjected(vineyard::Client& client,
                     const std::string& basic_params,
                     const std::string& selector_string,
                     const std::string& selectors_string) {
-  using AppType = gs::JavaPIEProjectedParallelAppOE<ProjectedFragmentType>;
+  // using AppType = gs::JavaPIEProjectedParallelAppOE<ProjectedFragmentType>;
+  using AppType = gs::JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -502,7 +504,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
                   selector_string, selectors_string);
   } else {  // 3. run projected
     pt.put("frag_name",
-           "gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>");
+           "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>");
     std::stringstream ss;
     boost::property_tree::json_parser::write_json(ss, pt);
     std::string basic_params = ss.str();

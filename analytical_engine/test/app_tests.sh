@@ -415,7 +415,7 @@ get_test_data
 #   exact_verify "${test_dir}"/p2p-31-"${app}"
 # done
 
-start_vineyard
+#start_vineyard
 
 # run_vy ${np} ./run_vy_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0
 # run_vy_2 ${np} ./run_vy_app "${socket_file}" 4 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1
@@ -449,6 +449,13 @@ then
     #     1 "${test_dir}/projected_property/twitter_property_v_0#header_row=True#label=v&include_all_columns=true&column_types=int64_t,std::string" \
     #     com.alibaba.graphscope.example.stringApp.StringApp
 
+    # run_vy_2 ${np} ./run_java_app "${socket_file}" 1 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1 0 1 com.alibaba.graphscope.example.bfs.BFS
+    GLOG_v=10 mpirun -n 2 ./run_java_app "${socket_file}" \
+      1 "../test/modern_graph/knows.csv#header_row=True#delimiter=|#src_label=v0&dst_label=v0&label=e" \
+      1 "../test/modern_graph/person.csv#header_row=True#delimiter=|#label=v0" 1 0 1 \
+      com.alibaba.graphscope.example.circle.CirclePIE
+
+
     echo "Running girpah tests..."
     # GLOG_v=10 ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat \
     #   --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \
@@ -456,10 +463,10 @@ then
     #   --user_app_class com.alibaba.graphscope.example.giraph.SSSP
 
     # echo "Test Giraph app user Customized Writable"
-    GLOG_v=10 ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat \
-      --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat --vfile hdfs://localhost:9000/test/p2p-31.v \
-      --efile hdfs://localhost:9000/test/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
-      --user_app_class com.alibaba.graphscope.example.giraph.SSSP
+    # GLOG_v=10 ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat \
+    #   --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat --vfile hdfs://localhost:9000/test/p2p-31.v \
+    #   --efile hdfs://localhost:9000/test/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
+    #   --user_app_class com.alibaba.graphscope.example.giraph.SSSP
   fi
 fi
 

@@ -16,6 +16,11 @@ public class Path {
         vertexInnerIds = new Stack<>();
     }
 
+    public Path(Path path) {
+        vertexInnerIds = new Stack<>();
+        vertexInnerIds.addAll(path.vertexInnerIds);
+    }
+
     public Path(long vid) {
         vertexInnerIds = new Stack<>();
         vertexInnerIds.add(vid);
@@ -66,7 +71,7 @@ public class Path {
         StringBuilder sb = new StringBuilder();
         sb.append("Path{");
         for (int i = 0; i < vertexInnerIds.size(); ++i){
-            sb.append(i);
+            sb.append(vertexInnerIds.get(i));
             if (i < vertexInnerIds.size() - 1){
                 sb.append(",");
             }

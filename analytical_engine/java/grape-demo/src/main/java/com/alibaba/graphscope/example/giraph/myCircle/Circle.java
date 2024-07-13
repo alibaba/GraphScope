@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 public class Circle extends BasicComputation<LongWritable, VertexAttrWritable, LongWritable, VertexAttrWritable> {
-    private static final Logger logger = LoggerFactory.getLogger(com.alibaba.graphscope.example.giraph.circle.Circle.class);
+    private static final Logger logger = LoggerFactory.getLogger(com.alibaba.graphscope.example.giraph.myCircle.Circle.class);
     int maxIteration = 3;
 
     public Circle() {

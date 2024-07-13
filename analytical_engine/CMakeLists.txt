@@ -373,11 +373,11 @@ if (BUILD_TESTS)
     # target_link_libraries(run_app OpenMP::OpenMP_CXX)
 
     if (ENABLE_JAVA_SDK)
-        # add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc core/object/dynamic.cc)
-        # target_include_directories(run_java_app PRIVATE core utils apps)
-        # target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
-        # target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-        #                                ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
+        add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc core/object/dynamic.cc)
+        target_include_directories(run_java_app PRIVATE core utils apps)
+        target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
+        target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
+                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
 
         # # java app benchmark
         # add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
@@ -407,7 +407,7 @@ if (BUILD_TESTS)
         # target_link_libraries(run_java_string_app ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} ${JNI_LIBRARIES})
 
         if (${LIBUNWIND_FOUND})
-            # target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
+            target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
             # target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})
             target_link_libraries(giraph_runner ${LIBUNWIND_LIBRARIES})
             # target_link_libraries(projected_fragment_mapper_test ${LIBUNWIND_LIBRARIES})
