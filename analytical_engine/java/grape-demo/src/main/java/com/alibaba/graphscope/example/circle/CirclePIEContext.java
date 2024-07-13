@@ -1,11 +1,15 @@
 package com.alibaba.graphscope.example.circle;
 
+import com.alibaba.fastffi.impl.CXXStdString;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.context.DefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
+import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
+import com.alibaba.graphscope.stdcxx.StdString;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.LongIdParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Long, Long>, Long>
+public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Long, Long>, StdString>
         implements DefaultContextBase<Long, Long, Long, Long> {
     private static final Logger logger = LoggerFactory.getLogger(CirclePIEContext.class);
 
@@ -38,7 +42,7 @@ public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Lo
     @Override
     public void Init(IFragment<Long, Long, Long, Long> frag, DefaultMessageManager messageManager, JSONObject jsonObject) {
         long innerVertexNum = frag.getInnerVerticesNum();
-        createFFIContext(frag, Long.class, false);
+        createFFIContext(frag, StdString.class, false);
         if (jsonObject.containsKey("maxStep")) {
             maxStep = jsonObject.getInteger("maxStep");
             return;
@@ -94,6 +98,14 @@ public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Lo
     public void Output(IFragment<Long, Long, Long, Long> frag) {
         logger.info("finally cur path {}", curPaths);
         logger.info("finally next path {}", nextPaths);
+
+        GSVertexArray<StdString> vertexArray = data();
+        Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
+        for (long vid = 0; vid < frag.getInnerVerticesNum(); ++vid) {
+            cur.setValue(vid);
+            StdString value = (StdString) vertexArray.get(cur);
+            value.fromJavaString(results.get((int) vid).toString());
+        }
     }
 
     public void tryToFindCircle(Path path) {
