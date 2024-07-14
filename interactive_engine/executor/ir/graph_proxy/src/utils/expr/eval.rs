@@ -178,13 +178,21 @@ impl Context<()> for NoneContext {}
 impl TryFrom<common_pb::Expression> for Evaluator {
     type Error = ParsePbError;
 
-    fn try_from(suffix_tree: common_pb::Expression) -> ParsePbResult<Self>
+    fn try_from(expression: common_pb::Expression) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
-        let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_tree.operators.len());
-        let suffix_oprs = to_suffix_expr(suffix_tree.operators)
+        let suffix_oprs = to_suffix_expr(expression.operators)
             .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
+        suffix_oprs.try_into()
+    }
+}
+
+impl TryFrom<Vec<common_pb::ExprOpr>> for Evaluator {
+    type Error = ParsePbError;
+
+    fn try_from(suffix_oprs: Vec<common_pb::ExprOpr>) -> ParsePbResult<Self> {
+        let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_oprs.len());
         for unit in suffix_oprs {
             inner_tree.push(InnerOpr::try_from(unit)?);
         }
@@ -1375,8 +1383,14 @@ mod tests {
         // So use gen_regex_expression() to help generate expression
         let cases: Vec<(&str, &str)> = vec![
             ("Josh", r"^J"),                                                    // startWith, true
+            ("Josh", r"^J.*"),                                                  // startWith, true
+            ("josh", r"^J.*"),                                                  // startWith, false
+            ("BJosh", r"^J.*"),                                                 // startWith, false
             ("Josh", r"J.*"),                                                   // true
             ("Josh", r"h$"),                                                    // endWith, true
+            ("Josh", r".*h$"),                                                  // endWith, true
+            ("JosH", r".*h$"),                                                  // endWith, false
+            ("JoshB", r".*h$"),                                                 // endWith, false
             ("Josh", r".*h"),                                                   // true
             ("Josh", r"os"),                                                    // true
             ("Josh", r"A.*"),                                                   // false
@@ -1389,7 +1403,13 @@ mod tests {
         let expected: Vec<Object> = vec![
             object!(true),
             object!(true),
+            object!(false),
+            object!(false),
             object!(true),
+            object!(true),
+            object!(true),
+            object!(false),
+            object!(false),
             object!(true),
             object!(true),
             object!(false),
