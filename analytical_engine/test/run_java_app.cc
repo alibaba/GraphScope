@@ -96,6 +96,12 @@ void output_nd_array(const grape::CommSpec& comm_spec,
         oarc >> v;
         assembled_ostream << v << std::endl;
       }
+    } else if (data_type_expected == 8) {
+      for (int64_t i = 0; i < length1; ++i) {
+        std::string s;
+        oarc >> s;
+        assembled_ostream << s << std::endl;
+      }
     } else {
       LOG(FATAL) << "Unregonizable data type " << data_type_expected;
     }
@@ -155,6 +161,12 @@ void output_data_frame(const grape::CommSpec& comm_spec,
     } else if (expected_data_type == 4) {
       for (int64_t i = 0; i < length; ++i) {
         int64_t data;
+        oarc >> data;
+        assembled_col2_ostream << data << std::endl;
+      }
+    } else if (expected_data_type == 8) {
+      for (int64_t i = 0; i < length; ++i) {
+        std::string data;
         oarc >> data;
         assembled_col2_ostream << data << std::endl;
       }
@@ -416,7 +428,7 @@ void QueryProjected(vineyard::Client& client,
       std::string java_out_prefix =
           out_prefix + "/java_projected_assembled_ndarray.dat";
       output_nd_array(comm_spec, std::move(arc), java_out_prefix,
-                      4);  // 4 for int64_t
+                      8);  // 4 for int64_t
     }
     VLOG(1) << "[0] java projected finish test ndarray";
 
@@ -427,7 +439,7 @@ void QueryProjected(vineyard::Client& client,
           vd_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
       std::string java_data_frame_out_prefix = out_prefix + "/java_projected";
       output_data_frame(comm_spec, std::move(arc), java_data_frame_out_prefix,
-                        4);
+                        8);
     }
 
     VLOG(1) << "[1] java projected finish test dataframe";
@@ -438,10 +450,11 @@ void QueryProjected(vineyard::Client& client,
       CHECK(tmp);
       vineyard::ObjectID ndarray_object = tmp.value();
       std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
-      vineyard::AnyType expected_data_type = vineyard::AnyType::Int64;  // 4
-      output_vineyard_tensor<int64_t>(client, ndarray_object, comm_spec,
-                                      java_v6d_tensor_prefix,
-                                      expected_data_type);
+      // vineyard::AnyType expected_data_type = vineyard::AnyType::Int64;  // 4
+      vineyard::AnyType expected_data_type = vineyard::AnyType::String;
+      output_vineyard_tensor<std::string>(client, ndarray_object, comm_spec,
+                                          java_v6d_tensor_prefix,
+                                          expected_data_type);
     }
     VLOG(1) << "[2] java projected finish test vineyard tensor";
 

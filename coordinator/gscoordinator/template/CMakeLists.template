@@ -384,14 +384,14 @@ elseif (JAVA_PIE_APP)
     endif()
 
     # 0. codegen
-    if (JAVA_APP_CODEGEN)
-        execute_process(COMMAND java -cp ${PRE_CP} ${PROCESSOR_MAIN_CLASS} ${JAR_PATH} ${OUTPUT_DIR} $_graph_type $_vd_type
-                    RESULT_VARIABLE ret)
-            message(STATUS "java -cp ${PRE_CP} ${PROCESSOR_MAIN_CLASS} ${JAR_PATH} ${OUTPUT_DIR} $_graph_type $_vd_type")
-        if (ret EQUAL "1")
-            message(FATAL_ERROR "Preprocess failed")
-        endif()
-    endif()
+    #if (JAVA_APP_CODEGEN)
+        #execute_process(COMMAND java -cp ${PRE_CP} ${PROCESSOR_MAIN_CLASS} ${JAR_PATH} ${OUTPUT_DIR} $_graph_type $_vd_type
+        #            RESULT_VARIABLE ret)
+        #    message(STATUS "java -cp ${PRE_CP} ${PROCESSOR_MAIN_CLASS} ${JAR_PATH} ${OUTPUT_DIR} $_graph_type $_vd_type")
+        #if (ret EQUAL "1")
+        #    message(FATAL_ERROR "Preprocess failed")
+        #endif()
+    #endif()
     # find jni---------------------------------------------------------------------
     find_package(JNI REQUIRED)
     include_directories(SYSTEM ${JAVA_INCLUDE_PATH})

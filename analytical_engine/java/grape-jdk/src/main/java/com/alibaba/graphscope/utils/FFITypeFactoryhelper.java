@@ -81,7 +81,7 @@ public class FFITypeFactoryhelper {
             return "int32_t";
         } else if (clz.getName() == Double.class.getName()) {
             return "double";
-        } else if (clz.getName() == String.class.getName()) {
+        } else if (clz.getName() == String.class.getName() || clz.getName() == StdString.class.getName()) {
             return "std::string";
         } else if (clz.getName() == StringView.class.getName()) {
             return "std::string";

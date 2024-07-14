@@ -47,8 +47,7 @@ RUN apt-get update -y && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
-RUN sudo apt purge -y openjdk* && sudo apt purge -y default-jre* && \
-    apt-get update && apt-get install -y openjdk-8-jdk && \
+RUN apt-get update && apt-get install -y openjdk-8-jdk && \
     update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope

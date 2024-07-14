@@ -204,6 +204,9 @@ public class AppContextGetter {
         else if (ret.getName() == "com.alibaba.graphscope.ds.StringView") {
             return "std::string";
         }
+        else if (ret.getName() == "com.alibaba.graphscope.stdcxx.StdString"){
+            return "std::string";
+        }
         return null;
     }
 }

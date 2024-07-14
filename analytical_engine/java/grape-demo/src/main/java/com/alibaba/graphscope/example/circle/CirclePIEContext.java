@@ -9,6 +9,7 @@ import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 import com.alibaba.graphscope.stdcxx.StdString;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.LongIdParser;
 import org.slf4j.Logger;

@@ -25,7 +25,7 @@ public class CirclePIE implements DefaultAppBase<
         Long,
         CirclePIEContext> {
     private static final Logger logger = LoggerFactory.getLogger(CirclePIE.class);
-    private static FFIByteVectorOutputStream msgVector = new FFIByteVectorOutputStream();
+    private static FFIByteVectorOutputStream msgVector;
 
     /**
      * Partial Evaluation to implement.
@@ -42,6 +42,7 @@ public class CirclePIE implements DefaultAppBase<
     public void PEval(IFragment<Long, Long, Long, Long> graph, DefaultContextBase<Long, Long, Long, Long> context, DefaultMessageManager messageManager) {
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
         CirclePIEContext ctx = (CirclePIEContext) context;
+        msgVector = new FFIByteVectorOutputStream();
         for (long i = 0; i < graph.getInnerVerticesNum(); ++i) {
             logger.info("vertex {}" ,i);
             vertex.setValue(i);
@@ -117,6 +118,7 @@ public class CirclePIE implements DefaultAppBase<
             // maybe receive message, but not sending message.
             logger.info("Max step reached, " + ctx.curStep);
         }
+        ctx.curStep += 1;
     }
 
     void sendMessageThroughOE(IFragment<Long,Long,Long,Long> graph, CirclePIEContext ctx, DefaultMessageManager messageManager) {
