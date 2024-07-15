@@ -226,6 +226,21 @@ jobs:
           eval ${cmd} || exit 1
         done
 
+        # test graph_algo plugin building
+        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ../tests/hqps/engine_config_test.yaml
+        cypher_files=$(ls ${GITHUB_WORKSPACE}/flex/interactive/examples/graph_algo/*.cypher)
+        for cypher_file in ${cypher_files};
+        do
+          cmd="./load_plan_and_gen.sh -e=hqps -i=${cypher_file} -w=/tmp/codegen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml"
+          echo $cmd
+          eval ${cmd}
+        done
+
+        #set back
+        sed -i 's/default_graph: graph_algo/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
+
     - name: Test cypher&cpp procedure generation and loading
       env:
         TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
@@ -265,7 +280,7 @@ jobs:
         # plus_one: (num: int64) -> (num: int64), CppEncoder
         # sample_app: (num: int64) -> (num: int64), kCypherJson
 
-        sed -i 's/default_graph: movies/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
         sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
         cd ${GITHUB_WORKSPACE}/flex/tests/interactive/
         bash test_plugin_loading.sh ${TMP_INTERACTIVE_WORKSPACE} modern_graph \
