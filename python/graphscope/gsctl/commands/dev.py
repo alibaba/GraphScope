@@ -155,9 +155,9 @@ def interactive(app, graphscope_repo):
     required=False,
 )
 @click.option(
-    "--cypher-port",
-    help="Mapping port of cypher query [docker only]",
-    default=7687,
+    "--admin-port",
+    help="Mapping port of Interactive Admin service [docker only]",
+    default=7777,
     show_default=True,
     required=False,
 )
@@ -165,6 +165,13 @@ def interactive(app, graphscope_repo):
     "--storedproc-port",
     help="Mapping port of stored procedure query [docker only]",
     default=10000,
+    show_default=True,
+    required=False,
+)
+@click.option(
+    "--cypher-port",
+    help="Mapping port of cypher query [docker only]",
+    default=7687,
     show_default=True,
     required=False,
 )
@@ -201,11 +208,11 @@ def deploy(
     container_name,
     image_registry,
     image_tag,
-    coordinator_port=8081,
-    admin_port=7778,
-    storedproc_port=10001,
-    cypher_port=7688,
-    gremlin_port=8183,
+    coordinator_port,
+    admin_port,
+    storedproc_port,
+    cypher_port,
+    gremlin_port,
 ):  # noqa: F811
     """Deploy Flex Interactive instance"""
     cmd = []
@@ -226,9 +233,9 @@ def deploy(
             f"{storedproc_port}:10000",
             "-p",
             f"{cypher_port}:7687",
-            "-p",
-            f"{gremlin_port}:8182",
         ]
+        if gremlin_port != -1:
+            cmd.extend(["-p", f"{gremlin_port}:8182"])
         image = f"{image_registry}/{type}:{image_tag}"
         cmd.extend([image, "--enable-coordinator"])
     click.secho("Run command: {0}".format(" ".join(cmd)))
@@ -250,7 +257,12 @@ You can connect to admin service with Interactive SDK, with following environmen
     export INTERACTIVE_ADMIN_ENDPOINT=http://127.0.0.1:{admin_port}
     export INTERACTIVE_STORED_PROC_ENDPOINT=http://127.0.0.1:{storedproc_port}
     export INTERACTIVE_CYPHER_ENDPOINT=neo4j://127.0.0.1:{cypher_port}
+"""
+        if gremlin_port != -1:
+            message += f"""
     export INTERACTIVE_GREMLIN_ENDPOINT=ws://127.0.0.1:{gremlin_port}/gremlin
+"""
+        message += """
 ############################################################################################
 
 See https://graphscope.io/docs/latest/flex/interactive/development/java/java_sdk and

@@ -394,18 +394,19 @@ class TreeDisplay(object):
                     identifier=specific_vertex_mapping_identifier,
                     parent=vertex_mapping_identifier,
                 )
-                for property_column_mapping in mapping.column_mappings:
-                    tag = "Property(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
-                        property_column_mapping.var_property,
-                        property_column_mapping.column.index,
-                        property_column_mapping.column.name,
-                    )
-                    p_mapping_identifier = f"{specific_vertex_mapping_identifier}_{property_column_mapping.var_property}"
-                    self.tree.create_node(
-                        tag=tag,
-                        identifier=p_mapping_identifier,
-                        parent=specific_vertex_mapping_identifier,
-                    )
+                if mapping.column_mappings is not None:
+                    for property_column_mapping in mapping.column_mappings:
+                        tag = "Property(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
+                            property_column_mapping.var_property,
+                            property_column_mapping.column.index,
+                            property_column_mapping.column.name,
+                        )
+                        p_mapping_identifier = f"{specific_vertex_mapping_identifier}_{property_column_mapping.var_property}"
+                        self.tree.create_node(
+                            tag=tag,
+                            identifier=p_mapping_identifier,
+                            parent=specific_vertex_mapping_identifier,
+                        )
         # edge mapping
         edge_mapping_identifier = f"{datasource_identifier}_edge_mappings"
         self.tree.create_node(
@@ -429,35 +430,37 @@ class TreeDisplay(object):
                     parent=edge_mapping_identifier,
                 )
                 # source vertex mapping
-                for source_vertex_column_mapping in mapping.source_vertex_mappings:
-                    self.tree.create_node(
-                        tag="SourceVertexPrimaryKey(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
-                            source_vertex_column_mapping.var_property,
-                            source_vertex_column_mapping.column.index,
-                            source_vertex_column_mapping.column.name,
-                        ),
-                        identifier="{0}_source_vertex_primary_key_{1}".format(
-                            specific_edge_mapping_identifier,
-                            source_vertex_column_mapping.var_property,
-                        ),
-                        parent=specific_edge_mapping_identifier,
-                    )
+                if mapping.source_vertex_mappings is not None:
+                    for source_vertex_column_mapping in mapping.source_vertex_mappings:
+                        self.tree.create_node(
+                            tag="SourceVertexPrimaryKey(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
+                                source_vertex_column_mapping.var_property,
+                                source_vertex_column_mapping.column.index,
+                                source_vertex_column_mapping.column.name,
+                            ),
+                            identifier="{0}_source_vertex_primary_key_{1}".format(
+                                specific_edge_mapping_identifier,
+                                source_vertex_column_mapping.var_property,
+                            ),
+                            parent=specific_edge_mapping_identifier,
+                        )
                 # destination vertex mapping
-                for (
-                    destination_vertex_column_mapping
-                ) in mapping.destination_vertex_mappings:
-                    self.tree.create_node(
-                        tag="DestinationVertexPrimaryKey(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
-                            destination_vertex_column_mapping.var_property,
-                            destination_vertex_column_mapping.column.index,
-                            destination_vertex_column_mapping.column.name,
-                        ),
-                        identifier="{0}_destination_vertex_primary_key_{1}".format(
-                            specific_edge_mapping_identifier,
-                            destination_vertex_column_mapping.var_property,
-                        ),
-                        parent=specific_edge_mapping_identifier,
-                    )
+                if mapping.destination_vertex_mappings is not None:
+                    for (
+                        destination_vertex_column_mapping
+                    ) in mapping.destination_vertex_mappings:
+                        self.tree.create_node(
+                            tag="DestinationVertexPrimaryKey(name: {0}) -> DataSourceColumn(index: {1}, name: {2})".format(
+                                destination_vertex_column_mapping.var_property,
+                                destination_vertex_column_mapping.column.index,
+                                destination_vertex_column_mapping.column.name,
+                            ),
+                            identifier="{0}_destination_vertex_primary_key_{1}".format(
+                                specific_edge_mapping_identifier,
+                                destination_vertex_column_mapping.var_property,
+                            ),
+                            parent=specific_edge_mapping_identifier,
+                        )
                 # property mapping
                 if mapping.column_mappings is not None:
                     for property_column_mapping in mapping.column_mappings:

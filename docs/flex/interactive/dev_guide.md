@@ -9,9 +9,9 @@ caption:GraphScope Interactive Development
 maxdepth: 2
 ---
 development/dev_and_test
-development/cypher_procedure
-development/cpp_procedure
-development/restful_api
 development/java/java_sdk
 development/python/python_sdk
+development/restful_api
+development/stored_procedure/cypher_procedure
+development/stored_procedure/cpp_procedure
 ```
