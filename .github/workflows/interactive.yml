@@ -235,7 +235,7 @@ jobs:
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml"
           echo $cmd
-          eval ${cmd}
+          eval ${cmd} || exit 1
         done
 
         #set back
