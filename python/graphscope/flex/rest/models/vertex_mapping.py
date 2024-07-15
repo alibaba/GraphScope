@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, StrictStr
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.column_mapping import ColumnMapping
 from typing import Optional, Set
 from typing_extensions import Self
@@ -30,7 +30,7 @@ class VertexMapping(BaseModel):
     """ # noqa: E501
     type_name: StrictStr
     inputs: List[StrictStr]
-    column_mappings: List[ColumnMapping]
+    column_mappings: Optional[List[ColumnMapping]] = None
     __properties: ClassVar[List[str]] = ["type_name", "inputs", "column_mappings"]
 
     model_config = {
