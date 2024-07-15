@@ -174,8 +174,6 @@ class CreateEdgeType(Model):
         :param properties: The properties of this CreateEdgeType.
         :type properties: List[CreatePropertyMeta]
         """
-        if properties is None:
-            raise ValueError("Invalid value for `properties`, must not be `None`")  # noqa: E501
 
         self._properties = properties
 
