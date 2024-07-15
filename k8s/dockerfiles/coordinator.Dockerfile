@@ -10,7 +10,7 @@ COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 # uninstall openjdk-11 and install openjdk-8
 RUN sudo apt purge -y openjdk* && sudo apt purge -y default-jre* && \
-    sudo apt-get update && sudo apt-get install -y openjdk-8-jdk && \
+    sudo apt-get update && sudo apt-get install -y openjdk-8-jdk maven && \
     sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java && java -version
 
 RUN cd /home/graphscope/GraphScope/ && \

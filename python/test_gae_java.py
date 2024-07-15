@@ -39,12 +39,6 @@ eformat2 = "giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeMultipleL
 #     edges="/data/gstest/p2p-31.e",
 #     eformat=eformat2,
 # )
-# graph2 = sess.load_from(
-#     vertices="hdfs://localhost:9000/test/p2p-31.v",
-#     vformat=vformat2,
-#     edges="hdfs://localhost:9000/test/p2p-31.e",
-#     eformat=eformat2,
-# )
 graph2 = sess.load_from(
     vertices="hdfs://host.minikube.internal:9000/test/p2p-31.v",
     vformat=vformat2,
