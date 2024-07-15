@@ -284,6 +284,11 @@ where
     }
     let worker_ids = workers.unwrap();
     let tracer = global::tracer("executor");
+    let current_cx = opentelemetry::Context::current();
+    let current_span = current_cx.span();
+    let trace_id = current_span.span_context().trace_id();
+    let trace_id_hex = format!("{:x}", trace_id);
+
 
     let mut workers = Vec::new();
     for worker_id in worker_ids {
@@ -304,7 +309,7 @@ where
         return Ok(());
     }
 
-    info!("spawn job_{}({}) with {} workers;", conf.job_name, conf.job_id, workers.len());
+    info!("trace_id:{}, spawn job_{}({}) with {} workers;", trace_id_hex, conf.job_name, conf.job_id, workers.len());
 
     match pegasus_executor::spawn_batch(workers) {
         Ok(_) => Ok(()),

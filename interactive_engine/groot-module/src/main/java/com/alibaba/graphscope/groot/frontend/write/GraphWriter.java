@@ -18,6 +18,7 @@ import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 
+import com.alibaba.graphscope.proto.groot.RequestOptionsPb;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -87,9 +88,11 @@ public class GraphWriter {
             String requestId,
             String writeSession,
             List<WriteRequest> writeRequests,
+            RequestOptionsPb optionsPb,
             CompletionCallback<Long> callback) {
         GraphSchema schema = snapshotCache.getSnapshotWithSchema().getGraphDef();
         OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
+        String upTraceId = optionsPb == null ? null : optionsPb.getTraceId();
         for (WriteRequest writeRequest : writeRequests) {
             OperationType operationType = writeRequest.getOperationType();
             DataRecord dataRecord = writeRequest.getDataRecord();
@@ -123,6 +126,7 @@ public class GraphWriter {
                             "Invalid operationType [" + operationType + "]");
             }
         }
+        batchBuilder.setTraceId(upTraceId);
         OperationBatch operationBatch = batchBuilder.build();
         long startTime = System.currentTimeMillis();
         AttributesBuilder attrs = Attributes.builder();

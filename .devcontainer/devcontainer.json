@@ -33,7 +33,7 @@
 	"remoteUser": "graphscope",
 
 	// Use 'postCreateCommand' to run commands before the container is created.
-	"initializeCommand": "sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest",
+	// "initializeCommand": "sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest",
 
 	// Uncomment this to enable C++ and Rust debugging in containers
 	// "capAdd": ["SYS_PTRACE"],

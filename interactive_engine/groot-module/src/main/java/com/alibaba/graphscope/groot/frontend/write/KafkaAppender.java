@@ -200,6 +200,7 @@ public class KafkaAppender {
         Map<Integer, OperationBatch.Builder> storeToBatchBuilder = new HashMap<>();
         Function<Integer, OperationBatch.Builder> storeDataBatchBuilderFunc =
                 k -> OperationBatch.newBuilder();
+        String traceId = operationBatch.getTraceId();
         for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();
             if (partitionKey == -1L) {
@@ -208,6 +209,9 @@ public class KafkaAppender {
                     OperationBatch.Builder batchBuilder =
                             storeToBatchBuilder.computeIfAbsent(i, storeDataBatchBuilderFunc);
                     batchBuilder.addOperationBlob(operationBlob);
+                    if (traceId != null) {
+                        batchBuilder.setTraceId(traceId);
+                    }
                 }
             } else {
                 int partitionId =
@@ -216,6 +220,9 @@ public class KafkaAppender {
                 OperationBatch.Builder batchBuilder =
                         storeToBatchBuilder.computeIfAbsent(storeId, storeDataBatchBuilderFunc);
                 batchBuilder.addOperationBlob(operationBlob);
+                if (traceId != null) {
+                    batchBuilder.setTraceId(traceId);
+                }
             }
         }
         return storeToBatchBuilder;

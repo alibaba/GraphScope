@@ -16,50 +16,107 @@
 
 package com.alibaba.graphscope.gremlin.plugin;
 
-import static io.opentelemetry.api.common.AttributeKey.*;
-
+import com.alibaba.graphscope.groot.common.constant.LogConstant;
+import com.alibaba.graphscope.groot.common.util.JSON;
+import com.google.gson.JsonObject;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
-
-import org.apache.commons.lang3.StringUtils;
+import io.opentelemetry.api.trace.Span;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.List;
 
 public class QueryStatusCallback {
     private final MetricsCollector metricsCollector;
     private final QueryLogger queryLogger;
 
     private LongHistogram queryHistogram;
+    private long printThreshold;
 
     public QueryStatusCallback(
-            MetricsCollector metricsCollector, LongHistogram histogram, QueryLogger queryLogger) {
+            MetricsCollector metricsCollector, LongHistogram histogram, QueryLogger queryLogger, long printThreshold) {
         this.metricsCollector = metricsCollector;
         this.queryLogger = queryLogger;
         this.queryHistogram = histogram;
+        this.printThreshold = printThreshold;
     }
 
     public void onStart() {}
 
-    public void onEnd(boolean isSucceed, @Nullable String msg) {
+    public void onErrorEnd(@Nullable String msg) {
         this.metricsCollector.stop();
-        if (isSucceed) {
-            queryLogger.info("total execution time is {} ms", metricsCollector.getElapsedMillis());
+        JsonObject detailLog = buildDetailLog(false, msg, metricsCollector.getElapsedMillis(), metricsCollector.getStartMillis(), null);
+        queryLogger.print(detailLog.toString(), false, null);
+
+        Attributes attrs =
+                Attributes.builder()
+                        .put("id", queryLogger.getQueryId().toString())
+                        .put("query", queryLogger.getQuery())
+                        .put("success", false)
+                        .put("message", msg != null ? msg : "")
+                        .build();
+        this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        queryLogger.metricsInfo(false, metricsCollector.getElapsedMillis());
+    }
+
+    public void onErrorEnd(@Nullable Throwable t) {
+        this.metricsCollector.stop();
+        String msg = t.getMessage();
+        JsonObject detailLog = buildDetailLog(false, msg, metricsCollector.getElapsedMillis(),
+                metricsCollector.getStartMillis(), null);
+        queryLogger.print(detailLog.toString(), false, t);
+
+        Attributes attrs =
+                Attributes.builder()
+                        .put("id", queryLogger.getQueryId().toString())
+                        .put("query", queryLogger.getQuery())
+                        .put("success", false)
+                        .put("message", msg != null ? msg : "")
+                        .build();
+        this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        queryLogger.metricsInfo(false, metricsCollector.getElapsedMillis());
+    }
+
+    public void onSuccessEnd(List<Object> results) {
+        this.metricsCollector.stop();
+        if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
+            JsonObject detailLog = buildDetailLog(true, null, metricsCollector.getElapsedMillis(),
+                    metricsCollector.getStartMillis(), results);
+            queryLogger.print(detailLog.toString(), true, null);
         }
 
         Attributes attrs =
                 Attributes.builder()
                         .put("id", queryLogger.getQueryId().toString())
                         .put("query", queryLogger.getQuery())
-                        .put("success", isSucceed)
-                        .put("message", msg != null ? msg : "")
+                        .put("success", true)
+                        .put("message", "")
                         .build();
         this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
+        queryLogger.metricsInfo(true, metricsCollector.getElapsedMillis());
+    }
 
-        queryLogger.metricsInfo(
-                "{} | {} | {} | {}",
-                isSucceed,
-                metricsCollector.getElapsedMillis(),
-                metricsCollector.getStartMillis(),
-                msg != null ? msg : StringUtils.EMPTY);
+    private JsonObject buildDetailLog(boolean isSucceed, String errorMessage, long elaspedMillis, long startMillis, List<Object> results) {
+        String traceId = Span.current().getSpanContext().getTraceId();
+        JsonObject detailJson = new JsonObject();
+        detailJson.addProperty(LogConstant.TRACE_ID, traceId);
+        detailJson.addProperty(LogConstant.QUERY_ID, queryLogger.getQueryId());
+        detailJson.addProperty(LogConstant.QUERY, queryLogger.getQuery());
+        detailJson.addProperty(LogConstant.SUCCESS, isSucceed);
+        if (queryLogger.getUpTraceId() != null) {
+            detailJson.addProperty(LogConstant.UP_TRACE_ID, queryLogger.getUpTraceId());
+        }
+        if (errorMessage != null) {
+            detailJson.addProperty(LogConstant.ERROR_MESSAGE, errorMessage);
+        }
+        if (results != null) {
+            detailJson.addProperty(LogConstant.RESULT, JSON.toJson(results));
+        }
+        detailJson.addProperty(LogConstant.IR_PLAN, queryLogger.getIrPlan());
+        detailJson.addProperty(LogConstant.STAGE, "java");
+        detailJson.addProperty(LogConstant.COST, elaspedMillis);
+        detailJson.addProperty(LogConstant.START_TIME, startMillis);
+        return detailJson;
     }
 
     public QueryLogger getQueryLogger() {

@@ -1,11 +1,13 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.constant.LogConstant;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.WriteRequest;
 import com.alibaba.graphscope.proto.groot.*;
 
+import com.google.gson.JsonObject;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
@@ -18,6 +20,7 @@ import java.util.List;
 
 public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientWriteService.class);
+    private static Logger metricLogger = LoggerFactory.getLogger("MetricLog");
 
     private final GraphWriter graphWriter;
 
@@ -36,8 +39,11 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     @Override
     public void batchWrite(
             BatchWriteRequest request, StreamObserver<BatchWriteResponse> responseObserver) {
+        long startBatchWrite = System.currentTimeMillis();
         String requestId = UuidUtils.getBase64UUIDString();
         String writeSession = request.getClientId();
+        RequestOptionsPb optionsPb = request.getRequestOptions();
+        String upTraceId = optionsPb == null ? null : optionsPb.getTraceId();
         int count = request.getWriteRequestsCount();
         List<WriteRequest> writeRequests = new ArrayList<>(count);
         logger.debug(
@@ -49,13 +55,17 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
             for (WriteRequestPb writeRequestPb : request.getWriteRequestsList()) {
                 writeRequests.add(WriteRequest.parseProto(writeRequestPb));
             }
+            JsonObject metricJson = buildMetricJsonLog(upTraceId, count, startBatchWrite);
             graphWriter.writeBatch(
                     requestId,
                     writeSession,
                     writeRequests,
+                    optionsPb,
                     new CompletionCallback<Long>() {
                         @Override
                         public void onCompleted(Long res) {
+                            metricJson.addProperty(LogConstant.SUCCESS, true);
+                            metricLogger.info(metricJson.toString());
                             responseObserver.onNext(
                                     BatchWriteResponse.newBuilder().setSnapshotId(res).build());
                             responseObserver.onCompleted();
@@ -63,6 +73,8 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
                         @Override
                         public void onError(Throwable t) {
+                            metricJson.addProperty(LogConstant.SUCCESS, false);
+                            metricLogger.info(metricJson.toString());
                             logger.error(
                                     "batch write error. request {} session {}",
                                     requestId,
@@ -77,10 +89,20 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
         } catch (Exception e) {
             logger.error(
-                    "batchWrite failed. request [{}] session [{}]", requestId, writeSession, e);
+                    "batchWrite failed. traceId[{}] request [{}] session [{}]", upTraceId, requestId, writeSession, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
+    }
+
+    private JsonObject buildMetricJsonLog(String traceId, int batchSize, long startTime) {
+        JsonObject metricJson = new JsonObject();
+        metricJson.addProperty(LogConstant.TRACE_ID, traceId);
+        metricJson.addProperty(LogConstant.BATCH_SIZE, batchSize);
+        metricJson.addProperty(LogConstant.COST, (System.currentTimeMillis() - startTime));
+        metricJson.addProperty(LogConstant.STAGE, "writeKafka");
+        metricJson.addProperty(LogConstant.LOG_TYPE, "write");
+        return metricJson;
     }
 
     @Override

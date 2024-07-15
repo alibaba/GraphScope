@@ -17,6 +17,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
+import com.alibaba.graphscope.groot.common.constant.LogConstant;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -27,6 +28,7 @@ import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.proto.groot.Statistics;
 
+import com.google.gson.JsonObject;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -59,6 +61,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class StoreService {
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private static final Logger metricLogger = LoggerFactory.getLogger("MetricLog");
 
     private final Configs storeConfigs;
     private final int storeId;
@@ -258,16 +261,19 @@ public class StoreService {
                                 if (partition.writeBatch(snapshotId, batch)) {
                                     hasDdl.set(true);
                                 }
+                                metricLogger.info(buildMetricJsonLog(true, batch, start, partitionId).toString());
                                 attrs.put("success", true).put("message", "");
                                 this.writeHistogram.record(
                                         System.currentTimeMillis() - start, attrs.build());
                                 this.writeCounter.add(batch.getOperationCount(), attrs.build());
                             }
                         } catch (Exception ex) {
+                            metricLogger.info(buildMetricJsonLog(false, batch, start, partitionId).toString());
                             logger.error(
-                                    "write to partition [{}] failed, snapshotId [{}].",
+                                    "write to partition [{}] failed, snapshotId [{}], traceId [{}].",
                                     partitionId,
                                     snapshotId,
+                                    batch.getTraceId(),
                                     ex);
                             attrs.put("message", ex.getMessage());
                             String msg = "Not supported operation in secondary mode";
@@ -296,6 +302,20 @@ public class StoreService {
             }
         }
         return batchNeedRetry;
+    }
+
+    private JsonObject buildMetricJsonLog(boolean succeed, OperationBatch operationBatch, long start, int partitionId) {
+        JsonObject metricJsonLog = new JsonObject();
+        String traceId = operationBatch.getTraceId();
+        int batchSize = operationBatch.getOperationCount();
+        metricJsonLog.addProperty(LogConstant.TRACE_ID, traceId);
+        metricJsonLog.addProperty(LogConstant.SUCCESS, succeed);
+        metricJsonLog.addProperty(LogConstant.BATCH_SIZE, batchSize);
+        metricJsonLog.addProperty(LogConstant.PARTITION_ID, partitionId);
+        metricJsonLog.addProperty(LogConstant.COST, (System.currentTimeMillis() - start));
+        metricJsonLog.addProperty(LogConstant.STAGE, "writeDb");
+        metricJsonLog.addProperty(LogConstant.LOG_TYPE, "write");
+        return metricJsonLog;
     }
 
     public GraphDefPb getGraphDefBlob() throws IOException {
