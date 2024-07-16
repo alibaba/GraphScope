@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gaia.benchmark;
 import com.alibaba.graphscope.gaia.clients.GraphClient;
 import com.alibaba.graphscope.gaia.clients.impls.CypherGraphClient;
 import com.alibaba.graphscope.gaia.clients.impls.GremlinGraphClient;
+import com.alibaba.graphscope.gaia.clients.impls.KuzuGraphClient;
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
 import com.alibaba.graphscope.gaia.utils.BenchmarkResultComparator;
@@ -39,7 +40,7 @@ public class InteractiveBenchmark {
         Properties properties = PropertyUtil.getProperties(args[0], false);
         Configuration configuration = new Configuration(properties);
 
-        String queryLanguage = configuration.getString(Configuration.QUERY_LANGUAGE);
+        String clientOpt = configuration.getString(Configuration.CLIENT_OPT);
         String serverEndpoint = configuration.getString(Configuration.SERVER_ENDPOINT);
         int threadCount = configuration.getInt(Configuration.THREAD_COUNT, 1);
         int warmUpCount = configuration.getInt(Configuration.WARMUP_EVERY_QUERY, 0);
@@ -68,13 +69,17 @@ public class InteractiveBenchmark {
                     String password,
                     BenchmarkResultComparator comparator) {
                 try {
-                    if ("gremlin".equalsIgnoreCase(queryLanguage)) {
+                    if ("gremlin".equalsIgnoreCase(clientOpt)) {
                         this.client = new GremlinGraphClient(endpoint, username, password);
-                    } else if ("cypher".equalsIgnoreCase(queryLanguage)) {
+                    } else if ("cypher".equalsIgnoreCase(clientOpt)) {
                         this.client = new CypherGraphClient(endpoint, username, password);
-                    } else {
+                    } else if ("kuzu".equalsIgnoreCase(clientOpt)) {
+                        // for kuzu, it is the db name
+                        this.client = new KuzuGraphClient(endpoint);
+                    }
+                    else {
                         throw new IllegalArgumentException(
-                                "Unsupported query language: " + queryLanguage);
+                                "Unsupported query language: " + clientOpt);
                     }
                     this.comparator = comparator;
                     System.out.println("Connect success.");

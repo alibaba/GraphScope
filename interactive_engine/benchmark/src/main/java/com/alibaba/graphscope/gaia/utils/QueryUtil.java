@@ -26,7 +26,7 @@ public class QueryUtil {
         String queryDir = configuration.getString(Configuration.QUERY_DIR);
         String parameterDir = configuration.getString(Configuration.PARAMETER_DIR);
         List<CommonQuery> queryList = new ArrayList<>();
-        String defaultSuffix = "." + configuration.getString(Configuration.QUERY_LANGUAGE);
+        String defaultSuffix = "." + configuration.getString(Configuration.CLIENT_OPT);
         String suffix = configuration.getString(Configuration.QUERY_SUFFIX, defaultSuffix);
 
         if (configuration.getBoolean(Configuration.ALL_QUERIES_ENABLE, false)) {
