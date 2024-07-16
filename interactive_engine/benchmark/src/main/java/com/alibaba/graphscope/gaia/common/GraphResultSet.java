@@ -4,6 +4,4 @@ public interface GraphResultSet {
     boolean hasNext();
 
     Object next();
-
-    Object get();
 }

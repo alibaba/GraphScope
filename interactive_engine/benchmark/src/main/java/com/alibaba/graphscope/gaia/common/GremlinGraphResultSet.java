@@ -21,9 +21,4 @@ public class GremlinGraphResultSet implements GraphResultSet {
     public Object next() {
         return resultIterator.next();
     }
-
-    @Override
-    public Object get() {
-        return resultIterator;
-    }
 }

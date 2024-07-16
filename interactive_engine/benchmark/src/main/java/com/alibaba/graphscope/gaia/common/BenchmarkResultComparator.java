@@ -24,18 +24,33 @@ public class BenchmarkResultComparator {
         }
     }
 
+    public BenchmarkResultComparator(Map<String, String> expectedResults) {
+        this.expectedResults = expectedResults;
+    }
+
     public void compareResults(String queryName, String actualResult) {
-        String expectedValue = expectedResults.getOrDefault(queryName, "").trim();
-        if (actualResult.trim().equals(expectedValue)) {
-            System.out.println(queryName + " - Result matches expected output.");
+        String expectedResult = expectedResults.getOrDefault(queryName, "").trim();
+        if (!expectedResult.isEmpty()) {
+            if (normalizeString(expectedResult).equals(normalizeString(actualResult))) {
+                System.out.println(queryName + ": Query result matches the expected result.");
+            } else {
+                System.err.println(
+                        queryName + ": Query result does not match the expected result.");
+                System.err.println("Expected: " + expectedResult);
+                System.err.println("Actual  : " + actualResult);
+            }
         } else {
-            System.out.println(queryName + " - Result does not match expected output.");
-            System.out.println("Actual result: " + actualResult);
-            System.out.println("Expected result: " + expectedValue);
+            System.err.println(queryName + ": No expected result found for comparison.");
         }
     }
 
     public boolean isEmpty() {
         return expectedResults == null || expectedResults.isEmpty();
+    }
+
+    private String normalizeString(String str) {
+        str = str.replace("\\\"", "\"");
+        str = str.replaceAll("\\s+", " ");
+        return str.trim();
     }
 }

@@ -16,11 +16,6 @@ public class CypherGraphResultSet implements GraphResultSet {
 
     @Override
     public Object next() {
-        return resultSet.next();
-    }
-
-    @Override
-    public Object get() {
-        return resultSet.list();
+        return resultSet.next().values();
     }
 }
