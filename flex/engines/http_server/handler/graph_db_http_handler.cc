@@ -77,9 +77,9 @@ class optional_param_matcher : public matcher {
 namespace server {
 
 #ifdef BUILD_HQPS
-////////////////////////////hqps_ic_handler////////////////////////////
+////////////////////////////stored_proc_handler////////////////////////////
 
-class hqps_ic_handler : public StoppableHandler {
+class stored_proc_handler : public StoppableHandler {
  public:
   // extra headers
   static constexpr const char* INTERACTIVE_REQUEST_FORMAT =
@@ -87,8 +87,8 @@ class hqps_ic_handler : public StoppableHandler {
   static constexpr const char* PROTOCOL_FORMAT = "proto";
   static constexpr const char* JSON_FORMAT = "json";
   static constexpr const char* ENCODER_FORMAT = "encoder";
-  hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
-                  uint32_t group_inc_step, uint32_t shard_concurrency)
+  stored_proc_handler(uint32_t init_group_id, uint32_t max_group_id,
+                      uint32_t group_inc_step, uint32_t shard_concurrency)
       : cur_group_id_(init_group_id),
         max_group_id_(max_group_id),
         group_inc_step_(group_inc_step),
@@ -109,7 +109,7 @@ class hqps_ic_handler : public StoppableHandler {
         otel::create_double_histogram("hqps_procedure_query_latency");
 #endif
   }
-  ~hqps_ic_handler() override = default;
+  ~stored_proc_handler() override = default;
 
   seastar::future<> stop() override {
     if (is_cancelled_) {
@@ -168,25 +168,24 @@ class hqps_ic_handler : public StoppableHandler {
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     // TODO(zhanglei): choose read or write based on the request, after the
     // read/write info is supported in physical plan
-    auto request_format = req->get_header(INTERACTIVE_REQUEST_FORMAT);
-    if (request_format.empty()) {
-      // If no format specfied, we use default format: proto
-      request_format = PROTOCOL_FORMAT;
-    }
-    if (request_format == JSON_FORMAT) {
-      req->content.append(gs::GraphDBSession::kCypherJson, 1);
-    } else if (request_format == PROTOCOL_FORMAT) {
-      req->content.append(gs::GraphDBSession::kCypherInternalProcedure, 1);
-    } else if (request_format == ENCODER_FORMAT) {
-      req->content.append(gs::GraphDBSession::kCppEncoder, 1);
+    char last_byte;
+    if (req->content.size() <= 0) {
+      // read last byte and get the format info from the byte.
+      last_byte = req->content.back();
+      if (last_byte > gs::GraphDBSession::kCypherInternalProcedure) {
+        LOG(ERROR) << "Unsupported request format: " << (int) last_byte;
+        rep->set_status(
+            seastar::httpd::reply::status_type::internal_server_error);
+        rep->write_body("bin", seastar::sstring("Unsupported request format!"));
+        rep->done();
+        return seastar::make_ready_future<
+            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+      }
     } else {
-      LOG(ERROR) << "Unsupported request format: " << request_format;
-      rep->set_status(
-          seastar::httpd::reply::status_type::internal_server_error);
-      rep->write_body("bin", seastar::sstring("Unsupported request format!"));
-      rep->done();
-      return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
-          std::move(rep));
+      // default is treated as encoder.
+      VLOG(10) << "No format byte is given, use default format: encoder";
+      req->content.append("\x00", 1);
+      last_byte = gs::GraphDBSession::kCppEncoder;
     }
     if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
       // TODO(zhanglei): get from graph_db.
@@ -216,13 +215,13 @@ class hqps_ic_handler : public StoppableHandler {
 
     return executor_refs_[dst_executor]
         .run_graph_db_query(query_param{std::move(req->content)})
-        .then([request_format
+        .then([last_byte
 #ifdef HAVE_OPENTELEMETRY_CPP
                ,
                this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
     ](auto&& output) {
-          if (request_format == ENCODER_FORMAT) {
+          if (last_byte == gs::GraphDBSession::kCppEncoder) {
             return seastar::make_ready_future<query_param>(
                 std::move(output.content));
           } else {
@@ -316,12 +315,11 @@ class hqps_ic_handler : public StoppableHandler {
 #endif
 };
 
-class hqps_adhoc_query_handler : public StoppableHandler {
+class adhoc_query_handler : public StoppableHandler {
  public:
-  hqps_adhoc_query_handler(uint32_t init_adhoc_group_id,
-                           uint32_t init_codegen_group_id,
-                           uint32_t max_group_id, uint32_t group_inc_step,
-                           uint32_t shard_concurrency)
+  adhoc_query_handler(uint32_t init_adhoc_group_id,
+                      uint32_t init_codegen_group_id, uint32_t max_group_id,
+                      uint32_t group_inc_step, uint32_t shard_concurrency)
       : cur_adhoc_group_id_(init_adhoc_group_id),
         cur_codegen_group_id_(init_codegen_group_id),
         max_group_id_(max_group_id),
@@ -355,7 +353,7 @@ class hqps_adhoc_query_handler : public StoppableHandler {
 #endif  // HAVE_OPENTELEMETRY_CPP
   }
 
-  ~hqps_adhoc_query_handler() override = default;
+  ~adhoc_query_handler() override = default;
 
   seastar::future<> stop() override {
     if (is_cancelled_) {
@@ -442,7 +440,7 @@ class hqps_adhoc_query_handler : public StoppableHandler {
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
 
 #ifdef HAVE_OPENTELEMETRY_CPP
-    auto tracer = otel::get_tracer("hqps_adhoc_query_handler");
+    auto tracer = otel::get_tracer("adhoc_query_handler");
     // Extract context from headers. This copy is necessary to avoid access
     // after header content been freed
     std::map<std::string, std::string> headers(req->_headers.begin(),
@@ -478,7 +476,7 @@ class hqps_adhoc_query_handler : public StoppableHandler {
         //  read/write info is supported in physical plan
         // The content contains the path to dynamic library
           param.content.append(gs::Schema::HQPS_ADHOC_WRITE_PLUGIN_ID_STR, 1);
-          param.content.append(gs::GraphDBSession::kCypherInternalAdhoc, 1);
+          // param.content.append(gs::GraphDBSession::kCypherInternalAdhoc, 1);
           return executor_refs_[dst_executor]
               .run_graph_db_query(query_param{std::move(param.content)})
               .then([
@@ -674,8 +672,8 @@ seastar::future<> graph_db_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
     // Create handlers
     auto graph_db_handler =
-        new hqps_ic_handler(ic_query_group_id, max_group_id, group_inc_step,
-                            shard_query_concurrency);
+        new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
+                                shard_query_concurrency);
     graph_db_handlers_[hiactor::local_shard_id()] = graph_db_handler;
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/query"), graph_db_handler);
@@ -683,14 +681,14 @@ seastar::future<> graph_db_http_handler::set_routes() {
 #ifdef BUILD_HQPS
     if (enable_hqps_handlers_.load()) {
       auto ic_handler =
-          new hqps_ic_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency);
-      auto adhoc_query_handler = new hqps_adhoc_query_handler(
+          new stored_proc_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency);
+      auto adhoc_query_handler_ = new adhoc_query_handler(
           ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
           shard_adhoc_concurrency);
 
       ic_handlers_[hiactor::local_shard_id()] = ic_handler;
-      adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler;
+      adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
 
       // Add routes
       auto rule_proc = new seastar::httpd::match_rule(ic_handler);
@@ -701,7 +699,7 @@ seastar::future<> graph_db_http_handler::set_routes() {
 
       r.add(seastar::httpd::operation_type::POST,
             seastar::httpd::url("/interactive/adhoc_query"),
-            adhoc_query_handler);
+            adhoc_query_handler_);
     }
 #endif  // BUILD_HQPS
 

@@ -38,9 +38,6 @@ import java.util.List;
 public class DefaultSession implements Session {
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_WRITE_TIMEOUT = 30000;
-    private static String JSON_FORMAT_STRING = "json";
-    private static String PROTO_FORMAT_STRING = "proto";
-    private static String ENCODER_FORMAT_STRING = "encoder";
     private final AdminServiceGraphManagementApi graphApi;
     private final AdminServiceJobManagementApi jobApi;
     private final AdminServiceProcedureManagementApi procedureApi;
@@ -566,7 +563,7 @@ public class DefaultSession implements Session {
             // Here we add byte of value 1 to denote the input format is in JSON format.
             ApiResponse<byte[]> response =
                     queryApi.procCallWithHttpInfo(
-                            graphName, JSON_FORMAT_STRING, request.toJson().getBytes());
+                            graphName, request.toJson().getBytes());
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -591,7 +588,7 @@ public class DefaultSession implements Session {
             // Here we add byte of value 1 to denote the input format is in JSON format.
             ApiResponse<byte[]> response =
                     queryApi.procCallCurrentWithHttpInfo(
-                            JSON_FORMAT_STRING, request.toJson().getBytes());
+                             request.toJson().getBytes());
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));

@@ -17,62 +17,22 @@
 #
 
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 from typing import Annotated, Any, Dict, List, Optional, Union
 
 
 from pydantic import Field, StrictStr, StrictBytes
 
 from gs_interactive.client.status import Status, StatusCode
-from gs_interactive.api.admin_service_graph_management_api import (
-    AdminServiceGraphManagementApi,
-)
-from gs_interactive.api.admin_service_job_management_api import (
-    AdminServiceJobManagementApi,
-)
-from gs_interactive.api.admin_service_procedure_management_api import (
-    AdminServiceProcedureManagementApi,
-)
-from gs_interactive.api.admin_service_service_management_api import (
-    AdminServiceServiceManagementApi,
-)
-from gs_interactive.api.graph_service_edge_management_api import (
-    GraphServiceEdgeManagementApi,
-)
-from gs_interactive.api.graph_service_vertex_management_api import (
-    GraphServiceVertexManagementApi,
-)
-from gs_interactive.api.utils_api import UtilsApi
-from gs_interactive.api.query_service_api import QueryServiceApi
+
+from gs_interactive.api import *
+
 from gs_interactive.api_client import ApiClient
 from gs_interactive.client.result import Result
 from gs_interactive.configuration import Configuration
-from gs_interactive.models.create_graph_request import CreateGraphRequest
-from gs_interactive.models.create_graph_response import CreateGraphResponse
-from gs_interactive.models.create_procedure_request import (
-    CreateProcedureRequest,
-)
-from gs_interactive.models.create_procedure_response import (
-    CreateProcedureResponse,
-)
-from gs_interactive.models.edge_request import EdgeRequest
-from gs_interactive.models.get_graph_response import GetGraphResponse
-from gs_interactive.models.get_graph_schema_response import (
-    GetGraphSchemaResponse,
-)
-from gs_interactive.models.get_graph_statistics_response import GetGraphStatisticsResponse
-from gs_interactive.models.get_procedure_response import GetProcedureResponse
-from gs_interactive.models.job_response import JobResponse
-from gs_interactive.models.job_status import JobStatus
-from gs_interactive.models.schema_mapping import SchemaMapping
-from gs_interactive.models.service_status import ServiceStatus
-from gs_interactive.models.start_service_request import StartServiceRequest
-from gs_interactive.models.update_procedure_request import (
-    UpdateProcedureRequest,
-)
-from gs_interactive.models.query_request import QueryRequest
-from gs_interactive.models.vertex_request import VertexRequest
+from gs_interactive.models import *
+from gs_interactive.client.utils import append_format_byte
 from gs_interactive.client.generated.results_pb2 import CollectiveResults
-from gs_interactive.models.upload_file_response import UploadFileResponse
 
 class EdgeInterface(metaclass=ABCMeta):
     @abstractmethod
@@ -317,9 +277,6 @@ class Session(
 
 
 class DefaultSession(Session):
-    PROTOCOL_FORMAT = "proto"
-    JSON_FORMAT = "json"
-    ENCODER_FORMAT = "encoder"
     def __init__(self, admin_uri: str, stored_proc_uri: str = None):
         self._client = ApiClient(Configuration(host=admin_uri))
 
@@ -577,8 +534,7 @@ class DefaultSession(Session):
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_with_http_info(
                 graph_id = graph_id, 
-                x_interactive_request_format = self.JSON_FORMAT,
-                body=params.to_json()
+                body=append_format_byte(params.to_json(), InputFormat.CYPHER_JSON.value)
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -596,8 +552,7 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
             response = self._query_api.proc_call_current_with_http_info(
-                x_interactive_request_format = self.JSON_FORMAT,
-                body = params.to_json()
+                body = append_format_byte(params.to_json(), InputFormat.CYPHER_JSON.value)
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -615,8 +570,7 @@ class DefaultSession(Session):
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_with_http_info(
                 graph_id = graph_id, 
-                x_interactive_request_format = self.ENCODER_FORMAT, 
-                body = params
+                body = append_format_byte(params, InputFormat.CPP_ENCODER.value)
             )
             return Result.from_response(response)
         except Exception as e:
@@ -627,8 +581,7 @@ class DefaultSession(Session):
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
             response = self._query_api.proc_call_current_with_http_info(
-                x_interactive_request_format = self.ENCODER_FORMAT, 
-                body = params
+                body = append_format_byte(params, InputFormat.CPP_ENCODER.value)
             )
             return Result.from_response(response)
         except Exception as e:

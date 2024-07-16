@@ -47,10 +47,14 @@ class GraphDBSession {
   static constexpr int32_t MAX_RETRY = 3;
   static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
 #ifdef BUILD_HQPS
-  static constexpr const char* kCppEncoder = "\x00";
-  static constexpr const char* kCypherJson = "\x01";
-  static constexpr const char* kCypherInternalAdhoc = "\x02";
-  static constexpr const char* kCypherInternalProcedure = "\x03";
+  // static constexpr const char* kCppEncoder = "";
+  // static constexpr const char* kCypherJson = "\x01";
+  // static constexpr const char* kCypherInternalAdhoc = "\x02";
+  // static constexpr const char* kCypherInternalProcedure = "\x03";
+  static constexpr char kCppEncoder = 0;
+  static constexpr char kCypherJson = 1;
+  static constexpr char kCypherInternalAdhoc = 2;
+  static constexpr char kCypherInternalProcedure = 3;
 #endif  // BUILD_HQPS
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)

@@ -937,20 +937,12 @@ paths:
       operationId: proc_call
       description: |
         After the procedure is created, user can use this API to run the procedure.
-        TODO: a full example cypher->plan->json.
-        TODO: make sure typeinfo can be passed.
       parameters:
         - name: graph_id
           in : path
           required: true
           schema:
             type: string
-        - name: X-Interactive-Request-Format
-          in: header
-          required: true
-          schema:
-            type: string
-            enum: [proto, encoder, json]
       requestBody:
         content:
           text/plain:
