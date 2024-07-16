@@ -53,7 +53,8 @@ public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
     public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
         if (expectedFamilies.size() != callBinding.getOperandCount()) {
             Litmus.THROW.fail(
-                    "wrong operand count {} for {}",
+                    "Expect {} operands, but got {} operands, expected operands of types {}",
+                    expectedFamilies.size(),
                     callBinding.getOperandCount(),
                     expectedFamilies);
         }
