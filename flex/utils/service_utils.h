@@ -107,6 +107,14 @@ inline boost::filesystem::path get_current_binary_directory() {
   return boost::filesystem::canonical("/proc/self/exe").parent_path();
 }
 
+inline std::string jsonToString(const nlohmann::json& json) {
+  if (json.is_string()) {
+    return json.get<std::string>();
+  } else {
+    return json.dump();
+  }
+}
+
 class FlexException : public std::exception {
  public:
   explicit FlexException(std::string&& error_msg);

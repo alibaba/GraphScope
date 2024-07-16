@@ -19,6 +19,7 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/version_manager.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/wal.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/transaction_utils.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/database/manager.h
         DESTINATION include/flex/engines/graph_db/database)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/app/app_base.h
