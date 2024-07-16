@@ -54,12 +54,15 @@ class VertexEdgeManager {
                     std::vector<EdgeData>&& edge_data,
                     nlohmann::json&& schema_json, int shard_id);
   ~VertexEdgeManager() {}
+  // check schema
   void checkVertexSchema();
   void checkEdgeSchema();
+  // db check
   void getLabelId();
   void checkEdgeExistsWithInsert();
   void checkEdgeExists();
   void checkVertexExists();
+  // db operations
   void singleInsertVertex();
   void multiInsertVertex();
   void insertVertex();
