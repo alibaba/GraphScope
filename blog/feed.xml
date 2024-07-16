@@ -5,9 +5,78 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 09 Jul 2024 03:38:41 +0000</pubDate>
-    <lastBuildDate>Tue, 09 Jul 2024 03:38:41 +0000</lastBuildDate>
+    <pubDate>Tue, 16 Jul 2024 03:16:58 +0000</pubDate>
+    <lastBuildDate>Tue, 16 Jul 2024 03:16:58 +0000</lastBuildDate>
     <generator>Jekyll v4.3.3</generator>
+    
+      <item>
+        <title>GraphScope&apos;s Perspective Sharing at the SIGMOD 2024 Panel: The Future of Graph Analytics</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/sigmod-panel.png&quot; alt=&quot;benchmark&quot; /&gt;
+From June 9th to June 15th, 2024, SIGMOD 2024 was held in Santiago, Chile. 
+Graph computing remains a hot topic at this conference, and it is also the area that received the most paper submissions. 
+SIGMOD 2024 organized a panel discussion on graph computation titled “The Future of Graph Analytics”.&lt;/p&gt;
+
+&lt;p&gt;This panel invited six well-known individuals from the academic and industrial sectors of graph computing, including Professor Angela Bonifati from Lyon 1 University, Professor M. Tamer Özsu from the University of Waterloo, Yuanyuan Tian, a Principal Scientist Manager from Microsoft, Hannes Voigt, a Staff Engineer from Neo4j, Professor Wenjie Zhang from the University of New South Wales, and Dr. Wenyuan Yu, the person in charge of GraphScope.&lt;/p&gt;
+
+&lt;p&gt;Graph computing plays an important role in real-world business scenarios, and various graph computing systems are emerging one after another. Nowadays, the types of graph computing tasks are becoming more diverse, and they form complex workflows together with other task types, such as machine learning and Large Language Model (LLM) tasks. This also leads to new discussions and considerations regarding graph computing. 
+The panel discussed the following six issues, and Dr. Wenyuan Yu shared GraphScope’s perspectives on these matters.&lt;/p&gt;
+
+&lt;h5 id=&quot;q-given-the-varied-types-of-graph-computations-and-the-widespread-use-of-graph-query-languages-eg-cypher-gql-do-we-need-new-and-more-expressive-query-languages&quot;&gt;Q: Given the varied types of graph computations and the widespread use of graph query languages (e.g., Cypher, GQL), do we need new and more expressive query languages?&lt;/h5&gt;
+
+&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: Considering the diverse and extensive applications of graphs, there is still a need for new query languages. However, languages with strong expressive power often come with increased complexity, so finding a balance between complexity and expressiveness is essential. The computing patterns for different types of graph computing tasks, such as pattern matching, graph analysis, and graph neural networks, exhibit both significant differences and some overlaps, making the balance challenging to achieve.&lt;/p&gt;
+
+&lt;p&gt;Over the past two years, the development of Large Language Models (LLMs) has inspired the idea that natural language processing enhanced by LLMs could play a vital role in simplifying complex queries and reducing the learning curve for users.&lt;/p&gt;
+
+&lt;h5 id=&quot;q-in-many-cases-graph-data-originates-from-oltp-systems-while-graph-analysis-is-a-typical-olap-operation-do-we-therefore-need-to-build-an-htap-system-for-graph-analysis&quot;&gt;Q: In many cases, graph data originates from OLTP systems, while graph analysis is a typical OLAP operation. Do we, therefore, need to build an HTAP system for graph analysis?&lt;/h5&gt;
+
+&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: Regarding the necessity of building an HTAP system for graph analysis, we believe it is essential. However, it is not necessary to process OLTP and OLAP tasks within the same system simultaneously. On the one hand, users’ core businesses often rely on very mature OLTP systems, such as relational databases, and it may be challenging for users to migrate their core businesses to a new system simply to add OLAP capabilities for graph analysis. On the other hand, performing OLAP tasks directly on the storage systems designed for OLTP can be highly inefficient.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/gart.jpg&quot; alt=&quot;GART&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;To address this, we developed and open-sourced a system called &lt;a href=&quot;https://github.com/GraphScope/GART&quot;&gt;GART&lt;/a&gt;. Its core architecture, as depicted in the diagram above, captures changes from OLTP systems (such as binlog from MySQL) and synchronizes these changes in real-time. The changes to table data in OLTP systems correspond to operations of adding, deleting, or modifying vertices and edges in graph data. GART has also been designed with efficient mutable graph storage and is integrated with the GraphScope’s graph analytical engine GAE and the graph interactive engine GIE. This allows users to intuitively express queries with graph semantics and achieve efficient execution on GraphScope’s engine. Consequently, graph HTAP capabilities are achieved without any modifications to the existing OLTP system.&lt;/p&gt;
+
+&lt;h5 id=&quot;q-currently-benchmarks-for-graph-analysis-focus-more-on-system-performance-metrics-such-as-the-execution-of-algorithms-should-we-also-focus-on-other-metrics&quot;&gt;Q: Currently, benchmarks for graph analysis focus more on system performance metrics such as the execution of algorithms. Should we also focus on other metrics?&lt;/h5&gt;
+
+&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: In addition to performance metrics, we believe that benchmarks for graph analysis should consider two additional aspects. Firstly, concerning the graphs themselves, it is important to increase the diversity of graph algorithms and datasets. The range of graph algorithms should extend beyond well-known examples like PageRank and Shortest Path. New algorithms need to exhibit a variety of graph access patterns and computational characteristics. In addition, benchmarks should include varied types of datasets beyond just social network datasets.
+Secondly, when evaluating a system, we should assess the ease with which an algorithm can be implemented within that system, as this reflects the expressive power of the system’s interface. In this context, we have collaborated with external universities to propose &lt;a href=&quot;https://arxiv.org/abs/2404.06037&quot;&gt;a new benchmark for graph analysis&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Moreover, graph computations may represent only a small component of a complex workflow. Therefore, when testing a system, it is insufficient to just consider the execution time of a particular algorithm; we should also evaluate the time required for the system to load the graph from common file formats and export the results in other formats.&lt;/p&gt;
+
+&lt;h5 id=&quot;q-in-many-cases-a-complete-graph-computation-task-includes-multiple-types-of-sub-tasks-so-is-one-graph-storage-sufficient-in-this-case-do-we-need-multiple-graph-storages&quot;&gt;Q: In many cases, a complete graph computation task includes multiple types of sub-tasks. So, is one graph storage sufficient? In this case, do we need multiple graph storages?&lt;/h5&gt;
+
+&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: Regarding whether multiple graph storages are needed, we believe they are necessary. Currently, various graph storages are designed for different scenarios and optimization objectives, and it is difficult to have a “one size fits all” solution. However, the existence of multiple storages means that when a task requires the use of multiple graph computing systems, data exchanges must be made between different systems to enable interfacing. To address this issue, GraphScope has taken the following two steps.&lt;/p&gt;
+
+&lt;p&gt;First, we designed a standardized graph storage file format, &lt;a href=&quot;https://graphscope.io/blog/tech/2023/08/29/GraphAr-A-Standard-Data-File-Format-for-Graph-Data-Storage-and-Retrieval&quot;&gt;GraphAr&lt;/a&gt;, which defines a set of computing/storage system-independent file formats for graph data and provides a series of interfaces to generate, access, and convert these formatted files. As illustrated in the diagram below, &lt;a href=&quot;https://github.com/apache/incubator-graphar&quot;&gt;GraphAr&lt;/a&gt; aims to solve the problem of data import/export and mutual access between various graph computing systems. GraphAr is now an Apache Incubator project and is actively promoting integration with mainstream graph systems in the industry.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-29-graphar-overview.jpg&quot; alt=&quot;graphar-overview&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;On the other hand, we designed &lt;a href=&quot;https://github.com/GraphScope/GRIN&quot;&gt;GRIN&lt;/a&gt;, a unified graph access interface, which defines a series of standardized interfaces for accessing graph data. Storages must implement these interface methods, and computing engines only need to use these interfaces to execute operators, thereby facilitating easy docking between different engines and storages.&lt;/p&gt;
+
+&lt;h5 id=&quot;q-in-a-complex-workflow-graph-analysis-may-be-just-one-component-alongside-data-analysis-machine-learning-llms-and-other-types-of-tasks-in-this-scenario-do-we-need-new-apisdsls-to-facilitate-interaction-between-graph-related-tasks-and-other-tasks&quot;&gt;Q: In a complex workflow, graph analysis may be just one component, alongside data analysis, machine learning, LLMs, and other types of tasks. In this scenario, do we need new APIs/DSLs to facilitate interaction between graph-related tasks and other tasks?&lt;/h5&gt;
+
+&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: This question should be considered from two perspectives. On one hand, graphs are adept at intuitively expressing relationships between entities, which allows graph data to be utilized as part of knowledge graphs within RAG (Retrieval-Augmented Generation), interacting seamlessly with LLMs. Additionally, graph neural networks, which represent a fundamental aspect of machine learning, naturally integrate graph tasks with machine learning tasks.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, the input and output formats of tasks involving graphs differ from those of tasks involving LLMs. To enable seamless interoperability between graph computation tasks and LLM tasks, we may need to consider the development of an ETL (Extract, Transform, Load) DSL in the future. Such a DSL would assist in resolving data alignment challenges that arise when integrating different types of tasks.&lt;/p&gt;
+
+&lt;h5 id=&quot;q-in-some-scenarios-graph-data-is-not-static-but-constantly-changing-what-are-the-expectations-for-dynamic-incremental-and-stream-graph-analysis-operations&quot;&gt;Q: In some scenarios, graph data is not static but constantly changing. What are the expectations for dynamic, incremental, and stream graph analysis operations?&lt;/h5&gt;
+
+&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: For dynamic graph scenarios, we believe that compared to static graphs, the applications may be more diverse. The current hot topics in dynamic graph research include dynamic, incremental, and stream graph processing, with complex application scenarios requiring the integration of these technologies or even the advancement beyond current capabilities. To apply dynamic graphs effectively to real-world scenarios, we need to work on the following aspects:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;In terms of storage, efficient dynamic/stream graph storage capabilities are essential. These capabilities should not only support graph update operations efficiently but also provide efficient graph data access interfaces.&lt;/li&gt;
+  &lt;li&gt;Concerning graph algorithms, it is necessary to research incremental graph algorithms and explore the use of previously computed results to efficiently calculate the required outcomes on newly updated graphs.&lt;/li&gt;
+  &lt;li&gt;The time dimension is an essential aspect of dynamic graphs, and we need to enhance support for time-series graphs in our analysis operations.&lt;/li&gt;
+&lt;/ul&gt;
+
+</description>
+        <pubDate>Tue, 16 Jul 2024 01:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2024/07/16/GraphScope-Perspective-Sharing-at-SIGMOD-2024-Panel.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/07/16/GraphScope-Perspective-Sharing-at-SIGMOD-2024-Panel.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>GraphScope Refreshes the World Record for the LDBC SNB Benchmark in both Performance and Data Scale</title>
@@ -999,171 +1068,6 @@ If a chosen edge passes the condition checking &lt;em&gt;F&lt;/em&gt;, the map f
         <pubDate>Wed, 16 Aug 2023 03:10:42 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Processing 100-billion edges in one second: Empowering Graphalytics with GPU Acceleration</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-08-title-picture.jpg&quot; alt=&quot;GPU-feature&quot; /&gt;
-Graph algorithms serve as essential building blocks for a wide range of applications, such as social network analytics, routing, constructing protein network and &lt;a href=&quot;https://en.wikipedia.org/wiki/De_Bruijn_graph&quot;&gt;De Bruijn graphs&lt;/a&gt;, and mining valuable information in RDF (Resource Description Framework) graphs. Generally, graph analytics involve propagating labels across edges or iteratively accumulating values from adjacent vertices. Existing engines in both academia and industry, like &lt;a href=&quot;https://github.com/jegonzal/PowerGraph&quot;&gt;PowerGraph&lt;/a&gt;, &lt;a href=&quot;https://kowshik.github.io/JPregel/pregel_paper.pdf&quot;&gt;Pregel&lt;/a&gt;, and &lt;a href=&quot;https://spark.apache.org/graphx/&quot;&gt;GraphX&lt;/a&gt;, have paved the way. However, in the era of big data, the computational and storage complexity of sophisticated algorithms coupled with rapidly growing datasets have exhausted the limits of a single device.&lt;/p&gt;
-
-&lt;p&gt;Traditionally, graph analysis tasks, characterized by data-intensive workloads, have been performed on CPUs. 
-However, the emergence of diverse new hardware in recent years has led to the recognition of the potential in constructing heterogeneous computing platforms using accelerator cards (such as FPGAs and GPUs).
-These accelerators often offer higher degrees of parallelism; for instance, an Nvidia V100 GPU can provide over 5,000 computation cores.
-Additionally, they exhibit enhanced memory bandwidth capabilities; HBM, for instance, can deliver several TB/s of memory bandwidth. 
-Numerous tasks have already harnessed the potential of such accelerator to achieve significant performance boosts, including deep learning and image processing, and graph computation is no exception.&lt;/p&gt;
-
-&lt;h3 id=&quot;cpu-vs-gpu&quot;&gt;CPU vs GPU&lt;/h3&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-08-cpu-vs-gpu.jpg&quot; alt=&quot;CPU vs GPU&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The above figure illustrates the key differences in architecture between CPUs and GPUs.
-CPUs feature relatively complex components, with most of the area dedicated to elements like prefetching, branch prediction, and caching, all aimed at improving CPU core computational efficiency, enabling them to handle intricate logic. 
-In contrast, GPUs have simpler components but stack a large number of cores, with longer pipelines. 
-When processing data, GPUs operate in a SIMT (Single Instruction, Multiple Threads) manner, typically grouping 32 threads together (some GPUs use groups of 64 threads), known as thread warps (warp in Nvidia GPUs, wave in AMD GPUs). 
-These thread warps execute the same instruction stream simultaneously, and GPUs rely on warp schedulers to hide data fetch latencies. 
-Moreover, GPUs have multiple memory hierarchies, necessitating data movement between main memory, video memory, on-chip shared memory, and vector registers.&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt; &lt;/th&gt;
-      &lt;th&gt;E5 2682&lt;/th&gt;
-      &lt;th&gt;NVIDIA V100&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Clock&lt;/td&gt;
-      &lt;td&gt;2.5GHz&lt;/td&gt;
-      &lt;td&gt;877MHz&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Cores&lt;/td&gt;
-      &lt;td&gt;8x2&lt;/td&gt;
-      &lt;td&gt;5120 (FP32)&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Prices&lt;/td&gt;
-      &lt;td&gt;~$1,000&lt;/td&gt;
-      &lt;td&gt;~$10,000&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Mem b/w&lt;/td&gt;
-      &lt;td&gt;~40GB/s&lt;/td&gt;
-      &lt;td&gt;~1TB/s&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Mem size&lt;/td&gt;
-      &lt;td&gt;~2TB&lt;/td&gt;
-      &lt;td&gt;16GB&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;This table provides a comparison of specific hardware parameters between CPUs and GPUs. 
-In terms of computational power, GPUs have more cores, allowing them to process more data simultaneously and achieve higher levels of parallelism. 
-This higher parallelism aligns well with the inherently high concurrency of graph algorithms, where each vertex can serve as a parallel unit. 
-Consequently, GPUs demonstrate higher throughput when handling graph algorithms. However, individual GPU cores are weaker and operate at lower clock frequencies compared to CPUs.
-This characteristic makes GPUs more susceptible to long tail effects when facing load imbalances.
-In scenarios with imbalanced workloads, most GPU cores might idle while waiting for a few weaker cores to complete their computations. 
-Unfortunately, graph data exhibits inherent irregularity, with skewed edge distributions, where a small number of vertices possess the majority of edges, while most vertices are only connected by a few edges. This irregularity further amplifies the challenge of achieving load balance on GPUs.&lt;/p&gt;
-
-&lt;p&gt;When it comes to memory access capabilities, GPUs indeed have higher bandwidth, such as the Nvidia V100 equipped with HBM2, which offers a bandwidth of up to 1TB/s. When GPU warps access adjacent data blocks, they can trigger coalesced memory access, combining multiple memory requests into a single one, providing an advantage over CPUs when handling large amounts of data. However, graph algorithms, especially parallel graph traversal algorithms, require simultaneous processing of a large number of edge data. Although GPUs boast higher memory bandwidth than CPUs, the memory access patterns of graph algorithms are unpredictable. Graph algorithms often need to randomly access a significant amount of data from memory, with each access touching only a small portion of memory (usually representing vertex states, which are not very large in graph analysis tasks). This leads to highly inefficient memory bandwidth utilization, often falling short of the theoretical peak.
-Additionally, GPU memory capacity is much smaller than that of CPUs, making it challenging for GPUs to handle larger-scale graph data. Furthermore, GPUs struggle to execute algorithms with high memory requirements, especially those that need to store large amounts of intermediate results for graph mining tasks.&lt;/p&gt;
-
-&lt;h3 id=&quot;when-efficient-graph-algorithms-go-inefficient-on-gpus&quot;&gt;When Efficient Graph Algorithms Go Inefficient on GPUs&lt;/h3&gt;
-
-&lt;p&gt;There is a significant gap between GPU and CPU architectures. Merely transferring CPU algorithms to GPUs may not lead to improved performance; it could even result in performance degradation.&lt;/p&gt;
-
-&lt;p&gt;Due to GPUs having more but weaker cores compared to CPUs, graph algorithms running on GPUs should be adjusted appropriately to fully leverage the high concurrency of GPUs. We can achieve higher concurrency by sacrificing some single-thread efficiency in the algorithm.
-For instance, in the case of the shortest path problem, efficient algorithms like &lt;a href=&quot;https://en.wikipedia.org/wiki/Edsger_W._Dijkstra&quot;&gt;Dijkstra&lt;/a&gt; are commonly used on CPUs. 
-Dijkstra maintains a small min-heap and processes only the closest unprocessed vertices to the source vertex, ensuring that each vertex is processed only once. This ordered update approach is highly efficient but limits concurrency based on the degree of each vertex.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-08-efficiency-vs-parallelism.jpg&quot; alt=&quot;Efficiency vs Parallelism&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In contrast, Bellman-Ford processes all edges in each update round, providing higher concurrency, but with slightly lower update efficiency as each vertex might be processed multiple times. 
-As shown in the above Figure, during the first round of updates from the source vertex &lt;em&gt;S&lt;/em&gt;, vertices &lt;em&gt;A&lt;/em&gt; and &lt;em&gt;B&lt;/em&gt; are modified, and &lt;em&gt;B&lt;/em&gt;’s distance is updated to 30.
-Subsequently, vertex &lt;em&gt;B&lt;/em&gt; updates its neighbors, and in the next round, its distance is modified to 21 via vertex &lt;em&gt;A&lt;/em&gt;, triggering updates to other vertices by vertex &lt;em&gt;B&lt;/em&gt;. Using Dijkstra, however, only the closer vertices are processed, avoiding repetitive transmission of invalid data by vertex B.&lt;/p&gt;
-
-&lt;p&gt;By carefully considering the trade-off between concurrency and single-thread efficiency, graph algorithms can be tailored to effectively harness the potential of GPU’s high concurrency while optimizing their performance on GPUs.&lt;/p&gt;
-
-&lt;p&gt;When considering GPUs, a delicate balance between parallelism and computational efficiency must be struck. On one hand, GPUs possess numerous cores; however, utilizing Dijkstra’s algorithm on them demands maintaining a costly concurrent heap, which subsequently curtails the achievable level of concurrency, thus impeding the exploitation of the GPU’s potential. 
-On the other hand, given the relatively weaker nature of GPU cores, adopting algorithms with lower computational efficiency could potentially lead to slower performance compared to directly employing efficient algorithms on CPUs.&lt;/p&gt;
-
-&lt;p&gt;To navigate this trade-off, we introduce the concept of an update window, denoted as &lt;em&gt;w&lt;/em&gt;. 
-&lt;em&gt;w&lt;/em&gt; serve as a soft adjustable threshold value to balance the efficiency and parallelism.
-In each iteration round, only vertices with distances falling within the update window are processed (specifically, those vertices &lt;em&gt;u&lt;/em&gt; satisfying &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dis[u] &amp;lt; w&lt;/code&gt;). 
-After completing updates within a window, the window &lt;em&gt;w&lt;/em&gt; is slid, targeting vertices with distances in next window, i.e. interval &lt;em&gt;[w, 2w)&lt;/em&gt;. 
-This process continues until all active vertices have undergone updates, signaling the transition to the next iteration. 
-The size of the window &lt;em&gt;w&lt;/em&gt; serves as a tuning parameter, affording users the flexibility to specify &lt;em&gt;w&lt;/em&gt; and thus adapt to diverse datasets and computing platforms with precision.&lt;/p&gt;
-
-&lt;h3 id=&quot;load-balance-is-more-important-than-you-think&quot;&gt;Load Balance is More Important than You Think&lt;/h3&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-08-load-balance.jpg&quot; alt=&quot;Load balance&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;As mentioned above, due to the irregular nature of graph algorithms, which does not align well with the SIMT architecture of GPUs, this irregular computation can result in severe load imbalance, making it crucial for GPU-based graph algorithms. 
-To cope with load imbalance, we have four different load balancing strategies, as illustrated in above.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;TWC (Thread-Warp-CTA) is the lowest-overhead load balancing method. It divides the currently active vertex set based on their out-degrees into low, medium, and high-degree vertices, and then maps them to threads, warps, and CTAs for processing.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;WM (Warp-Managed) primarily addresses load imbalance within a warp. It processes a fixed number of vertices as a batch and loads their neighbors into the GPU’s shared memory until all neighbors are processed before moving to the next batch. Each thread performs a binary search on the edges to determine their corresponding vertex.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;CM (CTA-Managed) is similar to WM, but focuses on load imbalance within a CTA. Like WM, it processes a fixed number of vertices as a batch and loads their neighbors into shared memory. However, CM uses a broader binary search to find the corresponding vertex for the edge, and threads in CM require explicit synchronization.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;STRICT is the highest-overhead load balancing method, ensuring that each thread in the GPU handles the same number of edges. It enforces equal edge distribution in each CTA, requiring additional preprocessing to partition the edges that need processing, with some nodes’ edges distributed across different CTAs, necessitating atomic operations during updates for consistency.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Theoretically, STRICT guarantees the best load balancing, but it incurs the highest overhead. It is often the optimal choice when the active vertex set contains a vertex with a large number of edges. TWC offers the lowest overhead but only guarantees approximate balance. WM/CM falls between the two extremes, with WM’s primary overhead being the binary search, taking no more than &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;log2(warpsize)&lt;/code&gt; steps to complete, while CM’s overhead is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;log2(blocksize)&lt;/code&gt; steps.&lt;/p&gt;
-
-&lt;h3 id=&quot;try-gpu-based-graphalytics-on-graphscope&quot;&gt;Try GPU-based Graphalytics on GraphScope&lt;/h3&gt;
-
-&lt;p&gt;If you are looking for an out-of-box GPU-based graphalytics library, come and try &lt;a href=&quot;https://github.com/alibaba/GraphScope&quot;&gt;GraphScope&lt;/a&gt;.
-Our recent update on graph analytical engine (&lt;a href=&quot;https://github.com/alibaba/libgrape-lite/&quot;&gt;GAE&lt;/a&gt;) of GraphScope introduces a new feature for GPU acceleration and achieves amazing performance on large graphs.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-08-performance.jpg&quot; alt=&quot;Performance&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The above chart illustrates the performance achieved by GPU-based GraphScope on a single node with eight A100 GPUs when running on graph data of various sizes. It showcases the throughput in terms of edges processed per second while handling this data. Processing a graph data set with 8 billion edges takes just 85 milliseconds, significantly outperforming the results obtained from a distributed cluster composed of multiple CPU nodes.&lt;/p&gt;
-
-&lt;p&gt;GraphScope continues to evolve, and we are working on ways to provide flexibility and performance. 
-We are building out the next version of GraphScope that will start to provide more exciting features like GPU, &lt;a href=&quot;https://en.wikipedia.org/wiki/Remote_direct_memory_access&quot;&gt;RDMA&lt;/a&gt; and &lt;a href=&quot;https://en.wikipedia.org/wiki/Compute_Express_Link&quot;&gt;CXL&lt;/a&gt;. 
-Reach out to us via &lt;a href=&quot;https://github.com/alibaba/GraphScope/discussions&quot;&gt;Github Discussions&lt;/a&gt;. We’re here to help.&lt;/p&gt;
-
-&lt;h3 id=&quot;references&quot;&gt;References&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;[1] Farzad Khorasani, Keval Vora, Rajiv Gupta, and Laxmi N. Bhuyan. CuSha: vertex-centric graph processing on GPUs. (&lt;a href=&quot;https://dl.acm.org/doi/abs/10.1145/2600212.2600227&quot;&gt;link&lt;/a&gt;)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;[2] Jianlong Zhong and Bingsheng He. Medusa: Simplified Graph Processing on GPUs. (&lt;a href=&quot;https://ieeexplore.ieee.org/document/6497047&quot;&gt;link&lt;/a&gt;)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;[3] Yangzihao Wang, Yuechao Pan, Andrew Davidson, Yuduo Wu, Carl Yang, Leyuan Wang, Muhammad Osama, Chenshan Yuan, Weitang Liu, Andy T. Riffel, and John D. Owens. Gunrock: GPU Graph Analytics. (&lt;a href=&quot;https://dl.acm.org/doi/10.1145/3108140&quot;&gt;link&lt;/a&gt;)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;[4] Tal Ben-Nun, Michael Sutton, Sreepathi Pai, and Keshav Pingali. Groute: An Asynchronous Multi-GPU Programming Model for Irregular Computations. (&lt;a href=&quot;https://dl.acm.org/doi/10.1145/3018743.3018756&quot;&gt;link&lt;/a&gt;)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;[5] Ke Meng, Jiajia Li, Guangming Tan, and Ninghui Sun. A pattern based algorithmic autotuner for graph processing on GPUs. (&lt;a href=&quot;https://dl.acm.org/doi/10.1145/3293883.3295716&quot;&gt;link&lt;/a&gt;)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;[6] K. Meng, L. Geng, X. Li, Q. Tao, W. Yu and J. Zhou, “Efficient Multi-GPU Graph Processing with Remote Work Stealing. (&lt;a href=&quot;https://ieeexplore.ieee.org/document/10184847&quot;&gt;link&lt;/a&gt;)&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-</description>
-        <pubDate>Tue, 08 Aug 2023 14:10:44 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/08/08/Empowering-Graph-Analysis-Tasks-with-GPU-Acceleration.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/08/08/Empowering-Graph-Analysis-Tasks-with-GPU-Acceleration.html</guid>
         
         
         <category>Tech</category>
