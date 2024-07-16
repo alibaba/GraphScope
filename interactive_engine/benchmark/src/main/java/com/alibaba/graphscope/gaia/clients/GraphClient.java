@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gaia.common;
+package com.alibaba.graphscope.gaia.clients;
 
 public interface GraphClient {
     GraphResultSet submit(String query);

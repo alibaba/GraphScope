@@ -15,6 +15,10 @@
  */
 package com.alibaba.graphscope.gaia.common;
 
+import com.alibaba.graphscope.gaia.clients.GraphClient;
+import com.alibaba.graphscope.gaia.clients.GraphResultSet;
+import com.alibaba.graphscope.gaia.utils.BenchmarkResultComparator;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Result;
 

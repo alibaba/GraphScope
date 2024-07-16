@@ -15,12 +15,12 @@
  */
 package com.alibaba.graphscope.gaia.benchmark;
 
-import com.alibaba.graphscope.gaia.common.BenchmarkResultComparator;
+import com.alibaba.graphscope.gaia.clients.GraphClient;
+import com.alibaba.graphscope.gaia.clients.impls.CypherGraphClient;
+import com.alibaba.graphscope.gaia.clients.impls.GremlinGraphClient;
 import com.alibaba.graphscope.gaia.common.CommonQuery;
 import com.alibaba.graphscope.gaia.common.Configuration;
-import com.alibaba.graphscope.gaia.common.CypherGraphClient;
-import com.alibaba.graphscope.gaia.common.GraphClient;
-import com.alibaba.graphscope.gaia.common.GremlinGraphClient;
+import com.alibaba.graphscope.gaia.utils.BenchmarkResultComparator;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
 

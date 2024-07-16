@@ -1,4 +1,7 @@
-package com.alibaba.graphscope.gaia.common;
+package com.alibaba.graphscope.gaia.clients.impls;
+
+import com.alibaba.graphscope.gaia.clients.GraphClient;
+import com.alibaba.graphscope.gaia.clients.GraphResultSet;
 
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;

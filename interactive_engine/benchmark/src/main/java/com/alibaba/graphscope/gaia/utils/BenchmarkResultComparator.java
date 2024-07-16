@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gaia.common;
+package com.alibaba.graphscope.gaia.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -50,6 +50,8 @@ public class BenchmarkResultComparator {
 
     private String normalizeString(String str) {
         str = str.replace("\\\"", "\"");
+        str = str.replace("'", "\"");
+        str = str.replace("None", "Null");
         str = str.replaceAll("\\s+", " ");
         return str.trim();
     }

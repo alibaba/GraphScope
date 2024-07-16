@@ -1,4 +1,6 @@
-package com.alibaba.graphscope.gaia.common;
+package com.alibaba.graphscope.gaia.clients.impls;
+
+import com.alibaba.graphscope.gaia.clients.GraphResultSet;
 
 import org.apache.tinkerpop.gremlin.driver.Result;
 import org.apache.tinkerpop.gremlin.driver.ResultSet;
