@@ -604,11 +604,7 @@ impl DistributedParResourceMaps {
         for _ in 0..resource_size {
             keyed_resource_maps.push(Some(Arc::new(Mutex::new(KeyedResources::default()))));
         }
-        DistributedParResourceMaps {
-            resource_maps,
-            keyed_resource_maps,
-            start_index,
-        }
+        DistributedParResourceMaps { resource_maps, keyed_resource_maps, start_index }
     }
 
     pub fn get_resource(&self, par: usize) -> Option<&Arc<Mutex<ResourceMap>>> {

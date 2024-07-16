@@ -36,9 +36,9 @@ pub struct VertexMap<G: Send + Sync + IndexType, I: Send + Sync + IndexType> {
 }
 
 impl<G, I> VertexMap<G, I>
-    where
-        G: Send + Sync + IndexType,
-        I: Send + Sync + IndexType,
+where
+    G: Send + Sync + IndexType,
+    I: Send + Sync + IndexType,
 {
     pub fn new(num_labels: usize) -> Self {
         let mut labeled_num = Vec::with_capacity(num_labels);

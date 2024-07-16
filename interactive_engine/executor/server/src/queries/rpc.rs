@@ -150,7 +150,7 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
     pub async fn run(
         self, server_id: u64, mut listener: StandaloneServiceListener,
     ) -> Result<(), Box<dyn std::error::Error>>
-        where {
+where {
         let RPCJobServer { service, mut rpc_config } = self;
         let mut builder = Server::builder();
         if let Some(limit) = rpc_config.rpc_concurrency_limit_per_connection {
@@ -319,7 +319,7 @@ impl pb::job_service_server::JobService for JobServiceImpl {
                                 Some(resource_maps.clone()),
                                 || query.Query(conf.clone(), &graph, &graph_index, params.clone(), None),
                             )
-                                .expect("submit query failure")
+                            .expect("submit query failure")
                         };
                         let mut write_operations = vec![];
                         let mut bytes_result = vec![];
@@ -341,7 +341,12 @@ impl pb::job_service_server::JobService for JobServiceImpl {
                         drop(graph_index);
                         let mut graph = self.graph_db.write().unwrap();
                         let mut graph_index = self.graph_index.write().unwrap();
-                        write_graph::apply_write_operations(&mut graph, &mut graph_index, write_operations, self.workers);
+                        write_graph::apply_write_operations(
+                            &mut graph,
+                            &mut graph_index,
+                            write_operations,
+                            self.workers,
+                        );
 
                         if !bytes_result.is_empty() {
                             let (tx, rx) = tokio::sync::mpsc::unbounded_channel();

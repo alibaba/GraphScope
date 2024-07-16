@@ -13,13 +13,16 @@ use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::GraphModifier;
 use bmcsr::schema::{CsrGraphSchema, InputSchema, Schema};
 use bmcsr::types::{DefaultId, LabelId};
-use graph_index::types::*;
 use graph_index::types::DataType as IndexDataType;
+use graph_index::types::*;
 use graph_index::GraphIndex;
 use itertools::max;
 use num::complex::ComplexFloat;
 
-pub fn apply_write_operations(graph: &mut GraphDB<usize, usize>, graph_index: &mut GraphIndex, mut write_operations: Vec<WriteOperation>, parallel: u32) {
+pub fn apply_write_operations(
+    graph: &mut GraphDB<usize, usize>, graph_index: &mut GraphIndex,
+    mut write_operations: Vec<WriteOperation>, parallel: u32,
+) {
     let mut merged_delete_vertices_data: HashMap<LabelId, Vec<u64>> = HashMap::new();
     for mut write_op in write_operations.drain(..) {
         match write_op.write_type() {
@@ -29,13 +32,7 @@ pub fn apply_write_operations(graph: &mut GraphDB<usize, usize>, graph_index: &m
                     let inputs = vertex_mappings.inputs();
                     let column_mappings = vertex_mappings.column_mappings();
                     for input in inputs.iter() {
-                        insert_vertices(
-                            graph,
-                            vertex_label,
-                            input,
-                            column_mappings,
-                            parallel,
-                        );
+                        insert_vertices(graph, vertex_label, input, column_mappings, parallel);
                     }
                 }
                 if let Some(edge_mappings) = write_op.take_edge_mappings() {
@@ -86,8 +83,11 @@ pub fn apply_write_operations(graph: &mut GraphDB<usize, usize>, graph_index: &m
                                         .get_mut(id_col as usize)
                                         .expect("Failed to get id column");
 
-                                    if let ColumnData::UInt64Array(mut data) = vertex_id_column.take_data() {
-                                        if let Some(mut combined_data) = merged_delete_vertices_data.get_mut(&vertex_label) {
+                                    if let ColumnData::UInt64Array(mut data) = vertex_id_column.take_data()
+                                    {
+                                        if let Some(mut combined_data) =
+                                            merged_delete_vertices_data.get_mut(&vertex_label)
+                                        {
                                             combined_data.append(&mut data)
                                         } else {
                                             merged_delete_vertices_data.insert(vertex_label, data);
@@ -98,13 +98,7 @@ pub fn apply_write_operations(graph: &mut GraphDB<usize, usize>, graph_index: &m
                             }
                             _ => {}
                         }
-                        delete_vertices(
-                            graph,
-                            vertex_label,
-                            &input,
-                            column_mappings,
-                            parallel,
-                        );
+                        delete_vertices(graph, vertex_label, &input, column_mappings, parallel);
                     }
                 }
                 if let Some(edge_mappings) = write_op.take_edge_mappings() {
@@ -136,14 +130,7 @@ pub fn apply_write_operations(graph: &mut GraphDB<usize, usize>, graph_index: &m
                     let mut inputs = vertex_mappings.take_inputs();
                     let column_mappings = vertex_mappings.column_mappings();
                     for mut input in inputs.drain(..) {
-                        set_vertices(
-                            graph,
-                            graph_index,
-                            vertex_label,
-                            input,
-                            column_mappings,
-                            parallel,
-                        );
+                        set_vertices(graph, graph_index, vertex_label, input, column_mappings, parallel);
                     }
                 }
                 if let Some(mut edge_mappings) = write_op.take_edge_mappings() {
@@ -173,22 +160,17 @@ pub fn apply_write_operations(graph: &mut GraphDB<usize, usize>, graph_index: &m
         };
     }
     for (vertex_label, vertex_ids) in merged_delete_vertices_data.into_iter() {
-        let column_mappings = vec![ColumnMappings::new(0, "id".to_string(), IndexDataType::VertexId, "id".to_string())];
+        let column_mappings =
+            vec![ColumnMappings::new(0, "id".to_string(), IndexDataType::VertexId, "id".to_string())];
         let input = Input::memory(DataFrame::new_vertices_ids(vertex_ids));
-        delete_vertices(
-            graph,
-            vertex_label,
-            &input,
-            &column_mappings,
-            parallel,
-        );
+        delete_vertices(graph, vertex_label, &input, &column_mappings, parallel);
     }
 }
 
 fn properties_to_items<G, I>(properties: Vec<ColumnData>) -> Vec<Vec<Item>>
-    where
-        I: Send + Sync + IndexType,
-        G: FromStr + Send + Sync + IndexType + Eq,
+where
+    I: Send + Sync + IndexType,
+    G: FromStr + Send + Sync + IndexType + Eq,
 {
     let properties_len = if properties.len() > 0 { properties[0].len() } else { 0 };
     let mut properties_items = Vec::with_capacity(properties_len);

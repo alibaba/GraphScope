@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::fmt;
 use std::hash::Hash;
 use std::ops::AddAssign;
+
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 /// Trait for the unsigned integer type used for node and edge indices.
 ///

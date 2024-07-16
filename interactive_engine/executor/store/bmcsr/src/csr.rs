@@ -2,11 +2,11 @@ use std::any::Any;
 use std::collections::HashSet;
 use std::marker::PhantomData;
 
-use crate::col_table::ColTable;
-use crate::graph::IndexType;
-
 #[cfg(feature = "hugepage_csr")]
 use huge_container::HugeVec;
+
+use crate::col_table::ColTable;
+use crate::graph::IndexType;
 
 #[cfg(feature = "hugepage_csr")]
 type ArrayType<T> = HugeVec<T>;

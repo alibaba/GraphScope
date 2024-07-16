@@ -23,14 +23,13 @@ use std::io::{BufReader, BufWriter, Read, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use dyn_type::object::RawType;
 use dyn_type::CastError;
+#[cfg(feature = "hugepage_table")]
+use huge_container::HugeVec;
 use serde::{Deserialize, Serialize};
 
 use crate::date::Date;
 use crate::date_time::DateTime;
 use crate::types::DefaultId;
-
-#[cfg(feature = "hugepage_table")]
-use huge_container::HugeVec;
 
 #[cfg(feature = "hugepage_table")]
 type ColumnContainer<T> = HugeVec<T>;
@@ -848,7 +847,9 @@ impl Column for IDColumn {
     }
 
     fn get(&self, index: usize) -> Option<RefItem> {
-        self.data.get(index).map(|x| RefItem::VertexId(x))
+        self.data
+            .get(index)
+            .map(|x| RefItem::VertexId(x))
     }
 
     fn set(&mut self, index: usize, val: Item) {

@@ -226,7 +226,8 @@ impl DataFrame {
     }
 
     pub fn new_edges_ids(ids: Vec<usize>) -> Self {
-        let columns = vec![Column::new(ColumnData::VertexIdArray(ids), "id".to_string(), DataType::VertexId)];
+        let columns =
+            vec![Column::new(ColumnData::VertexIdArray(ids), "id".to_string(), DataType::VertexId)];
         DataFrame { columns }
     }
 

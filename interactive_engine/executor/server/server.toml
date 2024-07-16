@@ -1,0 +1,13 @@
+[network_config.network]
+server_id = 0
+servers_size = 1
+[[network_config.network.servers]]
+hostname = '127.0.0.1'
+port = 1234
+
+[rpc_server]
+rpc_host = "127.0.0.1"
+rpc_port = 12345
+
+[pegasus_config]
+worker_num=8

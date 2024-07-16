@@ -4,17 +4,16 @@ use std::io::{BufReader, Write};
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use bmcsr::columns::*;
+use bmcsr::graph::{Direction, IndexType};
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_loader::get_files_list;
-use bmcsr::schema::Schema;
-use bmcsr::graph::{Direction, IndexType};
-use bmcsr::columns::*;
-use bmcsr::types::LabelId;
 use bmcsr::ldbc_parser::LDBCVertexParser;
-
+use bmcsr::schema::Schema;
+use bmcsr::types::LabelId;
 use clap::{App, Arg};
-use log::{info, warn};
 use csv::ReaderBuilder;
+use log::{info, warn};
 use rust_htslib::bgzf::Reader as GzReader;
 
 fn load_input(input_dir: &str, label: LabelId) -> Vec<(String, usize)> {
@@ -23,7 +22,12 @@ fn load_input(input_dir: &str, label: LabelId) -> Vec<(String, usize)> {
     let files = get_files_list(&PathBuf::from_str(input_dir).unwrap(), &suffixes).unwrap();
     let parser = LDBCVertexParser::<usize>::new(label, 1);
     for file in files {
-        if file.clone().to_str().unwrap().ends_with(".csv.gz") {
+        if file
+            .clone()
+            .to_str()
+            .unwrap()
+            .ends_with(".csv.gz")
+        {
             let mut rdr = ReaderBuilder::new()
                 .delimiter(b'|')
                 .buffer_capacity(4096)
@@ -34,7 +38,14 @@ fn load_input(input_dir: &str, label: LabelId) -> Vec<(String, usize)> {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let vertex_meta = parser.parse_vertex_meta(&record);
-                    ret.push((record.get(0).unwrap().parse::<String>().unwrap(), vertex_meta.global_id.index()));
+                    ret.push((
+                        record
+                            .get(0)
+                            .unwrap()
+                            .parse::<String>()
+                            .unwrap(),
+                        vertex_meta.global_id.index(),
+                    ));
                 }
             }
         }
@@ -43,19 +54,43 @@ fn load_input(input_dir: &str, label: LabelId) -> Vec<(String, usize)> {
     ret
 }
 
-fn iterate_persons(graph: &GraphDB<usize, usize>, persons: &Vec<(String, usize)>, comments: &mut Vec<(String, usize)>, posts: &mut Vec<(String, usize)>, forums: &mut Vec<(String, usize)>) {
-    let person_label = graph.graph_schema.get_vertex_label_id("PERSON").unwrap();
+fn iterate_persons(
+    graph: &GraphDB<usize, usize>, persons: &Vec<(String, usize)>, comments: &mut Vec<(String, usize)>,
+    posts: &mut Vec<(String, usize)>, forums: &mut Vec<(String, usize)>,
+) {
+    let person_label = graph
+        .graph_schema
+        .get_vertex_label_id("PERSON")
+        .unwrap();
 
-    let comment_label = graph.graph_schema.get_vertex_label_id("COMMENT").unwrap();
-    let post_label = graph.graph_schema.get_vertex_label_id("POST").unwrap();
-    let forum_label = graph.graph_schema.get_vertex_label_id("FORUM").unwrap();
+    let comment_label = graph
+        .graph_schema
+        .get_vertex_label_id("COMMENT")
+        .unwrap();
+    let post_label = graph
+        .graph_schema
+        .get_vertex_label_id("POST")
+        .unwrap();
+    let forum_label = graph
+        .graph_schema
+        .get_vertex_label_id("FORUM")
+        .unwrap();
 
-    let hasCreator_label = graph.graph_schema.get_edge_label_id("HASCREATOR").unwrap();
-    let hasModerator_label = graph.graph_schema.get_edge_label_id("HASMODERATOR").unwrap();
+    let hasCreator_label = graph
+        .graph_schema
+        .get_edge_label_id("HASCREATOR")
+        .unwrap();
+    let hasModerator_label = graph
+        .graph_schema
+        .get_edge_label_id("HASMODERATOR")
+        .unwrap();
 
-    let comment_hasCreator_person = graph.get_sub_graph(person_label, hasCreator_label, comment_label, Direction::Incoming);
-    let post_hasCreator_person = graph.get_sub_graph(person_label, hasCreator_label, post_label, Direction::Incoming);
-    let forum_hasModerator_person = graph.get_sub_graph(person_label, hasModerator_label, forum_label, Direction::Incoming);
+    let comment_hasCreator_person =
+        graph.get_sub_graph(person_label, hasCreator_label, comment_label, Direction::Incoming);
+    let post_hasCreator_person =
+        graph.get_sub_graph(person_label, hasCreator_label, post_label, Direction::Incoming);
+    let forum_hasModerator_person =
+        graph.get_sub_graph(person_label, hasModerator_label, forum_label, Direction::Incoming);
 
     let forum_title_column = graph.vertex_prop_table[forum_label as usize]
         .get_column_by_name("title")
@@ -69,21 +104,39 @@ fn iterate_persons(graph: &GraphDB<usize, usize>, persons: &Vec<(String, usize)>
                 warn!("Vertex {} is not a person", LDBCVertexParser::<usize>::get_original_id(*id));
                 continue;
             }
-            for e in comment_hasCreator_person.get_adj_list(lid).unwrap() {
-                let oid = graph.vertex_map.get_global_id(comment_label, *e).unwrap();
+            for e in comment_hasCreator_person
+                .get_adj_list(lid)
+                .unwrap()
+            {
+                let oid = graph
+                    .vertex_map
+                    .get_global_id(comment_label, *e)
+                    .unwrap();
                 comments.push((dt.clone(), oid));
             }
 
-            for e in post_hasCreator_person.get_adj_list(lid).unwrap() {
-                let oid = graph.vertex_map.get_global_id(post_label, *e).unwrap();
+            for e in post_hasCreator_person
+                .get_adj_list(lid)
+                .unwrap()
+            {
+                let oid = graph
+                    .vertex_map
+                    .get_global_id(post_label, *e)
+                    .unwrap();
                 posts.push((dt.clone(), oid));
             }
 
-            for e in forum_hasModerator_person.get_adj_list(lid).unwrap() {
+            for e in forum_hasModerator_person
+                .get_adj_list(lid)
+                .unwrap()
+            {
                 let title = forum_title_column.get(*e).unwrap();
                 let title_string = title.to_string();
                 if title_string.starts_with("Album") || title_string.starts_with("Wall") {
-                    let oid = graph.vertex_map.get_global_id(forum_label, *e).unwrap();
+                    let oid = graph
+                        .vertex_map
+                        .get_global_id(forum_label, *e)
+                        .unwrap();
                     forums.push((dt.clone(), oid));
                 }
             }
@@ -94,13 +147,25 @@ fn iterate_persons(graph: &GraphDB<usize, usize>, persons: &Vec<(String, usize)>
     }
 }
 
-fn iterate_forums(graph: &GraphDB<usize, usize>, forums: &Vec<(String, usize)>, posts: &mut Vec<(String, usize)>) {
-    let forum_label = graph.graph_schema.get_vertex_label_id("FORUM").unwrap();
-    let post_label = graph.graph_schema.get_vertex_label_id("POST").unwrap();
+fn iterate_forums(
+    graph: &GraphDB<usize, usize>, forums: &Vec<(String, usize)>, posts: &mut Vec<(String, usize)>,
+) {
+    let forum_label = graph
+        .graph_schema
+        .get_vertex_label_id("FORUM")
+        .unwrap();
+    let post_label = graph
+        .graph_schema
+        .get_vertex_label_id("POST")
+        .unwrap();
 
-    let containerOf_label = graph.graph_schema.get_edge_label_id("CONTAINEROF").unwrap();
+    let containerOf_label = graph
+        .graph_schema
+        .get_edge_label_id("CONTAINEROF")
+        .unwrap();
 
-    let forum_containerOf_post = graph.get_sub_graph(forum_label, containerOf_label, post_label, Direction::Outgoing);
+    let forum_containerOf_post =
+        graph.get_sub_graph(forum_label, containerOf_label, post_label, Direction::Outgoing);
     for (dt, id) in forums.iter() {
         if let Some((got_label, lid)) = graph.vertex_map.get_internal_id(*id) {
             if got_label != forum_label {
@@ -108,8 +173,14 @@ fn iterate_forums(graph: &GraphDB<usize, usize>, forums: &Vec<(String, usize)>, 
                 continue;
             }
 
-            for e in forum_containerOf_post.get_adj_list(lid).unwrap() {
-                let oid = graph.vertex_map.get_global_id(post_label, *e).unwrap();
+            for e in forum_containerOf_post
+                .get_adj_list(lid)
+                .unwrap()
+            {
+                let oid = graph
+                    .vertex_map
+                    .get_global_id(post_label, *e)
+                    .unwrap();
                 posts.push((dt.clone(), oid));
             }
         } else {
@@ -119,13 +190,25 @@ fn iterate_forums(graph: &GraphDB<usize, usize>, forums: &Vec<(String, usize)>, 
     }
 }
 
-fn iterate_posts(graph: &GraphDB<usize, usize>, posts: &Vec<(String, usize)>, comments: &mut Vec<(String, usize)>) {
-    let post_label = graph.graph_schema.get_vertex_label_id("POST").unwrap();
-    let comment_label = graph.graph_schema.get_vertex_label_id("COMMENT").unwrap();
+fn iterate_posts(
+    graph: &GraphDB<usize, usize>, posts: &Vec<(String, usize)>, comments: &mut Vec<(String, usize)>,
+) {
+    let post_label = graph
+        .graph_schema
+        .get_vertex_label_id("POST")
+        .unwrap();
+    let comment_label = graph
+        .graph_schema
+        .get_vertex_label_id("COMMENT")
+        .unwrap();
 
-    let replyOf_label = graph.graph_schema.get_edge_label_id("REPLYOF").unwrap();
+    let replyOf_label = graph
+        .graph_schema
+        .get_edge_label_id("REPLYOF")
+        .unwrap();
 
-    let comment_replyOf_post = graph.get_sub_graph(post_label, replyOf_label, comment_label, Direction::Incoming);
+    let comment_replyOf_post =
+        graph.get_sub_graph(post_label, replyOf_label, comment_label, Direction::Incoming);
     for (dt, id) in posts.iter() {
         if let Some((got_label, lid)) = graph.vertex_map.get_internal_id(*id) {
             if got_label != post_label {
@@ -134,7 +217,10 @@ fn iterate_posts(graph: &GraphDB<usize, usize>, posts: &Vec<(String, usize)>, co
             }
 
             for e in comment_replyOf_post.get_adj_list(lid).unwrap() {
-                let oid = graph.vertex_map.get_global_id(comment_label, *e).unwrap();
+                let oid = graph
+                    .vertex_map
+                    .get_global_id(comment_label, *e)
+                    .unwrap();
                 comments.push((dt.clone(), oid));
             }
         } else {
@@ -145,11 +231,18 @@ fn iterate_posts(graph: &GraphDB<usize, usize>, posts: &Vec<(String, usize)>, co
 }
 
 fn iterate_comments(graph: &GraphDB<usize, usize>, comments: &mut Vec<(String, usize)>) {
-    let comment_label = graph.graph_schema.get_vertex_label_id("COMMENT").unwrap();
+    let comment_label = graph
+        .graph_schema
+        .get_vertex_label_id("COMMENT")
+        .unwrap();
 
-    let replyOf_label = graph.graph_schema.get_edge_label_id("REPLYOF").unwrap();
+    let replyOf_label = graph
+        .graph_schema
+        .get_edge_label_id("REPLYOF")
+        .unwrap();
 
-    let comment_replyOf_comment = graph.get_sub_graph(comment_label, replyOf_label, comment_label, Direction::Incoming);
+    let comment_replyOf_comment =
+        graph.get_sub_graph(comment_label, replyOf_label, comment_label, Direction::Incoming);
     let mut index = 0;
     while index < comments.len() {
         let (dt, id) = comments[index].clone();
@@ -160,8 +253,14 @@ fn iterate_comments(graph: &GraphDB<usize, usize>, comments: &mut Vec<(String, u
                 continue;
             }
 
-            for e in comment_replyOf_comment.get_adj_list(lid).unwrap() {
-                let oid = graph.vertex_map.get_global_id(comment_label, *e).unwrap();
+            for e in comment_replyOf_comment
+                .get_adj_list(lid)
+                .unwrap()
+            {
+                let oid = graph
+                    .vertex_map
+                    .get_global_id(comment_label, *e)
+                    .unwrap();
                 comments.push((dt.clone(), oid));
             }
             index += 1;
@@ -196,7 +295,8 @@ fn main() {
                 .required(true)
                 .takes_value(true)
                 .index(3),
-        ]).get_matches();
+        ])
+        .get_matches();
     let graph_data_dir = matches
         .value_of("graph_data_dir")
         .unwrap()
@@ -213,32 +313,48 @@ fn main() {
     let graph = GraphDB::<usize, usize>::deserialize(&graph_data_dir, 0, None).unwrap();
 
     info!("process persons");
-    let person_label = graph.graph_schema.get_vertex_label_id("PERSON").unwrap();
-    let mut input_persons = load_input(&(input_dir.clone() + "/deletes/dynamic/Person/batch_id=2012-11-29"), person_label);
+    let person_label = graph
+        .graph_schema
+        .get_vertex_label_id("PERSON")
+        .unwrap();
+    let mut input_persons =
+        load_input(&(input_dir.clone() + "/deletes/dynamic/Person/batch_id=2012-11-29"), person_label);
     let mut input_persons_set = HashSet::new();
     for (_, id) in input_persons.iter() {
         input_persons_set.insert(*id);
     }
 
     info!("process forums");
-    let forum_label = graph.graph_schema.get_vertex_label_id("FORUM").unwrap();
-    let mut input_forums = load_input(&(input_dir.clone() + "/deletes/dynamic/Forum/batch_id=2012-11-29"), forum_label);
+    let forum_label = graph
+        .graph_schema
+        .get_vertex_label_id("FORUM")
+        .unwrap();
+    let mut input_forums =
+        load_input(&(input_dir.clone() + "/deletes/dynamic/Forum/batch_id=2012-11-29"), forum_label);
     let mut input_forums_set = HashSet::new();
     for (_, id) in input_forums.iter() {
         input_forums_set.insert(*id);
     }
 
     info!("process posts");
-    let post_label = graph.graph_schema.get_vertex_label_id("POST").unwrap();
-    let mut input_posts = load_input(&(input_dir.clone() + "/deletes/dynamic/Post/batch_id=2012-11-29"), post_label);
+    let post_label = graph
+        .graph_schema
+        .get_vertex_label_id("POST")
+        .unwrap();
+    let mut input_posts =
+        load_input(&(input_dir.clone() + "/deletes/dynamic/Post/batch_id=2012-11-29"), post_label);
     let mut input_posts_set = HashSet::new();
     for (_, id) in input_posts.iter() {
         input_posts_set.insert(*id);
     }
 
     info!("process comments");
-    let comment_label = graph.graph_schema.get_vertex_label_id("COMMENT").unwrap();
-    let mut input_comments = load_input(&(input_dir.clone() + "/deletes/dynamic/Comment/batch_id=2012-11-29"), comment_label);
+    let comment_label = graph
+        .graph_schema
+        .get_vertex_label_id("COMMENT")
+        .unwrap();
+    let mut input_comments =
+        load_input(&(input_dir.clone() + "/deletes/dynamic/Comment/batch_id=2012-11-29"), comment_label);
     let mut input_comments_set = HashSet::new();
     for (_, id) in input_comments.iter() {
         input_comments_set.insert(*id);

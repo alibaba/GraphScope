@@ -4,13 +4,13 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+#[cfg(feature = "hugepage_csr")]
+use huge_container::HugeVec;
+
 use crate::col_table::ColTable;
 use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrIterBeta, NbrOffsetIter, SafeMutPtr, SafePtr};
 use crate::graph::IndexType;
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-
-#[cfg(feature = "hugepage_csr")]
-use huge_container::HugeVec;
 
 #[cfg(feature = "hugepage_csr")]
 type ArrayType<T> = HugeVec<T>;

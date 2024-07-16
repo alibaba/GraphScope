@@ -1,12 +1,14 @@
-use csv::{Reader, ReaderBuilder};
-use glob::glob;
-use rust_htslib::bgzf::Reader as GzReader;
 use std::collections::HashSet;
 use std::fs::{create_dir_all, read_dir, File};
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
+
+use csv::{Reader, ReaderBuilder};
+use glob::glob;
+use regex::Regex;
+use rust_htslib::bgzf::Reader as GzReader;
 
 use crate::bmcsr::BatchMutableCsrBuilder;
 use crate::bmscsr::BatchMutableSingleCsrBuilder;
@@ -19,7 +21,6 @@ use crate::ldbc_parser::{LDBCEdgeParser, LDBCVertexParser};
 use crate::schema::{CsrGraphSchema, InputSchema, Schema};
 use crate::types::{DefaultId, InternalId, LabelId, DIR_BINARY_DATA};
 use crate::vertex_map::VertexMap;
-use regex::Regex;
 
 pub fn get_files_list_beta(prefix: &PathBuf, file_strings: &Vec<String>) -> Vec<PathBuf> {
     let mut ret = vec![];
