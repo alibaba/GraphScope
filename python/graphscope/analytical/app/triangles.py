@@ -22,7 +22,6 @@ from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 from graphscope.framework.errors import InvalidArgumentError
 
-
 __all__ = ["triangles"]
 
 
