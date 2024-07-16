@@ -226,6 +226,23 @@ jobs:
           eval ${cmd} || exit 1
         done
 
+        # test graph_algo plugin building
+        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ../tests/hqps/engine_config_test.yaml
+        cypher_files=$(ls ${GITHUB_WORKSPACE}/flex/interactive/examples/graph_algo/*.cypher)
+        for cypher_file in ${cypher_files};
+        do
+          cmd="./load_plan_and_gen.sh -e=hqps -i=${cypher_file} -w=/tmp/codegen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml"
+          cmd=${cmd}" --procedure_name=$(basename ${cypher_file} .cypher)"
+          cmd=${cmd}" --procedure_desc=\"This is test procedure, change the description if needed.\""
+          echo $cmd
+          eval ${cmd} || exit 1
+        done
+
+        #set back
+        sed -i 's/default_graph: graph_algo/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
+
     - name: Test cypher&cpp procedure generation and loading
       env:
         TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
@@ -248,7 +265,8 @@ jobs:
         ./load_plan_and_gen.sh -e=hqps -i=../tests/interactive/plus_one.cc -w=/tmp/codegen \
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
           --procedure_name=plus_one \
-          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
+          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml \
+          --procedure_desc="This is test procedure, and the input is a number, and the output is the number plus one."
         
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/sdk/java/src/test/resources/sample_app.cc -w=/tmp/codegen \
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
@@ -265,7 +283,7 @@ jobs:
         # plus_one: (num: int64) -> (num: int64), CppEncoder
         # sample_app: (num: int64) -> (num: int64), kCypherJson
 
-        sed -i 's/default_graph: movies/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
         sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
         cd ${GITHUB_WORKSPACE}/flex/tests/interactive/
         bash test_plugin_loading.sh ${TMP_INTERACTIVE_WORKSPACE} modern_graph \
@@ -451,6 +469,16 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest/
       run: |
         git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+
+    - name: Test String primary key on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_string_pk.yaml 
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
 
     - name: Test String edge property on modern graph
       env:

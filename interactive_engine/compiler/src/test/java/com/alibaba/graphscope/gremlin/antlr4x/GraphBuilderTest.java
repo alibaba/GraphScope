@@ -1720,9 +1720,11 @@ public class GraphBuilderTest {
                         "g.V().hasLabel('person').as('a').out('knows').as('b').select('a',"
                                 + " 'b').by(valueMap())");
         Assert.assertEquals(
-                "([CHAR(1), CHAR(1)], [([CHAR(2), CHAR(4), CHAR(3)], [BIGINT, CHAR(1), INTEGER])"
-                        + " MAP, ([CHAR(2), CHAR(4), CHAR(4), CHAR(12), CHAR(3)], [BIGINT, CHAR(1),"
-                        + " CHAR(1), DATE, INTEGER]) MAP]) MAP",
+                "({_UTF-8'a'=<CHAR(1), ({_UTF-8'name'=<CHAR(4), CHAR(1)>, _UTF-8'id'=<CHAR(2),"
+                        + " BIGINT>, _UTF-8'age'=<CHAR(3), INTEGER>}) MAP>, _UTF-8'b'=<CHAR(1),"
+                        + " ({_UTF-8'name'=<CHAR(4), CHAR(1)>, _UTF-8'id'=<CHAR(2), BIGINT>,"
+                        + " _UTF-8'creationDate'=<CHAR(12), DATE>, _UTF-8'age'=<CHAR(3), INTEGER>,"
+                        + " _UTF-8'lang'=<CHAR(4), CHAR(1)>}) MAP>}) MAP",
                 rel.getRowType().getFieldList().get(0).getType().toString());
     }
 

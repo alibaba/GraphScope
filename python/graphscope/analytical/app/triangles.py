@@ -20,6 +20,7 @@
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
+from graphscope.framework.errors import InvalidArgumentError
 
 __all__ = ["triangles"]
 
@@ -50,4 +51,8 @@ def triangles(graph):
         >>> sess.close()
 
     """
+    if graph.is_directed():
+        raise InvalidArgumentError(
+            "Triangles does not support be queried upon directed graph."
+        )
     return AppAssets(algo="triangles", context="vertex_data")(graph)

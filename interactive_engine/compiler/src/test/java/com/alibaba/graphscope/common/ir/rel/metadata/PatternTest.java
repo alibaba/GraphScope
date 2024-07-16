@@ -104,12 +104,16 @@ public class PatternTest {
         p6.addEdge(v11, v00, knows);
         p6.addEdge(v00, v22, knows);
         p6.reordering();
+
         Assert.assertEquals(p4.getVertexOrder(v00), p5.getVertexOrder(v00));
         Assert.assertEquals(p4.getVertexOrder(v11), p5.getVertexOrder(v22));
         Assert.assertEquals(p4.getVertexOrder(v22), p5.getVertexOrder(v11));
         Assert.assertEquals(p4.getVertexOrder(v00), p6.getVertexOrder(v11));
         Assert.assertEquals(p4.getVertexOrder(v11), p6.getVertexOrder(v00));
         Assert.assertEquals(p4.getVertexOrder(v22), p6.getVertexOrder(v22));
+
+        Assert.assertEquals(p4.hashCode(), p5.hashCode());
+        Assert.assertEquals(p4.hashCode(), p6.hashCode());
     }
 
     @Test

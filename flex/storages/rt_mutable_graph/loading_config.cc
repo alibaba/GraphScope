@@ -269,11 +269,16 @@ static Status parse_vertex_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
+      if (file_path.empty()) {
+        LOG(ERROR) << "file path is empty";
+        return Status(StatusCode::InvalidImportFile,
+                      "The input for vertex [" + label_name + "] is empty");
+      }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
-          LOG(ERROR) << "vertex file - " << file_path << " file not found...";
+          LOG(ERROR) << "vertex file - [" << file_path << "] file not found...";
           return Status(StatusCode::InvalidImportFile,
-                        "vertex file - " + file_path + " file not found...");
+                        "vertex file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
         files[label_id].emplace_back(std::filesystem::canonical(path));
@@ -457,11 +462,16 @@ static Status parse_edge_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
+      if (file_path.empty()) {
+        LOG(ERROR) << "file path is empty";
+        return Status(StatusCode::InvalidImportFile,
+                      "The input for edge [" + edge_label + "] is empty");
+      }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
-          LOG(ERROR) << "edge file - " << file_path << " file not found...";
+          LOG(ERROR) << "edge file - [" << file_path << "] file not found...";
           return Status(StatusCode::InvalidImportFile,
-                        "edge file - " + file_path + " file not found...");
+                        "edge file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
         VLOG(10) << "src " << src_label << " dst " << dst_label << " edge "
@@ -803,8 +813,12 @@ const std::string& LoadingConfig::GetFormat() const { return format_; }
 
 const BulkLoadMethod& LoadingConfig::GetMethod() const { return method_; }
 
-const std::string& LoadingConfig::GetEscapeChar() const {
-  return metadata_.at(reader_options::ESCAPE_CHAR);
+char LoadingConfig::GetEscapeChar() const {
+  const auto& escape_char = metadata_.at(reader_options::ESCAPE_CHAR);
+  if (escape_char.size() != 1) {
+    throw std::runtime_error("Escape char should be a single character");
+  }
+  return escape_char[0];
 }
 
 bool LoadingConfig::GetIsEscaping() const {
@@ -812,8 +826,12 @@ bool LoadingConfig::GetIsEscaping() const {
   return str == "true" || str == "True" || str == "TRUE";
 }
 
-const std::string& LoadingConfig::GetQuotingChar() const {
-  return metadata_.at(reader_options::QUOTE_CHAR);
+char LoadingConfig::GetQuotingChar() const {
+  const auto& quote_char = metadata_.at(reader_options::QUOTE_CHAR);
+  if (quote_char.size() != 1) {
+    throw std::runtime_error("Quoting char should be a single character");
+  }
+  return quote_char[0];
 }
 
 bool LoadingConfig::GetIsQuoting() const {

@@ -259,6 +259,14 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   size_t size() const override { return adj_lists_.size(); }
 
+  size_t edge_num() const override {
+    size_t ret = 0;
+    for (size_t i = 0; i < adj_lists_.size(); ++i) {
+      ret += degree_list_[i];
+    }
+    return ret;
+  }
+
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<ImmutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
@@ -452,6 +460,16 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   size_t size() const override { return nbr_list_.size(); }
 
+  size_t edge_num() const override {
+    size_t ret = 0;
+    for (size_t i = 0; i < nbr_list_.size(); ++i) {
+      if (nbr_list_[i].neighbor != std::numeric_limits<vid_t>::max()) {
+        ++ret;
+      }
+    }
+    return ret;
+  }
+
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<ImmutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
@@ -628,6 +646,16 @@ class SingleImmutableCsr<std::string_view>
   }
 
   size_t size() const override { return nbr_list_.size(); }
+
+  size_t edge_num() const override {
+    size_t ret = 0;
+    for (size_t i = 0; i < nbr_list_.size(); ++i) {
+      if (nbr_list_[i].neighbor != std::numeric_limits<vid_t>::max()) {
+        ++ret;
+      }
+    }
+    return ret;
+  }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<ImmutableCsrConstEdgeIter<std::string_view>>(

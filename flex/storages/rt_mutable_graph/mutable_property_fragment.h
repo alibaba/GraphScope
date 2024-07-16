@@ -70,6 +70,9 @@ class MutablePropertyFragment {
 
   vid_t vertex_num(label_t vertex_label) const;
 
+  size_t edge_num(label_t src_label, label_t edge_label,
+                  label_t dst_label) const;
+
   bool get_lid(label_t label, const Any& oid, vid_t& lid) const;
 
   Any get_oid(label_t label, vid_t lid) const;

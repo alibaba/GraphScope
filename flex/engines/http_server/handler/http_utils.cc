@@ -38,6 +38,8 @@ seastar::httpd::reply::status_type status_code_to_http_code(
     return seastar::httpd::reply::status_type::bad_request;
   case gs::StatusCode::AlreadyExists:
     return seastar::httpd::reply::status_type::conflict;
+  case gs::StatusCode::AlreadyLocked:
+    return seastar::httpd::reply::status_type::bad_request;
   case gs::StatusCode::NotExists:
     return seastar::httpd::reply::status_type::not_found;
   case gs::StatusCode::CodegenError:
