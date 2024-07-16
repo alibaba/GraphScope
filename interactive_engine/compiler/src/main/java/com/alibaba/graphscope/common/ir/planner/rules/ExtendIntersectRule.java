@@ -16,15 +16,13 @@
 
 package com.alibaba.graphscope.common.ir.planner.rules;
 
+import com.alibaba.graphscope.common.ir.meta.glogue.CountHandler;
 import com.alibaba.graphscope.common.ir.meta.glogue.ExtendWeightEstimator;
 import com.alibaba.graphscope.common.ir.meta.glogue.Utils;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersectEdge;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
@@ -62,12 +60,25 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
         HeuristicComparator comparator = new HeuristicComparator(graphPattern);
         ExtendWeightEstimator estimator =
                 new ExtendWeightEstimator(
-                        (Pattern pattern) ->
-                                mq.getRowCount(
+                        new CountHandler() {
+                            @Override
+                            public double handle(Pattern pattern) {
+                                return mq.getRowCount(
                                         new GraphPattern(
                                                 graphPattern.getCluster(),
                                                 graphPattern.getTraitSet(),
-                                                pattern)));
+                                                pattern));
+                            }
+
+                            @Override
+                            public double labelConstraintsDeltaCost(
+                                    PatternEdge edge, PatternVertex target) {
+                                return config.labelConstraintsEnabled()
+                                        ? mq.getGlogueQuery()
+                                                .getLabelConstraintsDeltaCost(edge, target)
+                                        : 0.0d;
+                            }
+                        });
         Pattern pattern = graphPattern.getPattern();
         int patternSize = pattern.getVertexNumber();
         List<GraphExtendIntersect> edges = Lists.newArrayList();
@@ -240,6 +251,7 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
         private @Nullable String description;
         private RelBuilderFactory builderFactory;
         private int maxPatternSizeInGlogue;
+        private boolean labelConstraintsEnabled;
 
         @Override
         public RelRule toRule() {
@@ -269,6 +281,16 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
         public ExtendIntersectRule.Config withMaxPatternSizeInGlogue(int maxPatternSizeInGlogue) {
             this.maxPatternSizeInGlogue = maxPatternSizeInGlogue;
             return this;
+        }
+
+        public ExtendIntersectRule.Config withLabelConstraintsEnabled(
+                boolean labelConstraintsEnabled) {
+            this.labelConstraintsEnabled = labelConstraintsEnabled;
+            return this;
+        }
+
+        public boolean labelConstraintsEnabled() {
+            return labelConstraintsEnabled;
         }
 
         @Override

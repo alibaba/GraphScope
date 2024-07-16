@@ -20,6 +20,10 @@ public class PlannerConfig {
             Config.intConfig("graph.planner.join.cost.factor.1", 1);
     public static final Config<Integer> JOIN_COST_FACTOR_2 =
             Config.intConfig("graph.planner.join.cost.factor.2", 1);
+    public static final Config<Boolean> LABEL_CONSTRAINTS_ENABLED =
+            Config.boolConfig("graph.planner.label.constraints.enabled", false);
+    public static final Config<Integer> INTERSECT_COST_FACTOR =
+            Config.intConfig("graph.planner.intersect.cost.factor", 1);
 
     private final Configs configs;
     private final List<String> rules;
@@ -60,6 +64,14 @@ public class PlannerConfig {
 
     public int getJoinCostFactor2() {
         return JOIN_COST_FACTOR_2.get(configs);
+    }
+
+    public boolean labelConstraintsEnabled() {
+        return LABEL_CONSTRAINTS_ENABLED.get(configs);
+    }
+
+    public int getIntersectCostFactor() {
+        return INTERSECT_COST_FACTOR.get(configs);
     }
 
     @Override

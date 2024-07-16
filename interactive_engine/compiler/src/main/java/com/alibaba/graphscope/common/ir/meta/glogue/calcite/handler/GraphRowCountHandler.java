@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
+public class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
     private final PrimitiveCountEstimator countEstimator;
     private final RelOptPlanner optPlanner;
     private final RelMdRowCount mdRowCount;
