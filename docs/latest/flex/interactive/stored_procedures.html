@@ -3,15 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Engine Configuration" href="configuration.html" /><link rel="prev" title="Using Custom Graph" href="custom_graph_data.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Configuration" href="configuration.html" /><link rel="prev" title="Using Custom Graph" href="custom_graph_data.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>Stored Procedures - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
@@ -291,27 +291,23 @@ MathJax = {
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../interactive_intro.html">GraphScope Interactive</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom_graph_data.html">Using Custom Graph</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Stored Procedures</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html">Engine Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_import.html">Data Import Configuration</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">RESTful API Documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/java/java_sdk.html">Java SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">Interactive RESTFul API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/stored_procedure/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="tools/admin_tool.html">The Administrative tool</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -319,7 +315,7 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -339,14 +335,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/neo4j/llm_assistant.html">Using LLM as an Assistant in GIE</a></li>
@@ -387,8 +383,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -399,13 +395,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -449,18 +445,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -495,7 +491,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -751,108 +747,94 @@ MathJax = {
           <section class="tex2jax_ignore mathjax_ignore" id="stored-procedures">
 <h1>Stored Procedures<a class="headerlink" href="#stored-procedures" title="Permalink to this heading">¶</a></h1>
 <p>Stored procedures in GraphScope Interactive offer a powerful way to encapsulate and reuse complex graph operations. This document provides a guide on how to compile, enable, and manage these procedures. We will take movies graph for example.</p>
-<p>Note:</p>
-<ul class="simple">
-<li><p>For the following command, If <code class="docutils literal notranslate"><span class="pre">-g</span> <span class="pre">{graph_name}</span></code> is not given, the default modern graph will be used.</p></li>
-</ul>
-<section id="compiling-a-stored-procedure">
-<h2>Compiling a Stored Procedure<a class="headerlink" href="#compiling-a-stored-procedure" title="Permalink to this heading">¶</a></h2>
-<p>To compile a stored procedure, use the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>compile<span class="w"> </span><span class="se">\</span>
-<span class="w">	</span>-g<span class="w"> </span><span class="o">{</span>graph_name<span class="o">}</span><span class="w"> </span><span class="se">\ </span><span class="w"> </span><span class="c1"># the graph **must** be specified</span>
-<span class="w">	</span>-n<span class="w"> </span>stored_procedure_1<span class="w"> </span><span class="se">\ </span><span class="w"> </span><span class="c1"># name of the stored procedure</span>
-<span class="w">	</span>-d<span class="w"> </span><span class="s2">&quot;Description of the stored procedure&#39;s functionality&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">	</span>-i<span class="w"> </span>stored_procedure_1.cypher<span class="w">  </span><span class="c1"># input file containing the Cypher code</span>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Before executing the following code, please ensure that you are in the context of the builtin graph <code class="docutils literal notranslate"><span class="pre">gs_interactive_default_graph</span></code>: <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">use</span> <span class="pre">GRAPH</span> <span class="pre">gs_interactive_default_graph</span></code>.</p>
+</div>
+<section id="define-a-stored-procedure">
+<h2>Define a Stored Procedure<a class="headerlink" href="#define-a-stored-procedure" title="Permalink to this heading">¶</a></h2>
+<p>To compile a stored procedure, first define it with a YAML file named <code class="docutils literal notranslate"><span class="pre">procedure.yaml</span></code>, which defines a stored procedure that searches for <code class="docutils literal notranslate"><span class="pre">softwares</span></code> created by the person with the provided name. The person’s name has been parameterized as <code class="docutils literal notranslate"><span class="pre">$personName</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test_procedure</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Ths</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">test</span><span class="nv"> </span><span class="s">procedure&quot;</span>
+<span class="nt">query</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;MATCH</span><span class="nv"> </span><span class="s">(p:</span><span class="nv"> </span><span class="s">person)-[c:created]-&gt;(s:</span><span class="nv"> </span><span class="s">software)</span><span class="nv"> </span><span class="s">where</span><span class="nv"> </span><span class="s">p.name</span><span class="nv"> </span><span class="s">=</span><span class="nv"> </span><span class="s">$personName</span><span class="nv"> </span><span class="s">RETURN</span><span class="nv"> </span><span class="s">s.id</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="s">softwareId,</span><span class="nv"> </span><span class="s">s.name</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="s">softwareName;&#39;</span>
+<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cypher</span>
 </pre></div>
 </div>
 <p>Note:</p>
 <ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">-g</span></code> flag is indicates the graph associated with the stored procedure. If this option is not specified, the built-in modern graph will be used.</p></li>
-<li><p>While the <code class="docutils literal notranslate"><span class="pre">-n</span></code> flag, which names the stored procedure, is optional, omitting it will default the procedure’s name to that of the input file.</p></li>
-<li><p>With the <code class="docutils literal notranslate"><span class="pre">-i</span></code> flag, you can either input a Cypher code file, or a C++ code file, or an entire directory. For comprehensive guidelines on crafting stored procedures in GraphScope Interactive using both Cypher and C++, refer to the Cypher procedure and C++ procedure documentation.</p></li>
-<li><p>If you opt to use the <code class="docutils literal notranslate"><span class="pre">-i</span></code> flag for specifying an entire directory, all files within that directory will be compiled. In such scenarios, the <code class="docutils literal notranslate"><span class="pre">-n</span></code> and <code class="docutils literal notranslate"><span class="pre">-d</span></code> flags become redundant, and the resulting stored procedures will adopt the names of their respective files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> is required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code> is optional.</p></li>
+<li><p>The string in <code class="docutils literal notranslate"><span class="pre">query</span></code> field could be either <code class="docutils literal notranslate"><span class="pre">cypher</span></code> query or <code class="docutils literal notranslate"><span class="pre">c++</span></code> code. For comprehensive guidelines on crafting stored procedures in GraphScope Interactive using both Cypher and C++, refer to the <a class="reference internal" href="development/stored_procedure/cypher_procedure.html"><span class="std std-doc">Cypher procedure</span></a> and <a class="reference internal" href="development/stored_procedure/cpp_procedure.html"><span class="std std-doc">C++ procedure</span></a> documentation.</p></li>
 <li><p>When compiling from Cypher code, the optimization rules defined under <a class="reference internal" href="configuration.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">compiler.planner</span></code></span></a> will be taken into account to generate a more efficient program.</p></li>
-<li><p>The compilation process described above will automatically <strong>enable</strong> the compiled stored procedures (the subsequent section will instruct how to enable stored procedures). If you wish to compile without enabling them, use the <code class="docutils literal notranslate"><span class="pre">--compile_only</span></code> flag.</p></li>
 </ul>
-<p>For example, You can compile the <code class="docutils literal notranslate"><span class="pre">actor</span></code> procedure on the builtin movies graph with the following command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>compile<span class="w"> </span>-g<span class="w"> </span>movies<span class="w"> </span>-n<span class="w"> </span>actor<span class="w"> </span>-i<span class="w"> </span>./examples/movies/actor.cypher
+<p>For more information on defining a Cypher stored procedure, please refer to <a class="reference internal" href="development/stored_procedure/cypher_procedure.html"><span class="std std-doc">Cypher Stored Procedure</span></a>.</p>
+</section>
+<section id="create-a-stored-procedure">
+<h2>Create a Stored Procedure<a class="headerlink" href="#create-a-stored-procedure" title="Permalink to this heading">¶</a></h2>
+<p>Then create the procedure with <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>create<span class="w"> </span>storedproc<span class="w"> </span>-f<span class="w"> </span>./procedure.yaml
 </pre></div>
 </div>
+<p>This will invoke the compilation procedure to convert the cypher query to a physical plan, then generate C++ code and compile it, so it may take some time.</p>
 <p>Restart the service is <strong>necessary</strong> to activate the stored procedures:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>service<span class="w"> </span>restart
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>service<span class="w"> </span>restart
 </pre></div>
 </div>
 </section>
-<section id="enabling-stored-procedures">
-<h2>Enabling Stored Procedures<a class="headerlink" href="#enabling-stored-procedures" title="Permalink to this heading">¶</a></h2>
-<p>To enable single stored procedure, simple using:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>-g<span class="w"> </span><span class="o">{</span>graph_name<span class="o">}</span><span class="w"> </span>-n<span class="w"> </span><span class="o">{</span>procedure_name<span class="o">}</span>
+<section id="delete-a-stored-procedures">
+<h2>Delete a Stored Procedures<a class="headerlink" href="#delete-a-stored-procedures" title="Permalink to this heading">¶</a></h2>
+<p>To delete a single stored procedures, simply using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>delete<span class="w"> </span>storedproc<span class="w"> </span>test_procedure
 </pre></div>
 </div>
-<p>If you want to enable multiple procedures at once, just using the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># enable all procedures listed in stored_procedures.yaml</span>
-bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>-g<span class="w"> </span><span class="o">{</span>graph_name<span class="o">}</span><span class="w"> </span>-c<span class="w"> </span>stored_procedures.yaml
-<span class="c1"># or use comma to separate procedure names for -n option</span>
-bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>-g<span class="w"> </span><span class="o">{</span>graph_name<span class="o">}</span><span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;{proc1},{proc2}&#39;</span>
-</pre></div>
-</div>
-<p>The above <code class="docutils literal notranslate"><span class="pre">stored_procedures.yaml</span></code> file configures which stored procedures are enabled for the current interactive service. Here’s an example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">actor</span>
-</pre></div>
-</div>
-<p>Note:</p>
-<ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">enable</span></code> functionality preserves the status of currently enabled stored procedures. In other words, a previously enabled stored procedure will remain enabled after executing the enabling command, regardless of whether it appears in the provided list or not.</p></li>
-</ul>
-<p>Remember to <strong>restart</strong> the service for the enabling to take effect.</p>
 </section>
-<section id="disabling-stored-procedures">
-<h2>Disabling Stored Procedures<a class="headerlink" href="#disabling-stored-procedures" title="Permalink to this heading">¶</a></h2>
-<p>To disable a single stored procedures, simply using:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>disable<span class="w"> </span>-g<span class="w"> </span><span class="o">{</span>graph_name<span class="o">}</span><span class="w"> </span>-n<span class="w"> </span><span class="o">{</span>procedure_name<span class="o">}</span>
+<section id="viewing-stored-procedures">
+<h2>Viewing Stored Procedures<a class="headerlink" href="#viewing-stored-procedures" title="Permalink to this heading">¶</a></h2>
+<p>To view a single stored procedure,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>desc<span class="w"> </span>storedproc<span class="w"> </span>test_procedure
 </pre></div>
 </div>
-<p>If you want to disable multiple procedures at once, just using the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># disable all procedures listed in stored_procedures.yaml</span>
-bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>disable<span class="w"> </span>-g<span class="w"> </span>movies<span class="w"> </span>-c<span class="w"> </span>stored_procedures.yaml
-<span class="c1"># or use comma to separate procedure names for -n option</span>
-bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>disable<span class="w"> </span>-g<span class="w"> </span><span class="o">{</span>graph_name<span class="o">}</span><span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;{proc1},{proc2}&#39;</span>
-</pre></div>
-</div>
-<p>For example, you can disable <code class="docutils literal notranslate"><span class="pre">actor</span></code> procedure via the following <code class="docutils literal notranslate"><span class="pre">YAML</span></code> file.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">actor</span>
-</pre></div>
-</div>
-<p>The following command makes it easy to disable all stored procedures:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># `-a` will yield any given list via `-c`</span>
-bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>disable<span class="w"> </span>-g<span class="w"> </span><span class="o">{</span>graph_name<span class="o">}</span><span class="w"> </span>-a
-</pre></div>
-</div>
-<p>Remember to <strong>restart</strong> the service for the disabling to take effect.</p>
-</section>
-<section id="viewing-enabled-stored-procedures">
-<h2>Viewing Enabled Stored Procedures<a class="headerlink" href="#viewing-enabled-stored-procedures" title="Permalink to this heading">¶</a></h2>
-<p>To view the currently enabled stored procedures of the given graph after starting the service, execute:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># show the procedures for a specified graph</span>
-bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>show<span class="w"> </span>-g<span class="w"> </span><span class="o">{</span>graph_name<span class="o">}</span>
-<span class="c1"># show the procedures for the builtin graph</span>
-bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>show
-</pre></div>
-</div>
-<p>This command provides a list of all active (enabled) stored procedures with their metadata including names and descriptions in your GraphScope Interactive instance.</p>
-<p>Or, in the Cypher shell, run:</p>
+<p>Or, show all valid procedures in cypher shell.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@neo4j&gt;<span class="w"> </span>Show<span class="w"> </span>Procedures<span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="querying-stored-procedures">
 <h2>Querying Stored Procedures<a class="headerlink" href="#querying-stored-procedures" title="Permalink to this heading">¶</a></h2>
-<p>Once you’ve enabled a stored procedure, you can easily invoke it using its designated name and required parameters within the Cypher shell. For instance:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@neo4j&gt;<span class="w"> </span>CALL<span class="w"> </span>actor<span class="o">(</span>1L<span class="o">)</span><span class="p">;</span>
-<span class="c1"># The capitalized &quot;L&quot; ensures that the vertex_id is passed to the engine as a long type.</span>
+<section id="call-the-stored-procedure-via-interactive-sdk">
+<h3>Call the Stored Procedure via Interactive SDK<a class="headerlink" href="#call-the-stored-procedure-via-interactive-sdk" title="Permalink to this heading">¶</a></h3>
+<p>You can call the stored procedure via Interactive Python SDK. (Make sure environment variables are set correctly, see <a class="reference internal" href="installation.html#install-and-deploy-interactive"><span class="std std-ref">Deploy Interactive</span></a>).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">INTERACTIVE_ADMIN_ENDPOINT</span><span class="o">=</span>http://127.0.0.1:7777
+<span class="nb">export</span><span class="w"> </span><span class="nv">INTERACTIVE_STORED_PROC_ENDPOINT</span><span class="o">=</span>http://127.0.0.1:10000
+<span class="nb">export</span><span class="w"> </span><span class="nv">INTERACTIVE_CYPHER_ENDPOINT</span><span class="o">=</span>neo4j://127.0.0.1:7687
 </pre></div>
 </div>
-<p>Ensure that the name and data type of the parameters align with what was specified during the procedure’s compilation, whether in the Cypher or C++ file.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.client.driver</span> <span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.client.session</span> <span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">driver</span><span class="o">.</span><span class="n">getNeo4jSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s1">&#39;CALL test_procedure(&quot;marko&quot;) YIELD *;&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="call-the-stored-procedure-via-neo4j-native-tools">
+<h3>Call the Stored Procedure via Neo4j-native Tools<a class="headerlink" href="#call-the-stored-procedure-via-neo4j-native-tools" title="Permalink to this heading">¶</a></h3>
+<p>You can also call the stored procedure via neo4j-native tools, like <code class="docutils literal notranslate"><span class="pre">cypher-shell</span></code>, <code class="docutils literal notranslate"><span class="pre">neo4j-driver</span></code>. Please refer to <a class="reference internal" href="../../interactive_engine/neo4j/cypher_sdk.html"><span class="doc std std-doc">this document</span></a> for connecting to cypher service.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./cypher-shell<span class="w"> </span>-a<span class="w"> </span><span class="si">${</span><span class="nv">INTERACTIVE_CYPHER_ENDPOINT</span><span class="si">}</span>
+</pre></div>
+</div>
+<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">CALL</span><span class="w"> </span><span class="n">test_procedure</span><span class="p">(</span><span class="s">&quot;marko&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">YIELD</span><span class="w"> </span><span class="p">*;</span>
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 
@@ -866,7 +848,7 @@ bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>show
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Engine Configuration</div>
+                <div class="title">Configuration</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -915,11 +897,15 @@ bin/gs_interactive<span class="w"> </span>procedure<span class="w"> </span>show
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Stored Procedures</a><ul>
-<li><a class="reference internal" href="#compiling-a-stored-procedure">Compiling a Stored Procedure</a></li>
-<li><a class="reference internal" href="#enabling-stored-procedures">Enabling Stored Procedures</a></li>
-<li><a class="reference internal" href="#disabling-stored-procedures">Disabling Stored Procedures</a></li>
-<li><a class="reference internal" href="#viewing-enabled-stored-procedures">Viewing Enabled Stored Procedures</a></li>
-<li><a class="reference internal" href="#querying-stored-procedures">Querying Stored Procedures</a></li>
+<li><a class="reference internal" href="#define-a-stored-procedure">Define a Stored Procedure</a></li>
+<li><a class="reference internal" href="#create-a-stored-procedure">Create a Stored Procedure</a></li>
+<li><a class="reference internal" href="#delete-a-stored-procedures">Delete a Stored Procedures</a></li>
+<li><a class="reference internal" href="#viewing-stored-procedures">Viewing Stored Procedures</a></li>
+<li><a class="reference internal" href="#querying-stored-procedures">Querying Stored Procedures</a><ul>
+<li><a class="reference internal" href="#call-the-stored-procedure-via-interactive-sdk">Call the Stored Procedure via Interactive SDK</a></li>
+<li><a class="reference internal" href="#call-the-stored-procedure-via-neo4j-native-tools">Call the Stored Procedure via Neo4j-native Tools</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

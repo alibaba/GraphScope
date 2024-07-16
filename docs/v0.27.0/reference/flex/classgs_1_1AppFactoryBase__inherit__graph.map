@@ -1,7 +1,0 @@
-<map id="gs::AppFactoryBase" name="gs::AppFactoryBase">
-<area shape="rect" id="node1" title=" " alt="" coords="5,81,155,108"/>
-<area shape="rect" id="node2" href="$classgs_1_1HQPSAdhocAppFactory.html" title=" " alt="" coords="215,5,409,32"/>
-<area shape="rect" id="node3" href="$classgs_1_1HQPSProcedureAppFactory.html" title=" " alt="" coords="203,56,421,83"/>
-<area shape="rect" id="node4" href="$classgs_1_1ServerAppFactory.html" title=" " alt="" coords="233,107,391,133"/>
-<area shape="rect" id="node5" href="$classgs_1_1SharedLibraryAppFactory.html" title=" " alt="" coords="209,157,415,184"/>
-</map>

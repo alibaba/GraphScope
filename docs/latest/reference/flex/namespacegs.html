@@ -663,8 +663,10 @@ Functions</h2></td></tr>
 <tr class="memitem:af49fc41c77e505cec5a0a7736daa1157"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:af49fc41c77e505cec5a0a7736daa1157"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1TypedMutableCsrBase.html">TypedMutableCsrBase</a>&lt; EDATA_T &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#af49fc41c77e505cec5a0a7736daa1157">create_typed_csr</a> (<a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> es, <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> edge_property)</td></tr>
 <tr class="separator:af49fc41c77e505cec5a0a7736daa1157"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2841f484d8c2d706cf143a4f074d24b"><td class="memItemLeft" align="right" valign="top">static std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ad2841f484d8c2d706cf143a4f074d24b">read_header</a> (const std::string &amp;file_name, char delimiter)</td></tr>
-<tr class="separator:ad2841f484d8c2d706cf143a4f074d24b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76076430ea5986d3a718b4b53a186787"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a76076430ea5986d3a718b4b53a186787">process_header_row_token</a> (const std::string &amp;token, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;config)</td></tr>
+<tr class="separator:a76076430ea5986d3a718b4b53a186787"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac697b3b27b740f642def343663c35d4f"><td class="memItemLeft" align="right" valign="top">static std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ac697b3b27b740f642def343663c35d4f">read_header</a> (const std::string &amp;file_name, char delimiter, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config)</td></tr>
+<tr class="separator:ac697b3b27b740f642def343663c35d4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbca023c2b89a0dcdb6d1d7ab10bd5f0"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#adbca023c2b89a0dcdb6d1d7ab10bd5f0">put_delimiter_option</a> (const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, arrow::csv::ParseOptions &amp;parse_options)</td></tr>
 <tr class="separator:adbca023c2b89a0dcdb6d1d7ab10bd5f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a958c48c8f87e67738b4700262c1d5e08"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a958c48c8f87e67738b4700262c1d5e08">put_skip_rows_option</a> (const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, arrow::csv::ReadOptions &amp;read_options)</td></tr>
@@ -713,6 +715,8 @@ Functions</h2></td></tr>
 <tr class="separator:a977b1a3fb8bc17d41e8943fbc80d8cbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af80e581a6395e7505d4f1cb2bceba450"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#af80e581a6395e7505d4f1cb2bceba450">CreateColumn</a> (<a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> type, <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> strategy)</td></tr>
 <tr class="separator:af80e581a6395e7505d4f1cb2bceba450"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a252131cd094fb06be22ff521d0faef2b"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classgs_1_1RefColumnBase.html">RefColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a252131cd094fb06be22ff521d0faef2b">CreateRefColumn</a> (std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt; column)</td></tr>
+<tr class="separator:a252131cd094fb06be22ff521d0faef2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a916f48a794f1c6e0dc6c18d3fbb7fb3c"><td class="memItemLeft" align="right" valign="top">grape::InArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a916f48a794f1c6e0dc6c18d3fbb7fb3c">operator&lt;&lt;</a> (grape::InArchive &amp;in_archive, const <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &amp;value)</td></tr>
 <tr class="separator:a916f48a794f1c6e0dc6c18d3fbb7fb3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae06bc0737a3448bb79a829453a9dc4d6"><td class="memItemLeft" align="right" valign="top">grape::OutArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ae06bc0737a3448bb79a829453a9dc4d6">operator&gt;&gt;</a> (grape::OutArchive &amp;out_archive, <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &amp;value)</td></tr>
@@ -2005,6 +2009,24 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="a252131cd094fb06be22ff521d0faef2b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a252131cd094fb06be22ff521d0faef2b">&#9670;&nbsp;</a></span>CreateRefColumn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt; <a class="el" href="classgs_1_1RefColumnBase.html">RefColumnBase</a> &gt; gs::CreateRefColumn </td>
+          <td>(</td>
+          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td>
+          <td class="paramname"><em>column</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ae5b9d7e99ac749858f548fe6390dd1f4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae5b9d7e99ac749858f548fe6390dd1f4">&#9670;&nbsp;</a></span>deserialize_field()</h2>
 
@@ -3252,6 +3274,42 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
+<a id="a76076430ea5986d3a718b4b53a186787"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76076430ea5986d3a718b4b53a186787">&#9670;&nbsp;</a></span>process_header_row_token()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static std::string gs::process_header_row_token </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>token</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td>
+          <td class="paramname"><em>config</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ae1443fc36751e744f569bfa20138806c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae1443fc36751e744f569bfa20138806c">&#9670;&nbsp;</a></span>PropertyTypeToArrowType()</h2>
 
@@ -3530,8 +3588,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="ad2841f484d8c2d706cf143a4f074d24b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad2841f484d8c2d706cf143a4f074d24b">&#9670;&nbsp;</a></span>read_header()</h2>
+<a id="ac697b3b27b740f642def343663c35d4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac697b3b27b740f642def343663c35d4f">&#9670;&nbsp;</a></span>read_header()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3549,7 +3607,13 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">char&#160;</td>
-          <td class="paramname"><em>delimiter</em>&#160;</td>
+          <td class="paramname"><em>delimiter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td>
+          <td class="paramname"><em>loading_config</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

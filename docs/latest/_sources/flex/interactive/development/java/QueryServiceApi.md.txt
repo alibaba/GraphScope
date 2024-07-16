@@ -1,20 +1,25 @@
 # QueryServiceApi
 
-All URIs are relative to *{INTERACTIVE_ENDPOINT}*
+All URIs are relative to *{INTERACTIVE_ADMIN_ENDPOINT}*
+
+Although Interactive supports multiple graphs in storage level, the query service currently could only runs on a single graph. 
+This means that at any given time, only one graph can provide query services. 
+If you attempt to submit a query to a graph that is not currently running, we will throw an error directly.
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**procCall**](QueryServiceApi.md#procCall) | **POST** /v1/graph/{graph_id}/query | run queries on graph |
-| [**procCallCurrent**](QueryServiceApi.md#procCallCurrent) | **POST** /v1/graph/current/query | run queries on the running graph |
+| [**CallProcedure**](QueryServiceApi.md#CallProcedure) | **POST** /v1/graph/{graph_id}/query | submit query to the graph identified by the specified graph id |
+| [**CallProcedureOnCurrentGraph**](QueryServiceApi.md#CallProcedureOnCurrentGraph) | **POST** /v1/graph/current/query | submit query to the current running graph |
 
 
-<a id="procCall"></a>
-# **procCall**
-> byte[] procCall(graphId, xInteractiveRequestFormat, body)
+<a id="CallProcedure"></a>
+# **CallProcedure**
+> Result&lt;IrResult.CollectiveResults&gt; callProcedure(graphId, request)
 
-run queries on graph
+Submit procedure call queries to the specified graph.
+The output format for the query is define by the [results.proto](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/results.proto).
 
-After the procedure is created, user can use this API to run the procedure. TODO: a full example cypher-&gt;plan-&gt;json. TODO: make sure typeinfo can be passed. 
+For the creation of stored procedure please refer to [CypherStoredProcedure](../stored_procedure/cypher_procedure.md) and [CppStoredProcedure](../stored_procedure/cpp_procedure.md).
 
 ### Example
 ```java
@@ -27,22 +32,29 @@ import com.alibaba.graphscope.interactive.api.QueryServiceApi;
 
 public class Example {
   public static void main(String[] args) {
-    ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
+    Driver driver = Driver.connect();
+    Session session = driver.session();
 
-    QueryServiceApi apiInstance = new QueryServiceApi(defaultClient);
-    String graphId = "graphId_example"; // String | 
-    String xInteractiveRequestFormat = "proto"; // String | 
-    byte[] body = null; // byte[] | 
-    try {
-      byte[] result = apiInstance.procCall(graphId, xInteractiveRequestFormat, body);
-      System.out.println(result);
-    } catch (ApiException e) {
-      System.err.println("Exception when calling QueryServiceApi#procCall");
-      System.err.println("Status code: " + e.getCode());
-      System.err.println("Reason: " + e.getResponseBody());
-      System.err.println("Response headers: " + e.getResponseHeaders());
-      e.printStackTrace();
+    //Create the graph and register procedure first, and start service on this graph.
+    String graphId = "2";
+    String procedureId = "testProcedure";
+    QueryRequest request = new QueryRequest();
+    request.setQueryName(procedureId);
+    request.addArgumentsItem(
+            new TypedValue()
+                    .value(1)
+                    .type(
+                            new GSDataType(
+                                    new PrimitiveType()
+                                            .primitiveType(
+                                                    PrimitiveType.PrimitiveTypeEnum
+                                                            .SIGNED_INT32))));
+    Result<IrResult.CollectiveResults> queryRes = session.callProcedure(graphId, request);
+    if (!queryRes.isOk()) {
+        System.out.println("Failed to call procedure: " + queryRes.getStatusMessage());
+        return;
+    } else {
+        System.out.println("Called procedure: " + queryRes.getValue());
     }
   }
 }
@@ -53,12 +65,11 @@ public class Example {
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **graphId** | **String**|  | |
-| **xInteractiveRequestFormat** | **String**|  | [enum: proto, encoder, json] |
-| **body** | **byte[]**|  | [optional] |
+| **body** | **QueryRequest**|  | [optional] |
 
 ### Return type
 
-**byte[]**
+**Result&lt;IrResult.CollectiveResults&gt;**
 
 ### Authorization
 
@@ -75,11 +86,9 @@ No authorization required
 | **200** | Successfully runned. Empty if failed? |  -  |
 | **500** | Server internal error |  -  |
 
-<a id="procCallCurrent"></a>
-# **procCallCurrent**
-> byte[] procCallCurrent(xInteractiveRequestFormat, body)
-
-run queries on the running graph
+<a id="CallProcedureOnCurrentGraph"></a>
+# **CallProcedureOnCurrentGraph**
+> Result&lt;IrResult.CollectiveResults&gt; callProcedure(body)
 
 Submit a query to the running graph. 
 
@@ -94,21 +103,29 @@ import com.alibaba.graphscope.interactive.api.QueryServiceApi;
 
 public class Example {
   public static void main(String[] args) {
-    ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("{INTERACTIVE_ENDPOINT}");
+    Driver driver = Driver.connect();
+    Session session = driver.session();
 
-    QueryServiceApi apiInstance = new QueryServiceApi(defaultClient);
-    String xInteractiveRequestFormat = "proto"; // String | 
-    byte[] body = null; // byte[] | 
-    try {
-      byte[] result = apiInstance.procCallCurrent(xInteractiveRequestFormat, body);
-      System.out.println(result);
-    } catch (ApiException e) {
-      System.err.println("Exception when calling QueryServiceApi#procCallCurrent");
-      System.err.println("Status code: " + e.getCode());
-      System.err.println("Reason: " + e.getResponseBody());
-      System.err.println("Response headers: " + e.getResponseHeaders());
-      e.printStackTrace();
+    //Create the graph and register procedure first, and start service on this graph.
+    String procedureId = "testProcedure";
+    QueryRequest request = new QueryRequest();
+    request.setQueryName(procedureId);
+    request.addArgumentsItem(
+            new TypedValue()
+                    .value(1)
+                    .type(
+                            new GSDataType(
+                                    new PrimitiveType()
+                                            .primitiveType(
+                                                    PrimitiveType.PrimitiveTypeEnum
+                                                            .SIGNED_INT32))));
+    // Note that graph id is not specified, will try to call the procedure on the current running graph, if exits.
+    Result<IrResult.CollectiveResults> queryRes = session.callProcedure(request);
+    if (!queryRes.isOk()) {
+        System.out.println("Failed to call procedure: " + queryRes.getStatusMessage());
+        return;
+    } else {
+        System.out.println("Called procedure: " + queryRes.getValue());
     }
   }
 }
@@ -118,12 +135,11 @@ public class Example {
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **xInteractiveRequestFormat** | **String**|  | [enum: proto, encoder, json] |
 | **body** | **byte[]**|  | [optional] |
 
 ### Return type
 
-**byte[]**
+**Result&lt;IrResult.CollectiveResults&gt;**
 
 ### Authorization
 

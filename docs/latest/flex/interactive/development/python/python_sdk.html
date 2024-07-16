@@ -3,15 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Glossary" href="../../glossary.html" /><link rel="prev" title="Java SDK Reference" href="../java/java_sdk.html" />
+<link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Interactive RESTFul API" href="../restful_api.html" /><link rel="prev" title="Java SDK Reference" href="../java/java_sdk.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
         <title>Python SDK Reference - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
@@ -291,27 +291,23 @@ MathJax = {
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../../interactive_intro.html">GraphScope Interactive</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../custom_graph_data.html">Using Custom Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../stored_procedures.html">Stored Procedures</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../configuration.html">Engine Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../data_import.html">Data Import Configuration</a></li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../../dev_guide.html">Development guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../restful_api.html">RESTful API Documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../java/java_sdk.html">Java SDK Reference</a></li>
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../restful_api.html">Interactive RESTFul API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stored_procedure/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../tools/admin_tool.html">The Administrative tool</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -319,7 +315,7 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../analytical_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../analytical_engine/deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../analytical_engine/key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -339,14 +335,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../interactive_engine/neo4j/llm_assistant.html">Using LLM as an Assistant in GIE</a></li>
@@ -387,8 +383,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -399,13 +395,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -449,18 +445,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -495,7 +491,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -757,25 +753,30 @@ MathJax = {
 </section>
 <section id="installation-usage">
 <h2>Installation &amp; Usage<a class="headerlink" href="#installation-usage" title="Permalink to this heading">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you want to isolate the installation from your local Python environment, you might consider using a virtual environment <a class="reference external" href="https://virtualenv.pypa.io/">virtualenv</a> to create a new one.”</p>
+</div>
 <section id="pip-install">
 <h3>pip install<a class="headerlink" href="#pip-install" title="Permalink to this heading">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>interactive-sdk
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>gs_interactive
 </pre></div>
 </div>
 <p>Then import the package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">interactive_sdk</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gs_interactive</span>
 </pre></div>
 </div>
 </section>
 <section id="setuptools">
 <h3>Setuptools<a class="headerlink" href="#setuptools" title="Permalink to this heading">¶</a></h3>
 <p>Install via <a class="reference external" href="http://pypi.python.org/pypi/setuptools">Setuptools</a>.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>--user
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>setup.py<span class="w"> </span>build_proto
+python3<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>--user
 </pre></div>
 </div>
-<p>(or <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code> to install the package for all users)</p>
+<p>(or <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">python3</span> <span class="pre">setup.py</span> <span class="pre">install</span></code> to install the package for all users)</p>
 <p>Then import the package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">interactive_sdk</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gs_interactive</span>
 </pre></div>
 </div>
 </section>
@@ -786,31 +787,319 @@ MathJax = {
 </section>
 <section id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h2>
-<p>First, install and start the interactive service via <a class="reference external" href="https://graphscope.io/docs/flex/interactive/getting_started">Interactive Getting Started</a>, and you will get the endpoint for the Interactive service.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Interactive<span class="w"> </span>Service<span class="w"> </span>is<span class="w"> </span>listening<span class="w"> </span>at<span class="w"> </span><span class="si">${</span><span class="nv">INTERACTIVE_ENDPOINT</span><span class="si">}</span>.
+<p>First, install and start the interactive service via <a class="reference internal" href="../../getting_started.html"><span class="std std-doc">Interactive Getting Started</span></a>, and you will get the all the endpoints for the Interactive service.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>You<span class="w"> </span>can<span class="w"> </span>connect<span class="w"> </span>to<span class="w"> </span>Interactive<span class="w"> </span>service<span class="w"> </span>with<span class="w"> </span>Interactive<span class="w"> </span>SDK,<span class="w"> </span>with<span class="w"> </span>following<span class="w"> </span>environment<span class="w"> </span>variables<span class="w"> </span>declared.
+
+<span class="c1">############################################################################################</span>
+<span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">INTERACTIVE_ADMIN_ENDPOINT</span><span class="o">=</span>http://127.0.0.1:7777
+<span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">INTERACTIVE_STORED_PROC_ENDPOINT</span><span class="o">=</span>http://127.0.0.1:10000
+<span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">INTERACTIVE_CYPHER_ENDPOINT</span><span class="o">=</span>neo4j://127.0.0.1:7687
+<span class="c1">############################################################################################</span>
 </pre></div>
 </div>
-<p>Then, connect to the interactive endpoint, and try to run a simple query with following code.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-<span class="kn">from</span> <span class="nn">interactive_sdk.client.driver</span> <span class="kn">import</span> <span class="n">Driver</span>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you have customized the ports when deploying Interactive, remember to replace the default ports with your customized ports.</p>
+</div>
+<p>Remember to export these environment variables.</p>
+<section id="connect-and-submit-a-query">
+<h3>Connect and submit a query<a class="headerlink" href="#connect-and-submit-a-query" title="Permalink to this heading">¶</a></h3>
+<p>Before connecting to the Interactive Service and submitting queries via the Python SDK, ensure that the service is running on the intended graph.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>use<span class="w"> </span>GRAPH<span class="w"> </span>&lt;graph_name&gt;
+gsctl<span class="w"> </span>service<span class="w"> </span>status
+</pre></div>
+</div>
+<p>Now submit query via Interactive Python SDK.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.client.driver</span> <span class="kn">import</span> <span class="n">Driver</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.client.session</span> <span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span> <span class="nn">gs_interactive.models</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="c1"># replace endpoint with the actual interactive endpoint, this is mock server just for testing.</span>
-<span class="n">interactive_endpoint</span><span class="o">=</span><span class="s1">&#39;https://virtserver.swaggerhub.com/GRAPHSCOPE/interactive/1.0.0/&#39;</span>
-<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">interactive_endpoint</span><span class="p">)</span>
-
-<span class="c1"># Interactive will initially start on a builtin modern graph. You can run a simple cypher query</span>
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
 <span class="k">with</span> <span class="n">driver</span><span class="o">.</span><span class="n">getNeo4jSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-    <span class="n">resp</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s1">&#39;MATCH(n) RETURN COUNT(n);&#39;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">resp</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;record: &#39;</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
-        <span class="c1"># record:  &lt;Record $f0=6&gt;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;MATCH(n) RETURN COUNT(n);&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>For a more detailed example, please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/python/basic_example.py">Python SDK Example</a>.</p>
+</section>
+<section id="create-a-new-graph">
+<h3>Create a new graph<a class="headerlink" href="#create-a-new-graph" title="Permalink to this heading">¶</a></h3>
+<p>To create a new graph, user need to specify the name, description, vertex types and edges types.
+For the detail data model of the graph, please refer to <a class="reference internal" href="../../data_model.html"><span class="doc std std-doc">Data Model</span></a>.</p>
+<p>In this example, we will create a simple graph with only one vertex type <code class="docutils literal notranslate"><span class="pre">persson</span></code>, and one edge type named <code class="docutils literal notranslate"><span class="pre">knows</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_graph</span><span class="p">(</span><span class="n">sess</span> <span class="p">:</span> <span class="n">Session</span><span class="p">):</span>
+    <span class="c1"># Define the graph schema via a python dict.</span>
+    <span class="n">test_graph_def</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test_graph&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;This is a test graph&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;vertex_types&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;type_name&quot;</span><span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;property_name&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;property_type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;primitive_type&quot;</span><span class="p">:</span> <span class="s2">&quot;DT_SIGNED_INT64&quot;</span><span class="p">},</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;property_name&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;property_type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;string&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;long_text&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">}},</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;property_name&quot;</span><span class="p">:</span> <span class="s2">&quot;age&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;property_type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;primitive_type&quot;</span><span class="p">:</span> <span class="s2">&quot;DT_SIGNED_INT32&quot;</span><span class="p">},</span>
+                        <span class="p">},</span>
+                    <span class="p">],</span>
+                    <span class="s2">&quot;primary_keys&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                <span class="p">}</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;edge_types&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;type_name&quot;</span><span class="p">:</span> <span class="s2">&quot;knows&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;vertex_type_pair_relations&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;source_vertex&quot;</span><span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;destination_vertex&quot;</span><span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;relation&quot;</span><span class="p">:</span> <span class="s2">&quot;MANY_TO_MANY&quot;</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">],</span>
+                    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;property_name&quot;</span><span class="p">:</span> <span class="s2">&quot;weight&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;property_type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;primitive_type&quot;</span><span class="p">:</span> <span class="s2">&quot;DT_DOUBLE&quot;</span><span class="p">},</span>
+                        <span class="p">}</span>
+                    <span class="p">],</span>
+                    <span class="s2">&quot;primary_keys&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="p">}</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+    <span class="n">create_graph_request</span> <span class="o">=</span> <span class="n">CreateGraphRequest</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">test_graph_def</span><span class="p">)</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span><span class="n">create_graph_request</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span><span class="o">.</span><span class="n">graph_id</span>
+
+<span class="n">driver</span> <span class="o">=</span> <span class="n">Driver</span><span class="p">()</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph_id</span> <span class="o">=</span> <span class="n">create_graph</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Created graph, id is &quot;</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the aforementioned example, a graph named <code class="docutils literal notranslate"><span class="pre">test_graph</span></code> is defined using a python dictionaly. You can also define the graph using the programmatic interface provided by <a class="reference internal" href="CreateGraphRequest.html"><span class="std std-doc">CreateGraphRequest</span></a>. Upon calling the <code class="docutils literal notranslate"><span class="pre">createGraph</span></code> method, a string representing the unique identifier of the graph is returned.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You might observe that we define the graph schema in YAML with <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, but switch to using <code class="docutils literal notranslate"><span class="pre">dict</span></code> in Python code. You may encounter challenges when converting between different formats.
+However, converting <code class="docutils literal notranslate"><span class="pre">YAML</span></code> to a Python <code class="docutils literal notranslate"><span class="pre">dict</span></code> is quite convenient.</p>
+<p>First, install pyYAML</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>pyYAML
+</pre></div>
+</div>
+<p>Then use pyYAML to convert the YAML string to a Python dict</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="n">yaml_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">...</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">python_dict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">yaml_string</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">python_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Afterwards, you can create a <code class="docutils literal notranslate"><span class="pre">CreateGraphRequest</span></code> from the Python dict.</p>
+</div>
+</section>
+<section id="import-data-to-the-graph">
+<h3>Import data to the graph<a class="headerlink" href="#import-data-to-the-graph" title="Permalink to this heading">¶</a></h3>
+<p>After a new graph is created, you may want to import data into the newly created graph.
+For the detail configuration of data import, please refer to <a class="reference internal" href="../../data_import.html"><span class="doc std std-doc">Data Import Configuration</span></a>.</p>
+<p>For example, you can import the local csv files into the <code class="docutils literal notranslate"><span class="pre">test_graph</span></code>. Note that, currently only csv files are supported now. The raw data of <code class="docutils literal notranslate"><span class="pre">test_graph</span></code> is available at <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph">GraphScope Interactive Github repo</a>, and you can download them with the following command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://raw.githubusercontent.com/alibaba/GraphScope/main/flex/interactive/examples/modern_graph/person.csv
+wget<span class="w"> </span>https://raw.githubusercontent.com/alibaba/GraphScope/main/flex/interactive/examples/modern_graph/person_knows_person.csv
+</pre></div>
+</div>
+<p>Now run the following code in python Interpreter, remember to replace <code class="docutils literal notranslate"><span class="pre">/path/to/person.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">/path/to/person_knows_person.csv</span></code> with the actual local path.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bulk_loading</span><span class="p">(</span><span class="n">sess</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">graph_id</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">test_graph_datasource</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;loading_config&quot;</span><span class="p">:{</span>
+            <span class="s2">&quot;data_source&quot;</span><span class="p">:{</span>
+                <span class="s2">&quot;scheme&quot;</span><span class="p">:</span> <span class="s2">&quot;file&quot;</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;import_option&quot;</span><span class="p">:</span> <span class="s2">&quot;init&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;format&quot;</span><span class="p">:{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;csv&quot;</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;vertex_mappings&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;type_name&quot;</span><span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;@/path/to/person.csv&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;column_mappings&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">},</span> <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">},</span> <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;age&quot;</span><span class="p">},</span> <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;age&quot;</span><span class="p">},</span>
+                <span class="p">],</span>
+            <span class="p">}</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;edge_mappings&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;type_triplet&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;edge&quot;</span><span class="p">:</span> <span class="s2">&quot;knows&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;source_vertex&quot;</span><span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;destination_vertex&quot;</span><span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">&quot;@/path/to/person_knows_person.csv&quot;</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;source_vertex_mappings&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;person.id&quot;</span><span class="p">},</span> <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">}</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;destination_vertex_mappings&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;person.id&quot;</span><span class="p">},</span> <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">}</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;column_mappings&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;weight&quot;</span><span class="p">},</span> <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;weight&quot;</span><span class="p">}</span>
+                <span class="p">],</span>
+            <span class="p">}</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">bulk_load_request</span> <span class="o">=</span> <span class="n">SchemaMapping</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">test_graph_datasource</span><span class="p">)</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">bulk_loading</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">bulk_load_request</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+    <span class="n">job_id</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span><span class="o">.</span><span class="n">job_id</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The bulkloading job id is &#39;</span><span class="p">,</span> <span class="n">job_id</span><span class="p">)</span>
+
+    <span class="c1"># wait until the job has completed successfully.</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">get_job</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span><span class="o">.</span><span class="n">status</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;job status: &quot;</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;SUCCESS&quot;</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;FAILED&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;job failed&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># We assume you have created the graph, uncomment </span>
+<span class="c1"># following code if you haven&#39;t create the new graph yet.</span>
+<span class="c1"># </span>
+<span class="c1"># driver = Driver()</span>
+<span class="c1"># sess = driver.session()</span>
+<span class="c1"># graph_id = create_graph(sess)</span>
+<span class="c1"># print(&quot;Created graph, id is &quot;, graph_id)</span>
+<span class="c1"># </span>
+
+<span class="n">bulk_loading</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For each vertex/edge types, you need to provide the input data source and column mapping information.
+Remember to add <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> at the beginning of the local file path.
+<code class="docutils literal notranslate"><span class="pre">Session.bulkLoading()</span></code> will submit an data loading job to the service, and we can query the status of the job via <code class="docutils literal notranslate"><span class="pre">Session.getJobStatus()</span></code>, and wait until the job has compleleted successfully.</p>
+</section>
+<section id="create-a-stored-procedure">
+<h3>Create a stored procedure<a class="headerlink" href="#create-a-stored-procedure" title="Permalink to this heading">¶</a></h3>
+<p>Stored procedures can be registered into GraphScope Interactive to encapsulate and reuse complex graph operations. Interactive support both <code class="docutils literal notranslate"><span class="pre">cypher</span></code> and <code class="docutils literal notranslate"><span class="pre">c++</span></code> queries as stored procedures.
+With the following code, you will create a procedure named <code class="docutils literal notranslate"><span class="pre">testProcedure</span></code> which is defined via a <code class="docutils literal notranslate"><span class="pre">cypher</span></code> query.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create Graph </span>
+<span class="c1"># ...</span>
+
+<span class="c1"># Bulk loading</span>
+<span class="c1"># ...</span>
+
+<span class="n">proc_name</span><span class="o">=</span><span class="s2">&quot;test_procedure&quot;</span>
+<span class="n">create_proc_request</span> <span class="o">=</span> <span class="n">CreateProcedureRequest</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">proc_name</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;test procedure&quot;</span><span class="p">,</span>
+    <span class="n">query</span><span class="o">=</span><span class="s2">&quot;MATCH (n) RETURN COUNT(n);&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">create_procedure</span><span class="p">(</span><span class="n">graph_id</span><span class="p">,</span> <span class="n">create_proc_request</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;successfully create procedure: &quot;</span><span class="p">,</span> <span class="n">proc_name</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The procedure could not be invoked now, since currently interactive service has not been switched to the newly created <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code>. We need to start the service on <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code>.</p>
+</section>
+<section id="start-the-query-service-on-the-new-graph">
+<h3>Start the query service on the new graph<a class="headerlink" href="#start-the-query-service-on-the-new-graph" title="Permalink to this heading">¶</a></h3>
+<p>Although Interactive supports multiple graphs in terms of logic and storage, it can only serve on one graph at a time. This means that at any given moment, only one graph is available to provide query service. So we need to switch to the newly created <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code> with following code.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">start_service</span><span class="p">(</span>
+    <span class="n">start_service_request</span><span class="o">=</span><span class="n">StartServiceRequest</span><span class="p">(</span><span class="n">graph_id</span><span class="o">=</span><span class="n">graph_id</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;start service ok&quot;</span><span class="p">,</span> <span class="n">resp</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="submit-queries-to-the-new-graph">
+<h3>Submit queries to the new graph<a class="headerlink" href="#submit-queries-to-the-new-graph" title="Permalink to this heading">¶</a></h3>
+<p>After starting query service on the new graph, we are now able to submit queries to <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code>.</p>
+<!-- #### Submit gremlin queries
+
+````{note}
+By default, the Gremlin service is disabled. To enable it, try specifying the Gremlin port when creating an interactive instance.
+
+
+```bash
+gsctl instance deploy --type interactive --gremlin-port 8183**
+```
+
+````
+
+```python
+query = "g.V().count();"
+ret = []
+gremlin_client = driver.getGremlinClient()
+q = gremlin_client.submit(query)
+while True:
+    try:
+        ret.extend(q.next())
+    except StopIteration:
+        break
+print(ret)
+``` -->
+<section id="submit-cypher-queries">
+<h4>Submit cypher queries<a class="headerlink" href="#submit-cypher-queries" title="Permalink to this heading">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;MATCH (n) RETURN COUNT(n);&quot;</span>
+<span class="k">with</span> <span class="n">driver</span><span class="o">.</span><span class="n">getNeo4jSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">resp</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="delete-the-graph">
+<h3>Delete the graph<a class="headerlink" href="#delete-the-graph" title="Permalink to this heading">¶</a></h3>
+<p>Finally, we can delete the graph. The graph data and stored procedure bound to the graph will also be deleted.
+Currently Interactive forbid deleting a graph which is currently serving in the service, so to delete graph, stop the service first.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># stop the service first</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">stop_service</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;successfully stopped the service&quot;</span><span class="p">)</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">delete_graph</span><span class="p">(</span><span class="n">graph_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;delete graph res: &quot;</span><span class="p">,</span> <span class="n">resp</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For the full example, please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/sdk/examples/java/interactive-example">Java SDK Example</a></p>
+</section>
 </section>
 <section id="documentation-for-service-apis">
 <h2>Documentation for Service APIs<a class="headerlink" href="#documentation-for-service-apis" title="Permalink to this heading">¶</a></h2>
-<p>All URIs are relative to <code class="docutils literal notranslate"><span class="pre">${INTERACTIVE_ENDPOINT}</span></code></p>
+<p>The APIs in interactive SDK are divided into five categories.</p>
+<ul class="simple">
+<li><p>GraphManagementApi</p></li>
+<li><p>ProcedureManagementApi</p></li>
+<li><p>JobManagementApi</p></li>
+<li><p>ServiceManagementApi</p></li>
+<li><p>QueryServiceApi</p></li>
+</ul>
+<p>All URIs are relative to <code class="docutils literal notranslate"><span class="pre">${INTERACTIVE_ADMIN_ENDPOINT}</span></code></p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -821,144 +1110,115 @@ MathJax = {
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><em>AdminServiceGraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceGraphManagementApi.html#create_dataloading_job"><span class="std std-ref"><strong>create_dataloading_job</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>GraphManagementApi</em></p></td>
+<td><p><a class="reference internal" href="GraphManagementApi.html#Bulkloading"><span class="std std-ref"><strong>BulkLoading</strong></span></a></p></td>
 <td><p><strong>POST</strong> /v1/graph/{graph_id}/dataloading</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceGraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceGraphManagementApi.html#create_graph"><span class="std std-ref"><strong>create_graph</strong></span></a></p></td>
+<tr class="row-odd"><td><p><em>GraphManagementApi</em></p></td>
+<td><p><a class="reference internal" href="GraphManagementApi.html#CreateGraph"><span class="std std-ref"><strong>CreateGraph</strong></span></a></p></td>
 <td><p><strong>POST</strong> /v1/graph</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>AdminServiceGraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceGraphManagementApi.html#delete_graph"><span class="std std-ref"><strong>delete_graph</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>GraphManagementApi</em></p></td>
+<td><p><a class="reference internal" href="GraphManagementApi.html#DeleteGraph"><span class="std std-ref"><strong>DeleteGraph</strong></span></a></p></td>
 <td><p><strong>DELETE</strong> /v1/graph/{graph_id}</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceGraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceGraphManagementApi.html#get_graph"><span class="std std-ref"><strong>get_graph</strong></span></a></p></td>
+<tr class="row-odd"><td><p><em>GraphManagementApi</em></p></td>
+<td><p><a class="reference internal" href="GraphManagementApi.html#GetGraphMeta"><span class="std std-ref"><strong>GetGraphMeta</strong></span></a></p></td>
 <td><p><strong>GET</strong> /v1/graph/{graph_id}</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>AdminServiceGraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceGraphManagementApi.html#get_schema"><span class="std std-ref"><strong>get_schema</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>GraphManagementApi</em></p></td>
+<td><p><a class="reference internal" href="GraphManagementApi.html#GetGraphSchema"><span class="std std-ref"><strong>GetGraphSchema</strong></span></a></p></td>
 <td><p><strong>GET</strong> /v1/graph/{graph_id}/schema</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceGraphManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceGraphManagementApi.html#list_graphs"><span class="std std-ref"><strong>list_graphs</strong></span></a></p></td>
+<tr class="row-odd"><td><p><em>GraphManagementApi</em></p></td>
+<td><p><a class="reference internal" href="GraphManagementApi.html#ListGraphs"><span class="std std-ref"><strong>ListGraphs</strong></span></a></p></td>
 <td><p><strong>GET</strong> /v1/graph</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>AdminServiceJobManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceJobManagementApi.html#delete_job_by_id"><span class="std std-ref"><strong>delete_job_by_id</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>GraphManagementApi</em></p></td>
+<td><p><a class="reference internal" href="GraphManagementApi.html#GetGraphStatistics"><span class="std std-ref"><strong>GetGraphStatistics</strong></span></a></p></td>
+<td><p><strong>GET</strong> /v1/graph/{graph_id}/statistics</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><em>JobManagementApi</em></p></td>
+<td><p><a class="reference internal" href="JobManagementApi.html#CancelJob"><span class="std std-ref"><strong>CancelJob</strong></span></a></p></td>
 <td><p><strong>DELETE</strong> /v1/job/{job_id}</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceJobManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceJobManagementApi.html#get_job_by_id"><span class="std std-ref"><strong>get_job_by_id</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>JobManagementApi</em></p></td>
+<td><p><a class="reference internal" href="JobManagementApi.html#GetJobById"><span class="std std-ref"><strong>GetJobById</strong></span></a></p></td>
 <td><p><strong>GET</strong> /v1/job/{job_id}</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>AdminServiceJobManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceJobManagementApi.html#list_jobs"><span class="std std-ref"><strong>list_jobs</strong></span></a></p></td>
+<tr class="row-odd"><td><p><em>JobManagementApi</em></p></td>
+<td><p><a class="reference internal" href="JobManagementApi.html#ListJobs"><span class="std std-ref"><strong>ListJobs</strong></span></a></p></td>
 <td><p><strong>GET</strong> /v1/job</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceProcedureManagementApi.html#create_procedure"><span class="std std-ref"><strong>create_procedure</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>ProcedureManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ProcedureManagementApi.html#CreateProcedure"><span class="std std-ref"><strong>CreateProcedure</strong></span></a></p></td>
 <td><p><strong>POST</strong> /v1/graph/{graph_id}/procedure</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>AdminServiceProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceProcedureManagementApi.html#delete_procedure"><span class="std std-ref"><strong>delete_procedure</strong></span></a></p></td>
+<tr class="row-odd"><td><p><em>ProcedureManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ProcedureManagementApi.html#DeleteProcedure"><span class="std std-ref"><strong>DeleteProcedure</strong></span></a></p></td>
 <td><p><strong>DELETE</strong> /v1/graph/{graph_id}/procedure/{procedure_id}</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceProcedureManagementApi.html#get_procedure"><span class="std std-ref"><strong>get_procedure</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>ProcedureManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ProcedureManagementApi.html#GetProcedure"><span class="std std-ref"><strong>GetProcedure</strong></span></a></p></td>
 <td><p><strong>GET</strong> /v1/graph/{graph_id}/procedure/{procedure_id}</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>AdminServiceProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceProcedureManagementApi.html#list_procedures"><span class="std std-ref"><strong>list_procedures</strong></span></a></p></td>
+<tr class="row-odd"><td><p><em>ProcedureManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ProcedureManagementApi.html#ListProcedures"><span class="std std-ref"><strong>ListProcedures</strong></span></a></p></td>
 <td><p><strong>GET</strong> /v1/graph/{graph_id}/procedure</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceProcedureManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceProcedureManagementApi.html#update_procedure"><span class="std std-ref"><strong>update_procedure</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>ProcedureManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ProcedureManagementApi.html#UpdateProcedure"><span class="std std-ref"><strong>UpdateProcedure</strong></span></a></p></td>
 <td><p><strong>PUT</strong> /v1/graph/{graph_id}/procedure/{procedure_id}</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>AdminServiceServiceManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceServiceManagementApi.html#get_service_status"><span class="std std-ref"><strong>get_service_status</strong></span></a></p></td>
+<tr class="row-odd"><td><p><em>ServiceManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ServiceManagementApi.html#GetServiceStatus"><span class="std std-ref"><strong>GetServiceStatus</strong></span></a></p></td>
 <td><p><strong>GET</strong> /v1/service/status</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceServiceManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceServiceManagementApi.html#restart_service"><span class="std std-ref"><strong>restart_service</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>ServiceManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ServiceManagementApi.html#RestartService"><span class="std std-ref"><strong>RestartService</strong></span></a></p></td>
 <td><p><strong>POST</strong> /v1/service/restart</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>AdminServiceServiceManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceServiceManagementApi.html#start_service"><span class="std std-ref"><strong>start_service</strong></span></a></p></td>
+<tr class="row-odd"><td><p><em>ServiceManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ServiceManagementApi.html#StartService"><span class="std std-ref"><strong>StartService</strong></span></a></p></td>
 <td><p><strong>POST</strong> /v1/service/start</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><em>AdminServiceServiceManagementApi</em></p></td>
-<td><p><a class="reference internal" href="AdminServiceServiceManagementApi.html#stop_service"><span class="std std-ref"><strong>stop_service</strong></span></a></p></td>
+<tr class="row-even"><td><p><em>ServiceManagementApi</em></p></td>
+<td><p><a class="reference internal" href="ServiceManagementApi.html#StopService"><span class="std std-ref"><strong>StopService</strong></span></a></p></td>
 <td><p><strong>POST</strong> /v1/service/stop</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><em>GraphServiceEdgeManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphServiceEdgeManagementApi.html#add_edge"><span class="std std-ref"><strong>add_edge</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/{graph_id}/edge</p></td>
-<td><p>Add edge to the graph</p></td>
-</tr>
-<tr class="row-odd"><td><p><em>GraphServiceEdgeManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphServiceEdgeManagementApi.html#delete_edge"><span class="std std-ref"><strong>delete_edge</strong></span></a></p></td>
-<td><p><strong>DELETE</strong> /v1/graph/{graph_id}/edge</p></td>
-<td><p>Remove edge from the graph</p></td>
-</tr>
-<tr class="row-even"><td><p><em>GraphServiceEdgeManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphServiceEdgeManagementApi.html#get_edge"><span class="std std-ref"><strong>get_edge</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}/edge</p></td>
-<td><p>Get the edge’s properties with src and dst vertex primary keys.</p></td>
-</tr>
-<tr class="row-odd"><td><p><em>GraphServiceEdgeManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphServiceEdgeManagementApi.html#update_edge"><span class="std std-ref"><strong>update_edge</strong></span></a></p></td>
-<td><p><strong>PUT</strong> /v1/graph/{graph_id}/edge</p></td>
-<td><p>Update edge’s property</p></td>
-</tr>
-<tr class="row-even"><td><p><em>GraphServiceVertexManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphServiceVertexManagementApi.html#add_vertex"><span class="std std-ref"><strong>add_vertex</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/{graph_id}/vertex</p></td>
-<td><p>Add vertex to the graph</p></td>
-</tr>
-<tr class="row-odd"><td><p><em>GraphServiceVertexManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphServiceVertexManagementApi.html#delete_vertex"><span class="std std-ref"><strong>delete_vertex</strong></span></a></p></td>
-<td><p><strong>DELETE</strong> /v1/graph/{graph_id}/vertex</p></td>
-<td><p>Remove vertex from the graph</p></td>
-</tr>
-<tr class="row-even"><td><p><em>GraphServiceVertexManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphServiceVertexManagementApi.html#get_vertex"><span class="std std-ref"><strong>get_vertex</strong></span></a></p></td>
-<td><p><strong>GET</strong> /v1/graph/{graph_id}/vertex</p></td>
-<td><p>Get the vertex’s properties with vertex primary key.</p></td>
-</tr>
-<tr class="row-odd"><td><p><em>GraphServiceVertexManagementApi</em></p></td>
-<td><p><a class="reference internal" href="GraphServiceVertexManagementApi.html#update_vertex"><span class="std std-ref"><strong>update_vertex</strong></span></a></p></td>
-<td><p><strong>PUT</strong> /v1/graph/{graph_id}/vertex</p></td>
-<td><p>Update vertex’s property</p></td>
+<tr class="row-odd"><td><p><em>QueryServiceApi</em></p></td>
+<td><p><a class="reference internal" href="QueryServiceApi.html#CallProcedure"><span class="std std-ref"><strong>CallProcedure</strong></span></a></p></td>
+<td><p><strong>POST</strong> /v1/graph/{graph_id}/query</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><em>QueryServiceApi</em></p></td>
-<td><p><a class="reference internal" href="QueryServiceApi.html#proc_call"><span class="std std-ref"><strong>proc_call</strong></span></a></p></td>
-<td><p><strong>POST</strong> /v1/graph/{graph_id}/query</p></td>
-<td><p>run queries on graph</p></td>
+<td><p><a class="reference internal" href="QueryServiceApi.html#CallProcedureOnCurrentGraph"><span class="std std-ref"><strong>CallProcedureOnCurrentGraph</strong></span></a></p></td>
+<td><p><strong>POST</strong> /v1/graph/current/query</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<!-- TODO(zhanglei): Add Vertex/Edge APIs after supported by Interactive -->
 </section>
 <section id="documentation-for-data-structures">
 <h2>Documentation for Data Structures<a class="headerlink" href="#documentation-for-data-structures" title="Permalink to this heading">¶</a></h2>
@@ -1039,12 +1299,12 @@ MathJax = {
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../../glossary.html">
+          <a class="next-page" href="../restful_api.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Glossary</div>
+                <div class="title">Interactive RESTFul API</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -1100,7 +1360,19 @@ MathJax = {
 <li><a class="reference internal" href="#tests">Tests</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li><a class="reference internal" href="#getting-started">Getting Started</a><ul>
+<li><a class="reference internal" href="#connect-and-submit-a-query">Connect and submit a query</a></li>
+<li><a class="reference internal" href="#create-a-new-graph">Create a new graph</a></li>
+<li><a class="reference internal" href="#import-data-to-the-graph">Import data to the graph</a></li>
+<li><a class="reference internal" href="#create-a-stored-procedure">Create a stored procedure</a></li>
+<li><a class="reference internal" href="#start-the-query-service-on-the-new-graph">Start the query service on the new graph</a></li>
+<li><a class="reference internal" href="#submit-queries-to-the-new-graph">Submit queries to the new graph</a><ul>
+<li><a class="reference internal" href="#submit-cypher-queries">Submit cypher queries</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#delete-the-graph">Delete the graph</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#documentation-for-service-apis">Documentation for Service APIs</a></li>
 <li><a class="reference internal" href="#documentation-for-data-structures">Documentation for Data Structures</a></li>
 <li><a class="reference internal" href="#documentation-for-authorization">Documentation For Authorization</a></li>

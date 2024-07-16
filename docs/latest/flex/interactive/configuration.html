@@ -6,12 +6,12 @@
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Data Model" href="data_model.html" /><link rel="prev" title="Stored Procedures" href="stored_procedures.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
-        <title>Engine Configuration - GraphScope documentation</title>
+        <title>Configuration - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
@@ -291,27 +291,23 @@ MathJax = {
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../interactive_intro.html">GraphScope Interactive</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom_graph_data.html">Using Custom Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stored_procedures.html">Stored Procedures</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Engine Configuration</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_import.html">Data Import Configuration</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">RESTful API Documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/java/java_sdk.html">Java SDK Reference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/python/python_sdk.html">Python SDK Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/restful_api.html">Interactive RESTFul API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/stored_procedure/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/stored_procedure/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="tools/admin_tool.html">The Administrative tool</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -319,7 +315,7 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -339,14 +335,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/neo4j/llm_assistant.html">Using LLM as an Assistant in GIE</a></li>
@@ -387,8 +383,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -399,13 +395,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -449,18 +445,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -495,7 +491,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -748,156 +744,158 @@ MathJax = {
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="engine-configuration">
-<h1>Engine Configuration<a class="headerlink" href="#engine-configuration" title="Permalink to this heading">¶</a></h1>
-<p>Starting your GraphScope Interactive service can be straightforward, as demonstrated in our <a class="reference internal" href="getting_started.html"><span class="std std-doc">getting_started</span></a> guide. By default, executing the command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>service<span class="w"> </span>start
+          <section class="tex2jax_ignore mathjax_ignore" id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h1>
+<section id="configurable-items-for-deploying-interactive-with-gsctl">
+<h2>Configurable Items for Deploying Interactive with gsctl<a class="headerlink" href="#configurable-items-for-deploying-interactive-with-gsctl" title="Permalink to this heading">¶</a></h2>
+<p>When deploying Interactive using <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, various items can be configured. For a given configurable item named <code class="docutils literal notranslate"><span class="pre">item-name</span></code>, you can set its value as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="w"> </span>--type<span class="w"> </span>interactive<span class="w"> </span><span class="o">[</span>--item-name<span class="o">=</span>value<span class="o">]</span>
 </pre></div>
 </div>
-<p>will initialize the service with its default settings. However, GraphScope is designed to be flexible and adaptable to your specific needs. This means you can tailor the service’s behavior using custom configurations.</p>
-<section id="customizing-your-service-configuration">
-<h2>Customizing Your Service Configuration<a class="headerlink" href="#customizing-your-service-configuration" title="Permalink to this heading">¶</a></h2>
-<p>To customize the service’s settings, you can provide a YAML configuration file. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>service<span class="w"> </span>start<span class="w"> </span>-c<span class="w"> </span>./conf/engine_config.yaml
-</pre></div>
-</div>
-<p>Note: Please be aware that you’re not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the sections that follow.</p>
-<p>If you already have an Interactive service running and wish to apply a new set of configurations, a simple restart with the custom configuration is required. This ensures that the service updates its settings and operates according to your newly specified preferences.</p>
-<p>To restart the service with your custom configuration, use the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/gs_interactive<span class="w"> </span>service<span class="w"> </span>restart<span class="w"> </span>-c<span class="w"> </span>./conf/engine_config.yaml
-</pre></div>
-</div>
-<p>Remember, any changes made in the configuration file will only take effect after the service has been restarted with the updated file.</p>
-</section>
-<section id="sample-configuration">
-<h2>Sample Configuration<a class="headerlink" href="#sample-configuration" title="Permalink to this heading">¶</a></h2>
-<p>Here’s a glimpse of what a typical YAML configuration file might look like:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span><span class="w"> </span><span class="c1"># default INFO</span>
-<span class="nt">compute_engine</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">thread_num_per_worker</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">  </span><span class="c1"># the number of shared workers, default 1</span>
-<span class="nt">compiler</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">planner</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">is_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">  </span><span class="nt">opt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RBO</span>
-<span class="w">  </span><span class="nt">rules</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FilterMatchRule</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FilterIntoJoinRule</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NotExistToAntiJoinRule</span>
-<span class="w">  </span><span class="nt">query_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20000</span><span class="w">  </span><span class="c1"># query timeout in milliseconds, default 20000</span>
-<span class="w">  </span><span class="nt">endpoint</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">default_listen_address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
-<span class="w">    </span><span class="nt">bolt_connector</span><span class="p">:</span><span class="w"> </span><span class="c1"># cypher query endpoint </span>
-<span class="w">      </span><span class="nt">disabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># disable cypher endpoint or not.</span>
-<span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7687</span>
-<span class="w">    </span><span class="nt">gremlin_connector</span><span class="p">:</span><span class="w"> </span><span class="c1"># gremlin query endpoint </span>
-<span class="w">      </span><span class="nt">disabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># disable gremlin endpoint or not.</span>
-<span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8182</span>
-<span class="nt">http_service</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">default_listen_address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
-<span class="w">  </span><span class="nt">admin_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7777</span>
-<span class="w">  </span><span class="nt">query_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
-</pre></div>
-</div>
-</section>
-<section id="available-configurations">
-<h2>Available Configurations<a class="headerlink" href="#available-configurations" title="Permalink to this heading">¶</a></h2>
-<p>For configurations associated with the root directory, we do not accept relative paths to ensure consistency.</p>
-<section id="service-configurations">
-<h3>Service configurations<a class="headerlink" href="#service-configurations" title="Permalink to this heading">¶</a></h3>
-<p>In this following table, we use the <code class="docutils literal notranslate"><span class="pre">.</span></code> notation to represent the hierarchy within the <code class="docutils literal notranslate"><span class="pre">YAML</span></code> structure.</p>
+<p>Below is a list of all configurable items:</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>PropertyName</p></th>
+<tr class="row-odd"><th class="head"><p>Item Name</p></th>
 <th class="head"><p>Default</p></th>
-<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Description</p></th>
 <th class="head"><p>Since Version</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>log_level</p></td>
-<td><p>INFO</p></td>
-<td><p>The level of database log, INFO/DEBUG/ERROR</p></td>
-<td><p>0.0.1</p></td>
+<tr class="row-even"><td><p>coordinator-port</p></td>
+<td><p>8080</p></td>
+<td><p>The port of the coordinator service</p></td>
+<td><p>v0.3</p></td>
 </tr>
-<tr class="row-odd"><td><p>default_graph</p></td>
-<td><p>modern</p></td>
-<td><p>The name of default graph on which to start the graph service.</p></td>
-<td><p>0.0.1</p></td>
-</tr>
-<tr class="row-even"><td><p>compute_engine.thread_num_per_worker</p></td>
-<td><p>1</p></td>
-<td><p>The number of threads will be used to process the queries. Increase the number can benefit the query throughput</p></td>
-<td><p>0.0.1</p></td>
-</tr>
-<tr class="row-odd"><td><p>compiler.planner.is_on</p></td>
-<td><p>true</p></td>
-<td><p>Determines if query optimization is enabled for compiling Cypher queries</p></td>
-<td><p>0.0.1</p></td>
-</tr>
-<tr class="row-even"><td><p>compiler.planner.opt</p></td>
-<td><p>RBO</p></td>
-<td><p>Specifies the optimizer to be used for query optimization. Currently, only the Rule-Based Optimizer (RBO) is supported</p></td>
-<td><p>0.0.1</p></td>
-</tr>
-<tr class="row-odd"><td><p>compiler.planner.rules.FilterMatchRule</p></td>
-<td><p>N/A</p></td>
-<td><p>An optimization rule that pushes filter (<code class="docutils literal notranslate"><span class="pre">Where</span></code>) conditions into the <code class="docutils literal notranslate"><span class="pre">Match</span></code> clause</p></td>
-<td><p>0.0.1</p></td>
-</tr>
-<tr class="row-even"><td><p>compiler.planner.rules.FilterIntoJoinRule</p></td>
-<td><p>N/A</p></td>
-<td><p>A native Calcite optimization rule that pushes filter conditions to the Join participants before performing the join</p></td>
-<td><p>0.0.1</p></td>
-</tr>
-<tr class="row-odd"><td><p>compiler.planner.rules.NotMatchToAntiJoinRule</p></td>
-<td><p>N/A</p></td>
-<td><p>An optimization rule that transforms a “not exist” pattern into an anti-join operation</p></td>
-<td><p>0.0.1</p></td>
-</tr>
-<tr class="row-even"><td><p>compiler.endpoint.default_listen_address</p></td>
-<td><p>localhost</p></td>
-<td><p>The address for compiler endpoint to bind</p></td>
-<td><p>0.0.3</p></td>
-</tr>
-<tr class="row-odd"><td><p>compiler.endpoint.bolt_connector.disabled</p></td>
-<td><p>false</p></td>
-<td><p>Whether to disable the cypher endpoint</p></td>
-<td><p>0.0.3</p></td>
-</tr>
-<tr class="row-even"><td><p>compiler.endpoint.bolt_connector.port</p></td>
-<td><p>7687</p></td>
-<td><p>The port for compiler’s cypher endpoint.</p></td>
-<td><p>0.0.3</p></td>
-</tr>
-<tr class="row-odd"><td><p>compiler.endpoint.gremlin_connector.disabled</p></td>
-<td><p>true</p></td>
-<td><p>Whether to disable the gremlin endpoint</p></td>
-<td><p>0.0.3</p></td>
-</tr>
-<tr class="row-even"><td><p>compiler.endpoint.gremlin_connector.port</p></td>
-<td><p>8182</p></td>
-<td><p>The port for compiler’s cypher endpoint.</p></td>
-<td><p>0.0.3</p></td>
-</tr>
-<tr class="row-odd"><td><p>http_service.default_listen_address</p></td>
-<td><p>localhost</p></td>
-<td><p>The address for http service to bind</p></td>
-<td><p>0.0.2</p></td>
-</tr>
-<tr class="row-even"><td><p>http_service.admin_port</p></td>
+<tr class="row-odd"><td><p>admin-port</p></td>
 <td><p>7777</p></td>
-<td><p>The port for admin service to listen on</p></td>
-<td><p>0.0.2</p></td>
+<td><p>The port of the interactive admin service</p></td>
+<td><p>v0.3</p></td>
 </tr>
-<tr class="row-odd"><td><p>http_service.query_port</p></td>
+<tr class="row-even"><td><p>storedproc-port</p></td>
 <td><p>10000</p></td>
-<td><p>The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved</p></td>
-<td><p>0.0.2</p></td>
+<td><p>The port of the interactive stored procedure service</p></td>
+<td><p>v0.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>cypher-port</p></td>
+<td><p>7687</p></td>
+<td><p>The port of the cypher service</p></td>
+<td><p>v0.3</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<!-- | gremlin-port       | None    | The port of the gremlin service       | v0.3          | -->
+<!-- *Note: The default value for `gremlin-port` is `None`, meaning the Gremlin service will not be initiated by default. -->
+<section id="default-ports">
+<h3>Default Ports<a class="headerlink" href="#default-ports" title="Permalink to this heading">¶</a></h3>
+<p>By default, Interactive will launch the following services on these ports:</p>
+<ul class="simple">
+<li><p>Coordinator Service: 8080</p></li>
+<li><p>Interactive Meta Service: 7777</p></li>
+<li><p>Interactive Cypher Service: 7687</p></li>
+<li><p>Stored Procedure Service: 10000</p></li>
+</ul>
+<p>You can customize these ports as needed. For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="w"> </span>--type<span class="w"> </span>interactive<span class="w"> </span>--coordinator-port<span class="w"> </span><span class="m">8081</span><span class="w"> </span>--admin-port<span class="w"> </span><span class="m">7778</span><span class="w"> </span>--cypher-port<span class="w"> </span><span class="m">7688</span><span class="w"> </span>--storedproc-port<span class="w"> </span><span class="m">10001</span>
+</pre></div>
+</div>
+<!-- ### Enabling Gremlin Service
+
+The Gremlin service is disabled by default. To enable it, add the `--gremlin-port` option:
+
+```bash
+gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001 --gremlin-port 8183
+``` -->
+<!-- Those content are commented but not deleted, since we will support those configurations later.
+> TODO: Currently `gsctl` doesn't support the following command!
+
+Starting your GraphScope Interactive service can be straightforward, as demonstrated in our [getting_started](./getting_started.md) guide. By default, executing the command:
+
+```bash
+gsctl use GRAPH <name>
+```
+
+will initialize the service with its default settings. However, GraphScope is designed to be flexible and adaptable to your specific needs. This means you can tailor the service's behavior using custom configurations.
+
+## Customizing Your Service Configuration
+To customize the service's settings, you can provide a YAML configuration file. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
+
+```bash
+gsctl use GRAPH <name> -c ./engine_config.yaml
+```
+
+Note: Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the sections that follow.
+
+
+If you already have an Interactive service running and wish to apply a new set of configurations, a simple restart with the custom configuration is required. This ensures that the service updates its settings and operates according to your newly specified preferences.
+
+To restart the service with your custom configuration, use the following command:
+```bash
+gsctl service restart -c ./conf/engine_config.yaml
+```
+Remember, any changes made in the configuration file will only take effect after the service has been restarted with the updated file.
+
+
+
+## Sample Configuration
+Here's a glimpse of what a typical YAML configuration file might look like:
+
+```yaml
+log_level: INFO # default INFO
+compute_engine:
+  thread_num_per_worker: 1  # the number of shared workers, default 1
+compiler:
+  planner:
+  is_on: true
+  opt: RBO
+  rules:
+    - FilterMatchRule
+    - FilterIntoJoinRule
+    - NotExistToAntiJoinRule
+  query_timeout: 20000  # query timeout in milliseconds, default 20000
+  endpoint:
+    default_listen_address: localhost
+    bolt_connector: # cypher query endpoint 
+      disabled: false # disable cypher endpoint or not.
+      port: 7687
+    gremlin_connector: # gremlin query endpoint 
+      disabled: false # disable gremlin endpoint or not.
+      port: 8182
+http_service:
+  default_listen_address: localhost
+  admin_port: 7777
+  query_port: 10000
+```
+
+
+## Available Configurations
+For configurations associated with the root directory, we do not accept relative paths to ensure consistency.
+
+### Service configurations
+
+In this following table, we use the `.` notation to represent the hierarchy within the `YAML` structure.
+
+
+| PropertyName       | Default   | Meaning |  Since Version |
+| --------           | --------  | -------- |-----------  |
+| log_level     |  INFO   | The level of database log, INFO/DEBUG/ERROR | 0.0.1 |
+|default_graph  | modern | The name of default graph on which to start the graph service. | 0.0.1 |
+| compute_engine.thread_num_per_worker | 1 | The number of threads will be used to process the queries. Increase the number can benefit the query throughput | 0.0.1 |
+| compiler.planner.is_on | true | Determines if query optimization is enabled for compiling Cypher queries  | 0.0.1 |
+| compiler.planner.opt | RBO | Specifies the optimizer to be used for query optimization. Currently, only the Rule-Based Optimizer (RBO) is supported | 0.0.1 |
+| compiler.planner.rules.FilterMatchRule | N/A | An optimization rule that pushes filter (`Where`) conditions into the `Match` clause | 0.0.1 |
+| compiler.planner.rules.FilterIntoJoinRule | N/A | A native Calcite optimization rule that pushes filter conditions to the Join participants before performing the join | 0.0.1 |
+| compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
+| compiler.endpoint.default_listen_address | localhost | The address for compiler endpoint to bind | 0.0.3 |
+| compiler.endpoint.bolt_connector.disabled | false | Whether to disable the cypher endpoint| 0.0.3 |
+| compiler.endpoint.bolt_connector.port | 7687 | The port for compiler's cypher endpoint.| 0.0.3 |
+| compiler.endpoint.gremlin_connector.disabled | true | Whether to disable the gremlin endpoint| 0.0.3 |
+| compiler.endpoint.gremlin_connector.port | 8182 | The port for compiler's cypher endpoint.| 0.0.3 |
+| http_service.default_listen_address | localhost | The address for http service to bind | 0.0.2 |
+| http_service.admin_port | 7777 | The port for admin service to listen on | 0.0.2 |
+| http_service.query_port | 10000 | The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved | 0.0.2 | -->
 </section>
 </section>
 </section>
@@ -960,11 +958,9 @@ MathJax = {
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Engine Configuration</a><ul>
-<li><a class="reference internal" href="#customizing-your-service-configuration">Customizing Your Service Configuration</a></li>
-<li><a class="reference internal" href="#sample-configuration">Sample Configuration</a></li>
-<li><a class="reference internal" href="#available-configurations">Available Configurations</a><ul>
-<li><a class="reference internal" href="#service-configurations">Service configurations</a></li>
+<li><a class="reference internal" href="#">Configuration</a><ul>
+<li><a class="reference internal" href="#configurable-items-for-deploying-interactive-with-gsctl">Configurable Items for Deploying Interactive with gsctl</a><ul>
+<li><a class="reference internal" href="#default-ports">Default Ports</a></li>
 </ul>
 </li>
 </ul>

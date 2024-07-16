@@ -23,7 +23,7 @@ GraphScope Interactive stands on the shoulders of two pivotal pillars:
 GraphScope Interactive boasts several key features:
 
 1. **Exceptional Query Throughput**: As highlighted, GraphScope Interactive's foundation is laid on benchmarking triumphs, enabling it to process tens of thousands of queries swiftly.
-2. **Versatility in Language Support**: GraphScope Interactive supports two graph query languages: TinkerPop Gremlin and Neo4j Cypher. Cypher can also be used for crafting stored procedures. For those who prefer a more comprehensive approach, C++ programming is also supported for stored procedure development.
+2. **Versatility in Language Support**: GraphScope Interactive supports the Neo4j Cypher Query language. Cypher can also be used for crafting stored procedures. For those who prefer a more comprehensive approach, C++ programming is also supported for stored procedure development.
 3. **Future-Ready Expansion Capabilities**: Drawing from the prowess of GraphScope Flex, GraphScope Interactive is primed for adaptability:
     * Support for Multiple Query Languages: In the near future, GraphScope Interactive will extend its language support to [GQL](https://www.gqlstandards.org/), further enhancing its versatility.
     * Scalability: GraphScope Interactive possesses the potential for distributed processing. This means it can be expanded with few effort to handle larger-scale graphs, ensuring it remains effective as your data grows.
@@ -46,18 +46,19 @@ The application of Cypher in GraphScope Interactive can be categorized into two 
 
 The Cypher endpoint is enabled by default and listens on port 7687. You can also turn of the bolt connector or customize the port it by setting properties under `compiler.endpoint.bolt_connector`. For more detail explanation, please refer to [Configuration](./configuration) guide. For instructions on how to connect to the Cypher endpoint, please see [GettingStarted](./getting_started#running-cypher-queries).
 
-## The Gremlin Query Language
+<!-- ## The Gremlin Query Language
 
 GraphScope Interactive also support [Gremlin]((https://tinkerpop.apache.org/gremlin.html)), a graph traversal language of Apache TinkerPop, and is widely adopted by many other graph databases. Although the syntax of Gremlin is definitely different from cypher, thanks to the unified Intermediate Representation (IR) used by GraphScope Interactive, we can achieve good unification at the execution level(physical plan).
 
 You can use Gremlin Console/Driver to connect to GraphScope Interactive' Gremlin endpoint to submit gremlin queries. Since Gremlin doesn't support stored procedure, you can only run **On-the-Fly** Gremlin queries.
 
 The Gremlin endpoint is disabled by default. To enable the gremlin endpoint, you need to set `compiler.endpoint.gremlin_connector.disabled` to `false` in the configuration.
-For more configurations about the Gremlin connector, please consult the [Configuration](./configuration) guide. To learn how to connect to the Gremlin endpoint, refer to [GettingStarted](./getting_started#running-gremlin-queries).
+For more configurations about the Gremlin connector, please consult the [Configuration](./configuration) guide. To learn how to connect to the Gremlin endpoint, refer to [GettingStarted](./getting_started#running-gremlin-queries). -->
 
 ## Limitations
 
 1. GraphScope Interactive now only supports a subset of Cypher read clause, as indicated in [supported_cypher](../../interactive_engine/neo4j/supported_cypher). Write and DDL (for defining and modifying schema) functionalities are not currently provided. 
-2. GraphScope Interactive also does not fully support all traversal steps of Gremlin, please check [supported_gremlin_step](../../interactive_engine/tinkerpop/supported_gremlin_steps). It's important to note that the `g.E()` step is currently not supported in Interactive.
-3. Writes are designed to be fulfilled via built-in stored procedures. Currently writes are not supported.
-4. ACID is currently not supported, but it is planned to be supported in the near future.
+2. Writes are designed to be fulfilled via built-in stored procedures. Currently writes are not supported.
+3. ACID is currently not supported, but it is planned to be supported in the near future.
+
+<!-- 2. GraphScope Interactive also does not fully support all traversal steps of Gremlin, please check [supported_gremlin_step](../../interactive_engine/tinkerpop/supported_gremlin_steps). It's important to note that the `g.E()` step is currently not supported in Interactive. -->
