@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/manager.h"
-#include "flex/engines/graph_db/database/graph_db_session.h"
-#include "flex/utils/service_utils.h"
 #include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
+#include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/graph_db/database/graph_db_session.h"
+#include "flex/utils/service_utils.h"
 
 namespace gs {
 VertexEdgeManager::VertexEdgeManager(std::vector<VertexData>&& vertex_data,
@@ -56,7 +55,8 @@ void VertexEdgeManager::checkVertexSchema() {
           continue;
         }
         vertex.col_names.push_back(property_name);
-        if (get_flag) continue;
+        if (get_flag)
+          continue;
         auto properties_iter = vertex.properties.find(property_name);
         if (properties_iter == vertex.properties.end()) {
           throw std::runtime_error("property not exists in input properties: " +
@@ -84,7 +84,8 @@ void VertexEdgeManager::checkEdgeSchema() {
       edge_exists = true;
       // get edge
       if (edge.property_name.empty()) {
-        edge.property_name = jsonToString(edge_types["properties"][0]["property_name"]);
+        edge.property_name =
+            jsonToString(edge_types["properties"][0]["property_name"]);
       } else {
         // update or add
         gs::PropertyType colType;
@@ -308,7 +309,7 @@ void VertexEdgeManager::insertEdge() {
 }
 
 void VertexEdgeManager::updateVertex() {
-  auto &vertex = vertex_data[0];
+  auto& vertex = vertex_data[0];
   auto txnRead = db.GetReadTransaction();
   gs::vid_t vertex_lid;
   if (txnRead.GetVertexIndex(vertex.label_id, vertex.pk_value, vertex_lid) ==
@@ -320,7 +321,8 @@ void VertexEdgeManager::updateVertex() {
   auto txnWrite = db.GetUpdateTransaction();
   for (int i = 0; i < int(vertex.col_names.size()); i++) {
     if (txnWrite.SetVertexField(vertex.label_id, vertex_lid, i,
-                                vertex.properties[vertex.col_names[i]]) == false) {
+                                vertex.properties[vertex.col_names[i]]) ==
+        false) {
       txnWrite.Abort();
       throw std::runtime_error("Fail to update vertex");
     }
@@ -341,8 +343,8 @@ void VertexEdgeManager::updateEdge() {
   }
   bool edge_exists = false;
   for (auto edgeIt = txn.GetOutEdgeIterator(
-            edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
-        edgeIt.IsValid(); edgeIt.Next()) {
+           edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
+       edgeIt.IsValid(); edgeIt.Next()) {
     if (edgeIt.GetNeighbor() == dst_vid) {
       edge_exists = true;
       break;
@@ -359,9 +361,8 @@ void VertexEdgeManager::updateEdge() {
   txn2.Commit();
 }
 
-
 std::string VertexEdgeManager::getVertex() {
-  auto &vertex = vertex_data[0];
+  auto& vertex = vertex_data[0];
   nlohmann::json result;
   result["label"] = vertex.label;
   auto txn = db.GetReadTransaction();
@@ -385,7 +386,7 @@ std::string VertexEdgeManager::getVertex() {
 }
 
 std::string VertexEdgeManager::getEdge() {
-  auto &edge = edge_data[0];
+  auto& edge = edge_data[0];
   nlohmann::json result;
   result["src_label"] = edge.src_label;
   result["dst_label"] = edge.dst_label;
@@ -395,14 +396,16 @@ std::string VertexEdgeManager::getEdge() {
   result["properties"] = nlohmann::json::array();
   auto txn = db.GetReadTransaction();
   gs::vid_t src_vid, dst_vid;
-  if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) == false ||
-      txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) == false) {
+  if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
+          false ||
+      txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
+          false) {
     txn.Abort();
     throw std::runtime_error("Vertex not found");
   }
-  for (auto edgeIt = txn.GetOutEdgeIterator(edge.src_label_id, src_vid,
-                                            edge.dst_label_id, edge.edge_label_id);
-        edgeIt.IsValid(); edgeIt.Next()) {
+  for (auto edgeIt = txn.GetOutEdgeIterator(
+           edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
+       edgeIt.IsValid(); edgeIt.Next()) {
     if (edgeIt.GetNeighbor() != dst_vid)
       continue;
     nlohmann::json push_json;
