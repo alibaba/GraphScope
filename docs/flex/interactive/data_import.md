@@ -30,7 +30,11 @@ You just need to specify the name of the `column`, since the name is guaranteed 
 
 ## Sample Configuration for loading "Modern" Graph from csv files
 
-To illustrate, let's examine the `examples/modern_import_full.yaml` file. This configuration is designed for importing the "modern" graph and showcases the full range of configuration possibilities. We'll dissect each configuration item in the sections that follow.
+To illustrate, let's examine the `modern_graph_import.yaml` file. This configuration is designed for importing the "modern" graph and showcases the full range of configuration possibilities. We'll dissect each configuration item in the sections that follow.
+
+```{note}
+Note that a `@` is prepend to the location, which means all files will be uploaded from local.
+```
 
 ``` yaml
 loading_config: 
@@ -40,7 +44,7 @@ loading_config:
     use_mmap_vector: true
   data_source:
     scheme: file
-    location: /home/modern_graph/ 
+    location: "@/home/modern_graph/"
   format: 
     metadata: 
       delimiter: "|"  

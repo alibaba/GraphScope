@@ -48,7 +48,9 @@ class TestDriver(unittest.TestCase):
         if self._graph_id is not None:
             if self._cypher_proc_name is not None:
                 print("delete procedure: ")
-                rep1 = self._sess.delete_procedure(self._graph_id, self._cypher_proc_name)
+                rep1 = self._sess.delete_procedure(
+                    self._graph_id, self._cypher_proc_name
+                )
                 print("delete procedure: ", rep1)
             if self._cpp_proc_name is not None:
                 print("delete procedure: ")
@@ -64,6 +66,7 @@ class TestDriver(unittest.TestCase):
         self.bulkLoadingUploading()
         self.bulkLoadingFailure()
         self.list_graph()
+        self.get_graph_meta()
         self.runCypherQuery()
         self.runGremlinQuery()
         self.createCypherProcedure()
@@ -132,13 +135,13 @@ class TestDriver(unittest.TestCase):
         print("test bulk loading: ", self._graph_id)
         schema_mapping = SchemaMapping(
             loading_config=SchemaMappingLoadingConfig(
-                data_source=SchemaMappingLoadingConfigDataSource(scheme="file", location=location),
+                data_source=SchemaMappingLoadingConfigDataSource(
+                    scheme="file", location=location
+                ),
                 import_option="init",
                 format=SchemaMappingLoadingConfigFormat(type="csv"),
                 x_csr_params=SchemaMappingLoadingConfigXCsrParams(
-                    parallelism=1,
-                    build_csr_in_mem=True,
-                    use_mmap_vector=True
+                    parallelism=1, build_csr_in_mem=True, use_mmap_vector=True
                 ),
             ),
             vertex_mappings=[
@@ -159,7 +162,6 @@ class TestDriver(unittest.TestCase):
         assert resp.is_ok()
         job_id = resp.get_value().job_id
         assert self.waitJobFinish(job_id)
-
 
     def bulkLoadingUploading(self):
         """
@@ -208,7 +210,7 @@ class TestDriver(unittest.TestCase):
                 return False
             else:
                 time.sleep(1)
-    
+
     def bulkLoadingFailure(self):
         """
         Submit a bulk loading job with invalid data, and expect the job to fail.
@@ -250,6 +252,18 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.list_graphs()
         assert resp.is_ok()
         print("list graph: ", resp.get_value())
+    
+    def get_graph_meta(self):
+        resp = self._sess.get_graph_meta(self._graph_id)
+        assert resp.is_ok()
+        print("get graph meta: ", resp.get_value())
+        # Now test calling with a int value, will be automatically converted to string
+        resp = self._sess.get_graph_meta(1)
+        assert resp.is_ok()
+        # Now test calling with a invalid value, will raise exception
+        with self.assertRaises(Exception) as context:
+            resp = self._sess.get_graph_meta([1,2,3])
+
 
     def runCypherQuery(self):
         query = "MATCH (n) RETURN COUNT(n);"
@@ -279,16 +293,18 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.create_procedure(self._graph_id, create_proc_request)
         assert resp.is_ok()
         print("create procedure: ", resp.get_value())
-    
+
     def createCppProcedure(self):
         self._cpp_proc_name = "test_procedure_cpp"
         # read strings from file ../../java/src/test/resources/sample_app.cc
-        app_path = os.path.join(os.path.dirname(__file__), "../../java/src/test/resources/sample_app.cc")
+        app_path = os.path.join(
+            os.path.dirname(__file__), "../../java/src/test/resources/sample_app.cc"
+        )
         if not os.path.exists(app_path):
             raise Exception("sample_app.cc not found")
         with open(app_path, "r") as f:
             app_content = f.read()
-            
+
         create_proc_request = CreateProcedureRequest(
             name=self._cpp_proc_name,
             description="test procedure",
@@ -311,7 +327,7 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.get_service_status()
         assert resp.is_ok()
         print("get service status: ", resp.get_value())
-    
+
     def restartOnNewGraph(self):
         original_graph_id = None
         status_res = self._sess.get_service_status()
@@ -344,6 +360,14 @@ class TestDriver(unittest.TestCase):
         status_res = self._sess.get_service_status()
         assert status_res.is_ok()
         print("get service status: ", status_res.get_value().status)
+        # If we don't stop service, delete graph will fail
+        delete_res = self._sess.delete_graph(new_graph_id)
+        assert not delete_res.is_ok()
+        delete_failure_msg = delete_res.get_status_message()
+        # expect "Graph is runnning" in the error message
+        print("delete graph failed: ", delete_failure_msg)
+        assert "Graph is running" in delete_failure_msg
+
         # stop
         print("stop service: ")
         stop_res = self._sess.stop_service()
@@ -382,14 +406,12 @@ class TestDriver(unittest.TestCase):
             query_name=self._cpp_proc_name,
             arguments=[
                 TypedValue(
-                    type=GSDataType(
-                        PrimitiveType(primitive_type="DT_SIGNED_INT32")
-                    ),
-                    value = 1
+                    type=GSDataType(PrimitiveType(primitive_type="DT_SIGNED_INT32")),
+                    value=1,
                 )
-            ]
+            ],
         )
-        resp = self._sess.call_procedure(graph_id = self._graph_id, params = req)
+        resp = self._sess.call_procedure(graph_id=self._graph_id, params=req)
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
 
@@ -398,21 +420,20 @@ class TestDriver(unittest.TestCase):
             query_name=self._cpp_proc_name,
             arguments=[
                 TypedValue(
-                    type=GSDataType(
-                        PrimitiveType(primitive_type="DT_SIGNED_INT32")
-                    ),
-                    value = 1
+                    type=GSDataType(PrimitiveType(primitive_type="DT_SIGNED_INT32")),
+                    value=1,
                 )
-            ]
+            ],
         )
-        resp = self._sess.call_procedure_current(params = req)
+        resp = self._sess.call_procedure_current(params=req)
         assert resp.is_ok()
         print("call procedure result: ", resp.get_value())
-    
+
     def createDriver(self):
         driver = Driver()
         sess = driver.getDefaultSession()
-        print("create driver: ", sess)     
+        print("create driver: ", sess)
+
 
 if __name__ == "__main__":
     unittest.main()

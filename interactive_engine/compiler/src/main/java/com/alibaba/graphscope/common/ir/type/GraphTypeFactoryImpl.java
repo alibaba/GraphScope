@@ -19,13 +19,17 @@ package com.alibaba.graphscope.common.ir.type;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     private final Configs configs;
@@ -75,8 +79,8 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     }
 
     public RelDataType createArbitraryMapType(
-            List<RelDataType> keyTypes, List<RelDataType> valueTypes, boolean isNullable) {
-        return new ArbitraryMapType(keyTypes, valueTypes, isNullable);
+            Map<RexNode, ArbitraryMapType.KeyValueType> keyValueTypeMap, boolean isNullable) {
+        return new ArbitraryMapType(keyValueTypeMap, isNullable);
     }
 
     @Override
@@ -98,44 +102,48 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     // return null
     private @Nullable RelDataType leastRestrictiveForArbitraryMapType(List<RelDataType> types) {
         boolean isNullable = false;
-        List<List<RelDataType>> leastKeyTypes = Lists.newArrayList();
-        List<List<RelDataType>> leastValueTypes = Lists.newArrayList();
+        Map<RexNode, List<ArbitraryMapType.KeyValueType>> leastKeyValueTypes = Maps.newHashMap();
         for (RelDataType type : types) {
             if (!(type instanceof ArbitraryMapType)) return null;
             ArbitraryMapType mapType = (ArbitraryMapType) type;
             if (mapType.isNullable()) isNullable = true;
-            if (leastKeyTypes.isEmpty() || leastValueTypes.isEmpty()) {
-                for (RelDataType keyType : mapType.getKeyTypes()) {
-                    leastKeyTypes.add(Lists.newArrayList(keyType));
-                }
-                for (RelDataType valueType : mapType.getValueTypes()) {
-                    leastValueTypes.add(Lists.newArrayList(valueType));
-                }
+            if (leastKeyValueTypes.isEmpty()) {
+                mapType.getKeyValueTypeMap()
+                        .forEach(
+                                (k, v) -> {
+                                    leastKeyValueTypes.put(k, Lists.newArrayList(v));
+                                });
             } else {
-                if (leastKeyTypes.size() != mapType.getKeyTypes().size()
-                        || leastValueTypes.size() != mapType.getValueTypes().size()) {
-                    return null;
-                }
-                for (int i = 0; i < leastKeyTypes.size(); i++) {
-                    leastKeyTypes.get(i).add(mapType.getKeyTypes().get(i));
-                }
-                for (int i = 0; i < leastValueTypes.size(); i++) {
-                    leastValueTypes.get(i).add(mapType.getValueTypes().get(i));
+                for (Map.Entry<RexNode, ArbitraryMapType.KeyValueType> entry :
+                        mapType.getKeyValueTypeMap().entrySet()) {
+                    List<ArbitraryMapType.KeyValueType> leastTypes =
+                            leastKeyValueTypes.get(entry.getKey());
+                    if (leastTypes == null) {
+                        return null;
+                    }
+                    leastTypes.add(entry.getValue());
                 }
             }
         }
-        List<RelDataType> mapKeyTypes = Lists.newArrayList();
-        for (List<RelDataType> leastKeyType : leastKeyTypes) {
-            RelDataType type = leastRestrictive(leastKeyType);
-            if (type == null) return null;
-            mapKeyTypes.add(type);
+        Map<RexNode, ArbitraryMapType.KeyValueType> leastKeyValueType = Maps.newHashMap();
+        for (Map.Entry<RexNode, List<ArbitraryMapType.KeyValueType>> entry :
+                leastKeyValueTypes.entrySet()) {
+            RelDataType leastKeyType =
+                    leastRestrictive(
+                            entry.getValue().stream()
+                                    .map(ArbitraryMapType.KeyValueType::getKey)
+                                    .collect(Collectors.toList()));
+            if (leastKeyType == null) return null;
+            RelDataType leastValueType =
+                    leastRestrictive(
+                            entry.getValue().stream()
+                                    .map(ArbitraryMapType.KeyValueType::getValue)
+                                    .collect(Collectors.toList()));
+            if (leastValueType == null) return null;
+            leastKeyValueType.put(
+                    entry.getKey(),
+                    new ArbitraryMapType.KeyValueType(leastKeyType, leastValueType));
         }
-        List<RelDataType> mapValueTypes = Lists.newArrayList();
-        for (List<RelDataType> leastValueType : leastValueTypes) {
-            RelDataType type = leastRestrictive(leastValueType);
-            if (type == null) return null;
-            mapValueTypes.add(type);
-        }
-        return createArbitraryMapType(mapKeyTypes, mapValueTypes, isNullable);
+        return createArbitraryMapType(leastKeyValueType, isNullable);
     }
 }

@@ -310,6 +310,8 @@ class ClientWrapper(object):
             if (
                 "source_vertex_mappings" in mapping
                 and "destination_vertex_mappings" in mapping
+                and mapping["source_vertex_mappings"] is not None
+                and mapping["destination_vertex_mappings"] is not None
             ):
                 for column_mapping in itertools.chain(
                     mapping["source_vertex_mappings"],

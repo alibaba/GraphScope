@@ -115,7 +115,5 @@ class VertexMapping(Model):
         :param column_mappings: The column_mappings of this VertexMapping.
         :type column_mappings: List[ColumnMapping]
         """
-        if column_mappings is None:
-            raise ValueError("Invalid value for `column_mappings`, must not be `None`")  # noqa: E501
 
         self._column_mappings = column_mappings

@@ -1,4 +1,2 @@
-MATCH (p:Paper)-[:WorkOn]->(:Algorithm)-[:Belong]->(ca:Category)
-WITH distinct ca, count(p) as paperCount
-RETURN ca.category, paperCount
-ORDER BY paperCount desc;
+MATCH (p:Paper)
+RETURN COUNT(p) AS cnt;
