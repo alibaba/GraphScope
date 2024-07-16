@@ -55,7 +55,6 @@ public class ExtendWeightEstimator {
      * @return
      */
     public double estimate(List<PatternEdge> edges, PatternVertex target) {
-        if (edges.size() == 1) return edgeCostEstimator.estimate(null, edges.get(0), target);
         // sort edges by their weight in ascending order
         Collections.sort(
                 edges, Comparator.comparingDouble((PatternEdge edge) -> estimate(edge, target)));
@@ -67,7 +66,10 @@ public class ExtendWeightEstimator {
             pattern.addVertex(edge.getDstVertex());
             pattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
             extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
-            double weight = handler.handle(pattern);
+            double weight =
+                    (edges.size() == 1)
+                            ? edgeCostEstimator.estimate(null, edges.get(0), target)
+                            : handler.handle(pattern);
             for (PatternVertex vertex : extendFromVertices) {
                 weight /= handler.handle(new Pattern(vertex));
             }

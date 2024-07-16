@@ -57,7 +57,8 @@ public abstract class EdgeCostEstimator<T> {
                                 : new FuzzyPatternVertex(target.getVertexTypeIds(), target.getId());
             }
             double edgeSelectivity = edge.getElementDetails().getSelectivity();
-            if (Double.compare(edgeSelectivity, 1.0d) != 0) {
+            if (Double.compare(targetSelectivity, 1.0d) != 0
+                    || Double.compare(edgeSelectivity, 1.0d) != 0) {
                 PatternVertex edgeSrc = (src == edge.getSrcVertex()) ? src : target;
                 PatternVertex edgeDst = (src == edge.getSrcVertex()) ? target : src;
                 edge =
