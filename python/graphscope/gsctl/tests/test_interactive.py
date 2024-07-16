@@ -469,5 +469,9 @@ class TestE2EInteractive(object):
             else:
                 assert s.status == "Stopped"
 
+    # Test whether the protocol-generated code is included.
+    def test_import_proto_module(self):
+        from gs_interactive.client.generated.results_pb2 import CollectiveResults
+
     def teardown_class(self):
         disconnect_coordinator()
