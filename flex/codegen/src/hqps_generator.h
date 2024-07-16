@@ -58,7 +58,6 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "  using Engine = SyncEngine<%4%>;\n"
     "  using label_id_t = typename %4%::label_id_t;\n"
     "  using vertex_id_t = typename %4%::vertex_id_t;\n"
-    "  using gid_t = typename %4%::gid_t;\n"
     " // constructor\n"
     "  %3%() {}\n"
     "// Query function for query class\n"
