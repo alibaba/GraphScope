@@ -12,8 +12,15 @@ public class KuzuGraphResult implements GraphResultSet {
         this.result = result;
     }
 
+    public KuzuGraphResult() {
+        this.result = null;
+    }
+
     @Override
     public boolean hasNext() {
+        if (result == null) {
+            return false;
+        }
         try {
             boolean hasNext = result.hasNext();
             if (!hasNext) {
@@ -28,6 +35,9 @@ public class KuzuGraphResult implements GraphResultSet {
 
     @Override
     public Object next() {
+        if (result == null) {
+            return null;
+        }
         try {
             KuzuFlatTuple tuple = result.getNext();
             String tupleString = tuple.toString();

@@ -19,7 +19,7 @@ public class KuzuGraphClient implements GraphClient {
             return new KuzuGraphResult(conn.query(query));
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new KuzuGraphResult();
         }
     }
 
