@@ -52,10 +52,13 @@ docs/source/reference/
 docs/reference/generated/
 docs/reference/networkx/generated/
 docs/_build/
-docs/flex/interactive/development/java
-!docs/flex/interactive/development/java/java_sdk.mod
-docs/flex/interactive/development/python
-!docs/flex/interactive/development/python/python_sdk.mod
+docs/flex/interactive/development/java/*
+!docs/flex/interactive/development/java/*Api.md
+!docs/flex/interactive/development/java/java_sdk.md
+docs/flex/interactive/development/python/*
+!docs/flex/interactive/development/python/*Api.md
+!docs/flex/interactive/development/python/python_sdk.md
+docs/flex/interactive/development/restful_api.html
 
 analytical_engine/build/
 

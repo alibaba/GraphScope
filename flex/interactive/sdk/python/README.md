@@ -39,7 +39,7 @@ Execute `pytest` to run the tests.
 First, install and start the interactive service via [Interactive Getting Started](https://graphscope.io/docs/flex/interactive/getting_started), and you will get the endpoint for the Interactive service.
 
 ```bash
-Interactive Service is listening at ${INTERACTIVE_ENDPOINT}.
+Interactive Service is listening at ${INTERACTIVE_ADMIN_ENDPOINT}.
 ```
 
 Then, connect to the interactive endpoint, and try to run a simple query with following code.

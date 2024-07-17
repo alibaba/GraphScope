@@ -34,11 +34,12 @@ REQUIRES = [
     "protobuf >= 3.17.3",
 ]
 
-import os
-import sys
-import subprocess
 import glob
+import os
+import subprocess
+import sys
 from distutils.cmd import Command
+
 
 class BuildProto(Command):
     description = "build protobuf file"
@@ -52,7 +53,7 @@ class BuildProto(Command):
 
     def run(self):
         proto_path = "../../../../interactive_engine/executor/ir/proto/"
-        proto_files = glob.glob(os.path.join(proto_path, '*.proto'))
+        proto_files = glob.glob(os.path.join(proto_path, "*.proto"))
         output_dir = "./gs_interactive/client/generated/"
         os.makedirs(output_dir, exist_ok=True)
         for proto_file in proto_files:
@@ -71,6 +72,7 @@ class BuildProto(Command):
                 stderr=subprocess.STDOUT,
             )
 
+
 setup(
     name=NAME,
     version=VERSION,
@@ -88,5 +90,5 @@ setup(
     This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrive.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query. 
     """,  # noqa: E501
     package_data={"gs_interactive": ["py.typed"]},
-    cmdclass={"build_proto": BuildProto}, 
+    cmdclass={"build_proto": BuildProto},
 )

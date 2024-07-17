@@ -99,7 +99,7 @@ pub struct EdgeMeta<G> {
 }
 
 /// To record the metadata of a column
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ColumnMeta {
     /// the name of the column
     pub name: String,
@@ -191,7 +191,6 @@ pub fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(
             }
         }
     }
-    debug!("Parse properties successfully: {:?}", properties);
 
     Ok(properties)
 }
