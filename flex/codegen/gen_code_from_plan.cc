@@ -120,6 +120,10 @@ int main(int argc, char** argv) {
       "output,o", bpo::value<std::string>(), "output file path")(
       "graph,g", bpo::value<std::string>()->default_value(""),
       "graph schema path");
+  google::InitGoogleLogging(argv[0]);
+  FLAGS_logtostderr =
+      false;  // we don't want to log stderr, since interactive
+              // server will try to catch the error log from stderr.
 
   bpo::variables_map vm;
   bpo::store(bpo::command_line_parser(argc, argv).options(desc).run(), vm);

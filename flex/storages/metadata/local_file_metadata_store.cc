@@ -99,7 +99,6 @@ LocalFileMetadataStore::GetAllMeta(const meta_kind_t& meta_kind) {
         continue;
       }
       auto id_str = file_name.substr(strlen(META_FILE_PREFIX));
-      VLOG(10) << "Reading meta file: " << file_name;
       auto meta_file = get_meta_file(meta_kind, id_str);
       auto meta_value_res = read_file(meta_file);
       if (meta_value_res.ok()) {
