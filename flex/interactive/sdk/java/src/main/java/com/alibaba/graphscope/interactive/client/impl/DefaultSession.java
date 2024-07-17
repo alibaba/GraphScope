@@ -30,6 +30,11 @@ import com.alibaba.graphscope.interactive.client.utils.InputFormat;
 import com.alibaba.graphscope.interactive.models.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -37,12 +42,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
 
 /***
  * A default implementation of the GraphScope interactive session interface.
@@ -749,8 +748,9 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            String localVarPath = "/v1/graph/{graph_id}/query"
-                    .replace("{" + "graph_id" + "}", graphId.toString());
+            String localVarPath =
+                    "/v1/graph/{graph_id}/query"
+                            .replace("{" + "graph_id" + "}", graphId.toString());
             String uri = queryClient.getBasePath() + localVarPath;
             OkHttpClient rawClient = queryClient.getHttpClient();
             byte[] bs = appendFormatByte(request, InputFormat.CPP_ENCODER);
@@ -840,8 +840,9 @@ public class DefaultSession implements Session {
             String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         try {
             // For adhoc query, we don't append format byte.
-            String localVarPath = "/v1/graph/{graph_id}/adhoc_query"
-                    .replace("{" + "graph_id" + "}", graphId.toString());
+            String localVarPath =
+                    "/v1/graph/{graph_id}/adhoc_query"
+                            .replace("{" + "graph_id" + "}", graphId.toString());
             String uri = queryClient.getBasePath() + localVarPath;
             OkHttpClient rawClient = queryClient.getHttpClient();
             byte[] bs = physicalPlan.toByteArray();
@@ -851,7 +852,8 @@ public class DefaultSession implements Session {
             if (response.code() != 200) {
                 throw new ApiException(response.code(), "Failed to call procedure");
             }
-            IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(response.body().bytes());
+            IrResult.CollectiveResults results =
+                    IrResult.CollectiveResults.parseFrom(response.body().bytes());
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -859,7 +861,7 @@ public class DefaultSession implements Session {
         } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
             return Result.error(e.getMessage());
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return Result.error(e.getMessage());
         }
@@ -902,7 +904,8 @@ public class DefaultSession implements Session {
             if (response.code() != 200) {
                 throw new ApiException(response.code(), "Failed to call procedure");
             }
-            IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(response.body().bytes());
+            IrResult.CollectiveResults results =
+                    IrResult.CollectiveResults.parseFrom(response.body().bytes());
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
