@@ -7,7 +7,7 @@ public class KuzuGraphResult implements GraphResultSet {
 
     KuzuQueryResult result;
 
-    public KuzuGraphResult( KuzuQueryResult result) {
+    public KuzuGraphResult(KuzuQueryResult result) {
         this.result = result;
     }
 
@@ -30,6 +30,4 @@ public class KuzuGraphResult implements GraphResultSet {
             return null;
         }
     }
-
-    
 }

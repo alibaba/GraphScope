@@ -20,18 +20,15 @@ public class KuzuGraphClient implements GraphClient {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
-        } 
-        
+        }
     }
 
     @Override
     public void close() {
-       try {
-           conn.destroy();
-       } catch (Exception e) {
-           e.printStackTrace();
-       }
+        try {
+            conn.destroy();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-
-    
 }

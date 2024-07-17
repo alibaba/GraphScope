@@ -76,8 +76,7 @@ public class InteractiveBenchmark {
                     } else if ("kuzu".equalsIgnoreCase(clientOpt)) {
                         // for kuzu, it is the db name
                         this.client = new KuzuGraphClient(endpoint);
-                    }
-                    else {
+                    } else {
                         throw new IllegalArgumentException(
                                 "Unsupported query language: " + clientOpt);
                     }
