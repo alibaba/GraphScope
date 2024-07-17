@@ -85,28 +85,28 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
         if (patternSize <= 1) {
             return edges;
         }
-        if (Utils.canLookUpFromGlogue(pattern, config.getMaxPatternSizeInGlogue())) {
-            Set<GlogueEdge> glogueEdges = mq.getGlogueEdges(graphPattern);
-            glogueEdges.forEach(
-                    k ->
-                            edges.add(
-                                    new GraphExtendIntersect(
-                                            graphPattern.getCluster(),
-                                            graphPattern.getTraitSet(),
-                                            new GraphPattern(
-                                                    graphPattern.getCluster(),
-                                                    graphPattern.getTraitSet(),
-                                                    k.getSrcPattern()),
-                                            (GlogueExtendIntersectEdge) k)));
-        } else {
-            PruningStrategy pruningStrategy = new PruningStrategy(pattern);
-            for (PatternVertex vertex : pattern.getVertexSet()) {
-                if (pruningStrategy.toPrune(vertex)) {
-                    continue;
-                }
-                edges.add(createExtendIntersect(graphPattern, vertex, estimator));
+        //        if (Utils.canLookUpFromGlogue(pattern, config.getMaxPatternSizeInGlogue())) {
+        //            Set<GlogueEdge> glogueEdges = mq.getGlogueEdges(graphPattern);
+        //            glogueEdges.forEach(
+        //                    k ->
+        //                            edges.add(
+        //                                    new GraphExtendIntersect(
+        //                                            graphPattern.getCluster(),
+        //                                            graphPattern.getTraitSet(),
+        //                                            new GraphPattern(
+        //                                                    graphPattern.getCluster(),
+        //                                                    graphPattern.getTraitSet(),
+        //                                                    k.getSrcPattern()),
+        //                                            (GlogueExtendIntersectEdge) k)));
+        //        } else {
+        PruningStrategy pruningStrategy = new PruningStrategy(pattern);
+        for (PatternVertex vertex : pattern.getVertexSet()) {
+            if (pruningStrategy.toPrune(vertex)) {
+                continue;
             }
+            edges.add(createExtendIntersect(graphPattern, vertex, estimator));
         }
+        //        }
         Collections.sort(edges, comparator.getEdgeComparator());
         return edges;
     }

@@ -22,7 +22,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirec
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.groot.common.schema.api.*;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import org.jgrapht.Graph;
@@ -31,7 +30,7 @@ import org.jgrapht.graph.DirectedPseudograph;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GlogueSchema {
     private Graph<Integer, EdgeTypeId> schemaGraph;
@@ -129,43 +128,50 @@ public class GlogueSchema {
 
     public Double getLabelConstraintsDeltaCost(PatternEdge edge, PatternVertex target) {
         PatternDirection direction = Utils.getExtendDirection(edge, target);
-        PatternVertex src = Utils.getExtendFromVertex(edge, target);
         double deltaCost = 0.0d;
         if (direction != PatternDirection.IN) {
-            deltaCost += getLabelConstraintsDeltaCost(src, edge, PatternDirection.OUT);
+            deltaCost += getLabelConstraintsDeltaCost(edge, PatternDirection.OUT);
         }
         if (direction != PatternDirection.OUT) {
-            deltaCost += getLabelConstraintsDeltaCost(src, edge, PatternDirection.IN);
+            deltaCost += getLabelConstraintsDeltaCost(edge, PatternDirection.IN);
         }
         return deltaCost;
     }
 
-    private Double getLabelConstraintsDeltaCost(
-            PatternVertex src, PatternEdge edge, PatternDirection direction) {
-        List<Integer> endIds = Lists.newArrayList();
-        AtomicDouble edgeCount = new AtomicDouble(0.0d);
-        edgeTypeCardinality.forEach(
-                (k, v) -> {
-                    switch (direction) {
-                        case OUT:
-                            if (src.getVertexTypeIds().contains(k.getSrcLabelId())
-                                    && edge.getEdgeTypeIds().contains(k.getEdgeLabelId())) {
-                                endIds.add(k.getDstLabelId());
-                                edgeCount.set(edgeCount.doubleValue() + v);
+    private Double getLabelConstraintsDeltaCost(PatternEdge edge, PatternDirection direction) {
+        AtomicDouble deltaCost = new AtomicDouble(0.0d);
+        edge.getEdgeTypeIds()
+                .forEach(
+                        edgeTypeId -> {
+                            AtomicDouble edgeDeltaCost = new AtomicDouble(0.0d);
+                            AtomicInteger endIdCounter = new AtomicInteger(0);
+                            edgeTypeCardinality.forEach(
+                                    (k, v) -> {
+                                        switch (direction) {
+                                            case OUT:
+                                                if (edgeTypeId.getSrcLabelId() == k.getSrcLabelId()
+                                                        && edgeTypeId.getEdgeLabelId()
+                                                                == k.getEdgeLabelId()) {
+                                                    edgeDeltaCost.addAndGet(v);
+                                                    endIdCounter.addAndGet(1);
+                                                }
+                                                break;
+                                            case IN:
+                                                if (edgeTypeId.getDstLabelId() == k.getDstLabelId()
+                                                        && edgeTypeId.getEdgeLabelId()
+                                                                == k.getEdgeLabelId()) {
+                                                    edgeDeltaCost.addAndGet(v);
+                                                    endIdCounter.addAndGet(1);
+                                                }
+                                                break;
+                                            default:
+                                        }
+                                    });
+                            if (endIdCounter.get() > 1) {
+                                deltaCost.addAndGet(edgeDeltaCost.doubleValue());
                             }
-                            break;
-                        case IN:
-                            if (src.getVertexTypeIds().contains(k.getDstLabelId())
-                                    && edge.getEdgeTypeIds().contains(k.getEdgeLabelId())) {
-                                endIds.add(k.getSrcLabelId());
-                                edgeCount.set(edgeCount.doubleValue() + v);
-                            }
-                            break;
-                        default:
-                    }
-                });
-        List<Integer> dedupEndIds = endIds.stream().distinct().collect(Collectors.toList());
-        return (dedupEndIds.size() <= 1) ? 0.0d : edgeCount.doubleValue();
+                        });
+        return deltaCost.get();
     }
 
     public List<Integer> getVertexTypes() {
