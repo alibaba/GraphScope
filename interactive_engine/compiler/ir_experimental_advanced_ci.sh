@@ -34,7 +34,7 @@ RUST_LOG=info DATA_PATH=/tmp/gstest/ldbc_graph_exp_bin PARTITION_ID=0 ./start_rp
 cd ${base_dir}/../executor/ir/target/release &&
 RUST_LOG=info DATA_PATH=/tmp/gstest/ldbc_graph_exp_bin PARTITION_ID=1 ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config/distributed/server_1 &
 sleep 10
-cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json gremlin.script.language.name=antlr_gremlin_calcite graph.physical.opt=proto graph.planner.opt=CBO graph.statistics=src/main/resources/statistics/ldbc1_statistics.json pegasus.hosts:=127.0.0.1:1234,127.0.0.1:1235 graph.planner.rules=NotMatchToAntiJoinRule,FilterIntoJoinRule,FilterMatchRule,ExtendIntersectRule,ExpandGetVFusionRule &
+cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json gremlin.script.language.name=antlr_gremlin_calcite graph.physical.opt=proto graph.planner.opt=CBO graph.statistics=src/test/resources/statistics/ldbc1_statistics.json pegasus.hosts:=127.0.0.1:1234,127.0.0.1:1235 graph.planner.rules=NotMatchToAntiJoinRule,FilterIntoJoinRule,FilterMatchRule,ExtendIntersectRule,ExpandGetVFusionRule &
 sleep 5s
 cd ${base_dir} && make pattern_test && make ldbc_test && make simple_test
 exit_code=$?
