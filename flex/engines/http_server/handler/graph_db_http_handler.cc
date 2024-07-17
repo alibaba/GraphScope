@@ -81,12 +81,6 @@ namespace server {
 
 class stored_proc_handler : public StoppableHandler {
  public:
-  // extra headers
-  static constexpr const char* INTERACTIVE_REQUEST_FORMAT =
-      "X-Interactive-Request-Format";
-  static constexpr const char* PROTOCOL_FORMAT = "proto";
-  static constexpr const char* JSON_FORMAT = "json";
-  static constexpr const char* ENCODER_FORMAT = "encoder";
   stored_proc_handler(uint32_t init_group_id, uint32_t max_group_id,
                       uint32_t group_inc_step, uint32_t shard_concurrency)
       : cur_group_id_(init_group_id),
@@ -168,11 +162,13 @@ class stored_proc_handler : public StoppableHandler {
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
     // TODO(zhanglei): choose read or write based on the request, after the
     // read/write info is supported in physical plan
-    char last_byte;
+    uint8_t last_byte;
     if (req->content.size() <= 0) {
       // read last byte and get the format info from the byte.
       last_byte = req->content.back();
-      if (last_byte > gs::GraphDBSession::kCypherInternalProcedure) {
+      if (last_byte >
+          static_cast<uint8_t>(
+              gs::GraphDBSession::InputFormat::kCypherInternalProcedure)) {
         LOG(ERROR) << "Unsupported request format: " << (int) last_byte;
         rep->set_status(
             seastar::httpd::reply::status_type::internal_server_error);
@@ -184,8 +180,9 @@ class stored_proc_handler : public StoppableHandler {
     } else {
       // default is treated as encoder.
       VLOG(10) << "No format byte is given, use default format: encoder";
-      req->content.append("\x00", 1);
-      last_byte = gs::GraphDBSession::kCppEncoder;
+      req->content.append(gs::GraphDBSession::kCppEncoderStr, 1);
+      last_byte =
+          static_cast<uint8_t>(gs::GraphDBSession::InputFormat::kCppEncoder);
     }
     if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
       // TODO(zhanglei): get from graph_db.
@@ -221,7 +218,8 @@ class stored_proc_handler : public StoppableHandler {
                this, outer_span = outer_span
 #endif  // HAVE_OPENTELEMETRY_CPP
     ](auto&& output) {
-          if (last_byte == gs::GraphDBSession::kCppEncoder) {
+          if (last_byte == static_cast<uint8_t>(
+                               gs::GraphDBSession::InputFormat::kCppEncoder)) {
             return seastar::make_ready_future<query_param>(
                 std::move(output.content));
           } else {
@@ -476,7 +474,7 @@ class adhoc_query_handler : public StoppableHandler {
         //  read/write info is supported in physical plan
         // The content contains the path to dynamic library
           param.content.append(gs::Schema::HQPS_ADHOC_WRITE_PLUGIN_ID_STR, 1);
-          // param.content.append(gs::GraphDBSession::kCypherInternalAdhoc, 1);
+          param.content.append(gs::GraphDBSession::kCypherInternalAdhocStr, 1);
           return executor_refs_[dst_executor]
               .run_graph_db_query(query_param{std::move(param.content)})
               .then([
@@ -698,7 +696,7 @@ seastar::future<> graph_db_http_handler::set_routes() {
       r.add(rule_proc, seastar::httpd::operation_type::POST);
 
       r.add(seastar::httpd::operation_type::POST,
-            seastar::httpd::url("/interactive/adhoc_query"),
+            seastar::httpd::url("/v1/graph/current/adhoc_query"),
             adhoc_query_handler_);
     }
 #endif  // BUILD_HQPS

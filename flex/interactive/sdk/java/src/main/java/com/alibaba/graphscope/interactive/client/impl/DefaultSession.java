@@ -29,7 +29,6 @@ import com.alibaba.graphscope.interactive.client.common.Status;
 import com.alibaba.graphscope.interactive.client.utils.InputFormat;
 import com.alibaba.graphscope.interactive.models.*;
 import com.google.protobuf.InvalidProtocolBufferException;
-import okhttp3.OkHttpClient;
 
 import java.io.Closeable;
 import java.io.File;
@@ -561,14 +560,14 @@ public class DefaultSession implements Session {
         }
     }
 
-    ////////////////////////////////Submitting Queries//////////////////////////////////////
+    //////////////////////////////// Submitting Queries//////////////////////////////////////
     @Override
-    public Result<IrResult.CollectiveResults> callProcedure(
-            String graphId, QueryRequest request) {
+    public Result<IrResult.CollectiveResults> callProcedure(String graphId, QueryRequest request) {
         try {
             ApiResponse<byte[]> response =
                     queryApi.callProcWithHttpInfo(
-                            graphId, appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON));
+                            graphId,
+                            appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON));
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -586,12 +585,16 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(String graphId, QueryRequest request) {
+    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
+            String graphId, QueryRequest request) {
         CompletableFuture<Result<IrResult.CollectiveResults>> future = new CompletableFuture<>();
         ApiCallback<byte[]> callBack = new CollectiveResultsCallback(future);
         try {
-            okhttp3.Call call = queryApi.callProcAsync(graphId, appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON), callBack);
-            System.out.println("Submitted call " + call);
+            okhttp3.Call call =
+                    queryApi.callProcAsync(
+                            graphId,
+                            appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON),
+                            callBack);
         } catch (ApiException e) {
             e.printStackTrace();
             future.complete(Result.fromException(e));
@@ -625,12 +628,15 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(QueryRequest request) {
+    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
+            QueryRequest request) {
         CompletableFuture<Result<IrResult.CollectiveResults>> future = new CompletableFuture<>();
         ApiCallback<byte[]> callBack = new CollectiveResultsCallback(future);
         try {
-            okhttp3.Call call = queryApi.callProcCurrentAsync(appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON), callBack);
-            System.out.println("Submitted call " + call);
+            okhttp3.Call call =
+                    queryApi.callProcCurrentAsync(
+                            appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON),
+                            callBack);
         } catch (ApiException e) {
             e.printStackTrace();
             future.complete(Result.fromException(e));
@@ -639,13 +645,15 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<IrResult.CollectiveResults> callProcedure(String graphId, StoredProcedure.Query request) {
+    public Result<IrResult.CollectiveResults> callProcedure(
+            String graphId, StoredProcedure.Query request) {
         try {
             // Interactive currently support four type of inputformat, see
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 1 to denote the input format is in JSON format.
             ApiResponse<byte[]> response =
-                    queryApi.callProcWithHttpInfo(graphId,
+                    queryApi.callProcWithHttpInfo(
+                            graphId,
                             appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE));
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
@@ -664,12 +672,16 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(String graphId, StoredProcedure.Query request) {
+    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
+            String graphId, StoredProcedure.Query request) {
         CompletableFuture<Result<IrResult.CollectiveResults>> future = new CompletableFuture<>();
         ApiCallback<byte[]> callBack = new CollectiveResultsCallback(future);
         try {
-            okhttp3.Call call = queryApi.callProcAsync(graphId, appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE), callBack);
-            System.out.println("Submitted call " + call);
+            okhttp3.Call call =
+                    queryApi.callProcAsync(
+                            graphId,
+                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE),
+                            callBack);
         } catch (ApiException e) {
             e.printStackTrace();
             future.complete(Result.fromException(e));
@@ -703,12 +715,15 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(StoredProcedure.Query request) {
+    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
+            StoredProcedure.Query request) {
         CompletableFuture<Result<IrResult.CollectiveResults>> future = new CompletableFuture<>();
         ApiCallback<byte[]> callBack = new CollectiveResultsCallback(future);
         try {
-            okhttp3.Call call = queryApi.callProcCurrentAsync(appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE), callBack);
-            System.out.println("Submitted call " + call);
+            okhttp3.Call call =
+                    queryApi.callProcCurrentAsync(
+                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE),
+                            callBack);
         } catch (ApiException e) {
             e.printStackTrace();
             future.complete(Result.fromException(e));
@@ -728,7 +743,8 @@ public class DefaultSession implements Session {
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
             ApiResponse<byte[]> response =
-                    queryApi.callProcWithHttpInfo(graphId, appendFormatByte(request, InputFormat.CPP_ENCODER));
+                    queryApi.callProcWithHttpInfo(
+                            graphId, appendFormatByte(request, InputFormat.CPP_ENCODER));
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -745,8 +761,9 @@ public class DefaultSession implements Session {
         CompletableFuture<Result<byte[]>> future = new CompletableFuture<>();
         ApiCallback<byte[]> callBack = new RawBytesCallback(future);
         try {
-            okhttp3.Call call = queryApi.callProcAsync(graphId, appendFormatByte(request, InputFormat.CPP_ENCODER), callBack);
-            System.out.println("Submitted call " + call);
+            okhttp3.Call call =
+                    queryApi.callProcAsync(
+                            graphId, appendFormatByte(request, InputFormat.CPP_ENCODER), callBack);
         } catch (ApiException e) {
             e.printStackTrace();
             future.complete(Result.fromException(e));
@@ -762,7 +779,8 @@ public class DefaultSession implements Session {
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
             ApiResponse<byte[]> response =
-                    queryApi.callProcCurrentWithHttpInfo(appendFormatByte(request, InputFormat.CPP_ENCODER));
+                    queryApi.callProcCurrentWithHttpInfo(
+                            appendFormatByte(request, InputFormat.CPP_ENCODER));
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -779,8 +797,9 @@ public class DefaultSession implements Session {
         CompletableFuture<Result<byte[]>> future = new CompletableFuture<>();
         ApiCallback<byte[]> callBack = new RawBytesCallback(future);
         try {
-            okhttp3.Call call = queryApi.callProcCurrentAsync(appendFormatByte(request, InputFormat.CPP_ENCODER), callBack);
-            System.out.println("Submitted call " + call);
+            okhttp3.Call call =
+                    queryApi.callProcCurrentAsync(
+                            appendFormatByte(request, InputFormat.CPP_ENCODER), callBack);
         } catch (ApiException e) {
             e.printStackTrace();
             future.complete(Result.fromException(e));
@@ -796,10 +815,12 @@ public class DefaultSession implements Session {
      * @return the results.
      */
     @Override
-    public Result<IrResult.CollectiveResults> runAdhocQuery(String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+    public Result<IrResult.CollectiveResults> runAdhocQuery(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         try {
+            // For adhoc query, we don't append format byte.
             ApiResponse<byte[]> response =
-                    queryApi.runAdhocWithHttpInfo(graphId, appendFormatByte(physicalPlan.toByteArray(), InputFormat.CYPHER_ADHOC));
+                    queryApi.runAdhocWithHttpInfo(graphId, physicalPlan.toByteArray());
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -810,20 +831,21 @@ public class DefaultSession implements Session {
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);
-        }
-        catch (InvalidProtocolBufferException e) {
+        } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
             return Result.error(e.getMessage());
         }
     }
 
     @Override
-    public CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsync(String graphId,GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+    public CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsync(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         CompletableFuture<Result<IrResult.CollectiveResults>> future = new CompletableFuture<>();
         ApiCallback<byte[]> callBack = new CollectiveResultsCallback(future);
         try {
-            okhttp3.Call call = queryApi.runAdhocAsync(graphId, appendFormatByte(physicalPlan.toByteArray(), InputFormat.CYPHER_ADHOC), callBack);
-            System.out.println("Submitted call " + call);
+            // For adhoc query, we don't append format byte.
+            okhttp3.Call call =
+                    queryApi.runAdhocAsync(graphId, physicalPlan.toByteArray(), callBack);
         } catch (ApiException e) {
             e.printStackTrace();
             future.complete(Result.fromException(e));
@@ -838,10 +860,12 @@ public class DefaultSession implements Session {
      * @return the results.
      */
     @Override
-    public Result<IrResult.CollectiveResults> runAdhocQuery(GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+    public Result<IrResult.CollectiveResults> runAdhocQuery(
+            GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         try {
+            // For adhoc query, we don't append format byte.
             ApiResponse<byte[]> response =
-                    queryApi.runAdhocCurrentWithHttpInfo(appendFormatByte(physicalPlan.toByteArray(), InputFormat.CYPHER_ADHOC));
+                    queryApi.runAdhocCurrentWithHttpInfo(physicalPlan.toByteArray());
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -852,20 +876,20 @@ public class DefaultSession implements Session {
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);
-        }
-        catch (InvalidProtocolBufferException e) {
+        } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
             return Result.error(e.getMessage());
         }
     }
 
     @Override
-    public CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsync(GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+    public CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsync(
+            GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         CompletableFuture<Result<IrResult.CollectiveResults>> future = new CompletableFuture<>();
         ApiCallback<byte[]> callBack = new CollectiveResultsCallback(future);
         try {
-            okhttp3.Call call = queryApi.runAdhocCurrentAsync(appendFormatByte(physicalPlan.toByteArray(), InputFormat.CYPHER_ADHOC), callBack);
-            System.out.println("Submitted call " + call);
+            // For adhoc query, we don't append format byte.
+            okhttp3.Call call = queryApi.runAdhocCurrentAsync(physicalPlan.toByteArray(), callBack);
         } catch (ApiException e) {
             e.printStackTrace();
             future.complete(Result.fromException(e));
@@ -1029,7 +1053,6 @@ public class DefaultSession implements Session {
         }
     }
 
-
     private byte[] appendFormatByte(byte[] payload, InputFormat inputFormat) {
         byte[] newBytes = new byte[payload.length + 1];
         if (payload.length > 0) {
@@ -1041,6 +1064,7 @@ public class DefaultSession implements Session {
 
     private static class CollectiveResultsCallback implements ApiCallback<byte[]> {
         private CompletableFuture<Result<IrResult.CollectiveResults>> future;
+
         CollectiveResultsCallback(CompletableFuture<Result<IrResult.CollectiveResults>> future) {
             this.future = future;
         }
@@ -1053,7 +1077,8 @@ public class DefaultSession implements Session {
          * @param responseHeaders Headers of the response if available, otherwise it would be null
          */
         @Override
-        public void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
+        public void onFailure(
+                ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
             future.complete(Result.fromException(e));
         }
 
@@ -1065,14 +1090,17 @@ public class DefaultSession implements Session {
          * @param responseHeaders Headers of the response
          */
         @Override
-        public void onSuccess(byte[] result, int statusCode, Map<String, List<String>> responseHeaders) {
+        public void onSuccess(
+                byte[] result, int statusCode, Map<String, List<String>> responseHeaders) {
             try {
-                IrResult.CollectiveResults results =
-                        IrResult.CollectiveResults.parseFrom(result);
+                IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(result);
                 future.complete(new Result<>(results));
             } catch (InvalidProtocolBufferException e) {
                 e.printStackTrace();
-                future.complete(Result.error("Error when deserialize response to collective results" + e.getMessage()));
+                future.complete(
+                        Result.error(
+                                "Error when deserialize response to collective results"
+                                        + e.getMessage()));
             }
         }
 
@@ -1084,9 +1112,7 @@ public class DefaultSession implements Session {
          * @param done          write end
          */
         @Override
-        public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {
-
-        }
+        public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {}
 
         /**
          * This is called when the API download processing.
@@ -1096,14 +1122,13 @@ public class DefaultSession implements Session {
          * @param done          Read end
          */
         @Override
-        public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {
-
-        }
+        public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {}
     }
 
     private static class RawBytesCallback implements ApiCallback<byte[]> {
         private CompletableFuture<Result<byte[]>> future;
-        public RawBytesCallback(CompletableFuture<Result<byte[]>> future){
+
+        public RawBytesCallback(CompletableFuture<Result<byte[]>> future) {
             this.future = future;
         }
         /**
@@ -1114,7 +1139,8 @@ public class DefaultSession implements Session {
          * @param responseHeaders Headers of the response if available, otherwise it would be null
          */
         @Override
-        public void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
+        public void onFailure(
+                ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
             future.complete(Result.fromException(e));
         }
 
@@ -1126,7 +1152,8 @@ public class DefaultSession implements Session {
          * @param responseHeaders Headers of the response
          */
         @Override
-        public void onSuccess(byte[] result, int statusCode, Map<String, List<String>> responseHeaders) {
+        public void onSuccess(
+                byte[] result, int statusCode, Map<String, List<String>> responseHeaders) {
             future.complete(Result.ok(result));
         }
 
@@ -1138,9 +1165,7 @@ public class DefaultSession implements Session {
          * @param done          write end
          */
         @Override
-        public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {
-
-        }
+        public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {}
 
         /**
          * This is called when the API download processing.
@@ -1150,8 +1175,6 @@ public class DefaultSession implements Session {
          * @param done          Read end
          */
         @Override
-        public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {
-
-        }
+        public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {}
     }
 }

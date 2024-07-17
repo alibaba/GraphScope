@@ -31,7 +31,7 @@ from gs_interactive.api_client import ApiClient
 from gs_interactive.client.result import Result
 from gs_interactive.configuration import Configuration
 from gs_interactive.models import *
-from gs_interactive.client.utils import append_format_byte
+from gs_interactive.client.utils import append_format_byte, InputFormat
 from gs_interactive.client.generated.results_pb2 import CollectiveResults
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -532,7 +532,7 @@ class DefaultSession(Session):
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
-            response = self._query_api.proc_call_with_http_info(
+            response = self._query_api.call_proc_with_http_info(
                 graph_id = graph_id, 
                 body=append_format_byte(params.to_json(), InputFormat.CYPHER_JSON.value)
             )
@@ -551,7 +551,7 @@ class DefaultSession(Session):
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
-            response = self._query_api.proc_call_current_with_http_info(
+            response = self._query_api.call_proc_current_with_http_info(
                 body = append_format_byte(params.to_json(), InputFormat.CYPHER_JSON.value)
             )
             result = CollectiveResults()
@@ -568,7 +568,7 @@ class DefaultSession(Session):
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
-            response = self._query_api.proc_call_with_http_info(
+            response = self._query_api.call_proc_with_http_info(
                 graph_id = graph_id, 
                 body = append_format_byte(params, InputFormat.CPP_ENCODER.value)
             )
@@ -580,7 +580,7 @@ class DefaultSession(Session):
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
-            response = self._query_api.proc_call_current_with_http_info(
+            response = self._query_api.call_proc_current_with_http_info(
                 body = append_format_byte(params, InputFormat.CPP_ENCODER.value)
             )
             return Result.from_response(response)

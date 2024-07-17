@@ -146,9 +146,9 @@ public class YamlConfigs extends Configs {
                         (Configs configs) -> {
                             String host = configs.get("http_service.default_listen_address");
                             String port = configs.get("http_service.admin_port");
-                            if (host != null){
-                                if (port !=null){
-                                    return host + ":" + port;
+                            if (host != null) {
+                                if (port != null) {
+                                    return "http://" + host + ":" + port;
                                 }
                             }
                             return null;

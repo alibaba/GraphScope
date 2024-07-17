@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.utils.Encoder;
 import com.alibaba.graphscope.interactive.models.*;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.junit.jupiter.api.AfterAll;
@@ -403,13 +404,14 @@ public class DriverTest {
                                                         PrimitiveType.PrimitiveTypeEnum
                                                                 .SIGNED_INT32))));
         {
-            //1. call cpp procedure with graph id and procedure id, sync
+            // 1. call cpp procedure with graph id and procedure id, sync
             Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
             assertOk(resp);
         }
         {
-            //2. call cpp procedure with graph id and procedure id, async
-            CompletableFuture<Result<IrResult.CollectiveResults>> future = session.callProcedureAsync(graphId, request);
+            // 2. call cpp procedure with graph id and procedure id, async
+            CompletableFuture<Result<IrResult.CollectiveResults>> future =
+                    session.callProcedureAsync(graphId, request);
             Result<IrResult.CollectiveResults> results = future.join();
             logger.info("Got result: {}" + results.toString());
         }
@@ -429,13 +431,14 @@ public class DriverTest {
                                                         PrimitiveType.PrimitiveTypeEnum
                                                                 .SIGNED_INT32))));
         {
-            //1. call cpp procedure with procedure id, sync
+            // 1. call cpp procedure with procedure id, sync
             Result<IrResult.CollectiveResults> resp = session.callProcedure(request);
             assertOk(resp);
         }
         {
-            //2. call cpp procedure with procedure id, async
-            CompletableFuture<Result<IrResult.CollectiveResults>> future = session.callProcedureAsync(request);
+            // 2. call cpp procedure with procedure id, async
+            CompletableFuture<Result<IrResult.CollectiveResults>> future =
+                    session.callProcedureAsync(request);
             Result<IrResult.CollectiveResults> results = future.join();
             logger.info("Got result: {}" + results.toString());
         }
@@ -456,7 +459,8 @@ public class DriverTest {
             assertOk(resp);
         }
         {
-            CompletableFuture<Result<byte[]>> future = session.callProcedureRawAsync(graphId, bytes);
+            CompletableFuture<Result<byte[]>> future =
+                    session.callProcedureRawAsync(graphId, bytes);
             Result<byte[]> resp = future.join();
             assertOk(resp);
         }
@@ -476,10 +480,15 @@ public class DriverTest {
 
     @Test
     public void testCallCypherProcedureProto() {
-        //Call stored procedure via StoredProcedure.Query
+        // Call stored procedure via StoredProcedure.Query
         StoredProcedure.Query.Builder builder = StoredProcedure.Query.newBuilder();
         builder.setQueryName(Common.NameOrId.newBuilder().setName(cppProcedureId1).build());
-        builder.addArguments(StoredProcedure.Argument.newBuilder().setParamInd(0).setParamName("personName").setValue(Common.Value.newBuilder().setStr(personNameValue).build()).build());
+        builder.addArguments(
+                StoredProcedure.Argument.newBuilder()
+                        .setParamInd(0)
+                        .setParamName("personName")
+                        .setValue(Common.Value.newBuilder().setStr(personNameValue).build())
+                        .build());
         StoredProcedure.Query query = builder.build();
         {
             Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, query);
@@ -490,17 +499,18 @@ public class DriverTest {
             assertOk(resp);
         }
         {
-            CompletableFuture<Result<IrResult.CollectiveResults>> future = session.callProcedureAsync(graphId, query);
+            CompletableFuture<Result<IrResult.CollectiveResults>> future =
+                    session.callProcedureAsync(graphId, query);
             Result<IrResult.CollectiveResults> resp = future.join();
             assertOk(resp);
         }
         {
-            CompletableFuture<Result<IrResult.CollectiveResults>> future = session.callProcedureAsync(query);
+            CompletableFuture<Result<IrResult.CollectiveResults>> future =
+                    session.callProcedureAsync(query);
             Result<IrResult.CollectiveResults> resp = future.join();
             assertOk(resp);
         }
     }
-
 
     @Test
     public void test11CreateDriver() {
