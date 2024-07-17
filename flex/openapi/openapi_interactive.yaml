@@ -100,7 +100,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to get
+          description: The id of graph to get
       responses:
         '200':
           description: Successful operation
@@ -118,7 +118,7 @@ paths:
     delete:
       tags:
         - AdminService/GraphManagement
-      description: Delete a graph by name
+      description: Delete a graph by id
       operationId: delete_graph
       parameters:
         - name: graph_id
@@ -127,7 +127,7 @@ paths:
           schema:
             type: string
           description:
-            The name of graph to delete
+            The id of graph to delete
       responses:
         '200':
           description: Successful operation
@@ -154,7 +154,7 @@ paths:
     get:
       tags:
         - AdminService/GraphManagement
-      description: Get schema by graph name
+      description: Get schema by graph id
       operationId: get_schema
       parameters:
         - name: graph_id
@@ -162,7 +162,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to delete
+          description: The id of graph to delete
       responses:
         '200':
           description: successful operation
@@ -224,7 +224,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to do bulk loading.
+          description: The id of graph to do bulk loading.
       requestBody:
         content:
           application/json:
@@ -366,7 +366,7 @@ paths:
     get:
       tags:
         - AdminService/ProcedureManagement
-      description: Get a procedure by name
+      description: Get a procedure by id
       operationId: get_procedure
       parameters:
         - name: graph_id
@@ -396,7 +396,7 @@ paths:
     put:
       tags:
         - AdminService/ProcedureManagement
-      description:  Update procedure on a graph by name
+      description:  Update procedure on a graph by id
       operationId: update_procedure
       parameters:
         - name: graph_id
@@ -445,7 +445,7 @@ paths:
     delete:
       tags:
         - AdminService/ProcedureManagement
-      description: Delete a procedure on a graph by name
+      description: Delete a procedure on a graph by id
       operationId: delete_procedure
       parameters:
         - name: graph_id
@@ -554,7 +554,7 @@ paths:
         - name: graph_id
           in: path
           required: true
-          description: The name of the graph
+          description: The id of the graph
           schema:
             type: string
         - name: label

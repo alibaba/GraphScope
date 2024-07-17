@@ -161,15 +161,18 @@ cypher_to_plan() {
     err "Compiler jar = ${COMPILER_JAR} not exists."
     exit 1
   fi
-  # add extra_key_value_config
-  extra_config="name:${procedure_name}"
-  extra_config="${extra_config},description:${procedure_description}"
-  extra_config="${extra_config},type:cypher"
+  # dump extra_key_value_config to a temp yaml, containing the extra config
+  extra_arg_config_file="${real_output_yaml}_extra_config.yaml"
+  cat <<EOM > ${extra_arg_config_file}
+name: ${procedure_name}
+description: "${procedure_description}"
+type: cypher
+EOM
 
   cmd="java -cp ${COMPILER_LIB_DIR}/*:${COMPILER_JAR}"
   cmd="${cmd} -Dgraph.schema=${graph_schema_path}"
   cmd="${cmd} -Djna.library.path=${IR_CORE_LIB_DIR}"
-  cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} '${extra_config}'"
+  cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} ${extra_arg_config_file}"
   info "running physical plan generation with ${cmd}"
   eval ${cmd}
 
