@@ -126,9 +126,12 @@ seastar::future<gs::Result<bool>> CodegenProxy::call_codegen_cmd(
   plan_path = prepare_next_job_dir(work_dir, query_name, plan);
   if (plan_path.empty()) {
     insert_or_update(next_job_id, CodegenStatus::FAILED, "");
-    return seastar::make_exception_future<gs::Result<bool>>(std::runtime_error(
-        "Fail to prepare next job dir for " + query_name + ", job id: " +
-        std::to_string(next_job_id) + ", plan path: " + plan_path));
+    return seastar::make_ready_future<gs::Result<bool>>(gs::Result<bool>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Fail to prepare next job dir for " + query_name +
+                       ", job id: " + std::to_string(next_job_id) +
+                       ", plan path: " + plan_path),
+        false));
   }
 
   std::string expected_res_lib_path = work_dir + "/lib" + query_name + ".so";
@@ -140,14 +143,16 @@ seastar::future<gs::Result<bool>> CodegenProxy::call_codegen_cmd(
           LOG(ERROR) << "Compilation failure: "
                      << codegen_res.status().error_message();
           insert_or_update(next_job_id, CodegenStatus::FAILED, "");
-          return seastar::make_ready_future<gs::Result<bool>>(codegen_res);
+          return seastar::make_ready_future<gs::Result<bool>>(codegen_res,
+                                                              false);
         }
         if (!std::filesystem::exists(expected_res_lib_path)) {
           LOG(ERROR) << "Compilation success, but generated lib not exists: "
                      << expected_res_lib_path;
           insert_or_update(next_job_id, CodegenStatus::FAILED, "");
           VLOG(10) << "Compilation failed, job id: " << next_job_id;
-          return seastar::make_ready_future<gs::Result<bool>>(codegen_res);
+          return seastar::make_ready_future<gs::Result<bool>>(codegen_res,
+                                                              false);
         }
         VLOG(10) << "Compilation success, job id: " << next_job_id;
         insert_or_update(next_job_id, CodegenStatus::SUCCESS,

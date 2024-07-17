@@ -122,8 +122,9 @@ int main(int argc, char** argv) {
       "graph schema path");
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr =
-      false;  // we don't want to log stderr, since interactive
-              // server will try to catch the error log from stderr.
+      false;  // We avoid outputting logs to stderr to allow the interactive
+              // server capturing error logs and returning them to the
+              // client when code generation fails.
 
   bpo::variables_map vm;
   bpo::store(bpo::command_line_parser(argc, argv).options(desc).run(), vm);
