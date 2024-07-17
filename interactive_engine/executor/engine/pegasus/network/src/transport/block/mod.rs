@@ -107,16 +107,13 @@ pub fn listen_on<A: ToSocketAddrs>(
 ///
 /// 如果参数中的`server_id` 大于等于当前服务的id，并不会发起连接，返回`Ok(())`;
 ///
-pub fn connect(
-    local_id: u64, remote_id: u64, params: ConnectionParams, addr: SocketAddr,
+pub fn connect<A: ToSocketAddrs>(
+    local_id: u64, remote_id: u64, params: ConnectionParams, addr: A,
 ) -> Result<(), NetError> {
     // 连接请求可能会失败， 或许由于对端服务器未启动端口监听，调用方需要根据返回内容确定是否重试;
-    info!("Try to connect to server {:?}", addr);
-    let timeout = std::time::Duration::from_secs(10);
-    let mut conn = TcpStream::connect_timeout(&addr, timeout)?;
-    // let mut conn = TcpStream::connect(addr)?;
+    let mut conn = TcpStream::connect(addr)?;
     let addr = conn.peer_addr()?;
-    info!("connect to server {:?};", addr);
+    debug!("connect to server {:?};", addr);
     let hb_sec = params.get_hb_interval_sec();
     super::setup_connection(local_id, hb_sec, &mut conn)?;
     info!("setup connection to {:?} success;", addr);

@@ -16,10 +16,16 @@
 use std::any::Any;
 use std::cell::RefCell;
 use std::collections::{HashMap, LinkedList};
+use std::net::SocketAddr;
+use std::sync::{Arc, Weak};
+
+use crossbeam_channel::Sender;
+use crossbeam_utils::sync::ShardedLock;
+use pegasus_network::{InboxRegister, NetData};
 
 use crate::data_plane::ChannelResource;
 use crate::errors::{BuildJobError, IOError};
-use crate::{Data, JobConf};
+use crate::{Data, JobConf, WorkerId};
 
 mod buffer;
 pub(crate) mod cancel;
@@ -27,6 +33,7 @@ pub(crate) mod channel;
 pub(crate) mod decorator;
 pub(crate) mod input;
 pub(crate) mod output;
+
 pub use channel::Channel;
 
 use crate::channel_id::ChannelId;
@@ -67,9 +74,10 @@ impl Magic {
 }
 
 pub(crate) fn build_channel<T: Data>(
-    ch_id: ChannelId, conf: &JobConf,
+    ch_id: ChannelId, conf: &JobConf, worker_id: WorkerId,
+    msg_senders: Option<&'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>>,
+    recv_register: Option<&'static ShardedLock<HashMap<(u64, u64), InboxRegister>>>,
 ) -> Result<ChannelResource<T>, BuildJobError> {
-    let worker_id = crate::worker_id::get_current_worker();
     let ch = CHANNEL_RESOURCES.with(|res| {
         let mut map = res.borrow_mut();
         map.get_mut(&ch_id)
@@ -90,8 +98,14 @@ pub(crate) fn build_channel<T: Data>(
     } else {
         let local_workers = worker_id.local_peers;
         let server_index = worker_id.server_index;
-        let mut resources =
-            crate::data_plane::build_channels::<T>(ch_id, local_workers, server_index, conf.servers())?;
+        let mut resources = crate::data_plane::build_channels::<T>(
+            ch_id,
+            local_workers,
+            server_index,
+            conf.servers(),
+            msg_senders,
+            recv_register,
+        )?;
         if let Some(ch) = resources.pop_front() {
             if !resources.is_empty() {
                 let mut upcast = LinkedList::new();

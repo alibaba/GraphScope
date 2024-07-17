@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::borrow::Borrow;
+
 use crate::api::meta::OperatorInfo;
 use crate::api::Unary;
 use crate::communication::input::{new_input_session, InputProxy};
@@ -20,6 +22,7 @@ use crate::communication::output::{new_output, OutputProxy};
 use crate::communication::{Input, Output};
 use crate::errors::{BuildJobError, JobExecError};
 use crate::operator::OperatorCore;
+use crate::resource::{KeyedResourceBar, ResourceBar};
 use crate::stream::Stream;
 use crate::Data;
 
@@ -45,12 +48,42 @@ where
     O: Data,
     F: FnMut(&mut Input<I>, &Output<O>) -> Result<(), JobExecError> + Send + 'static,
 {
+    fn set_resource(&self, resource: Option<&ResourceBar>, keyed_resource: Option<&KeyedResourceBar>) {
+        if let Some(resource) = resource {
+            let my_res = resource
+                .data
+                .with(|store| store.replace(Default::default()));
+            crate::resource::replace_resource(my_res);
+        }
+        if let Some(keyed_resource) = keyed_resource {
+            let my_res = keyed_resource
+                .data
+                .with(|store| store.replace(Default::default()));
+            crate::resource::replace_keyed_resources(my_res);
+        }
+    }
+
     fn on_receive(
         &mut self, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
     ) -> Result<(), JobExecError> {
         let mut input = new_input_session::<I>(&inputs[0]);
         let output = new_output::<O>(&outputs[0]);
         (self.func)(&mut input, &output)
+    }
+
+    fn reset_resource(&self, resource: Option<&ResourceBar>, keyed_resource: Option<&KeyedResourceBar>) {
+        if let Some(resource) = resource {
+            let my_res = crate::resource::replace_resource(Default::default());
+            resource
+                .data
+                .with(|store| store.replace(my_res));
+        }
+        if let Some(keyed_resource) = keyed_resource {
+            let my_res = crate::resource::replace_keyed_resources(Default::default());
+            keyed_resource
+                .data
+                .with(|store| store.replace(my_res));
+        }
     }
 }
 
@@ -63,7 +96,7 @@ impl<I: Data> Unary<I> for Stream<I> {
     {
         self.transform(name, |info| {
             let func = construct(info);
-            Box::new(UnaryOperator::new(func))
+            UnaryOperator::new(func)
         })
     }
 }

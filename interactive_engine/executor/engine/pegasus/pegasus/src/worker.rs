@@ -15,13 +15,15 @@
 
 use std::any::TypeId;
 use std::fmt::Debug;
+use std::net::SocketAddr;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, Weak};
 use std::time::Instant;
 
 use opentelemetry::global::BoxedSpan;
 use opentelemetry::{trace, trace::Span, KeyValue};
 use pegasus_executor::{Task, TaskState};
+use pegasus_network::{get_msg_sender, get_recv_register};
 
 use crate::api::primitive::source::Source;
 use crate::channel_id::ChannelId;
@@ -46,8 +48,8 @@ pub struct Worker<D: Data, T: Debug + Send + 'static> {
     peer_guard: Arc<AtomicUsize>,
     start: Instant,
     sink: ResultSink<T>,
-    resources: ResourceMap,
-    keyed_resources: KeyedResources,
+    resources: Arc<Mutex<ResourceMap>>,
+    keyed_resources: Arc<Mutex<KeyedResources>>,
     is_finished: bool,
     span: BoxedSpan,
     _ph: std::marker::PhantomData<D>,
@@ -61,7 +63,6 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         if peer_guard.fetch_add(1, Ordering::SeqCst) == 0 {
             pegasus_memory::alloc::new_task(conf.job_id as usize);
         }
-
         Worker {
             conf: conf.clone(),
             id,
@@ -69,8 +70,8 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             peer_guard: peer_guard.clone(),
             start: Instant::now(),
             sink,
-            resources: ResourceMap::default(),
-            keyed_resources: KeyedResources::default(),
+            resources: Arc::new(Mutex::new(ResourceMap::default())),
+            keyed_resources: Arc::new(Mutex::new(KeyedResources::default())),
             is_finished: false,
             span: span,
             _ph: std::marker::PhantomData,
@@ -83,8 +84,13 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
     {
         // set current worker's id into tls variable to make it accessible at anywhere;
         let _g = crate::worker_id::guard(self.id);
-        let resource =
-            crate::communication::build_channel::<Event>(ChannelId::new(self.id.job_id, 0), &self.conf)?;
+        let resource = crate::communication::build_channel::<Event>(
+            ChannelId::new(self.id.job_id, 0),
+            &self.conf,
+            self.id,
+            None,
+            None,
+        )?;
         if resource.ch_id.index != 0 {
             return Err(BuildJobError::InternalError(String::from("Event channel index must be 0")));
         }
@@ -101,7 +107,13 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             abort.close().ok();
         }
         let event_emitter = EventEmitter::new(tx);
-        let dfb = DataflowBuilder::new(self.id, event_emitter.clone(), &self.conf);
+        let dfb = DataflowBuilder::new(
+            self.id,
+            event_emitter.clone(),
+            &self.conf,
+            get_msg_sender(),
+            get_recv_register(),
+        );
         let root_builder = OutputBuilderImpl::new(
             Port::new(0, 0),
             0,
@@ -117,7 +129,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let root = Box::new(root_builder)
             .build()
             .expect("no output;");
-        let end = EndOfScope::new(Tag::Root, DynPeers::all(), 0, 0);
+        let end = EndOfScope::new(Tag::Root, DynPeers::all(self.id.total_peers()), 0, 0);
         root.notify_end(end).ok();
         root.close().ok();
         Ok(())
@@ -125,16 +137,30 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
 
     pub fn add_resource<R: Send + 'static>(&mut self, resource: R) {
         let type_id = TypeId::of::<R>();
-        self.resources
-            .insert(type_id, Box::new(resource));
+        let mut resources_guard = self
+            .resources
+            .lock()
+            .expect("Worker resources poisoned");
+        resources_guard.insert(type_id, Box::new(resource));
     }
 
     pub fn add_resource_with_key<R: Send + 'static>(&mut self, key: String, resource: R) {
-        self.keyed_resources
-            .insert(key, Box::new(resource));
+        let mut keyed_resources_guard = self
+            .keyed_resources
+            .lock()
+            .expect("Worker keyed_resources poisoned");
+        keyed_resources_guard.insert(key, Box::new(resource));
     }
 
-    fn check_cancel(&mut self) -> bool {
+    pub fn set_resources(&mut self, resource_map: Arc<Mutex<ResourceMap>>) {
+        self.resources = resource_map;
+    }
+
+    pub fn set_resources_with_key(&mut self, keyed_resource_map: Arc<Mutex<KeyedResources>>) {
+        self.keyed_resources = keyed_resource_map;
+    }
+
+    fn check_cancel(&self) -> bool {
         if self.conf.time_limit > 0 {
             let elapsed = self.start.elapsed().as_millis() as u64;
             if elapsed >= self.conf.time_limit {
@@ -194,43 +220,51 @@ impl WorkerTask {
     }
 }
 
-struct WorkerContext<'a> {
-    resource: Option<&'a mut ResourceMap>,
-    keyed_resources: Option<&'a mut KeyedResources>,
+struct WorkerContext {
+    resource: Option<Arc<Mutex<ResourceMap>>>,
+    keyed_resources: Option<Arc<Mutex<KeyedResources>>>,
 }
 
-impl<'a> WorkerContext<'a> {
-    fn new(res: &'a mut ResourceMap, key_res: &'a mut KeyedResources) -> Self {
-        let resource = if !res.is_empty() {
-            let reset = std::mem::replace(res, Default::default());
+impl WorkerContext {
+    fn new(res: &Arc<Mutex<ResourceMap>>, keyed_res: &Arc<Mutex<KeyedResources>>) -> Self {
+        let res_arc = res.clone();
+        let mut res_guard = res.lock().expect("Resource lock poisoned");
+        let resource = if !res_guard.is_empty() {
+            let reset = std::mem::replace(&mut *res_guard, Default::default());
             let pre = crate::resource::replace_resource(reset);
             assert!(pre.is_empty());
-            Some(res)
+            Some(res_arc)
         } else {
             None
         };
+        drop(res_guard);
 
-        let keyed_resources = if !key_res.is_empty() {
-            let reset = std::mem::replace(key_res, Default::default());
+        let keyed_res_arc = keyed_res.clone();
+        let mut keyed_res_guard = keyed_res
+            .lock()
+            .expect("KeyedResource lock poisoned");
+        let keyed_resources = {
+            let reset = std::mem::replace(&mut *keyed_res_guard, Default::default());
             let pre = crate::resource::replace_keyed_resources(reset);
             assert!(pre.is_empty());
-            Some(key_res)
-        } else {
-            None
+            Some(keyed_res_arc)
         };
+
         WorkerContext { resource, keyed_resources }
     }
 }
 
-impl<'a> Drop for WorkerContext<'a> {
+impl Drop for WorkerContext {
     fn drop(&mut self) {
         if let Some(res) = self.resource.take() {
+            let mut res_guard = res.lock().expect("Resource lock poisoned");
             let my_res = crate::resource::replace_resource(Default::default());
-            let _r = std::mem::replace(res, my_res);
+            let _r = std::mem::replace(&mut *res_guard, my_res);
         }
         if let Some(res) = self.keyed_resources.take() {
+            let mut res_guard = res.lock().expect("Resource lock poisoned");
             let my_res = crate::resource::replace_keyed_resources(Default::default());
-            let _r = std::mem::replace(res, my_res);
+            let _r = std::mem::replace(&mut *res_guard, my_res);
         }
     }
 }
@@ -239,9 +273,6 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
     fn execute(&mut self) -> TaskState {
         let _g = crate::worker_id::guard(self.id);
         if self.check_cancel() {
-            self.span
-                .set_status(trace::Status::error("Job is canceled"));
-            self.span.end();
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
@@ -253,20 +284,14 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
         match self.task.execute() {
             Ok(state) => {
                 if TaskState::Finished == state {
-                    let elapsed = self.start.elapsed().as_millis();
                     info_worker!(
                         "trace_id:{}, job({}) '{}' finished, used {:?} ms;",
                         trace_id_hex,
                         self.id.job_id,
                         self.conf.job_name,
-                        elapsed
+                        self.start.elapsed().as_millis()
                     );
                     self.is_finished = true;
-                    self.span
-                        .set_attribute(KeyValue::new("used_ms", elapsed.to_string()));
-                    self.span.set_status(trace::Status::Ok);
-                    self.span.end();
-
                     // if this is last worker, return Finished
                     if self.peer_guard.fetch_sub(1, Ordering::SeqCst) == 1 {
                         state
@@ -300,12 +325,11 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                 Ok(state) => {
                     {
                         if TaskState::Finished == state {
-                            let elapsed = self.start.elapsed().as_millis();
                             info_worker!(
                                 "job({}) '{}' finished, used {:?};",
                                 self.id.job_id,
                                 self.conf.job_name,
-                                elapsed
+                                self.start.elapsed()
                             );
                         }
                     }

@@ -13,10 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::LinkedList;
+use std::collections::{HashMap, LinkedList};
+use std::net::SocketAddr;
+use std::sync::{Arc, Weak};
 
+use crossbeam_channel::Sender;
+use crossbeam_utils::sync::ShardedLock;
 use pegasus_common::channel::MPMCSender;
-use pegasus_network::{IPCReceiver, IPCSender};
+use pegasus_network::{IPCReceiver, IPCSender, InboxRegister, NetData};
 
 use crate::channel_id::ChannelId;
 use crate::data::Data;
@@ -107,7 +111,7 @@ use intra_thread::{ThreadPull, ThreadPush};
 
 use crate::config::ServerConf;
 
-#[enum_dispatch(Push<T>)]
+#[enum_dispatch(Push < T >)]
 pub enum GeneralPush<T: Data> {
     IntraThread(ThreadPush<T>),
     IntraProcess(IntraProcessPush<T>),
@@ -124,7 +128,7 @@ impl<T: Data> GeneralPush<T> {
     }
 }
 
-#[enum_dispatch(Pull<T>)]
+#[enum_dispatch(Pull < T >)]
 pub enum GeneralPull<T: Data> {
     IntraThread(ThreadPull<T>),
     IntraProcess(IntraProcessPull<T>),
@@ -190,6 +194,8 @@ pub fn build_local_channels<T: Data>(id: ChannelId, workers: usize) -> LinkedLis
 
 pub fn build_channels<T: Data>(
     id: ChannelId, local_workers: u32, server_index: u32, server_conf: &ServerConf,
+    msg_senders: Option<&'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>>,
+    recv_register: Option<&'static ShardedLock<HashMap<(u64, u64), InboxRegister>>>,
 ) -> Result<LinkedList<ChannelResource<T>>, BuildJobError> {
     let workers = local_workers as usize;
     let servers = server_conf.get_servers();
@@ -241,9 +247,10 @@ pub fn build_channels<T: Data>(
         for i in 0..workers {
             let ch_id = encode_channel_id(id, i as u32);
             // use send[j] to send  message to worker[i] at server j
-            let sends = pegasus_network::ipc_channel_send::<T>(ch_id, my_server_id, &servers)?;
+            let sends = pegasus_network::ipc_channel_send::<T>(ch_id, my_server_id, &servers, msg_senders)?;
             remote_sends.push(sends);
-            let recv = pegasus_network::ipc_channel_recv::<T>(ch_id, my_server_id, &servers)?;
+            let recv =
+                pegasus_network::ipc_channel_recv::<T>(ch_id, my_server_id, &servers, recv_register)?;
             remote_recv.push_back(recv);
         }
     }
@@ -391,6 +398,8 @@ mod test {
             workers as u32,
             server_index as u32,
             servers,
+            None,
+            None,
         )
         .unwrap();
         let servers_len = servers.len();
@@ -484,6 +493,8 @@ mod test {
                     local_workers,
                     index as u32,
                     &server_conf,
+                    None,
+                    None,
                 )
                 .unwrap();
                 let mut ch_resources_second = build_channels::<Vec<u64>>(
@@ -491,6 +502,8 @@ mod test {
                     local_workers,
                     index as u32,
                     &server_conf,
+                    None,
+                    None,
                 )
                 .unwrap();
                 let mut channels = vec![];
@@ -589,6 +602,8 @@ mod test {
                     local_workers,
                     index as u32,
                     &server_conf,
+                    None,
+                    None,
                 )
                 .unwrap();
                 let mut channel_threads = vec![];

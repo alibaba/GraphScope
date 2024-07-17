@@ -56,7 +56,6 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Once;
 
 pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;
@@ -70,8 +69,9 @@ pub use worker::Worker;
 pub use worker_id::{get_current_worker, get_current_worker_checked, set_current_worker, WorkerId};
 
 use crate::api::Source;
-pub use crate::errors::{BuildJobError, CancelError, JobSubmitError, SpawnJobError, StartupError};
-use crate::resource::PartitionedResource;
+use crate::errors::CancelError;
+pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
+use crate::resource::{DistributedParResourceMaps, PartitionedKeydResource, PartitionedResource};
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
 
@@ -263,6 +263,77 @@ where
     Ok(results)
 }
 
+pub fn run_with_keyed_resources<DI, DO, F, FN, R, K>(
+    conf: JobConf, mut resource: Option<R>, mut keyed_resource: Option<K>, func: F,
+) -> Result<ResultStream<DO>, JobSubmitError>
+where
+    DI: Data,
+    DO: Debug + Send + 'static,
+    R: PartitionedResource,
+    K: PartitionedKeydResource,
+    F: Fn() -> FN,
+    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
+{
+    let (tx, rx) = crossbeam_channel::unbounded();
+    let sink = ResultSink::new(tx);
+    let cancel_hook = sink.get_cancel_hook().clone();
+    let results = ResultStream::new(conf.job_id, cancel_hook, rx);
+    run_opt(conf, sink, |worker| {
+        let index = worker.id.index as usize;
+        if resource.is_some() {
+            let mut resource = resource
+                .take()
+                .expect("Failed to take resource");
+            if let Some(r) = resource.take_resource(index) {
+                worker.add_resource(r);
+            }
+        }
+        if keyed_resource.is_some() {
+            let mut keyed_resource = keyed_resource
+                .take()
+                .expect("Failed to take resource");
+            if let Some(rs) = keyed_resource.take_keyed_resource(index) {
+                for (k, r) in rs {
+                    worker.add_resource_with_key(k, r);
+                }
+            }
+        }
+        worker.dataflow(func())
+    })?;
+    Ok(results)
+}
+
+pub fn run_with_resource_map<DI, DO, F, FN>(
+    conf: JobConf, mut resource: Option<DistributedParResourceMaps>, func: F,
+) -> Result<ResultStream<DO>, JobSubmitError>
+where
+    DI: Data,
+    DO: Debug + Send + 'static,
+    F: Fn() -> FN,
+    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
+{
+    let (tx, rx) = crossbeam_channel::unbounded();
+    let sink = ResultSink::new(tx);
+    let cancel_hook = sink.get_cancel_hook().clone();
+    let results = ResultStream::new(conf.job_id, cancel_hook, rx);
+    run_opt(conf, sink, |worker| {
+        let index = worker.id.index as usize;
+        if resource.is_some() {
+            let mut resource_map = resource
+                .take()
+                .expect("Failed to take resource");
+            if let Some(res) = resource_map.take_resource(index) {
+                worker.set_resources(res);
+            }
+            if let Some(keyed_res) = resource_map.take_keyed_resource(index) {
+                worker.set_resources_with_key(keyed_res);
+            }
+        }
+        worker.dataflow(func())
+    })?;
+    Ok(results)
+}
+
 pub fn run_opt<DI, DO, F>(conf: JobConf, sink: ResultSink<DO>, mut logic: F) -> Result<(), JobSubmitError>
 where
     DI: Data,
@@ -394,6 +465,7 @@ fn allocate_local_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, Bu
     }
 }
 
+use std::sync::Once;
 lazy_static! {
     static ref SINGLETON_INIT: Once = Once::new();
 }
