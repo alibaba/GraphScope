@@ -162,6 +162,10 @@
             <artifactId>jgrapht-ext</artifactId>
             <version>1.0.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba.graphscope</groupId>
+            <artifactId>interactive</artifactId>
+        </dependency>
     </dependencies>
 
     <profiles>

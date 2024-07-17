@@ -23,7 +23,12 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.HiactorConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gaia.proto.StoredProcedure;
+import com.alibaba.graphscope.interactive.client.Driver;
+import com.alibaba.graphscope.interactive.client.Session;
+import com.alibaba.graphscope.interactive.client.common.Result;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -54,27 +59,27 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpExecutionClient extends ExecutionClient<URI> {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutionClient.class);
-    private static final String CONTENT_TYPE = "Content-Type";
-    private static final String INTERACTIVE_REQUEST_FORMAT = "X-Interactive-Request-Format";
-    private static final String TEXT_PLAIN = "text/plain;charset=UTF-8";
-    private static final String PROTOCOL_FORMAT = "proto";
+//    private static final String CONTENT_TYPE = "Content-Type";
+//    private static final String TEXT_PLAIN = "text/plain;charset=UTF-8";
+//    private static final String PROTOCOL_FORMAT = "proto";
     private static final String INTERACTIVE_QUERY_PATH = "/v1/graph/current/query";
-    private static final String INTERACTIVE_ADHOC_QUERY_PATH = "/interactive/adhoc_query";
-    private final HttpClient httpClient;
+    private static final String INTERACTIVE_ADHOC_QUERY_PATH = "/v1/graph/current/adhoc_query";
+//    private final HttpClient httpClient;
+    private final Driver driver;
+    private final Session session;
 
     private final OpenTelemetry openTelemetry;
     private final Tracer tracer;
 
-    private final TextMapSetter<HttpRequest.Builder> setter =
-            (carrier, key, value) -> carrier.headers(key, value);
+    private final TextMapSetter<ExecutionRequest> setter =
+            (carrier, key, value) -> {
+                logger.info("key: {}, value {}", key,value);
+            };
 
     public HttpExecutionClient(Configs graphConfig, ChannelFetcher<URI> channelFetcher) {
         super(channelFetcher);
-        this.httpClient =
-                HttpClient.newBuilder()
-                        .connectTimeout(
-                                Duration.ofMillis(HiactorConfig.HIACTOR_TIMEOUT.get(graphConfig)))
-                        .build();
+        driver = Driver.connect(HiactorConfig.INTERACTIVE_ADMIN_ENDPOINT.get(graphConfig));
+        session = driver.session();
         this.openTelemetry = GlobalOpenTelemetry.get();
         this.tracer = openTelemetry.getTracer(HttpExecutionClient.class.getName());
     }
@@ -90,65 +95,57 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
             Span outgoing =
                     tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
             try (Scope scope = outgoing.makeCurrent()) {
-                URI uri = resolvePath(httpURI, request);
-                outgoing.setAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "POST");
-                outgoing.setAttribute(SemanticAttributes.URL_FULL, uri.toString());
+                CompletableFuture<Result<IrResult.CollectiveResults>> future;
+                if (request.getRequestLogical().getRegularQuery() != null){
+                    byte[] bytes = (byte[]) request.getRequestPhysical().getContent();
+                    future = session.runAdhocQueryAsync(GraphAlgebraPhysical.PhysicalPlan.parseFrom(bytes));
+                }
+                else if (request.getRequestLogical().getProcedureCall() != null){
+                    byte[] bytes = (byte[]) request.getRequestPhysical().getContent();
+                    future = session.callProcedureAsync(StoredProcedure.Query.parseFrom(bytes));
+                }
+                else {
+                    throw new IllegalArgumentException("the request can not be sent to the remote service, expect a regular query or a procedure call");
+                }
 
-                HttpRequest.Builder httpRequest =
-                        HttpRequest.newBuilder()
-                                .uri(uri)
-                                .headers(CONTENT_TYPE, TEXT_PLAIN)
-                                .headers(INTERACTIVE_REQUEST_FORMAT, PROTOCOL_FORMAT)
-                                .POST(
-                                        HttpRequest.BodyPublishers.ofByteArray(
-                                                (byte[])
-                                                        request.getRequestPhysical().getContent()));
                 openTelemetry
                         .getPropagators()
                         .getTextMapPropagator()
-                        .inject(Context.current(), httpRequest, setter);
+                        .inject(Context.current(), request, setter);
 
-                CompletableFuture<HttpResponse<byte[]>> responseFuture =
-                        httpClient
-                                .sendAsync(
-                                        httpRequest.build(),
-                                        HttpResponse.BodyHandlers.ofByteArray())
-                                .orTimeout(
-                                        timeoutConfig.getChannelTimeoutMS(), TimeUnit.MILLISECONDS)
-                                .whenComplete(
+
+
+                CompletableFuture<Result<IrResult.CollectiveResults>> responseFuture =
+                        future.whenComplete(
                                         (response, exception) -> {
                                             if (exception != null) {
                                                 listener.onError(exception);
                                                 outgoing.recordException(exception);
                                             }
-                                            try {
-                                                // if response is not 200
-                                                if (response.statusCode() != 200) {
-                                                    // parse String from response.body()
-                                                    String errorMessage =
-                                                            new String(response.body());
-                                                    RuntimeException ex =
-                                                            new RuntimeException(
-                                                                    "Query execution failed:"
-                                                                        + " response status code is"
-                                                                        + " "
-                                                                            + response.statusCode()
-                                                                            + ", error message: "
-                                                                            + errorMessage);
-                                                    outgoing.recordException(ex);
-                                                    listener.onError(ex);
-                                                } else {
-                                                    outgoing.end();
-                                                }
-                                                IrResult.CollectiveResults results =
-                                                        IrResult.CollectiveResults.parseFrom(
-                                                                response.body());
-                                                for (IrResult.Results irResult :
-                                                        results.getResultsList()) {
-                                                    listener.onNext(irResult.getRecord());
-                                                }
-                                            } catch (InvalidProtocolBufferException e) {
-                                                listener.onError(e);
+
+                                            // if response is not 200
+                                            if (!response.isOk()) {
+                                                // parse String from response.body()
+                                                String errorMessage =
+                                                        new String(response.getStatusMessage());
+                                                RuntimeException ex =
+                                                        new RuntimeException(
+                                                                "Query execution failed:"
+                                                                    + " response status code is"
+                                                                    + " "
+                                                                    + response.getStatusCode()
+                                                                    + ", error message: "
+                                                                        + errorMessage);
+                                                outgoing.recordException(ex);
+                                                listener.onError(ex);
+                                            } else {
+                                                outgoing.end();
+                                            }
+                                            IrResult.CollectiveResults results =
+                                                            response.getValue();
+                                            for (IrResult.Results irResult :
+                                                    results.getResultsList()) {
+                                                listener.onNext(irResult.getRecord());
                                             }
                                         });
                 responseFutures.add(responseFuture);
@@ -174,16 +171,6 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                 });
     }
 
-    private URI resolvePath(URI original, ExecutionRequest request) {
-        LogicalPlan logicalPlan = request.getRequestLogical();
-        if (logicalPlan.getRegularQuery() != null) {
-            return original.resolve(INTERACTIVE_ADHOC_QUERY_PATH);
-        } else if (logicalPlan.getProcedureCall() != null) {
-            return original.resolve(INTERACTIVE_QUERY_PATH);
-        } else {
-            throw new IllegalArgumentException("the request can not be sent to the remote service");
-        }
-    }
 
     @Override
     public void close() throws Exception {}

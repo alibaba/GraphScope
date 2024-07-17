@@ -43,6 +43,8 @@ public class Result<T> {
         return status.getMessage();
     }
 
+    public Status.StatusCode getStatusCode() {return status.getCode();}
+
     public T getValue() {
         return value;
     }
