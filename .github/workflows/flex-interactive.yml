@@ -56,6 +56,7 @@ jobs:
     - name: Test
       env:
         INTERACTIVE_ADMIN_ENDPOINT: http://localhost:7777
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
       run: |
         # install gsctl
         python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
@@ -69,4 +70,6 @@ jobs:
                           $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_interactive.py
         # test python sdk
         cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/python
+        pip3 install -r requirements.txt
+        pipe install -r test-requirements.txt
         python3 -m pytest -s -v ./test/test_driver.py
