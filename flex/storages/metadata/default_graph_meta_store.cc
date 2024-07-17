@@ -151,6 +151,11 @@ Result<std::vector<PluginMeta>> DefaultGraphMetaStore::GetAllPluginMeta(
       metas.push_back(plugin_meta);
     }
   }
+  // Sort the plugin metas by create time.
+  std::sort(metas.begin(), metas.end(),
+            [](const PluginMeta& a, const PluginMeta& b) {
+              return a.creation_time < b.creation_time;
+            });
   VLOG(10) << "Found plugin metas belong to graph " << graph_id << ": "
            << metas.size();
   return Result<std::vector<PluginMeta>>(metas);
