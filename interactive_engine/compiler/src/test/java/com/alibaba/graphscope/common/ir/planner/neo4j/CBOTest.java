@@ -203,7 +203,7 @@ public class CBOTest {
                     + " physicalOpt=[VERTEX])\n"
                     + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[FORUM]}],"
                     + " alias=[person2], opt=[VERTEX])",
-                before.explain().trim());
+                after.explain().trim());
     }
 
     @Test
