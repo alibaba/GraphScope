@@ -86,7 +86,6 @@ Result<std::vector<std::pair<LocalFileMetadataStore::meta_key_t,
                              LocalFileMetadataStore::meta_value_t>>>
 LocalFileMetadataStore::GetAllMeta(const meta_kind_t& meta_kind) {
   std::unique_lock<std::mutex> lock(meta_mutex_);
-  VLOG(10) << "Getting all meta for: " << meta_kind;
   std::vector<std::pair<meta_key_t, meta_value_t>> meta_values;
   auto meta_dir = get_meta_kind_dir(meta_kind);
   for (auto& p : std::filesystem::directory_iterator(meta_dir)) {

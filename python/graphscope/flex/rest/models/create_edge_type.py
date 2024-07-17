@@ -33,7 +33,7 @@ class CreateEdgeType(BaseModel):
     vertex_type_pair_relations: List[BaseEdgeTypeVertexTypePairRelationsInner]
     directed: Optional[StrictBool] = None
     primary_keys: Optional[List[StrictStr]] = None
-    properties: List[CreatePropertyMeta]
+    properties: Optional[List[CreatePropertyMeta]] = None
     description: Optional[StrictStr] = None
     __properties: ClassVar[List[str]] = ["type_name", "vertex_type_pair_relations", "directed", "primary_keys", "properties", "description"]
 

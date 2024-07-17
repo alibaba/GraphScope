@@ -331,8 +331,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/BaseEdgeType'
         - type: object
-          required:
-            - properties
           properties:
             properties:
               type: array
@@ -549,7 +547,6 @@ components:
       required:
         - type_name
         - inputs
-        - column_mappings
       properties:
         type_name:
           type: string
@@ -558,7 +555,7 @@ components:
           items:
             type: string
             example: file:///path/to/file.csv
-        column_mappings:
+        column_mappings: # column_mappings could be empty, which indicates the default mapping in order.
           type: array
           items:
             $ref: '#/components/schemas/ColumnMapping'
@@ -568,8 +565,6 @@ components:
       required:
         - type_triplet
         - inputs
-        - source_vertex_mappings
-        - destination_vertex_mappings
       properties:
         type_triplet:
           required:
