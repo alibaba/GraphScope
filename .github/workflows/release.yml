@@ -40,6 +40,7 @@ jobs:
         fi
 
         cd ${GITHUB_WORKSPACE}/python
+        python3 setup_flex.py bdist_wheel
         python3 setup_gsctl.py bdist_wheel
         # move wheels into one folder to upload to PyPI
         mkdir ${GITHUB_WORKSPACE}/upload_pypi
