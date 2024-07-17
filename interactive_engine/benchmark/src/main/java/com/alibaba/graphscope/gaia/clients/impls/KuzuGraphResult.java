@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.gaia.clients.impls;
 
 import com.alibaba.graphscope.gaia.clients.GraphResultSet;
+import com.kuzudb.KuzuFlatTuple;
 import com.kuzudb.KuzuQueryResult;
 
 public class KuzuGraphResult implements GraphResultSet {
@@ -14,7 +15,11 @@ public class KuzuGraphResult implements GraphResultSet {
     @Override
     public boolean hasNext() {
         try {
-            return result.hasNext();
+            boolean hasNext = result.hasNext();
+            if (!hasNext) {
+                result.destroy();
+            }
+            return hasNext;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -24,7 +29,10 @@ public class KuzuGraphResult implements GraphResultSet {
     @Override
     public Object next() {
         try {
-            return result.getNext();
+            KuzuFlatTuple tuple = result.getNext();
+            String tupleString = tuple.toString();
+            tuple.destroy();
+            return tupleString;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
