@@ -142,7 +142,7 @@ impl ConnectionParams {
 }
 
 /// Check "../server/config/server_config.toml" for configuration descriptions;
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct NetworkConfig {
     pub server_id: u64,
     pub servers_size: usize,

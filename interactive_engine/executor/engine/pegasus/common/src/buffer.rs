@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+use std::iter::FromIterator;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -28,61 +30,41 @@ impl<D> BufferRecycleHook<D> {
 }
 
 pub struct Buffer<D> {
-    inner: Vec<Option<D>>,
-    head: usize,
-    tail: usize,
+    inner: VecDeque<D>,
     recycle_hooks: Vec<BufferRecycleHook<D>>,
 }
 
 impl<D> Buffer<D> {
     pub fn new() -> Self {
-        Buffer { inner: vec![], head: 0, tail: 0, recycle_hooks: vec![] }
+        Buffer { inner: VecDeque::new(), recycle_hooks: vec![] }
     }
 
     pub fn with_capacity(cap: usize) -> Self {
-        Buffer { inner: Vec::with_capacity(cap), head: 0, tail: 0, recycle_hooks: vec![] }
+        Buffer { inner: VecDeque::with_capacity(cap), recycle_hooks: vec![] }
     }
 
-    pub fn from(vec: Vec<Option<D>>) -> Self {
-        Buffer { inner: vec, head: 0, tail: 0, recycle_hooks: vec![] }
+    pub fn from(vec: Vec<D>) -> Self {
+        Buffer { inner: VecDeque::from_iter(vec.into_iter()), recycle_hooks: vec![] }
     }
 
     pub fn push(&mut self, item: D) {
-        if self.tail >= self.inner.len() {
-            self.inner.push(Some(item));
-            self.tail = self.inner.len();
-        } else {
-            let cursor = self.tail;
-            self.tail += 1;
-            self.inner[cursor] = Some(item);
-        }
+        self.inner.push_back(item);
     }
 
     pub fn pop(&mut self) -> Option<D> {
-        if self.head >= self.tail || self.head >= self.inner.len() {
-            None
-        } else {
-            let cursor = self.head;
-            self.head += 1;
-            self.inner[cursor].take()
-        }
+        self.inner.pop_front()
     }
 
     pub fn get(&self, offset: usize) -> Option<&D> {
-        let offset = self.head + offset;
-        if offset >= self.tail || offset >= self.inner.len() {
-            None
-        } else {
-            self.inner[offset].as_ref()
-        }
+        self.inner.get(offset)
     }
 
     pub fn len(&self) -> usize {
-        self.tail.checked_sub(self.head).unwrap_or(0)
+        self.inner.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.inner.is_empty()
     }
 
     pub fn capacity(&self) -> usize {
@@ -91,8 +73,7 @@ impl<D> Buffer<D> {
 
     #[inline]
     pub fn clear(&mut self) {
-        self.head = 0;
-        self.tail = 0;
+        self.inner.clear();
     }
 
     fn insert_recycle_hook(&mut self, hook: BufferRecycleHook<D>) {
@@ -110,7 +91,7 @@ impl<D> Buffer<D> {
                     return;
                 }
             }
-            batch.inner = vec![];
+            batch.inner = VecDeque::new();
         } else {
             // trace!("no recycle hook found;")
         }
@@ -119,7 +100,7 @@ impl<D> Buffer<D> {
 
 impl<D: Clone> Clone for Buffer<D> {
     fn clone(&self) -> Self {
-        Buffer { inner: self.inner.clone(), head: self.head, tail: self.tail, recycle_hooks: vec![] }
+        Buffer { inner: self.inner.clone(), recycle_hooks: vec![] }
     }
 }
 
@@ -297,7 +278,7 @@ impl<D> BufferFactory<D> for MemBufAlloc<D> {
     }
 
     fn release(&mut self, mut b: Buffer<D>) {
-        b.inner = vec![];
+        b.inner = VecDeque::new();
         self.alloc -= 1;
     }
 }

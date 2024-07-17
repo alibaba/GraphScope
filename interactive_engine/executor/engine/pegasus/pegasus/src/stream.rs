@@ -30,7 +30,7 @@ use crate::errors::BuildJobError;
 use crate::graph::{Edge, Port};
 use crate::macros::route::*;
 use crate::operator::{NotifiableOperator, OperatorCore};
-use crate::{Data, JobConf, WorkerId};
+use crate::{Data, JobConf, ServerConf, WorkerId};
 
 #[must_use = "this `Stream` must be consumed"]
 pub struct Stream<D: Data> {
@@ -370,6 +370,7 @@ impl<D: Data> Stream<D> {
         let mut op = self
             .builder
             .add_operator(name, self.get_scope_level(), builder);
+
         let edge = self.connect(&mut op)?;
         self.builder.add_edge(edge);
         Ok(op)
@@ -446,6 +447,16 @@ impl<D: Debug + Send + Sync + 'static> SingleItem<D> {
         F: Fn(D) -> FnResult<Iter> + Send + 'static,
     {
         self.inner.flat_map(move |single| f(single.0))
+    }
+
+    pub fn unfold_with_name<Iter, F>(self, name: &str, f: F) -> Result<Stream<Iter::Item>, BuildJobError>
+    where
+        Iter: Iterator + Send + 'static,
+        Iter::Item: Data,
+        F: Fn(D) -> FnResult<Iter> + Send + 'static,
+    {
+        self.inner
+            .flat_map_with_name(name, move |single| f(single.0))
     }
 
     pub fn map<T, F>(mut self, f: F) -> Result<SingleItem<T>, BuildJobError>

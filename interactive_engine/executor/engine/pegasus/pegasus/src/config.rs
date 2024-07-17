@@ -33,7 +33,7 @@ macro_rules! configure_with_default {
     }};
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Configuration {
     pub network: Option<NetworkConfig>,
     pub max_pool_size: Option<u32>,

@@ -222,6 +222,9 @@ where
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let rpc_sink = RpcSink::new(conf.job_id, tx);
         let sink = ResultSink::<Vec<u8>>::with(rpc_sink);
+        if conf.trace_enable {
+            info!("submitting job({}) with id {}", conf.job_name, conf.job_id);
+        }
         let job_id = conf.job_id;
         let service = &self.inner;
         let job = JobDesc { input: source, plan, resource };
@@ -302,13 +305,11 @@ where
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
-    init_otel().expect("Failed to initialize open telemetry");
     let server_id = server_config.server_id();
     if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
         listener.on_server_start(server_id, server_addr)?;
     }
     start_rpc_server(server_id, rpc_config, assemble, listener).await?;
-    global::shutdown_tracer_provider();
     Ok(())
 }
 

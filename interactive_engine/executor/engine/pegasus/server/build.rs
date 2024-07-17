@@ -38,7 +38,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     tonic_build::configure()
         .build_server(true)
-        .build_client(true)
         .compile(&["proto/job_service.proto", "proto/job_plan.proto"], &["proto"])?;
     Ok(())
 }

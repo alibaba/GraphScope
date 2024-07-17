@@ -104,7 +104,7 @@ impl<D> BufSlot<D> {
     }
 }
 
-struct BufSlotPtr<D: Data> {
+pub(crate) struct BufSlotPtr<D: Data> {
     ptr: NonNull<BufSlot<D>>,
 }
 
@@ -118,7 +118,7 @@ impl<D: Data> BufSlotPtr<D> {
     fn destroy(&mut self) {
         unsafe {
             let ptr = self.ptr;
-            drop(Box::from_raw(ptr.as_ptr()));
+            Box::from_raw(ptr.as_ptr());
         }
     }
 }
@@ -282,7 +282,7 @@ impl<D: Data> ScopeBufferPool<D> {
             })
     }
 
-    fn fetch_slot_ptr(&mut self, tag: &Tag) -> BufSlotPtr<D> {
+    pub fn fetch_slot_ptr(&mut self, tag: &Tag) -> BufSlotPtr<D> {
         if let Some(slot) = self.buf_slots.get(tag) {
             slot.clone()
         } else {
