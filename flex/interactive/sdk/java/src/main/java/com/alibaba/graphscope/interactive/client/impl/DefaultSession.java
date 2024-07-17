@@ -32,10 +32,17 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 
 /***
  * A default implementation of the GraphScope interactive session interface.
@@ -742,17 +749,25 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            ApiResponse<byte[]> response =
-                    queryApi.callProcWithHttpInfo(
-                            graphId, appendFormatByte(request, InputFormat.CPP_ENCODER));
-            if (response.getStatusCode() != 200) {
-                return Result.fromException(
-                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            String localVarPath = "/v1/graph/{graph_id}/query"
+                    .replace("{" + "graph_id" + "}", graphId.toString());
+            String uri = queryClient.getBasePath() + localVarPath;
+            OkHttpClient rawClient = queryClient.getHttpClient();
+            byte[] bs = appendFormatByte(request, InputFormat.CPP_ENCODER);
+            RequestBody body = RequestBody.create(bs);
+            Request req = new Request.Builder().url(uri).post(body).build();
+            System.out.println("url: " + queryClient.getBasePath());
+            Response response = rawClient.newCall(req).execute();
+            if (response.code() != 200) {
+                throw new ApiException(response.code(), "Failed to call procedure");
             }
-            return new Result<byte[]>(response.getData());
+            return new Result<byte[]>(response.body().bytes());
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Result.error(e.getMessage());
         }
     }
 
@@ -778,17 +793,23 @@ public class DefaultSession implements Session {
             // flex/engines/graph_db/graph_db_session.h
             // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
             // format.
-            ApiResponse<byte[]> response =
-                    queryApi.callProcCurrentWithHttpInfo(
-                            appendFormatByte(request, InputFormat.CPP_ENCODER));
-            if (response.getStatusCode() != 200) {
-                return Result.fromException(
-                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            String localVarPath = "/v1/graph/current/query";
+            String uri = queryClient.getBasePath() + localVarPath;
+            OkHttpClient rawClient = queryClient.getHttpClient();
+            byte[] bs = appendFormatByte(request, InputFormat.CPP_ENCODER);
+            RequestBody body = RequestBody.create(bs);
+            Request req = new Request.Builder().url(uri).post(body).build();
+            Response response = rawClient.newCall(req).execute();
+            if (response.code() != 200) {
+                throw new ApiException(response.code(), "Failed to call procedure");
             }
-            return new Result<byte[]>(response.getData());
+            return new Result<byte[]>(response.body().bytes());
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Result.error(e.getMessage());
         }
     }
 
@@ -819,19 +840,26 @@ public class DefaultSession implements Session {
             String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         try {
             // For adhoc query, we don't append format byte.
-            ApiResponse<byte[]> response =
-                    queryApi.runAdhocWithHttpInfo(graphId, physicalPlan.toByteArray());
-            if (response.getStatusCode() != 200) {
-                return Result.fromException(
-                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            String localVarPath = "/v1/graph/{graph_id}/adhoc_query"
+                    .replace("{" + "graph_id" + "}", graphId.toString());
+            String uri = queryClient.getBasePath() + localVarPath;
+            OkHttpClient rawClient = queryClient.getHttpClient();
+            byte[] bs = physicalPlan.toByteArray();
+            RequestBody body = RequestBody.create(bs);
+            Request req = new Request.Builder().url(uri).post(body).build();
+            Response response = rawClient.newCall(req).execute();
+            if (response.code() != 200) {
+                throw new ApiException(response.code(), "Failed to call procedure");
             }
-            IrResult.CollectiveResults results =
-                    IrResult.CollectiveResults.parseFrom(response.getData());
+            IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(response.body().bytes());
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);
         } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            return Result.error(e.getMessage());
+        } catch(IOException e) {
             e.printStackTrace();
             return Result.error(e.getMessage());
         }
@@ -864,19 +892,25 @@ public class DefaultSession implements Session {
             GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         try {
             // For adhoc query, we don't append format byte.
-            ApiResponse<byte[]> response =
-                    queryApi.runAdhocCurrentWithHttpInfo(physicalPlan.toByteArray());
-            if (response.getStatusCode() != 200) {
-                return Result.fromException(
-                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
+            String localVarPath = "/v1/graph/current/adhoc_query";
+            String uri = queryClient.getBasePath() + localVarPath;
+            OkHttpClient rawClient = queryClient.getHttpClient();
+            byte[] bs = physicalPlan.toByteArray();
+            RequestBody body = RequestBody.create(bs);
+            Request req = new Request.Builder().url(uri).post(body).build();
+            Response response = rawClient.newCall(req).execute();
+            if (response.code() != 200) {
+                throw new ApiException(response.code(), "Failed to call procedure");
             }
-            IrResult.CollectiveResults results =
-                    IrResult.CollectiveResults.parseFrom(response.getData());
+            IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(response.body().bytes());
             return new Result<>(results);
         } catch (ApiException e) {
             e.printStackTrace();
             return Result.fromException(e);
         } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            return Result.error(e.getMessage());
+        } catch (IOException e) {
             e.printStackTrace();
             return Result.error(e.getMessage());
         }
