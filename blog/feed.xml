@@ -5,8 +5,8 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 16 Jul 2024 03:16:58 +0000</pubDate>
-    <lastBuildDate>Tue, 16 Jul 2024 03:16:58 +0000</lastBuildDate>
+    <pubDate>Wed, 17 Jul 2024 02:14:48 +0000</pubDate>
+    <lastBuildDate>Wed, 17 Jul 2024 02:14:48 +0000</lastBuildDate>
     <generator>Jekyll v4.3.3</generator>
     
       <item>
@@ -16,7 +16,7 @@ From June 9th to June 15th, 2024, SIGMOD 2024 was held in Santiago, Chile.
 Graph computing remains a hot topic at this conference, and it is also the area that received the most paper submissions. 
 SIGMOD 2024 organized a panel discussion on graph computation titled “The Future of Graph Analytics”.&lt;/p&gt;
 
-&lt;p&gt;This panel invited six well-known individuals from the academic and industrial sectors of graph computing, including Professor Angela Bonifati from Lyon 1 University, Professor M. Tamer Özsu from the University of Waterloo, Yuanyuan Tian, a Principal Scientist Manager from Microsoft, Hannes Voigt, a Staff Engineer from Neo4j, Professor Wenjie Zhang from the University of New South Wales, and Dr. Wenyuan Yu, the person in charge of GraphScope.&lt;/p&gt;
+&lt;p&gt;This panel invited six well-known individuals from the academic and industrial sectors of graph computing, including Professor &lt;a href=&quot;https://perso.liris.cnrs.fr/angela.bonifati/&quot;&gt;Angela Bonifati&lt;/a&gt; from Lyon 1 University, Professor &lt;a href=&quot;https://cs.uwaterloo.ca/~tozsu/&quot;&gt;M. Tamer Özsu&lt;/a&gt; from the University of Waterloo, &lt;a href=&quot;https://humming80.github.io/&quot;&gt;Yuanyuan Tian&lt;/a&gt;, a Principal Scientist Manager from Microsoft, &lt;a href=&quot;https://de.linkedin.com/in/hannesvoigt&quot;&gt;Hannes Voigt&lt;/a&gt;, a Staff Engineer from Neo4j, Professor &lt;a href=&quot;https://research.unsw.edu.au/people/professor-wenjie-zhang&quot;&gt;Wenjie Zhang&lt;/a&gt; from the University of New South Wales, and Dr. &lt;a href=&quot;https://wyu.io/&quot;&gt;Wenyuan Yu&lt;/a&gt;, the person in charge of GraphScope.&lt;/p&gt;
 
 &lt;p&gt;Graph computing plays an important role in real-world business scenarios, and various graph computing systems are emerging one after another. Nowadays, the types of graph computing tasks are becoming more diverse, and they form complex workflows together with other task types, such as machine learning and Large Language Model (LLM) tasks. This also leads to new discussions and considerations regarding graph computing. 
 The panel discussed the following six issues, and Dr. Wenyuan Yu shared GraphScope’s perspectives on these matters.&lt;/p&gt;
