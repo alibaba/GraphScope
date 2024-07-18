@@ -143,16 +143,14 @@ seastar::future<gs::Result<bool>> CodegenProxy::call_codegen_cmd(
           LOG(ERROR) << "Compilation failure: "
                      << codegen_res.status().error_message();
           insert_or_update(next_job_id, CodegenStatus::FAILED, "");
-          return seastar::make_ready_future<gs::Result<bool>>(codegen_res,
-                                                              false);
+          return seastar::make_ready_future<gs::Result<bool>>(codegen_res);
         }
         if (!std::filesystem::exists(expected_res_lib_path)) {
           LOG(ERROR) << "Compilation success, but generated lib not exists: "
                      << expected_res_lib_path;
           insert_or_update(next_job_id, CodegenStatus::FAILED, "");
           VLOG(10) << "Compilation failed, job id: " << next_job_id;
-          return seastar::make_ready_future<gs::Result<bool>>(codegen_res,
-                                                              false);
+          return seastar::make_ready_future<gs::Result<bool>>(codegen_res);
         }
         VLOG(10) << "Compilation success, job id: " << next_job_id;
         insert_or_update(next_job_id, CodegenStatus::SUCCESS,
