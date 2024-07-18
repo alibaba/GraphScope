@@ -47,6 +47,7 @@ jobs:
     - name: Build gsctl Wheel Package
       run: |
         cd ${GITHUB_WORKSPACE}/python
+        python3 setup_flex.py bdist_wheel
         python3 setup_gsctl.py bdist_wheel
 
     - name: Setup tmate session
