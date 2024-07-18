@@ -11,7 +11,6 @@ maxdepth: 2
 ---
 interactive/overview
 interactive/installation
-interactive/deployment
 interactive/getting_started
 interactive/custom_graph_data
 interactive/stored_procedures
@@ -19,6 +18,6 @@ interactive/configuration
 interactive/data_model
 interactive/data_import
 interactive/dev_guide
+interactive/deployment
 interactive/glossary
-interactive/tools
 ```

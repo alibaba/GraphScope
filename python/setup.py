@@ -223,7 +223,10 @@ class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else bui
             else str(int(torch._C._GLIBCXX_USE_CXX11_ABI))
         )
         print(f"GCC_USE_CXX11_ABI for {extension.name}: {gcc_use_cxx_abi}")
-        self._add_compile_flag(extension, "-D_GLIBCXX_USE_CXX11_ABI=" + gcc_use_cxx_abi)
+        if gcc_use_cxx_abi is not None:
+            self._add_compile_flag(
+                extension, "-D_GLIBCXX_USE_CXX11_ABI=" + gcc_use_cxx_abi
+            )
 
 
 class CustomDevelop(develop):
