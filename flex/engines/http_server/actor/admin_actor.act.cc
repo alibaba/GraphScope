@@ -1389,25 +1389,31 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
     // vertex data
     for (auto& vertex_insert : input_json["vertex_request"]) {
       gs::VertexData vertex;
-      vertex.label = gs::jsonToString(vertex_insert["label"]);
+      std::string label = gs::jsonToString(vertex_insert["label"]);
       vertex.pk_value =
           gs::Any(gs::jsonToString(vertex_insert["primary_key_value"]));
+      std::unordered_set<std::string> property_names;
       for (auto& property : vertex_insert["properties"]["properties"]) {
         auto name_string = gs::jsonToString(property["name"]);
         auto value_string = gs::jsonToString(property["value"]);
-        if (vertex.properties.find(name_string) != vertex.properties.end())
+        if (property_names.find(name_string) != property_names.end()) {
           throw std::runtime_error(
               "property already exists in input properties: " + name_string);
-        vertex.properties[name_string] = gs::Any(value_string);
+        } else {
+          property_names.insert(name_string);
+        }
+        vertex.properties.emplace_back(name_string, gs::Any(value_string));
       }
+      gs::VertexEdgeManager::checkVertexSchema(schema_json, vertex, label);
+      gs::VertexEdgeManager::getVertexLabelId(vertex, label, hiactor::local_shard_id());
       vertex_data.push_back(vertex);
     }
     // edge data
     for (auto& edge_insert : input_json["edge_request"]) {
       gs::EdgeData edge;
-      edge.src_label = gs::jsonToString(edge_insert["src_label"]);
-      edge.dst_label = gs::jsonToString(edge_insert["dst_label"]);
-      edge.edge_label = gs::jsonToString(edge_insert["edge_label"]);
+      std::string src_label = gs::jsonToString(edge_insert["src_label"]);
+      std::string dst_label = gs::jsonToString(edge_insert["dst_label"]);
+      std::string edge_label = gs::jsonToString(edge_insert["edge_label"]);
       edge.src_pk_value =
           gs::Any(gs::jsonToString(edge_insert["src_primary_key_value"]));
       edge.dst_pk_value =
@@ -1421,27 +1427,19 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
           gs::jsonToString(edge_insert["properties"][0]["name"]);
       edge.property_value =
           gs::Any(gs::jsonToString(edge_insert["properties"][0]["value"]));
+      gs::VertexEdgeManager::checkEdgeSchema(schema_json, edge, src_label, dst_label, edge_label);
+      gs::VertexEdgeManager::getEdgeLabelId(edge, src_label, dst_label, edge_label, hiactor::local_shard_id());
       edge_data.push_back(edge);
     }
   } catch (std::exception& e) {
     return errorResponse(gs::StatusCode::InvalidSchema,
                          " Bad input parameter : " + std::string(e.what()));
   }
-  auto manager = new gs::VertexEdgeManager(
-      std::move(vertex_data), std::move(edge_data), std::move(schema_json),
-      hiactor::local_shard_id());
   try {
-    manager->checkVertexSchema();
-    manager->checkEdgeSchema();
-    manager->getLabelId();
-    manager->checkVertexExists();
-    manager->checkEdgeExistsWithInsert();
-    manager->insertVertex();
+    gs::VertexEdgeManager::insertVertex(vertex_data, edge_data, hiactor::local_shard_id());
   } catch (std::exception& e) {
-    delete manager;
     return errorResponse(gs::StatusCode::InvalidSchema, e.what());
   }
-  delete manager;
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
 }
@@ -1473,9 +1471,9 @@ seastar::future<admin_query_result> admin_actor::create_edge(
   try {
     for (auto& edge_insert : input_json) {
       gs::EdgeData edge;
-      edge.src_label = gs::jsonToString(edge_insert["src_label"]);
-      edge.dst_label = gs::jsonToString(edge_insert["dst_label"]);
-      edge.edge_label = gs::jsonToString(edge_insert["edge_label"]);
+      std::string src_label = gs::jsonToString(edge_insert["src_label"]);
+      std::string dst_label = gs::jsonToString(edge_insert["dst_label"]);
+      std::string edge_label = gs::jsonToString(edge_insert["edge_label"]);
       edge.src_pk_value =
           gs::Any(gs::jsonToString(edge_insert["src_primary_key_value"]));
       edge.dst_pk_value =
@@ -1489,25 +1487,19 @@ seastar::future<admin_query_result> admin_actor::create_edge(
           gs::jsonToString(edge_insert["properties"][0]["name"]);
       edge.property_value =
           gs::Any(gs::jsonToString(edge_insert["properties"][0]["value"]));
+      gs::VertexEdgeManager::checkEdgeSchema(schema_json, edge, src_label, dst_label, edge_label);
+      gs::VertexEdgeManager::getEdgeLabelId(edge, src_label, dst_label, edge_label, hiactor::local_shard_id());
       edge_data.push_back(edge);
     }
   } catch (std::exception& e) {
     return errorResponse(gs::StatusCode::InvalidSchema,
                          " Bad input parameter : " + std::string(e.what()));
   }
-  auto manager = new gs::VertexEdgeManager(
-      std::move(vertex_data), std::move(edge_data), std::move(schema_json),
-      hiactor::local_shard_id());
   try {
-    manager->checkEdgeSchema();
-    manager->getLabelId();
-    manager->checkEdgeExists();
-    manager->insertEdge();
+    gs::VertexEdgeManager::insertEdge(edge_data, hiactor::local_shard_id());
   } catch (std::exception& e) {
-    delete manager;
     return errorResponse(gs::StatusCode::InvalidSchema, e.what());
   }
-  delete manager;
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
 }
@@ -1532,34 +1524,33 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
   // input vertex data
   try {
     gs::VertexData vertex;
-    vertex.label = gs::jsonToString(input_json["label"]);
+    std::string label = gs::jsonToString(input_json["label"]);
     vertex.pk_value =
         gs::Any(gs::jsonToString(input_json["primary_key_value"]));
+    std::unordered_set<std::string> property_names;
     for (auto& property : input_json["properties"]["properties"]) {
       auto name_string = gs::jsonToString(property["name"]);
       auto value_string = gs::jsonToString(property["value"]);
-      if (vertex.properties.find(name_string) != vertex.properties.end())
+      if (property_names.find(name_string) != property_names.end()) {
         throw std::runtime_error(
             "property already exists in input properties: " + name_string);
-      vertex.properties[name_string] = gs::Any(value_string);
+      } else {
+        property_names.insert(name_string);
+      }
+      vertex.properties.emplace_back(name_string, gs::Any(value_string));
     }
+    gs::VertexEdgeManager::checkVertexSchema(schema_json, vertex, label);
+    gs::VertexEdgeManager::getVertexLabelId(vertex, label, hiactor::local_shard_id());
     vertex_data.push_back(vertex);
   } catch (std::exception& e) {
     return errorResponse(gs::StatusCode::InvalidSchema,
                          " Bad input parameter : " + std::string(e.what()));
   }
-  auto manager = new gs::VertexEdgeManager(
-      std::move(vertex_data), std::move(edge_data), std::move(schema_json),
-      hiactor::local_shard_id());
   try {
-    manager->checkVertexSchema();
-    manager->getLabelId();
-    manager->updateVertex();
+    gs::VertexEdgeManager::updateVertex(vertex_data, hiactor::local_shard_id());
   } catch (std::exception& e) {
-    delete manager;
     return errorResponse(gs::StatusCode::InvalidSchema, e.what());
   }
-  delete manager;
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
 }
@@ -1583,9 +1574,9 @@ seastar::future<admin_query_result> admin_actor::update_edge(
   // input edge data
   try {
     gs::EdgeData edge;
-    edge.src_label = gs::jsonToString(input_json["src_label"]);
-    edge.dst_label = gs::jsonToString(input_json["dst_label"]);
-    edge.edge_label = gs::jsonToString(input_json["edge_label"]);
+    std::string src_label = gs::jsonToString(input_json["src_label"]);
+    std::string dst_label = gs::jsonToString(input_json["dst_label"]);
+    std::string edge_label = gs::jsonToString(input_json["edge_label"]);
     edge.src_pk_value =
         gs::Any(gs::jsonToString(input_json["src_primary_key_value"]));
     edge.dst_pk_value =
@@ -1598,30 +1589,25 @@ seastar::future<admin_query_result> admin_actor::update_edge(
     edge.property_name = gs::jsonToString(input_json["properties"][0]["name"]);
     edge.property_value =
         gs::Any(gs::jsonToString(input_json["properties"][0]["value"]));
+    gs::VertexEdgeManager::checkEdgeSchema(schema_json, edge, src_label, dst_label, edge_label);
+    gs::VertexEdgeManager::getEdgeLabelId(edge, src_label, dst_label, edge_label, hiactor::local_shard_id());
     edge_data.push_back(edge);
   } catch (std::exception& e) {
     return errorResponse(gs::StatusCode::InvalidSchema,
                          " Bad input parameter : " + std::string(e.what()));
   }
-  auto manager = new gs::VertexEdgeManager(
-      std::move(vertex_data), std::move(edge_data), std::move(schema_json),
-      hiactor::local_shard_id());
   try {
-    manager->checkEdgeSchema();
-    manager->getLabelId();
-    manager->updateEdge();
+    gs::VertexEdgeManager::updateEdge(edge_data, hiactor::local_shard_id());
   } catch (std::exception& e) {
-    delete manager;
     return errorResponse(gs::StatusCode::InvalidSchema, e.what());
   }
-  delete manager;
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
 }
 
 seastar::future<admin_query_result> admin_actor::get_vertex(
     graph_management_query_param&& param) {
-  nlohmann::json schema_json;
+  nlohmann::json schema_json, result;
   std::vector<gs::VertexData> vertex_data;
   std::vector<gs::EdgeData> edge_data;
   // Parse the input
@@ -1635,32 +1621,28 @@ seastar::future<admin_query_result> admin_actor::get_vertex(
   // input vertex data
   try {
     gs::VertexData vertex;
-    vertex.label = query_params["label"];
+    std::string label = query_params["label"];
+    result["label"] = label;
     vertex.pk_value = gs::Any(std::string(query_params["primary_key_value"]));
+    gs::VertexEdgeManager::checkVertexSchema(schema_json, vertex, label);
+    gs::VertexEdgeManager::getVertexLabelId(vertex, label, hiactor::local_shard_id());
     vertex_data.push_back(vertex);
   } catch (std::exception& e) {
     return errorResponse(gs::StatusCode::InvalidSchema,
                          " Bad input parameter : " + std::string(e.what()));
   }
-  auto manager = new gs::VertexEdgeManager(
-      std::move(vertex_data), std::move(edge_data), std::move(schema_json),
-      hiactor::local_shard_id());
   try {
-    manager->checkVertexSchema();
-    manager->getLabelId();
-    auto ans = manager->getVertex();
-    delete manager;
+    result["values"] = gs::VertexEdgeManager::getVertex(vertex_data, hiactor::local_shard_id());
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(ans));
+        gs::Result<seastar::sstring>(result.dump()));
   } catch (std::exception& e) {
-    delete manager;
     return errorResponse(gs::StatusCode::InvalidSchema, e.what());
   }
 }
 
 seastar::future<admin_query_result> admin_actor::get_edge(
     graph_management_query_param&& param) {
-  nlohmann::json schema_json;
+  nlohmann::json schema_json, result;
   std::vector<gs::VertexData> vertex_data;
   std::vector<gs::EdgeData> edge_data;
   // Parse the input json
@@ -1674,30 +1656,30 @@ seastar::future<admin_query_result> admin_actor::get_edge(
   // input edge data
   try {
     gs::EdgeData edge;
-    edge.src_label = query_params["src_label"];
-    edge.dst_label = query_params["dst_label"];
-    edge.edge_label = query_params["edge_label"];
-    edge.src_pk_value =
-        gs::Any(std::string(query_params["src_primary_key_value"]));
-    edge.dst_pk_value =
-        gs::Any(std::string(query_params["dst_primary_key_value"]));
+    std::string src_label = query_params["src_label"];
+    std::string dst_label = query_params["dst_label"];
+    std::string edge_label = query_params["edge_label"];
+    std::string src_pk_value = query_params["src_primary_key_value"];
+    std::string dst_pk_value = query_params["dst_primary_key_value"];
+    edge.src_pk_value = gs::Any(src_pk_value);
+    edge.dst_pk_value = gs::Any(dst_pk_value);
+    gs::VertexEdgeManager::checkEdgeSchema(schema_json, edge, src_label, dst_label, edge_label);
+    gs::VertexEdgeManager::getEdgeLabelId(edge, src_label, dst_label, edge_label, hiactor::local_shard_id());
     edge_data.push_back(edge);
+    result["src_label"] = src_label;
+    result["dst_label"] = dst_label;
+    result["edge_label"] = edge_label;
+    result["src_primary_key_value"] = src_pk_value;
+    result["dst_primary_key_value"] = dst_pk_value;
   } catch (std::exception& e) {
     return errorResponse(gs::StatusCode::InvalidSchema,
                          " Bad input parameter : " + std::string(e.what()));
   }
-  auto manager = new gs::VertexEdgeManager(
-      std::move(vertex_data), std::move(edge_data), std::move(schema_json),
-      hiactor::local_shard_id());
   try {
-    manager->checkEdgeSchema();
-    manager->getLabelId();
-    auto ans = manager->getEdge();
-    delete manager;
+    result["properties"] = gs::VertexEdgeManager::getEdge(edge_data, hiactor::local_shard_id());
     return seastar::make_ready_future<admin_query_result>(
-        gs::Result<seastar::sstring>(ans));
+        gs::Result<seastar::sstring>(result.dump()));
   } catch (std::exception& e) {
-    delete manager;
     return errorResponse(gs::StatusCode::InvalidSchema, e.what());
   }
 }

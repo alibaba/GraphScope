@@ -22,8 +22,8 @@ class VertexSDK:
                     primary_key_value=8,
                     properties=PropertyArray(
                         properties=[
-                            ModelProperty(name="age", type="integer", value=1),
                             ModelProperty(name="name", type="string", value="mike"),
+                            ModelProperty(name="age", type="integer", value=1),
                         ]
                     ),
                 ),
@@ -32,8 +32,8 @@ class VertexSDK:
                     primary_key_value=7,
                     properties=PropertyArray(
                         properties=[
-                            ModelProperty(name="age", type="integer", value=2),
                             ModelProperty(name="name", type="string", value="lisa"),
+                            ModelProperty(name="age", type="integer", value=2),
                         ]
                     ),
                 ),
@@ -76,7 +76,7 @@ class VertexSDK:
             graph_id = "1"  # str | The id of the graph
             age_property = ModelProperty(name="age", type="integer", value=24)
             name_property = ModelProperty(name="name", type="string", value="Cindy")
-            properties = PropertyArray(properties=[age_property, name_property])
+            properties = PropertyArray(properties=[name_property, age_property])
             vertex_request = VertexRequest(
                 label="person", primary_key_value=1, properties=properties
             )
