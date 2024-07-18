@@ -16,57 +16,11 @@
 #ifndef ENGINES_HTTP_SERVER_HANDLER_GRAPH_DB_HTTP_HANDLER_H_
 #define ENGINES_HTTP_SERVER_HANDLER_GRAPH_DB_HTTP_HANDLER_H_
 
-#define RANDOM_DISPATCHER 1
-// when RANDOM_DISPATCHER is false, the dispatcher will use round-robin
-// algorithm to dispatch the query to different executors
-
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/generated/actor/codegen_actor_ref.act.autogen.h"
 #include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 
-#if RANDOM_DISPATCHER
-#include <random>
-#endif
-
 #include <seastar/http/httpd.hh>
-
-class query_dispatcher {
- public:
-  query_dispatcher(uint32_t shard_concurrency)
-      :
-#if RANDOM_DISPATCHER
-        rd_(),
-        gen_(rd_()),
-        dis_(0, shard_concurrency - 1)
-#else
-        shard_concurrency_(shard_concurrency),
-        executor_idx_(0)
-#endif  // RANDOM_DISPATCHER
-  {
-  }
-
-  inline int get_executor_idx() {
-#if RANDOM_DISPATCHER
-    return dis_(gen_);
-#else
-    auto idx = executor_idx_;
-    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-    return idx;
-#endif  // RANDOM_DISPATCHER
-  }
-
- private:
-#if RANDOM_DISPATCHER
-  std::random_device rd_;
-  std::mt19937 gen_;
-  std::uniform_int_distribution<> dis_;
-#else
-  int shard_concurrency_;
-  int executor_idx_;
-#endif
-};
-
-#undef RANDOM_DISPATCHER
 
 namespace server {
 

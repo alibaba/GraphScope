@@ -32,6 +32,52 @@
 #include "opentelemetry/trace/span_startoptions.h"
 #endif  // HAVE_OPENTELEMETRY_CPP
 
+#define RANDOM_DISPATCHER 1
+// when RANDOM_DISPATCHER is false, the dispatcher will use round-robin
+// algorithm to dispatch the query to different executors
+
+#if RANDOM_DISPATCHER
+#include <random>
+#endif
+
+class query_dispatcher {
+ public:
+  query_dispatcher(uint32_t shard_concurrency)
+      :
+#if RANDOM_DISPATCHER
+        rd_(),
+        gen_(rd_()),
+        dis_(0, shard_concurrency - 1)
+#else
+        shard_concurrency_(shard_concurrency),
+        executor_idx_(0)
+#endif  // RANDOM_DISPATCHER
+  {
+  }
+
+  inline int get_executor_idx() {
+#if RANDOM_DISPATCHER
+    return dis_(gen_);
+#else
+    auto idx = executor_idx_;
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    return idx;
+#endif  // RANDOM_DISPATCHER
+  }
+
+ private:
+#if RANDOM_DISPATCHER
+  std::random_device rd_;
+  std::mt19937 gen_;
+  std::uniform_int_distribution<> dis_;
+#else
+  int shard_concurrency_;
+  int executor_idx_;
+#endif
+};
+
+#undef RANDOM_DISPATCHER
+
 //////////////////////////////////////////////////////////////////////////
 namespace seastar {
 namespace httpd {
@@ -85,7 +131,7 @@ class stored_proc_handler : public StoppableHandler {
         max_group_id_(max_group_id),
         group_inc_step_(group_inc_step),
         shard_concurrency_(shard_concurrency),
-        executor_idx_(0),
+        dispatcher_(shard_concurrency_),
         is_cancelled_(false) {
     executor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
@@ -156,8 +202,7 @@ class stored_proc_handler : public StoppableHandler {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_executor = executor_idx_;
-    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    auto dst_executor = dispatcher_.get_executor_idx();
     // TODO(zhanglei): choose read or write based on the request, after the
     // read/write info is supported in physical plan
     uint8_t last_byte;
@@ -304,7 +349,7 @@ class stored_proc_handler : public StoppableHandler {
   uint32_t cur_group_id_;
   const uint32_t max_group_id_, group_inc_step_;
   const uint32_t shard_concurrency_;
-  uint32_t executor_idx_;
+  query_dispatcher dispatcher_;
   std::vector<executor_ref> executor_refs_;
   bool is_cancelled_;
 #ifdef HAVE_OPENTELEMETRY_CPP
