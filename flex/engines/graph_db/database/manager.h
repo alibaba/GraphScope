@@ -43,6 +43,10 @@ struct EdgeData {
   ~EdgeData() {}
 };
 
+gs::VertexData inputVertex(const nlohmann::json &vertex_json, const nlohmann::json &schema_json, int shard_id);
+
+gs::EdgeData inputEdge(const nlohmann::json &edge_json, const nlohmann::json &schema_json, int shard_id);
+
 class VertexEdgeManager {
  public:
   // check schema

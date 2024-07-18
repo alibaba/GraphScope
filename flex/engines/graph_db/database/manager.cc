@@ -24,6 +24,51 @@
 
 namespace gs {
 
+gs::VertexData inputVertex(const nlohmann::json &vertex_json, const nlohmann::json &schema_json, int shard_id) {
+  gs::VertexData vertex;
+  std::string label = gs::jsonToString(vertex_json["label"]);
+  vertex.pk_value =
+      gs::Any(gs::jsonToString(vertex_json["primary_key_value"]));
+  std::unordered_set<std::string> property_names;
+  for (auto& property : vertex_json["properties"]["properties"]) {
+    auto name_string = gs::jsonToString(property["name"]);
+    auto value_string = gs::jsonToString(property["value"]);
+    if (property_names.find(name_string) != property_names.end()) {
+      throw std::runtime_error(
+          "property already exists in input properties: " + name_string);
+    } else {
+      property_names.insert(name_string);
+    }
+    vertex.properties.emplace_back(name_string, gs::Any(value_string));
+  }
+  gs::VertexEdgeManager::checkVertexSchema(schema_json, vertex, label);
+  gs::VertexEdgeManager::getVertexLabelId(vertex, label, shard_id);
+  return vertex;
+}
+
+gs::EdgeData inputEdge(const nlohmann::json &edge_json, const nlohmann::json &schema_json, int shard_id) {
+  gs::EdgeData edge;
+  std::string src_label = gs::jsonToString(edge_json["src_label"]);
+  std::string dst_label = gs::jsonToString(edge_json["dst_label"]);
+  std::string edge_label = gs::jsonToString(edge_json["edge_label"]);
+  edge.src_pk_value =
+      gs::Any(gs::jsonToString(edge_json["src_primary_key_value"]));
+  edge.dst_pk_value =
+      gs::Any(gs::jsonToString(edge_json["dst_primary_key_value"]));
+  // Check that all parameters in the parameter
+  if (edge_json["properties"].size() != 1) {
+    throw std::runtime_error(
+        "size should be 1(only support single property edge)");
+  }
+  edge.property_name =
+      gs::jsonToString(edge_json["properties"][0]["name"]);
+  edge.property_value =
+      gs::Any(gs::jsonToString(edge_json["properties"][0]["value"]));
+  gs::VertexEdgeManager::checkEdgeSchema(schema_json, edge, src_label, dst_label, edge_label);
+  gs::VertexEdgeManager::getEdgeLabelId(edge, src_label, dst_label, edge_label, shard_id);
+  return edge;
+}
+
 void VertexEdgeManager::checkVertexSchema(const nlohmann::json& schema_json, VertexData& vertex, std::string &label) {
   bool vertex_exists = false;
   for (auto& vertex_types : schema_json["vertex_types"]) {
