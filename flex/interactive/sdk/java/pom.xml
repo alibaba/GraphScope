@@ -453,6 +453,13 @@
             <artifactId>protobuf-java-util</artifactId>
             <version>${protobuf.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-bom</artifactId>
+            <version>${opentelemetry-bom.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
     </dependencies>
     <properties>
         <java.version>1.8</java.version>
@@ -480,5 +487,6 @@
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.7</nexus-staging-maven-plugin.version>
         <maven-source-plugin.version>2.2.1</maven-source-plugin.version>
+        <opentelemetry-bom.version>1.37.0</opentelemetry-bom.version>
     </properties>
 </project>

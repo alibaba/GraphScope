@@ -56,20 +56,20 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
     private final Driver driver;
     private final Session session;
 
-    private final OpenTelemetry openTelemetry;
-    private final Tracer tracer;
+//    private final OpenTelemetry openTelemetry;
+//    private final Tracer tracer;
 
-    private final TextMapSetter<ExecutionRequest> setter =
-            (carrier, key, value) -> {
-                logger.info("key: {}, value {}", key, value);
-            };
+//    private final TextMapSetter<ExecutionRequest> setter =
+//            (carrier, key, value) -> {
+//                logger.info("key: {}, value {}", key, value);
+//            };
 
     public HttpExecutionClient(Configs graphConfig, ChannelFetcher<URI> channelFetcher) {
         super(channelFetcher);
         driver = Driver.connect(HiactorConfig.INTERACTIVE_ADMIN_ENDPOINT.get(graphConfig));
         session = driver.session();
-        this.openTelemetry = GlobalOpenTelemetry.get();
-        this.tracer = openTelemetry.getTracer(HttpExecutionClient.class.getName());
+//        this.openTelemetry = GlobalOpenTelemetry.get();
+//        this.tracer = openTelemetry.getTracer(HttpExecutionClient.class.getName());
     }
 
     @Override
@@ -80,9 +80,9 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
             throws Exception {
         List<CompletableFuture> responseFutures = Lists.newArrayList();
         for (URI httpURI : channelFetcher.fetch()) {
-            Span outgoing =
-                    tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
-            try (Scope scope = outgoing.makeCurrent()) {
+//            Span outgoing =
+//                    tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
+//            try (Scope scope = outgoing.makeCurrent()) {
                 CompletableFuture<Result<IrResult.CollectiveResults>> future;
                 if (request.getRequestLogical().getRegularQuery() != null) {
                     byte[] bytes = (byte[]) request.getRequestPhysical().getContent();
@@ -98,17 +98,17 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                     + " query or a procedure call");
                 }
 
-                openTelemetry
-                        .getPropagators()
-                        .getTextMapPropagator()
-                        .inject(Context.current(), request, setter);
+//                openTelemetry
+//                        .getPropagators()
+//                        .getTextMapPropagator()
+//                        .inject(Context.current(), request, setter);
 
                 CompletableFuture<Result<IrResult.CollectiveResults>> responseFuture =
                         future.whenComplete(
                                 (response, exception) -> {
                                     if (exception != null) {
                                         listener.onError(exception);
-                                        outgoing.recordException(exception);
+//                                        outgoing.recordException(exception);
                                     }
 
                                     // if response is not 200
@@ -124,10 +124,10 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                                                 + response.getStatusCode()
                                                                 + ", error message: "
                                                                 + errorMessage);
-                                        outgoing.recordException(ex);
+//                                        outgoing.recordException(ex);
                                         listener.onError(ex);
                                     } else {
-                                        outgoing.end();
+//                                        outgoing.end();
                                     }
                                     IrResult.CollectiveResults results = response.getValue();
                                     for (IrResult.Results irResult : results.getResultsList()) {
@@ -136,7 +136,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                 });
                 responseFutures.add(responseFuture);
             }
-        }
+//        }
         CompletableFuture<Void> joinFuture =
                 CompletableFuture.runAsync(
                         () -> {
