@@ -76,9 +76,7 @@ class optional_param_matcher : public matcher {
 
 namespace server {
 
-#ifdef BUILD_HQPS
 ////////////////////////////stored_proc_handler////////////////////////////
-
 class stored_proc_handler : public StoppableHandler {
  public:
   stored_proc_handler(uint32_t init_group_id, uint32_t max_group_id,
@@ -163,12 +161,12 @@ class stored_proc_handler : public StoppableHandler {
     // TODO(zhanglei): choose read or write based on the request, after the
     // read/write info is supported in physical plan
     uint8_t last_byte;
-    if (req->content.size() <= 0) {
+    if (req->content.size() > 0) {
       // read last byte and get the format info from the byte.
       last_byte = req->content.back();
       if (last_byte >
           static_cast<uint8_t>(
-              gs::GraphDBSession::InputFormat::kCypherInternalProcedure)) {
+              gs::GraphDBSession::InputFormat::kCypherProtoProcedure)) {
         LOG(ERROR) << "Unsupported request format: " << (int) last_byte;
         rep->set_status(
             seastar::httpd::reply::status_type::internal_server_error);
@@ -184,6 +182,7 @@ class stored_proc_handler : public StoppableHandler {
       last_byte =
           static_cast<uint8_t>(gs::GraphDBSession::InputFormat::kCppEncoder);
     }
+#ifdef BUILD_HQPS  // Only need to check running graph for hqps
     if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
       // TODO(zhanglei): get from graph_db.
       if (!is_running_graph(req->param["graph_id"])) {
@@ -197,6 +196,7 @@ class stored_proc_handler : public StoppableHandler {
             std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
       }
     }
+#endif  // BUILD_HQPS
 #ifdef HAVE_OPENTELEMETRY_CPP
     auto tracer = otel::get_tracer("hqps_procedure_query_handler");
     // Extract context from headers. This copy is necessary to avoid access
@@ -232,7 +232,9 @@ class stored_proc_handler : public StoppableHandler {
               outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
                                     "Invalid output size");
               outer_span->End();
-              std::map<std::string, std::string> labels = {{"status", "fail"}};
+              std::map<std::string, std::string> labels = {
+                  { "status",
+                    "fail" }};
               total_counter_->Add(1, labels);
 #endif  // HAVE_OPENTELEMETRY_CPP
               return seastar::make_ready_future<query_param>(std::move(output));
@@ -259,7 +261,7 @@ class stored_proc_handler : public StoppableHandler {
             outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
                                   "Internal Server Error");
             outer_span->End();
-            std::map<std::string, std::string> labels = {{"status", "fail"}};
+            std::map<std::string, std::string> labels = {{ "status", "fail" }};
             total_counter_->Add(1, labels);
 #endif  // HAVE_OPENTELEMETRY_CPP
             rep->done();
@@ -270,7 +272,7 @@ class stored_proc_handler : public StoppableHandler {
           rep->write_body("bin", std::move(result.content));
 #ifdef HAVE_OPENTELEMETRY_CPP
           outer_span->End();
-          std::map<std::string, std::string> labels = {{"status", "success"}};
+          std::map<std::string, std::string> labels = {{ "status", "success" }};
           total_counter_->Add(1, labels);
           auto end_ts = gs::GetCurrentTimeStamp();
 #if OPENTELEMETRY_ABI_VERSION_NO >= 2
@@ -313,6 +315,7 @@ class stored_proc_handler : public StoppableHandler {
 #endif
 };
 
+#ifdef BUILD_HQPS
 class adhoc_query_handler : public StoppableHandler {
  public:
   adhoc_query_handler(uint32_t init_adhoc_group_id,
@@ -474,7 +477,7 @@ class adhoc_query_handler : public StoppableHandler {
         //  read/write info is supported in physical plan
         // The content contains the path to dynamic library
           param.content.append(gs::Schema::HQPS_ADHOC_WRITE_PLUGIN_ID_STR, 1);
-          param.content.append(gs::GraphDBSession::kCypherInternalAdhocStr, 1);
+          param.content.append(gs::GraphDBSession::kCypherProtoAdhocStr, 1);
           return executor_refs_[dst_executor]
               .run_graph_db_query(query_param{std::move(param.content)})
               .then([
@@ -498,7 +501,7 @@ class adhoc_query_handler : public StoppableHandler {
           if (output.content.size() < 4) {
             LOG(ERROR) << "Invalid output size: " << output.content.size();
 #ifdef HAVE_OPENTELEMETRY_CPP
-            std::map<std::string, std::string> labels = {{"status", "fail"}};
+            std::map<std::string, std::string> labels = {{ "status", "fail" }};
             total_counter_->Add(1, labels);
             outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
                                   "Internal output size");
@@ -523,7 +526,9 @@ class adhoc_query_handler : public StoppableHandler {
             } catch (std::exception& e) {
               rep->write_body("bin", seastar::sstring(e.what()));
 #ifdef HAVE_OPENTELEMETRY_CPP
-              std::map<std::string, std::string> labels = {{"status", "fail"}};
+              std::map<std::string, std::string> labels = {
+                  { "status",
+                    "fail" }};
               total_counter_->Add(1, labels);
               outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
                                     "Internal Server Error");
@@ -539,7 +544,7 @@ class adhoc_query_handler : public StoppableHandler {
           auto result = fut.get0();
           rep->write_body("bin", std::move(result.content));
 #ifdef HAVE_OPENTELEMETRY_CPP
-          std::map<std::string, std::string> labels = {{"status", "success"}};
+          std::map<std::string, std::string> labels = {{ "status", "success" }};
           total_counter_->Add(1, labels);
           outer_span->End();
           auto end_ts = gs::GetCurrentTimeStamp();
@@ -695,9 +700,11 @@ seastar::future<> graph_db_http_handler::set_routes() {
           .add_str("/query");
       r.add(rule_proc, seastar::httpd::operation_type::POST);
 
-      r.add(seastar::httpd::operation_type::POST,
-            seastar::httpd::url("/v1/graph/current/adhoc_query"),
-            adhoc_query_handler_);
+      auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
+      rule_adhoc->add_str("/v1/graph")
+          .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+          .add_str("/adhoc_query");
+      r.add(rule_adhoc, seastar::httpd::operation_type::POST);
     }
 #endif  // BUILD_HQPS
 

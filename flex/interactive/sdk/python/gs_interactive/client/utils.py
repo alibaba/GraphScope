@@ -20,8 +20,8 @@ from enum import Enum
 class InputFormat(Enum):
     CPP_ENCODER = 0 # raw bytes encoded by encoder/decoder
     CYPHER_JSON = 1 # json format string
-    CYPHER_ADHOC = 2 # adhoc format string
-    CYPHER_PROTO = 3 # protobuf format string
+    CYPHER_PROTO_ADHOC = 2 # protobuf adhoc bytes
+    CYPHER_PROTO_PROCEDURE = 3 # protobuf procedure bytes
 
 def append_format_byte(input: bytes, input_format: InputFormat):
     """

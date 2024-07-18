@@ -660,7 +660,7 @@ public class DefaultSession implements Session {
             ApiResponse<byte[]> response =
                     queryApi.callProcWithHttpInfo(
                             graphId,
-                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE));
+                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE));
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -686,7 +686,7 @@ public class DefaultSession implements Session {
             okhttp3.Call call =
                     queryApi.callProcAsync(
                             graphId,
-                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE),
+                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE),
                             callBack);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -703,7 +703,7 @@ public class DefaultSession implements Session {
             // Here we add byte of value 1 to denote the input format is in JSON format.
             ApiResponse<byte[]> response =
                     queryApi.callProcCurrentWithHttpInfo(
-                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE));
+                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE));
             if (response.getStatusCode() != 200) {
                 return Result.fromException(
                         new ApiException(response.getStatusCode(), "Failed to call procedure"));
@@ -728,7 +728,7 @@ public class DefaultSession implements Session {
         try {
             okhttp3.Call call =
                     queryApi.callProcCurrentAsync(
-                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROCEDURE),
+                            appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE),
                             callBack);
         } catch (ApiException e) {
             e.printStackTrace();
