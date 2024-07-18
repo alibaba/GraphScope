@@ -35,7 +35,7 @@ struct VertexData {
 };
 
 struct EdgeData {
-  gs::label_t src_label_id, dst_label_id, edge_label_id; 
+  gs::label_t src_label_id, dst_label_id, edge_label_id;
   gs::Any src_pk_value, dst_pk_value;
   gs::Any property_value;
   std::string property_name;
@@ -43,45 +43,51 @@ struct EdgeData {
   ~EdgeData() {}
 };
 
-gs::VertexData inputVertex(const nlohmann::json &vertex_json, const nlohmann::json &schema_json, int shard_id);
+gs::VertexData inputVertex(const nlohmann::json& vertex_json,
+                           const nlohmann::json& schema_json, int shard_id);
 
-gs::EdgeData inputEdge(const nlohmann::json &edge_json, const nlohmann::json &schema_json, int shard_id);
+gs::EdgeData inputEdge(const nlohmann::json& edge_json,
+                       const nlohmann::json& schema_json, int shard_id);
 
 class VertexEdgeManager {
  public:
   // check schema
-  static void checkVertexSchema(const nlohmann::json& schema_json, VertexData& vertex,
-                         std::string& label);
+  static void checkVertexSchema(const nlohmann::json& schema_json,
+                                VertexData& vertex, std::string& label);
   static void checkEdgeSchema(const nlohmann::json& schema_json, EdgeData& edge,
-                       std::string& src_label, std::string& dst_label,
-                       std::string& edge_label);
+                              std::string& src_label, std::string& dst_label,
+                              std::string& edge_label);
 
   // check labelId
-  static void getVertexLabelId(VertexData& vertex, std::string& label, int shard_id);
+  static void getVertexLabelId(VertexData& vertex, std::string& label,
+                               int shard_id);
   static void getEdgeLabelId(EdgeData& edge, std::string& src_label,
-                      std::string& dst_label, std::string& edge_label,
-                      int shard_id);
+                             std::string& dst_label, std::string& edge_label,
+                             int shard_id);
 
   // db check
   static void checkEdgeExistsWithInsert(const std::vector<EdgeData>& edge_data,
-                                 int shard_id);
-  static void checkEdgeExists(const std::vector<EdgeData>& edge_data, int shard_id);
+                                        int shard_id);
+  static void checkEdgeExists(const std::vector<EdgeData>& edge_data,
+                              int shard_id);
   static void checkVertexExists(const std::vector<VertexData>& vertex_data,
-                         int shard_id);
+                                int shard_id);
 
   // db operations
   static void singleInsertVertex(std::vector<VertexData>& vertex_data,
-                          std::vector<EdgeData>& edge_data, int shard_id);
+                                 std::vector<EdgeData>& edge_data,
+                                 int shard_id);
   static void multiInsertVertex(std::vector<VertexData>& vertex_data,
-                         std::vector<EdgeData>& edge_data, int shard_id);
+                                std::vector<EdgeData>& edge_data, int shard_id);
   static void insertVertex(std::vector<VertexData>& vertex_data,
-                    std::vector<EdgeData>& edge_data, int shard_id);
+                           std::vector<EdgeData>& edge_data, int shard_id);
   static void singleInsertEdge(std::vector<EdgeData>& edge_data, int shard_id);
   static void multiInsertEdge(std::vector<EdgeData>& edge_data, int shard_id);
   static void insertEdge(std::vector<EdgeData>& edge_data, int shard_id);
   static void updateVertex(std::vector<VertexData>& vertex_data, int shard_id);
   static void updateEdge(std::vector<EdgeData>& edge_data, int shard_id);
-  static nlohmann::json getVertex(std::vector<VertexData>& vertex_data, int shard_id);
+  static nlohmann::json getVertex(std::vector<VertexData>& vertex_data,
+                                  int shard_id);
   static nlohmann::json getEdge(std::vector<EdgeData>& edge_data, int shard_id);
 };
 

@@ -24,18 +24,18 @@
 
 namespace gs {
 
-gs::VertexData inputVertex(const nlohmann::json &vertex_json, const nlohmann::json &schema_json, int shard_id) {
+gs::VertexData inputVertex(const nlohmann::json& vertex_json,
+                           const nlohmann::json& schema_json, int shard_id) {
   gs::VertexData vertex;
   std::string label = gs::jsonToString(vertex_json["label"]);
-  vertex.pk_value =
-      gs::Any(gs::jsonToString(vertex_json["primary_key_value"]));
+  vertex.pk_value = gs::Any(gs::jsonToString(vertex_json["primary_key_value"]));
   std::unordered_set<std::string> property_names;
   for (auto& property : vertex_json["properties"]["properties"]) {
     auto name_string = gs::jsonToString(property["name"]);
     auto value_string = gs::jsonToString(property["value"]);
     if (property_names.find(name_string) != property_names.end()) {
-      throw std::runtime_error(
-          "property already exists in input properties: " + name_string);
+      throw std::runtime_error("property already exists in input properties: " +
+                               name_string);
     } else {
       property_names.insert(name_string);
     }
@@ -46,7 +46,8 @@ gs::VertexData inputVertex(const nlohmann::json &vertex_json, const nlohmann::js
   return vertex;
 }
 
-gs::EdgeData inputEdge(const nlohmann::json &edge_json, const nlohmann::json &schema_json, int shard_id) {
+gs::EdgeData inputEdge(const nlohmann::json& edge_json,
+                       const nlohmann::json& schema_json, int shard_id) {
   gs::EdgeData edge;
   std::string src_label = gs::jsonToString(edge_json["src_label"]);
   std::string dst_label = gs::jsonToString(edge_json["dst_label"]);
@@ -60,16 +61,19 @@ gs::EdgeData inputEdge(const nlohmann::json &edge_json, const nlohmann::json &sc
     throw std::runtime_error(
         "size should be 1(only support single property edge)");
   }
-  edge.property_name =
-      gs::jsonToString(edge_json["properties"][0]["name"]);
+  edge.property_name = gs::jsonToString(edge_json["properties"][0]["name"]);
   edge.property_value =
       gs::Any(gs::jsonToString(edge_json["properties"][0]["value"]));
-  gs::VertexEdgeManager::checkEdgeSchema(schema_json, edge, src_label, dst_label, edge_label);
-  gs::VertexEdgeManager::getEdgeLabelId(edge, src_label, dst_label, edge_label, shard_id);
+  gs::VertexEdgeManager::checkEdgeSchema(schema_json, edge, src_label,
+                                         dst_label, edge_label);
+  gs::VertexEdgeManager::getEdgeLabelId(edge, src_label, dst_label, edge_label,
+                                        shard_id);
   return edge;
 }
 
-void VertexEdgeManager::checkVertexSchema(const nlohmann::json& schema_json, VertexData& vertex, std::string &label) {
+void VertexEdgeManager::checkVertexSchema(const nlohmann::json& schema_json,
+                                          VertexData& vertex,
+                                          std::string& label) {
   bool vertex_exists = false;
   for (auto& vertex_types : schema_json["vertex_types"]) {
     if (vertex_types["type_name"] != label)
@@ -93,8 +97,7 @@ void VertexEdgeManager::checkVertexSchema(const nlohmann::json& schema_json, Ver
         continue;
       }
       if (get_flag) {
-        vertex.properties.push_back(
-            std::make_pair(property_name, gs::Any()));
+        vertex.properties.push_back(std::make_pair(property_name, gs::Any()));
         continue;
       }
       if (vertex.properties[col_index].first != property_name) {
@@ -112,9 +115,10 @@ void VertexEdgeManager::checkVertexSchema(const nlohmann::json& schema_json, Ver
     throw std::runtime_error("Vertex Label not exists in schema");
   }
 }
-void VertexEdgeManager::checkEdgeSchema(const nlohmann::json& schema_json, EdgeData& edge,
-                     std::string &src_label, std::string &dst_label,
-                     std::string &edge_label) {
+void VertexEdgeManager::checkEdgeSchema(const nlohmann::json& schema_json,
+                                        EdgeData& edge, std::string& src_label,
+                                        std::string& dst_label,
+                                        std::string& edge_label) {
   bool edge_exists = false;
   // Check if the edge exists
   for (auto& edge_types : schema_json["edge_types"]) {
@@ -179,22 +183,24 @@ void VertexEdgeManager::checkEdgeSchema(const nlohmann::json& schema_json, EdgeD
   }
 }
 
-void VertexEdgeManager::getVertexLabelId(VertexData& vertex, std::string& label, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+void VertexEdgeManager::getVertexLabelId(VertexData& vertex, std::string& label,
+                                         int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   vertex.label_id = db.schema().get_vertex_label_id(label);
 }
 
 void VertexEdgeManager::getEdgeLabelId(EdgeData& edge, std::string& src_label,
-                    std::string& dst_label, std::string& edge_label,
-                    int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+                                       std::string& dst_label,
+                                       std::string& edge_label, int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   edge.src_label_id = db.schema().get_vertex_label_id(src_label);
   edge.dst_label_id = db.schema().get_vertex_label_id(dst_label);
   edge.edge_label_id = db.schema().get_edge_label_id(edge_label);
 }
 
-void VertexEdgeManager::checkEdgeExistsWithInsert(const std::vector<EdgeData>& edge_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+void VertexEdgeManager::checkEdgeExistsWithInsert(
+    const std::vector<EdgeData>& edge_data, int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto txn = db.GetReadTransaction();
   for (auto& edge : edge_data) {
     gs::vid_t src_vid, dst_vid;
@@ -217,8 +223,9 @@ void VertexEdgeManager::checkEdgeExistsWithInsert(const std::vector<EdgeData>& e
   }
 }
 
-void VertexEdgeManager::checkEdgeExists(const std::vector<EdgeData>& edge_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+void VertexEdgeManager::checkEdgeExists(const std::vector<EdgeData>& edge_data,
+                                        int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto txn = db.GetReadTransaction();
   for (auto& edge : edge_data) {
     gs::vid_t src_vid, dst_vid;
@@ -241,8 +248,9 @@ void VertexEdgeManager::checkEdgeExists(const std::vector<EdgeData>& edge_data, 
   }
 }
 
-void VertexEdgeManager::checkVertexExists(const std::vector<VertexData>& vertex_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+void VertexEdgeManager::checkVertexExists(
+    const std::vector<VertexData>& vertex_data, int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto txn = db.GetReadTransaction();
   for (auto& vertex : vertex_data) {
     gs::vid_t vid;
@@ -254,15 +262,17 @@ void VertexEdgeManager::checkVertexExists(const std::vector<VertexData>& vertex_
   txn.Commit();
 }
 void VertexEdgeManager::singleInsertVertex(std::vector<VertexData>& vertex_data,
-                        std::vector<EdgeData>& edge_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+                                           std::vector<EdgeData>& edge_data,
+                                           int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto txnWrite = db.GetSingleVertexInsertTransaction();
   for (auto& vertex : vertex_data) {
     std::vector<gs::Any> insert_arr;
-    for (auto & prop : vertex.properties) {
+    for (auto& prop : vertex.properties) {
       insert_arr.push_back(prop.second);
     }
-    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value, insert_arr) == false) {
+    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value, insert_arr) ==
+        false) {
       txnWrite.Abort();
       throw std::runtime_error(
           "Fail to create vertex: " + vertex.pk_value.to_string() +
@@ -282,15 +292,17 @@ void VertexEdgeManager::singleInsertVertex(std::vector<VertexData>& vertex_data,
 }
 
 void VertexEdgeManager::multiInsertVertex(std::vector<VertexData>& vertex_data,
-                       std::vector<EdgeData>& edge_data, int shard_id) {
+                                          std::vector<EdgeData>& edge_data,
+                                          int shard_id) {
   auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto txnWrite = db.GetInsertTransaction();
   for (auto& vertex : vertex_data) {
     std::vector<gs::Any> insert_arr;
-    for (auto & prop : vertex.properties) {
+    for (auto& prop : vertex.properties) {
       insert_arr.push_back(prop.second);
     }
-    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value, insert_arr) == false) {
+    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value, insert_arr) ==
+        false) {
       txnWrite.Abort();
       throw std::runtime_error(
           "Fail to create vertex: " + vertex.pk_value.to_string() +
@@ -309,7 +321,8 @@ void VertexEdgeManager::multiInsertVertex(std::vector<VertexData>& vertex_data,
   txnWrite.Commit();
 }
 void VertexEdgeManager::insertVertex(std::vector<VertexData>& vertex_data,
-                  std::vector<EdgeData>& edge_data, int shard_id) {
+                                     std::vector<EdgeData>& edge_data,
+                                     int shard_id) {
   checkVertexExists(vertex_data, shard_id);
   checkEdgeExistsWithInsert(edge_data, shard_id);
   if (vertex_data.size() == 1) {
@@ -319,8 +332,9 @@ void VertexEdgeManager::insertVertex(std::vector<VertexData>& vertex_data,
   }
 }
 
-void VertexEdgeManager::singleInsertEdge(std::vector<EdgeData>& edge_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+void VertexEdgeManager::singleInsertEdge(std::vector<EdgeData>& edge_data,
+                                         int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto txnWrite = db.GetSingleEdgeInsertTransaction();
   for (auto& edge : edge_data) {
     if (txnWrite.AddEdge(edge.src_label_id, edge.src_pk_value,
@@ -334,8 +348,9 @@ void VertexEdgeManager::singleInsertEdge(std::vector<EdgeData>& edge_data, int s
   txnWrite.Commit();
 }
 
-void VertexEdgeManager::multiInsertEdge(std::vector<EdgeData>& edge_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+void VertexEdgeManager::multiInsertEdge(std::vector<EdgeData>& edge_data,
+                                        int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto txnWrite = db.GetInsertTransaction();
   for (auto& edge : edge_data) {
     if (txnWrite.AddEdge(edge.src_label_id, edge.src_pk_value,
@@ -349,7 +364,8 @@ void VertexEdgeManager::multiInsertEdge(std::vector<EdgeData>& edge_data, int sh
   txnWrite.Commit();
 }
 
-void VertexEdgeManager::insertEdge(std::vector<EdgeData>& edge_data, int shard_id) {
+void VertexEdgeManager::insertEdge(std::vector<EdgeData>& edge_data,
+                                   int shard_id) {
   checkEdgeExists(edge_data, shard_id);
   if (edge_data.size() == 1) {
     singleInsertEdge(edge_data, shard_id);
@@ -358,8 +374,9 @@ void VertexEdgeManager::insertEdge(std::vector<EdgeData>& edge_data, int shard_i
   }
 }
 
-void VertexEdgeManager::updateVertex(std::vector<VertexData>& vertex_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+void VertexEdgeManager::updateVertex(std::vector<VertexData>& vertex_data,
+                                     int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto& vertex = vertex_data[0];
   auto txnRead = db.GetReadTransaction();
   gs::vid_t vertex_lid;
@@ -372,8 +389,7 @@ void VertexEdgeManager::updateVertex(std::vector<VertexData>& vertex_data, int s
   auto txnWrite = db.GetUpdateTransaction();
   for (int i = 0; i < int(vertex.properties.size()); i++) {
     if (txnWrite.SetVertexField(vertex.label_id, vertex_lid, i,
-                                vertex.properties[i].second) ==
-        false) {
+                                vertex.properties[i].second) == false) {
       txnWrite.Abort();
       throw std::runtime_error("Fail to update vertex");
     }
@@ -381,8 +397,9 @@ void VertexEdgeManager::updateVertex(std::vector<VertexData>& vertex_data, int s
   txnWrite.Commit();
 }
 
-void VertexEdgeManager::updateEdge(std::vector<EdgeData>& edge_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+void VertexEdgeManager::updateEdge(std::vector<EdgeData>& edge_data,
+                                   int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto& edge = edge_data[0];
   auto txn = db.GetReadTransaction();
   gs::vid_t src_vid, dst_vid;
@@ -413,8 +430,9 @@ void VertexEdgeManager::updateEdge(std::vector<EdgeData>& edge_data, int shard_i
   txn2.Commit();
 }
 
-nlohmann::json VertexEdgeManager::getVertex(std::vector<VertexData>& vertex_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+nlohmann::json VertexEdgeManager::getVertex(
+    std::vector<VertexData>& vertex_data, int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto& vertex = vertex_data[0];
   nlohmann::json result = nlohmann::json::array();
   auto txn = db.GetReadTransaction();
@@ -433,8 +451,9 @@ nlohmann::json VertexEdgeManager::getVertex(std::vector<VertexData>& vertex_data
   return result;
 }
 
-nlohmann::json VertexEdgeManager::getEdge(std::vector<EdgeData>& edge_data, int shard_id) {
-  auto &db = gs::GraphDB::get().GetSession(shard_id);
+nlohmann::json VertexEdgeManager::getEdge(std::vector<EdgeData>& edge_data,
+                                          int shard_id) {
+  auto& db = gs::GraphDB::get().GetSession(shard_id);
   auto& edge = edge_data[0];
   nlohmann::json result = nlohmann::json::array();
   auto txn = db.GetReadTransaction();
