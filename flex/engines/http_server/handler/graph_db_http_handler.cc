@@ -724,26 +724,22 @@ seastar::future<> graph_db_http_handler::set_routes() {
                                 shard_query_concurrency);
     graph_db_handlers_[hiactor::local_shard_id()] = graph_db_handler;
     r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/interactive/query"), graph_db_handler);
-
+          seastar::httpd::url("/v1/graph/current/query"), graph_db_handler);
+    auto rule_proc = new seastar::httpd::match_rule(graph_db_handler);
+    rule_proc->add_str("/v1/graph")
+        .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+        .add_str("/query");
+    r.add(rule_proc, seastar::httpd::operation_type::POST);
 #ifdef BUILD_HQPS
     if (enable_hqps_handlers_.load()) {
-      auto ic_handler =
-          new stored_proc_handler(ic_query_group_id, max_group_id,
-                                  group_inc_step, shard_query_concurrency);
       auto adhoc_query_handler_ = new adhoc_query_handler(
           ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
           shard_adhoc_concurrency);
 
-      ic_handlers_[hiactor::local_shard_id()] = ic_handler;
+      ic_handlers_[hiactor::local_shard_id()] = graph_db_handler;
       adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
 
       // Add routes
-      auto rule_proc = new seastar::httpd::match_rule(ic_handler);
-      rule_proc->add_str("/v1/graph")
-          .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
-          .add_str("/query");
-      r.add(rule_proc, seastar::httpd::operation_type::POST);
 
       auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
       rule_adhoc->add_str("/v1/graph")
