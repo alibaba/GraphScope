@@ -79,7 +79,7 @@ setup(
         "parse": parse_version,
     },
     install_requires=REQUIRES,
-    packages=find_packages(include=["graphscope.flex.rest"]),
+    packages=find_packages(include=["graphscope.flex.rest", "graphscope.flex.rest.*"]),
     include_package_data=True,
     license="Apache 2.0",
     long_description_content_type="text/markdown",
