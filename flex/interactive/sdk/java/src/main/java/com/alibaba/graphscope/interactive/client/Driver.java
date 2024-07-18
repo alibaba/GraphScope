@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
+import com.alibaba.graphscope.interactive.client.common.Config;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.impl.DefaultSession;
 import com.alibaba.graphscope.interactive.models.*;
@@ -74,6 +75,17 @@ public class Driver {
         return connect(adminUri, storedProcUri, cypherUri, gremlinUri);
     }
 
+    public static QueryInterface queryServiceOnly(String storedProcUri) {
+        return queryServiceOnly(storedProcUri, Config.newBuilder().build());
+    }
+
+    public static QueryInterface queryServiceOnly(String storedProcUri, Config config) {
+        if (storedProcUri == null || storedProcUri.isEmpty()) {
+            throw new IllegalArgumentException("uri is null or empty");
+        }
+        return DefaultSession.queryInterfaceOnly(storedProcUri, config);
+    }
+
     /**
      * Connect to the interactive service by specifying the URIs of the admin, stored procedure, cypher, and gremlin services.
      * @param adminUri The URI of the admin service.
@@ -99,6 +111,9 @@ public class Driver {
     }
 
     private Driver(String uri) {
+        if (uri == null){
+            throw new IllegalArgumentException("Invalid uri is null");
+        }
         this.adminUri = uri;
         this.storedProcUri = null;
         this.cypherUri = null;
@@ -127,10 +142,16 @@ public class Driver {
      * @return
      */
     public Session session() {
+        Config config = Config.newBuilder().build();
+        return session(config);
+    }
+
+    public Session session(Config config) {
         if (storedProcUri == null) {
-            return DefaultSession.newInstance(adminUri);
+            System.out.println("here");
+            return DefaultSession.newInstance(adminUri, config);
         } else {
-            return DefaultSession.newInstance(adminUri, storedProcUri);
+            return DefaultSession.newInstance(adminUri, storedProcUri, config);
         }
     }
 
@@ -251,14 +272,16 @@ public class Driver {
     }
 
     private void initHostPort() {
-        if (!adminUri.startsWith("http")) {
-            throw new IllegalArgumentException("Invalid uri: " + adminUri);
+        if (adminUri != null){
+            if (!adminUri.startsWith("http")) {
+                throw new IllegalArgumentException("Invalid uri: " + adminUri);
+            }
+            String[] parts = adminUri.split(":");
+            if (parts.length != 3) {
+                throw new IllegalArgumentException("Invalid uri: " + adminUri);
+            }
+            host = parts[1].substring(2);
+            port = Integer.parseInt(parts[2]);
         }
-        String[] parts = adminUri.split(":");
-        if (parts.length != 3) {
-            throw new IllegalArgumentException("Invalid uri: " + adminUri);
-        }
-        host = parts[1].substring(2);
-        port = Integer.parseInt(parts[2]);
     }
 }

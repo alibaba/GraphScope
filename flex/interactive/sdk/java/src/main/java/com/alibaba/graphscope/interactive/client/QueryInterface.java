@@ -15,26 +15,20 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
+import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.models.*;
+import com.alibaba.graphscope.interactive.models.QueryRequest;
 
-import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-/**
- * All APIs about procedure management.
- * TODO(zhanglei): differ between ProcedureRequest and Procedure
- */
-public interface ProcedureInterface {
-    Result<CreateProcedureResponse> createProcedure(
-            String graphId, CreateProcedureRequest procedure);
+public interface QueryInterface {
+    Result<IrResult.CollectiveResults> callProcedure(String graphId, QueryRequest request);
 
-    Result<String> deleteProcedure(String graphId, String procedureName);
+    Result<IrResult.CollectiveResults> callProcedure(QueryRequest request);
 
-    Result<GetProcedureResponse> getProcedure(String graphId, String procedureName);
+    Result<byte[]> callProcedureRaw(String graphId, byte[] request);
 
-    Result<List<GetProcedureResponse>> listProcedures(String graphId);
-
-    Result<String> updateProcedure(
-            String graphId, String procedureId, UpdateProcedureRequest procedure);
+    Result<byte[]> callProcedureRaw(byte[] request);
 }
