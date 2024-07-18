@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
+import com.alibaba.graphscope.interactive.client.common.Config;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.impl.DefaultSession;
 import com.alibaba.graphscope.interactive.models.*;
@@ -75,10 +76,14 @@ public class Driver {
     }
 
     public static ProcedureInterface queryServiceOnly(String storedProcUri) {
+        return queryServiceOnly(storedProcUri, Config.newBuilder().build());
+    }
+
+    public static ProcedureInterface queryServiceOnly(String storedProcUri, Config config) {
         if (storedProcUri == null || storedProcUri.isEmpty()){
             throw new IllegalArgumentException("uri is null or empty");
         }
-        return DefaultSession.procedureInterfaceOnly(storedProcUri);
+        return DefaultSession.procedureInterfaceOnly(storedProcUri, config);
     }
 
     /**
@@ -134,10 +139,15 @@ public class Driver {
      * @return
      */
     public Session session() {
+        Config config = Config.newBuilder().build();
+        return session(config);
+    }
+
+    public Session session(Config config) {
         if (storedProcUri == null) {
-            return DefaultSession.newInstance(adminUri);
+            return DefaultSession.newInstance(adminUri, config);
         } else {
-            return DefaultSession.newInstance(adminUri, storedProcUri);
+            return DefaultSession.newInstance(adminUri, storedProcUri, config);
         }
     }
 
