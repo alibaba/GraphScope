@@ -513,6 +513,19 @@ public class DriverTest {
     }
 
     @Test
+    public void testProcedureInterface() {
+        String queryEndpoint =
+                System.getProperty("interactive.procedure.endpoint", "http://localhost:1000");
+        ProcedureInterface procedureInterface = Driver.queryServiceOnly(queryEndpoint);
+        byte[] bytes = new byte[4 + 1];
+        Encoder encoder = new Encoder(bytes);
+        encoder.put_int(1);
+        encoder.put_byte((byte) 1); // Assume the procedure index is 1
+        Result<byte[]> resp = session.callProcedureRaw(graphId, bytes);
+        assertOk(resp);
+    }
+
+    @Test
     public void test11CreateDriver() {
         // Create a new driver with all endpoints specified.
         // Assume the environment variables are set

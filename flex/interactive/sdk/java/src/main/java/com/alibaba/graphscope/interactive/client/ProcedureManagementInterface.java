@@ -16,18 +16,24 @@
 package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.models.ServiceStatus;
-import com.alibaba.graphscope.interactive.models.StartServiceRequest;
+import com.alibaba.graphscope.interactive.models.*;
+
+import java.util.List;
 
 /**
- * Manage the query interface.
+ * All APIs about procedure management.
+ * TODO(zhanglei): differ between ProcedureRequest and Procedure
  */
-public interface QueryServiceInterface {
-    Result<ServiceStatus> getServiceStatus();
+public interface ProcedureManagementInterface {
+    Result<CreateProcedureResponse> createProcedure(
+            String graphId, CreateProcedureRequest procedure);
 
-    Result<String> restartService();
+    Result<String> deleteProcedure(String graphId, String procedureName);
 
-    Result<String> startService(StartServiceRequest service);
+    Result<GetProcedureResponse> getProcedure(String graphId, String procedureName);
 
-    Result<String> stopService();
+    Result<List<GetProcedureResponse>> listProcedures(String graphId);
+
+    Result<String> updateProcedure(
+            String graphId, String procedureId, UpdateProcedureRequest procedure);
 }

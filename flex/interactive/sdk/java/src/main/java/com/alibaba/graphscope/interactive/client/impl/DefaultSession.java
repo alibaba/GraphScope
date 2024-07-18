@@ -23,6 +23,7 @@ import com.alibaba.graphscope.interactive.ApiClient;
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
 import com.alibaba.graphscope.interactive.api.*;
+import com.alibaba.graphscope.interactive.client.ProcedureInterface;
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.common.Status;
@@ -66,21 +67,33 @@ public class DefaultSession implements Session {
      * @param uri should be in the format "http://host:port"
      */
     private DefaultSession(String uri, String storedProcUri) {
-        client = new ApiClient();
-        client.setBasePath(uri);
-        client.setReadTimeout(DEFAULT_READ_TIMEOUT);
-        client.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
+        if (uri != null) {
+            client = new ApiClient();
+            client.setBasePath(uri);
+            client.setReadTimeout(DEFAULT_READ_TIMEOUT);
+            client.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
 
-        graphApi = new AdminServiceGraphManagementApi(client);
-        jobApi = new AdminServiceJobManagementApi(client);
-        procedureApi = new AdminServiceProcedureManagementApi(client);
-        serviceApi = new AdminServiceServiceManagementApi(client);
-        vertexApi = new GraphServiceVertexManagementApi(client);
-        edgeApi = new GraphServiceEdgeManagementApi(client);
+            graphApi = new AdminServiceGraphManagementApi(client);
+            jobApi = new AdminServiceJobManagementApi(client);
+            procedureApi = new AdminServiceProcedureManagementApi(client);
+            serviceApi = new AdminServiceServiceManagementApi(client);
+            vertexApi = new GraphServiceVertexManagementApi(client);
+            edgeApi = new GraphServiceEdgeManagementApi(client);
+            utilsApi = new UtilsApi(client);
+        }
+        else {
+            System.out.println("Creating session without admin uri specified");
+            client = null;
+            graphApi = null;
+            jobApi = null;
+            procedureApi = null;
+            serviceApi = null;
+            vertexApi = null;
+            edgeApi = null;
+            utilsApi = null;
+        }
 
-        utilsApi = new UtilsApi(client);
-
-        if (storedProcUri == null) {
+        if (storedProcUri == null && graphApi != null) {
             Result<ServiceStatus> status = getServiceStatus();
             if (!status.isOk()) {
                 throw new RuntimeException(
@@ -92,6 +105,9 @@ public class DefaultSession implements Session {
             // Replace the port with the query port, http:://host:port -> http:://host:queryPort
             storedProcUri = uri.replaceFirst(":[0-9]+", ":" + queryPort);
             System.out.println("Query URI: " + storedProcUri);
+        }
+        if (storedProcUri == null){
+            throw new RuntimeException("DefaultSession need at least stored procedure uri specified, current is null");
         }
         queryClient = new ApiClient();
         queryClient.setBasePath(storedProcUri);
@@ -106,6 +122,16 @@ public class DefaultSession implements Session {
 
     public static DefaultSession newInstance(String adminUri, String storedProcUri) {
         return new DefaultSession(adminUri, storedProcUri);
+    }
+
+    /**
+     * Create defaultSession in stored procedure only mode, which means the session will only connect to query service,
+     * for launching queries.
+     * @param storedProcUri http uri, points to query service.
+     * @return the procedure interface.
+     */
+    public static ProcedureInterface procedureInterfaceOnly(String storedProcUri) {
+        return new DefaultSession(null, storedProcUri);
     }
 
     /**

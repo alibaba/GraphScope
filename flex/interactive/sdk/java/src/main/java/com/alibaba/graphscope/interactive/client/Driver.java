@@ -74,6 +74,13 @@ public class Driver {
         return connect(adminUri, storedProcUri, cypherUri, gremlinUri);
     }
 
+    public static ProcedureInterface queryServiceOnly(String storedProcUri) {
+        if (storedProcUri == null || storedProcUri.isEmpty()){
+            throw new IllegalArgumentException("uri is null or empty");
+        }
+        return DefaultSession.procedureInterfaceOnly(storedProcUri);
+    }
+
     /**
      * Connect to the interactive service by specifying the URIs of the admin, stored procedure, cypher, and gremlin services.
      * @param adminUri The URI of the admin service.

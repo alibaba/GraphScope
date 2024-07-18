@@ -17,10 +17,12 @@ package com.alibaba.graphscope.interactive.client;
 
 public interface Session
         extends VertexInterface,
-                EdgeInterface,
-                GraphInterface,
-                JobInterface,
-                ProcedureInterface,
-                QueryServiceInterface,
-                AutoCloseable,
-                UtilsInterface {}
+        EdgeInterface,
+        GraphInterface,
+        JobInterface,
+        ProcedureManagementInterface,
+        ProcedureInterface,
+        QueryServiceInterface,
+        AutoCloseable,
+        UtilsInterface {
+}
