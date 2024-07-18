@@ -25,7 +25,7 @@ public class Result<T> {
     private final Status status;
     private final T value;
 
-    public Result(Status status){
+    public Result(Status status) {
         this.status = status;
         this.value = null;
     }

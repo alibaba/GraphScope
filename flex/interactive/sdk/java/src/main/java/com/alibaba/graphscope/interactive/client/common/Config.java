@@ -18,9 +18,7 @@ package com.alibaba.graphscope.interactive.client.common;
 public class Config {
     private boolean enableTracing;
 
-    private Config() {
-
-    }
+    private Config() {}
 
     public boolean isEnableTracing() {
         return enableTracing;
@@ -28,6 +26,7 @@ public class Config {
 
     public static class ConfigBuilder {
         Config config;
+
         public ConfigBuilder() {
             config.enableTracing = false; // default not enable tracing.
         }

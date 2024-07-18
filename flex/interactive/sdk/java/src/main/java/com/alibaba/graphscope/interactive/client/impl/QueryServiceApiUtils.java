@@ -2,10 +2,12 @@ package com.alibaba.graphscope.interactive.client.impl;
 
 import com.alibaba.graphscope.interactive.*;
 import com.alibaba.graphscope.interactive.api.QueryServiceApi;
+
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.internal.http.HttpMethod;
+
 import okio.Buffer;
 
 import java.io.IOException;
@@ -17,11 +19,13 @@ import java.util.Map;
 
 // add extra customization for query service api interface.
 public class QueryServiceApiUtils {
-    public static Request.Builder createProcCallRequestBuilder(QueryServiceApi api, String graphId, byte[] body, final ApiCallback _callback) throws ApiException {
+    public static Request.Builder createProcCallRequestBuilder(
+            QueryServiceApi api, String graphId, byte[] body, final ApiCallback _callback)
+            throws ApiException {
         String basePath = null;
 
         // Determine Base Path to Use
-        if (api.getCustomBaseUrl() != null){
+        if (api.getCustomBaseUrl() != null) {
             basePath = api.getCustomBaseUrl();
         } else {
             basePath = null;
@@ -34,10 +38,12 @@ public class QueryServiceApiUtils {
         // create path and map variables
         String localVarPath;
         if (graphId != null) {
-            localVarPath = "/v1/graph/{graph_id}/query"
-                    .replace("{" + "graph_id" + "}", localVarApiClient.escapeString(graphId.toString()));
-        }
-        else {
+            localVarPath =
+                    "/v1/graph/{graph_id}/query"
+                            .replace(
+                                    "{" + "graph_id" + "}",
+                                    localVarApiClient.escapeString(graphId.toString()));
+        } else {
             localVarPath = "/v1/graph/current/query";
         }
 
@@ -47,27 +53,49 @@ public class QueryServiceApiUtils {
         Map<String, String> localVarCookieParams = new HashMap<String, String>();
         Map<String, Object> localVarFormParams = new HashMap<String, Object>();
 
-        final String[] localVarAccepts = {
-                "text/plain"
-        };
+        final String[] localVarAccepts = {"text/plain"};
         final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
         if (localVarAccept != null) {
             localVarHeaderParams.put("Accept", localVarAccept);
         }
 
-        final String[] localVarContentTypes = {
-                "text/plain"
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
+        final String[] localVarContentTypes = {"text/plain"};
+        final String localVarContentType =
+                localVarApiClient.selectHeaderContentType(localVarContentTypes);
         if (localVarContentType != null) {
             localVarHeaderParams.put("Content-Type", localVarContentType);
         }
 
-        String[] localVarAuthNames = new String[] {  };
-        return createRequestBuilder(localVarApiClient, basePath, localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+        String[] localVarAuthNames = new String[] {};
+        return createRequestBuilder(
+                localVarApiClient,
+                basePath,
+                localVarPath,
+                "POST",
+                localVarQueryParams,
+                localVarCollectionQueryParams,
+                localVarPostBody,
+                localVarHeaderParams,
+                localVarCookieParams,
+                localVarFormParams,
+                localVarAuthNames,
+                _callback);
     }
 
-    private static Request.Builder createRequestBuilder(ApiClient client, String baseUrl, String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams, Object body, Map<String, String> headerParams, Map<String, String> cookieParams, Map<String, Object> formParams, String[] authNames, ApiCallback callback)throws ApiException {
+    private static Request.Builder createRequestBuilder(
+            ApiClient client,
+            String baseUrl,
+            String path,
+            String method,
+            List<Pair> queryParams,
+            List<Pair> collectionQueryParams,
+            Object body,
+            Map<String, String> headerParams,
+            Map<String, String> cookieParams,
+            Map<String, Object> formParams,
+            String[] authNames,
+            ApiCallback callback)
+            throws ApiException {
         // aggregate queryParams (non-collection) and collectionQueryParams into allQueryParams
         List<Pair> allQueryParams = new ArrayList<Pair>(queryParams);
         allQueryParams.addAll(collectionQueryParams);
@@ -93,14 +121,23 @@ public class QueryServiceApiUtils {
                 reqBody = null;
             } else {
                 // use an empty request body (for POST, PUT and PATCH)
-                reqBody = RequestBody.create("", contentType == null ? null : MediaType.parse(contentType));
+                reqBody =
+                        RequestBody.create(
+                                "", contentType == null ? null : MediaType.parse(contentType));
             }
         } else {
             reqBody = client.serialize(body, contentType);
         }
 
         // update parameters with authentication settings
-        client.updateParamsForAuth(authNames, allQueryParams, headerParams, cookieParams, requestBodyToString(reqBody), method, URI.create(url));
+        client.updateParamsForAuth(
+                authNames,
+                allQueryParams,
+                headerParams,
+                cookieParams,
+                requestBodyToString(reqBody),
+                method,
+                URI.create(url));
 
         final Request.Builder reqBuilder = new Request.Builder().url(url);
         client.processHeaderParams(headerParams, reqBuilder);
@@ -114,9 +151,9 @@ public class QueryServiceApiUtils {
 
         if (callback != null && reqBody != null) {
             ProgressRequestBody progressRequestBody = new ProgressRequestBody(reqBody, callback);
-             return reqBuilder.method(method, progressRequestBody);
+            return reqBuilder.method(method, progressRequestBody);
         } else {
-             return reqBuilder.method(method, reqBody);
+            return reqBuilder.method(method, reqBody);
         }
     }
 

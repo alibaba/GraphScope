@@ -32,6 +32,7 @@ import com.alibaba.graphscope.interactive.client.utils.InputFormat;
 import com.alibaba.graphscope.interactive.models.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -41,14 +42,15 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.semconv.SemanticAttributes;
+
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,13 +78,14 @@ public class DefaultSession implements Session {
     private OpenTelemetry openTelemetry;
     private Tracer tracer;
 
-    private final TextMapSetter<Request.Builder> setter = new TextMapSetter<Request.Builder>() {
-        @Override
-        public void set(@Nullable Request.Builder builder, String s, String s1) {
-            assert builder != null;
-            builder.addHeader(s, s1);
-        }
-    };
+    private final TextMapSetter<Request.Builder> setter =
+            new TextMapSetter<Request.Builder>() {
+                @Override
+                public void set(@Nullable Request.Builder builder, String s, String s1) {
+                    assert builder != null;
+                    builder.addHeader(s, s1);
+                }
+            };
 
     /**
      * Create a default GraphScope Interactive Session.
@@ -130,7 +133,8 @@ public class DefaultSession implements Session {
             System.out.println("Query URI: " + storedProcUri);
         }
         if (storedProcUri == null) {
-            throw new RuntimeException("DefaultSession need at least stored procedure uri specified, current is null");
+            throw new RuntimeException(
+                    "DefaultSession need at least stored procedure uri specified, current is null");
         }
         queryClient = new ApiClient();
         queryClient.setBasePath(storedProcUri);
@@ -630,55 +634,73 @@ public class DefaultSession implements Session {
     //////////////////////////////// Submitting Queries//////////////////////////////////////
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(String graphId, QueryRequest request) {
-        return parseBytesToCollectiveResults(callProcedureImpl(graphId, appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON)));
+        return parseBytesToCollectiveResults(
+                callProcedureImpl(
+                        graphId,
+                        appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON)));
     }
 
     @Override
     public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
             String graphId, QueryRequest queryRequest) {
-        return callProcedureAsyncImpl(graphId, appendFormatByte(queryRequest.toJson().getBytes(), InputFormat.CYPHER_JSON)).thenApply(
-                this::parseBytesToCollectiveResults
-        );
+        return callProcedureAsyncImpl(
+                        graphId,
+                        appendFormatByte(queryRequest.toJson().getBytes(), InputFormat.CYPHER_JSON))
+                .thenApply(this::parseBytesToCollectiveResults);
     }
 
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(QueryRequest request) {
-        return parseBytesToCollectiveResults(callProcedureImpl(null, appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON)));
+        return parseBytesToCollectiveResults(
+                callProcedureImpl(
+                        null,
+                        appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON)));
     }
 
     @Override
     public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
             QueryRequest queryRequest) {
-        return callProcedureAsyncImpl(null, appendFormatByte(queryRequest.toJson().getBytes(), InputFormat.CYPHER_JSON)).thenApply(
-                this::parseBytesToCollectiveResults
-        );
+        return callProcedureAsyncImpl(
+                        null,
+                        appendFormatByte(queryRequest.toJson().getBytes(), InputFormat.CYPHER_JSON))
+                .thenApply(this::parseBytesToCollectiveResults);
     }
 
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(
             String graphId, StoredProcedure.Query request) {
-        return parseBytesToCollectiveResults(callProcedureImpl(graphId, appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE)));
+        return parseBytesToCollectiveResults(
+                callProcedureImpl(
+                        graphId,
+                        appendFormatByte(
+                                request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE)));
     }
 
     @Override
     public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
             String graphId, StoredProcedure.Query request) {
-        return callProcedureAsyncImpl(graphId, appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE)).thenApply(
-                this::parseBytesToCollectiveResults
-        );
+        return callProcedureAsyncImpl(
+                        graphId,
+                        appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE))
+                .thenApply(this::parseBytesToCollectiveResults);
     }
 
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(StoredProcedure.Query request) {
-        return parseBytesToCollectiveResults(callProcedureImpl(null, appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE)));
+        return parseBytesToCollectiveResults(
+                callProcedureImpl(
+                        null,
+                        appendFormatByte(
+                                request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE)));
     }
 
     @Override
     public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
             StoredProcedure.Query request) {
-        return callProcedureAsyncImpl(null, appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE)).thenApply(
-                this::parseBytesToCollectiveResults
-        );
+        return callProcedureAsyncImpl(
+                        null,
+                        appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE))
+                .thenApply(this::parseBytesToCollectiveResults);
     }
 
     /***
@@ -878,8 +900,7 @@ public class DefaultSession implements Session {
      * @throws Exception if this resource cannot be closed
      */
     @Override
-    public void close() throws Exception {
-    }
+    public void close() throws Exception {}
 
     /**
      * Upload a file to the server.
@@ -970,8 +991,7 @@ public class DefaultSession implements Session {
          * @param done          write end
          */
         @Override
-        public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {
-        }
+        public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {}
 
         /**
          * This is called when the API download processing.
@@ -981,18 +1001,18 @@ public class DefaultSession implements Session {
          * @param done          Read end
          */
         @Override
-        public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {
-        }
+        public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {}
     }
 
-
-    ////////////////////////////////////Implement adhoc/stored procedure query submission///////////////////////
+    //////////////////////////////////// Implement adhoc/stored procedure query
+    // submission///////////////////////
     private Result<IrResult.CollectiveResults> parseBytesToCollectiveResults(Result<byte[]> input) {
         if (!input.isOk()) {
             return new Result<>(input.getStatus());
         } else {
             try {
-                IrResult.CollectiveResults results = IrResult.CollectiveResults.parseFrom(input.getValue());
+                IrResult.CollectiveResults results =
+                        IrResult.CollectiveResults.parseFrom(input.getValue());
                 return new Result<IrResult.CollectiveResults>(results);
             } catch (InvalidProtocolBufferException e) {
                 e.printStackTrace();
@@ -1006,32 +1026,31 @@ public class DefaultSession implements Session {
         return submitSyncRequest(builder);
     }
 
-    private Result<IrResult.CollectiveResults> runAdhocQueryImpl(String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+    private Result<IrResult.CollectiveResults> runAdhocQueryImpl(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         Request.Builder builder = createAdhocRequestBuilder(graphId, physicalPlan);
         Result<byte[]> callRes = submitSyncRequest(builder);
-        if (callRes.isOk()){
+        if (callRes.isOk()) {
             try {
                 return Result.ok(IrResult.CollectiveResults.parseFrom(callRes.getValue()));
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 return Result.error(e.getMessage());
             }
-        }
-        else {
+        } else {
             return new Result<>(callRes.getStatus());
         }
     }
 
     private Result<byte[]> submitSyncRequest(Request.Builder builder) {
-        okhttp3.Call call =  this.queryApi.getApiClient().getHttpClient().newCall(builder.build());
+        okhttp3.Call call = this.queryApi.getApiClient().getHttpClient().newCall(builder.build());
         Span outgoing = null;
         try {
             Response response;
             if (config.isEnableTracing()) {
-                outgoing =
-                        tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
+                outgoing = tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
                 outgoing.setAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "POST");
-                outgoing.setAttribute(SemanticAttributes.URL_FULL, builder.getUrl$okhttp().uri().toString());
+                outgoing.setAttribute(
+                        SemanticAttributes.URL_FULL, builder.getUrl$okhttp().uri().toString());
                 try (Scope scope = outgoing.makeCurrent()) {
                     openTelemetry
                             .getPropagators()
@@ -1039,16 +1058,19 @@ public class DefaultSession implements Session {
                             .inject(Context.current(), builder, setter);
                     response = call.execute();
                 }
-            }
-            else {
-                response = this.queryApi.getApiClient().getHttpClient().newCall(builder.build()).execute();
+            } else {
+                response =
+                        this.queryApi
+                                .getApiClient()
+                                .getHttpClient()
+                                .newCall(builder.build())
+                                .execute();
             }
             if (response.code() != 200) {
                 return Result.error("fail to call procedure, " + response);
             }
             return Result.ok(response.body().bytes());
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             if (config.isEnableTracing() && outgoing != null) {
                 outgoing.recordException(e);
                 outgoing.end();
@@ -1058,45 +1080,46 @@ public class DefaultSession implements Session {
     }
 
     private CompletableFuture<Result<byte[]>> callProcedureAsyncImpl(String graphId, byte[] body) {
-        Request.Builder builder =
-                createCallProcRequestBuilder(graphId, body);
+        Request.Builder builder = createCallProcRequestBuilder(graphId, body);
         return submitAsyncRequest(builder);
     }
 
     // For adhoc query, we don't append format byte.
-    private CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsyncImpl(String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
-        Request.Builder builder =
-                createAdhocRequestBuilder(graphId, physicalPlan);
-        return submitAsyncRequest(builder).thenApply(
-                this::parseBytesToCollectiveResults
-        );
+    private CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsyncImpl(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+        Request.Builder builder = createAdhocRequestBuilder(graphId, physicalPlan);
+        return submitAsyncRequest(builder).thenApply(this::parseBytesToCollectiveResults);
     }
 
     private CompletableFuture<Result<byte[]>> submitAsyncRequest(Request.Builder builder) {
         CompletableFuture<Result<byte[]>> future = new CompletableFuture<>();
-        Type localVarReturnType = new TypeToken<byte[]>() {
-        }.getType();
+        Type localVarReturnType = new TypeToken<byte[]>() {}.getType();
         RawBytesCallback callback;
         if (config.isEnableTracing()) {
             Span outgoing =
                     tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
             outgoing.setAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "POST");
-            outgoing.setAttribute(SemanticAttributes.URL_FULL, builder.getUrl$okhttp().uri().toString());
+            outgoing.setAttribute(
+                    SemanticAttributes.URL_FULL, builder.getUrl$okhttp().uri().toString());
             openTelemetry
                     .getPropagators()
                     .getTextMapPropagator()
                     .inject(Context.current(), builder, setter);
             callback = new RawBytesCallback(future, outgoing);
-            //The span will be closed in call back
+            // The span will be closed in call back
         } else {
             callback = new RawBytesCallback(future);
         }
-        queryClient.executeAsync(this.queryApi.getApiClient().getHttpClient().newCall(builder.build()), localVarReturnType, callback);
+        queryClient.executeAsync(
+                this.queryApi.getApiClient().getHttpClient().newCall(builder.build()),
+                localVarReturnType,
+                callback);
         return future;
     }
 
     // For adhoc query, we don't append format byte.
-    private Request.Builder createAdhocRequestBuilder(String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+    private Request.Builder createAdhocRequestBuilder(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
         String localVarPath;
         if (graphId != null) {
             localVarPath =

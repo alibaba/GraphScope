@@ -80,7 +80,7 @@ public class Driver {
     }
 
     public static ProcedureInterface queryServiceOnly(String storedProcUri, Config config) {
-        if (storedProcUri == null || storedProcUri.isEmpty()){
+        if (storedProcUri == null || storedProcUri.isEmpty()) {
             throw new IllegalArgumentException("uri is null or empty");
         }
         return DefaultSession.procedureInterfaceOnly(storedProcUri, config);

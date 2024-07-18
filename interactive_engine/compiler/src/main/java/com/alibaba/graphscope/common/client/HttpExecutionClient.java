@@ -29,6 +29,7 @@ import com.alibaba.graphscope.interactive.client.Driver;
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.google.common.collect.Lists;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,8 +84,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                 // if response is not 200
                                 if (!response.isOk()) {
                                     // parse String from response.body()
-                                    String errorMessage =
-                                            new String(response.getStatusMessage());
+                                    String errorMessage = new String(response.getStatusMessage());
                                     RuntimeException ex =
                                             new RuntimeException(
                                                     "Query execution failed:"
@@ -124,6 +124,5 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
     }
 
     @Override
-    public void close() throws Exception {
-    }
+    public void close() throws Exception {}
 }
