@@ -221,11 +221,13 @@ class stored_proc_handler : public StoppableHandler {
             std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
       }
     } else {
-      // default is treated as encoder.
-      VLOG(10) << "No format byte is given, use default format: encoder";
-      req->content.append(gs::GraphDBSession::kCppEncoderStr, 1);
-      last_byte =
-          static_cast<uint8_t>(gs::GraphDBSession::InputFormat::kCppEncoder);
+      LOG(ERROR) << "Empty request content!";
+      rep->set_status(
+          seastar::httpd::reply::status_type::internal_server_error);
+      rep->write_body("bin", seastar::sstring("Empty request content!"));
+      rep->done();
+      return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+          std::move(rep));
     }
 #ifdef BUILD_HQPS  // Only need to check running graph for hqps
     if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
