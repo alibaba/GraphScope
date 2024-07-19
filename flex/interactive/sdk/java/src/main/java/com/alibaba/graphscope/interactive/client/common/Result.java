@@ -25,6 +25,11 @@ public class Result<T> {
     private final Status status;
     private final T value;
 
+    public Result(Status status) {
+        this.status = status;
+        this.value = null;
+    }
+
     public Result(Status status, T value) {
         this.status = status;
         this.value = value;
@@ -41,6 +46,10 @@ public class Result<T> {
 
     public String getStatusMessage() {
         return status.getMessage();
+    }
+
+    public Status.StatusCode getStatusCode() {
+        return status.getCode();
     }
 
     public T getValue() {
