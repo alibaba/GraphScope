@@ -1,8 +1,8 @@
 import gs_interactive
 from gs_interactive.models.vertex_request import VertexRequest
 from gs_interactive.models.edge_request import EdgeRequest
-from gs_interactive.models.property_array import PropertyArray
 from gs_interactive.models.model_property import ModelProperty
+from gs_interactive.models.vertex_edge_request import VertexEdgeRequest
 from gs_interactive.rest import ApiException
 import argparse
 
@@ -20,22 +20,18 @@ class VertexSDK:
                 VertexRequest(
                     label="person",
                     primary_key_value=8,
-                    properties=PropertyArray(
-                        properties=[
-                            ModelProperty(name="name", type="string", value="mike"),
-                            ModelProperty(name="age", type="integer", value=1),
-                        ]
-                    ),
+                    properties=[
+                        ModelProperty(name="name", type="string", value="mike"),
+                        ModelProperty(name="age", type="integer", value=1),
+                    ],
                 ),
                 VertexRequest(
                     label="person",
                     primary_key_value=7,
-                    properties=PropertyArray(
-                        properties=[
-                            ModelProperty(name="name", type="string", value="lisa"),
-                            ModelProperty(name="age", type="integer", value=2),
-                        ]
-                    ),
+                    properties=[
+                        ModelProperty(name="name", type="string", value="lisa"),
+                        ModelProperty(name="age", type="integer", value=2),
+                    ],
                 ),
             ]
             edge_request = [
@@ -56,9 +52,10 @@ class VertexSDK:
                     properties=[ModelProperty(name="weight", value=5)],
                 ),
             ]
+            params = VertexEdgeRequest(vertex_request=vertex_request, edge_request=edge_request)
             try:
                 api_response = api_instance.add_vertex(
-                    graph_id, vertex_request=vertex_request, edge_request=edge_request
+                    graph_id, vertex_edge_request=params
                 )
                 print(
                     "The response of GraphServiceVertexManagementApi->add_vertex:",
@@ -74,11 +71,10 @@ class VertexSDK:
         with gs_interactive.ApiClient(configuration) as api_client:
             api_instance = gs_interactive.GraphServiceVertexManagementApi(api_client)
             graph_id = "1"  # str | The id of the graph
-            age_property = ModelProperty(name="age", type="integer", value=24)
             name_property = ModelProperty(name="name", type="string", value="Cindy")
-            properties = PropertyArray(properties=[name_property, age_property])
+            age_property = ModelProperty(name="age", type="integer", value=24)
             vertex_request = VertexRequest(
-                label="person", primary_key_value=1, properties=properties
+                label="person", primary_key_value=1, properties=[name_property, age_property]
             )
             try:
                 api_response = api_instance.update_vertex(
@@ -93,7 +89,7 @@ class VertexSDK:
             api_instance = gs_interactive.GraphServiceVertexManagementApi(api_client)
             graph_id = "1"  # str | The id of the graph
             label = "person"  # str | The label name of querying vertex.
-            primary_key_value = 8  # object | The primary key value of querying vertex.
+            primary_key_value = 1  # object | The primary key value of querying vertex.
             try:
                 api_response = api_instance.get_vertex(
                     graph_id, label, primary_key_value
@@ -137,8 +133,8 @@ class EdgeSDK:
 
             dst_label = "software"
             edge_label = "created"
-            src_primary_key_value = 8
-            dst_primary_key_value = 5
+            src_primary_key_value = 1
+            dst_primary_key_value = 3
             try:
                 api_response = api_instance.get_edge(
                     graph_id,
@@ -213,4 +209,3 @@ if __name__ == "__main__":
         operation()
     except KeyError:
         print("Invalid operation type or function")
-

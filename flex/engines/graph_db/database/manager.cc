@@ -30,7 +30,7 @@ gs::VertexData inputVertex(const nlohmann::json& vertex_json,
   std::string label = gs::jsonToString(vertex_json["label"]);
   vertex.pk_value = gs::Any(gs::jsonToString(vertex_json["primary_key_value"]));
   std::unordered_set<std::string> property_names;
-  for (auto& property : vertex_json["properties"]["properties"]) {
+  for (auto& property : vertex_json["properties"]) {
     auto name_string = gs::jsonToString(property["name"]);
     auto value_string = gs::jsonToString(property["value"]);
     if (property_names.find(name_string) != property_names.end()) {
