@@ -66,8 +66,9 @@ public class DefaultSession implements Session {
     private DefaultSession(String uri, String storedProcUri, Config config) {
         this.config = config;
         System.out.println("uri neq null" + (uri != null));
+        OkHttpClient httpClient = createHttpClient(config);
         if (uri != null) {
-            client = new ApiClient(createHttpClient(config));
+            client = new ApiClient(httpClient);
             client.setBasePath(uri);
             graphApi = new AdminServiceGraphManagementApi(client);
             jobApi = new AdminServiceJobManagementApi(client);
@@ -105,7 +106,7 @@ public class DefaultSession implements Session {
             throw new RuntimeException(
                     "DefaultSession need at least stored procedure uri specified, current is null");
         }
-        queryClient = new ApiClient(createHttpClient(config));
+        queryClient = new ApiClient(httpClient);
         queryClient.setBasePath(storedProcUri);
         queryApi = new QueryServiceApi(queryClient);
     }
