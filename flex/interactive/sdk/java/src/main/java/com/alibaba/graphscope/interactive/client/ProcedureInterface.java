@@ -15,7 +15,6 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
-import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.models.*;
 

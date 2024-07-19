@@ -15,13 +15,9 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
-import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.IrResult;
-import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.models.QueryRequest;
-
-import java.util.concurrent.CompletableFuture;
 
 public interface QueryInterface {
     Result<IrResult.CollectiveResults> callProcedure(String graphId, QueryRequest request);

@@ -111,7 +111,7 @@ public class Driver {
     }
 
     private Driver(String uri) {
-        if (uri == null){
+        if (uri == null) {
             throw new IllegalArgumentException("Invalid uri is null");
         }
         this.adminUri = uri;
@@ -272,7 +272,7 @@ public class Driver {
     }
 
     private void initHostPort() {
-        if (adminUri != null){
+        if (adminUri != null) {
             if (!adminUri.startsWith("http")) {
                 throw new IllegalArgumentException("Invalid uri: " + adminUri);
             }

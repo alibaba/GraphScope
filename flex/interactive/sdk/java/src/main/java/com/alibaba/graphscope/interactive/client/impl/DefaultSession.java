@@ -30,10 +30,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.Closeable;
 import java.io.File;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /***
  * A default implementation of the GraphScope interactive session interface.

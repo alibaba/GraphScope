@@ -15,19 +15,17 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
-import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
-import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.utils.Encoder;
 import com.alibaba.graphscope.interactive.models.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.Assert;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -35,7 +33,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 public class DriverTest {
@@ -277,7 +274,6 @@ public class DriverTest {
         waitJobFinished(jobId);
     }
 
-    
     public void test3StartService() {
         Result<String> startServiceResponse =
                 session.startService(new StartServiceRequest().graphId(graphId));
@@ -294,29 +290,24 @@ public class DriverTest {
         }
     }
 
-    
     public void test4CypherAdhocQuery() {
         String query = "MATCH(a) return COUNT(a);";
         org.neo4j.driver.Result result = neo4jSession.run(query);
         logger.info("result: " + result.toString());
     }
 
-    
     public void test5GremlinAdhoQuery() {
         String query = "g.V().count();";
         try {
             List<org.apache.tinkerpop.gremlin.driver.Result> results =
-                gremlinClient.submit(query).all().get();
+                    gremlinClient.submit(query).all().get();
             logger.info("result: " + results.toString());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             assert false;
         }
-        
     }
 
-    
     public void test6CreateCypherProcedure() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
         procedure.setName("cypherProcedure");
@@ -328,7 +319,6 @@ public class DriverTest {
         cypherProcedureId = "cypherProcedure";
     }
 
-    
     public void test7CreateCppProcedure1() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
         procedure.setName("cppProcedure1");
@@ -359,7 +349,6 @@ public class DriverTest {
         cppProcedureId1 = "cppProcedure1";
     }
 
-    
     public void test7CreateCppProcedure2() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
         procedure.setName("cppProcedure2");
@@ -390,7 +379,6 @@ public class DriverTest {
         cppProcedureId2 = "cppProcedure2";
     }
 
-    
     public void test8Restart() {
         Result<String> resp = session.startService(new StartServiceRequest().graphId(graphId));
         assertOk(resp);
@@ -403,14 +391,12 @@ public class DriverTest {
         logger.info("service restarted: " + resp.getValue());
     }
 
-    
     public void test9GetGraphStatistics() {
         Result<GetGraphStatisticsResponse> resp = session.getGraphStatistics(graphId);
         assertOk(resp);
         logger.info("graph statistics: " + resp.getValue());
     }
 
-    
     public void test9CallCppProcedureJson() {
         QueryRequest request = new QueryRequest();
         request.setQueryName(cppProcedureId1);
@@ -427,7 +413,6 @@ public class DriverTest {
         assertOk(resp);
     }
 
-    
     public void test9CallCppProcedure1Current() {
         QueryRequest request = new QueryRequest();
         request.setQueryName(cppProcedureId1);
@@ -448,7 +433,10 @@ public class DriverTest {
         byte[] bytes = new byte[4 + 1];
         Encoder encoder = new Encoder(bytes);
         encoder.put_int(1);
-        encoder.put_byte((byte) 3); // Assume the procedure index is 3. since the procedures are sorted by creation time.
+        encoder.put_byte(
+                (byte)
+                        3); // Assume the procedure index is 3. since the procedures are sorted by
+                            // creation time.
         Result<byte[]> resp = session.callProcedureRaw(graphId, bytes);
         assertOk(resp);
     }
