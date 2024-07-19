@@ -39,7 +39,7 @@ from gs_interactive.client.generated.results_pb2 import CollectiveResults
 
 class EdgeInterface(metaclass=ABCMeta):
     @abstractmethod
-    def add_edge(self, graph_id: StrictStr, edge_request: EdgeRequest) -> Result[str]:
+    def add_edge(self, graph_id: StrictStr, edge_request: List[EdgeRequest]) -> Result[str]:
         raise NotImplementedError
 
     @abstractmethod
@@ -90,7 +90,9 @@ class EdgeInterface(metaclass=ABCMeta):
 class VertexInterface(metaclass=ABCMeta):
     @abstractmethod
     def add_vertex(
-        self, graph_id: StrictStr, vertex_request: VertexRequest
+        self,
+        graph_id: StrictStr,
+        vertex_edge_request: VertexEdgeRequest,
     ) -> Result[StrictStr]:
         raise NotImplementedError
 
@@ -309,7 +311,9 @@ class DefaultSession(Session):
     # implementations of the methods from the interfaces
     ################ Vertex Interfaces ##########
     def add_vertex(
-        self, graph_id: StrictStr, vertex_request: VertexRequest
+        self,
+        graph_id: StrictStr,
+        vertex_edge_request: VertexEdgeRequest,
     ) -> Result[StrictStr]:
         raise NotImplementedError
 
@@ -339,7 +343,7 @@ class DefaultSession(Session):
         raise NotImplementedError
 
     ################ Edge Interfaces ##########
-    def add_edge(self, graph_id: StrictStr, edge_request: EdgeRequest) -> Result[str]:
+    def add_edge(self, graph_id: StrictStr, edge_request: List[EdgeRequest]) -> Result[str]:
         raise NotImplementedError
 
     def delete_edge(

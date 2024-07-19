@@ -17,9 +17,9 @@
 
 #include "flex/engines/http_server/actor/admin_actor.act.h"
 
-#include "flex/engines/graph_db/database/manager.h"
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
+#include "flex/engines/graph_db/database/manager.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 #include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
@@ -1366,7 +1366,8 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
   try {
     input_json = nlohmann::json::parse(param.content.second);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         "Bad input json : " + std::string(e.what()));
   }
   // Check if the input json contains vertex_request and edge_request
   if (input_json.contains("vertex_request") == false ||
@@ -1382,7 +1383,8 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
   try {
     schema_json = getSchemaData(metadata_store_, param.content.first);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::NotFound, e.what());
+    return errorResponse(gs::StatusCode::NotFound,
+                         "Graph not exists : " + std::string(e.what()));
   }
   // input vertex data and edge data
   try {
@@ -1404,7 +1406,9 @@ seastar::future<admin_query_result> admin_actor::create_vertex(
     gs::VertexEdgeManager::insertVertex(vertex_data, edge_data,
                                         hiactor::local_shard_id());
   } catch (std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(
+        gs::StatusCode::InvalidSchema,
+        "fail to insert vertex/edge : " + std::string(e.what()));
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
@@ -1419,7 +1423,8 @@ seastar::future<admin_query_result> admin_actor::create_edge(
   try {
     input_json = nlohmann::json::parse(param.content.second);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         "Bad input json : " + std::string(e.what()));
   }
   // Check if the input json contains edge_request
   if (input_json.is_array() == false || input_json.size() == 0) {
@@ -1431,7 +1436,8 @@ seastar::future<admin_query_result> admin_actor::create_edge(
   try {
     schema_json = getSchemaData(metadata_store_, param.content.first);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::NotFound, e.what());
+    return errorResponse(gs::StatusCode::NotFound,
+                         "Graph not exists : " + std::string(e.what()));
   }
   // input edge data
   try {
@@ -1446,7 +1452,8 @@ seastar::future<admin_query_result> admin_actor::create_edge(
   try {
     gs::VertexEdgeManager::insertEdge(edge_data, hiactor::local_shard_id());
   } catch (std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         "fail to insert edge : " + std::string(e.what()));
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
@@ -1461,13 +1468,15 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
   try {
     input_json = nlohmann::json::parse(param.content.second);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         " Bad input json : " + std::string(e.what()));
   }
   //  Check if the currently running graph is graph_id
   try {
     schema_json = getSchemaData(metadata_store_, param.content.first);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::NotFound, e.what());
+    return errorResponse(gs::StatusCode::NotFound,
+                         "Graph not exists : " + std::string(e.what()));
   }
   // input vertex data
   try {
@@ -1480,7 +1489,8 @@ seastar::future<admin_query_result> admin_actor::update_vertex(
   try {
     gs::VertexEdgeManager::updateVertex(vertex_data, hiactor::local_shard_id());
   } catch (std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         "fail to update vertex : " + std::string(e.what()));
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
@@ -1494,13 +1504,15 @@ seastar::future<admin_query_result> admin_actor::update_edge(
   try {
     input_json = nlohmann::json::parse(param.content.second);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         " Bad input json : " + std::string(e.what()));
   }
   //  Check if the currently running graph is graph_id
   try {
     schema_json = getSchemaData(metadata_store_, param.content.first);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::NotFound, e.what());
+    return errorResponse(gs::StatusCode::NotFound,
+                         "Graph not exists : " + std::string(e.what()));
   }
   // input edge data
   try {
@@ -1513,7 +1525,8 @@ seastar::future<admin_query_result> admin_actor::update_edge(
   try {
     gs::VertexEdgeManager::updateEdge(edge_data, hiactor::local_shard_id());
   } catch (std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         "fail to update edge : " + std::string(e.what()));
   }
   return seastar::make_ready_future<admin_query_result>(
       gs::Result<seastar::sstring>("success"));
@@ -1530,7 +1543,8 @@ seastar::future<admin_query_result> admin_actor::get_vertex(
   try {
     schema_json = getSchemaData(metadata_store_, param.content.first);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::NotFound, e.what());
+    return errorResponse(gs::StatusCode::NotFound,
+                         "Graph not exists : " + std::string(e.what()));
   }
   // input vertex data
   try {
@@ -1552,7 +1566,8 @@ seastar::future<admin_query_result> admin_actor::get_vertex(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(result.dump()));
   } catch (std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         "fail to get vertex : " + std::string(e.what()));
   }
 }
 
@@ -1567,7 +1582,8 @@ seastar::future<admin_query_result> admin_actor::get_edge(
   try {
     schema_json = getSchemaData(metadata_store_, param.content.first);
   } catch (const std::exception& e) {
-    return errorResponse(gs::StatusCode::NotFound, e.what());
+    return errorResponse(gs::StatusCode::NotFound,
+                         "Graph not exists : " + std::string(e.what()));
   }
   // input edge data
   try {
@@ -1599,7 +1615,8 @@ seastar::future<admin_query_result> admin_actor::get_edge(
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(result.dump()));
   } catch (std::exception& e) {
-    return errorResponse(gs::StatusCode::InvalidSchema, e.what());
+    return errorResponse(gs::StatusCode::InvalidSchema,
+                         "fail to get edge : " + std::string(e.what()));
   }
 }
 

@@ -58,7 +58,7 @@ class VertexSDK:
                     graph_id, vertex_edge_request=params
                 )
                 print(
-                    "The response of GraphServiceVertexManagementApi->add_vertex:",
+                    "The response of GraphServiceVertexManagementApi->add_vertex:\n",
                     api_response,
                 )
             except Exception as e:
@@ -80,7 +80,7 @@ class VertexSDK:
                 api_response = api_instance.update_vertex(
                     graph_id, vertex_request=vertex_request
                 )
-                print("The response of update_vertex:", api_response)
+                print("The response of update_vertex:\n", api_response)
             except Exception as e:
                 print("Exception when calling update_vertex: %s\n" % e)
     @staticmethod
@@ -94,7 +94,7 @@ class VertexSDK:
                 api_response = api_instance.get_vertex(
                     graph_id, label, primary_key_value
                 )
-                print("The response of get_vertex:", api_response)
+                print("The response of get_vertex:\n", api_response)
             except Exception as e:
                 print("Exception when calling get_vertex: %s" % e)
 
@@ -118,7 +118,7 @@ class EdgeSDK:
                 api_response = api_instance.update_edge(
                     graph_id, edge_request=edge_request
                 )
-                print("The response of GraphServiceEdgeManagementApi->update_edge:", api_response)
+                print("The response of GraphServiceEdgeManagementApi->update_edge:\n", api_response)
             except Exception as e:
                 print(
                     "Exception when calling GraphServiceEdgeManagementApi->update_edge: %s\n"
@@ -144,7 +144,7 @@ class EdgeSDK:
                     dst_label,
                     dst_primary_key_value,
                 )
-                print("The response of GraphServiceEdgeManagementApi->get_edge:", api_response)
+                print("The response of GraphServiceEdgeManagementApi->get_edge:\n", api_response)
             except ApiException as e:
                 print(
                     "Exception when calling GraphServiceEdgeManagementApi->get_edge: %s\n"
@@ -176,7 +176,7 @@ class EdgeSDK:
             ]
             try:
                 api_response = api_instance.add_edge(graph_id, edge_request)
-                print("The response of GraphServiceEdgeManagementApi->add_edge:", api_response)
+                print("The response of GraphServiceEdgeManagementApi->add_edge:\n", api_response)
             except Exception as e:
                 print(
                     "Exception when calling GraphServiceEdgeManagementApi->add_edge: %s\n"
