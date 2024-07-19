@@ -144,7 +144,7 @@ jobs:
         bash generate_sdk.sh -g java
         bash generate_sdk.sh -g python
         cd java
-        mvn clean install -DskipTests
+        mvn clean install -DskipTests -q
         cd ../python
         pip3 install -r requirements.txt
         pip3 install -r test-requirements.txt
