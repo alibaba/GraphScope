@@ -434,9 +434,8 @@ public class DriverTest {
         Encoder encoder = new Encoder(bytes);
         encoder.put_int(1);
         encoder.put_byte(
-                (byte)
-                        3); // Assume the procedure index is 3. since the procedures are sorted by
-                            // creation time.
+                (byte) 3); // Assume the procedure index is 3. since the procedures are sorted by
+        // creation time.
         Result<byte[]> resp = session.callProcedureRaw(graphId, bytes);
         assertOk(resp);
     }
