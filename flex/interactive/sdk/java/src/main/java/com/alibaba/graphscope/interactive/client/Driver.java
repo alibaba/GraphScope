@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
+import com.alibaba.graphscope.interactive.client.common.Config;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.impl.DefaultSession;
 import com.alibaba.graphscope.interactive.models.*;
@@ -48,7 +49,10 @@ public class Driver {
     public static Driver connect() {
         String adminUri = System.getenv("INTERACTIVE_ADMIN_ENDPOINT");
         if (adminUri == null) {
-            throw new IllegalArgumentException("INTERACTIVE_ADMIN_ENDPOINT is not set");
+            throw new IllegalArgumentException(
+                    "INTERACTIVE_ADMIN_ENDPOINT is not set, did you forget to export the"
+                            + " environment variable after deploying Interactive? see"
+                            + " https://graphscope.io/docs/latest/flex/interactive/installation");
         }
         String storedProcUri = System.getenv("INTERACTIVE_STORED_PROC_ENDPOINT");
         if (storedProcUri == null) {
@@ -69,6 +73,17 @@ public class Driver {
                             + " service_status");
         }
         return connect(adminUri, storedProcUri, cypherUri, gremlinUri);
+    }
+
+    public static QueryInterface queryServiceOnly(String storedProcUri) {
+        return queryServiceOnly(storedProcUri, Config.newBuilder().build());
+    }
+
+    public static QueryInterface queryServiceOnly(String storedProcUri, Config config) {
+        if (storedProcUri == null || storedProcUri.isEmpty()) {
+            throw new IllegalArgumentException("uri is null or empty");
+        }
+        return DefaultSession.queryInterfaceOnly(storedProcUri, config);
     }
 
     /**
@@ -96,6 +111,9 @@ public class Driver {
     }
 
     private Driver(String uri) {
+        if (uri == null) {
+            throw new IllegalArgumentException("Invalid uri is null");
+        }
         this.adminUri = uri;
         this.storedProcUri = null;
         this.cypherUri = null;
@@ -124,10 +142,15 @@ public class Driver {
      * @return
      */
     public Session session() {
+        Config config = Config.newBuilder().build();
+        return session(config);
+    }
+
+    public Session session(Config config) {
         if (storedProcUri == null) {
-            return DefaultSession.newInstance(adminUri);
+            return DefaultSession.newInstance(adminUri, config);
         } else {
-            return DefaultSession.newInstance(adminUri, storedProcUri);
+            return DefaultSession.newInstance(adminUri, storedProcUri, config);
         }
     }
 
@@ -248,14 +271,16 @@ public class Driver {
     }
 
     private void initHostPort() {
-        if (!adminUri.startsWith("http")) {
-            throw new IllegalArgumentException("Invalid uri: " + adminUri);
+        if (adminUri != null) {
+            if (!adminUri.startsWith("http")) {
+                throw new IllegalArgumentException("Invalid uri: " + adminUri);
+            }
+            String[] parts = adminUri.split(":");
+            if (parts.length != 3) {
+                throw new IllegalArgumentException("Invalid uri: " + adminUri);
+            }
+            host = parts[1].substring(2);
+            port = Integer.parseInt(parts[2]);
         }
-        String[] parts = adminUri.split(":");
-        if (parts.length != 3) {
-            throw new IllegalArgumentException("Invalid uri: " + adminUri);
-        }
-        host = parts[1].substring(2);
-        port = Integer.parseInt(parts[2]);
     }
 }

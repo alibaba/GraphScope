@@ -51,6 +51,9 @@ clean:
 	@mkdir -p "$(BUILDDIR)/${TAG}/$@/reference/"
 	@cat Doxyfile-flex | sed 's/_build\/latest\/html\/reference\//$(BUILDDIR)\/${TAG}\/$@\/reference\//g' | doxygen -
 
+	# Generate the latest restful api doc and override the placeholder
+	@cd ${WORKING_DIR}/../flex/interactive/ && bash generate_restful_api_doc.sh -o ${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/flex/interactive/development/restful_api.html
+
 interactive-sdk:
 	@echo "Building interactive sdk doc to $(BUILDDIR)/${TAG}/interactive-sdk"
 	@cd ${WORKING_DIR}/../flex/interactive/sdk/ && ./generate_sdk.sh -g java \

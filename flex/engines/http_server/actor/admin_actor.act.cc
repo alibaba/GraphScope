@@ -1149,10 +1149,7 @@ seastar::future<admin_query_result> admin_actor::service_status(
         auto get_all_procedure_res =
             metadata_store_->GetAllPluginMeta(running_graph_res.value());
         if (get_all_procedure_res.ok()) {
-          VLOG(10) << "Successfully get all procedures: "
-                   << get_all_procedure_res.value().size();
           auto& all_plugin_metas = get_all_procedure_res.value();
-          VLOG(10) << "original all plugins : " << all_plugin_metas.size();
           for (auto& plugin_meta : all_plugin_metas) {
             add_runnable_info(plugin_meta);
           }
@@ -1160,13 +1157,11 @@ seastar::future<admin_query_result> admin_actor::service_status(
             add_runnable_info(plugin_meta);
           }
 
-          VLOG(10) << "original graph meta: " << graph_meta.plugin_metas.size();
           for (auto& plugin_meta : all_plugin_metas) {
             if (plugin_meta.runnable) {
               graph_meta.plugin_metas.emplace_back(plugin_meta);
             }
           }
-          VLOG(10) << "got graph meta: " << graph_meta.ToJson();
           res["graph"] = nlohmann::json::parse(graph_meta.ToJson());
         } else {
           LOG(ERROR) << "Fail to get all procedures: "

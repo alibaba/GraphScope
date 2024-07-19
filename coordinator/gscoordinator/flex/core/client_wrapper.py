@@ -96,6 +96,14 @@ class ClientWrapper(object):
                             and "long_text" in p["property_type"]["string"]
                         ):
                             p["property_type"]["string"]["long_text"] = ""
+            if "stored_procedures" in g:
+                for sp in g["stored_procedures"]:
+                    for item in itertools.chain(sp["params"], sp["returns"]):
+                        if (
+                            "string" in item["type"]
+                            and "long_text" in item["type"]["string"]
+                        ):
+                            item["type"]["string"]["long_text"] = ""
         # transfer
         rlts = [GetGraphResponse.from_dict(g) for g in graphs]
         return rlts
@@ -177,6 +185,14 @@ class ClientWrapper(object):
                         and "long_text" in p["property_type"]["string"]
                     ):
                         p["property_type"]["string"]["long_text"] = ""
+        if "stored_procedures" in g:
+            for sp in g["stored_procedures"]:
+                for item in itertools.chain(sp["params"], sp["returns"]):
+                    if (
+                        "string" in item["type"]
+                        and "long_text" in item["type"]["string"]
+                    ):
+                        item["type"]["string"]["long_text"] = ""
         return GetGraphResponse.from_dict(g)
 
     def create_stored_procedure(
@@ -188,6 +204,13 @@ class ClientWrapper(object):
 
     def list_stored_procedures(self, graph_id: str) -> List[GetStoredProcResponse]:
         stored_procedures = self._client.list_stored_procedures(graph_id)
+        for sp in stored_procedures:
+            for item in itertools.chain(sp["params"], sp["returns"]):
+                if (
+                    "string" in item["type"]
+                    and "long_text" in item["type"]["string"]
+                ):
+                    item["type"]["string"]["long_text"] = ""
         # transfer
         rlt = [GetStoredProcResponse.from_dict(p) for p in stored_procedures]
         return rlt
@@ -211,9 +234,14 @@ class ClientWrapper(object):
     def get_stored_procedure_by_id(
         self, graph_id: str, stored_procedure_id: str
     ) -> GetStoredProcResponse:
-        return GetStoredProcResponse.from_dict(
-            self._client.get_stored_procedure_by_id(graph_id, stored_procedure_id)
-        )
+        sp = self._client.get_stored_procedure_by_id(graph_id, stored_procedure_id)
+        for item in itertools.chain(sp["params"], sp["returns"]):
+            if (
+                "string" in item["type"]
+                and "long_text" in item["type"]["string"]
+            ):
+                item["type"]["string"]["long_text"] = ""
+        return GetStoredProcResponse.from_dict(sp)
 
     def get_deployment_info(self) -> RunningDeploymentInfo:
         info = {
@@ -310,6 +338,8 @@ class ClientWrapper(object):
             if (
                 "source_vertex_mappings" in mapping
                 and "destination_vertex_mappings" in mapping
+                and mapping["source_vertex_mappings"] is not None
+                and mapping["destination_vertex_mappings"] is not None
             ):
                 for column_mapping in itertools.chain(
                     mapping["source_vertex_mappings"],
