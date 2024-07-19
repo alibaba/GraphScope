@@ -148,7 +148,6 @@ public class Driver {
 
     public Session session(Config config) {
         if (storedProcUri == null) {
-            System.out.println("here");
             return DefaultSession.newInstance(adminUri, config);
         } else {
             return DefaultSession.newInstance(adminUri, storedProcUri, config);
