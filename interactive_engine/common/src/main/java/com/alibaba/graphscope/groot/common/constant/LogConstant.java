@@ -37,6 +37,8 @@ public class LogConstant {
 
     public static String START_TIME = "startMillis";
 
+    public static String END_TIME = "endMillis";
+
     /**
      * 日志类型: query/write
      */

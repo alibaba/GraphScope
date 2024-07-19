@@ -97,9 +97,11 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
     private JsonObject buildMetricJsonLog(String traceId, int batchSize, long startTime) {
         JsonObject metricJson = new JsonObject();
+        long current = System.currentTimeMillis();
         metricJson.addProperty(LogConstant.TRACE_ID, traceId);
         metricJson.addProperty(LogConstant.BATCH_SIZE, batchSize);
-        metricJson.addProperty(LogConstant.COST, (System.currentTimeMillis() - startTime));
+        metricJson.addProperty(LogConstant.COST, (current - startTime));
+        metricJson.addProperty(LogConstant.END_TIME, current);
         metricJson.addProperty(LogConstant.STAGE, "writeKafka");
         metricJson.addProperty(LogConstant.LOG_TYPE, "write");
         return metricJson;

@@ -108,6 +108,7 @@ public class QueryLogger {
         metricJson.addProperty(LogConstant.COST, cost);
         metricJson.addProperty(LogConstant.STAGE, "java");
         metricJson.addProperty(LogConstant.LOG_TYPE, "query");
+        metricJson.addProperty(LogConstant.END_TIME, System.currentTimeMillis());
         metricLogger.info(metricJson.toString());
     }
 

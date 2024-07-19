@@ -307,12 +307,14 @@ public class StoreService {
     private JsonObject buildMetricJsonLog(boolean succeed, OperationBatch operationBatch, long start, int partitionId) {
         JsonObject metricJsonLog = new JsonObject();
         String traceId = operationBatch.getTraceId();
+        long current = System.currentTimeMillis();
         int batchSize = operationBatch.getOperationCount();
         metricJsonLog.addProperty(LogConstant.TRACE_ID, traceId);
         metricJsonLog.addProperty(LogConstant.SUCCESS, succeed);
         metricJsonLog.addProperty(LogConstant.BATCH_SIZE, batchSize);
         metricJsonLog.addProperty(LogConstant.PARTITION_ID, partitionId);
-        metricJsonLog.addProperty(LogConstant.COST, (System.currentTimeMillis() - start));
+        metricJsonLog.addProperty(LogConstant.END_TIME, current);
+        metricJsonLog.addProperty(LogConstant.COST, (current - start));
         metricJsonLog.addProperty(LogConstant.STAGE, "writeDb");
         metricJsonLog.addProperty(LogConstant.LOG_TYPE, "write");
         return metricJsonLog;
