@@ -28,6 +28,7 @@ public class Config {
         Config config;
 
         public ConfigBuilder() {
+            config = new Config();
             config.enableTracing = false; // default not enable tracing.
         }
 
