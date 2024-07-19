@@ -48,6 +48,10 @@ public class Status {
         return message;
     }
 
+    public StatusCode getCode() {
+        return this.code;
+    }
+
     public Status(StatusCode code, String message) {
         this.code = code;
         this.message = message;
