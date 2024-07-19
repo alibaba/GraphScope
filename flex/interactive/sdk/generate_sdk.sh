@@ -29,6 +29,7 @@ developerOrganizationUrl="https://graphscope.io"
 DEVELOPER_NAME="GraphScope Team"
 LICENSE_NAME="Apache-2.0"
 LICENSE_URL="https://www.apache.org/licenses/LICENSE-2.0.html"
+LOG_LEVEL="error"
 
 
 #get current bash scrip's directory
@@ -54,6 +55,7 @@ function do_gen_java() {
     addtional_properties="${addtional_properties},developerName=\"${DEVELOPER_NAME}\",developerOrganization=\"${ORGANIZATION}\""
     addtional_properties="${addtional_properties},developerOrganizationUrl=${developerOrganizationUrl}"
     addtional_properties="${addtional_properties},artifactVersion=${VERSION},hideGenerationTimestamp=true"
+    export JAVA_OPTS="-Dlog.level=${LOG_LEVEL}"
 
     cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g java -o ${OUTPUT_PATH}"
     cmd=" ${cmd} --api-package ${PACKAGE_NAME}.api"
@@ -71,6 +73,7 @@ function do_gen_java() {
 function do_gen_python() {
     echo "Generating Python SDK"
     OUTPUT_PATH="${CUR_DIR}/python"
+    export JAVA_OPTS="-Dlog.level=${LOG_LEVEL}"
     cmd="openapi-generator-cli generate -i ${OPENAPI_SPEC_PATH} -g python -o ${OUTPUT_PATH}"
     cmd=" ${cmd} --package-name ${PYTHON_PACKAGE_NAME}"
     cmd=" ${cmd} --additional-properties=packageVersion=${VERSION},pythonVersion=3"

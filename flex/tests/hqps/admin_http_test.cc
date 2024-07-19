@@ -42,6 +42,8 @@ std::string get_file_name_from_path(const std::string& file_path) {
   auto file_name = file_path.substr(file_path.find_last_of('/') + 1);
   // remove extension
   file_name = file_name.substr(0, file_name.find_last_of('.'));
+  // prepend query_ before filename, to avoid name start with number
+  file_name = "query_" + file_name;
   return file_name;
 }
 

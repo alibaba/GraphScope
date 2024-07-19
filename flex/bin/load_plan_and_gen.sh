@@ -89,17 +89,17 @@ generate_cpp_yaml() {
   local procedure_query=$4
   local output_yaml_file=$5
   local template_str="""
-  name: ${procedure_name}
-  description: \"${procedure_description}\"
-  library: ${output_so_name}
-  type: cpp
-  query: |
+name: ${procedure_name}
+description: \"${procedure_description}\"
+library: ${output_so_name}
+type: cpp
+query: |
   """
   # for each line in procedure_query, add 2 spaces
   while IFS= read -r line; do
     # add newline after each line
     template_str="${template_str}  ${line}\n"
-  done <<< "${procedure_query}"
+  done <<< "'${procedure_query}'"
   echo "${template_str}" > ${output_yaml_file}
   info "Generate yaml file to ${output_yaml_file}"
 }

@@ -954,6 +954,11 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
       .then_wrapped([plugin_id = plugin_id, output_dir](auto&& f) {
         try {
           auto res = f.get();
+          if (!res.ok()) {
+            return seastar::make_exception_future<seastar::sstring>(
+                std::runtime_error("Fail to generate procedure, error: " +
+                                   res.status().error_message()));
+          }
           std::string so_file;
           {
             std::stringstream ss;
