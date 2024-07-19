@@ -27,11 +27,14 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.common.Status;
 import com.alibaba.graphscope.interactive.models.*;
 import com.google.protobuf.InvalidProtocolBufferException;
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
 
 import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /***
  * A default implementation of the GraphScope interactive session interface.
@@ -63,11 +66,8 @@ public class DefaultSession implements Session {
         this.config = config;
         System.out.println("uri neq null" + (uri != null));
         if (uri != null) {
-            client = new ApiClient();
+            client = new ApiClient(createHttpClient(config));
             client.setBasePath(uri);
-            client.setReadTimeout(DEFAULT_READ_TIMEOUT);
-            client.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
-
             graphApi = new AdminServiceGraphManagementApi(client);
             jobApi = new AdminServiceJobManagementApi(client);
             procedureApi = new AdminServiceProcedureManagementApi(client);
@@ -104,10 +104,8 @@ public class DefaultSession implements Session {
             throw new RuntimeException(
                     "DefaultSession need at least stored procedure uri specified, current is null");
         }
-        queryClient = new ApiClient();
+        queryClient = new ApiClient(createHttpClient(config));
         queryClient.setBasePath(storedProcUri);
-        queryClient.setReadTimeout(DEFAULT_READ_TIMEOUT);
-        queryClient.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
         queryApi = new QueryServiceApi(queryClient);
     }
 
@@ -833,5 +831,13 @@ public class DefaultSession implements Session {
             e.printStackTrace();
             return Result.fromException(e);
         }
+    }
+
+    private static OkHttpClient createHttpClient(Config config){
+        return new OkHttpClient.Builder().readTimeout(config.getReadTimeout(), TimeUnit.MILLISECONDS)
+                .writeTimeout(config.getWriteTimeout(), TimeUnit.MILLISECONDS)
+                .connectTimeout(config.getConnectionTimeout(), TimeUnit.MILLISECONDS)
+                .connectionPool(new ConnectionPool(config.getMaxIdleConnections(), config.getKeepAliveDuration(), TimeUnit.MILLISECONDS))
+                .build();
     }
 }
