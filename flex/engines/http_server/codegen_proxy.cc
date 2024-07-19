@@ -229,6 +229,8 @@ seastar::future<gs::Result<bool>> CodegenProxy::CallCodegenCmd(
     }
 
     codegen_process.wait();
+    stderr_pipe.close();
+    stdout_pipe.close();
     int res = codegen_process.exit_code();
     if (res != 0) {
       return gs::Result<bool>(
