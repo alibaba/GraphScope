@@ -24,9 +24,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class CommonQuery {
     String queryName;
@@ -56,7 +56,6 @@ public class CommonQuery {
             BenchmarkResultComparator comparator) {
         try {
             String gremlinQuery = generateGraphQuery(singleParameter, queryPattern);
-
             long startTime = System.currentTimeMillis();
             GraphResultSet resultSet = client.submit(gremlinQuery);
             Pair<Integer, String> result = processResult(resultSet);
@@ -152,29 +151,33 @@ public class CommonQuery {
         return "";
     }
 
+    // Support two formats of startDate: timestamp or "yyyyMMddHHmmssSSS"
     protected String getEndDate(String startDate, String durationDays) {
-        DateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS"); // date format
+        boolean isTimeStamp = (startDate.matches("\\d+")) && (startDate.length() == 13);
+        int days = Integer.parseInt(durationDays);
         try {
-            Date sDate = format.parse(startDate);
-            sDate.after(new Date(Long.parseLong(durationDays) * 24 * 3600 * 1000));
-            return format.format(
-                    new Date(sDate.getTime() + (Long.parseLong(durationDays) * 24 * 3600 * 1000)));
+            if (isTimeStamp) {
+                long startMillis = Long.parseLong(startDate);
+                long endMillis = startMillis + TimeUnit.DAYS.toMillis(days);
+                return Long.toString(endMillis);
+            } else {
+                // Assume the startDate is in the format of "yyyyMMddHHmmssSSS"
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+                Date startDateObj = dateFormat.parse(startDate);
+                long endMillis = startDateObj.getTime() + TimeUnit.DAYS.toMillis(days);
+                Date endDateObj = new Date(endMillis);
+                return dateFormat.format(endDateObj);
+            }
         } catch (Exception e) {
-            return String.valueOf(
-                    Long.parseLong(startDate) + (Long.parseLong(durationDays) * 24 * 3600 * 1000));
+            throw new RuntimeException("Failed to calculate end date", e);
         }
     }
 
+    // Support two formats of startDate: timestamp or "yyyyMMddHHmmssSSS"
     protected String transformDate(String date) {
-        DateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-        TimeZone gmtTime = TimeZone.getTimeZone("UTC");
-        format.setTimeZone(gmtTime);
-        try {
-            format.parse(date);
-            return date;
-        } catch (Exception e) {
-            return format.format(new Date(Long.parseLong(date)));
-        }
+        // For standard date string, simply return it (if additional transformation is needed, add
+        // here)
+        return date;
     }
 
     protected String transformSimpleDate(String date) {
