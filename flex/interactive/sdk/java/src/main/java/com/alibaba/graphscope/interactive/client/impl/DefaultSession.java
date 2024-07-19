@@ -27,6 +27,7 @@ import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.common.Status;
 import com.alibaba.graphscope.interactive.models.*;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 
@@ -833,11 +834,16 @@ public class DefaultSession implements Session {
         }
     }
 
-    private static OkHttpClient createHttpClient(Config config){
-        return new OkHttpClient.Builder().readTimeout(config.getReadTimeout(), TimeUnit.MILLISECONDS)
+    private static OkHttpClient createHttpClient(Config config) {
+        return new OkHttpClient.Builder()
+                .readTimeout(config.getReadTimeout(), TimeUnit.MILLISECONDS)
                 .writeTimeout(config.getWriteTimeout(), TimeUnit.MILLISECONDS)
                 .connectTimeout(config.getConnectionTimeout(), TimeUnit.MILLISECONDS)
-                .connectionPool(new ConnectionPool(config.getMaxIdleConnections(), config.getKeepAliveDuration(), TimeUnit.MILLISECONDS))
+                .connectionPool(
+                        new ConnectionPool(
+                                config.getMaxIdleConnections(),
+                                config.getKeepAliveDuration(),
+                                TimeUnit.MILLISECONDS))
                 .build();
     }
 }
