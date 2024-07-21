@@ -18,8 +18,9 @@ package com.alibaba.graphscope.gremlin.plugin;
 
 import com.alibaba.graphscope.groot.common.constant.LogConstant;
 import com.google.gson.JsonObject;
+
 import io.opentelemetry.api.trace.Span;
-import jline.internal.Log;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +37,8 @@ public class QueryLogger {
      * 上游带下来的traceId
      */
     private final String upTraceId;
-    private String irPlan;
 
+    private String irPlan;
 
     public QueryLogger(String query, BigInteger queryId) {
         this.query = query;
@@ -69,7 +70,6 @@ public class QueryLogger {
         defaultLogger.error(this + " : " + format, args);
     }
 
-
     public void error(Throwable throwable) {
         JsonObject errorJson = new JsonObject();
         String traceId = Span.current().getSpanContext().getTraceId();
@@ -83,7 +83,6 @@ public class QueryLogger {
         errorJson.addProperty(LogConstant.ERROR_MESSAGE, throwable.getMessage());
         defaultLogger.error(errorJson.toString(), throwable);
     }
-
 
     public void print(String message, boolean success, Throwable t) {
         if (success) {
@@ -117,9 +116,7 @@ public class QueryLogger {
         StringBuilder str = new StringBuilder();
         str.append("[");
         if (this.upTraceId != null) {
-            str.append("upTraceId=")
-                    .append(this.upTraceId)
-                    .append(", ");
+            str.append("upTraceId=").append(this.upTraceId).append(", ");
         }
         str.append("query='")
                 .append(this.query)

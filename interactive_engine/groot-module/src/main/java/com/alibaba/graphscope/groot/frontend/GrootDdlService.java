@@ -156,7 +156,10 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             String trace = sw.toString();
-            logger.error("Exception occurred when processing batch DDL request. traceId:[{}]", traceId, e);
+            logger.error(
+                    "Exception occurred when processing batch DDL request. traceId:[{}]",
+                    traceId,
+                    e);
             responseObserver.onError(Status.INTERNAL.withDescription(trace).asRuntimeException());
         }
     }

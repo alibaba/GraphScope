@@ -27,7 +27,8 @@ public class OperationBatch implements Iterable<OperationBlob> {
     private final List<OperationBlob> operationBlobs;
     private final String traceId;
 
-    private OperationBatch(long latestSnapshotId, List<OperationBlob> operationBlobs, String traceId) {
+    private OperationBatch(
+            long latestSnapshotId, List<OperationBlob> operationBlobs, String traceId) {
         this.latestSnapshotId = latestSnapshotId;
         this.operationBlobs = operationBlobs;
         this.traceId = traceId;

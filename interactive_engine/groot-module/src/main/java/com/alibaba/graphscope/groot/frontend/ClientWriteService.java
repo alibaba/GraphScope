@@ -6,8 +6,8 @@ import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.WriteRequest;
 import com.alibaba.graphscope.proto.groot.*;
-
 import com.google.gson.JsonObject;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
@@ -89,7 +89,11 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
         } catch (Exception e) {
             logger.error(
-                    "batchWrite failed. traceId[{}] request [{}] session [{}]", upTraceId, requestId, writeSession, e);
+                    "batchWrite failed. traceId[{}] request [{}] session [{}]",
+                    upTraceId,
+                    requestId,
+                    writeSession,
+                    e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }

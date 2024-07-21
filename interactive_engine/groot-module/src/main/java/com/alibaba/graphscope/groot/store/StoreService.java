@@ -27,8 +27,8 @@ import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.proto.groot.Statistics;
-
 import com.google.gson.JsonObject;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -261,16 +261,21 @@ public class StoreService {
                                 if (partition.writeBatch(snapshotId, batch)) {
                                     hasDdl.set(true);
                                 }
-                                metricLogger.info(buildMetricJsonLog(true, batch, start, partitionId).toString());
+                                metricLogger.info(
+                                        buildMetricJsonLog(true, batch, start, partitionId)
+                                                .toString());
                                 attrs.put("success", true).put("message", "");
                                 this.writeHistogram.record(
                                         System.currentTimeMillis() - start, attrs.build());
                                 this.writeCounter.add(batch.getOperationCount(), attrs.build());
                             }
                         } catch (Exception ex) {
-                            metricLogger.info(buildMetricJsonLog(false, batch, start, partitionId).toString());
+                            metricLogger.info(
+                                    buildMetricJsonLog(false, batch, start, partitionId)
+                                            .toString());
                             logger.error(
-                                    "write to partition [{}] failed, snapshotId [{}], traceId [{}].",
+                                    "write to partition [{}] failed, snapshotId [{}], traceId"
+                                        + " [{}].",
                                     partitionId,
                                     snapshotId,
                                     batch.getTraceId(),
@@ -304,7 +309,8 @@ public class StoreService {
         return batchNeedRetry;
     }
 
-    private JsonObject buildMetricJsonLog(boolean succeed, OperationBatch operationBatch, long start, int partitionId) {
+    private JsonObject buildMetricJsonLog(
+            boolean succeed, OperationBatch operationBatch, long start, int partitionId) {
         JsonObject metricJsonLog = new JsonObject();
         String traceId = operationBatch.getTraceId();
         long current = System.currentTimeMillis();

@@ -62,8 +62,8 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.*;
 import io.opentelemetry.context.Scope;
-
 import io.opentelemetry.sdk.trace.IdGenerator;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -99,7 +99,8 @@ import java.util.function.Supplier;
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
-    private static final Logger defaultLogger = LoggerFactory.getLogger(IrStandardOpProcessor.class);
+    private static final Logger defaultLogger =
+            LoggerFactory.getLogger(IrStandardOpProcessor.class);
     protected final Graph graph;
     protected final GraphTraversalSource g;
     protected final Configs configs;
@@ -119,6 +120,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
      * Print if the threshold is exceeded
      */
     private long printThreshold;
+
     private IdGenerator opentelemetryIdGenerator;
 
     public IrStandardOpProcessor(
@@ -160,8 +162,12 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         GremlinExecutor gremlinExecutor = gremlinExecutorSupplier.get();
         Map<String, Object> args = msg.getArgs();
         String script = (String) args.get("gremlin");
-        Map<String, Object> bindings = args.get("bindings") == null ? null : (Map<String, Object>) args.get("bindings");
-        String upTraceId = (bindings == null || bindings.get("X-Trace-ID") == null) ? null : String.valueOf(bindings.get("X-Trace-ID"));
+        Map<String, Object> bindings =
+                args.get("bindings") == null ? null : (Map<String, Object>) args.get("bindings");
+        String upTraceId =
+                (bindings == null || bindings.get("X-Trace-ID") == null)
+                        ? null
+                        : String.valueOf(bindings.get("X-Trace-ID"));
 
         String defaultValidateQuery = "''";
         // ad-hoc handling for connection validation
@@ -316,7 +322,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
     protected QueryStatusCallback createQueryStatusCallback(String query, BigInteger queryId) {
         return new QueryStatusCallback(
-                new MetricsCollector(evalOpTimer), queryHistogram, new QueryLogger(query, queryId), this.printThreshold);
+                new MetricsCollector(evalOpTimer),
+                queryHistogram,
+                new QueryLogger(query, queryId),
+                this.printThreshold);
     }
 
     /**
@@ -326,13 +335,20 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
      * @param upTraceId 上游传下来的traceId, 用于做全链路追踪
      * @return
      */
-    protected QueryStatusCallback createQueryStatusCallback(String query, BigInteger queryId, String upTraceId) {
+    protected QueryStatusCallback createQueryStatusCallback(
+            String query, BigInteger queryId, String upTraceId) {
         if (upTraceId == null) {
             return new QueryStatusCallback(
-                    new MetricsCollector(evalOpTimer), queryHistogram, new QueryLogger(query, queryId), printThreshold);
+                    new MetricsCollector(evalOpTimer),
+                    queryHistogram,
+                    new QueryLogger(query, queryId),
+                    printThreshold);
         } else {
             return new QueryStatusCallback(
-                    new MetricsCollector(evalOpTimer), queryHistogram, new QueryLogger(query, queryId, upTraceId), printThreshold);
+                    new MetricsCollector(evalOpTimer),
+                    queryHistogram,
+                    new QueryLogger(query, queryId, upTraceId),
+                    printThreshold);
         }
     }
 
@@ -435,14 +451,22 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Span outgoing;
         // if exist up trace, useUpTraceId as current traceId
         if (TraceId.isValid(queryLogger.getUpTraceId())) {
-            SpanContext spanContext = SpanContext.createFromRemoteParent(queryLogger.getUpTraceId(),
-                    this.opentelemetryIdGenerator.generateSpanId(), TraceFlags.getDefault(), TraceState.getDefault());
+            SpanContext spanContext =
+                    SpanContext.createFromRemoteParent(
+                            queryLogger.getUpTraceId(),
+                            this.opentelemetryIdGenerator.generateSpanId(),
+                            TraceFlags.getDefault(),
+                            TraceState.getDefault());
             outgoing =
                     tracer.spanBuilder("frontend/query")
-                            .setParent(io.opentelemetry.context.Context.current().with(Span.wrap(spanContext)))
-                            .setSpanKind(SpanKind.CLIENT).startSpan();
+                            .setParent(
+                                    io.opentelemetry.context.Context.current()
+                                            .with(Span.wrap(spanContext)))
+                            .setSpanKind(SpanKind.CLIENT)
+                            .startSpan();
         } else {
-            outgoing = tracer.spanBuilder("frontend/query").setSpanKind(SpanKind.CLIENT).startSpan();
+            outgoing =
+                    tracer.spanBuilder("frontend/query").setSpanKind(SpanKind.CLIENT).startSpan();
         }
         try (Scope ignored = outgoing.makeCurrent()) {
             outgoing.setAttribute("query.id", queryLogger.getQueryId().toString());

@@ -19,9 +19,11 @@ package com.alibaba.graphscope.gremlin.plugin;
 import com.alibaba.graphscope.groot.common.constant.LogConstant;
 import com.alibaba.graphscope.groot.common.util.JSON;
 import com.google.gson.JsonObject;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.trace.Span;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -34,7 +36,10 @@ public class QueryStatusCallback {
     private long printThreshold;
 
     public QueryStatusCallback(
-            MetricsCollector metricsCollector, LongHistogram histogram, QueryLogger queryLogger, long printThreshold) {
+            MetricsCollector metricsCollector,
+            LongHistogram histogram,
+            QueryLogger queryLogger,
+            long printThreshold) {
         this.metricsCollector = metricsCollector;
         this.queryLogger = queryLogger;
         this.queryHistogram = histogram;
@@ -45,7 +50,13 @@ public class QueryStatusCallback {
 
     public void onErrorEnd(@Nullable String msg) {
         this.metricsCollector.stop();
-        JsonObject detailLog = buildDetailLog(false, msg, metricsCollector.getElapsedMillis(), metricsCollector.getStartMillis(), null);
+        JsonObject detailLog =
+                buildDetailLog(
+                        false,
+                        msg,
+                        metricsCollector.getElapsedMillis(),
+                        metricsCollector.getStartMillis(),
+                        null);
         queryLogger.print(detailLog.toString(), false, null);
 
         Attributes attrs =
@@ -62,8 +73,13 @@ public class QueryStatusCallback {
     public void onErrorEnd(@Nullable Throwable t) {
         this.metricsCollector.stop();
         String msg = t.getMessage();
-        JsonObject detailLog = buildDetailLog(false, msg, metricsCollector.getElapsedMillis(),
-                metricsCollector.getStartMillis(), null);
+        JsonObject detailLog =
+                buildDetailLog(
+                        false,
+                        msg,
+                        metricsCollector.getElapsedMillis(),
+                        metricsCollector.getStartMillis(),
+                        null);
         queryLogger.print(detailLog.toString(), false, t);
 
         Attributes attrs =
@@ -80,8 +96,13 @@ public class QueryStatusCallback {
     public void onSuccessEnd(List<Object> results) {
         this.metricsCollector.stop();
         if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
-            JsonObject detailLog = buildDetailLog(true, null, metricsCollector.getElapsedMillis(),
-                    metricsCollector.getStartMillis(), results);
+            JsonObject detailLog =
+                    buildDetailLog(
+                            true,
+                            null,
+                            metricsCollector.getElapsedMillis(),
+                            metricsCollector.getStartMillis(),
+                            results);
             queryLogger.print(detailLog.toString(), true, null);
         }
 
@@ -96,7 +117,12 @@ public class QueryStatusCallback {
         queryLogger.metricsInfo(true, metricsCollector.getElapsedMillis());
     }
 
-    private JsonObject buildDetailLog(boolean isSucceed, String errorMessage, long elaspedMillis, long startMillis, List<Object> results) {
+    private JsonObject buildDetailLog(
+            boolean isSucceed,
+            String errorMessage,
+            long elaspedMillis,
+            long startMillis,
+            List<Object> results) {
         String traceId = Span.current().getSpanContext().getTraceId();
         JsonObject detailJson = new JsonObject();
         detailJson.addProperty(LogConstant.TRACE_ID, traceId);

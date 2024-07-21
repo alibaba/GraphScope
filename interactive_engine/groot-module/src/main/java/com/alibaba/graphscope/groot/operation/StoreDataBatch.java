@@ -72,7 +72,8 @@ public class StoreDataBatch {
                     .forEach((pid, pb) -> batch.put(pid, OperationBatch.parseProto(pb)));
             dataBatch.add(batch);
         }
-        return new StoreDataBatch(requestId, queueId, snapshotId, offset, dataBatch, proto.getTraceId());
+        return new StoreDataBatch(
+                requestId, queueId, snapshotId, offset, dataBatch, proto.getTraceId());
     }
 
     public String getRequestId() {
@@ -206,7 +207,8 @@ public class StoreDataBatch {
                 partitionBatchBuilder.forEach((pid, builder) -> batch.put(pid, builder.build()));
                 addBatch(batch);
             }
-            return new StoreDataBatch(requestId, queueId, snapshotId, offset, dataBatch, size, traceId);
+            return new StoreDataBatch(
+                    requestId, queueId, snapshotId, offset, dataBatch, size, traceId);
         }
     }
 }

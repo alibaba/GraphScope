@@ -24,8 +24,8 @@ import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-
 import io.opentelemetry.api.trace.Span;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
