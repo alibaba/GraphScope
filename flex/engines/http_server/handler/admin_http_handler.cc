@@ -309,20 +309,6 @@ class admin_http_graph_handler_impl : public seastar::httpd::handler_base {
         return seastar::make_exception_future<
             std::unique_ptr<seastar::httpd::reply>>(
             std::runtime_error("graph_id not given"));
-      } else {
-        auto graph_id = trim_slash(req->param.at("graph_id"));
-        return admin_actor_refs_[dst_executor]
-            .run_delete_graph(query_param{std::move(graph_id)})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
-      }
-    } else if (method == "PUT") {
-      if (!req->param.exists("graph_id")) {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("graph_id not given"));
       }
       auto graph_id = trim_slash(req->param.at("graph_id"));
       return admin_actor_refs_[dst_executor]
@@ -811,6 +797,7 @@ seastar::future<> admin_http_handler::set_routes() {
           .add_str("/statistics");
       r.add(match_rule, seastar::httpd::operation_type::GET);
     }
+
     {
       // Node and service management
       r.add(seastar::httpd::operation_type::GET,
