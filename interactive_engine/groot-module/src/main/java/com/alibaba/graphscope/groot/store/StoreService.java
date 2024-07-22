@@ -261,17 +261,14 @@ public class StoreService {
                                     hasDdl.set(true);
                                 }
                                 metricLogger.info(
-                                        buildMetricJsonLog(true, batch, start, partitionId)
-                                                .toString());
+                                        buildMetricJsonLog(true, batch, start, partitionId));
                                 attrs.put("success", true).put("message", "");
                                 this.writeHistogram.record(
                                         System.currentTimeMillis() - start, attrs.build());
                                 this.writeCounter.add(batch.getOperationCount(), attrs.build());
                             }
                         } catch (Exception ex) {
-                            metricLogger.info(
-                                    buildMetricJsonLog(false, batch, start, partitionId)
-                                            .toString());
+                            metricLogger.info(buildMetricJsonLog(false, batch, start, partitionId));
                             logger.error(
                                     "write to partition [{}] failed, snapshotId [{}], traceId"
                                             + " [{}].",
