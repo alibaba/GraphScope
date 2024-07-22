@@ -15,11 +15,11 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
+import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.models.QueryRequest;
-import com.alibaba.graphscope.gaia.proto.StoredProcedure;
-import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 
 import java.util.concurrent.CompletableFuture;
 
