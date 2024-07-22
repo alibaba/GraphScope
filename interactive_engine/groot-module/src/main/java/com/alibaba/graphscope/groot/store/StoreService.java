@@ -275,7 +275,7 @@ public class StoreService {
                                             .toString());
                             logger.error(
                                     "write to partition [{}] failed, snapshotId [{}], traceId"
-                                        + " [{}].",
+                                            + " [{}].",
                                     partitionId,
                                     snapshotId,
                                     batch.getTraceId(),
