@@ -337,11 +337,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
      */
     protected QueryStatusCallback createQueryStatusCallback(
             String query, BigInteger queryId, String upTraceId) {
-            return new QueryStatusCallback(
-                    new MetricsCollector(evalOpTimer),
-                    queryHistogram,
-                    new QueryLogger(query, queryId, upTraceId),
-                    printThreshold);
+        return new QueryStatusCallback(
+                new MetricsCollector(evalOpTimer),
+                queryHistogram,
+                new QueryLogger(query, queryId, upTraceId),
+                printThreshold);
     }
 
     protected GremlinExecutor.LifeCycle createLifeCycle(
@@ -442,10 +442,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         request = request.toBuilder().setConf(jobConfig).build();
         Span outgoing;
         // if exist up trace, useUpTraceId as current traceId
-        if (TraceId.isValid(queryLogger.getUpTraceId())) {
+        if (TraceId.isValid(queryLogger.getUpStreamId())) {
             SpanContext spanContext =
                     SpanContext.createFromRemoteParent(
-                            queryLogger.getUpTraceId(),
+                            queryLogger.getUpStreamId(),
                             this.opentelemetryIdGenerator.generateSpanId(),
                             TraceFlags.getDefault(),
                             TraceState.getDefault());

@@ -17,7 +17,6 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
-import com.alibaba.graphscope.groot.common.constant.LogConstant;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.common.util.Utils;
@@ -28,7 +27,6 @@ import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.proto.groot.Statistics;
-import com.google.gson.JsonObject;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -310,13 +308,20 @@ public class StoreService {
         return batchNeedRetry;
     }
 
-    private JsonObject buildMetricJsonLog(
+    private String buildMetricJsonLog(
             boolean succeed, OperationBatch operationBatch, long start, int partitionId) {
         String traceId = operationBatch.getTraceId();
         long current = System.currentTimeMillis();
         int batchSize = operationBatch.getOperationCount();
-        return Utils.buildMetricJsonLog(succeed, traceId, batchSize, partitionId, (current - start), current,
-                "writeDb","write");
+        return Utils.buildMetricJsonLog(
+                succeed,
+                traceId,
+                batchSize,
+                partitionId,
+                (current - start),
+                current,
+                "writeDb",
+                "write");
     }
 
     public GraphDefPb getGraphDefBlob() throws IOException {

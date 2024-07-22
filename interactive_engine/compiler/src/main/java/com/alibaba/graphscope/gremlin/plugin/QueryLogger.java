@@ -37,7 +37,7 @@ public class QueryLogger {
     /**
      * 上游带下来的traceId
      */
-    private final String upTraceId;
+    private final String upStreamId;
 
     private String irPlan;
 
@@ -45,13 +45,13 @@ public class QueryLogger {
         this.query = query;
         this.queryId = queryId;
         this.irPlan = null;
-        this.upTraceId = null;
+        this.upStreamId = null;
     }
 
-    public QueryLogger(String query, BigInteger queryId, String upTraceId) {
+    public QueryLogger(String query, BigInteger queryId, String upStreamId) {
         this.query = query;
         this.queryId = queryId;
-        this.upTraceId = upTraceId;
+        this.upStreamId = upStreamId;
         this.irPlan = null;
     }
 
@@ -74,8 +74,8 @@ public class QueryLogger {
     public void error(Throwable throwable) {
         JsonObject errorJson = new JsonObject();
         String traceId = Span.current().getSpanContext().getTraceId();
-        if (this.upTraceId != null) {
-            errorJson.addProperty(LogConstant.UP_TRACE_ID, this.upTraceId);
+        if (this.upStreamId != null) {
+            errorJson.addProperty(LogConstant.UP_STREAM_ID, this.upStreamId);
         }
         errorJson.addProperty(LogConstant.TRACE_ID, traceId);
         errorJson.addProperty(LogConstant.SUCCESS, false);
@@ -99,25 +99,25 @@ public class QueryLogger {
 
     public void metricsInfo(boolean isSucceed, long cost) {
         String traceId = Span.current().getSpanContext().getTraceId();
-        JsonObject metricJson = Utils.buildMetricJsonLog(
-                isSucceed,
-                traceId,
-                null,
-                null,
-                cost,
-                System.currentTimeMillis(),
-                "java",
-                "query"
-        );
-        metricLogger.info(metricJson.toString());
+        String metricJson =
+                Utils.buildMetricJsonLog(
+                        isSucceed,
+                        traceId,
+                        null,
+                        null,
+                        cost,
+                        System.currentTimeMillis(),
+                        "java",
+                        "query");
+        metricLogger.info(metricJson);
     }
 
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
         str.append("[");
-        if (this.upTraceId != null) {
-            str.append("upTraceId=").append(this.upTraceId).append(", ");
+        if (this.upStreamId != null) {
+            str.append("upStreamId=").append(this.upStreamId).append(", ");
         }
         str.append("query='")
                 .append(this.query)
@@ -140,8 +140,8 @@ public class QueryLogger {
         this.irPlan = irPlan;
     }
 
-    public String getUpTraceId() {
-        return upTraceId;
+    public String getUpStreamId() {
+        return upStreamId;
     }
 
     public String getIrPlan() {

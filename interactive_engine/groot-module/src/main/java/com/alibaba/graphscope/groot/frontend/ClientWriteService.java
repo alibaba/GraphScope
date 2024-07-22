@@ -1,13 +1,11 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.common.constant.LogConstant;
 import com.alibaba.graphscope.groot.common.util.Utils;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.WriteRequest;
 import com.alibaba.graphscope.proto.groot.*;
-import com.google.gson.JsonObject;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -65,10 +63,17 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
                         @Override
                         public void onCompleted(Long res) {
                             long current = System.currentTimeMillis();
-                            JsonObject metricJson = Utils.buildMetricJsonLog(true, upTraceId, count, null,
-                                    (current - startBatchWrite),
-                                    current, "writeKafka", "write");
-                            metricLogger.info(metricJson.toString());
+                            String metricJson =
+                                    Utils.buildMetricJsonLog(
+                                            true,
+                                            upTraceId,
+                                            count,
+                                            null,
+                                            (current - startBatchWrite),
+                                            current,
+                                            "writeKafka",
+                                            "write");
+                            metricLogger.info(metricJson);
                             responseObserver.onNext(
                                     BatchWriteResponse.newBuilder().setSnapshotId(res).build());
                             responseObserver.onCompleted();
@@ -77,10 +82,17 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
                         @Override
                         public void onError(Throwable t) {
                             long current = System.currentTimeMillis();
-                            JsonObject metricJson = Utils.buildMetricJsonLog(false, upTraceId, count, null,
-                                    (current - startBatchWrite),
-                                    current, "writeKafka", "write");
-                            metricLogger.info(metricJson.toString());
+                            String metricJson =
+                                    Utils.buildMetricJsonLog(
+                                            false,
+                                            upTraceId,
+                                            count,
+                                            null,
+                                            (current - startBatchWrite),
+                                            current,
+                                            "writeKafka",
+                                            "write");
+                            metricLogger.info(metricJson);
                             logger.error(
                                     "batch write error. request {} session {}",
                                     requestId,

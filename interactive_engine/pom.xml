@@ -168,7 +168,6 @@
     <jackson.version>2.14.1</jackson.version>
     <protoc.version>3.22.2</protoc.version>
     <protobuf.version>3.22.2</protobuf.version>
-    <gson.version>2.2.4</gson.version>
     <grpc.version>1.51.1</grpc.version>
     <netty.version>4.1.79.Final</netty.version>
     <jna.version>5.7.0</jna.version>
@@ -283,11 +282,6 @@
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java-util</artifactId>
         <version>${protobuf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.code.gson</groupId>
-        <artifactId>gson</artifactId>
-        <version>${gson.version}</version>
       </dependency>
 
       <!-- apache -->

@@ -104,18 +104,15 @@ public class QueryStatusCallback {
         simpleJson.addProperty(LogConstant.TRACE_ID, traceId);
         simpleJson.addProperty(LogConstant.QUERY_ID, queryLogger.getQueryId());
         simpleJson.addProperty(LogConstant.SUCCESS, isSucceed);
-        if (queryLogger.getUpTraceId() != null) {
-            simpleJson.addProperty(LogConstant.UP_TRACE_ID, queryLogger.getUpTraceId());
+        if (queryLogger.getUpStreamId() != null) {
+            simpleJson.addProperty(LogConstant.UP_STREAM_ID, queryLogger.getUpStreamId());
         }
         simpleJson.addProperty(LogConstant.COST, elaspedMillis);
         return simpleJson;
     }
 
     private void fillLogDetail(
-            JsonObject logJson,
-            String errorMessage,
-            long startMillis,
-            List<Object> results) {
+            JsonObject logJson, String errorMessage, long startMillis, List<Object> results) {
         logJson.addProperty(LogConstant.QUERY, queryLogger.getQuery());
         if (results != null) {
             logJson.addProperty(LogConstant.RESULT, JSON.toJson(results));

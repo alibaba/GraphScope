@@ -1,9 +1,16 @@
 package com.alibaba.graphscope.groot.common.util;
 
 import com.alibaba.graphscope.groot.common.constant.LogConstant;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Utils {
+
+    private static final ObjectMapper jsonMapper = new ObjectMapper();
+    private static final Logger defaultLogger = LoggerFactory.getLogger(Utils.class);
 
     /**
      * build metric json log for monitor
@@ -19,7 +26,7 @@ public class Utils {
      * @param logType
      * @return
      */
-    public static JsonObject buildMetricJsonLog(
+    public static String buildMetricJsonLog(
             boolean isSuccess,
             String traceId,
             Integer batchSize,
@@ -28,23 +35,29 @@ public class Utils {
             Long endTime,
             String stage,
             String logType) {
-        JsonObject metricJsonLog = new JsonObject();
-        metricJsonLog.addProperty(LogConstant.TRACE_ID, traceId);
-        metricJsonLog.addProperty(LogConstant.SUCCESS, isSuccess);
+        String jsonLog = "";
+        ObjectNode metricJsonLog = jsonMapper.createObjectNode();
+        metricJsonLog.put(LogConstant.TRACE_ID, traceId);
+        metricJsonLog.put(LogConstant.SUCCESS, isSuccess);
         if (batchSize != null) {
-            metricJsonLog.addProperty(LogConstant.BATCH_SIZE, batchSize);
+            metricJsonLog.put(LogConstant.BATCH_SIZE, batchSize);
         }
         if (partitionId != null) {
-            metricJsonLog.addProperty(LogConstant.PARTITION_ID, partitionId);
+            metricJsonLog.put(LogConstant.PARTITION_ID, partitionId);
         }
         if (endTime != null) {
-            metricJsonLog.addProperty(LogConstant.END_TIME, endTime);
+            metricJsonLog.put(LogConstant.END_TIME, endTime);
         }
-        metricJsonLog.addProperty(LogConstant.COST, cost);
+        metricJsonLog.put(LogConstant.COST, cost);
         if (stage != null) {
-            metricJsonLog.addProperty(LogConstant.STAGE, stage);
+            metricJsonLog.put(LogConstant.STAGE, stage);
         }
-        metricJsonLog.addProperty(LogConstant.LOG_TYPE, logType);
-        return metricJsonLog;
+        metricJsonLog.put(LogConstant.LOG_TYPE, logType);
+        try {
+            jsonLog = jsonMapper.writeValueAsString(metricJsonLog);
+        } catch (Exception e) {
+            defaultLogger.error("JsonProcessingException!", e);
+        }
+        return jsonLog;
     }
 }
