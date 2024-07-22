@@ -75,15 +75,15 @@ public class Driver {
         return connect(adminUri, storedProcUri, cypherUri, gremlinUri);
     }
 
-    public static ProcedureInterface queryServiceOnly(String storedProcUri) {
+    public static QueryInterface queryServiceOnly(String storedProcUri) {
         return queryServiceOnly(storedProcUri, Config.newBuilder().build());
     }
 
-    public static ProcedureInterface queryServiceOnly(String storedProcUri, Config config) {
+    public static QueryInterface queryServiceOnly(String storedProcUri, Config config) {
         if (storedProcUri == null || storedProcUri.isEmpty()) {
             throw new IllegalArgumentException("uri is null or empty");
         }
-        return DefaultSession.procedureInterfaceOnly(storedProcUri, config);
+        return DefaultSession.queryInterfaceOnly(storedProcUri, config);
     }
 
     /**
@@ -111,6 +111,9 @@ public class Driver {
     }
 
     private Driver(String uri) {
+        if (uri == null) {
+            throw new IllegalArgumentException("Invalid uri is null");
+        }
         this.adminUri = uri;
         this.storedProcUri = null;
         this.cypherUri = null;
@@ -268,14 +271,16 @@ public class Driver {
     }
 
     private void initHostPort() {
-        if (!adminUri.startsWith("http")) {
-            throw new IllegalArgumentException("Invalid uri: " + adminUri);
+        if (adminUri != null) {
+            if (!adminUri.startsWith("http")) {
+                throw new IllegalArgumentException("Invalid uri: " + adminUri);
+            }
+            String[] parts = adminUri.split(":");
+            if (parts.length != 3) {
+                throw new IllegalArgumentException("Invalid uri: " + adminUri);
+            }
+            host = parts[1].substring(2);
+            port = Integer.parseInt(parts[2]);
         }
-        String[] parts = adminUri.split(":");
-        if (parts.length != 3) {
-            throw new IllegalArgumentException("Invalid uri: " + adminUri);
-        }
-        host = parts[1].substring(2);
-        port = Integer.parseInt(parts[2]);
     }
 }

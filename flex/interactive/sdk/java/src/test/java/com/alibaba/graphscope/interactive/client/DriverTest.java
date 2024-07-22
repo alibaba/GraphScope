@@ -24,6 +24,7 @@ import com.alibaba.graphscope.interactive.models.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Client;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,8 @@ public class DriverTest {
         String interactiveEndpoint =
                 System.getProperty("interactive.endpoint", "http://localhost:7777");
         driver = Driver.connect(interactiveEndpoint);
+        assert driver != null;
+        System.out.println("driver is not null: " + (driver != null));
         session = driver.session();
         String neo4jEndpoint = driver.getNeo4jEndpoint();
         if (neo4jEndpoint != null) {
@@ -96,15 +99,28 @@ public class DriverTest {
         }
     }
 
-    private static <T> boolean assertOk(Result<T> result) {
-        if (!result.isOk()) {
-            System.out.println(result.getStatusMessage());
-            return false;
-        }
-        return true;
+    @Test
+    public void test() {
+        test0CreateGraph();
+        test1BulkLoading();
+        test2BulkLoadingUploading();
+        test3StartService();
+        test4CypherAdhocQuery();
+        test5GremlinAdhoQuery();
+        test6CreateCypherProcedure();
+        test7CreateCppProcedure1();
+        test7CreateCppProcedure2();
+        test8Restart();
+        test9GetGraphStatistics();
+        test9CallCppProcedureJson();
+        test9CallCppProcedure1Current();
+        test9CallCppProcedure2();
+        test10CallCypherProcedureViaNeo4j();
+        testCallCypherProcedureProto();
+        testQueryInterface();
+        test11CreateDriver();
     }
 
-    @Test
     public void test0CreateGraph() {
         CreateGraphRequest graph = new CreateGraphRequest();
         graph.setName("testGraph");
@@ -181,7 +197,6 @@ public class DriverTest {
         logger.info("graphId: " + graphId);
     }
 
-    @Test
     public void test1BulkLoading() {
         SchemaMapping schemaMapping = new SchemaMapping();
         {
@@ -222,8 +237,7 @@ public class DriverTest {
         waitJobFinished(jobId);
     }
 
-    @Test
-    public void test1BulkLoadingUploading() {
+    public void test2BulkLoadingUploading() {
         SchemaMapping schemaMapping = new SchemaMapping();
         {
             SchemaMappingLoadingConfig loadingConfig = new SchemaMappingLoadingConfig();
@@ -264,7 +278,6 @@ public class DriverTest {
         waitJobFinished(jobId);
     }
 
-    @Test
     public void test3StartService() {
         Result<String> startServiceResponse =
                 session.startService(new StartServiceRequest().graphId(graphId));
@@ -281,22 +294,24 @@ public class DriverTest {
         }
     }
 
-    @Test
     public void test4CypherAdhocQuery() {
         String query = "MATCH(a) return COUNT(a);";
         org.neo4j.driver.Result result = neo4jSession.run(query);
         logger.info("result: " + result.toString());
     }
 
-    @Test
-    public void test5GremlinAdhoQuery() throws Exception {
+    public void test5GremlinAdhoQuery() {
         String query = "g.V().count();";
-        List<org.apache.tinkerpop.gremlin.driver.Result> results =
-                gremlinClient.submit(query).all().get();
-        logger.info("result: " + results.toString());
+        try {
+            List<org.apache.tinkerpop.gremlin.driver.Result> results =
+                    gremlinClient.submit(query).all().get();
+            logger.info("result: " + results.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            assert false;
+        }
     }
 
-    @Test
     public void test6CreateCypherProcedure() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
         procedure.setName("cypherProcedure");
@@ -308,7 +323,6 @@ public class DriverTest {
         cypherProcedureId = "cypherProcedure";
     }
 
-    @Test
     public void test7CreateCppProcedure1() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
         procedure.setName("cppProcedure1");
@@ -339,7 +353,6 @@ public class DriverTest {
         cppProcedureId1 = "cppProcedure1";
     }
 
-    @Test
     public void test7CreateCppProcedure2() {
         CreateProcedureRequest procedure = new CreateProcedureRequest();
         procedure.setName("cppProcedure2");
@@ -370,7 +383,6 @@ public class DriverTest {
         cppProcedureId2 = "cppProcedure2";
     }
 
-    @Test
     public void test8Restart() {
         Result<String> resp = session.startService(new StartServiceRequest().graphId(graphId));
         assertOk(resp);
@@ -383,14 +395,12 @@ public class DriverTest {
         logger.info("service restarted: " + resp.getValue());
     }
 
-    @Test
     public void test9GetGraphStatistics() {
         Result<GetGraphStatisticsResponse> resp = session.getGraphStatistics(graphId);
         assertOk(resp);
         logger.info("graph statistics: " + resp.getValue());
     }
 
-    @Test
     public void test9CallCppProcedureJson() {
         QueryRequest request = new QueryRequest();
         request.setQueryName(cppProcedureId1);
@@ -417,7 +427,6 @@ public class DriverTest {
         }
     }
 
-    @Test
     public void test9CallCppProcedure1Current() {
         QueryRequest request = new QueryRequest();
         request.setQueryName(cppProcedureId1);
@@ -444,12 +453,11 @@ public class DriverTest {
         }
     }
 
-    @Test
     public void test9CallCppProcedure2() {
         byte[] bytes = new byte[4 + 1];
         Encoder encoder = new Encoder(bytes);
         encoder.put_int(1);
-        encoder.put_byte((byte) 1); // Assume the procedure index is 1
+        encoder.put_byte((byte) 3); // Assume the procedure index is 1
         {
             Result<byte[]> resp = session.callProcedureRaw(graphId, bytes);
             assertOk(resp);
@@ -471,14 +479,13 @@ public class DriverTest {
         }
     }
 
-    @Test
     public void test10CallCypherProcedureViaNeo4j() {
-        String query = "CALL " + cypherProcedureId + "(" + personNameValue + ") YIELD *;";
+        String query = "CALL " + cypherProcedureId + "(\"" + personNameValue + "\") YIELD *;";
+        logger.info("calling query: " + query);
         org.neo4j.driver.Result result = neo4jSession.run(query);
         logger.info("result: " + result.toString());
     }
 
-    @Test
     public void testCallCypherProcedureProto() {
         // Call stored procedure via StoredProcedure.Query
         StoredProcedure.Query.Builder builder = StoredProcedure.Query.newBuilder();
@@ -512,25 +519,30 @@ public class DriverTest {
         }
     }
 
-    @Test
-    public void testProcedureInterface() {
+    public void testQueryInterface() {
         String queryEndpoint =
-                System.getProperty("interactive.procedure.endpoint", "http://localhost:1000");
-        ProcedureInterface procedureInterface = Driver.queryServiceOnly(queryEndpoint);
+                System.getProperty("interactive.procedure.endpoint", "http://localhost:10000");
+        QueryInterface procedureInterface = Driver.queryServiceOnly(queryEndpoint);
         byte[] bytes = new byte[4 + 1];
         Encoder encoder = new Encoder(bytes);
         encoder.put_int(1);
-        encoder.put_byte((byte) 1); // Assume the procedure index is 1
+        encoder.put_byte((byte) 3); // Assume the procedure index is 1
         Result<byte[]> resp = procedureInterface.callProcedureRaw(graphId, bytes);
         assertOk(resp);
     }
 
-    @Test
     public void test11CreateDriver() {
         // Create a new driver with all endpoints specified.
         // Assume the environment variables are set
         Driver driver = Driver.connect();
         Session session = driver.session();
+    }
+
+    private static <T> boolean assertOk(Result<T> result) {
+        if (!result.isOk()) {
+            Assert.fail("error: " + result.getStatusMessage());
+        }
+        return true;
     }
 
     private void waitJobFinished(String jobId) {

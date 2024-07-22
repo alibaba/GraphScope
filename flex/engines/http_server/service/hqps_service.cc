@@ -98,12 +98,6 @@ void HQPSService::init(const ServiceConfig& config) {
       return;
     }
   }
-  if (config.start_compiler) {
-    if (!start_compiler_subprocess()) {
-      LOG(FATAL) << "Failed to start compiler subprocess! exiting...";
-    }
-  }
-  start_time_.store(gs::GetCurrentTimeStamp());
 }
 
 HQPSService::~HQPSService() {
@@ -170,6 +164,12 @@ void HQPSService::run_and_wait_for_exit() {
   if (admin_hdl_) {
     admin_hdl_->start();
   }
+  if (service_config_.start_compiler) {
+    if (!start_compiler_subprocess()) {
+      LOG(FATAL) << "Failed to start compiler subprocess! exiting...";
+    }
+  }
+  start_time_.store(gs::GetCurrentTimeStamp());
   running_.store(true);
   while (running_.load(std::memory_order_relaxed)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

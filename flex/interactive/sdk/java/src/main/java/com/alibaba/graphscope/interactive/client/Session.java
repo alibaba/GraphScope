@@ -20,8 +20,8 @@ public interface Session
                 EdgeInterface,
                 GraphInterface,
                 JobInterface,
-                ProcedureManagementInterface,
                 ProcedureInterface,
                 QueryServiceInterface,
+                QueryInterface,
                 AutoCloseable,
                 UtilsInterface {}

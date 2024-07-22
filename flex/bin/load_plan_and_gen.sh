@@ -90,7 +90,7 @@ generate_cpp_yaml() {
   local output_yaml_file=$5
   local template_str="""
   name: ${procedure_name}
-  description: ${procedure_description}
+  description: \"${procedure_description}\"
   library: ${output_so_name}
   type: cpp
   query: |

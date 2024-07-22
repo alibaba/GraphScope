@@ -23,7 +23,7 @@ import com.alibaba.graphscope.interactive.ApiClient;
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
 import com.alibaba.graphscope.interactive.api.*;
-import com.alibaba.graphscope.interactive.client.ProcedureInterface;
+import com.alibaba.graphscope.interactive.client.QueryInterface;
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Config;
 import com.alibaba.graphscope.interactive.client.common.Result;
@@ -43,12 +43,11 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.OkHttpClient;
-import okhttp3.ConnectionPool;
-
 
 import org.jetbrains.annotations.Nullable;
 
@@ -101,12 +100,10 @@ public class DefaultSession implements Session {
      */
     private DefaultSession(String uri, String storedProcUri, Config config) {
         this.config = config;
+        OkHttpClient httpClient = createHttpClient(config);
         if (uri != null) {
-            client = new ApiClient();
+            client = new ApiClient(httpClient);
             client.setBasePath(uri);
-            client.setReadTimeout(DEFAULT_READ_TIMEOUT);
-            client.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
-
             graphApi = new AdminServiceGraphManagementApi(client);
             jobApi = new AdminServiceJobManagementApi(client);
             procedureApi = new AdminServiceProcedureManagementApi(client);
@@ -143,14 +140,7 @@ public class DefaultSession implements Session {
             throw new RuntimeException(
                     "DefaultSession need at least stored procedure uri specified, current is null");
         }
-        queryClient = new ApiClient();
-        OkHttpClient raw_client = new OkHttpClient.Builder()
-                .connectionPool(new ConnectionPool(DEFAULT_CONNECT_POOL_MAX_IDLE, DEFAULT_KEEP_ALIVE_DURATION, TimeUnit.MILLISECONDS))
-                .readTimeout(DEFAULT_READ_TIMEOUT, TimeUnit.MILLISECONDS)
-                .writeTimeout(DEFAULT_WRITE_TIMEOUT, TimeUnit.MILLISECONDS)
-                .connectTimeout(DEFAULT_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS)
-                .build();
-        queryClient.setHttpClient(raw_client);
+        queryClient = new ApiClient(httpClient);
         queryClient.setBasePath(storedProcUri);
         queryApi = new QueryServiceApi(queryClient);
         initOpenTelemetry();
@@ -171,7 +161,7 @@ public class DefaultSession implements Session {
      * @param storedProcUri http uri, points to query service.
      * @return the procedure interface.
      */
-    public static ProcedureInterface procedureInterfaceOnly(String storedProcUri, Config config) {
+    public static QueryInterface queryInterfaceOnly(String storedProcUri, Config config) {
         return new DefaultSession(null, storedProcUri, config);
     }
 
@@ -1161,5 +1151,18 @@ public class DefaultSession implements Session {
         String uri = queryClient.getBasePath() + localVarPath;
         RequestBody requestBody = RequestBody.create(body);
         return new Request.Builder().url(uri).post(requestBody);
+    }
+
+    private static OkHttpClient createHttpClient(Config config) {
+        return new OkHttpClient.Builder()
+                .readTimeout(config.getReadTimeout(), TimeUnit.MILLISECONDS)
+                .writeTimeout(config.getWriteTimeout(), TimeUnit.MILLISECONDS)
+                .connectTimeout(config.getConnectionTimeout(), TimeUnit.MILLISECONDS)
+                .connectionPool(
+                        new ConnectionPool(
+                                config.getMaxIdleConnections(),
+                                config.getKeepAliveDuration(),
+                                TimeUnit.MILLISECONDS))
+                .build();
     }
 }
