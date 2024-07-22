@@ -489,7 +489,7 @@ public class DriverTest {
     public void testCallCypherProcedureProto() {
         // Call stored procedure via StoredProcedure.Query
         StoredProcedure.Query.Builder builder = StoredProcedure.Query.newBuilder();
-        builder.setQueryName(Common.NameOrId.newBuilder().setName(cppProcedureId1).build());
+        builder.setQueryName(Common.NameOrId.newBuilder().setName(cypherProcedureId).build());
         builder.addArguments(
                 StoredProcedure.Argument.newBuilder()
                         .setParamInd(0)
