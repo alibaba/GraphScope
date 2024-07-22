@@ -106,12 +106,10 @@ class GraphDBSession {
   AppBase* GetApp(int idx);
 
  private:
-#ifdef BUILD_HQPS
   Result<std::pair<uint8_t, std::string_view>>
   parse_query_type_from_cypher_json(const std::string_view& input);
   Result<std::pair<uint8_t, std::string_view>>
   parse_query_type_from_cypher_internal(const std::string_view& input);
-#endif  // BUILD_HQPS
   /**
    * @brief Parse the input format of the query.
    *        There are four formats:
@@ -150,10 +148,8 @@ class GraphDBSession {
       // user-defined payload,
       return std::make_pair((uint8_t) input[len - 2],
                             std::string_view(str_data, len - 2));
-    }
-#ifdef BUILD_HQPS
-    else if (input_tag ==
-             static_cast<uint8_t>(InputFormat::kCypherProtoAdhoc)) {
+    } else if (input_tag ==
+               static_cast<uint8_t>(InputFormat::kCypherProtoAdhoc)) {
       // For cypher internal adhoc, the query id is the
       // second last byte,which is fixed to 255, and other bytes are a string
       // representing the path to generated dynamic lib.
@@ -171,9 +167,7 @@ class GraphDBSession {
       std::string_view str_view(input.data(), len - 1);
       return parse_query_type_from_cypher_internal(str_view);
 
-    }
-#endif  // BUILD_HQPS
-    else {
+    } else {
       return Result<std::pair<uint8_t, std::string_view>>(
           gs::Status(StatusCode::InValidArgument,
                      "Invalid input tag: " + std::to_string(input_tag)));

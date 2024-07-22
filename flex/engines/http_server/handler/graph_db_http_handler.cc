@@ -127,18 +127,16 @@ class stored_proc_handler : public StoppableHandler {
  public:
   stored_proc_handler(uint32_t init_group_id, uint32_t max_group_id,
                       uint32_t group_inc_step, uint32_t shard_concurrency)
-      : cur_group_id_(init_group_id),
-        max_group_id_(max_group_id),
-        group_inc_step_(group_inc_step),
-        shard_concurrency_(shard_concurrency),
-        dispatcher_(shard_concurrency_),
-        is_cancelled_(false) {
-    executor_refs_.reserve(shard_concurrency_);
+      : StoppableHandler(init_group_id, max_group_id, group_inc_step,
+                         shard_concurrency),
+        dispatcher_(shard_concurrency) {
+    executor_refs_.reserve(shard_concurrency);
     hiactor::scope_builder builder;
     builder.set_shard(hiactor::local_shard_id())
         .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-    for (unsigned i = 0; i < shard_concurrency_; ++i) {
+        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(
+            StoppableHandler::cur_group_id_));
+    for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
       executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
     }
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -150,54 +148,22 @@ class stored_proc_handler : public StoppableHandler {
   ~stored_proc_handler() override = default;
 
   seastar::future<> stop() override {
-    if (is_cancelled_) {
-      LOG(INFO) << "The current scope has been already cancelled!";
-      return seastar::make_ready_future<>();
-    }
-    hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-    return hiactor::actor_engine()
-        .cancel_scope_request(builder, false)
-        .then([this] {
-          LOG(INFO) << "Cancel IC scope successfully!";
-          // clear the actor refs
-          executor_refs_.clear();
-          is_cancelled_ = true;
-          return seastar::make_ready_future<>();
-        });
+    return StoppableHandler::cancel_scope([this] { executor_refs_.clear(); });
   }
-
-  bool is_stopped() const override { return is_cancelled_; }
 
   bool start() override {
     if (executor_refs_.size() > 0) {
       LOG(ERROR) << "The actors have been already created!";
       return false;
     }
-
-    VLOG(10) << "Create actors with a different sub scope id: "
-             << cur_group_id_;
-    if (cur_group_id_ + group_inc_step_ > max_group_id_) {
-      LOG(ERROR) << "The max group id is reached, cannot create more actors!";
-      return false;
-    }
-    if (cur_group_id_ + group_inc_step_ < cur_group_id_) {
-      LOG(ERROR) << "overflow detected!";
-      return false;
-    }
-    cur_group_id_ += group_inc_step_;
-    hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-    for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-    }
-    is_cancelled_ = false;  // locked outside
-    return true;
+    return StoppableHandler::start_scope(
+        [this](hiactor::scope_builder& builder) {
+          for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
+            executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
+          }
+        });
   }
+
   seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
@@ -229,7 +195,6 @@ class stored_proc_handler : public StoppableHandler {
       return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
           std::move(rep));
     }
-#ifdef BUILD_HQPS  // Only need to check running graph for hqps
     if (path != "/v1/graph/current/query" && req->param.exists("graph_id")) {
       // TODO(zhanglei): get from graph_db.
       if (!is_running_graph(req->param["graph_id"])) {
@@ -243,7 +208,6 @@ class stored_proc_handler : public StoppableHandler {
             std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
       }
     }
-#endif  // BUILD_HQPS
 #ifdef HAVE_OPENTELEMETRY_CPP
     auto tracer = otel::get_tracer("hqps_procedure_query_handler");
     // Extract context from headers. This copy is necessary to avoid access
@@ -271,8 +235,8 @@ class stored_proc_handler : public StoppableHandler {
                 std::move(output.content));
           } else {
             // For cypher input format, the results are written with
-            // output.put_string(), which will add extra 4 bytes. So we need to
-            // remove the first 4 bytes here.
+            // output.put_string(), which will add extra 4 bytes. So we need
+            // to remove the first 4 bytes here.
             if (output.content.size() < 4) {
               LOG(ERROR) << "Invalid output size: " << output.content.size();
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -348,9 +312,6 @@ class stored_proc_handler : public StoppableHandler {
     return running_graph_res.value() == graph_id_str;
   }
 
-  uint32_t cur_group_id_;
-  const uint32_t max_group_id_, group_inc_step_;
-  const uint32_t shard_concurrency_;
   query_dispatcher dispatcher_;
   std::vector<executor_ref> executor_refs_;
   bool is_cancelled_;
@@ -362,26 +323,19 @@ class stored_proc_handler : public StoppableHandler {
 #endif
 };
 
-#ifdef BUILD_HQPS
 class adhoc_query_handler : public StoppableHandler {
  public:
-  adhoc_query_handler(uint32_t init_adhoc_group_id,
-                      uint32_t init_codegen_group_id, uint32_t max_group_id,
+  adhoc_query_handler(uint32_t init_group_id, uint32_t max_group_id,
                       uint32_t group_inc_step, uint32_t shard_concurrency)
-      : cur_adhoc_group_id_(init_adhoc_group_id),
-        cur_codegen_group_id_(init_codegen_group_id),
-        max_group_id_(max_group_id),
-        group_inc_step_(group_inc_step),
-        shard_concurrency_(shard_concurrency),
-        executor_idx_(0),
-        is_cancelled_(false) {
+      : StoppableHandler(init_group_id, max_group_id, group_inc_step,
+                         shard_concurrency),
+        executor_idx_(0) {
     executor_refs_.reserve(shard_concurrency_);
     {
       hiactor::scope_builder builder;
       builder.set_shard(hiactor::local_shard_id())
           .enter_sub_scope(hiactor::scope<executor_group>(0))
-          .enter_sub_scope(
-              hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
+          .enter_sub_scope(hiactor::scope<hiactor::actor_group>(init_group_id));
       for (unsigned i = 0; i < shard_concurrency_; ++i) {
         executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
       }
@@ -390,8 +344,7 @@ class adhoc_query_handler : public StoppableHandler {
       hiactor::scope_builder builder;
       builder.set_shard(hiactor::local_shard_id())
           .enter_sub_scope(hiactor::scope<executor_group>(0))
-          .enter_sub_scope(
-              hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
+          .enter_sub_scope(hiactor::scope<hiactor::actor_group>(init_group_id));
       codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
     }
 #ifdef HAVE_OPENTELEMETRY_CPP
@@ -404,80 +357,24 @@ class adhoc_query_handler : public StoppableHandler {
   ~adhoc_query_handler() override = default;
 
   seastar::future<> stop() override {
-    if (is_cancelled_) {
-      LOG(INFO) << "The current scope has been already cancelled!";
-      return seastar::make_ready_future<>();
-    }
-    hiactor::scope_builder adhoc_builder;
-    adhoc_builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(
-            hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
-    hiactor::scope_builder codegen_builder;
-    codegen_builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(
-            hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
-    return hiactor::actor_engine()
-        .cancel_scope_request(adhoc_builder, false)
-        .then([codegen_builder] {
-          LOG(INFO) << "Cancel adhoc scope successfully!";
-          return hiactor::actor_engine().cancel_scope_request(codegen_builder,
-                                                              false);
-        })
-        .then([this] {
-          LOG(INFO) << "Cancel codegen scope successfully!";
-          // clear the actor refs
-          executor_refs_.clear();
-          codegen_actor_refs_.clear();
-          LOG(INFO) << "Clear actor refs successfully!";
-          is_cancelled_ = true;
-          return seastar::make_ready_future<>();
-        });
+    return StoppableHandler::cancel_scope([this] {
+      executor_refs_.clear();
+      codegen_actor_refs_.clear();
+    });
   }
-
-  bool is_stopped() const override { return is_cancelled_; }
 
   bool start() override {
     if (executor_refs_.size() > 0 || codegen_actor_refs_.size() > 0) {
       LOG(ERROR) << "The actors have been already created!";
       return false;
     }
-    // Check whether cur_adhoc_group_id + group_inc_step_ is larger than
-    // max_group_id_, considering overflow
-    if (cur_adhoc_group_id_ + group_inc_step_ > max_group_id_ ||
-        cur_codegen_group_id_ + group_inc_step_ > max_group_id_) {
-      LOG(ERROR) << "The max group id is reached, cannot create more actors!";
-      return false;
-    }
-    if (cur_adhoc_group_id_ + group_inc_step_ < cur_adhoc_group_id_ ||
-        cur_codegen_group_id_ + group_inc_step_ < cur_codegen_group_id_) {
-      LOG(ERROR) << "overflow detected!";
-      return false;
-    }
-
-    {
-      cur_adhoc_group_id_ += group_inc_step_;
-      hiactor::scope_builder builder;
-      builder.set_shard(hiactor::local_shard_id())
-          .enter_sub_scope(hiactor::scope<executor_group>(0))
-          .enter_sub_scope(
-              hiactor::scope<hiactor::actor_group>(cur_adhoc_group_id_));
-      for (unsigned i = 0; i < shard_concurrency_; ++i) {
+    return StoppableHandler::start_scope([this](
+                                             hiactor::scope_builder& builder) {
+      for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
         executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
       }
-    }
-    {
-      cur_codegen_group_id_ += group_inc_step_;
-      hiactor::scope_builder builder;
-      builder.set_shard(hiactor::local_shard_id())
-          .enter_sub_scope(hiactor::scope<executor_group>(0))
-          .enter_sub_scope(
-              hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
       codegen_actor_refs_.emplace_back(builder.build_ref<codegen_actor_ref>(0));
-    }
-    is_cancelled_ = false;
-    return true;
+    });
   }
 
   seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
@@ -609,13 +506,9 @@ class adhoc_query_handler : public StoppableHandler {
   }
 
  private:
-  uint32_t cur_adhoc_group_id_, cur_codegen_group_id_;
-  const uint32_t max_group_id_, group_inc_step_;
-  const uint32_t shard_concurrency_;
   uint32_t executor_idx_;
   std::vector<executor_ref> executor_refs_;
   std::vector<codegen_actor_ref> codegen_actor_refs_;
-  bool is_cancelled_;
 #ifdef HAVE_OPENTELEMETRY_CPP
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
       total_counter_;
@@ -623,7 +516,6 @@ class adhoc_query_handler : public StoppableHandler {
       latency_histogram_;
 #endif
 };
-#endif  // BUILD_HQPS
 
 ///////////////////////////graph_db_http_handler/////////////////////////////
 
@@ -635,12 +527,10 @@ graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
       running_(false),
       actors_running_(true) {
   graph_db_handlers_.resize(shard_num);
-#ifdef BUILD_HQPS
   if (enable_hqps_handlers_) {
     ic_handlers_.resize(shard_num);
     adhoc_query_handlers_.resize(shard_num);
   }
-#endif  // BUILD_HQPS
 }
 
 graph_db_http_handler::~graph_db_http_handler() {
@@ -660,7 +550,6 @@ bool graph_db_http_handler::is_actors_running() const {
 }
 
 seastar::future<> graph_db_http_handler::stop_query_actors() {
-#ifdef BUILD_HQPS
   if (enable_hqps_handlers_.load()) {
     // Only cancel the hqps-related actors
     return ic_handlers_[hiactor::local_shard_id()]
@@ -677,19 +566,14 @@ seastar::future<> graph_db_http_handler::stop_query_actors() {
   } else {
     return seastar::make_ready_future<>();
   }
-#else
-  return seastar::make_ready_future<>();
-#endif  // BUILD_HQPS
 }
 
 void graph_db_http_handler::start_query_actors() {
-#ifdef BUILD_HQPS
   if (enable_hqps_handlers_.load()) {
     ic_handlers_[hiactor::local_shard_id()]->start();
     adhoc_query_handlers_[hiactor::local_shard_id()]->start();
     actors_running_.store(true);
   }
-#endif  // BUILD_HQPS
 }
 
 void graph_db_http_handler::start() {
@@ -732,11 +616,10 @@ seastar::future<> graph_db_http_handler::set_routes() {
         .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
         .add_str("/query");
     r.add(rule_proc, seastar::httpd::operation_type::POST);
-#ifdef BUILD_HQPS
     if (enable_hqps_handlers_.load()) {
-      auto adhoc_query_handler_ = new adhoc_query_handler(
-          ic_adhoc_group_id, codegen_group_id, max_group_id, group_inc_step,
-          shard_adhoc_concurrency);
+      auto adhoc_query_handler_ =
+          new adhoc_query_handler(ic_adhoc_group_id, max_group_id,
+                                  group_inc_step, shard_adhoc_concurrency);
 
       ic_handlers_[hiactor::local_shard_id()] = graph_db_handler;
       adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
@@ -749,7 +632,6 @@ seastar::future<> graph_db_http_handler::set_routes() {
           .add_str("/adhoc_query");
       r.add(rule_adhoc, seastar::httpd::operation_type::POST);
     }
-#endif  // BUILD_HQPS
 
     return seastar::make_ready_future<>();
   });

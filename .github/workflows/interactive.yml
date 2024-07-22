@@ -375,14 +375,13 @@ jobs:
         mkdir build && cd build # only test default build
         cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && sudo make -j 4
 
-  # test the different combination of cmake options: -DBUILD_HQPS=ON/OFF -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
+  # test the different combination of cmake options: -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
   test-cmake-options:
     runs-on: ubuntu-20.04
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     strategy:
       matrix:
-        BUILD_HQPS: [ON, OFF]
         BUILD_TEST: [ON, OFF]
         BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
     steps:

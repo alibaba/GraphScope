@@ -10,7 +10,6 @@ project (
   LANGUAGES CXX)
 
 
-option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" OFF)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
@@ -36,11 +35,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-if (BUILD_HQPS)
-    message("Build HighQPS Engine")
-    add_definitions(-DBUILD_HQPS)
-endif ()
 
 if(USE_PTHASH)
     message("Use PTHash")

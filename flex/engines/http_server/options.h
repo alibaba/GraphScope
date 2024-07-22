@@ -25,11 +25,10 @@ namespace server {
 const uint32_t interactive_admin_group_id = 1;
 const uint32_t ic_query_group_id = 2;
 const uint32_t ic_adhoc_group_id = 3;
-const uint32_t codegen_group_id = 4;
 
 const uint32_t max_group_id = std::numeric_limits<uint32_t>::max();
 const uint32_t group_inc_step =
-    3;  // should equal to number of non-admin groups.
+    2;  // should equal to number of non-admin groups.
 // Each time we cancel a scope, we will increase the group id by this step.
 
 extern uint32_t shard_admin_concurrency;
