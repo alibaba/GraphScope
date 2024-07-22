@@ -392,7 +392,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex
         git submodule update --init
         mkdir build && cd build
-        cmake .. -DBUILD_HQPS=${{ matrix.BUILD_HQPS }} -DBUILD_TEST=${{ matrix.BUILD_TEST }} \
+        cmake .. -DBUILD_TEST=${{ matrix.BUILD_TEST }} \
                  -DBUILD_ODPS_FRAGMENT_LOADER=${{ matrix.BUILD_ODPS_FRAGMENT_LOADER }}
         sudo make -j4
 
