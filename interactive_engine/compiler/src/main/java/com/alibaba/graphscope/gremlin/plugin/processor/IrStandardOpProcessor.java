@@ -337,19 +337,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
      */
     protected QueryStatusCallback createQueryStatusCallback(
             String query, BigInteger queryId, String upTraceId) {
-        if (upTraceId == null) {
-            return new QueryStatusCallback(
-                    new MetricsCollector(evalOpTimer),
-                    queryHistogram,
-                    new QueryLogger(query, queryId),
-                    printThreshold);
-        } else {
             return new QueryStatusCallback(
                     new MetricsCollector(evalOpTimer),
                     queryHistogram,
                     new QueryLogger(query, queryId, upTraceId),
                     printThreshold);
-        }
     }
 
     protected GremlinExecutor.LifeCycle createLifeCycle(

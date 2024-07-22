@@ -20,6 +20,7 @@ import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.constant.LogConstant;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.groot.common.util.Utils;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
@@ -311,19 +312,11 @@ public class StoreService {
 
     private JsonObject buildMetricJsonLog(
             boolean succeed, OperationBatch operationBatch, long start, int partitionId) {
-        JsonObject metricJsonLog = new JsonObject();
         String traceId = operationBatch.getTraceId();
         long current = System.currentTimeMillis();
         int batchSize = operationBatch.getOperationCount();
-        metricJsonLog.addProperty(LogConstant.TRACE_ID, traceId);
-        metricJsonLog.addProperty(LogConstant.SUCCESS, succeed);
-        metricJsonLog.addProperty(LogConstant.BATCH_SIZE, batchSize);
-        metricJsonLog.addProperty(LogConstant.PARTITION_ID, partitionId);
-        metricJsonLog.addProperty(LogConstant.END_TIME, current);
-        metricJsonLog.addProperty(LogConstant.COST, (current - start));
-        metricJsonLog.addProperty(LogConstant.STAGE, "writeDb");
-        metricJsonLog.addProperty(LogConstant.LOG_TYPE, "write");
-        return metricJsonLog;
+        return Utils.buildMetricJsonLog(succeed, traceId, batchSize, partitionId, (current - start), current,
+                "writeDb","write");
     }
 
     public GraphDefPb getGraphDefBlob() throws IOException {

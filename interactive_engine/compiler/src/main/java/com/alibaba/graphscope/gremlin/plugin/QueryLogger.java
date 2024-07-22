@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.plugin;
 
 import com.alibaba.graphscope.groot.common.constant.LogConstant;
+import com.alibaba.graphscope.groot.common.util.Utils;
 import com.google.gson.JsonObject;
 
 import io.opentelemetry.api.trace.Span;
@@ -97,17 +98,17 @@ public class QueryLogger {
     }
 
     public void metricsInfo(boolean isSucceed, long cost) {
-        JsonObject metricJson = new JsonObject();
         String traceId = Span.current().getSpanContext().getTraceId();
-        if (this.upTraceId != null) {
-            metricJson.addProperty(LogConstant.UP_TRACE_ID, this.upTraceId);
-        }
-        metricJson.addProperty(LogConstant.TRACE_ID, traceId);
-        metricJson.addProperty(LogConstant.SUCCESS, isSucceed);
-        metricJson.addProperty(LogConstant.COST, cost);
-        metricJson.addProperty(LogConstant.STAGE, "java");
-        metricJson.addProperty(LogConstant.LOG_TYPE, "query");
-        metricJson.addProperty(LogConstant.END_TIME, System.currentTimeMillis());
+        JsonObject metricJson = Utils.buildMetricJsonLog(
+                isSucceed,
+                traceId,
+                null,
+                null,
+                cost,
+                System.currentTimeMillis(),
+                "java",
+                "query"
+        );
         metricLogger.info(metricJson.toString());
     }
 

@@ -2,6 +2,7 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.constant.LogConstant;
+import com.alibaba.graphscope.groot.common.util.Utils;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.WriteRequest;
@@ -55,7 +56,6 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
             for (WriteRequestPb writeRequestPb : request.getWriteRequestsList()) {
                 writeRequests.add(WriteRequest.parseProto(writeRequestPb));
             }
-            JsonObject metricJson = buildMetricJsonLog(upTraceId, count, startBatchWrite);
             graphWriter.writeBatch(
                     requestId,
                     writeSession,
@@ -64,7 +64,10 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
                     new CompletionCallback<Long>() {
                         @Override
                         public void onCompleted(Long res) {
-                            metricJson.addProperty(LogConstant.SUCCESS, true);
+                            long current = System.currentTimeMillis();
+                            JsonObject metricJson = Utils.buildMetricJsonLog(true, upTraceId, count, null,
+                                    (current - startBatchWrite),
+                                    current, "writeKafka", "write");
                             metricLogger.info(metricJson.toString());
                             responseObserver.onNext(
                                     BatchWriteResponse.newBuilder().setSnapshotId(res).build());
@@ -73,7 +76,10 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
                         @Override
                         public void onError(Throwable t) {
-                            metricJson.addProperty(LogConstant.SUCCESS, false);
+                            long current = System.currentTimeMillis();
+                            JsonObject metricJson = Utils.buildMetricJsonLog(false, upTraceId, count, null,
+                                    (current - startBatchWrite),
+                                    current, "writeKafka", "write");
                             metricLogger.info(metricJson.toString());
                             logger.error(
                                     "batch write error. request {} session {}",
@@ -97,18 +103,6 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
-    }
-
-    private JsonObject buildMetricJsonLog(String traceId, int batchSize, long startTime) {
-        JsonObject metricJson = new JsonObject();
-        long current = System.currentTimeMillis();
-        metricJson.addProperty(LogConstant.TRACE_ID, traceId);
-        metricJson.addProperty(LogConstant.BATCH_SIZE, batchSize);
-        metricJson.addProperty(LogConstant.COST, (current - startTime));
-        metricJson.addProperty(LogConstant.END_TIME, current);
-        metricJson.addProperty(LogConstant.STAGE, "writeKafka");
-        metricJson.addProperty(LogConstant.LOG_TYPE, "write");
-        return metricJson;
     }
 
     @Override

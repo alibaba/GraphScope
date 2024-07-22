@@ -33,6 +33,7 @@ public class QueryStatusCallback {
     private final QueryLogger queryLogger;
 
     private LongHistogram queryHistogram;
+    // if query cost large than threshold, will print detail log
     private long printThreshold;
 
     public QueryStatusCallback(
@@ -50,37 +51,22 @@ public class QueryStatusCallback {
 
     public void onErrorEnd(@Nullable String msg) {
         this.metricsCollector.stop();
-        JsonObject detailLog =
-                buildDetailLog(
-                        false,
-                        msg,
-                        metricsCollector.getElapsedMillis(),
-                        metricsCollector.getStartMillis(),
-                        null);
-        queryLogger.print(detailLog.toString(), false, null);
-
-        Attributes attrs =
-                Attributes.builder()
-                        .put("id", queryLogger.getQueryId().toString())
-                        .put("query", queryLogger.getQuery())
-                        .put("success", false)
-                        .put("message", msg != null ? msg : "")
-                        .build();
-        this.queryHistogram.record(metricsCollector.getElapsedMillis(), attrs);
-        queryLogger.metricsInfo(false, metricsCollector.getElapsedMillis());
+        onErrorEnd(null, msg);
     }
 
     public void onErrorEnd(@Nullable Throwable t) {
         this.metricsCollector.stop();
-        String msg = t.getMessage();
-        JsonObject detailLog =
-                buildDetailLog(
-                        false,
-                        msg,
-                        metricsCollector.getElapsedMillis(),
-                        metricsCollector.getStartMillis(),
-                        null);
-        queryLogger.print(detailLog.toString(), false, t);
+        onErrorEnd(t, null);
+    }
+
+    private void onErrorEnd(Throwable t, String msg) {
+        String errorMsg = msg;
+        if (t != null) {
+            errorMsg = t.getMessage();
+        }
+        JsonObject logJson = buildSimpleLog(false, metricsCollector.getElapsedMillis());
+        fillLogDetail(logJson, errorMsg, metricsCollector.getStartMillis(), null);
+        queryLogger.print(logJson.toString(), false, t);
 
         Attributes attrs =
                 Attributes.builder()
@@ -95,16 +81,11 @@ public class QueryStatusCallback {
 
     public void onSuccessEnd(List<Object> results) {
         this.metricsCollector.stop();
+        JsonObject logJson = buildSimpleLog(true, metricsCollector.getElapsedMillis());
         if (this.metricsCollector.getElapsedMillis() > this.printThreshold) {
-            JsonObject detailLog =
-                    buildDetailLog(
-                            true,
-                            null,
-                            metricsCollector.getElapsedMillis(),
-                            metricsCollector.getStartMillis(),
-                            results);
-            queryLogger.print(detailLog.toString(), true, null);
+            fillLogDetail(logJson, null, metricsCollector.getStartMillis(), results);
         }
+        queryLogger.print(logJson.toString(), true, null);
 
         Attributes attrs =
                 Attributes.builder()
@@ -117,32 +98,34 @@ public class QueryStatusCallback {
         queryLogger.metricsInfo(true, metricsCollector.getElapsedMillis());
     }
 
-    private JsonObject buildDetailLog(
-            boolean isSucceed,
+    private JsonObject buildSimpleLog(boolean isSucceed, long elaspedMillis) {
+        String traceId = Span.current().getSpanContext().getTraceId();
+        JsonObject simpleJson = new JsonObject();
+        simpleJson.addProperty(LogConstant.TRACE_ID, traceId);
+        simpleJson.addProperty(LogConstant.QUERY_ID, queryLogger.getQueryId());
+        simpleJson.addProperty(LogConstant.SUCCESS, isSucceed);
+        if (queryLogger.getUpTraceId() != null) {
+            simpleJson.addProperty(LogConstant.UP_TRACE_ID, queryLogger.getUpTraceId());
+        }
+        simpleJson.addProperty(LogConstant.COST, elaspedMillis);
+        return simpleJson;
+    }
+
+    private void fillLogDetail(
+            JsonObject logJson,
             String errorMessage,
-            long elaspedMillis,
             long startMillis,
             List<Object> results) {
-        String traceId = Span.current().getSpanContext().getTraceId();
-        JsonObject detailJson = new JsonObject();
-        detailJson.addProperty(LogConstant.TRACE_ID, traceId);
-        detailJson.addProperty(LogConstant.QUERY_ID, queryLogger.getQueryId());
-        detailJson.addProperty(LogConstant.QUERY, queryLogger.getQuery());
-        detailJson.addProperty(LogConstant.SUCCESS, isSucceed);
-        if (queryLogger.getUpTraceId() != null) {
-            detailJson.addProperty(LogConstant.UP_TRACE_ID, queryLogger.getUpTraceId());
+        logJson.addProperty(LogConstant.QUERY, queryLogger.getQuery());
+        if (results != null) {
+            logJson.addProperty(LogConstant.RESULT, JSON.toJson(results));
         }
         if (errorMessage != null) {
-            detailJson.addProperty(LogConstant.ERROR_MESSAGE, errorMessage);
+            logJson.addProperty(LogConstant.ERROR_MESSAGE, errorMessage);
         }
-        if (results != null) {
-            detailJson.addProperty(LogConstant.RESULT, JSON.toJson(results));
-        }
-        detailJson.addProperty(LogConstant.IR_PLAN, queryLogger.getIrPlan());
-        detailJson.addProperty(LogConstant.STAGE, "java");
-        detailJson.addProperty(LogConstant.COST, elaspedMillis);
-        detailJson.addProperty(LogConstant.START_TIME, startMillis);
-        return detailJson;
+        logJson.addProperty(LogConstant.IR_PLAN, queryLogger.getIrPlan());
+        logJson.addProperty(LogConstant.STAGE, "java");
+        logJson.addProperty(LogConstant.START_TIME, startMillis);
     }
 
     public QueryLogger getQueryLogger() {
