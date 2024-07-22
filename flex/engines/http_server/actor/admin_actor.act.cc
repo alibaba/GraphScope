@@ -1082,7 +1082,7 @@ seastar::future<admin_query_result> admin_actor::start_service(
 seastar::future<admin_query_result> admin_actor::stop_service(
     query_param&& query_param) {
   auto& hqps_service = HQPSService::get();
-  return hqps_service.stop_query_actors().then([this, &hqps_service] {
+  return hqps_service.stop_query_actors().then([this] {
     LOG(INFO) << "Successfully stopped query handler";
     // Add also remove current running graph
     {
