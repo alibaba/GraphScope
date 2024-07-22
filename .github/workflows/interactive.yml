@@ -138,7 +138,7 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_robustness_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
 
     - name: Build and test Interactive Java/Python SDK
       env: 
