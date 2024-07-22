@@ -1068,13 +1068,6 @@ seastar::future<admin_query_result> admin_actor::start_service(
     // now start the compiler
     auto schema_path =
         server::WorkDirManipulator::GetGraphSchemaPath(graph_name);
-    // if (!hqps_service.start_compiler_subprocess(schema_path)) {
-    //   LOG(ERROR) << "Fail to start compiler";
-    //   return seastar::make_ready_future<admin_query_result>(
-    //       gs::Result<seastar::sstring>(gs::Status(gs::StatusCode::InternalError,
-    //                                               "Fail to start
-    //                                               compiler")));
-    // }
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
     hqps_service.reset_start_time();
     return seastar::make_ready_future<admin_query_result>(
@@ -1116,18 +1109,6 @@ seastar::future<admin_query_result> admin_actor::stop_service(
       return seastar::make_ready_future<admin_query_result>(
           gs::Result<seastar::sstring>(
               to_message_json("Successfully stop service")));
-
-      // if (hqps_service.stop_compiler_subprocess()) {
-      //   LOG(INFO) << "Successfully stop compiler";
-      //   return seastar::make_ready_future<admin_query_result>(
-      //       gs::Result<seastar::sstring>(
-      //           to_message_json("Successfully stop service")));
-      // } else {
-      //   LOG(ERROR) << "Fail to stop compiler";
-      //   return seastar::make_ready_future<admin_query_result>(
-      //       gs::Result<seastar::sstring>(gs::Status(
-      //           gs::StatusCode::InternalError, "Fail to stop compiler")));
-      // }
     }
   });
 }
