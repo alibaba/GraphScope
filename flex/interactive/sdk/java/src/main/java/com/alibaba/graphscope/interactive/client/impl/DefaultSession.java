@@ -50,14 +50,14 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import org.jetbrains.annotations.Nullable;
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
 
 import java.io.Closeable;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /***
