@@ -291,6 +291,14 @@ jobs:
            ./modern_graph_schema_v0_0.yaml  ./modern_graph_schema_v0_1.yaml
         sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
         sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+      
+    - name: Let compiler use latest interactive java sdk
+      run: |
+        # replace the <interactive.sdk.version>0.4</interactive.sdk.version> with the latest version in flex/interactive/sdk/java/pom.xml
+        sdk_version=$(grep -oPm1 "(?<=<version>)[^<]+" ${GITHUB_WORKSPACE}/flex/interactive/sdk/java/pom.xml)
+        sed -i "s/<interactive.sdk.version>.*<\/interactive.sdk.version>/<interactive.sdk.version>${sdk_version}<\/interactive.sdk.version>/" ${GITHUB_WORKSPACE}/interactive_engine/pom.xml
+        cd ${GITHUB_WORKSPACE}/interactive_engine/
+        mvn clean install -Pexperimental -DskipTests
 
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
