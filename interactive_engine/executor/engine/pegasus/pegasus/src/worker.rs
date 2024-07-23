@@ -247,13 +247,16 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
         }
 
         let _ctx = WorkerContext::new(&mut self.resources, &mut self.keyed_resources);
+        let trace_id = self.span.span_context().trace_id();
+        let trace_id_hex = format!("{:x}", trace_id);
 
         match self.task.execute() {
             Ok(state) => {
                 if TaskState::Finished == state {
                     let elapsed = self.start.elapsed().as_millis();
                     info_worker!(
-                        "job({}) '{}' finished, used {:?} ms;",
+                        "trace_id:{}, job({}) '{}' finished, used {:?} ms;",
+                        trace_id_hex,
                         self.id.job_id,
                         self.conf.job_name,
                         elapsed
@@ -276,7 +279,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                 }
             }
             Err(e) => {
-                error_worker!("job({}) execute error: {}", self.id.job_id, e);
+                error_worker!("trace_id:{}, job({}) execute error: {}", trace_id_hex, self.id.job_id, e);
                 self.span
                     .set_status(trace::Status::error(format!("Execution error: {}", e)));
                 self.span.end();
