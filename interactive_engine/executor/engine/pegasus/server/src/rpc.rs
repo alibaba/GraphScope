@@ -305,11 +305,13 @@ where
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
+    init_otel().expect("Failed to initialize open telemetry");
     let server_id = server_config.server_id();
     if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
         listener.on_server_start(server_id, server_addr)?;
     }
     start_rpc_server(server_id, rpc_config, assemble, listener).await?;
+    global::shutdown_tracer_provider();
     Ok(())
 }
 

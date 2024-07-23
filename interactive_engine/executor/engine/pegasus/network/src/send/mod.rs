@@ -220,8 +220,12 @@ pub(crate) fn start_net_sender(
     let params = params.get_write_params();
     match params.mode {
         BlockMode::Blocking(timeout) => {
-            conn.set_write_timeout(timeout).ok();
-            is_block = false;
+            if timeout.is_none() {
+                is_block = false;
+            } else {
+                conn.set_write_timeout(timeout).ok();
+                is_block = true;
+            }
         }
         _ => (),
     }

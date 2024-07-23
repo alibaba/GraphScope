@@ -25,6 +25,7 @@ extern crate core;
 
 use std::cell::Cell;
 use std::sync::atomic::AtomicUsize;
+use std::sync::Once;
 use std::sync::{Arc, Mutex, RwLock};
 
 mod config;
@@ -69,8 +70,7 @@ pub use worker::Worker;
 pub use worker_id::{get_current_worker, get_current_worker_checked, set_current_worker, WorkerId};
 
 use crate::api::Source;
-use crate::errors::CancelError;
-pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
+pub use crate::errors::{BuildJobError, CancelError, JobSubmitError, SpawnJobError, StartupError};
 use crate::resource::{DistributedParResourceMaps, PartitionedKeydResource, PartitionedResource};
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
@@ -465,7 +465,6 @@ fn allocate_local_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, Bu
     }
 }
 
-use std::sync::Once;
 lazy_static! {
     static ref SINGLETON_INIT: Once = Once::new();
 }
