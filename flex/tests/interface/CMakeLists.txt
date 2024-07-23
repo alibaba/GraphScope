@@ -1,0 +1,2 @@
+add_executable(storage_interface_test storage_interface_test.cc)
+target_link_libraries(storage_interface_test hqps_plan_proto flex_rt_mutable_graph flex_graph_db flex_utils)
