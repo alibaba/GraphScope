@@ -75,7 +75,7 @@ public class QueryLogger {
         JsonObject errorJson = new JsonObject();
         String traceId = Span.current().getSpanContext().getTraceId();
         if (this.upstreamId != null) {
-            errorJson.addProperty(LogConstant.UP_STREAM_ID, this.upstreamId);
+            errorJson.addProperty(LogConstant.UPSTREAM_ID, this.upstreamId);
         }
         errorJson.addProperty(LogConstant.TRACE_ID, traceId);
         errorJson.addProperty(LogConstant.SUCCESS, false);

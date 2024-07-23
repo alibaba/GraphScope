@@ -4,7 +4,7 @@ public class LogConstant {
 
     public static String TRACE_ID = "traceId";
 
-    public static String UP_STREAM_ID = "upStreamId";
+    public static String UPSTREAM_ID = "upstreamId";
 
     public static String QUERY_ID = "queryId";
 
