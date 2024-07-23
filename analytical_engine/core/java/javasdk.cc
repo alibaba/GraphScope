@@ -121,8 +121,19 @@ inline uint64_t getTotalSystemMemory() {
   return ret;
 }
 
+inline uint64_t getCurrentAvailableMemory() {
+  uint64_t pages = sysconf(_SC_AVPHYS_PAGES);
+  uint64_t page_size = sysconf(_SC_PAGE_SIZE);
+  uint64_t ret = pages * page_size;
+  VLOG(10) << "---> getTotalAvailabelSystemMemory() -> " << ret;
+  ret = ret / 1024;
+  ret = ret / 1024;
+  ret = ret / 1024;
+  return ret;
+}
+
 void SetupEnv(const int local_num) {
-  int systemMemory = getTotalSystemMemory() / 5;
+  int systemMemory = (getCurrentAvailableMemory() * 2) / 3;
   int systemMemoryPerWorker = std::max(systemMemory / local_num, 1);
   int mnPerWorker = std::max(systemMemoryPerWorker * 9 / 12, 1);
 

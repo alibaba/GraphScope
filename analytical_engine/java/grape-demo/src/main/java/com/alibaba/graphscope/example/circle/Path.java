@@ -60,7 +60,7 @@ public class Path {
             throw new RuntimeException("The Path is not empty");
         }
         int len = input.readInt();
-        logger.info("reading {} elements from stream", len);
+        // logger.info("reading {} elements from stream", len);
         for (int i = 0; i < len; ++i) {
             vertexInnerIds.push(input.readLong());
         }

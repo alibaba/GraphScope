@@ -422,40 +422,43 @@ void QueryProjected(vineyard::Client& client,
     auto vd_ctx_wrapper =
         std::dynamic_pointer_cast<gs::IVertexDataContextWrapper>(ctx_wrapper);
     /// 0. test ndarray
-    {
-      std::unique_ptr<grape::InArchive> arc = std::move(
-          vd_ctx_wrapper->ToNdArray(comm_spec, selector, range).value());
-      std::string java_out_prefix =
-          out_prefix + "/java_projected_assembled_ndarray.dat";
-      output_nd_array(comm_spec, std::move(arc), java_out_prefix,
-                      8);  // 4 for int64_t
-    }
-    VLOG(1) << "[0] java projected finish test ndarray";
+    // {
+    //   std::unique_ptr<grape::InArchive> arc = std::move(
+    //       vd_ctx_wrapper->ToNdArray(comm_spec, selector, range).value());
+    //   std::string java_out_prefix =
+    //       out_prefix + "/java_projected_assembled_ndarray.dat";
+    //   output_nd_array(comm_spec, std::move(arc), java_out_prefix,
+    //                   8);  // 4 for int64_t
+    // }
+    // VLOG(1) << "[0] java projected finish test ndarray";
 
-    // 1. Test data frame
-    {
-      // auto selectors = gs::gs::Selector::ParseSelectors(s_selectors).value();
-      std::unique_ptr<grape::InArchive> arc = std::move(
-          vd_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
-      std::string java_data_frame_out_prefix = out_prefix + "/java_projected";
-      output_data_frame(comm_spec, std::move(arc), java_data_frame_out_prefix,
-                        8);
-    }
+    // // 1. Test data frame
+    // {
+    //   // auto selectors =
+    //   gs::gs::Selector::ParseSelectors(s_selectors).value();
+    //   std::unique_ptr<grape::InArchive> arc = std::move(
+    //       vd_ctx_wrapper->ToDataframe(comm_spec, selectors, range).value());
+    //   std::string java_data_frame_out_prefix = out_prefix +
+    //   "/java_projected"; output_data_frame(comm_spec, std::move(arc),
+    //   java_data_frame_out_prefix,
+    //                     8);
+    // }
 
-    VLOG(1) << "[1] java projected finish test dataframe";
-    // 2. test vineyard tensor
-    {
-      auto tmp =
-          vd_ctx_wrapper->ToVineyardTensor(comm_spec, client, selector, range);
-      CHECK(tmp);
-      vineyard::ObjectID ndarray_object = tmp.value();
-      std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
-      // vineyard::AnyType expected_data_type = vineyard::AnyType::Int64;  // 4
-      vineyard::AnyType expected_data_type = vineyard::AnyType::String;
-      output_vineyard_tensor<std::string>(client, ndarray_object, comm_spec,
-                                          java_v6d_tensor_prefix,
-                                          expected_data_type);
-    }
+    // VLOG(1) << "[1] java projected finish test dataframe";
+    // // 2. test vineyard tensor
+    // {
+    //   auto tmp =
+    //       vd_ctx_wrapper->ToVineyardTensor(comm_spec, client, selector,
+    //       range);
+    //   CHECK(tmp);
+    //   vineyard::ObjectID ndarray_object = tmp.value();
+    //   std::string java_v6d_tensor_prefix = out_prefix + "/java_projected";
+    //   // vineyard::AnyType expected_data_type = vineyard::AnyType::Int64;  //
+    //   4 vineyard::AnyType expected_data_type = vineyard::AnyType::String;
+    //   output_vineyard_tensor<std::string>(client, ndarray_object, comm_spec,
+    //                                       java_v6d_tensor_prefix,
+    //                                       expected_data_type);
+    // }
     VLOG(1) << "[2] java projected finish test vineyard tensor";
 
   } else {

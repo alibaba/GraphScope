@@ -97,8 +97,8 @@ public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Lo
      */
     @Override
     public void Output(IFragment<Long, Long, Long, Long> frag) {
-        logger.info("finally cur path {}", curPaths);
-        logger.info("finally next path {}", nextPaths);
+        // logger.info("finally cur path {}", curPaths);
+        // logger.info("finally next path {}", nextPaths);
 
         GSVertexArray<StdString> vertexArray = data();
         Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
@@ -111,7 +111,7 @@ public class CirclePIEContext extends VertexDataContext<IFragment<Long, Long, Lo
 
     public void tryToFindCircle(Path path) {
         if (path.isCircle()){
-            logger.info("path is circle {}", path);
+            // logger.info("path is circle {}", path);
             long lid = parser.getOffset(path.top());
             this.results.get((int)lid).add(path);
         }

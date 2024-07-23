@@ -44,7 +44,6 @@ public class CirclePIE implements DefaultAppBase<
         CirclePIEContext ctx = (CirclePIEContext) context;
         msgVector = new FFIByteVectorOutputStream();
         for (long i = 0; i < graph.getInnerVerticesNum(); ++i) {
-            logger.info("vertex {}" ,i);
             vertex.setValue(i);
             Long globalId = graph.getInnerVertexGid(vertex);
             Path path = new Path(globalId);
@@ -59,7 +58,6 @@ public class CirclePIE implements DefaultAppBase<
                         e.printStackTrace();
                     }
                 } else {
-                    logger.info("sending to inner vertex {}, path {}", nbr.neighbor().getValue(), path);
                     ctx.addToNextPath(nbr.neighbor(), path);
                 }
                 path.pop();
@@ -67,8 +65,8 @@ public class CirclePIE implements DefaultAppBase<
         }
         //No need to check circels
         ctx.swapPaths();
-        logger.info("After PEval: cur_path: " + ctx.curPaths.toString());
-        logger.info("After PEval: next_path: " + ctx.nextPaths.toString());
+        logger.info("After PEval: cur_path: " + ctx.curPaths.size());
+        logger.info("After PEval: next_path: " + ctx.nextPaths.size());
         messageManager.forceContinue();
         ctx.curStep += 1;
     }
@@ -97,8 +95,8 @@ public class CirclePIE implements DefaultAppBase<
             e.printStackTrace();
         }
 
-        logger.info("In super step {}, cur path {}", ctx.curStep, ctx.curPaths);
-        logger.info("In super step {}, next path {}", ctx.curStep, ctx.nextPaths);
+        logger.info("In super step {}, cur path {}", ctx.curStep, ctx.curPaths.size());
+        logger.info("In super step {}, next path {}", ctx.curStep, ctx.nextPaths.size());
         // For received msg, check if it is already circle, if true, add to the final results.
         ctx.persistCirclePathInCurrent();
 
@@ -125,7 +123,6 @@ public class CirclePIE implements DefaultAppBase<
         logger.info("Send message through oe");
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
         for (long i = 0; i < graph.getInnerVerticesNum(); ++i) {
-            logger.info("vertex {}" ,i);
             vertex.setValue(i);
             Long globalId = graph.getInnerVertexGid(vertex);
             List<Path> paths = ctx.curPaths.get((int) i);
@@ -142,14 +139,14 @@ public class CirclePIE implements DefaultAppBase<
                         // send path to outer vertex.
                         try {
                             if (!path.isCircle()){ // If circle path already found, skip.
-                                logger.info("send msg to outer vertex: {} , path {}",nbr.neighbor(), path);
+                                // logger.info("send msg to outer vertex: {} , path {}",nbr.neighbor(), path);
                                 sendMessageToOuterVertex(graph, messageManager, nbr.neighbor(), path);
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     } else {
-                        logger.info("send msg to inner vertex: {} , path {}", nbr.neighbor().getValue(), path);
+                        // logger.info("send msg to inner vertex: {} , path {}", nbr.neighbor().getValue(), path);
                         ctx.addToNextPath(nbr.neighbor(), path);
                     }
                     path.pop();
@@ -164,7 +161,7 @@ public class CirclePIE implements DefaultAppBase<
      * @param neighbor the outer vertex vid
      */
     void sendMessageToOuterVertex(IFragment<Long, Long, Long, Long> graph, DefaultMessageManager mm, Vertex<Long> neighbor, Path path) throws IOException {
-        logger.info("Send path {} to vertex {}, dst frag {}", path, neighbor.getValue(), graph.fid());
+        // logger.info("Send path {} to vertex {}, dst frag {}", path, neighbor.getValue(), graph.fid());
         msgVector.reset();
         msgVector.writeLong(graph.getOuterVertexGid(neighbor));
         path.write(msgVector);
@@ -180,14 +177,14 @@ public class CirclePIE implements DefaultAppBase<
             // trigger the refresh
             tmpVector.touch();
             bytesOfReceivedMsg += tmpVector.size();
-            logger.info("Frag [{}] digest message of size {}", graph.fid(), tmpVector.size());
+            // logger.info("Frag [{}] digest message of size {}", graph.fid(), tmpVector.size());
             Path path = new Path();
             FFIByteVectorInputStream inputStream = new FFIByteVectorInputStream(tmpVector);
             long gid = inputStream.readLong();
             if (!graph.innerVertexGid2Vertex(gid, tmpVertex)){
                 logger.error("Fail to get lid from gid {}", gid);
             }
-            logger.info("Got msg to lid {}", tmpVertex.getValue());
+            // logger.info("Got msg to lid {}", tmpVertex.getValue());
             path.read(inputStream);
             // Add the tail node of new path here.
 //            path.add(gid);
