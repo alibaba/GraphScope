@@ -1,1 +1,0 @@
-MATCH(c: CCFField)<-[e]-(p:Paper) where type(e) = 6 return type(e) As edgeType ORDER BY edgeType ASC LIMIT 10;

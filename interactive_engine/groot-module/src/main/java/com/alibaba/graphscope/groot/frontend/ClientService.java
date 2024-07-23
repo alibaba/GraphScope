@@ -526,8 +526,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                                     if (t != null) {
                                         responseObserver.onError(t);
                                     } else {
-                                        responseObserver.onNext(
-                                                GetStoreStateResponse.newBuilder().build());
+                                        responseObserver.onNext(response.build());
                                         responseObserver.onCompleted();
                                     }
                                 }

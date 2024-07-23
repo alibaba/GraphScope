@@ -47,9 +47,9 @@ This is the image for GraphScope-Store
 
 ## Build multiarch image
 
-We do out best to deliver [multi-platform images](https://docs.docker.com/build/building/multi-platform)
-Most of the images contains variants for linux/amd64 and linux/arm64,
-When pulling, Docker would automatically selects the image that matches the architecture.
+We do our best to deliver [multi-platform images](https://docs.docker.com/build/building/multi-platform)
+Most of the images contain variants for linux/amd64 and linux/arm64,
+When pulling, Docker would automatically select the image that matches the architecture.
 
 - Build graphscope-dev:latest
 
@@ -67,7 +67,7 @@ When pulling, Docker would automatically selects the image that matches the arch
 
 ### Set up building environment
 
-Incase you want to build a multi-platform on your own, here are steps to help you getting started.
+In case you want to build a multi-platform on your own, here are steps to help you get started.
 
 #### Set up the cross-platform emulator on x84_64 architecture
 

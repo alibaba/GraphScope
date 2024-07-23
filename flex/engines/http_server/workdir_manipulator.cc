@@ -105,7 +105,8 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
       YAML::Node plugin_node;
       plugin_node["name"] = plugin.name;
       plugin_node["library"] = plugin.library;
-      plugin_node["description"] = plugin.description;
+      // quote the description, since it may contain space.
+      plugin_node["description"] = "\"" + plugin.description + "\"";
       if (plugin.params.size() > 0) {
         YAML::Node params_node;
         for (auto& param : plugin.params) {
@@ -525,7 +526,9 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
     auto new_description = json["description"];
     VLOG(10) << "Update description: "
              << new_description;  // update description
-    plugin_node["description"] = new_description.get<std::string>();
+    // quote the description, since it may contain space.
+    plugin_node["description"] =
+        "\"" + new_description.get<std::string>() + "\"";
   }
 
   bool enabled;
@@ -951,6 +954,11 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
       .then_wrapped([plugin_id = plugin_id, output_dir](auto&& f) {
         try {
           auto res = f.get();
+          if (!res.ok()) {
+            return seastar::make_exception_future<seastar::sstring>(
+                std::runtime_error("Fail to generate procedure, error: " +
+                                   res.status().error_message()));
+          }
           std::string so_file;
           {
             std::stringstream ss;
