@@ -273,6 +273,9 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
     fn execute(&mut self) -> TaskState {
         let _g = crate::worker_id::guard(self.id);
         if self.check_cancel() {
+            self.span
+                .set_status(trace::Status::error("Job is canceled"));
+            self.span.end();
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
@@ -284,14 +287,19 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
         match self.task.execute() {
             Ok(state) => {
                 if TaskState::Finished == state {
+                    let elapsed = self.start.elapsed().as_millis();
                     info_worker!(
                         "trace_id:{}, job({}) '{}' finished, used {:?} ms;",
                         trace_id_hex,
                         self.id.job_id,
                         self.conf.job_name,
-                        self.start.elapsed().as_millis()
+                        elapsed
                     );
                     self.is_finished = true;
+                    self.span
+                        .set_attribute(KeyValue::new("used_ms", elapsed.to_string()));
+                    self.span.set_status(trace::Status::Ok);
+                    self.span.end();
                     // if this is last worker, return Finished
                     if self.peer_guard.fetch_sub(1, Ordering::SeqCst) == 1 {
                         state
@@ -325,11 +333,12 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                 Ok(state) => {
                     {
                         if TaskState::Finished == state {
+                            let elapsed = self.start.elapsed().as_millis();
                             info_worker!(
                                 "job({}) '{}' finished, used {:?};",
                                 self.id.job_id,
                                 self.conf.job_name,
-                                self.start.elapsed()
+                                elapsed
                             );
                         }
                     }
