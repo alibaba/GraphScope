@@ -122,6 +122,18 @@ class optional_param_matcher : public matcher {
 
 namespace server {
 
+bool is_running_graph(const seastar::sstring& graph_id) {
+  std::string graph_id_str(graph_id.data(), graph_id.size());
+  auto running_graph_res =
+      HQPSService::get().get_metadata_store()->GetRunningGraph();
+  if (!running_graph_res.ok()) {
+    LOG(ERROR) << "Failed to get running graph: "
+               << running_graph_res.status().error_message();
+    return false;
+  }
+  return running_graph_res.value() == graph_id_str;
+}
+
 ////////////////////////////stored_proc_handler////////////////////////////
 class stored_proc_handler : public StoppableHandler {
  public:
@@ -300,18 +312,6 @@ class stored_proc_handler : public StoppableHandler {
   }
 
  private:
-  bool is_running_graph(const seastar::sstring& graph_id) const {
-    std::string graph_id_str(graph_id.data(), graph_id.size());
-    auto running_graph_res =
-        HQPSService::get().get_metadata_store()->GetRunningGraph();
-    if (!running_graph_res.ok()) {
-      LOG(ERROR) << "Failed to get running graph: "
-                 << running_graph_res.status().error_message();
-      return false;
-    }
-    return running_graph_res.value() == graph_id_str;
-  }
-
   query_dispatcher dispatcher_;
   std::vector<executor_ref> executor_refs_;
   bool is_cancelled_;
@@ -383,6 +383,21 @@ class adhoc_query_handler : public StoppableHandler {
       std::unique_ptr<seastar::httpd::reply> rep) override {
     auto dst_executor = executor_idx_;
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+
+    if (path != "/v1/graph/current/adhoc_query" &&
+        req->param.exists("graph_id")) {
+      // TODO(zhanglei): get from graph_db.
+      if (!is_running_graph(req->param["graph_id"])) {
+        rep->set_status(
+            seastar::httpd::reply::status_type::internal_server_error);
+        rep->write_body("bin",
+                        seastar::sstring("The querying query is not running:" +
+                                         req->param["graph_id"]));
+        rep->done();
+        return seastar::make_ready_future<
+            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+      }
+    }
 
 #ifdef HAVE_OPENTELEMETRY_CPP
     auto tracer = otel::get_tracer("adhoc_query_handler");
@@ -528,7 +543,6 @@ graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
       actors_running_(true) {
   graph_db_handlers_.resize(shard_num);
   if (enable_hqps_handlers_) {
-    ic_handlers_.resize(shard_num);
     adhoc_query_handlers_.resize(shard_num);
   }
 }
@@ -552,7 +566,7 @@ bool graph_db_http_handler::is_actors_running() const {
 seastar::future<> graph_db_http_handler::stop_query_actors() {
   if (enable_hqps_handlers_.load()) {
     // Only cancel the hqps-related actors
-    return ic_handlers_[hiactor::local_shard_id()]
+    return graph_db_handlers_[hiactor::local_shard_id()]
         ->stop()
         .then([this] {
           LOG(INFO) << "Cancelled ic scope";
@@ -570,7 +584,7 @@ seastar::future<> graph_db_http_handler::stop_query_actors() {
 
 void graph_db_http_handler::start_query_actors() {
   if (enable_hqps_handlers_.load()) {
-    ic_handlers_[hiactor::local_shard_id()]->start();
+    graph_db_handlers_[hiactor::local_shard_id()]->start();
     adhoc_query_handlers_[hiactor::local_shard_id()]->start();
     actors_running_.store(true);
   }
@@ -609,8 +623,6 @@ seastar::future<> graph_db_http_handler::set_routes() {
         new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
                                 shard_query_concurrency);
     graph_db_handlers_[hiactor::local_shard_id()] = graph_db_handler;
-    r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/v1/graph/current/query"), graph_db_handler);
     auto rule_proc = new seastar::httpd::match_rule(graph_db_handler);
     rule_proc->add_str("/v1/graph")
         .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
@@ -620,12 +632,8 @@ seastar::future<> graph_db_http_handler::set_routes() {
       auto adhoc_query_handler_ =
           new adhoc_query_handler(ic_adhoc_group_id, max_group_id,
                                   group_inc_step, shard_adhoc_concurrency);
-
-      ic_handlers_[hiactor::local_shard_id()] = graph_db_handler;
       adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
-
       // Add routes
-
       auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
       rule_adhoc->add_str("/v1/graph")
           .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))

@@ -124,7 +124,6 @@ class graph_db_http_handler {
       actors_running_{false};
 
   std::vector<StoppableHandler*> graph_db_handlers_;
-  std::vector<StoppableHandler*> ic_handlers_;
   std::vector<StoppableHandler*> adhoc_query_handlers_;
 };
 

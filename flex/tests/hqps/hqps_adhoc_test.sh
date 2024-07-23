@@ -78,8 +78,8 @@ info() {
 
 kill_service(){
     info "Kill Service first"
-    ps -ef | grep "com.alibaba.graphscope.GraphServer" | awk '{print $2}' | xargs kill -9 || true
     ps -ef | grep "interactive_server" |  awk '{print $2}' | xargs kill -9  || true
+    ps -ef | grep "com.alibaba.graphscope.GraphServer" | awk '{print $2}' | xargs kill -9 || true
     sleep 3
     # check if service is killed
     info "Kill Service success"
@@ -102,8 +102,8 @@ start_engine_service(){
         err "SERVER_BIN not found"
         exit 1
     fi
-    cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
-    cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
+    cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -w ${INTERACTIVE_WORKSPACE} "
+    cmd="${cmd} --enable-admin-service --start-compiler"
     
     info "Start engine service with command: ${cmd}"
     ${cmd} &
@@ -112,20 +112,6 @@ start_engine_service(){
     ps -ef | grep "interactive_server" | grep -v grep
 
     info "Start engine service success"
-}
-
-
-start_compiler_service(){
-  echo "try to start compiler service"
-  pushd ${GIE_HOME}/compiler
-  cmd="make run graph.schema=${GRAPH_SCHEMA_YAML} config.path=${ENGINE_CONFIG_PATH}"
-  echo "Start compiler service with command: ${cmd}"
-  ${cmd} &
-  sleep 5
-  # check if Graph Server is running, if not exist
-  ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep
-  info "Start compiler service success"
-  popd
 }
 
 run_ldbc_test() {
@@ -203,7 +189,6 @@ run_gremlin_test(){
 
 kill_service
 start_engine_service
-start_compiler_service
 
 
 if [ "${TEST_TYPE}" == "cypher" ]; then
