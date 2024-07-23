@@ -1343,7 +1343,6 @@ bool Schema::has_edge_label(const std::string& src_label,
   auto src_label_id = get_vertex_label_id(src_label);
   auto dst_label_id = get_vertex_label_id(dst_label);
   if (!elabel_indexer_.get_index(label, edge_label_id)) {
-    LOG(ERROR) << "edge label not found:" << label;
     return false;
   }
   return has_edge_label(src_label_id, dst_label_id, edge_label_id);

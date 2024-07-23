@@ -20,16 +20,22 @@ import com.alibaba.graphscope.interactive.ApiClient;
 import com.alibaba.graphscope.interactive.ApiException;
 import com.alibaba.graphscope.interactive.ApiResponse;
 import com.alibaba.graphscope.interactive.api.*;
+import com.alibaba.graphscope.interactive.client.QueryInterface;
 import com.alibaba.graphscope.interactive.client.Session;
+import com.alibaba.graphscope.interactive.client.common.Config;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.common.Status;
 import com.alibaba.graphscope.interactive.models.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
+
 import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /***
  * A default implementation of the GraphScope interactive session interface.
@@ -50,28 +56,40 @@ public class DefaultSession implements Session {
     private final QueryServiceApi queryApi;
     private final UtilsApi utilsApi;
     private final ApiClient client, queryClient;
+    private final Config config;
 
     /**
      * Create a default GraphScope Interactive Session.
      *
      * @param uri should be in the format "http://host:port"
      */
-    private DefaultSession(String uri, String storedProcUri) {
-        client = new ApiClient();
-        client.setBasePath(uri);
-        client.setReadTimeout(DEFAULT_READ_TIMEOUT);
-        client.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
+    private DefaultSession(String uri, String storedProcUri, Config config) {
+        this.config = config;
+        System.out.println("uri neq null" + (uri != null));
+        OkHttpClient httpClient = createHttpClient(config);
+        if (uri != null) {
+            client = new ApiClient(httpClient);
+            client.setBasePath(uri);
+            graphApi = new AdminServiceGraphManagementApi(client);
+            jobApi = new AdminServiceJobManagementApi(client);
+            procedureApi = new AdminServiceProcedureManagementApi(client);
+            serviceApi = new AdminServiceServiceManagementApi(client);
+            vertexApi = new GraphServiceVertexManagementApi(client);
+            edgeApi = new GraphServiceEdgeManagementApi(client);
+            utilsApi = new UtilsApi(client);
+        } else {
+            System.out.println("Creating session without admin uri specified");
+            client = null;
+            graphApi = null;
+            jobApi = null;
+            procedureApi = null;
+            serviceApi = null;
+            vertexApi = null;
+            edgeApi = null;
+            utilsApi = null;
+        }
 
-        graphApi = new AdminServiceGraphManagementApi(client);
-        jobApi = new AdminServiceJobManagementApi(client);
-        procedureApi = new AdminServiceProcedureManagementApi(client);
-        serviceApi = new AdminServiceServiceManagementApi(client);
-        vertexApi = new GraphServiceVertexManagementApi(client);
-        edgeApi = new GraphServiceEdgeManagementApi(client);
-
-        utilsApi = new UtilsApi(client);
-
-        if (storedProcUri == null) {
+        if (storedProcUri == null && graphApi != null) {
             Result<ServiceStatus> status = getServiceStatus();
             if (!status.isOk()) {
                 throw new RuntimeException(
@@ -84,19 +102,32 @@ public class DefaultSession implements Session {
             storedProcUri = uri.replaceFirst(":[0-9]+", ":" + queryPort);
             System.out.println("Query URI: " + storedProcUri);
         }
-        queryClient = new ApiClient();
+        if (storedProcUri == null) {
+            throw new RuntimeException(
+                    "DefaultSession need at least stored procedure uri specified, current is null");
+        }
+        queryClient = new ApiClient(httpClient);
         queryClient.setBasePath(storedProcUri);
-        queryClient.setReadTimeout(DEFAULT_READ_TIMEOUT);
-        queryClient.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
         queryApi = new QueryServiceApi(queryClient);
     }
 
-    public static DefaultSession newInstance(String adminUri) {
-        return new DefaultSession(adminUri, null);
+    public static DefaultSession newInstance(String adminUri, Config config) {
+        return new DefaultSession(adminUri, null, config);
     }
 
-    public static DefaultSession newInstance(String adminUri, String storedProcUri) {
-        return new DefaultSession(adminUri, storedProcUri);
+    public static DefaultSession newInstance(String adminUri, String storedProcUri, Config config) {
+        return new DefaultSession(adminUri, storedProcUri, config);
+    }
+
+    /**
+     * Create defaultSession in stored procedure only mode, which means the session will only connect to query service,
+     * for launching queries.
+     *
+     * @param storedProcUri http uri, points to query service.
+     * @return the procedure interface.
+     */
+    public static QueryInterface queryInterfaceOnly(String storedProcUri, Config config) {
+        return new DefaultSession(null, storedProcUri, config);
     }
 
     /**
@@ -802,5 +833,18 @@ public class DefaultSession implements Session {
             e.printStackTrace();
             return Result.fromException(e);
         }
+    }
+
+    private static OkHttpClient createHttpClient(Config config) {
+        return new OkHttpClient.Builder()
+                .readTimeout(config.getReadTimeout(), TimeUnit.MILLISECONDS)
+                .writeTimeout(config.getWriteTimeout(), TimeUnit.MILLISECONDS)
+                .connectTimeout(config.getConnectionTimeout(), TimeUnit.MILLISECONDS)
+                .connectionPool(
+                        new ConnectionPool(
+                                config.getMaxIdleConnections(),
+                                config.getKeepAliveDuration(),
+                                TimeUnit.MILLISECONDS))
+                .build();
     }
 }
