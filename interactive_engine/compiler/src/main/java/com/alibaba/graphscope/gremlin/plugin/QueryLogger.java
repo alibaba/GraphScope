@@ -37,7 +37,7 @@ public class QueryLogger {
     /**
      * 上游带下来的traceId
      */
-    private final String upStreamId;
+    private final String upstreamId;
 
     private String irPlan;
 
@@ -45,13 +45,13 @@ public class QueryLogger {
         this.query = query;
         this.queryId = queryId;
         this.irPlan = null;
-        this.upStreamId = null;
+        this.upstreamId = null;
     }
 
-    public QueryLogger(String query, BigInteger queryId, String upStreamId) {
+    public QueryLogger(String query, BigInteger queryId, String upstreamId) {
         this.query = query;
         this.queryId = queryId;
-        this.upStreamId = upStreamId;
+        this.upstreamId = upstreamId;
         this.irPlan = null;
     }
 
@@ -74,8 +74,8 @@ public class QueryLogger {
     public void error(Throwable throwable) {
         JsonObject errorJson = new JsonObject();
         String traceId = Span.current().getSpanContext().getTraceId();
-        if (this.upStreamId != null) {
-            errorJson.addProperty(LogConstant.UP_STREAM_ID, this.upStreamId);
+        if (this.upstreamId != null) {
+            errorJson.addProperty(LogConstant.UP_STREAM_ID, this.upstreamId);
         }
         errorJson.addProperty(LogConstant.TRACE_ID, traceId);
         errorJson.addProperty(LogConstant.SUCCESS, false);
@@ -116,8 +116,8 @@ public class QueryLogger {
     public String toString() {
         StringBuilder str = new StringBuilder();
         str.append("[");
-        if (this.upStreamId != null) {
-            str.append("upStreamId=").append(this.upStreamId).append(", ");
+        if (this.upstreamId != null) {
+            str.append("upstreamId=").append(this.upstreamId).append(", ");
         }
         str.append("query='")
                 .append(this.query)
@@ -140,8 +140,8 @@ public class QueryLogger {
         this.irPlan = irPlan;
     }
 
-    public String getUpStreamId() {
-        return upStreamId;
+    public String getUpstreamId() {
+        return upstreamId;
     }
 
     public String getIrPlan() {

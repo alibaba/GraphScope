@@ -416,7 +416,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // print script and jobName with ir plan
         queryLogger.info("Submitted query");
         // Too verbose, since all identical queries produce identical plans, it's no need to print
-        // every plan in production.
+        // every plan in production.de
         String irPlanStr = irPlan.getPlanAsJson();
         queryLogger.debug("ir plan {}", irPlanStr);
         queryLogger.setIrPlan(irPlanStr);
@@ -442,10 +442,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         request = request.toBuilder().setConf(jobConfig).build();
         Span outgoing;
         // if exist up trace, useUpTraceId as current traceId
-        if (TraceId.isValid(queryLogger.getUpStreamId())) {
+        if (TraceId.isValid(queryLogger.getUpstreamId())) {
             SpanContext spanContext =
                     SpanContext.createFromRemoteParent(
-                            queryLogger.getUpStreamId(),
+                            queryLogger.getUpstreamId(),
                             this.opentelemetryIdGenerator.generateSpanId(),
                             TraceFlags.getDefault(),
                             TraceState.getDefault());

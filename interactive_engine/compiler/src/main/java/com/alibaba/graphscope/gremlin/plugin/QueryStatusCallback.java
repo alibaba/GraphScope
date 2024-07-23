@@ -104,8 +104,8 @@ public class QueryStatusCallback {
         simpleJson.addProperty(LogConstant.TRACE_ID, traceId);
         simpleJson.addProperty(LogConstant.QUERY_ID, queryLogger.getQueryId());
         simpleJson.addProperty(LogConstant.SUCCESS, isSucceed);
-        if (queryLogger.getUpStreamId() != null) {
-            simpleJson.addProperty(LogConstant.UP_STREAM_ID, queryLogger.getUpStreamId());
+        if (queryLogger.getUpstreamId() != null) {
+            simpleJson.addProperty(LogConstant.UP_STREAM_ID, queryLogger.getUpstreamId());
         }
         simpleJson.addProperty(LogConstant.COST, elaspedMillis);
         return simpleJson;
