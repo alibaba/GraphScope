@@ -15,9 +15,22 @@
  */
 package com.alibaba.graphscope.groot.common.exception;
 
-public class InvalidSchemaException extends GrootException {
+import com.alibaba.graphscope.proto.Code;
 
-    public InvalidSchemaException(String msg) {
-        super(msg);
+public class PropertyNotFoundException extends GrootException {
+    public PropertyNotFoundException() {
+        super(Code.PROPERTY_NOT_FOUND);
+    }
+
+    public PropertyNotFoundException(Exception exception) {
+        super(Code.PROPERTY_NOT_FOUND, exception);
+    }
+
+    public PropertyNotFoundException(String message) {
+        super(Code.PROPERTY_NOT_FOUND, message);
+    }
+
+    public PropertyNotFoundException(String message, Exception exception) {
+        super(Code.PROPERTY_NOT_FOUND, message, exception);
     }
 }

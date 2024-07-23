@@ -24,7 +24,7 @@
 
 #include "vineyard/graph/utils/error.h"  // IWYU pragma: export
 
-#include "proto/error_codes.pb.h"  // IWYU pragma: export
+#include "proto/error/coordinator.pb.h"  // IWYU pragma: export
 
 namespace gs {
 
@@ -35,9 +35,9 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
   case vineyard::ErrorCode::kVineyardError:
     return rpc::Code::VINEYARD_ERROR;
   case vineyard::ErrorCode::kNetworkError:
-    return rpc::Code::NETWORK_ERROR;
+    return rpc::Code::NETWORK_FAILURE;
   case vineyard::ErrorCode::kUnimplementedMethod:
-    return rpc::Code::UNIMPLEMENTED_ERROR;
+    return rpc::Code::UNIMPLEMENTED;
   default:
     return rpc::Code::ANALYTICAL_ENGINE_INTERNAL_ERROR;
   }
@@ -49,7 +49,7 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     std::stringstream TOKENPASTE2(_ss, __LINE__);                           \
     vineyard::backtrace_info::backtrace(TOKENPASTE2(_ss, __LINE__), true);  \
     LOG(ERROR) << "graphscope error in frame: code = "                      \
-               << static_cast<int>(code) << " at "                          \
+               << vineyard::formatEnumValue(code) << " at "                          \
                << (std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
                    ": " + std::string(__FUNCTION__))                        \
                << " -> " << (msg)                                           \
@@ -68,7 +68,7 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     std::stringstream TOKENPASTE2(_ss, __LINE__);                           \
     vineyard::backtrace_info::backtrace(TOKENPASTE2(_ss, __LINE__), true);  \
     LOG(ERROR) << "graphscope error in frame: code = "                      \
-               << static_cast<int>(code) << " at "                          \
+               << vineyard::formatEnumValue(code) << " at "                          \
                << (std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
                    ": " + std::string(__FUNCTION__))                        \
                << " -> " << (msg)                                           \

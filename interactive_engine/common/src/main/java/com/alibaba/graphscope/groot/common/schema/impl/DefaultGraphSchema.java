@@ -15,8 +15,9 @@
  */
 package com.alibaba.graphscope.groot.common.schema.impl;
 
-import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
-import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
+import com.alibaba.graphscope.groot.common.exception.PropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.TypeNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
@@ -55,23 +56,23 @@ public class DefaultGraphSchema implements GraphSchema {
     }
 
     @Override
-    public GraphElement getElement(String label) throws GraphElementNotFoundException {
+    public GraphElement getElement(String label) throws TypeNotFoundException {
         if (vertexList.containsKey(label)) {
             return vertexList.get(label);
         } else if (edgeList.containsKey(label)) {
             return edgeList.get(label);
         }
 
-        throw new GraphElementNotFoundException("label " + label + " not exist");
+        throw new TypeNotFoundException("label " + label + " not exist");
     }
 
     @Override
-    public GraphElement getElement(int labelId) throws GraphElementNotFoundException {
+    public GraphElement getElement(int labelId) throws TypeNotFoundException {
         if (idToLabelList.containsKey(labelId)) {
             return getElement(idToLabelList.get(labelId));
         }
 
-        throw new GraphElementNotFoundException("label not exist for label ID " + labelId);
+        throw new TypeNotFoundException("label not exist for label ID " + labelId);
     }
 
     @Override
@@ -85,22 +86,22 @@ public class DefaultGraphSchema implements GraphSchema {
     }
 
     @Override
-    public Integer getPropertyId(String propName) throws GraphPropertyNotFoundException {
+    public Integer getPropertyId(String propName) throws PropertyNotFoundException {
         if (propNameToIdList.containsKey(propName)) {
             return propNameToIdList.get(propName);
         }
 
-        throw new GraphPropertyNotFoundException("property " + propName + " not exist");
+        throw new PropertyNotFoundException("property " + propName + " not exist");
     }
 
     @Override
-    public String getPropertyName(int propId) throws GraphPropertyNotFoundException {
+    public String getPropertyName(int propId) throws PropertyNotFoundException {
         for (Map.Entry<String, Integer> entry : propNameToIdList.entrySet()) {
             if (entry.getValue() == propId) {
                 return entry.getKey();
             }
         }
-        throw new GraphPropertyNotFoundException("property not exist for property id " + propId);
+        throw new PropertyNotFoundException("property not exist for property id " + propId);
     }
 
     @Override
@@ -223,7 +224,7 @@ public class DefaultGraphSchema implements GraphSchema {
             return new DefaultGraphSchema(vertexList, edgeList, propNameToIdList);
 
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InvalidArgumentException(e);
         }
     }
 

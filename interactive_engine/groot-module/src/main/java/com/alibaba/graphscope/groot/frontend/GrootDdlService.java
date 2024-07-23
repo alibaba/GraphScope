@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
+import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
@@ -222,7 +224,7 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
                 builder.setTypeEnum(TypeEnumPb.EDGE);
                 break;
             default:
-                throw new IllegalArgumentException(
+                throw new InvalidArgumentException(
                         "Invalid type enum [" + typeDef.getTypeEnum() + "]");
         }
         for (PropertyDef property : typeDef.getProperties()) {
