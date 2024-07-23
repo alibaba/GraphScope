@@ -1064,10 +1064,6 @@ seastar::future<admin_query_result> admin_actor::start_service(
       }
     }
     hqps_service.start_query_actors();  // start on a new scope.
-    LOG(INFO) << "Successfully restart query actors";
-    // now start the compiler
-    auto schema_path =
-        server::WorkDirManipulator::GetGraphSchemaPath(graph_name);
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
     hqps_service.reset_start_time();
     return seastar::make_ready_future<admin_query_result>(
