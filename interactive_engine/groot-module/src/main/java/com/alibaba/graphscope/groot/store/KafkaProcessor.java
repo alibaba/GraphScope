@@ -225,6 +225,7 @@ public class KafkaProcessor {
                         .requestId("")
                         .queueId(storeId)
                         .snapshotId(snapshotId)
+                        .traceId(operationBatch.getTraceId())
                         .offset(offset);
         for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();

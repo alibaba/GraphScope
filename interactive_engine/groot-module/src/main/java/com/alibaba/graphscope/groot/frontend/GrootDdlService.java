@@ -54,10 +54,13 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
     @Override
     public void batchSubmit(
             BatchSubmitRequest request, StreamObserver<BatchSubmitResponse> responseObserver) {
+        RequestOptionsPb requestOptionsPb = request.getRequestOptions();
+        String traceId = requestOptionsPb == null ? null : requestOptionsPb.getTraceId();
         try {
             boolean simple = request.getSimpleResponse();
             DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
-            logger.info("Received DDL request: " + request);
+            builder.setTraceId(traceId);
+            logger.info("traceId: [{}], Received DDL request: [{}]", traceId, request);
             for (BatchSubmitRequest.DDLRequest ddlRequest : request.getValueList()) {
                 switch (ddlRequest.getValueCase()) {
                     case CREATE_VERTEX_TYPE_REQUEST:
@@ -153,7 +156,10 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             String trace = sw.toString();
-            logger.error("Exception occurred when processing batch DDL request", e);
+            logger.error(
+                    "Exception occurred when processing batch DDL request. traceId:[{}]",
+                    traceId,
+                    e);
             responseObserver.onError(Status.INTERNAL.withDescription(trace).asRuntimeException());
         }
     }

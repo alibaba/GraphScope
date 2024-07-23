@@ -218,7 +218,6 @@ where
         }
 
         let conf = parse_conf_req(conf.unwrap());
-        info!("job conf {:?}", conf);
         pegasus::wait_servers_ready(conf.servers());
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let rpc_sink = RpcSink::new(conf.job_id, tx);
@@ -231,6 +230,9 @@ where
             .span_builder("JobService/submit")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);
+        let trace_id = span.span_context().trace_id();
+        let trace_id_hex = format!("{:x}", trace_id);
+        info!("trace_id : {}, job conf {:?}", trace_id_hex, conf);
         span.set_attributes(vec![
             KeyValue::new("job.name", conf.job_name.clone()),
             KeyValue::new("job.id", conf.job_id.to_string()),
@@ -240,7 +242,7 @@ where
         let ret = pegasus::run_opt(conf, sink, move |worker| service.assemble(&job, worker));
 
         if let Err(e) = ret {
-            error!("submit job {} failure: {:?}", job_id, e);
+            error!("trace_id:{}, submit job {} failure: {:?}", trace_id_hex, job_id, e);
             Err(Status::unknown(format!("submit job error {}", e)))
         } else {
             Ok(Response::new(UnboundedReceiverStream::new(rx)))
