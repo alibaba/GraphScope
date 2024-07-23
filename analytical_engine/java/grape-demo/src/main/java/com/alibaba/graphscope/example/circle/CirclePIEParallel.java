@@ -1,0 +1,284 @@
+package com.alibaba.graphscope.example.circle;
+
+import com.alibaba.graphscope.app.ParallelAppBase;
+import com.alibaba.graphscope.context.ParallelContextBase;
+import com.alibaba.graphscope.ds.Vertex;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
+import com.alibaba.graphscope.fragment.IFragment;
+import com.alibaba.graphscope.parallel.ParallelMessageManager;
+import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
+import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
+import com.alibaba.graphscope.stdcxx.FFIByteVector;
+import com.alibaba.graphscope.stdcxx.FFIByteVectorFactory;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+import com.alibaba.graphscope.parallel.MessageInBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class CirclePIEParallel implements ParallelAppBase<
+        Long,
+        Long,
+        Long,
+        Long,
+        CirclePIEParallelContext> {
+    private static final Logger logger = LoggerFactory.getLogger(CirclePIEParallel.class);
+    private static FFIByteVectorOutputStream msgVector;
+
+    /**
+     * Partial Evaluation to implement.
+     *
+     * @param graph          fragment. The graph fragment providing accesses to graph data.
+     * @param context        context. User defined context which manages data during the whole
+     *                       computations.
+     * @param messageManager The message manger which manages messages between fragments.
+     * @see IFragment
+     * @see ParallelContextBase
+     * @see ParallelMessageManager
+     */
+    @Override
+    public void PEval(IFragment<Long, Long, Long, Long> graph, ParallelContextBase<Long, Long, Long, Long> context, ParallelMessageManager messageManager) {
+        Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
+        CirclePIEParallelContext ctx = (CirclePIEParallelContext) context;
+        msgVector = new FFIByteVectorOutputStream();
+        for (long i = 0; i < graph.getInnerVerticesNum(); ++i) {
+            vertex.setValue(i);
+            Long globalId = graph.getInnerVertexGid(vertex);
+            Path path = new Path(globalId);
+            AdjList<Long, Long> adjList = graph.getOutgoingAdjList(vertex);
+            for (Nbr<Long, Long> nbr : adjList.iterable()) {
+                path.add(graph.vertex2Gid(nbr.neighbor()));
+                if (graph.isOuterVertex(nbr.neighbor())) {
+                    // send path to outer vertex.
+                    try {
+                        sendMessageToOuterVertex(graph, messageManager, nbr.neighbor(), path, 0);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    ctx.addToNextPath(nbr.neighbor(), path);
+                }
+                path.pop();
+            }
+        }
+        //No need to check circels
+        ctx.swapPaths();
+        logger.info("After PEval: cur_path: " + ctx.curPaths.size());
+        logger.info("After PEval: next_path: " + ctx.nextPaths.size());
+        messageManager.forceContinue();
+        ctx.curStep += 1;
+    }
+
+    /**
+     * Incremental Evaluation to implement.
+     *
+     * @param graph          fragment. The graph fragment providing accesses to graph data.
+     * @param context        context. User defined context which manages data during the whole
+     *                       computations.
+     * @param messageManager The message manger which manages messages between fragments.
+     * @see IFragment
+     * @see ParallelContextBase
+     * @see ParallelMessageManager
+     */
+    @Override
+    public void IncEval(IFragment<Long, Long, Long, Long> graph, ParallelContextBase<Long, Long, Long, Long> context, ParallelMessageManager messageManager) {
+        CirclePIEParallelContext ctx = (CirclePIEParallelContext) context;
+        if (ctx.curStep >= ctx.maxStep){
+            return ;
+        }
+        //Receive msg and merge
+        receiveMessage(graph, messageManager, ctx);
+
+        logger.info("In super step {}, cur path {}", ctx.curStep, ctx.curPaths.size());
+        logger.info("In super step {}, next path {}", ctx.curStep, ctx.nextPaths.size());
+        // For received msg, check if it is already circle, if true, add to the final results.
+        ctx.persistCirclePathInCurrent();
+
+        // Implement vertex program
+        vprog();
+
+        if (ctx.curStep < ctx.maxStep - 1){
+            // send msg
+            sendMessageThroughOE(graph, ctx, messageManager);
+            ctx.swapPaths();
+        }
+        else if (ctx.curStep == ctx.maxStep - 1){
+            // check whether received paths start with the nbr.
+            // No work
+            messageManager.forceContinue();
+        } else {
+            // maybe receive message, but not sending message.
+            logger.info("Max step reached, " + ctx.curStep);
+        }
+        ctx.curStep += 1;
+    }
+
+    void sendMessageThroughOEImpl(IFragment<Long,Long,Long,Long> graph, long startVertex, long endVertex, CirclePIEParallelContext ctx, ParallelMessageManager messageManager, int thread_id){
+        Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
+        for (long i = startVertex; i < endVertex; ++i) {
+            vertex.setValue(i);
+            Long globalId = graph.getInnerVertexGid(vertex);
+            List<Path> paths = ctx.curPaths.get((int) i);
+            for (int j = 0; j < paths.size(); ++j) {
+                Path path = paths.get(j);
+                //Check whether the last node is exactly current vertex.
+                if (path.top() != globalId){
+                    logger.error("Invalid path, ending at {}, but collected by {}", path.top(), globalId);
+                }
+                AdjList<Long, Long> adjList = graph.getOutgoingAdjList(vertex);
+                for (Nbr<Long, Long> nbr : adjList.iterable()) {
+                    path.add(graph.vertex2Gid(nbr.neighbor()));
+                    if (graph.isOuterVertex(nbr.neighbor())) {
+                        // send path to outer vertex.
+                        try {
+                            if (!path.isCircle()){ // If circle path already found, skip.
+                                // logger.info("send msg to outer vertex: {} , path {}",nbr.neighbor(), path);
+                                sendMessageToOuterVertex(graph, messageManager, nbr.neighbor(), path, thread_id);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        // logger.info("send msg to inner vertex: {} , path {}", nbr.neighbor().getValue(), path);
+                        ctx.addToNextPath(nbr.neighbor(), path);
+                    }
+                    path.pop();
+                }
+            }
+        }
+    }
+
+    void sendMessageThroughOE(IFragment<Long,Long,Long,Long> graph, CirclePIEParallelContext ctx, ParallelMessageManager messageManager) {
+        logger.info("Send message through oe");
+        CountDownLatch countDownLatch = new CountDownLatch(ctx.threadNum);
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        int chunkSize = 256;
+
+        int originEnd = (int) graph.getInnerVerticesNum();
+        for (int tid = 0; tid < ctx.threadNum; ++tid) {
+            final int finalTid = tid;
+            ctx.executor.execute(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            while (true) {
+                                int curBegin =
+                                        Math.min(atomicInteger.getAndAdd(chunkSize), originEnd);
+                                int curEnd = Math.min(curBegin + chunkSize, originEnd);
+                                if (curBegin >= originEnd) {
+                                    break;
+                                }
+                                for (int i = curBegin; i < curEnd; ++i) {
+                                    sendMessageThroughOEImpl(graph, curBegin, curEnd, ctx, messageManager, finalTid);
+                                }
+                            }
+                            countDownLatch.countDown();
+                        }
+                    });
+        }
+        try {
+            countDownLatch.await();
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.executor.shutdown();
+        }
+        ctx.curStep += 1;
+    }
+
+    /**
+     * Send a message to the outer vertex (to other fragment)
+     * @param neighbor the outer vertex vid
+     */
+    void sendMessageToOuterVertex(IFragment<Long, Long, Long, Long> graph, ParallelMessageManager mm, Vertex<Long> neighbor, Path path, int threadId) throws IOException {
+        // logger.info("Send path {} to vertex {}, dst frag {}", path, neighbor.getValue(), graph.fid());
+        msgVector.reset();
+        msgVector.writeLong(graph.getOuterVertexGid(neighbor));
+        path.write(msgVector);
+        mm.sendToFragment(graph.getFragId(neighbor), msgVector.getVector(), threadId);
+    }
+
+    void receiveMessageImpl(IFragment<Long, Long, Long, Long> graph, ParallelMessageManager messageManager, CirclePIEParallelContext ctx, MessageInBuffer buffer)throws IOException {
+        FFIByteVector tmpVector = (FFIByteVector) FFIByteVectorFactory.INSTANCE.create();
+        long bytesOfReceivedMsg = 0;
+        Vertex<Long> tmpVertex = FFITypeFactoryhelper.newVertexLong();
+        while (buffer.getPureMessage(tmpVector)) {
+            // The retrieved tmp vector has been resized, so the cached objAddress is not available.
+            // trigger the refresh
+            tmpVector.touch();
+            bytesOfReceivedMsg += tmpVector.size();
+            // logger.info("Frag [{}] digest message of size {}", graph.fid(), tmpVector.size());
+            Path path = new Path();
+            FFIByteVectorInputStream inputStream = new FFIByteVectorInputStream(tmpVector);
+            long gid = inputStream.readLong();
+            if (!graph.innerVertexGid2Vertex(gid, tmpVertex)){
+                logger.error("Fail to get lid from gid {}", gid);
+            }
+            // logger.info("Got msg to lid {}", tmpVertex.getValue());
+            path.read(inputStream);
+            // Add the tail node of new path here.
+//            path.add(gid);
+            //TODO: make this thread safe.
+            digestMessage(ctx, tmpVertex, path);
+            tmpVector.clear();
+        }
+        logger.info("total message received by frag {} bytes {}", graph.fid(), bytesOfReceivedMsg);
+        tmpVector.delete();
+    }
+
+    void receiveMessage(IFragment<Long, Long, Long, Long> graph, ParallelMessageManager messageManager, CirclePIEParallelContext ctx) {
+        CountDownLatch countDownLatch = new CountDownLatch(ctx.threadNum);
+        MessageInBuffer.Factory bufferFactory = FFITypeFactoryhelper.newMessageInBuffer();
+        int chunkSize = 1024;
+        for (int tid = 0; tid < ctx.threadNum; ++tid) {
+            final int finalTid = tid;
+            ctx.executor.execute(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            MessageInBuffer messageInBuffer = bufferFactory.create();
+                            FFIByteVector tmpVector = (FFIByteVector) FFIByteVectorFactory.INSTANCE.create();
+                            boolean result;
+                            while (true) {
+                                result = messageManager.getMessageInBuffer(messageInBuffer);
+                                if (result) {
+                                    try {
+                                        receiveMessageImpl(graph, messageManager, ctx, messageInBuffer);
+                                    }
+                                    catch (Exception e) {
+                                        e.printStackTrace();
+                                        logger.error(
+                                               "Error when receiving message in fragment {} thread {}",
+                                                  graph.fid(),
+                                                    finalTid);
+                                    }
+                                } else {
+                                    break;
+                                }
+                            }
+                            countDownLatch.countDown();
+                        }
+                    });
+        }
+        try {
+            countDownLatch.await();
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.executor.shutdown();
+        }
+    }
+
+    void digestMessage(CirclePIEParallelContext ctx, Vertex<Long> vertex, Path path ) {
+        ctx.addToCurrentPath(vertex,path);
+    }
+
+    void vprog() {
+
+    }
+}

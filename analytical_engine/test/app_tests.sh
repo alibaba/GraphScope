@@ -454,7 +454,7 @@ then
     GLOG_v=10 mpirun -n 2 ./run_java_app "${socket_file}" \
       1 "../test/modern_graph/knows.csv#header_row=True#delimiter=|#src_label=v0&dst_label=v0&label=e" \
       1 "../test/modern_graph/person.csv#header_row=True#delimiter=|#label=v0" 1 0 1 \
-      com.alibaba.graphscope.example.circle.CirclePIE
+      com.alibaba.graphscope.example.circle.CirclePIEParallel
 
     # GLOG_v=10 mpirun -n 2 ./run_java_app "${socket_file}" \
     #   1 "/workspaces/GraphScope/single/e.csv#header_row=False#delimiter=,#src_label=v0&dst_label=v0&label=e" \

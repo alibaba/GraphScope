@@ -346,7 +346,8 @@ void QueryProjected(vineyard::Client& client,
                     const std::string& selector_string,
                     const std::string& selectors_string) {
   // using AppType = gs::JavaPIEProjectedParallelAppOE<ProjectedFragmentType>;
-  using AppType = gs::JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
+  // using AppType = gs::JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
+  using AppType = gs::JavaPIEProjectedParallelApp<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
