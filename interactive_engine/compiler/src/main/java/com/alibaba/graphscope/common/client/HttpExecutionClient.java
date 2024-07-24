@@ -25,7 +25,8 @@ import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.StoredProcedure;
-import com.alibaba.graphscope.interactive.client.QueryInterface;
+import com.alibaba.graphscope.interactive.client.impl.DefaultSession;
+import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.Driver;
 import com.google.common.collect.Lists;
@@ -42,12 +43,13 @@ import java.util.concurrent.CompletableFuture;
  */
 public class HttpExecutionClient extends ExecutionClient<URI> {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutionClient.class);
-    private final QueryInterface session;
+    private final Session session;
 
     public HttpExecutionClient(Configs graphConfig, ChannelFetcher<URI> channelFetcher) {
         super(channelFetcher);
         session =
-                Driver.queryServiceOnly(
+                DefaultSession.newInstance(
+                        HiactorConfig.INTERACTIVE_ADMIN_ENDPOINT.get(graphConfig),
                         HiactorConfig.INTERACTIVE_QUERY_ENDPOINT.get(graphConfig));
     }
 
