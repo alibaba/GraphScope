@@ -96,7 +96,8 @@
                 <include>graph_def.proto</include>
                 <include>schema_common.proto</include>
                 <include>ddl_service.proto</include>
-                <include>write_service.proto</include>                
+                <include>write_service.proto</include>
+                <include>request_option.proto</include>
               </includes>
             </configuration>
             <goals>
