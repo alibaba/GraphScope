@@ -1027,5 +1027,91 @@ class MatchQuery15 : public ReadAppBase {
   }
 };
 
+// Auto generated expression class definition
+struct MatchQuery16expr0 {
+ public:
+  using result_t = bool;
+  static constexpr bool filter_null = true;
+  MatchQuery16expr0() {}
+
+  inline auto operator()(LabelKey label) const {
+    return (label<WithIn> std::array<int64_t, 2>{0, 2});
+  }
+
+ private:
+};
+
+// Auto generated query class definition
+class MatchQuery16 : public CypherInternalPbWriteAppBase {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  using gid_t = typename gs::MutableCSRInterface::gid_t;
+  // constructor
+  MatchQuery16() {}
+  // Query function for query class
+  results::CollectiveResults Query(gs::MutableCSRInterface& graph) const {
+    auto expr0 =
+        gs::make_filter(Query0expr0(), gs::PropertySelector<LabelKey>("label"));
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, std::array<label_id_t, 2>{0, 2}, std::move(expr0));
+
+    auto edge_expand_opt0 = gs::make_edge_expand_multie_opt<
+        label_id_t, std::tuple<grape::EmptyType>, std::tuple<double>,
+        std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>,
+        std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>>(
+        gs::Direction::Out,
+        std::array<std::array<label_id_t, 3>, 6>{
+            std::array<label_id_t, 3>{0, 1, 0},
+            std::array<label_id_t, 3>{2, 1, 5},
+            std::array<label_id_t, 3>{0, 1, 2},
+            std::array<label_id_t, 3>{0, 1, 3},
+            std::array<label_id_t, 3>{2, 0, 4},
+            std::array<label_id_t, 3>{0, 1, 1}},
+        std::tuple{PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<double>>{"rating"},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{}});
+    auto ctx1 =
+        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+            graph, std::move(ctx0), std::move(edge_expand_opt0));
+
+    auto get_v_opt1 = make_getv_opt(
+        gs::VOpt::End,
+        std::array<label_id_t, 2>{(label_id_t) 0, (label_id_t) 1});
+    auto ctx2 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx1), std::move(get_v_opt1));
+    auto ctx3 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx2),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<grape::EmptyType>("")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<grape::EmptyType>("")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
+                       gs::PropertySelector<grape::EmptyType>(""))});
+    return Engine::Sink(graph, ctx3, std::array<int32_t, 3>{0, 1, 2});
+  }
+
+  // Wrapper query function for query class
+  bool DoQuery(gs::GraphDBSession& sess, Decoder& decoder,
+               Encoder& encoder) override {
+    // decoding params from decoder, and call real query func
+
+    gs::MutableCSRInterface graph(sess);
+    auto res = Query(graph);
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    if (!res_str.empty()) {
+      encoder.put_string_view(res_str);
+    }
+    return true;
+  }
+  // private members
+ private:
+};
 }  // namespace gs
 #endif  // TESTS_HQPS_MATCH_QUERY_H_
