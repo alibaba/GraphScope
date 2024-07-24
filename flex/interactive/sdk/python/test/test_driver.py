@@ -396,6 +396,24 @@ class TestDriver(unittest.TestCase):
         with self._driver.getNeo4jSession() as session:
             result = session.run("CALL test_procedure();")
             print("call procedure result: ", result)
+    
+    def callPrcedureWithServiceStop(self):
+        # stop service
+        print("stop service: ")
+        stop_res = self._sess.stop_service()
+        assert stop_res.is_ok()
+        # call procedure on stopped service should raise exception
+        with self._driver.getNeo4jSession() as session:
+            with self.assertRaises(Exception) as context:
+                result = session.run("CALL test_procedure();")
+        # start service
+        print("start service: ")
+        start_res = self._sess.start_service(
+            start_service_request=StartServiceRequest(graph_id=self._graph_id)
+        )
+        assert start_res.is_ok()
+        # wait 5 seconds
+        time.sleep(5)
 
     def callProcedureWithHttp(self):
         req = QueryRequest(

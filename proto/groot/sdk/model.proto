@@ -31,6 +31,7 @@ message OperationPb {
 message OperationBatchPb {
   int64 latestSnapshotId = 1;
   repeated OperationPb operations = 2;
+  string traceId = 3;
 }
 
 message LogEntryPb {
@@ -102,6 +103,7 @@ message DdlRequestPb {
 
 message DdlRequestBatchPb {
   repeated DdlRequestPb ddlRequests = 1;
+  string traceId = 2;
 }
 
 message DdlOperationPb {
