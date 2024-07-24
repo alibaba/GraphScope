@@ -25,10 +25,9 @@ import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.StoredProcedure;
-import com.alibaba.graphscope.interactive.client.impl.DefaultSession;
 import com.alibaba.graphscope.interactive.client.Session;
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.client.Driver;
+import com.alibaba.graphscope.interactive.client.impl.DefaultSession;
 import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;

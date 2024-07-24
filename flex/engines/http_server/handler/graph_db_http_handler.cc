@@ -314,7 +314,6 @@ class stored_proc_handler : public StoppableHandler {
  private:
   query_dispatcher dispatcher_;
   std::vector<executor_ref> executor_refs_;
-  bool is_cancelled_;
 #ifdef HAVE_OPENTELEMETRY_CPP
   opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
       total_counter_;

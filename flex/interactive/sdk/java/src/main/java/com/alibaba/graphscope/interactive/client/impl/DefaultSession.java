@@ -145,8 +145,16 @@ public class DefaultSession implements Session {
         return new DefaultSession(adminUri, null, config);
     }
 
+    public static DefaultSession newInstance(String adminUri) {
+        return new DefaultSession(adminUri, null, new Config.ConfigBuilder().build());
+    }
+
     public static DefaultSession newInstance(String adminUri, String storedProcUri, Config config) {
         return new DefaultSession(adminUri, storedProcUri, config);
+    }
+
+    public static DefaultSession newInstance(String adminUri, String storedProcUri) {
+        return new DefaultSession(adminUri, storedProcUri, new Config.ConfigBuilder().build());
     }
 
     /**
