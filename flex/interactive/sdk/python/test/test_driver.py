@@ -32,7 +32,11 @@ class TestDriver(unittest.TestCase):
 
     def setUp(self):
         # get endpoint from environment variable INTERACTIVE_ADMIN_ENDPOINT
-        self._driver = Driver()
+        self._endpoint = os.getenv("INTERACTIVE_ADMIN_ENDPOINT")
+        if self._endpoint is None:
+            self._endpoint = "http://localhost:7777"
+        print("endpoint: ", self._endpoint)
+        self._driver = Driver(self._endpoint)
         self._sess = self._driver.getDefaultSession()
         self._gremlin_client = self._driver.getGremlinClient()
         self._graph_id = None

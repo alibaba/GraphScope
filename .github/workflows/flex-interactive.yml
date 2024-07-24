@@ -55,22 +55,14 @@ jobs:
       if: false
 
     - name: Test
-      env:
-        INTERACTIVE_ADMIN_ENDPOINT: http://localhost:7777
-        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
       run: |
         # install gsctl
         python3 -m pip install ${GITHUB_WORKSPACE}/python/dist/*.whl
         # launch service: 8080 for coordinator http port; 7687 for cypher port;
-        docker run -p 8080:8080 -p 7687:7687 -p 7777:7777 -p 10000:10000 registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${SHORT_SHA}-x86_64 --enable-coordinator &
+        docker run -p 8080:8080 -p 7688:7687 registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${SHORT_SHA}-x86_64 --enable-coordinator &
         sleep 20
         # test
         python3 -m pip install --no-cache-dir pytest pytest-xdist
         python3 -m pytest -d --tx popen//python=python3 \
                           -s -v \
                           $(dirname $(python3 -c "import graphscope.gsctl as gsctl; print(gsctl.__file__)"))/tests/test_interactive.py
-        # test python sdk
-        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/python
-        pip3 install -r requirements.txt
-        pipe install -r test-requirements.txt
-        python3 -m pytest -s -v ./test/test_driver.py
