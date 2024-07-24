@@ -293,7 +293,11 @@ jobs:
         sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
       
     - name: Let compiler use latest interactive java sdk
+      env:
+        HOME: /home/graphscope/
       run: |
+        . /home/graphscope/.graphscope_env
+        . /home/graphscope/.cargo/env
         # replace the <interactive.sdk.version>0.4</interactive.sdk.version> with the latest version in flex/interactive/sdk/java/pom.xml
         sdk_version=$(grep -oPm1 "(?<=<version>)[^<]+" ${GITHUB_WORKSPACE}/flex/interactive/sdk/java/pom.xml)
         sed -i "s/<interactive.sdk.version>.*<\/interactive.sdk.version>/<interactive.sdk.version>${sdk_version}<\/interactive.sdk.version>/" ${GITHUB_WORKSPACE}/interactive_engine/pom.xml
