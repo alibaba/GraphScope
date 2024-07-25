@@ -31,8 +31,8 @@ class TestDriver(unittest.TestCase):
     """Test usage of driver"""
 
     def setUp(self):
-        # get endpoint from environment variable gs_interactive_ENDPOINT
-        self._endpoint = os.getenv("gs_interactive_ENDPOINT")
+        # get endpoint from environment variable INTERACTIVE_ADMIN_ENDPOINT
+        self._endpoint = os.getenv("INTERACTIVE_ADMIN_ENDPOINT")
         if self._endpoint is None:
             self._endpoint = "http://localhost:7777"
         print("endpoint: ", self._endpoint)
