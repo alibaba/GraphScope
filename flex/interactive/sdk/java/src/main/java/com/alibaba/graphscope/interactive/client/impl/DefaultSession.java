@@ -1064,12 +1064,7 @@ public class DefaultSession implements Session {
                     response = call.execute();
                 }
             } else {
-                response =
-                        this.queryApi
-                                .getApiClient()
-                                .getHttpClient()
-                                .newCall(builder.build())
-                                .execute();
+                response = call.execute();
             }
             if (response.code() != 200) {
                 return Result.error("fail to call procedure, " + response);
