@@ -18,7 +18,7 @@
 #include "stdlib.h"
 
 #include "flex/engines/http_server/codegen_proxy.h"
-#include "flex/engines/http_server/service/hqps_service.h"
+#include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/otel/otel.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
@@ -64,7 +64,7 @@ void blockSignal(int sig) {
 }
 
 // When graph_schema is not specified, codegen proxy will use the running graph
-// schema in hqps_service
+// schema in graph_db_service
 void init_codegen_proxy(const bpo::variables_map& vm,
                         const std::string& engine_config_file,
                         const std::string& graph_schema_file = "") {
@@ -203,6 +203,7 @@ int main(int argc, char** argv) {
   service_config.start_admin_service = vm["enable-admin-service"].as<bool>();
   service_config.start_compiler = vm["start-compiler"].as<bool>();
   service_config.memory_level = vm["memory-level"].as<unsigned>();
+  service_config.enable_adhoc_handler = true;
 
   auto& db = gs::GraphDB::get();
 
@@ -266,8 +267,8 @@ int main(int argc, char** argv) {
     }
   }
 
-  server::HQPSService::get().init(service_config);
-  server::HQPSService::get().run_and_wait_for_exit();
+  server::GraphDBService::get().init(service_config);
+  server::GraphDBService::get().run_and_wait_for_exit();
 
 #ifdef HAVE_OPENTELEMETRY_CPP
   otel::cleanUpTracer();

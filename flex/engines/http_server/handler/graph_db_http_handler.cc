@@ -16,8 +16,8 @@
 #include "flex/engines/http_server/handler/graph_db_http_handler.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/executor_group.actg.h"
+#include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/options.h"
-#include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/types.h"
 #include "flex/otel/otel.h"
 
@@ -125,7 +125,7 @@ namespace server {
 bool is_running_graph(const seastar::sstring& graph_id) {
   std::string graph_id_str(graph_id.data(), graph_id.size());
   auto running_graph_res =
-      HQPSService::get().get_metadata_store()->GetRunningGraph();
+      GraphDBService::get().get_metadata_store()->GetRunningGraph();
   if (!running_graph_res.ok()) {
     LOG(ERROR) << "Failed to get running graph: "
                << running_graph_res.status().error_message();
@@ -535,13 +535,14 @@ class adhoc_query_handler : public StoppableHandler {
 
 graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
                                              int32_t shard_num,
-                                             bool enable_hqps_handlers)
+                                             bool enable_adhoc_handlers)
     : http_port_(http_port),
-      enable_hqps_handlers_(enable_hqps_handlers),
+      enable_adhoc_handlers_(enable_adhoc_handlers),
       running_(false),
       actors_running_(true) {
-  graph_db_handlers_.resize(shard_num);
-  if (enable_hqps_handlers_) {
+  current_graph_query_handlers_.resize(shard_num);
+  all_graph_query_handlers_.resize(shard_num);
+  if (enable_adhoc_handlers_) {
     adhoc_query_handlers_.resize(shard_num);
   }
 }
@@ -563,30 +564,31 @@ bool graph_db_http_handler::is_actors_running() const {
 }
 
 seastar::future<> graph_db_http_handler::stop_query_actors() {
-  if (enable_hqps_handlers_.load()) {
-    // Only cancel the hqps-related actors
-    return graph_db_handlers_[hiactor::local_shard_id()]
-        ->stop()
-        .then([this] {
-          LOG(INFO) << "Cancelled ic scope";
+  return current_graph_query_handlers_[hiactor::local_shard_id()]
+      ->stop()
+      .then([this] {
+        return all_graph_query_handlers_[hiactor::local_shard_id()]->stop();
+      })
+      .then([this] {
+        if (enable_adhoc_handlers_.load()) {
           return adhoc_query_handlers_[hiactor::local_shard_id()]->stop();
-        })
-        .then([this] {
-          LOG(INFO) << "Cancelled proc scope";
-          actors_running_.store(false);
+        } else {
           return seastar::make_ready_future<>();
-        });
-  } else {
-    return seastar::make_ready_future<>();
-  }
+        }
+      })
+      .then([this] {
+        actors_running_.store(false);
+        return seastar::make_ready_future<>();
+      });
 }
 
 void graph_db_http_handler::start_query_actors() {
-  if (enable_hqps_handlers_.load()) {
-    graph_db_handlers_[hiactor::local_shard_id()]->start();
+  current_graph_query_handlers_[hiactor::local_shard_id()]->start();
+  all_graph_query_handlers_[hiactor::local_shard_id()]->start();
+  if (enable_adhoc_handlers_.load()) {
     adhoc_query_handlers_[hiactor::local_shard_id()]->start();
-    actors_running_.store(true);
   }
+  actors_running_.store(true);
 }
 
 void graph_db_http_handler::start() {
@@ -617,19 +619,24 @@ void graph_db_http_handler::stop() {
 
 seastar::future<> graph_db_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
-    // Create handlers
-    auto graph_db_handler =
+    // matches /v1/graph/current/query
+    current_graph_query_handlers_[hiactor::local_shard_id()] =
         new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
                                 shard_query_concurrency);
-    graph_db_handlers_[hiactor::local_shard_id()] = graph_db_handler;
     r.put(seastar::httpd::operation_type::POST, "/v1/graph/current/query",
-          graph_db_handler);
-    auto rule_proc = new seastar::httpd::match_rule(graph_db_handler);
+          current_graph_query_handlers_[hiactor::local_shard_id()]);
+
+    // matches /v1/graph/{graph_id}/query
+    all_graph_query_handlers_[hiactor::local_shard_id()] =
+        new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
+                                shard_query_concurrency);
+    auto rule_proc = new seastar::httpd::match_rule(
+        all_graph_query_handlers_[hiactor::local_shard_id()]);
     rule_proc->add_str("/v1/graph")
         .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
         .add_str("/query");
     r.add(rule_proc, seastar::httpd::operation_type::POST);
-    if (enable_hqps_handlers_.load()) {
+    if (enable_adhoc_handlers_.load()) {
       auto adhoc_query_handler_ =
           new adhoc_query_handler(ic_adhoc_group_id, max_group_id,
                                   group_inc_step, shard_adhoc_concurrency);
