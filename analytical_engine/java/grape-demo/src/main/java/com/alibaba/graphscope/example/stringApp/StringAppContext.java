@@ -57,9 +57,7 @@ public class StringAppContext
         for (long i = 0; i < vertexData.size(); ++i) {
             vertex.setValue(i);
             StdString string = vertexData.get(vertex);
-            // string.fromJavaString("{\"attr\":{\"attr\":{\"label\":\"phone_num\"}},\"matches\":[{\"isKeep\":false,\"iteration\":1,\"matched\":[\"109=0=5000\",\"198=0=5008\",\"312=0=100\"],\"nextRound\":[5001],\"startVertex\":\"312\"},{\"isKeep\":false,\"iteration\":1,\"matched\":[\"109=0=5000\",\"233=0=100\"],\"nextRound\":[5001],\"startVertex\":\"233\"}]}");
-            string.fromJavaString(
-                    "eyJhdHRyIjp7ImF0dHIiOnsibGFiZWwiOiJwaG9uZV9udW0ifX0sIm1hdGNoZXMiOlt7ImlzS2VlcCI6ZmFsc2UsIml0ZXJhdGlvbiI6MSwibWF0Y2hlZCI6WyIxMDk9MD01MDAwIiwiMTk4PTA9NTAwOCIsIjMxMj0wPTEwMCJdLCJuZXh0Um91bmQiOls1MDAxXSwic3RhcnRWZXJ0ZXgiOiIzMTIifSx7ImlzS2VlcCI6ZmFsc2UsIml0ZXJhdGlvbiI6MSwibWF0Y2hlZCI6WyIxMDk9MD01MDAwIiwiMjMzPTA9MTAwIl0sIm5leHRSb3VuZCI6WzUwMDFdLCJzdGFydFZlcnRleCI6IjIzMyJ9XX0=eCI6IjI2OCJ9XX0=ZSwiaXRlcmF0aW9uIjoxLCJtYXRjaGVkIjpbIjE4NT0wPTUwMDgiLCIyOTU9MD0xMDAiXSwibmV4dFJvdW5kIjpbXSwic3RhcnRWZXJ0ZXgiOiIyOTUifV19cnRleCI6IjMzNCJ9XX0=");
+            string.fromJavaString("vertex: " + i);
         }
         logger.info("Finish out");
     }
