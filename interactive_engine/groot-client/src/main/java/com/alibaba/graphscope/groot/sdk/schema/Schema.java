@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.sdk.schema;
 
+import com.alibaba.graphscope.groot.sdk.RequestOptions;
 import com.alibaba.graphscope.proto.groot.*;
 import com.alibaba.graphscope.proto.groot.BatchSubmitRequest.DDLRequest;
 
@@ -108,8 +109,23 @@ public class Schema {
         return new Builder();
     }
 
+    public BatchSubmitRequest toProto(RequestOptions options) {
+        if (options == null) {
+            return toProto();
+        }
+        BatchSubmitRequest.Builder builder = BatchSubmitRequest.newBuilder();
+        builder.setRequestOptions(options.toWriteRequest());
+        buildProto(builder);
+        return builder.build();
+    }
+
     public BatchSubmitRequest toProto() {
         BatchSubmitRequest.Builder builder = BatchSubmitRequest.newBuilder();
+        buildProto(builder);
+        return builder.build();
+    }
+
+    private void buildProto(BatchSubmitRequest.Builder builder) {
         for (VertexLabel label : vertexLabels) {
             CreateVertexTypeRequest.Builder typeBuilder = CreateVertexTypeRequest.newBuilder();
             typeBuilder.setTypeDef(label.toProto());
@@ -172,7 +188,6 @@ public class Schema {
                 builder.addValue(ddlRequestBuilder);
             }
         }
-        return builder.build();
     }
 
     public static class Builder {

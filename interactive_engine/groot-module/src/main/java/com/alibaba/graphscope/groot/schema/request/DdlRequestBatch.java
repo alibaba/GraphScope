@@ -26,8 +26,11 @@ import java.util.List;
 public class DdlRequestBatch implements Iterable<DdlRequestBlob> {
     private List<DdlRequestBlob> ddlRequestBlobs;
 
-    private DdlRequestBatch(List<DdlRequestBlob> ddlRequestBlobs) {
+    private String traceId;
+
+    private DdlRequestBatch(List<DdlRequestBlob> ddlRequestBlobs, String traceId) {
         this.ddlRequestBlobs = ddlRequestBlobs;
+        this.traceId = traceId;
     }
 
     public static DdlRequestBatch parseProto(DdlRequestBatchPb proto) {
@@ -36,15 +39,22 @@ public class DdlRequestBatch implements Iterable<DdlRequestBlob> {
         for (DdlRequestPb ddlRequestPb : ddlRequestPbs) {
             ddlRequestBlobs.add(DdlRequestBlob.parseProto(ddlRequestPb));
         }
-        return new DdlRequestBatch(ddlRequestBlobs);
+        return new DdlRequestBatch(ddlRequestBlobs, proto.getTraceId());
     }
 
     public DdlRequestBatchPb toProto() {
         DdlRequestBatchPb.Builder builder = DdlRequestBatchPb.newBuilder();
+        if (this.traceId != null) {
+            builder.setTraceId(traceId);
+        }
         for (DdlRequestBlob blob : ddlRequestBlobs) {
             builder.addDdlRequests(blob.toProto());
         }
         return builder.build();
+    }
+
+    public String getTraceId() {
+        return traceId;
     }
 
     @Override
@@ -70,9 +80,11 @@ public class DdlRequestBatch implements Iterable<DdlRequestBlob> {
 
     public static class Builder {
         private List<DdlRequestBlob> ddlRequestBlobs;
+        private String traceId;
 
         private Builder() {
             this.ddlRequestBlobs = new ArrayList<>();
+            this.traceId = null;
         }
 
         public Builder addDdlRequest(AbstractDdlRequest ddlRequest) {
@@ -80,8 +92,13 @@ public class DdlRequestBatch implements Iterable<DdlRequestBlob> {
             return this;
         }
 
+        public Builder setTraceId(String traceId) {
+            this.traceId = traceId;
+            return this;
+        }
+
         public DdlRequestBatch build() {
-            return new DdlRequestBatch(new ArrayList<>(ddlRequestBlobs));
+            return new DdlRequestBatch(new ArrayList<>(ddlRequestBlobs), traceId);
         }
     }
 }
