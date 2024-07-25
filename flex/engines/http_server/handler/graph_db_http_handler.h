@@ -52,12 +52,19 @@ class StoppableHandler : public seastar::httpd::handler_base {
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
     return hiactor::actor_engine()
         .cancel_scope_request(builder, false)
-        .then([this, func] {
-          LOG(INFO) << "Cancel IC scope successfully!";
-          // clear the actor refs
-          // executor_refs_.clear();
-          is_cancelled_ = true;
-          func();
+        .then_wrapped([this, func](auto&& fut) {
+          try {
+            fut.get();
+            LOG(INFO) << "Cancel IC scope successfully!";
+            // clear the actor refs
+            // executor_refs_.clear();
+            is_cancelled_ = true;
+            func();
+          } catch (const std::exception& e) {
+            // In case the scope is already cancelled, we should ignore the
+            // exception.
+            LOG(INFO) << "Failed to cancel IC scope: " << e.what();
+          }
           return seastar::make_ready_future<>();
         });
   }
