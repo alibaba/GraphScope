@@ -622,8 +622,8 @@ seastar::future<> graph_db_http_handler::set_routes() {
         new stored_proc_handler(ic_query_group_id, max_group_id, group_inc_step,
                                 shard_query_concurrency);
     graph_db_handlers_[hiactor::local_shard_id()] = graph_db_handler;
-    r.put(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/v1/graph/current/query"), graph_db_handler);
+    r.put(seastar::httpd::operation_type::POST, "/v1/graph/current/query",
+          graph_db_handler);
     auto rule_proc = new seastar::httpd::match_rule(graph_db_handler);
     rule_proc->add_str("/v1/graph")
         .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
