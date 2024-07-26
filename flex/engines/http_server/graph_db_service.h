@@ -21,7 +21,7 @@
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/http_server/actor_system.h"
 #include "flex/engines/http_server/handler/admin_http_handler.h"
-#include "flex/engines/http_server/handler/hqps_http_handler.h"
+#include "flex/engines/http_server/handler/graph_db_http_handler.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/storages/metadata/metadata_store_factory.h"
@@ -48,6 +48,7 @@ struct ServiceConfig {
   uint32_t query_port;
   uint32_t shard_num;
   uint32_t memory_level;
+  bool enable_adhoc_handler;  // Whether to enable adhoc handler.
   bool dpdk_mode;
   bool enable_thread_resource_pool;
   unsigned external_thread_num;
@@ -65,15 +66,14 @@ struct ServiceConfig {
   ServiceConfig();
 };
 
-class HQPSService {
+class GraphDBService {
  public:
   static const std::string DEFAULT_GRAPH_NAME;
   static const std::string DEFAULT_INTERACTIVE_HOME;
   static const std::string COMPILER_SERVER_CLASS_NAME;
-  static HQPSService& get();
-  ~HQPSService();
+  static GraphDBService& get();
+  ~GraphDBService();
 
-  // only start the query service.
   void init(const ServiceConfig& config);
 
   const ServiceConfig& get_service_config() const;
@@ -113,7 +113,7 @@ class HQPSService {
   bool check_compiler_ready() const;
 
  private:
-  HQPSService() = default;
+  GraphDBService() = default;
 
   std::string find_interactive_class_path();
   // Insert graph meta into metadata store.
@@ -124,7 +124,7 @@ class HQPSService {
  private:
   std::unique_ptr<actor_system> actor_sys_;
   std::unique_ptr<admin_http_handler> admin_hdl_;
-  std::unique_ptr<hqps_http_handler> query_hdl_;
+  std::unique_ptr<graph_db_http_handler> query_hdl_;
   std::atomic<bool> running_{false};
   std::atomic<bool> initialized_{false};
   std::atomic<uint64_t> start_time_{0};

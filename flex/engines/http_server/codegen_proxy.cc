@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "flex/engines/http_server/codegen_proxy.h"
-#include "flex/engines/http_server/service/hqps_service.h"
+#include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 
 namespace server {
@@ -70,10 +70,10 @@ seastar::future<std::pair<int32_t, std::string>> CodegenProxy::DoGen(
 
   auto cur_graph_schema_path = default_graph_schema_path_;
   if (cur_graph_schema_path.empty()) {
-    auto& hqps_service = server::HQPSService::get();
-    if (hqps_service.get_metadata_store()) {
+    auto& graph_db_service = server::GraphDBService::get();
+    if (graph_db_service.get_metadata_store()) {
       auto running_graph_res =
-          hqps_service.get_metadata_store()->GetRunningGraph();
+          graph_db_service.get_metadata_store()->GetRunningGraph();
       if (!running_graph_res.ok()) {
         return seastar::make_exception_future<std::pair<int32_t, std::string>>(
             std::runtime_error("Get running graph failed"));

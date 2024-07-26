@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "flex/engines/http_server/service/hqps_service.h"
+#include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 namespace server {
@@ -37,26 +37,27 @@ ServiceConfig::ServiceConfig()
       admin_port(DEFAULT_ADMIN_PORT),
       query_port(DEFAULT_QUERY_PORT),
       shard_num(DEFAULT_SHARD_NUM),
+      enable_adhoc_handler(false),
       dpdk_mode(false),
       enable_thread_resource_pool(true),
       external_thread_num(2),
-      start_admin_service(true),
+      start_admin_service(false),
       start_compiler(false),
-      enable_gremlin(true),
-      enable_bolt(true),
+      enable_gremlin(false),
+      enable_bolt(false),
       metadata_store_type_(gs::MetadataStoreType::kLocalFile) {}
 
-const std::string HQPSService::DEFAULT_GRAPH_NAME = "modern_graph";
-const std::string HQPSService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";
-const std::string HQPSService::COMPILER_SERVER_CLASS_NAME =
+const std::string GraphDBService::DEFAULT_GRAPH_NAME = "modern_graph";
+const std::string GraphDBService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";
+const std::string GraphDBService::COMPILER_SERVER_CLASS_NAME =
     "com.alibaba.graphscope.GraphServer";
 
-HQPSService& HQPSService::get() {
-  static HQPSService instance;
+GraphDBService& GraphDBService::get() {
+  static GraphDBService instance;
   return instance;
 }
 
-void HQPSService::init(const ServiceConfig& config) {
+void GraphDBService::init(const ServiceConfig& config) {
   if (initialized_.load(std::memory_order_relaxed)) {
     std::cerr << "High QPS service has been already initialized!" << std::endl;
     return;
@@ -64,8 +65,8 @@ void HQPSService::init(const ServiceConfig& config) {
   actor_sys_ = std::make_unique<actor_system>(
       config.shard_num, config.dpdk_mode, config.enable_thread_resource_pool,
       config.external_thread_num, [this]() { set_exit_state(); });
-  query_hdl_ =
-      std::make_unique<hqps_http_handler>(config.query_port, config.shard_num);
+  query_hdl_ = std::make_unique<graph_db_http_handler>(
+      config.query_port, config.shard_num, config.enable_adhoc_handler);
   if (config.start_admin_service) {
     admin_hdl_ = std::make_unique<admin_http_handler>(config.admin_port);
   }
@@ -100,7 +101,7 @@ void HQPSService::init(const ServiceConfig& config) {
   }
 }
 
-HQPSService::~HQPSService() {
+GraphDBService::~GraphDBService() {
   if (actor_sys_) {
     actor_sys_->terminate();
   }
@@ -110,38 +111,39 @@ HQPSService::~HQPSService() {
   }
 }
 
-const ServiceConfig& HQPSService::get_service_config() const {
+const ServiceConfig& GraphDBService::get_service_config() const {
   return service_config_;
 }
 
-bool HQPSService::is_initialized() const {
+bool GraphDBService::is_initialized() const {
   return initialized_.load(std::memory_order_relaxed);
 }
 
-bool HQPSService::is_running() const {
+bool GraphDBService::is_running() const {
   return running_.load(std::memory_order_relaxed);
 }
 
-uint16_t HQPSService::get_query_port() const {
+uint16_t GraphDBService::get_query_port() const {
   if (query_hdl_) {
     return query_hdl_->get_port();
   }
   return 0;
 }
 
-uint64_t HQPSService::get_start_time() const {
+uint64_t GraphDBService::get_start_time() const {
   return start_time_.load(std::memory_order_relaxed);
 }
 
-void HQPSService::reset_start_time() {
+void GraphDBService::reset_start_time() {
   start_time_.store(gs::GetCurrentTimeStamp());
 }
 
-std::shared_ptr<gs::IGraphMetaStore> HQPSService::get_metadata_store() const {
+std::shared_ptr<gs::IGraphMetaStore> GraphDBService::get_metadata_store()
+    const {
   return metadata_store_;
 }
 
-gs::Result<seastar::sstring> HQPSService::service_status() {
+gs::Result<seastar::sstring> GraphDBService::service_status() {
   if (!is_initialized()) {
     return gs::Result<seastar::sstring>(
         gs::StatusCode::OK, "High QPS service has not been inited!", "");
@@ -154,7 +156,7 @@ gs::Result<seastar::sstring> HQPSService::service_status() {
       seastar::sstring("High QPS service is running ..."));
 }
 
-void HQPSService::run_and_wait_for_exit() {
+void GraphDBService::run_and_wait_for_exit() {
   if (!is_initialized()) {
     std::cerr << "High QPS service has not been inited!" << std::endl;
     return;
@@ -181,16 +183,16 @@ void HQPSService::run_and_wait_for_exit() {
   actor_sys_->terminate();
 }
 
-void HQPSService::set_exit_state() { running_.store(false); }
+void GraphDBService::set_exit_state() { running_.store(false); }
 
-bool HQPSService::is_actors_running() const {
+bool GraphDBService::is_actors_running() const {
   if (query_hdl_) {
     return query_hdl_->is_actors_running();
   } else
     return false;
 }
 
-seastar::future<> HQPSService::stop_query_actors() {
+seastar::future<> GraphDBService::stop_query_actors() {
   std::unique_lock<std::mutex> lock(mtx_);
   if (query_hdl_) {
     return query_hdl_->stop_query_actors();
@@ -201,7 +203,7 @@ seastar::future<> HQPSService::stop_query_actors() {
   }
 }
 
-void HQPSService::start_query_actors() {
+void GraphDBService::start_query_actors() {
   std::unique_lock<std::mutex> lock(mtx_);
   if (query_hdl_) {
     query_hdl_->start_query_actors();
@@ -211,7 +213,7 @@ void HQPSService::start_query_actors() {
   }
 }
 
-bool HQPSService::check_compiler_ready() const {
+bool GraphDBService::check_compiler_ready() const {
   if (service_config_.start_compiler) {
     if (service_config_.enable_gremlin) {
       if (check_port_occupied(service_config_.gremlin_port)) {
@@ -233,7 +235,7 @@ bool HQPSService::check_compiler_ready() const {
   return true;
 }
 
-bool HQPSService::start_compiler_subprocess(
+bool GraphDBService::start_compiler_subprocess(
     const std::string& graph_schema_path) {
   if (!service_config_.start_compiler) {
     return true;
@@ -292,7 +294,7 @@ bool HQPSService::start_compiler_subprocess(
   return false;
 }
 
-bool HQPSService::stop_compiler_subprocess() {
+bool GraphDBService::stop_compiler_subprocess() {
   if (compiler_process_.running()) {
     LOG(INFO) << "Terminate previous compiler process with pid: "
               << compiler_process_.id();
@@ -325,7 +327,7 @@ bool HQPSService::stop_compiler_subprocess() {
   return true;
 }
 
-std::string HQPSService::find_interactive_class_path() {
+std::string GraphDBService::find_interactive_class_path() {
   std::string interactive_home = DEFAULT_INTERACTIVE_HOME;
   if (std::getenv("INTERACTIVE_HOME")) {
     // try to use DEFAULT_INTERACTIVE_HOME
@@ -375,7 +377,7 @@ std::string HQPSService::find_interactive_class_path() {
   return "";
 }
 
-gs::GraphId HQPSService::insert_default_graph_meta() {
+gs::GraphId GraphDBService::insert_default_graph_meta() {
   if (!metadata_store_) {
     LOG(FATAL) << "Metadata store has not been inited!" << std::endl;
   }
