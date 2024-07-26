@@ -29,7 +29,7 @@ class HeartBeatChecker {
  public:
   static constexpr int32_t DEFAULT_HEART_BEAT_INTERVAL = 2;  // 2s
   HeartBeatChecker(
-      std::vector<httplib::Client>& clients,
+      //   std::vector<httplib::Client>& clients,
       const std::vector<std::pair<std::string, uint16_t>>& endpoints,
       int32_t heart_beat_interval = DEFAULT_HEART_BEAT_INTERVAL);
   ~HeartBeatChecker();
@@ -45,7 +45,7 @@ class HeartBeatChecker {
 
   std::atomic<bool> running_;
   int32_t heart_beat_interval_;
-  std::vector<httplib::Client>& clients_;
+  //   std::vector<httplib::Client>& clients_;
   const std::vector<std::pair<std::string, uint16_t>>& endpoints_;
   std::vector<bool> endpoint_status_;  // to mark whether the endpoint is alive
   std::thread heartbeat_thread_;
@@ -89,20 +89,18 @@ class HttpProxy {
   seastar::future<HttpForwardingResponses> do_send_request(
       const std::string& path, const std::string& method,
       const std::string& body, const seastar_http_headers_t& headers,
-      std::vector<httplib::Client>& clients, size_t ind,
-      HttpForwardingResponses&& responses);
+      size_t ind, HttpForwardingResponses&& responses);
 
   seastar::future<HttpForwardingResponses> do_send_requests(
       const std::string& path, const std::string& method,
-      const std::string& body, const seastar_http_headers_t& headers,
-      std::vector<httplib::Client>& clients);
+      const std::string& body, const seastar_http_headers_t& headers);
 
   std::atomic<bool> initialized_;
   bool enable_heart_beat_check_;
   bool hang_until_success_;
   std::vector<std::pair<std::string, uint16_t>> endpoints_;  // ip and ports
 
-  std::vector<httplib::Client> clients_;
+  //   std::vector<httplib::Client> clients_;
 
   std::unique_ptr<HeartBeatChecker> heartbeat_checker_;
 };

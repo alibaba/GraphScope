@@ -112,6 +112,13 @@ cronjob:
   podAnnotations: {}
   podLabels: {}
 
+nginx:
+  image:
+    registry: reg.docker.alibaba-inc.com
+    repository: "7brs/interactive"
+    tag: "nginx-debug"
+    pullPolicy: IfNotPresent
+
 ## GraphScope Interactive parameters
 ##
 primary:
