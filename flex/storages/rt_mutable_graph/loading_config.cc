@@ -607,8 +607,10 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
                ++it) {
             // override previous settings.
             auto key = it->first.as<std::string>();
-            VLOG(1) << "Got metadata key: " << key
-                    << " value: " << it->second.as<std::string>();
+            if (key != reader_options::NULL_VALUES) {
+              VLOG(1) << "Got metadata key: " << key
+                      << " value: " << it->second.as<std::string>();
+            }
             if (reader_options::CSV_META_KEY_WORDS.find(key) !=
                 reader_options::CSV_META_KEY_WORDS.end()) {
               if (key == reader_options::BATCH_SIZE_KEY) {
@@ -618,6 +620,10 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
                 auto block_size = parse_block_size(block_size_str);
                 load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
                     std::to_string(block_size);
+              } else if (key == reader_options::NULL_VALUES) {
+                // special case for null values
+                auto null_values = it->second.as<std::vector<std::string>>();
+                load_config.null_values_ = null_values;
               } else {
                 load_config.metadata_[key] = it->second.as<std::string>();
               }
@@ -842,6 +848,10 @@ bool LoadingConfig::GetIsQuoting() const {
 bool LoadingConfig::GetIsDoubleQuoting() const {
   auto str = metadata_.at(reader_options::DOUBLE_QUOTE);
   return str == "true" || str == "True" || str == "TRUE";
+}
+
+const std::vector<std::string>& LoadingConfig::GetNullValues() const {
+  return null_values_;
 }
 
 int32_t LoadingConfig::GetBatchSize() const {
