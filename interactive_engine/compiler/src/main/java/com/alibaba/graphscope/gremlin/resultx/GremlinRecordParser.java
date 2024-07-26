@@ -16,10 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.resultx;
 
-import com.alibaba.graphscope.common.ir.type.ArbitraryArrayType;
-import com.alibaba.graphscope.common.ir.type.ArbitraryMapType;
-import com.alibaba.graphscope.common.ir.type.GraphLabelType;
-import com.alibaba.graphscope.common.ir.type.GraphPathType;
+import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.common.result.Utils;
 import com.alibaba.graphscope.gaia.proto.Common;
@@ -33,7 +30,9 @@ import com.google.common.collect.Maps;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
+import org.apache.calcite.sql.type.MultisetSqlType;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
@@ -57,6 +56,7 @@ public class GremlinRecordParser implements RecordParser<Object> {
     @Override
     public List<Object> parseFrom(IrResult.Record record) {
         RelDataType outputType = resultSchema.outputType;
+        resetTypeCursor(outputType);
         Preconditions.checkArgument(
                 record.getColumnsCount() == outputType.getFieldCount(),
                 "column size of results "
@@ -133,9 +133,11 @@ public class GremlinRecordParser implements RecordParser<Object> {
 
     private List<Object> parseCollection(
             IrResult.Collection collection, RelDataType componentType) {
-        return collection.getCollectionList().stream()
-                .map(k -> parseElement(k, componentType))
-                .collect(Collectors.toList());
+        List<Object> results =
+                collection.getCollectionList().stream()
+                        .map(k -> parseElement(k, componentType))
+                        .collect(Collectors.toList());
+        return results;
     }
 
     private List<Object> parseCollection(
@@ -261,7 +263,9 @@ public class GremlinRecordParser implements RecordParser<Object> {
     }
 
     protected @Nullable Object parseValue(Common.Value value, @Nullable RelDataType dataType) {
-        if (dataType instanceof GraphLabelType) {
+        if (dataType instanceof InterleavedVELabelTypes) {
+            return parseValue(value, ((InterleavedVELabelTypes) dataType).next());
+        } else if (dataType instanceof GraphLabelType) {
             return Utils.parseLabelValue(value, (GraphLabelType) dataType);
         }
         switch (value.getItemCase()) {
@@ -320,6 +324,30 @@ public class GremlinRecordParser implements RecordParser<Object> {
                 // todo: support temporal types
             default:
                 throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
+        }
+    }
+
+    private void resetTypeCursor(RelDataType type) {
+        if (type.isStruct()) {
+            type.getFieldList().forEach(k -> resetTypeCursor(k.getType()));
+        } else if (type instanceof ArraySqlType || type instanceof MultisetSqlType) {
+            resetTypeCursor(type.getComponentType());
+        } else if (type instanceof MapSqlType) {
+            resetTypeCursor(type.getKeyType());
+            resetTypeCursor(type.getValueType());
+        } else if (type instanceof ArbitraryArrayType) {
+            ((ArbitraryArrayType) type).getComponentTypes().forEach(this::resetTypeCursor);
+        } else if (type instanceof ArbitraryMapType) {
+            ((ArbitraryMapType) type)
+                    .getKeyValueTypeMap()
+                    .values()
+                    .forEach(
+                            k -> {
+                                resetTypeCursor(k.getKey());
+                                resetTypeCursor(k.getValue());
+                            });
+        } else if (type instanceof InterleavedVELabelTypes) {
+            ((InterleavedVELabelTypes) type).resetCursor();
         }
     }
 }
