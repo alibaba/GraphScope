@@ -13,9 +13,10 @@ metadata:
   {{- end }}
 data:  
   nginx.conf: |  
+    events {}
     http {  
         upstream my_service_1 {  
-            server {{ include "graphscope-interactive.secondary.fullname" }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:10000;  # Replace with your actual service URL and port  
+            server  {{ include "graphscope-interactive.secondary.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:10000;  # Replace with your actual service URL and port  
         }   
 
         server {  

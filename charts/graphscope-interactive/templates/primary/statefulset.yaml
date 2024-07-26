@@ -159,7 +159,7 @@ spec:
               mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
               subPath: engine_config.yaml
         - name: nginx
-          image: {{.Values.nginx.image | quote }}
+          image: {{ include "graphscope-interactive.nginx.image" . }} 
           imagePullPolicy: {{ .Values.nginx.image.pullPolicy | quote }}
           # command: ["sleep", "infinity"]
           ports:

@@ -294,7 +294,7 @@ struct ResultsCreator {
 
 class HuoYan : public WriteAppBase {
 public:
-  static constexpr double timeout_sec = 15;
+  static constexpr double timeout_sec = 90;
   static constexpr int32_t REL_TYPE_MAX = 8; // 1 ~ 7
   HuoYan() : is_initialized_(false) {}
   ~HuoYan() {}
@@ -508,9 +508,6 @@ public:
     }
     ////////////Initialization///////////////////////////
 
-    for (size_t i = 0; i < valid_comp_vids_.size(); ++i) {
-      valid_comp_vids_[i] = false;
-    }
     results_creator_->clear();
     double cur_time_left = timeout_sec;
 
