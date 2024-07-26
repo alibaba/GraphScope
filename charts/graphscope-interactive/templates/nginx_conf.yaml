@@ -15,9 +15,15 @@ data:
   nginx.conf: |  
     events {}
     http {  
-        upstream my_service_1 {  
-            server  {{ include "graphscope-interactive.secondary.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:10000;  # Replace with your actual service URL and port  
-        }   
+        upstream my_service_1 {
+          {{- $baseName := include "graphscope-interactive.secondary.fullname" . }}  
+          {{- $replicaCount := .Values.backend.replicas }}  
+          {{- $serviceName := printf "%s.%s.svc.%s" (include "graphscope-interactive.secondary.fullname" .) .Release.Namespace .Values.clusterDomain }}  
+          {{- $port := .Values.secondary.service.queryPort }}
+          {{- range $i := until $replicaCount }}  
+            server {{ printf "%s-%d.%s:%d" $baseName (add $i 1) $serviceName $port }};
+          {{- end }}
+        }
 
         server {  
             listen 10000;  
