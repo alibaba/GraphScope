@@ -465,6 +465,12 @@ then
       --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeMultipleLongInputFormat --vfile "${test_dir}"/p2p-31.v \
       --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
       --user_app_class com.alibaba.graphscope.example.giraph.MessageAppWithUserWritable
+
+    echo "Test Giraph app user Circle App"
+    GLOG_v=10 ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.circle.CircleVertexInputFormat \
+      --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.circle.CircleEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \
+      --efile "${test_dir}"/p2p-31.e --ipc_socket /tmp/vineyard.sock --lib_path /opt/graphscope/lib/libgrape-jni.so \
+      --user_app_class com.alibaba.graphscope.example.giraph.circle.Circle
   fi
 fi
 

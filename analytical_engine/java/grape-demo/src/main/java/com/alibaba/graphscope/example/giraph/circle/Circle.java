@@ -1,11 +1,23 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
+/*
+ * Copyright 2022 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 
 package com.alibaba.graphscope.example.giraph.circle;
 
 import com.google.common.collect.Lists;
+
 import org.apache.giraph.Algorithm;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
@@ -21,29 +33,31 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Algorithm(
-        name = "Circle",
-        description = "Finds Circle"
-)
-public class Circle extends BasicComputation<LongWritable, VertexAttrWritable, LongWritable, VertexAttrWritable> {
+@Algorithm(name = "Circle", description = "Finds Circle")
+public class Circle
+        extends BasicComputation<
+                LongWritable, VertexAttrWritable, LongWritable, VertexAttrWritable> {
     private static final Logger logger = LoggerFactory.getLogger(Circle.class);
     int maxIteration = 3;
 
-    public Circle() {
-    }
+    public Circle() {}
 
     public void preSuperstep() {
         this.maxIteration = Integer.parseInt(this.getConf().get("max", "3"));
         logger.info("[preSuperstep] max is {}", this.maxIteration);
     }
 
-    public void compute(Vertex<LongWritable, VertexAttrWritable, LongWritable> vertex, Iterable<VertexAttrWritable> messages) throws IOException {
+    public void compute(
+            Vertex<LongWritable, VertexAttrWritable, LongWritable> vertex,
+            Iterable<VertexAttrWritable> messages)
+            throws IOException {
         this.maxIteration = Integer.parseInt(this.getConf().get("max", "3"));
         long superStep = this.getSuperstep();
 
         List<MsgWritable> writables = new ArrayList<MsgWritable>();
-        writables.add(new MsgWritable(Arrays.asList(1L,2L,3L), Arrays.asList(12L,23L)));
-        writables.add(new MsgWritable(Arrays.asList(4L,5L,6L), Arrays.asList(45L,56L)));
+        for (int i = 0; i < vertex.getId().get() % 5; ++i) {
+            writables.add(new MsgWritable(Arrays.asList(1L, 2L, 3L), Arrays.asList(12L, 23L)));
+        }
         vertex.setValue(new VertexAttrWritable(writables));
         vertex.voteToHalt();
     }
@@ -52,7 +66,9 @@ public class Circle extends BasicComputation<LongWritable, VertexAttrWritable, L
         VertexAttrWritable merged = new VertexAttrWritable();
 
         VertexAttrWritable mess;
-        for (Iterator var3 = messages.iterator(); var3.hasNext(); merged = this.merge(merged, mess)) {
+        for (Iterator var3 = messages.iterator();
+                var3.hasNext();
+                merged = this.merge(merged, mess)) {
             mess = (VertexAttrWritable) var3.next();
         }
 
@@ -63,15 +79,27 @@ public class Circle extends BasicComputation<LongWritable, VertexAttrWritable, L
         long superStep = this.getSuperstep();
         List<MsgWritable> nodeAttr = vdata.getVertexAttr();
         List<MsgWritable> messageAttr = message.getVertexAttr();
-        List<MsgWritable> processedMsg = (List) messageAttr.stream().peek((item) -> {
-            List<Long> vlist = item.getVertexPath();
-            this.addVertexToPath(vid, vlist);
-        }).collect(Collectors.toList());
+        List<MsgWritable> processedMsg =
+                (List)
+                        messageAttr.stream()
+                                .peek(
+                                        (item) -> {
+                                            List<Long> vlist = item.getVertexPath();
+                                            this.addVertexToPath(vid, vlist);
+                                        })
+                                .collect(Collectors.toList());
         nodeAttr.addAll(processedMsg);
-        List<MsgWritable> finalNodeAttr = (List) nodeAttr.stream().distinct().filter((item) -> {
-            List<Long> vertexPath = item.getVertexPath();
-            return this.filterPathInVertexAttr(vertexPath, superStep + 1L);
-        }).collect(Collectors.toList());
+        List<MsgWritable> finalNodeAttr =
+                (List)
+                        nodeAttr.stream()
+                                .distinct()
+                                .filter(
+                                        (item) -> {
+                                            List<Long> vertexPath = item.getVertexPath();
+                                            return this.filterPathInVertexAttr(
+                                                    vertexPath, superStep + 1L);
+                                        })
+                                .collect(Collectors.toList());
         vdata.setVertexAttr(finalNodeAttr);
     }
 
@@ -86,7 +114,6 @@ public class Circle extends BasicComputation<LongWritable, VertexAttrWritable, L
                 if (!path.subList(1, pathSize).contains(vid)) {
                     path.add(vid);
                 }
-
             }
         }
     }
@@ -111,25 +138,44 @@ public class Circle extends BasicComputation<LongWritable, VertexAttrWritable, L
             while (var5.hasNext()) {
                 Edge<LongWritable, LongWritable> edge = (Edge) var5.next();
                 long edgeId = ((LongWritable) edge.getValue()).get();
-                List<MsgWritable> finalMsgs = (List) currVertexAttr.stream().filter((path) -> {
-                    return this.meetMsgCondition(((LongWritable) vertex.getId()).get(), edgeId, path, superStep);
-                }).map((path) -> {
-                    List<Long> newEdgeSet = Lists.newArrayList(path.getEdgePath());
-                    newEdgeSet.add(edgeId);
-                    return new MsgWritable(path.getVertexPath(), newEdgeSet);
-                }).collect(Collectors.toList());
+                List<MsgWritable> finalMsgs =
+                        (List)
+                                currVertexAttr.stream()
+                                        .filter(
+                                                (path) -> {
+                                                    return this.meetMsgCondition(
+                                                            ((LongWritable) vertex.getId()).get(),
+                                                            edgeId,
+                                                            path,
+                                                            superStep);
+                                                })
+                                        .map(
+                                                (path) -> {
+                                                    List<Long> newEdgeSet =
+                                                            Lists.newArrayList(path.getEdgePath());
+                                                    newEdgeSet.add(edgeId);
+                                                    return new MsgWritable(
+                                                            path.getVertexPath(), newEdgeSet);
+                                                })
+                                        .collect(Collectors.toList());
                 if (!finalMsgs.isEmpty()) {
                     this.sendMessage(edge.getTargetVertexId(), new VertexAttrWritable(finalMsgs));
                 }
             }
         }
-
     }
 
-    private boolean meetMsgCondition(long currVertexId, long edgeIdToSendMsg, MsgWritable onePathInCurrVertex, long superStep) {
+    private boolean meetMsgCondition(
+            long currVertexId,
+            long edgeIdToSendMsg,
+            MsgWritable onePathInCurrVertex,
+            long superStep) {
         List<Long> vertexPath = onePathInCurrVertex.getVertexPath();
         List<Long> edgePath = onePathInCurrVertex.getEdgePath();
         int vertexPathSize = vertexPath.size();
-        return (long) vertexPathSize == superStep + 1L && !MsgWritable.isCircle(vertexPath) && currVertexId == (Long) vertexPath.get(vertexPathSize - 1) && !edgePath.contains(edgeIdToSendMsg);
+        return (long) vertexPathSize == superStep + 1L
+                && !MsgWritable.isCircle(vertexPath)
+                && currVertexId == (Long) vertexPath.get(vertexPathSize - 1)
+                && !edgePath.contains(edgeIdToSendMsg);
     }
 }

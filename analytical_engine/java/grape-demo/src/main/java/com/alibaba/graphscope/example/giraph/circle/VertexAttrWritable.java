@@ -1,12 +1,26 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
+/*
+ * Copyright 2022 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 
 package com.alibaba.graphscope.example.giraph.circle;
 
-import com.alibaba.graphscope.example.giraph.circle.MsgWritable;
 import com.google.common.collect.Lists;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.io.Writable;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -14,14 +28,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.io.Writable;
 
 public class VertexAttrWritable implements Writable {
     private List<MsgWritable> vertexAttr;
 
     public VertexAttrWritable() {
-        this.vertexAttr = Lists.newArrayList(new MsgWritable[]{new MsgWritable()});
+        this.vertexAttr = Lists.newArrayList(new MsgWritable[] {new MsgWritable()});
     }
 
     public VertexAttrWritable(List<MsgWritable> values) {
@@ -40,7 +52,7 @@ public class VertexAttrWritable implements Writable {
         int size = in.readInt();
         List<MsgWritable> vertexAttr = new ArrayList();
         if (size != 0) {
-            for(int i = 0; i < size; ++i) {
+            for (int i = 0; i < size; ++i) {
                 MsgWritable msgWritable = new MsgWritable();
                 msgWritable.readFields(in);
                 vertexAttr.add(msgWritable);
@@ -54,19 +66,26 @@ public class VertexAttrWritable implements Writable {
         out.writeInt(this.vertexAttr.size());
         Iterator var2 = this.vertexAttr.iterator();
 
-        while(var2.hasNext()) {
-            MsgWritable msgWritable = (MsgWritable)var2.next();
+        while (var2.hasNext()) {
+            MsgWritable msgWritable = (MsgWritable) var2.next();
             msgWritable.write(out);
         }
-
     }
 
+    @Override
     public String toString() {
-        List<String> pathList = (List)this.vertexAttr.stream().filter((path) -> {
-            return MsgWritable.isCircle(path.getVertexPath());
-        }).map((path) -> {
-            return StringUtils.join(path.getEdgePath(), "&");
-        }).collect(Collectors.toList());
-        return !pathList.isEmpty() ? StringUtils.join(pathList, "|") : "";
+        List<String> pathList =
+                (List)
+                        this.vertexAttr.stream()
+                                .filter(
+                                        (path) -> {
+                                            return MsgWritable.isCircle(path.getVertexPath());
+                                        })
+                                .map(
+                                        (path) -> {
+                                            return StringUtils.join(path.getEdgePath(), "&");
+                                        })
+                                .collect(Collectors.toList());
+        return !pathList.isEmpty() ? StringUtils.join(pathList, "|") : "No Circle";
     }
 }
