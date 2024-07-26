@@ -607,8 +607,10 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
                ++it) {
             // override previous settings.
             auto key = it->first.as<std::string>();
-            VLOG(1) << "Got metadata key: " << key
-                    << " value: " << it->second.as<std::string>();
+            if (key != reader_options::NULL_VALUES) {
+              VLOG(1) << "Got metadata key: " << key
+                      << " value: " << it->second.as<std::string>();
+            }
             if (reader_options::CSV_META_KEY_WORDS.find(key) !=
                 reader_options::CSV_META_KEY_WORDS.end()) {
               if (key == reader_options::BATCH_SIZE_KEY) {
