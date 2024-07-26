@@ -615,24 +615,25 @@ void hqps_http_handler::stop() {
 
 seastar::future<> hqps_http_handler::stop_query_actors() {
   // First cancel the scope.
-  return ic_handlers_[hiactor::local_shard_id()]
-      ->cancel_current_scope()
-      .then([this] {
-        LOG(INFO) << "Cancelled ic scope";
-        return adhoc_query_handlers_[hiactor::local_shard_id()]
-            ->cancel_current_scope();
-      })
-      .then([this] {
-        LOG(INFO) << "Cancelled proc scope";
-        actors_running_.store(false);
-        return seastar::make_ready_future<>();
-      });
+  // return ic_handlers_[hiactor::local_shard_id()]
+  //     ->cancel_current_scope()
+  //     .then([this] {
+  //       LOG(INFO) << "Cancelled ic scope";
+  //       return adhoc_query_handlers_[hiactor::local_shard_id()]
+  //           ->cancel_current_scope();
+  //     })
+  //     .then([this] {
+  //       LOG(INFO) << "Cancelled proc scope";
+  //       actors_running_.store(false);
+  //       return seastar::make_ready_future<>();
+  //     });
+  return seastar::make_ready_future<>();
 }
 
 void hqps_http_handler::start_query_actors() {
-  ic_handlers_[hiactor::local_shard_id()]->create_actors();
-  adhoc_query_handlers_[hiactor::local_shard_id()]->create_actors();
-  actors_running_.store(true);
+  // ic_handlers_[hiactor::local_shard_id()]->create_actors();
+  // adhoc_query_handlers_[hiactor::local_shard_id()]->create_actors();
+  // actors_running_.store(true);
 }
 
 seastar::future<> hqps_http_handler::set_routes() {

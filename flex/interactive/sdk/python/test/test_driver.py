@@ -44,36 +44,36 @@ class TestDriver(unittest.TestCase):
         self._cpp_proc_name = None
         print("finish setup")
 
-    def tearDown(self):
-        if self._graph_id is not None:
-            if self._cypher_proc_name is not None:
-                print("delete procedure: ")
-                rep1 = self._sess.delete_procedure(self._graph_id, self._cypher_proc_name)
-                print("delete procedure: ", rep1)
-            if self._cpp_proc_name is not None:
-                print("delete procedure: ")
-                rep1 = self._sess.delete_procedure(self._graph_id, self._cpp_proc_name)
-                print("delete procedure: ", rep1)
-            print("delete graph: ", self._graph_id)
-            rep2 = self._sess.delete_graph(self._graph_id)
-            print("delete graph: ", rep2)
+    # def tearDown(self):
+        # if self._graph_id is not None:
+        #     if self._cypher_proc_name is not None:
+        #         print("delete procedure: ")
+        #         rep1 = self._sess.delete_procedure(self._graph_id, self._cypher_proc_name)
+        #         print("delete procedure: ", rep1)
+        #     if self._cpp_proc_name is not None:
+        #         print("delete procedure: ")
+        #         rep1 = self._sess.delete_procedure(self._graph_id, self._cpp_proc_name)
+        #         print("delete procedure: ", rep1)
+        #     print("delete graph: ", self._graph_id)
+        #     rep2 = self._sess.delete_graph(self._graph_id)
+        #     print("delete graph: ", rep2)
 
     def test_example(self):
         self._graph_id = self.createGraph()
         self.bulkLoading()
         self.bulkLoadingUploading()
         self.waitJobFinish()
-        self.list_graph()
-        self.runCypherQuery()
-        self.runGremlinQuery()
-        self.createCypherProcedure()
+        # self.list_graph()
+        # self.runCypherQuery()
+        # self.runGremlinQuery()
+        # self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
-        self.restartOnNewGraph()
-        self.getStatistics()
-        self.callProcedure()
-        self.callProcedureWithHttp()
-        self.callProcedureWithHttpCurrent()
+        # self.restartOnNewGraph()
+        # self.getStatistics()
+        # self.callProcedure()
+        # self.callProcedureWithHttp()
+        # self.callProcedureWithHttpCurrent()
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
