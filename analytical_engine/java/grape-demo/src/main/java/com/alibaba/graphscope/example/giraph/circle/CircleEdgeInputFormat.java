@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.example.giraph.circle;
 
-import java.io.IOException;
 import org.apache.giraph.io.EdgeReader;
 import org.apache.giraph.io.formats.TextEdgeInputFormat;
 import org.apache.hadoop.io.LongWritable;
@@ -24,15 +23,20 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-public class CircleEdgeInputFormat extends TextEdgeInputFormat<LongWritable, LongWritable> {
-    public CircleEdgeInputFormat() {
-    }
+import java.io.IOException;
 
-    public EdgeReader<LongWritable, LongWritable> createEdgeReader(InputSplit split, TaskAttemptContext context) throws IOException {
+public class CircleEdgeInputFormat extends TextEdgeInputFormat<LongWritable, LongWritable> {
+    public CircleEdgeInputFormat() {}
+
+    public EdgeReader<LongWritable, LongWritable> createEdgeReader(
+            InputSplit split, TaskAttemptContext context) throws IOException {
         return new CircleEdgeInputFormat.P2PEdgeReader();
     }
 
-    public class P2PEdgeReader extends TextEdgeInputFormat<LongWritable, LongWritable>.TextEdgeReaderFromEachLineProcessed<String[]> {
+    public class P2PEdgeReader
+            extends TextEdgeInputFormat<LongWritable, LongWritable>
+                            .TextEdgeReaderFromEachLineProcessed<
+                    String[]> {
         String SEPARATOR = " ";
         private LongWritable srcId;
         private LongWritable dstId;

@@ -14,15 +14,10 @@
  *  limitations under the License.
  */
 
-
 package com.alibaba.graphscope.example.giraph.circle;
 
-import com.alibaba.graphscope.example.giraph.circle.VertexAttrWritable;
 import com.google.common.collect.Lists;
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
+
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.io.formats.TextVertexInputFormat;
 import org.apache.hadoop.io.LongWritable;
@@ -30,15 +25,24 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-public class CircleVertexInputFormat extends TextVertexInputFormat<LongWritable, VertexAttrWritable, LongWritable> {
-    public CircleVertexInputFormat() {
-    }
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-    public TextVertexInputFormat<LongWritable, VertexAttrWritable, LongWritable>.TextVertexReader createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
+public class CircleVertexInputFormat
+        extends TextVertexInputFormat<LongWritable, VertexAttrWritable, LongWritable> {
+    public CircleVertexInputFormat() {}
+
+    public TextVertexInputFormat<LongWritable, VertexAttrWritable, LongWritable>.TextVertexReader
+            createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
         return new CircleVertexInputFormat.P2PVertexReader();
     }
 
-    public class P2PVertexReader extends TextVertexInputFormat<LongWritable, VertexAttrWritable, LongWritable>.TextVertexReaderFromEachLineProcessed<String[]> {
+    public class P2PVertexReader
+            extends TextVertexInputFormat<LongWritable, VertexAttrWritable, LongWritable>
+                            .TextVertexReaderFromEachLineProcessed<
+                    String[]> {
         String SEPARATOR = " ";
         private LongWritable id;
         private VertexAttrWritable value;
@@ -64,7 +68,8 @@ public class CircleVertexInputFormat extends TextVertexInputFormat<LongWritable,
             return this.value;
         }
 
-        protected Iterable<Edge<LongWritable, LongWritable>> getEdges(String[] tokens) throws IOException {
+        protected Iterable<Edge<LongWritable, LongWritable>> getEdges(String[] tokens)
+                throws IOException {
             List<Edge<LongWritable, LongWritable>> edges = Lists.newArrayListWithCapacity(0);
             return edges;
         }

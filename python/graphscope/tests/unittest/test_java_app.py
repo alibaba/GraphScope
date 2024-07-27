@@ -208,7 +208,6 @@ def test_string_app(
     for i in range(min(num_rows, 10)):
         # size should large than 0
         assert len(frame["r"][i]) > 0
-    del g
 
 
 @pytest.mark.skipif(
