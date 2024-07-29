@@ -23,6 +23,7 @@
 #include "flex/engines/graph_db/database/graph_db_operations.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/utils/service_utils.h"
+#include "utils/result.h"
 
 namespace gs {
 
@@ -36,9 +37,10 @@ Result<std::string> GraphDBOperations::CreateVertex(
       input_json["vertex_request"].size() == 0 ||
       (input_json.contains("edge_request") == true &&
        input_json["edge_request"].is_array() == false)) {
-    return response(StatusCode::InvalidSchema,
-                    "Invalid input json, vertex_request and edge_request "
-                    "should be array and not empty");
+    return Result<std::string>(
+        StatusCode::InvalidSchema,
+        "Invalid input json, vertex_request and edge_request should be array "
+        "and not empty");
   }
   const Schema& schema = session.schema();
   // input vertex data and edge data
@@ -52,18 +54,18 @@ Result<std::string> GraphDBOperations::CreateVertex(
       edge_data.push_back(inputEdge(edge_insert, schema, session));
     }
   } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    " Bad input parameter : " + std::string(e.what()));
+    return Result<std::string>(
+        StatusCode::InvalidSchema,
+        " Bad input parameter : " + std::string(e.what()));
   }
-  try {
-    insertVertex(std::move(vertex_data), std::move(edge_data), session);
-  } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    "fail to insert vertex/edge : " + std::string(e.what()));
+  auto insert_result =
+      insertVertex(std::move(vertex_data), std::move(edge_data), session);
+  if (insert_result.ok()) {
+    nlohmann::json result;
+    result["message"] = "Vertex data is successfully inserted";
+    return Result<std::string>(result.dump());
   }
-  nlohmann::json result;
-  result["message"] = "Vertex data is successfully inserted";
-  return response(StatusCode::OK, result.dump());
+  return Result<std::string>(insert_result);
 }
 Result<std::string> GraphDBOperations::CreateEdge(GraphDBSession& session,
                                                   nlohmann::json&& input_json) {
@@ -71,7 +73,7 @@ Result<std::string> GraphDBOperations::CreateEdge(GraphDBSession& session,
   std::vector<EdgeData> edge_data;
   // Check if the input json contains edge_request
   if (input_json.is_array() == false || input_json.size() == 0) {
-    return response(
+    return Result<std::string>(
         StatusCode::InvalidSchema,
         "Invalid input json, edge_request should be array and not empty");
   }
@@ -82,18 +84,17 @@ Result<std::string> GraphDBOperations::CreateEdge(GraphDBSession& session,
       edge_data.push_back(inputEdge(edge_insert, schema, session));
     }
   } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    " Bad input parameter : " + std::string(e.what()));
+    return Result<std::string>(
+        StatusCode::InvalidSchema,
+        " Bad input parameter : " + std::string(e.what()));
   }
-  try {
-    insertEdge(std::move(edge_data), session);
-  } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    "fail to insert edge : " + std::string(e.what()));
+  auto insert_result = insertEdge(std::move(edge_data), session);
+  if (insert_result.ok()) {
+    nlohmann::json result;
+    result["message"] = "Edge data is successfully inserted";
+    return Result<std::string>(result.dump());
   }
-  nlohmann::json result;
-  result["message"] = "Edge is successfully inserted";
-  return response(StatusCode::OK, result.dump());
+  return Result<std::string>(insert_result);
 }
 Result<std::string> GraphDBOperations::UpdateVertex(
     GraphDBSession& session, nlohmann::json&& input_json) {
@@ -104,18 +105,17 @@ Result<std::string> GraphDBOperations::UpdateVertex(
   try {
     vertex_data.push_back(inputVertex(input_json, schema, session));
   } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    " Bad input parameter : " + std::string(e.what()));
+    return Result<std::string>(
+        StatusCode::InvalidSchema,
+        " Bad input parameter : " + std::string(e.what()));
   }
-  try {
-    updateVertex(std::move(vertex_data), session);
-  } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    "fail to update vertex : " + std::string(e.what()));
+  auto update_result = updateVertex(std::move(vertex_data), session);
+  if (update_result.ok()) {
+    nlohmann::json result;
+    result["message"] = "Successfully update Vertex";
+    return Result<std::string>(result.dump());
   }
-  nlohmann::json result;
-  result["message"] = "Successfully update Vertex";
-  return response(StatusCode::OK, result.dump());
+  return Result<std::string>(update_result);
 }
 Result<std::string> GraphDBOperations::UpdateEdge(GraphDBSession& session,
                                                   nlohmann::json&& input_json) {
@@ -126,18 +126,17 @@ Result<std::string> GraphDBOperations::UpdateEdge(GraphDBSession& session,
   try {
     edge_data.push_back(inputEdge(input_json, schema, session));
   } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    " Bad input parameter : " + std::string(e.what()));
+    return Result<std::string>(
+        StatusCode::InvalidSchema,
+        " Bad input parameter : " + std::string(e.what()));
   }
-  try {
-    updateEdge(std::move(edge_data), session);
-  } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    "fail to update edge : " + std::string(e.what()));
+  auto update_result = updateEdge(std::move(edge_data), session);
+  if (update_result.ok()) {
+    nlohmann::json result;
+    result["message"] = "Successfully update Edge";
+    return Result<std::string>(result.dump());
   }
-  nlohmann::json result;
-  result["message"] = "Successfully update Edge";
-  return response(StatusCode::OK, result.dump());
+  return Result<std::string>(update_result);
 }
 Result<std::string> GraphDBOperations::GetVertex(
     GraphDBSession& session,
@@ -152,18 +151,18 @@ Result<std::string> GraphDBOperations::GetVertex(
   std::string label = params["label"];
   result["label"] = label;
   vertex.pk_value = Any(std::string(params["primary_key_value"]));
-  if (!checkVertexSchema(schema, vertex, label, property_names, true)) {
-    return response(StatusCode::InvalidSchema, " Bad input parameter");
+  auto check_result =
+      checkVertexSchema(schema, vertex, label, property_names, true);
+  if (check_result.ok() == false) {
+    return Result<std::string>(check_result);
   }
   vertex_data.push_back(vertex);
-  try {
-    result["values"] =
-        getVertex(std::move(vertex_data), property_names, session);
-    return response(StatusCode::OK, result.dump());
-  } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    "fail to get vertex : " + std::string(e.what()));
+  auto get_result = getVertex(std::move(vertex_data), property_names, session);
+  if (get_result.ok()) {
+    result["values"] = get_result.value();
+    return Result<std::string>(result.dump());
   }
+  return Result<std::string>(get_result.status());
 }
 Result<std::string> GraphDBOperations::GetEdge(
     GraphDBSession& session,
@@ -182,9 +181,10 @@ Result<std::string> GraphDBOperations::GetEdge(
   std::string dst_pk_value = params["dst_primary_key_value"];
   edge.src_pk_value = Any(src_pk_value);
   edge.dst_pk_value = Any(dst_pk_value);
-  if (!checkEdgeSchema(schema, edge, src_label, dst_label, edge_label,
-                       property_name, true)) {
-    return response(StatusCode::InvalidSchema, " Bad input parameter");
+  auto check_result = checkEdgeSchema(schema, edge, src_label, dst_label,
+                                      edge_label, property_name, true);
+  if (check_result.ok() == false) {
+    return Result<std::string>(check_result);
   }
   edge_data.push_back(edge);
   result["src_label"] = src_label;
@@ -192,25 +192,24 @@ Result<std::string> GraphDBOperations::GetEdge(
   result["edge_label"] = edge_label;
   result["src_primary_key_value"] = src_pk_value;
   result["dst_primary_key_value"] = dst_pk_value;
-  try {
-    result["properties"] =
-        getEdge(std::move(edge_data), property_name, session);
-    return response(StatusCode::OK, result.dump());
-  } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    "fail to get edge : " + std::string(e.what()));
+  auto get_result = getEdge(std::move(edge_data), property_name, session);
+  if (get_result.ok()) {
+    result["properties"] = get_result.value();
+    return Result<std::string>(result.dump());
   }
+  return Result<std::string>(get_result.status());
 }
 Result<std::string> GraphDBOperations::DeleteVertex(
     GraphDBSession& session, nlohmann::json&& input_json) {
   // not implemented
-  return response(StatusCode::Unimplemented,
-                  "delete_vertex is not implemented");
+  return Result<std::string>(StatusCode::Unimplemented,
+                             "delete_vertex is not implemented");
 }
 Result<std::string> GraphDBOperations::DeleteEdge(GraphDBSession& session,
                                                   nlohmann::json&& input_json) {
   // not implemented
-  return response(StatusCode::Unimplemented, "delete_edge is not implemented");
+  return Result<std::string>(StatusCode::Unimplemented,
+                             "delete_edge is not implemented");
 }
 
 VertexData GraphDBOperations::inputVertex(const nlohmann::json& vertex_json,
@@ -233,8 +232,10 @@ VertexData GraphDBOperations::inputVertex(const nlohmann::json& vertex_json,
     }
     vertex.properties.emplace_back(value_string);
   }
-  if (!checkVertexSchema(schema, vertex, label, property_names_arr)) {
-    throw std::runtime_error(" Bad input parameter");
+  auto check_result =
+      checkVertexSchema(schema, vertex, label, property_names_arr);
+  if (check_result.ok() == false) {
+    throw std::runtime_error(check_result.error_message());
   }
   return vertex;
 }
@@ -254,14 +255,15 @@ EdgeData GraphDBOperations::inputEdge(const nlohmann::json& edge_json,
   }
   edge.property_value = Any(jsonToString(edge_json["properties"][0]["value"]));
   std::string property_name = edge_json["properties"][0]["name"];
-  if (!checkEdgeSchema(schema, edge, src_label, dst_label, edge_label,
-                       property_name)) {
-    throw std::runtime_error(" Bad input parameter");
+  auto check_result = checkEdgeSchema(schema, edge, src_label, dst_label,
+                                      edge_label, property_name);
+  if (check_result.ok() == false) {
+    throw std::runtime_error(check_result.error_message());
   }
   return edge;
 }
 
-bool GraphDBOperations::checkVertexSchema(
+Status GraphDBOperations::checkVertexSchema(
     const Schema& schema, VertexData& vertex, const std::string& label,
     std::vector<std::string>& input_property_names, bool is_get) {
   try {
@@ -276,7 +278,7 @@ bool GraphDBOperations::checkVertexSchema(
     }
     if (is_get) {
       input_property_names = properties_name;
-      return true;
+      return Status::OK();
     }
     for (int col_index = 0; col_index < int(properties_name.size());
          col_index++) {
@@ -287,15 +289,18 @@ bool GraphDBOperations::checkVertexSchema(
       vertex.properties[col_index] = ConvertStringToAny(
           vertex.properties[col_index].to_string(), properties_type[col_index]);
     }
-    return true;
-  } catch (...) { return false; }
+    return Status::OK();
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema,
+                  " Bad input parameter : " + std::string(e.what()));
+  }
 }
-bool GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
-                                        const std::string& src_label,
-                                        const std::string& dst_label,
-                                        const std::string& edge_label,
-                                        std::string& property_name,
-                                        bool is_get) {
+Status GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
+                                          const std::string& src_label,
+                                          const std::string& dst_label,
+                                          const std::string& edge_label,
+                                          std::string& property_name,
+                                          bool is_get) {
   try {
     edge.src_label_id = schema.get_vertex_label_id(src_label);
     edge.dst_label_id = schema.get_vertex_label_id(dst_label);
@@ -308,7 +313,7 @@ bool GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
       if (property_name !=
           schema.get_edge_property_names(edge.src_label_id, edge.dst_label_id,
                                          edge.edge_label_id)[0]) {
-        return false;
+        throw std::runtime_error("property name not match");
       }
       PropertyType colType = schema.get_edge_property(
           edge.src_label_id, edge.dst_label_id, edge.edge_label_id);
@@ -321,262 +326,325 @@ bool GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
     edge.dst_pk_value = ConvertStringToAny(
         edge.dst_pk_value.to_string(),
         std::get<0>(schema.get_vertex_primary_key(edge.dst_label_id)[0]));
-    return true;
-  } catch (...) { return false; }
+    return Status::OK();
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema,
+                  " Bad input parameter : " + std::string(e.what()));
+  }
 }
 
-void GraphDBOperations::checkEdgeExistsWithInsert(
+Status GraphDBOperations::checkEdgeExistsWithInsert(
     const std::vector<EdgeData>& edge_data, GraphDBSession& session) {
-  auto txn = session.GetReadTransaction();
-  for (auto& edge : edge_data) {
-    vid_t src_vid, dst_vid;
-    if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
-            false ||
-        txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
-            false) {
-      // It could be that this point is about to be inserted
-      continue;
-    }
-    // If the edge already exists, just report the error
-    for (auto edgeIt = txn.GetOutEdgeIterator(
-             edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
-         edgeIt.IsValid(); edgeIt.Next()) {
-      if (edgeIt.GetNeighbor() == dst_vid) {
-        txn.Abort();
-        throw std::runtime_error("Edge already exists");
+  try {
+    auto txn = session.GetReadTransaction();
+    for (auto& edge : edge_data) {
+      vid_t src_vid, dst_vid;
+      if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
+              false ||
+          txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
+              false) {
+        // It could be that this point is about to be inserted
+        continue;
+      }
+      // If the edge already exists, just report the error
+      for (auto edgeIt =
+               txn.GetOutEdgeIterator(edge.src_label_id, src_vid,
+                                      edge.dst_label_id, edge.edge_label_id);
+           edgeIt.IsValid(); edgeIt.Next()) {
+        if (edgeIt.GetNeighbor() == dst_vid) {
+          txn.Abort();
+          throw std::runtime_error("Fail to create edge: Edge already exists");
+        }
       }
     }
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema, e.what());
   }
+  return Status::OK();
 }
 
-void GraphDBOperations::checkEdgeExists(const std::vector<EdgeData>& edge_data,
-                                        GraphDBSession& session) {
-  auto txn = session.GetReadTransaction();
-  for (auto& edge : edge_data) {
-    vid_t src_vid, dst_vid;
-    if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
-            false ||
-        txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
-            false) {
-      txn.Abort();
-      throw std::runtime_error("Vertex not exists");
-    }
-    // If the edge already exists, just report the error
-    for (auto edgeIt = txn.GetOutEdgeIterator(
-             edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
-         edgeIt.IsValid(); edgeIt.Next()) {
-      if (edgeIt.GetNeighbor() == dst_vid) {
+Status GraphDBOperations::checkEdgeExists(
+    const std::vector<EdgeData>& edge_data, GraphDBSession& session) {
+  try {
+    auto txn = session.GetReadTransaction();
+    for (auto& edge : edge_data) {
+      vid_t src_vid, dst_vid;
+      if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
+              false ||
+          txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
+              false) {
         txn.Abort();
-        throw std::runtime_error("Edge already exists");
+        throw std::runtime_error("Vertex not exists");
+      }
+      // If the edge already exists, just report the error
+      for (auto edgeIt =
+               txn.GetOutEdgeIterator(edge.src_label_id, src_vid,
+                                      edge.dst_label_id, edge.edge_label_id);
+           edgeIt.IsValid(); edgeIt.Next()) {
+        if (edgeIt.GetNeighbor() == dst_vid) {
+          txn.Abort();
+          throw std::runtime_error("Fail to create edge: Edge already exists");
+        }
       }
     }
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema, e.what());
   }
+  return Status::OK();
 }
 
-void GraphDBOperations::checkVertexExists(
+Status GraphDBOperations::checkVertexExists(
     const std::vector<VertexData>& vertex_data, GraphDBSession& session) {
-  auto txn = session.GetReadTransaction();
-  for (auto& vertex : vertex_data) {
-    vid_t vid;
-    if (txn.GetVertexIndex(vertex.label_id, vertex.pk_value, vid)) {
-      txn.Abort();
-      throw std::runtime_error("Vertex already exists");
+  try {
+    auto txn = session.GetReadTransaction();
+    for (auto& vertex : vertex_data) {
+      vid_t vid;
+      if (txn.GetVertexIndex(vertex.label_id, vertex.pk_value, vid)) {
+        txn.Abort();
+        throw std::runtime_error(
+            "Fail to create vertex: Vertex already exists");
+      }
     }
+    txn.Commit();
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema, e.what());
   }
-  txn.Commit();
+  return Status::OK();
 }
-void GraphDBOperations::singleInsertVertex(
+Status GraphDBOperations::singleInsertVertex(
     std::vector<VertexData>&& vertex_data, std::vector<EdgeData>&& edge_data,
     GraphDBSession& session) {
-  auto txnWrite = session.GetSingleVertexInsertTransaction();
-  for (auto& vertex : vertex_data) {
-    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value,
-                           vertex.properties) == false) {
-      txnWrite.Abort();
-      throw std::runtime_error(
-          "Fail to create vertex: " + vertex.pk_value.to_string() +
-          "; All inserts are rollbacked");
+  try {
+    auto txnWrite = session.GetSingleVertexInsertTransaction();
+    for (auto& vertex : vertex_data) {
+      if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value,
+                             vertex.properties) == false) {
+        txnWrite.Abort();
+        throw std::runtime_error(
+            "Fail to create vertex; All inserts are rollbacked");
+      }
     }
-  }
-  for (auto& edge : edge_data) {
-    if (txnWrite.AddEdge(edge.src_label_id, edge.src_pk_value,
-                         edge.dst_label_id, edge.dst_pk_value,
-                         edge.edge_label_id, edge.property_value) == false) {
-      txnWrite.Abort();
-      throw std::runtime_error(
-          "Fail to create edge; All inserts are rollbacked");
+    for (auto& edge : edge_data) {
+      if (txnWrite.AddEdge(edge.src_label_id, edge.src_pk_value,
+                           edge.dst_label_id, edge.dst_pk_value,
+                           edge.edge_label_id, edge.property_value) == false) {
+        txnWrite.Abort();
+        throw std::runtime_error(
+            "Fail to create edge; All inserts are rollbacked");
+      }
     }
+    txnWrite.Commit();
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema, e.what());
   }
-  txnWrite.Commit();
+  return Status::OK();
 }
 
-void GraphDBOperations::multiInsert(std::vector<VertexData>&& vertex_data,
-                                    std::vector<EdgeData>&& edge_data,
-                                    GraphDBSession& session) {
-  auto txnWrite = session.GetInsertTransaction();
-  for (auto& vertex : vertex_data) {
-    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value,
-                           vertex.properties) == false) {
-      txnWrite.Abort();
-      throw std::runtime_error(
-          "Fail to create vertex: " + vertex.pk_value.to_string() +
-          "; All inserts are rollbacked");
+Status GraphDBOperations::multiInsert(std::vector<VertexData>&& vertex_data,
+                                      std::vector<EdgeData>&& edge_data,
+                                      GraphDBSession& session) {
+  try {
+    auto txnWrite = session.GetInsertTransaction();
+    for (auto& vertex : vertex_data) {
+      if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value,
+                             vertex.properties) == false) {
+        txnWrite.Abort();
+        throw std::runtime_error(
+            "Fail to create vertex; All inserts are rollbacked");
+      }
     }
-  }
-  for (auto& edge : edge_data) {
-    if (txnWrite.AddEdge(edge.src_label_id, edge.src_pk_value,
-                         edge.dst_label_id, edge.dst_pk_value,
-                         edge.edge_label_id, edge.property_value) == false) {
-      txnWrite.Abort();
-      throw std::runtime_error(
-          "Fail to create edge; All inserts are rollbacked");
+    for (auto& edge : edge_data) {
+      if (txnWrite.AddEdge(edge.src_label_id, edge.src_pk_value,
+                           edge.dst_label_id, edge.dst_pk_value,
+                           edge.edge_label_id, edge.property_value) == false) {
+        txnWrite.Abort();
+        throw std::runtime_error(
+            "Fail to create edge; All inserts are rollbacked");
+      }
     }
+    txnWrite.Commit();
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema, e.what());
   }
-  txnWrite.Commit();
+  return Status::OK();
 }
-void GraphDBOperations::insertVertex(std::vector<VertexData>&& vertex_data,
-                                     std::vector<EdgeData>&& edge_data,
-                                     GraphDBSession& session) {
-  checkVertexExists(vertex_data, session);
-  checkEdgeExistsWithInsert(edge_data, session);
+Status GraphDBOperations::insertVertex(std::vector<VertexData>&& vertex_data,
+                                       std::vector<EdgeData>&& edge_data,
+                                       GraphDBSession& session) {
+  auto check_result = checkVertexExists(vertex_data, session);
+  if (check_result.ok() == false) {
+    return check_result;
+  }
+  check_result = checkEdgeExistsWithInsert(edge_data, session);
+  if (check_result.ok() == false) {
+    return check_result;
+  }
   if (vertex_data.size() == 1) {
-    singleInsertVertex(std::move(vertex_data), std::move(edge_data), session);
+    return singleInsertVertex(std::move(vertex_data), std::move(edge_data),
+                              session);
   } else {
-    multiInsert(std::move(vertex_data), std::move(edge_data), session);
+    return multiInsert(std::move(vertex_data), std::move(edge_data), session);
   }
 }
 
-void GraphDBOperations::singleInsertEdge(std::vector<EdgeData>&& edge_data,
-                                         GraphDBSession& session) {
-  auto txnWrite = session.GetSingleEdgeInsertTransaction();
-  for (auto& edge : edge_data) {
-    if (txnWrite.AddEdge(edge.src_label_id, edge.src_pk_value,
-                         edge.dst_label_id, edge.dst_pk_value,
-                         edge.edge_label_id, edge.property_value) == false) {
-      txnWrite.Abort();
-      throw std::runtime_error(
-          "Fail to create edge; All inserts are rollbacked");
+Status GraphDBOperations::singleInsertEdge(std::vector<EdgeData>&& edge_data,
+                                           GraphDBSession& session) {
+  try {
+    auto txnWrite = session.GetSingleEdgeInsertTransaction();
+    for (auto& edge : edge_data) {
+      if (txnWrite.AddEdge(edge.src_label_id, edge.src_pk_value,
+                           edge.dst_label_id, edge.dst_pk_value,
+                           edge.edge_label_id, edge.property_value) == false) {
+        txnWrite.Abort();
+        throw std::runtime_error(
+            "Fail to create edge; All inserts are rollbacked");
+      }
     }
+    txnWrite.Commit();
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema, e.what());
   }
-  txnWrite.Commit();
+  return Status::OK();
 }
 
-void GraphDBOperations::insertEdge(std::vector<EdgeData>&& edge_data,
-                                   GraphDBSession& session) {
-  checkEdgeExists(edge_data, session);
-  if (edge_data.size() == 1) {
-    singleInsertEdge(std::move(edge_data), session);
-  } else {
-    multiInsert(std::vector<VertexData>(), std::move(edge_data), session);
-  }
-}
-
-void GraphDBOperations::updateVertex(std::vector<VertexData>&& vertex_data,
+Status GraphDBOperations::insertEdge(std::vector<EdgeData>&& edge_data,
                                      GraphDBSession& session) {
-  const auto& vertex = vertex_data[0];
-  auto txnRead = session.GetReadTransaction();
-  vid_t vertex_lid;
-  if (txnRead.GetVertexIndex(vertex.label_id, vertex.pk_value, vertex_lid) ==
-      false) {
-    txnRead.Abort();
-    throw std::runtime_error("Vertex not exists");
+  auto check_result = checkEdgeExists(edge_data, session);
+  if (check_result.ok() == false) {
+    return check_result;
   }
-  txnRead.Commit();
-  auto txnWrite = session.GetUpdateTransaction();
-  for (int i = 0; i < int(vertex.properties.size()); i++) {
-    if (txnWrite.SetVertexField(vertex.label_id, vertex_lid, i,
-                                vertex.properties[i]) == false) {
-      txnWrite.Abort();
-      throw std::runtime_error("Fail to update vertex");
-    }
+  if (edge_data.size() == 1) {
+    return singleInsertEdge(std::move(edge_data), session);
+  } else {
+    return multiInsert(std::vector<VertexData>(), std::move(edge_data),
+                       session);
   }
-  txnWrite.Commit();
 }
 
-void GraphDBOperations::updateEdge(std::vector<EdgeData>&& edge_data,
-                                   GraphDBSession& session) {
-  const auto& edge = edge_data[0];
-  auto txn = session.GetReadTransaction();
-  vid_t src_vid, dst_vid;
-  if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
-          false ||
-      txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
-          false) {
-    txn.Abort();
-    throw std::runtime_error("Vertex not found");
+Status GraphDBOperations::updateVertex(std::vector<VertexData>&& vertex_data,
+                                       GraphDBSession& session) {
+  try {
+    const auto& vertex = vertex_data[0];
+    auto txnRead = session.GetReadTransaction();
+    vid_t vertex_lid;
+    if (txnRead.GetVertexIndex(vertex.label_id, vertex.pk_value, vertex_lid) ==
+        false) {
+      txnRead.Abort();
+      throw std::runtime_error("Vertex not exists");
+    }
+    txnRead.Commit();
+    auto txnWrite = session.GetUpdateTransaction();
+    for (int i = 0; i < int(vertex.properties.size()); i++) {
+      if (txnWrite.SetVertexField(vertex.label_id, vertex_lid, i,
+                                  vertex.properties[i]) == false) {
+        txnWrite.Abort();
+        throw std::runtime_error("Fail to update vertex");
+      }
+    }
+    txnWrite.Commit();
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema, e.what());
   }
-  bool edge_exists = false;
-  for (auto edgeIt = txn.GetOutEdgeIterator(
-           edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
-       edgeIt.IsValid(); edgeIt.Next()) {
-    if (edgeIt.GetNeighbor() == dst_vid) {
-      edge_exists = true;
+  return Status::OK();
+}
+
+Status GraphDBOperations::updateEdge(std::vector<EdgeData>&& edge_data,
+                                     GraphDBSession& session) {
+  try {
+    const auto& edge = edge_data[0];
+    auto txn = session.GetReadTransaction();
+    vid_t src_vid, dst_vid;
+    if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
+            false ||
+        txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
+            false) {
+      txn.Abort();
+      throw std::runtime_error("Vertex not found");
+    }
+    bool edge_exists = false;
+    for (auto edgeIt = txn.GetOutEdgeIterator(
+             edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
+         edgeIt.IsValid(); edgeIt.Next()) {
+      if (edgeIt.GetNeighbor() == dst_vid) {
+        edge_exists = true;
+        break;
+      }
+    }
+    if (!edge_exists) {
+      txn.Abort();
+      throw std::runtime_error("Edge not found");
+    }
+    txn.Commit();
+    auto txn2 = session.GetUpdateTransaction();
+    txn2.SetEdgeData(true, edge.src_label_id, src_vid, edge.dst_label_id,
+                     dst_vid, edge.edge_label_id, edge.property_value);
+    txn2.Commit();
+  } catch (std::exception& e) {
+    return Status(StatusCode::InvalidSchema, e.what());
+  }
+  return Status::OK();
+}
+
+Result<nlohmann::json> GraphDBOperations::getVertex(
+    std::vector<VertexData>&& vertex_data,
+    const std::vector<std::string>& property_names, GraphDBSession& session) {
+  try {
+    auto& vertex = vertex_data[0];
+    nlohmann::json result = nlohmann::json::array();
+    auto txn = session.GetReadTransaction();
+    auto vertex_db = txn.FindVertex(vertex.label_id, vertex.pk_value);
+    if (vertex_db.IsValid() == false) {
+      txn.Abort();
+      throw std::runtime_error("Vertex not found");
+    }
+    for (int i = 0; i < vertex_db.FieldNum(); i++) {
+      nlohmann::json values;
+      values["name"] = property_names[i];
+      values["value"] = vertex_db.GetField(i).to_string();
+      result.push_back(values);
+    }
+    txn.Commit();
+    return Result<nlohmann::json>(result);
+  } catch (std::exception& e) {
+    return Result<nlohmann::json>(Status(StatusCode::InvalidSchema, e.what()));
+  }
+}
+
+Result<nlohmann::json> GraphDBOperations::getEdge(
+    std::vector<EdgeData>&& edge_data, const std::string& property_name,
+    GraphDBSession& session) {
+  try {
+    const auto& edge = edge_data[0];
+    nlohmann::json result = nlohmann::json::array();
+    auto txn = session.GetReadTransaction();
+    vid_t src_vid, dst_vid;
+    if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
+            false ||
+        txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
+            false) {
+      txn.Abort();
+      throw std::runtime_error("Vertex not found");
+    }
+    for (auto edgeIt = txn.GetOutEdgeIterator(
+             edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
+         edgeIt.IsValid(); edgeIt.Next()) {
+      if (edgeIt.GetNeighbor() != dst_vid)
+        continue;
+      nlohmann::json push_json;
+      push_json["name"] = property_name;
+      push_json["value"] = edgeIt.GetData().to_string();
+      result.push_back(push_json);
       break;
     }
+    if (result.empty()) {
+      txn.Abort();
+      throw std::runtime_error("Edge not found");
+    }
+    txn.Commit();
+    return Result<nlohmann::json>(result);
+  } catch (std::exception& e) {
+    return Result<nlohmann::json>(Status(StatusCode::InvalidSchema, e.what()));
   }
-  if (!edge_exists) {
-    txn.Abort();
-    throw std::runtime_error("Edge not found");
-  }
-  txn.Commit();
-  auto txn2 = session.GetUpdateTransaction();
-  txn2.SetEdgeData(true, edge.src_label_id, src_vid, edge.dst_label_id, dst_vid,
-                   edge.edge_label_id, edge.property_value);
-  txn2.Commit();
-}
-
-nlohmann::json GraphDBOperations::getVertex(
-    std::vector<VertexData>&& vertex_data,
-    std::vector<std::string> property_names, GraphDBSession& session) {
-  auto& vertex = vertex_data[0];
-  nlohmann::json result = nlohmann::json::array();
-  auto txn = session.GetReadTransaction();
-  auto vertex_db = txn.FindVertex(vertex.label_id, vertex.pk_value);
-  if (vertex_db.IsValid() == false) {
-    txn.Abort();
-    throw std::runtime_error("Vertex not found");
-  }
-  for (int i = 0; i < vertex_db.FieldNum(); i++) {
-    nlohmann::json values;
-    values["name"] = property_names[i];
-    values["value"] = vertex_db.GetField(i).to_string();
-    result.push_back(values);
-  }
-  txn.Commit();
-  return result;
-}
-
-nlohmann::json GraphDBOperations::getEdge(std::vector<EdgeData>&& edge_data,
-                                          std::string property_name,
-                                          GraphDBSession& session) {
-  const auto& edge = edge_data[0];
-  nlohmann::json result = nlohmann::json::array();
-  auto txn = session.GetReadTransaction();
-  vid_t src_vid, dst_vid;
-  if (txn.GetVertexIndex(edge.src_label_id, edge.src_pk_value, src_vid) ==
-          false ||
-      txn.GetVertexIndex(edge.dst_label_id, edge.dst_pk_value, dst_vid) ==
-          false) {
-    txn.Abort();
-    throw std::runtime_error("Vertex not found");
-  }
-  for (auto edgeIt = txn.GetOutEdgeIterator(
-           edge.src_label_id, src_vid, edge.dst_label_id, edge.edge_label_id);
-       edgeIt.IsValid(); edgeIt.Next()) {
-    if (edgeIt.GetNeighbor() != dst_vid)
-      continue;
-    nlohmann::json push_json;
-    push_json["name"] = property_name;
-    push_json["value"] = edgeIt.GetData().to_string();
-    result.push_back(push_json);
-    break;
-  }
-  if (result.empty()) {
-    txn.Abort();
-    throw std::runtime_error("Edge not found");
-  }
-  txn.Commit();
-  return result;
 }
 
 }  // namespace gs

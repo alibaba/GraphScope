@@ -65,59 +65,55 @@ class GraphDBOperations {
                                         nlohmann::json&& input_json);
 
  private:
-  static Result<std::string> response(const StatusCode& code,
-                                      const std::string& message) {
-    return Result<std::string>(code, message);
-  }
   // The following interfaces are called before the Transaction is constructed
   static VertexData inputVertex(const nlohmann::json& vertex_json,
                                 const Schema& schema, GraphDBSession& session);
   static EdgeData inputEdge(const nlohmann::json& edge_json,
                             const Schema& schema, GraphDBSession& session);
   // check schema
-  static bool checkVertexSchema(const Schema& schema, VertexData& vertex,
-                                const std::string& label,
-                                std::vector<std::string>& input_property_names,
-                                bool is_get = false);
+  static Status checkVertexSchema(
+      const Schema& schema, VertexData& vertex, const std::string& label,
+      std::vector<std::string>& input_property_names, bool is_get = false);
 
-  static bool checkEdgeSchema(const Schema& schema, EdgeData& edge,
-                              const std::string& src_label,
-                              const std::string& dst_label,
-                              const std::string& edge_label,
-                              std::string& property_name, bool is_get = false);
+  static Status checkEdgeSchema(const Schema& schema, EdgeData& edge,
+                                const std::string& src_label,
+                                const std::string& dst_label,
+                                const std::string& edge_label,
+                                std::string& property_name,
+                                bool is_get = false);
 
   // The following interfaces are called after the Transaction is constructed
   // db check
-  static void checkEdgeExistsWithInsert(const std::vector<EdgeData>& edge_data,
-                                        GraphDBSession& session);
-  static void checkEdgeExists(const std::vector<EdgeData>& edge_data,
-                              GraphDBSession& session);
-  static void checkVertexExists(const std::vector<VertexData>& vertex_data,
+  static Status checkEdgeExistsWithInsert(
+      const std::vector<EdgeData>& edge_data, GraphDBSession& session);
+  static Status checkEdgeExists(const std::vector<EdgeData>& edge_data,
                                 GraphDBSession& session);
-  // db operations
-  static void multiInsert(std::vector<VertexData>&& vertex_data,
-                          std::vector<EdgeData>&& edge_data,
-                          GraphDBSession& session);
-  static void singleInsertVertex(std::vector<VertexData>&& vertex_data,
-                                 std::vector<EdgeData>&& edge_data,
-                                 GraphDBSession& session);
-  static void insertVertex(std::vector<VertexData>&& vertex_data,
-                           std::vector<EdgeData>&& edge_data,
-                           GraphDBSession& session);
-  static void singleInsertEdge(std::vector<EdgeData>&& edge_data,
-                               GraphDBSession& session);
-  static void insertEdge(std::vector<EdgeData>&& edge_data,
-                         GraphDBSession& session);
-  static void updateVertex(std::vector<VertexData>&& vertex_data,
-                           GraphDBSession& session);
-  static void updateEdge(std::vector<EdgeData>&& edge_data,
-                         GraphDBSession& session);
-  static nlohmann::json getVertex(std::vector<VertexData>&& vertex_data,
-                                  std::vector<std::string> property_names,
+  static Status checkVertexExists(const std::vector<VertexData>& vertex_data,
                                   GraphDBSession& session);
-  static nlohmann::json getEdge(std::vector<EdgeData>&& edge_data,
-                                std::string property_name,
-                                GraphDBSession& session);
+  // db operations
+  static Status multiInsert(std::vector<VertexData>&& vertex_data,
+                            std::vector<EdgeData>&& edge_data,
+                            GraphDBSession& session);
+  static Status singleInsertVertex(std::vector<VertexData>&& vertex_data,
+                                   std::vector<EdgeData>&& edge_data,
+                                   GraphDBSession& session);
+  static Status insertVertex(std::vector<VertexData>&& vertex_data,
+                             std::vector<EdgeData>&& edge_data,
+                             GraphDBSession& session);
+  static Status singleInsertEdge(std::vector<EdgeData>&& edge_data,
+                                 GraphDBSession& session);
+  static Status insertEdge(std::vector<EdgeData>&& edge_data,
+                           GraphDBSession& session);
+  static Status updateVertex(std::vector<VertexData>&& vertex_data,
+                             GraphDBSession& session);
+  static Status updateEdge(std::vector<EdgeData>&& edge_data,
+                           GraphDBSession& session);
+  static Result<nlohmann::json> getEdge(std::vector<EdgeData>&& edge_data,
+                                        const std::string& property_name,
+                                        GraphDBSession& session);
+  static Result<nlohmann::json> getVertex(
+      std::vector<VertexData>&& vertex_data,
+      const std::vector<std::string>& property_names, GraphDBSession& session);
 };
 
 }  // namespace gs
