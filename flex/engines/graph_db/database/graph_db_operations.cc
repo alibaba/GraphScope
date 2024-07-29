@@ -143,6 +143,7 @@ Result<std::string> GraphDBOperations::GetVertex(
   nlohmann::json result;
   std::vector<VertexData> vertex_data;
   std::vector<EdgeData> edge_data;
+  std::vector<std::string> property_names;
   const Schema& schema = session.schema();
   // input vertex data
   try {
@@ -150,14 +151,15 @@ Result<std::string> GraphDBOperations::GetVertex(
     std::string label = params["label"];
     result["label"] = label;
     vertex.pk_value = Any(std::string(params["primary_key_value"]));
-    checkVertexSchema(schema, vertex, label);
+    checkVertexSchema(schema, vertex, label, property_names, true);
     vertex_data.push_back(vertex);
   } catch (std::exception& e) {
     return response(StatusCode::InvalidSchema,
                     " Bad input parameter : " + std::string(e.what()));
   }
   try {
-    result["values"] = getVertex(std::move(vertex_data), session);
+    result["values"] =
+        getVertex(std::move(vertex_data), property_names, session);
     return response(StatusCode::OK, result.dump());
   } catch (std::exception& e) {
     return response(StatusCode::InvalidSchema,
@@ -171,6 +173,7 @@ Result<std::string> GraphDBOperations::GetEdge(
   std::vector<VertexData> vertex_data;
   std::vector<EdgeData> edge_data;
   const Schema& schema = session.schema();
+  std::string property_name;
   // input edge data
   try {
     EdgeData edge;
@@ -181,7 +184,8 @@ Result<std::string> GraphDBOperations::GetEdge(
     std::string dst_pk_value = params["dst_primary_key_value"];
     edge.src_pk_value = Any(src_pk_value);
     edge.dst_pk_value = Any(dst_pk_value);
-    checkEdgeSchema(schema, edge, src_label, dst_label, edge_label);
+    property_name =
+        checkEdgeSchema(schema, edge, src_label, dst_label, edge_label, true);
     edge_data.push_back(edge);
     result["src_label"] = src_label;
     result["dst_label"] = dst_label;
@@ -193,7 +197,8 @@ Result<std::string> GraphDBOperations::GetEdge(
                     " Bad input parameter : " + std::string(e.what()));
   }
   try {
-    result["properties"] = getEdge(std::move(edge_data), session);
+    result["properties"] =
+        getEdge(std::move(edge_data), property_name, session);
     return response(StatusCode::OK, result.dump());
   } catch (std::exception& e) {
     return response(StatusCode::InvalidSchema,
@@ -219,6 +224,7 @@ VertexData GraphDBOperations::inputVertex(const nlohmann::json& vertex_json,
   std::string label = jsonToString(vertex_json["label"]);
   vertex.pk_value = Any(jsonToString(vertex_json["primary_key_value"]));
   std::unordered_set<std::string> property_names;
+  std::vector<std::string> property_names_arr;
   for (auto& property : vertex_json["properties"]) {
     auto name_string = jsonToString(property["name"]);
     auto value_string = jsonToString(property["value"]);
@@ -227,10 +233,11 @@ VertexData GraphDBOperations::inputVertex(const nlohmann::json& vertex_json,
                                name_string);
     } else {
       property_names.insert(name_string);
+      property_names_arr.push_back(name_string);
     }
-    vertex.properties.emplace_back(name_string, Any(value_string));
+    vertex.properties.emplace_back(value_string);
   }
-  checkVertexSchema(schema, vertex, label);
+  checkVertexSchema(schema, vertex, label, property_names_arr);
   return vertex;
 }
 EdgeData GraphDBOperations::inputEdge(const nlohmann::json& edge_json,
@@ -247,53 +254,46 @@ EdgeData GraphDBOperations::inputEdge(const nlohmann::json& edge_json,
     throw std::runtime_error(
         "size should be 1(only support single property edge)");
   }
-  edge.property_name = jsonToString(edge_json["properties"][0]["name"]);
   edge.property_value = Any(jsonToString(edge_json["properties"][0]["value"]));
   checkEdgeSchema(schema, edge, src_label, dst_label, edge_label);
   return edge;
 }
 
-void GraphDBOperations::checkVertexSchema(const Schema& schema,
-                                          VertexData& vertex,
-                                          const std::string& label) {
+void GraphDBOperations::checkVertexSchema(
+    const Schema& schema, VertexData& vertex, const std::string& label,
+    std::vector<std::string>& input_property_names, bool is_get) {
   vertex.label_id = schema.get_vertex_label_id(label);
   PropertyType colType =
       std::get<0>(schema.get_vertex_primary_key(vertex.label_id)[0]);
   vertex.pk_value = ConvertStringToAny(vertex.pk_value.to_string(), colType);
   auto properties_type = schema.get_vertex_properties(vertex.label_id);
   auto properties_name = schema.get_vertex_property_names(vertex.label_id);
-  bool get_flag = (vertex.properties.size() == 0);
-  if (vertex.properties.size() != properties_name.size() && get_flag == false) {
+  if (vertex.properties.size() != properties_name.size() && is_get == false) {
     throw std::runtime_error("properties size not match");
+  }
+  if (is_get) {
+    input_property_names = properties_name;
+    return;
   }
   for (int col_index = 0; col_index < int(properties_name.size());
        col_index++) {
-    auto property_name = properties_name[col_index];
-    PropertyType colType = properties_type[col_index];
-    if (get_flag) {
-      vertex.properties.push_back(std::make_pair(property_name, Any()));
-      continue;
-    }
-    if (vertex.properties[col_index].first != property_name) {
+    if (input_property_names[col_index] != properties_name[col_index]) {
       throw std::runtime_error(
           "properties name not match, pleace check the order and name");
     }
-    vertex.properties[col_index].second = ConvertStringToAny(
-        vertex.properties[col_index].second.to_string(), colType);
+    vertex.properties[col_index] = ConvertStringToAny(
+        vertex.properties[col_index].to_string(), properties_type[col_index]);
   }
 }
-void GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
-                                        const std::string& src_label,
-                                        const std::string& dst_label,
-                                        const std::string& edge_label) {
+std::string GraphDBOperations::checkEdgeSchema(
+    const Schema& schema, EdgeData& edge, const std::string& src_label,
+    const std::string& dst_label, const std::string& edge_label, bool is_get) {
   edge.src_label_id = schema.get_vertex_label_id(src_label);
   edge.dst_label_id = schema.get_vertex_label_id(dst_label);
   edge.edge_label_id = schema.get_edge_label_id(edge_label);
-  // get edge
-  if (edge.property_name.empty()) {
-    edge.property_name = schema.get_edge_property_names(
-        edge.src_label_id, edge.dst_label_id, edge.edge_label_id)[0];
-  } else {
+  auto property_name = schema.get_edge_property_names(
+      edge.src_label_id, edge.dst_label_id, edge.edge_label_id)[0];
+  if (is_get == false) {
     // update or add
     PropertyType colType = schema.get_edge_property(
         edge.src_label_id, edge.dst_label_id, edge.edge_label_id);
@@ -306,6 +306,7 @@ void GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
   edge.dst_pk_value = ConvertStringToAny(
       edge.dst_pk_value.to_string(),
       std::get<0>(schema.get_vertex_primary_key(edge.dst_label_id)[0]));
+  return property_name;
 }
 
 void GraphDBOperations::checkEdgeExistsWithInsert(
@@ -373,12 +374,8 @@ void GraphDBOperations::singleInsertVertex(
     GraphDBSession& session) {
   auto txnWrite = session.GetSingleVertexInsertTransaction();
   for (auto& vertex : vertex_data) {
-    std::vector<Any> insert_arr;
-    for (auto& prop : vertex.properties) {
-      insert_arr.push_back(prop.second);
-    }
-    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value, insert_arr) ==
-        false) {
+    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value,
+                           vertex.properties) == false) {
       txnWrite.Abort();
       throw std::runtime_error(
           "Fail to create vertex: " + vertex.pk_value.to_string() +
@@ -402,12 +399,8 @@ void GraphDBOperations::multiInsert(std::vector<VertexData>&& vertex_data,
                                     GraphDBSession& session) {
   auto txnWrite = session.GetInsertTransaction();
   for (auto& vertex : vertex_data) {
-    std::vector<Any> insert_arr;
-    for (auto& prop : vertex.properties) {
-      insert_arr.push_back(prop.second);
-    }
-    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value, insert_arr) ==
-        false) {
+    if (txnWrite.AddVertex(vertex.label_id, vertex.pk_value,
+                           vertex.properties) == false) {
       txnWrite.Abort();
       throw std::runtime_error(
           "Fail to create vertex: " + vertex.pk_value.to_string() +
@@ -476,7 +469,7 @@ void GraphDBOperations::updateVertex(std::vector<VertexData>&& vertex_data,
   auto txnWrite = session.GetUpdateTransaction();
   for (int i = 0; i < int(vertex.properties.size()); i++) {
     if (txnWrite.SetVertexField(vertex.label_id, vertex_lid, i,
-                                vertex.properties[i].second) == false) {
+                                vertex.properties[i]) == false) {
       txnWrite.Abort();
       throw std::runtime_error("Fail to update vertex");
     }
@@ -517,7 +510,8 @@ void GraphDBOperations::updateEdge(std::vector<EdgeData>&& edge_data,
 }
 
 nlohmann::json GraphDBOperations::getVertex(
-    std::vector<VertexData>&& vertex_data, GraphDBSession& session) {
+    std::vector<VertexData>&& vertex_data,
+    std::vector<std::string> property_names, GraphDBSession& session) {
   auto& vertex = vertex_data[0];
   nlohmann::json result = nlohmann::json::array();
   auto txn = session.GetReadTransaction();
@@ -528,7 +522,7 @@ nlohmann::json GraphDBOperations::getVertex(
   }
   for (int i = 0; i < vertex_db.FieldNum(); i++) {
     nlohmann::json values;
-    values["name"] = vertex.properties[i].first;
+    values["name"] = property_names[i];
     values["value"] = vertex_db.GetField(i).to_string();
     result.push_back(values);
   }
@@ -537,6 +531,7 @@ nlohmann::json GraphDBOperations::getVertex(
 }
 
 nlohmann::json GraphDBOperations::getEdge(std::vector<EdgeData>&& edge_data,
+                                          std::string property_name,
                                           GraphDBSession& session) {
   const auto& edge = edge_data[0];
   nlohmann::json result = nlohmann::json::array();
@@ -555,7 +550,7 @@ nlohmann::json GraphDBOperations::getEdge(std::vector<EdgeData>&& edge_data,
     if (edgeIt.GetNeighbor() != dst_vid)
       continue;
     nlohmann::json push_json;
-    push_json["name"] = edge.property_name;
+    push_json["name"] = property_name;
     push_json["value"] = edgeIt.GetData().to_string();
     result.push_back(push_json);
     break;

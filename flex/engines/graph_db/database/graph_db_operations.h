@@ -28,7 +28,7 @@ namespace gs {
 struct VertexData {
   Any pk_value;
   label_t label_id;
-  std::vector<std::pair<std::string, Any>> properties;
+  std::vector<Any> properties;
   VertexData() {}
   ~VertexData() {}
 };
@@ -37,7 +37,6 @@ struct EdgeData {
   label_t src_label_id, dst_label_id, edge_label_id;
   Any src_pk_value, dst_pk_value;
   Any property_value;
-  std::string property_name;
   EdgeData() {}
   ~EdgeData() {}
 };
@@ -75,11 +74,15 @@ class GraphDBOperations {
                             const Schema& schema, GraphDBSession& session);
   // check schema
   static void checkVertexSchema(const Schema& schema, VertexData& vertex,
-                                const std::string& label);
-  static void checkEdgeSchema(const Schema& schema, EdgeData& edge,
-                              const std::string& src_label,
-                              const std::string& dst_label,
-                              const std::string& edge_label);
+                                const std::string& label,
+                                std::vector<std::string>& input_property_names,
+                                bool is_get = false);
+
+  static std::string checkEdgeSchema(const Schema& schema, EdgeData& edge,
+                                     const std::string& src_label,
+                                     const std::string& dst_label,
+                                     const std::string& edge_label,
+                                     bool is_get = false);
 
   // The following interfaces are called after the Transaction is constructed
   // db check
@@ -91,8 +94,8 @@ class GraphDBOperations {
                                 GraphDBSession& session);
   // db operations
   static void multiInsert(std::vector<VertexData>&& vertex_data,
-                                std::vector<EdgeData>&& edge_data,
-                                GraphDBSession& session);
+                          std::vector<EdgeData>&& edge_data,
+                          GraphDBSession& session);
   static void singleInsertVertex(std::vector<VertexData>&& vertex_data,
                                  std::vector<EdgeData>&& edge_data,
                                  GraphDBSession& session);
@@ -108,8 +111,10 @@ class GraphDBOperations {
   static void updateEdge(std::vector<EdgeData>&& edge_data,
                          GraphDBSession& session);
   static nlohmann::json getVertex(std::vector<VertexData>&& vertex_data,
+                                  std::vector<std::string> property_names,
                                   GraphDBSession& session);
   static nlohmann::json getEdge(std::vector<EdgeData>&& edge_data,
+                                std::string property_name,
                                 GraphDBSession& session);
 };
 
