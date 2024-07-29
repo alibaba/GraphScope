@@ -86,8 +86,7 @@ seastar::future<admin_query_result> executor::create_vertex(
         gs::Result<seastar::sstring>(result.value()));
   }
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(
-          gs::Status(result.status().error_code(), result.status().error_message())));
+      gs::Result<seastar::sstring>(result.status()));
 }
 
 seastar::future<admin_query_result> executor::create_edge(
@@ -117,8 +116,7 @@ seastar::future<admin_query_result> executor::create_edge(
         gs::Result<seastar::sstring>(result.value()));
   }
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(
-          gs::Status(result.status().error_code(), result.status().error_message())));
+      gs::Result<seastar::sstring>(result.status()));
 }
 
 seastar::future<admin_query_result> executor::update_vertex(
@@ -150,8 +148,7 @@ seastar::future<admin_query_result> executor::update_vertex(
         gs::Result<seastar::sstring>(result.value()));
   }
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(
-          gs::Status(result.status().error_code(), result.status().error_message())));
+      gs::Result<seastar::sstring>(result.status()));
 }
 seastar::future<admin_query_result> executor::update_edge(
     graph_management_param&& param) {
@@ -182,8 +179,7 @@ seastar::future<admin_query_result> executor::update_edge(
         gs::Result<seastar::sstring>(result.value()));
   }
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(
-          gs::Status(result.status().error_code(), result.status().error_message())));
+      gs::Result<seastar::sstring>(result.status()));
 }
 
 seastar::future<admin_query_result> executor::get_vertex(
@@ -210,8 +206,7 @@ seastar::future<admin_query_result> executor::get_vertex(
         gs::Result<seastar::sstring>(result.value()));
   }
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(
-          gs::Status(result.status().error_code(), result.status().error_message())));
+      gs::Result<seastar::sstring>(result.status()));
 }
 
 seastar::future<admin_query_result> executor::get_edge(
@@ -237,8 +232,7 @@ seastar::future<admin_query_result> executor::get_edge(
         gs::Result<seastar::sstring>(result.value()));
   }
   return seastar::make_ready_future<admin_query_result>(
-      gs::Result<seastar::sstring>(
-          gs::Status(result.status().error_code(), result.status().error_message())));
+      gs::Result<seastar::sstring>(result.status()));
 }
 
 seastar::future<admin_query_result> executor::delete_vertex(

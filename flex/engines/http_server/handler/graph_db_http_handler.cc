@@ -430,18 +430,22 @@ class adhoc_query_handler : public StoppableHandler {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
             .create_vertex(graph_management_param{
                 std::make_pair(std::move(graph_id), std::move(req->content))})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else if (path.find("edge") != seastar::sstring::npos) {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
             .create_edge(graph_management_param{
                 std::make_pair(std::move(graph_id), std::move(req->content))})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (method == "GET") {
       auto graph_id = trim_slash(req->param.at("graph_id"));
@@ -449,18 +453,22 @@ class adhoc_query_handler : public StoppableHandler {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
             .get_vertex(graph_management_query_param{std::make_pair(
                 std::move(graph_id), std::move(req->query_parameters))})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else if (path.find("edge") != seastar::sstring::npos) {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
             .get_edge(graph_management_query_param{std::make_pair(
                 std::move(graph_id), std::move(req->query_parameters))})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (method == "DELETE") {
       auto graph_id = trim_slash(req->param.at("graph_id"));
@@ -468,18 +476,22 @@ class adhoc_query_handler : public StoppableHandler {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
             .delete_vertex(graph_management_param{
                 std::make_pair(std::move(graph_id), std::move(req->content))})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else if (path.find("edge") != seastar::sstring::npos) {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
             .delete_edge(graph_management_param{
                 std::make_pair(std::move(graph_id), std::move(req->content))})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     } else if (method == "PUT") {
       auto graph_id = trim_slash(req->param.at("graph_id"));
@@ -487,18 +499,22 @@ class adhoc_query_handler : public StoppableHandler {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
             .update_vertex(graph_management_param{
                 std::make_pair(std::move(graph_id), std::move(req->content))})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       } else if (path.find("edge") != seastar::sstring::npos) {
         return get_executors()[StoppableHandler::shard_id()][dst_executor]
             .update_edge(graph_management_param{
                 std::make_pair(std::move(graph_id), std::move(req->content))})
-            .then_wrapped([rep = std::move(rep)](
-                              seastar::future<admin_query_result>&& fut) mutable {
-              return return_reply_with_result(std::move(rep), std::move(fut));
-            });
+            .then_wrapped(
+                [rep = std::move(rep)](
+                    seastar::future<admin_query_result>&& fut) mutable {
+                  return return_reply_with_result(std::move(rep),
+                                                  std::move(fut));
+                });
       }
     }
     if (path != "/v1/graph/current/adhoc_query" &&
@@ -796,57 +812,64 @@ seastar::future<> graph_db_http_handler::set_routes() {
     {
       // Query Vertex information
       auto match_rule = new seastar::httpd::match_rule(
-          new adhoc_query_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency));
+          new adhoc_query_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/vertex");
       r.add(match_rule, seastar::httpd::operation_type::GET);
     }
     {
       // Query Edge information
-      auto match_rule = new seastar::httpd::match_rule(new adhoc_query_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency));
+      auto match_rule = new seastar::httpd::match_rule(
+          new adhoc_query_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/edge");
       r.add(match_rule, seastar::httpd::operation_type::GET);
     }
     {
       // Delete Vertex
-      auto match_rule = new seastar::httpd::match_rule(new adhoc_query_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency));
+      auto match_rule = new seastar::httpd::match_rule(
+          new adhoc_query_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/vertex");
       r.add(match_rule, SEASTAR_DELETE);
     }
     {
       // Delete Edge
-      auto match_rule = new seastar::httpd::match_rule(new adhoc_query_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency));
+      auto match_rule = new seastar::httpd::match_rule(
+          new adhoc_query_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/edge");
       r.add(match_rule, SEASTAR_DELETE);
     }
     {
       // add Vertex
-      auto match_rule = new seastar::httpd::match_rule(new adhoc_query_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency));
+      auto match_rule = new seastar::httpd::match_rule(
+          new adhoc_query_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/vertex");
       r.add(match_rule, seastar::httpd::operation_type::POST);
     }
     {
       // add Edge
-      auto match_rule = new seastar::httpd::match_rule(new adhoc_query_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency));
+      auto match_rule = new seastar::httpd::match_rule(
+          new adhoc_query_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/edge");
       r.add(match_rule, seastar::httpd::operation_type::POST);
     }
     {
       // update Vertex
-      auto match_rule = new seastar::httpd::match_rule(new adhoc_query_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency));
+      auto match_rule = new seastar::httpd::match_rule(
+          new adhoc_query_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/vertex");
       r.add(match_rule, seastar::httpd::operation_type::PUT);
     }
     {
       // update Edge
-      auto match_rule = new seastar::httpd::match_rule(new adhoc_query_handler(ic_query_group_id, max_group_id, group_inc_step,
-                              shard_query_concurrency));
+      auto match_rule = new seastar::httpd::match_rule(
+          new adhoc_query_handler(ic_query_group_id, max_group_id,
+                                  group_inc_step, shard_query_concurrency));
       match_rule->add_str("/v1/graph").add_param("graph_id").add_str("/edge");
       r.add(match_rule, seastar::httpd::operation_type::PUT);
     }
