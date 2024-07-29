@@ -341,7 +341,11 @@ def check_giraph_app_graph_consistency(
             graph_actual_type_params[cpp_index], java_app_type_params[java_index]
         ):
             raise RuntimeError(
-                f"Error in check app and graph consistency, type params index {cpp_index}, cpp: {graph_actual_type_params[cpp_index]}, java: {java_app_type_params[java_index]}"
+                "Error in check app and graph consistency, type params index {}, cpp: {}, java: {}".format(
+                    cpp_index,
+                    graph_actual_type_params[cpp_index],
+                    java_app_type_params[java_index],
+                )
             )
 
     return True
