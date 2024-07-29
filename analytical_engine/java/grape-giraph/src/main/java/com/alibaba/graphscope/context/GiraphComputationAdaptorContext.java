@@ -171,9 +171,11 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
         {
             long previous = 0;
             try {
-                if (conf.getGrapeVdataClass().equals(String.class)) {
+                if (conf.getGrapeVdataClass().equals(String.class)
+                        || conf.getGrapeVdataClass().equals(StringView.class)) {
                     for (long lid = 0; lid < innerVerticesNum; ++lid) {
-                        vertexDataManager.getVertexData(lid).write(outputStream);
+                        // Write the output of toString().
+                        outputStream.writeBytes(vertexDataManager.getVertexData(lid).toString());
                         long cur = outputStream.bytesWriten();
                         offsets[(int) lid] = cur - previous;
                         maxOffset = Math.max(offsets[(int) lid], maxOffset);
@@ -258,13 +260,14 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                         throw new IllegalStateException(
                                 "Input stream too short for " + innerVerticesNum + " vertices");
                     }
-                    if (inputStream.read(bytes, 0, (int) offsets[(int) lid]) == -1) {
+                    int bytes_read = inputStream.read(bytes, 0, (int) offsets[(int) lid]);
+                    if (bytes_read == -1) {
                         throw new IllegalStateException("read input stream failed");
                     }
                     // This string is not readable.
                     StdString value = (StdString) vertexArray.get(grapeVertex);
                     // TODO: can be optimized without creating a java string
-                    value.fromJavaString(new String(bytes));
+                    value.fromJavaString(new String(bytes, 0, bytes_read));
                 }
             } else {
                 throw new IllegalStateException(
