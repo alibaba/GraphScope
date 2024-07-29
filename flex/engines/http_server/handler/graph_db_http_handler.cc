@@ -147,7 +147,7 @@ class stored_proc_handler : public StoppableHandler {
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
         dispatcher_(shard_concurrency) {
-    auto executors = get_executors();
+    auto& executors = get_executors();
     CHECK(executors.size() >= StoppableHandler::shard_id());
     executors[StoppableHandler::shard_id()].reserve(shard_concurrency);
     hiactor::scope_builder builder;
