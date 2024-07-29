@@ -25,6 +25,7 @@ import pytest
 
 from gs_interactive.client.driver import Driver
 from gs_interactive.models import *
+from gs_interactive.client.status import StatusCode
 
 
 class TestDriver(unittest.TestCase):
@@ -77,6 +78,8 @@ class TestDriver(unittest.TestCase):
         self.callProcedure()
         self.callProcedureWithHttp()
         self.callProcedureWithHttpCurrent()
+        # test stop the service, and submit queries
+        self.queryWithServiceStop()
         self.createDriver()
 
     def createGraph(self):
@@ -327,6 +330,35 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.get_service_status()
         assert resp.is_ok()
         print("get service status: ", resp.get_value())
+
+    def queryWithServiceStop(self):
+        # stop service
+        print("stop service: ")
+        stop_res = self._sess.stop_service()
+        assert stop_res.is_ok()
+        # submit query on stopped service should raise exception
+        req = QueryRequest(
+            query_name=self._cpp_proc_name,
+            arguments=[
+                TypedValue(
+                    type=GSDataType(PrimitiveType(primitive_type="DT_SIGNED_INT32")),
+                    value=1,
+                )
+            ],
+        )
+        resp = self._sess.call_procedure_current(params=req)
+        assert not resp.is_ok()
+        print("call procedure failed: ", resp.get_status_message())
+        assert resp.get_status().get_code() == StatusCode.SERVICE_UNAVAILABLE
+
+        # start service
+        print("start service: ")
+        start_res = self._sess.start_service(
+            start_service_request=StartServiceRequest(graph_id=self._graph_id)
+        )
+        assert start_res.is_ok()
+        # wait 5 seconds
+        time
 
     def restartOnNewGraph(self):
         original_graph_id = None
