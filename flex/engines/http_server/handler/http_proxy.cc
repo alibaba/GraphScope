@@ -21,14 +21,14 @@
 namespace server {
 
 HeartBeatChecker::HeartBeatChecker(
-    std::vector<httplib::Client>& clients,
+    // std::vector<httplib::Client>& clients,
     const std::vector<std::pair<std::string, uint16_t>>& endpoints,
     int32_t heart_beat_interval)
     : running_(false),
       heart_beat_interval_(DEFAULT_HEART_BEAT_INTERVAL),
-      clients_(clients),
+      // clients_(clients),
       endpoints_(endpoints) {
-  endpoint_status_.resize(clients.size(), true);
+  endpoint_status_.resize(endpoints.size(), true);
 }
 
 HeartBeatChecker::~HeartBeatChecker() {
@@ -57,7 +57,7 @@ gs::Status HeartBeatChecker::stop() {
 
 void HeartBeatChecker::check_heartbeat() {
   while (running_) {
-    for (size_t i = 0; i < clients_.size(); ++i) {
+    for (size_t i = 0; i < endpoints_.size(); ++i) {
       httplib::Client client(endpoints_[i].first, endpoints_[i].second);
       auto res = client.Get("/");
       if (!res) {
@@ -115,9 +115,9 @@ void HttpProxy::close() {
     if (heartbeat_checker_) {
       heartbeat_checker_->stop();
     }
-    for (auto& client : clients_) {
-      client.stop();
-    }
+    // for (auto& client : clients_) {
+    //   client.stop();
+    // }
     initialized_ = false;
   }
 }
@@ -133,26 +133,25 @@ gs::Status HttpProxy::init(
     return gs::Status(gs::StatusCode::InValidArgument, "No endpoint provided");
   }
   // TODO: check connection to endpoint, if not connected, return error
-  clients_.reserve(endpoints_.size());
-  for (auto& endpoint : endpoints_) {
-    httplib::Client client(endpoint.first, endpoint.second);
-    client.set_connection_timeout(CONNECTION_TIMEOUT, 0);  // 5s
-    client.set_read_timeout(READ_TIMEOUT, 0);              // 10s
-    client.set_write_timeout(WRITE_TIMEOUT, 0);            // 10s
-    clients_.emplace_back(std::move(client));
-  }
-  // test connection
-  for (auto& client : clients_) {
-    auto res = client.Get("/heartbeat");
-    if (!res) {
-      return gs::Status(gs::StatusCode::InternalError,
-                        "Failed to connect to endpoint");
-    }
-  }
+  // clients_.reserve(endpoints_.size());
+  // for (auto& endpoint : endpoints_) {
+  //   httplib::Client client(endpoint.first, endpoint.second);
+  //   client.set_connection_timeout(CONNECTION_TIMEOUT, 0);  // 5s
+  //   client.set_read_timeout(READ_TIMEOUT, 0);              // 10s
+  //   client.set_write_timeout(WRITE_TIMEOUT, 0);            // 10s
+  //   clients_.emplace_back(std::move(client));
+  // }
+  // // test connection
+  // for (auto& client : clients_) {
+  //   auto res = client.Get("/heartbeat");
+  //   if (!res) {
+  //     return gs::Status(gs::StatusCode::InternalError,
+  //                       "Failed to connect to endpoint");
+  //   }
+  // }
   // start heart beat check
   if (enable_heart_beat_check_) {
-    heartbeat_checker_ =
-        std::make_unique<HeartBeatChecker>(clients_, endpoints_);
+    heartbeat_checker_ = std::make_unique<HeartBeatChecker>(endpoints_);
     RETURN_IF_NOT_OK(heartbeat_checker_->start());
   }
   initialized_ = true;
@@ -163,7 +162,7 @@ seastar::future<gs::Result<HttpForwardingResponses>> HttpProxy::forward_request(
     const std::string& path, const std::string& method, const std::string& body,
     const seastar_http_headers_t& headers) {
   LOG(INFO) << "Forwarding request to " << path << ", method: " << method
-            << ", body: " << body << ", headers: " << headers.size();
+            << ", body: " << body.size() << ", headers: " << headers.size();
   if (!initialized_) {
     return seastar::make_ready_future<gs::Result<HttpForwardingResponses>>(
         HttpForwardingResponses{});
@@ -175,12 +174,12 @@ seastar::future<gs::Result<HttpForwardingResponses>> HttpProxy::forward_request(
     if (heartbeat_checker_) {
       const auto& endpoint_status = heartbeat_checker_->get_endpoint_status();
       // First check if all the endpoints
-      for (size_t i = 0; i < clients_.size(); ++i) {
-        if (!endpoint_status[i]) {
-          LOG(WARNING) << "Endpoint at index " << i << " is not available";
-          all_endpoints_ready = false;
-        }
-      }
+      // for (size_t i = 0; i < clients_.size(); ++i) {
+      // if (!endpoint_status[i]) {
+      // LOG(WARNING) << "Endpoint at index " << i << " is not available";
+      // all_endpoints_ready = false;
+      // }
+      // }
     }
     if (!all_endpoints_ready) {
       // TODO: add results to indicate the endpoint is not available
@@ -190,7 +189,7 @@ seastar::future<gs::Result<HttpForwardingResponses>> HttpProxy::forward_request(
   }
   // HttpForwardingResponses replies;
   // First send to client 0 and then send to client 1
-  return do_send_requests(path, method, body, headers, clients_)
+  return do_send_requests(path, method, body, headers)
       .then_wrapped([](seastar::future<HttpForwardingResponses>&& fut) {
         try {
           auto responses = fut.get();
@@ -205,9 +204,9 @@ seastar::future<gs::Result<HttpForwardingResponses>> HttpProxy::forward_request(
 seastar::future<HttpForwardingResponses> HttpProxy::do_send_request(
     const std::string& path, const std::string& method, const std::string& body,
     const seastar_http_headers_t& headers,
-    std::vector<httplib::Client>& clients, size_t ind,
-    HttpForwardingResponses&& responses) {
-  if (ind >= clients.size()) {
+    // std::vector<httplib::Client>& clients,
+    size_t ind, HttpForwardingResponses&& responses) {
+  if (ind >= endpoints_.size()) {
     return seastar::make_ready_future<HttpForwardingResponses>(
         std::move(responses));
   }
@@ -221,21 +220,28 @@ seastar::future<HttpForwardingResponses> HttpProxy::do_send_request(
 
   HttpForwardingResponse response;
 
-  auto lambda = [this, &path, &method, &body, &headers, &clients, ind,
-                 &responses]() {
+  auto lambda = [this, &path, &method, &body, &headers, ind, &responses]() {
+    seastar::sstring content_type = "application/json";
+    seastar::sstring sstr("Content-Type");
+    if (headers.find(sstr) != headers.end()) {
+      content_type = headers.at(sstr);
+    }
+    httplib::Client client(endpoints_[ind].first, endpoints_[ind].second);
+    client.set_connection_timeout(CONNECTION_TIMEOUT, 0);  // 5s
+    client.set_read_timeout(READ_TIMEOUT, 0);              // 10s
+    client.set_write_timeout(WRITE_TIMEOUT, 0);            // 10s
     if (method == "GET") {
       VLOG(10) << "Forwarding GET request to " << path;
-      return to_response(
-          clients[ind].Get(path.c_str(), to_httplib_headers(headers)));
+      return to_response(client.Get(path.c_str(), to_httplib_headers(headers)));
     } else if (method == "POST") {
-      return to_response(clients[ind].Post(
-          path.c_str(), to_httplib_headers(headers), body, "application/json"));
+      return to_response(client.Post(path.c_str(), to_httplib_headers(headers),
+                                     body, content_type));
     } else if (method == "DELETE") {
       return to_response(
-          clients[ind].Delete(path.c_str(), to_httplib_headers(headers)));
+          client.Delete(path.c_str(), to_httplib_headers(headers)));
     } else {  // must be put
-      return to_response(clients[ind].Put(
-          path.c_str(), to_httplib_headers(headers), body, "application/json"));
+      return to_response(client.Put(path.c_str(), to_httplib_headers(headers),
+                                    body, content_type));
     }
   };
 
@@ -261,16 +267,14 @@ seastar::future<HttpForwardingResponses> HttpProxy::do_send_request(
     response = lambda();
     responses.emplace_back(std::move(response));
   }
-  return do_send_request(path, method, body, headers, clients, ind + 1,
+  return do_send_request(path, method, body, headers, ind + 1,
                          std::move(responses));
 }
 seastar::future<HttpForwardingResponses> HttpProxy::do_send_requests(
     const std::string& path, const std::string& method, const std::string& body,
-    const seastar_http_headers_t& headers,
-    std::vector<httplib::Client>& clients) {
+    const seastar_http_headers_t& headers) {
   HttpForwardingResponses responses;
-  return do_send_request(path, method, body, headers, clients, 0,
-                         std::move(responses));
+  return do_send_request(path, method, body, headers, 0, std::move(responses));
 }
 
 }  // namespace server

@@ -21,8 +21,8 @@ NoKata: &nokata
 Defaults: &defaults
   dnsPolicy: &dnspolicy None
   dnsConfig: &dnsconfig
-    # nameservers: ["33.18.9.125"] #118f
-    nameservers: ["11.163.105.32"] #88n
+    nameservers: ["33.18.9.125"] #118f
+    #nameservers: ["11.163.105.32"] #88n
     searches:
     - kubetask.svc.cluster.local
     - svc.cluster.local

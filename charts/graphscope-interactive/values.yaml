@@ -112,13 +112,20 @@ cronjob:
   podAnnotations: {}
   podLabels: {}
 
+nginx:
+  image:
+    registry: reg.docker.alibaba-inc.com
+    repository: "7brs/interactive"
+    tag: "nginx-debug"
+    pullPolicy: IfNotPresent
+
 ## GraphScope Interactive parameters
 ##
 primary:
   image:
-    # registry: registry.cn-hongkong.aliyuncs.com
+    #registry: registry.cn-hongkong.aliyuncs.com
     registry: reg.docker.alibaba-inc.com
-    # repository: graphscope/interactive
+    #repository: graphscope/interactive
     repository: 7brs/interactive
     # Overrides the image tag whose default is the chart appVersion.
     tag: "debug"
@@ -214,11 +221,11 @@ primary:
   ##
   resources: 
     limits:
-      cpu: 16000m
+      cpu: 64000m
       memory: 32Gi
     requests:
-      cpu: 8000m
-      memory: 16Gi
+      cpu: 64000m
+      memory: 32Gi
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -357,9 +364,9 @@ primary:
 ##
 secondary:
   image:
-    # registry: registry.cn-hongkong.aliyuncs.com
+    #registry: registry.cn-hongkong.aliyuncs.com
     registry: reg.docker.alibaba-inc.com
-    # repository: graphscope/interactive
+    #repository: graphscope/interactive
     repository: 7brs/interactive
     # Overrides the image tag whose default is the chart appVersion.
     tag: "debug"
@@ -453,11 +460,11 @@ secondary:
   ##
   resources: 
     limits:
-      cpu: 320000m
-      memory: 200Gi
+      cpu: 640000m
+      memory: 400Gi
     requests:
-      cpu: 32000m
-      memory: 200Gi
+      cpu: 64000m
+      memory: 300Gi
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -517,7 +524,7 @@ secondary:
       - ReadWriteOnce # read and write by a single node.
     ## Persistent Volume size
     ##
-    size: 200Gi
+    size: 300Gi
     ## selector can be used to match an existing PersistentVolume
     ## selector:
     ##   matchLabels:
@@ -556,8 +563,8 @@ secondary:
       admin: ""
     ## Service clusterIP
     ##
-    # clusterIP: None
-    clusterIP: ""
+    clusterIP: None
+    #clusterIP: ""
     ## Set the LoadBalancer service type to internal only.
     ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
     ##
@@ -597,9 +604,9 @@ secondary:
 ##
 frontend:
   image:
-    # registry: registry.cn-hongkong.aliyuncs.com
+    #registry: registry.cn-hongkong.aliyuncs.com
     registry: reg.docker.alibaba-inc.com
-    # repository: graphscope/interactive
+    #repository: graphscope/interactive
     repository: 7brs/interactive
     # Overrides the image tag whose default is the chart appVersion.
     tag: "debug"
