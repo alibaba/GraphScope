@@ -637,41 +637,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--endpoint", type=str, default="http://localhost:7777")
     parser.add_argument("--proc-name", type=str, default="huoyan")
-    parser.add_argument("--remove-old-graph", type=bool, default=False)
-    parser.add_argument("--ds", type=str)
+    parser.add_argument("--graph-id", type=str)
 
     # finish
     args = parser.parse_args()
     print(args)
     print("connecting to ", args.endpoint)
-    if args.ds is None:
-        # get the date string of yesterday, yyyymmdd
-        import datetime
-
-        yesterday = datetime.datetime.now() - datetime.timedelta(days=2)
-        ds = yesterday.strftime("%Y%m%d")
-    else:
-        ds = args.ds
-    print("ds: ", ds)
+    print("graph id", args.graph_id)
     driver = Driver(args.endpoint)
     sess = driver.session()
     # get current running graph
-    old_graph = get_current_running_graph(sess)
-    print("-----------------Finish getting current running graph-----------------")
-    print("old graph: ", old_graph)
 
-    graph_id = create_graph(sess, ds)
-    print("-----------------Finish creating graph-----------------")
-    print("graph_id: ", graph_id)
-
-    job_id = loading_graph(sess, graph_id, ds)
-    wait_job_finish(sess, job_id)
-    print("-----------------Finish loading graph-----------------")
-
-    create_procedure(sess, graph_id, "procedure.cc", args.proc_name)
+    create_procedure(sess, args.graph_id, "procedure.cc", args.proc_name)
     print("-----------------Finish creating procedure-----------------")
 
-    restart_service(sess, graph_id)
+    restart_service(sess, args.graph_id)
     print("-----------------Finish restarting service-----------------")
 
     get_service_status(sess)

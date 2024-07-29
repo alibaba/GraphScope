@@ -9,20 +9,20 @@ namespace gs {
 // TODO: make sure the max vid is less than 2^30
 inline vid_t encode_vid(label_t v_label, vid_t vid) {
   // vid_t is uint32_t, use the first 4 bits to store label id
-  return ((vid_t)v_label << 31) | vid;
+  return ((vid_t) v_label << 31) | vid;
 }
 
 inline label_t decode_label(vid_t encoded_vid) { return encoded_vid >> 31; }
 
 inline vid_t decode_vid(vid_t encoded_vid) { return encoded_vid & 0x7FFFFFFF; }
 
-inline int64_t get_oid_from_encoded_vid(ReadTransaction &txn,
+inline int64_t get_oid_from_encoded_vid(ReadTransaction& txn,
                                         vid_t encoded_vid) {
   auto label = decode_label(encoded_vid);
   auto vid = decode_vid(encoded_vid);
   CHECK(encode_vid(label, vid) == encoded_vid)
-      << "vid: " << encoded_vid << ", label " << (int32_t)label << ", local id "
-      << vid;
+      << "vid: " << encoded_vid << ", label " << (int32_t) label
+      << ", local id " << vid;
   return txn.GetVertexId(label, vid).AsInt64();
 }
 
@@ -82,7 +82,8 @@ struct ResultsCreator {
       std::shared_ptr<TypedColumn<std::string_view>>
           typed_comp_license_number_col,
       std::shared_ptr<TypedColumn<std::string_view>> typed_person_named_col)
-      : comp_label_id_(comp_label_id), person_label_id_(person_label_id),
+      : comp_label_id_(comp_label_id),
+        person_label_id_(person_label_id),
         typed_comp_named_col_(typed_comp_named_col),
         typed_comp_status_col_(typed_comp_status_col),
         typed_comp_credit_code_col_(typed_comp_credit_code_col),
@@ -91,8 +92,8 @@ struct ResultsCreator {
 
   void set_start_vid(uint32_t start_vid) { results_.start_node_id = start_vid; }
 
-  inline std::string
-  get_vertex_label_str_from_encoded_vid(vid_t encoded_vid) const {
+  inline std::string get_vertex_label_str_from_encoded_vid(
+      vid_t encoded_vid) const {
     auto label = decode_label(encoded_vid);
     if (label == comp_label_id_) {
       return "company";
@@ -103,9 +104,8 @@ struct ResultsCreator {
     }
   }
 
-  inline nlohmann::json
-  get_vertex_properties_from_encoded_vid(ReadTransaction &txn,
-                                         vid_t encoded_vid) const {
+  inline nlohmann::json get_vertex_properties_from_encoded_vid(
+      ReadTransaction& txn, vid_t encoded_vid) const {
     auto label = decode_label(encoded_vid);
     auto vid = decode_vid(encoded_vid);
     auto oid = get_oid_from_encoded_vid(txn, encoded_vid);
@@ -129,8 +129,8 @@ struct ResultsCreator {
     return properties;
   }
 
-  inline std::string_view
-  get_vertex_name_from_encoded_vid(vid_t encoded_vid) const {
+  inline std::string_view get_vertex_name_from_encoded_vid(
+      vid_t encoded_vid) const {
     auto label = decode_label(encoded_vid);
     auto vid = decode_vid(encoded_vid);
     if (label == comp_label_id_) {
@@ -145,11 +145,11 @@ struct ResultsCreator {
   }
 
   // TODO: support multiple properties on edge.
-  bool add_result(const std::vector<vid_t> &cur_path,
-                  const std::vector<double> &weights,
-                  const std::vector<int32_t> &rel_types,
-                  const std::vector<std::string_view> &rel_infos,
-                  const std::vector<Direction> &directions) {
+  bool add_result(const std::vector<vid_t>& cur_path,
+                  const std::vector<double>& weights,
+                  const std::vector<int32_t>& rel_types,
+                  const std::vector<std::string_view>& rel_infos,
+                  const std::vector<Direction>& directions) {
     if (cur_path.size() < 2) {
       LOG(ERROR) << "Path size is less than 2";
       return false;
@@ -174,11 +174,11 @@ struct ResultsCreator {
     path.rel_types = rel_types;
     path.rel_infos = rel_infos;
     path.directions = directions;
-    LOG(INFO) << "emplace path: " << gs::to_string(path.vids) << ", "
-              << gs::to_string(path.weights) << ", "
-              << gs::to_string(path.rel_types) << ", "
-              << gs::to_string(path.rel_infos) << ", "
-              << gs::to_string(path.directions);
+    // LOG(INFO) << "emplace path: " << gs::to_string(path.vids) << ", "
+    //            << gs::to_string(path.weights) << ", "
+    //            << gs::to_string(path.rel_types) << ", "
+    //            << gs::to_string(path.rel_infos) << ", "
+    //            << gs::to_string(path.directions);
     results_.path_to_end_node[end_node_id].push_back(path);
     return true;
   }
@@ -188,9 +188,8 @@ struct ResultsCreator {
     return std::to_string(encoded_start_id) + "->" + std::to_string(end_vid);
   }
 
-  inline nlohmann::json
-  get_edge_properties(double weight, int64_t rel_type,
-                      const std::string_view &rel_info) const {
+  inline nlohmann::json get_edge_properties(
+      double weight, int64_t rel_type, const std::string_view& rel_info) const {
     nlohmann::json properties;
     properties["label"] = rel_type_to_string(rel_type);
     properties["weight"] = weight;
@@ -198,11 +197,11 @@ struct ResultsCreator {
     return properties;
   }
 
-  std::string get_result_as_json_string(ReadTransaction &txn) const {
+  std::string get_result_as_json_string(ReadTransaction& txn) const {
     nlohmann::json json = nlohmann::json::array();
     auto start_node_name =
         get_vertex_name_from_encoded_vid(results_.start_node_id);
-    for (const auto &[end_node_id, paths_vec] : results_.path_to_end_node) {
+    for (const auto& [end_node_id, paths_vec] : results_.path_to_end_node) {
       auto end_node_name = get_vertex_name_from_encoded_vid(end_node_id);
       nlohmann::json end_node_json;
       end_node_json["endNodeName"] = end_node_name;
@@ -211,7 +210,7 @@ struct ResultsCreator {
       std::string prev_name;
       nlohmann::json paths = nlohmann::json::array();
       LOG(INFO) << "paths vec size:" << paths_vec.size();
-      for (const auto &path : paths_vec) {
+      for (const auto& path : paths_vec) {
         nlohmann::json path_json = nlohmann::json::object();
         path_json["relationShips"] = nlohmann::json::array();
         path_json["nodes"] = nlohmann::json::array();
@@ -232,7 +231,7 @@ struct ResultsCreator {
             nlohmann::json rel_json;
             rel_json["type"] = rel_type_to_string(path.rel_types[i]);
             rel_json["name"] = rel_json["type"];
-            auto &dir = path.directions[i];
+            auto& dir = path.directions[i];
             if (dir == Direction::Out) {
               rel_json["startNode"] = prev_name;
               rel_json["id"] = build_edge_id(
@@ -273,7 +272,7 @@ struct ResultsCreator {
   std::shared_ptr<TypedColumn<std::string_view>> typed_comp_license_number_col_;
   std::shared_ptr<TypedColumn<std::string_view>> typed_person_named_col_;
 
-  Results results_; // The results of the query.
+  Results results_;  // The results of the query.
 };
 
 /**
@@ -293,15 +292,15 @@ struct ResultsCreator {
  */
 
 class HuoYan : public WriteAppBase {
-public:
-  static constexpr double timeout_sec = 15;
-  static constexpr int32_t REL_TYPE_MAX = 8; // 1 ~ 7
+ public:
+  static constexpr double timeout_sec = 60;
+  static constexpr int32_t REL_TYPE_MAX = 8;  // 1 ~ 7
   HuoYan() : is_initialized_(false) {}
   ~HuoYan() {}
-  bool is_simple(const std::vector<vid_t> &path) {
+  bool is_simple(const std::vector<vid_t>& path) {
     // to check whether there are same vid in the path
     vis_.clear();
-    for (auto &vid : path) {
+    for (auto& vid : path) {
       if (vis_.find(vid) != vis_.end()) {
         return false;
       }
@@ -310,30 +309,30 @@ public:
     return true;
   }
 
-  bool edge_expand(gs::ReadTransaction &txn, const std::vector<vid_t> &vid_vec,
-                   label_t dst_label_id, const AdjListView<RecordView> &edges,
-                   const std::vector<bool> &valid_rel_type_ids, int32_t cur_ind,
-                   std::vector<std::vector<vid_t>> &cur_paths,
-                   std::vector<std::vector<double>> &cur_weights,
-                   std::vector<std::vector<int32_t>> &cur_rel_types,
-                   std::vector<std::vector<std::string_view>> &cur_rel_infos,
-                   std::vector<std::vector<Direction>> &cur_directions,
-                   std::vector<std::vector<vid_t>> &next_paths,
-                   std::vector<std::vector<double>> &next_weights,
-                   std::vector<std::vector<int32_t>> &next_rel_types,
-                   std::vector<std::vector<std::string_view>> &next_rel_infos,
-                   std::vector<std::vector<Direction>> &next_directions,
-                   size_t &result_size, int result_limit, Encoder &output,
-                   double &cur_time_left, Direction direction) {
-    auto &cur_path = cur_paths[cur_ind];
-    auto &cur_rel_type = cur_rel_types[cur_ind];
-    auto &cur_weight = cur_weights[cur_ind];
-    auto &cur_rel_info = cur_rel_infos[cur_ind];
-    auto &cur_direction = cur_directions[cur_ind];
+  bool edge_expand(gs::ReadTransaction& txn, const std::vector<vid_t>& vid_vec,
+                   label_t dst_label_id, const AdjListView<RecordView>& edges,
+                   const std::vector<bool>& valid_rel_type_ids, int32_t cur_ind,
+                   std::vector<std::vector<vid_t>>& cur_paths,
+                   std::vector<std::vector<double>>& cur_weights,
+                   std::vector<std::vector<int32_t>>& cur_rel_types,
+                   std::vector<std::vector<std::string_view>>& cur_rel_infos,
+                   std::vector<std::vector<Direction>>& cur_directions,
+                   std::vector<std::vector<vid_t>>& next_paths,
+                   std::vector<std::vector<double>>& next_weights,
+                   std::vector<std::vector<int32_t>>& next_rel_types,
+                   std::vector<std::vector<std::string_view>>& next_rel_infos,
+                   std::vector<std::vector<Direction>>& next_directions,
+                   size_t& result_size, int result_limit, Encoder& output,
+                   double& cur_time_left, Direction direction) {
+    auto& cur_path = cur_paths[cur_ind];
+    auto& cur_rel_type = cur_rel_types[cur_ind];
+    auto& cur_weight = cur_weights[cur_ind];
+    auto& cur_rel_info = cur_rel_infos[cur_ind];
+    auto& cur_direction = cur_directions[cur_ind];
     double t0 = -grape::GetCurrentTime();
     // The direction is same for all edges.
     cur_direction.emplace_back(direction);
-    for (auto &edge : edges) {
+    for (auto& edge : edges) {
       auto dst = edge.get_neighbor();
       auto encoded_vid = encode_vid(dst_label_id, dst);
       auto data = edge.get_data();
@@ -369,7 +368,7 @@ public:
           if (cur_path.size() != cur_rel_type.size() + 1) {
             throw std::runtime_error("Error Internal state");
           }
-          VLOG(10) << "put path of size: " << cur_rel_type.size();
+          // VLOG(10) << "put path of size: " << cur_rel_type.size();
           if (!results_creator_->add_result(cur_path, cur_weight, cur_rel_type,
                                             cur_rel_info, cur_direction)) {
             LOG(ERROR) << "Failed to add result";
@@ -395,9 +394,10 @@ public:
 
           if (result_size >= result_limit) {
             // output.put_int_at(begin_loc, result_size);
+            LOG(INFO) << "result limit exced: " << result_size;
             output.put_string(results_creator_->get_result_as_json_string(txn));
             txn.Commit();
-            for (auto &vid : vid_vec) {
+            for (auto& vid : vid_vec) {
               valid_comp_vids_[vid] = false;
               results_creator_->clear();
             }
@@ -418,7 +418,7 @@ public:
       LOG(INFO) << "Timeout, result size: " << result_size;
       output.put_string(results_creator_->get_result_as_json_string(txn));
       txn.Commit();
-      for (auto &vid : vid_vec) {
+      for (auto& vid : vid_vec) {
         valid_comp_vids_[vid] = false;
       }
       return true;
@@ -426,7 +426,7 @@ public:
     return false;
   }
 
-  bool initialize(GraphDBSession &graph) {
+  bool initialize(GraphDBSession& graph) {
     LOG(INFO) << "initializing...";
     comp_label_id_ = graph.schema().get_vertex_label_id("company");
     person_label_id_ = graph.schema().get_vertex_label_id("person");
@@ -494,7 +494,7 @@ public:
   }
 
 #define DEBUG
-  bool Query(GraphDBSession &graph, Decoder &input, Encoder &output) {
+  bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) {
     //////////Initialization////////////////////////////
     if (!is_initialized_.load()) {
       if (!initialize(graph)) {
@@ -507,10 +507,6 @@ public:
       LOG(INFO) << "Already initialized";
     }
     ////////////Initialization///////////////////////////
-
-    for (size_t i = 0; i < valid_comp_vids_.size(); ++i) {
-      valid_comp_vids_[i] = false;
-    }
     results_creator_->clear();
     double cur_time_left = timeout_sec;
 
@@ -567,7 +563,7 @@ public:
       }
     }
     LOG(INFO) << count << " out of " << vec_size << " vertices not found";
-    for (auto &vid : vid_vec) {
+    for (auto& vid : vid_vec) {
       valid_comp_vids_[vid] = true;
     }
 
@@ -615,37 +611,37 @@ public:
         auto last_vid = decode_vid(last_vid_encoded);
         auto label = decode_label(last_vid_encoded);
         if (label == comp_label_id_) {
-          const auto &oedges = cmp_invest_outgoing_view.get_edges(last_vid);
+          const auto& oedges = cmp_invest_outgoing_view.get_edges(last_vid);
           if (edge_expand(
                   txn, vid_vec, comp_label_id_, oedges, valid_rel_type_ids, j,
                   cur_paths, cur_weights, cur_rel_types, cur_rel_infos,
                   cur_directions, next_paths, next_weights, next_rel_types,
                   next_rel_infos, next_directions, result_size, result_limit,
                   output, cur_time_left, Direction::Out)) {
-            return true; // early terminate.
+            return true;  // early terminate.
           }
 
-          const auto &iedges = cmp_invest_incoming_view.get_edges(last_vid);
+          const auto& iedges = cmp_invest_incoming_view.get_edges(last_vid);
           if (edge_expand(txn, vid_vec, comp_label_id_, iedges,
                           valid_rel_type_ids, j, cur_paths, cur_weights,
                           cur_rel_types, cur_rel_infos, cur_directions,
                           next_paths, next_weights, next_rel_types,
                           next_rel_infos, next_directions, result_size,
                           result_limit, output, cur_time_left, Direction::In)) {
-            return true; // early terminate.
+            return true;  // early terminate.
           }
 
-          const auto &oedges2 = person_invest_incoming_view.get_edges(last_vid);
+          const auto& oedges2 = person_invest_incoming_view.get_edges(last_vid);
           if (edge_expand(txn, vid_vec, person_label_id_, oedges2,
                           valid_rel_type_ids, j, cur_paths, cur_weights,
                           cur_rel_types, cur_rel_infos, cur_directions,
                           next_paths, next_weights, next_rel_types,
                           next_rel_infos, next_directions, result_size,
                           result_limit, output, cur_time_left, Direction::In)) {
-            return true; // early terminate.
+            return true;  // early terminate.
           }
         } else if (label == person_label_id_) {
-          const auto &oedges = person_invest_outgoing_view.get_edges(last_vid);
+          const auto& oedges = person_invest_outgoing_view.get_edges(last_vid);
           double t0 = -grape::GetCurrentTime();
           if (edge_expand(
                   txn, vid_vec, comp_label_id_, oedges, valid_rel_type_ids, j,
@@ -653,7 +649,7 @@ public:
                   cur_directions, next_paths, next_weights, next_rel_types,
                   next_rel_infos, next_directions, result_size, result_limit,
                   output, cur_time_left, Direction::Out)) {
-            return true; // early terminate.
+            return true;  // early terminate.
           }
         } else {
           LOG(ERROR) << "Invalid label: " << label;
@@ -675,18 +671,18 @@ public:
       next_directions.clear();
     }
 
-    LOG(INFO) << "result size: " << result_size;
     output.put_string(results_creator_->get_result_as_json_string(txn));
     txn.Commit();
-    for (auto &vid : vid_vec) {
+    for (auto& vid : vid_vec) {
       valid_comp_vids_[vid] = false;
       results_creator_->clear();
     }
+    LOG(INFO) << "result size: " << result_size;
 
     return true;
   }
 
-private:
+ private:
   std::atomic<bool> is_initialized_;
   label_t comp_label_id_;
   label_t person_label_id_;
@@ -708,16 +704,17 @@ private:
 
 #undef DEBUG
 
-} // namespace gs
+}  // namespace gs
 
 extern "C" {
-void *CreateApp(gs::GraphDBSession &db) {
-  gs::HuoYan *app = new gs::HuoYan();
-  return static_cast<void *>(app);
+void* CreateApp(gs::GraphDBSession& db) {
+  gs::HuoYan* app = new gs::HuoYan();
+  return static_cast<void*>(app);
 }
 
-void DeleteApp(void *app) {
-  gs::HuoYan *casted = static_cast<gs::HuoYan *>(app);
+void DeleteApp(void* app) {
+  gs::HuoYan* casted = static_cast<gs::HuoYan*>(app);
   delete casted;
 }
 }
+
