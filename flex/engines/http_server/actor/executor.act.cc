@@ -18,8 +18,8 @@
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_operations.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
-#include "flex/engines/http_server/service/hqps_service.h"
-#include "flex/utils/service_utils.h"
+#include "flex/engines/http_server/graph_db_service.h"
+#include "graph_db_service.h"
 #include "nlohmann/json.hpp"
 
 #include <seastar/core/print.hh>
@@ -36,9 +36,9 @@ executor::executor(hiactor::actor_base* exec_ctx, const hiactor::byte_t* addr)
   set_max_concurrency(1);  // set max concurrency for task reentrancy (stateful)
   // initialization
   // ...
-  auto& hqps_service = HQPSService::get();
+  auto& graph_db_service = GraphDBService::get();
   // meta_data_ should be thread safe.
-  metadata_store_ = hqps_service.get_metadata_store();
+  metadata_store_ = graph_db_service.get_metadata_store();
 }
 
 seastar::future<query_result> executor::run_graph_db_query(
