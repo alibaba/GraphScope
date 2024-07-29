@@ -392,6 +392,23 @@ def arrow_project_undirected_graph(arrow_property_graph_undirected):
 
 
 @pytest.fixture(scope="module")
+def p2p_property_graph_string_prop(graphscope_session):
+    g = graphscope_session.g(generate_eid=False, retain_oid=True, directed=True)
+    g = g.add_vertices(
+        f"{property_dir}/p2p-31_property_v_0", "person", properties=[("weight", "str")]
+    )
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+        properties=[("dist", "str")],
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
 def p2p_property_graph(graphscope_session):
     g = graphscope_session.g(generate_eid=False, retain_oid=True, directed=True)
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
@@ -633,6 +650,14 @@ def p2p_property_graph_undirected_perfect_hash(graphscope_session):
 @pytest.fixture(scope="module")
 def p2p_project_directed_graph(p2p_property_graph):
     pg = p2p_property_graph.project(
+        vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
+    )
+    yield pg
+
+
+@pytest.fixture(scope="module")
+def p2p_project_directed_graph_string_prop(p2p_property_graph_string_prop):
+    pg = p2p_property_graph_string_prop.project(
         vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
     )
     yield pg

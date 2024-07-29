@@ -238,6 +238,8 @@ public class Utils {
             return "double";
         } else if (javaType.equals("com.alibaba.graphscope.ds.StringView")) {
             return "std::string";
+        } else if (javaType.equals("com.alibaba.graphscope.stdcxx.StdString")) {
+            return "std::string";
         }
         throw new IllegalStateException("Unrecognized type " + javaType + " sign: " + signed);
     }
