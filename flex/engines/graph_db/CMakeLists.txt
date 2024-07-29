@@ -1,16 +1,11 @@
 file(GLOB_RECURSE GRAPH_DB_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/app/*.cc"
   	                             "${CMAKE_CURRENT_SOURCE_DIR}/database/*.cc")
-if (NOT BUILD_HQPS)
-        list(FILTER GRAPH_DB_SRC_FILES EXCLUDE REGEX ".*hqps_app*.")
-endif()
 
 add_library(flex_graph_db SHARED ${GRAPH_DB_SRC_FILES})
 
 target_include_directories(flex_graph_db PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 target_link_libraries(flex_graph_db flex_rt_mutable_graph flex_utils ${GLOG_LIBRARIES} ${LIBGRAPELITE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-if (BUILD_HQPS)
-        target_link_libraries(flex_graph_db hqps_plan_proto)
-endif()
+target_link_libraries(flex_graph_db hqps_plan_proto)
 install_flex_target(flex_graph_db)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db.h
@@ -28,8 +23,7 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db.h
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/app/app_base.h
         DESTINATION include/flex/engines/graph_db/app)
-if (BUILD_HQPS)
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/app/hqps_app.h
-                DESTINATION include/flex/engines/graph_db/app)
-endif()
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/app/hqps_app.h
+        DESTINATION include/flex/engines/graph_db/app)
+
 

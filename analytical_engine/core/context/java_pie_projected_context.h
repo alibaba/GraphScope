@@ -71,30 +71,12 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
   }
 
   void Output(std::ostream& os) override {
-    JNIEnvMark m;
-    if (m.env()) {
-      JNIEnv* env = m.env();
-
-      jclass context_class = env->GetObjectClass(this->context_object());
-      CHECK_NOTNULL(context_class);
-
-      const char* descriptor = "(Lcom/alibaba/graphscope/fragment/IFragment;)V";
-      jmethodID output_methodID =
-          env->GetMethodID(context_class, "Output", descriptor);
-      if (output_methodID) {
-        VLOG(1) << "Found output method in java context.";
-        env->CallVoidMethod(this->context_object(), output_methodID,
-                            this->fragment_object());
-      } else {
-        VLOG(1) << "Output method not found, skip.";
-      }
-    } else {
-      LOG(ERROR) << "JNI env not available.";
-    }
+    LOG(WARNING) << "Output is not supported for JavaPIEProjectedContext";
   }
 
   std::shared_ptr<gs::IContextWrapper> CreateInnerCtxWrapper(
       const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper) {
+    JavaContextBase<FRAG_T>::WriteBackJVMHeapToCppContext();
     std::string java_ctx_type_name = getJavaCtxTypeName(this->context_object());
     VLOG(1) << "Java ctx type name" << java_ctx_type_name;
     if (java_ctx_type_name == "VertexDataContext") {
@@ -139,6 +121,15 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
         using inner_ctx_type = grape::VertexDataContext<FRAG_T, int64_t>;
         using inner_ctx_wrapper_type =
             VertexDataContextWrapper<FRAG_T, int64_t>;
+        auto inner_ctx_impl =
+            reinterpret_cast<inner_ctx_type*>(this->inner_context_addr());
+        std::shared_ptr<inner_ctx_type> inner_ctx_impl_shared(inner_ctx_impl);
+        return std::make_shared<inner_ctx_wrapper_type>(id, frag_wrapper,
+                                                        inner_ctx_impl_shared);
+      } else if (data_type == "std::string") {
+        using inner_ctx_type = grape::VertexDataContext<FRAG_T, std::string>;
+        using inner_ctx_wrapper_type =
+            VertexDataContextWrapper<FRAG_T, std::string>;
         auto inner_ctx_impl =
             reinterpret_cast<inner_ctx_type*>(this->inner_context_addr());
         std::shared_ptr<inner_ctx_type> inner_ctx_impl_shared(inner_ctx_impl);

@@ -230,8 +230,10 @@ public class SchemaManager {
             String sessionId,
             DdlRequestBatch ddlRequestBatch,
             CompletionCallback<Long> callback) {
+        String traceId = ddlRequestBatch.getTraceId();
         logger.info(
-                "submitBatchDdl requestId [{}], sessionId [{}], request body [{}]",
+                "submitBatchDdl, traceId [{}] requestId [{}], sessionId [{}], request body [{}]",
+                traceId,
                 requestId,
                 sessionId,
                 ddlRequestBatch.toProto());
@@ -261,6 +263,7 @@ public class SchemaManager {
                             OperationBatch operationBatch =
                                     OperationBatch.newBuilder(ddlOperations)
                                             .setLatestSnapshotId(currentWriteSnapshotId)
+                                            .setTraceId(traceId)
                                             .build();
                             batchId = this.ddlWriter.writeOperations(requestId, operationBatch);
                         } finally {
@@ -278,7 +281,8 @@ public class SchemaManager {
                         callback.onCompleted(snapshotId);
                     } catch (Exception e) {
                         logger.error(
-                                "Error in Ddl requestId [{}], sessionId [{}]",
+                                "Error in Ddl traceId[{}], requestId [{}], sessionId [{}]",
+                                traceId,
                                 requestId,
                                 sessionId,
                                 e);

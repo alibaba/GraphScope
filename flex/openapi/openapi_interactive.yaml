@@ -934,23 +934,39 @@ paths:
       tags:
         - QueryService
       summary: run queries on graph
-      operationId: proc_call
+      operationId: call_proc
       description: |
         After the procedure is created, user can use this API to run the procedure.
-        TODO: a full example cypher->plan->json.
-        TODO: make sure typeinfo can be passed.
       parameters:
         - name: graph_id
           in : path
           required: true
           schema:
             type: string
-        - name: X-Interactive-Request-Format
-          in: header
-          required: true
-          schema:
-            type: string
-            enum: [proto, encoder, json]
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned.
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
+        '500':
+          description: Server internal error
+  /v1/graph/current/query:
+    post:
+      tags:
+        - QueryService
+      summary: run queries on the running graph
+      operationId: call_proc_current
+      description: |
+        Submit a query to the running graph.
       requestBody:
         content:
           text/plain:
@@ -967,21 +983,15 @@ paths:
                 format: byte
         '500':
           description: Server internal error
-  /v1/graph/current/query:
+  /v1/graph/current/adhoc_query:
     post:
       tags:
         - QueryService
-      summary: run queries on the running graph
-      operationId: proc_call_current
+      summary: Submit adhoc query to the Interactive Query Service.
+      operationId: run_adhoc_current
       description: |
-        Submit a query to the running graph.
-      parameters:
-        - name: X-Interactive-Request-Format
-          in: header
-          required: true
-          schema:
-            type: string
-            enum: [proto, encoder, json]
+        Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+        https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
       requestBody:
         content:
           text/plain:
@@ -991,6 +1001,37 @@ paths:
       responses:
         '200':
           description: Successfully runned. Empty if failed?
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
+        '500':
+          description: Server internal error
+  /v1/graph/{graph_id}/adhoc_query:
+    post:
+      tags:
+        - QueryService
+      summary: Submit adhoc query to the Interactive Query Service.
+      operationId: run_adhoc
+      description: |
+        Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+        https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+      parameters:
+          - name: graph_id
+            in : path
+            required: true
+            schema:
+              type: string
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned.
           content:
             text/plain:
               schema:
