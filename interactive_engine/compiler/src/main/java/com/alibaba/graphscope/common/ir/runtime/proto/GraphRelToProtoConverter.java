@@ -396,6 +396,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 Map<Integer, Set<GraphNameOrId>> tagColumns =
                         Utils.extractTagColumnsFromRexNodes(List.of(filter.getCondition()));
                 if (preCacheEdgeProps) {
+                    // Currently, we've already precache edge properties and path properties, so we
+                    // need to remove them. So as the follows.
                     Utils.removeEdgeProperties(
                             com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(
                                     filter.getInput()),
