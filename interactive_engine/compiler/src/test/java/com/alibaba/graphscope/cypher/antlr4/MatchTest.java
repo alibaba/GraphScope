@@ -519,7 +519,7 @@ public class MatchTest {
                         .build();
         Assert.assertEquals(
                 "RecordType(Graph_Schema_Type(labels=[EdgeLabel(HASCREATOR, COMMENT, PERSON)],"
-                    + " properties=[BIGINT creationDate]) h)",
+                        + " properties=[BIGINT creationDate]) h)",
                 rel.getRowType().toString());
     }
 }
