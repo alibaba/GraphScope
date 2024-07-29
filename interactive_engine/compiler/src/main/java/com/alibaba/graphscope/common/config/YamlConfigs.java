@@ -22,11 +22,9 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.Map;
 
 public class YamlConfigs extends Configs {
@@ -56,16 +54,24 @@ public class YamlConfigs extends Configs {
                             if (schema != null) {
                                 return schema;
                             }
-                            String workspace = configs.get("directories.workspace");
-                            String subdir = configs.get("directories.subdirs.data");
-                            String graphName = configs.get("default_graph");
-                            if (workspace != null && subdir != null && graphName != null) {
-                                return Path.of(workspace, subdir, graphName, "graph.yaml")
-                                        .toString();
-                            } else {
-                                return null;
-                            }
+                            return configs.get("compiler.meta.reader.schema.uri");
                         })
+                .put(
+                        "graph.statistics",
+                        (Configs configs) -> {
+                            String statistics = System.getProperty("graph.statistics");
+                            if (statistics != null) {
+                                return statistics;
+                            }
+                            return configs.get("compiler.meta.reader.statistics.uri");
+                        })
+                .put(
+                        "graph.meta.schema.fetch.interval.ms",
+                        (Configs configs) -> configs.get("compiler.meta.reader.schema.interval"))
+                .put(
+                        "graph.meta.statistics.fetch.interval.ms",
+                        (Configs configs) ->
+                                configs.get("compiler.meta.reader.statistics.interval"))
                 .put(
                         "graph.store",
                         (Configs configs) -> {
@@ -73,26 +79,6 @@ public class YamlConfigs extends Configs {
                                 return configs.get("compute_engine.store.type");
                             } else {
                                 return "cpp-mcsr";
-                            }
-                        })
-                .put(
-                        "graph.stored.procedures.yaml",
-                        (Configs configs) -> {
-                            File schemaFile = new File(GraphConfig.GRAPH_SCHEMA.get(configs));
-                            if (!schemaFile.exists() || !schemaFile.getName().endsWith(".yaml")) {
-                                return null;
-                            }
-                            try {
-                                Yaml yaml = new Yaml();
-                                Map<String, Object> yamlAsMap =
-                                        yaml.load(new FileInputStream(schemaFile));
-                                Object value;
-                                if ((value = yamlAsMap.get("stored_procedures")) == null) {
-                                    return null;
-                                }
-                                return yaml.dump(value);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
                             }
                         })
                 .put(
@@ -154,6 +140,30 @@ public class YamlConfigs extends Configs {
                                 }
                                 return null;
                             }
+                        })
+                .put(
+                        "interactive.admin.endpoint",
+                        (Configs configs) -> {
+                            String host = configs.get("http_service.default_listen_address");
+                            String port = configs.get("http_service.admin_port");
+                            if (host != null) {
+                                if (port != null) {
+                                    return "http://" + host + ":" + port;
+                                }
+                            }
+                            return null;
+                        })
+                .put(
+                        "interactive.query.endpoint",
+                        (Configs configs) -> {
+                            String host = configs.get("http_service.default_listen_address");
+                            String port = configs.get("http_service.query_port");
+                            if (host != null) {
+                                if (port != null) {
+                                    return "http://" + host + ":" + port;
+                                }
+                            }
+                            return null;
                         })
                 .put(
                         "neo4j.bolt.server.disabled",

@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.unified.Graph;
@@ -527,8 +526,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                                     if (t != null) {
                                         responseObserver.onError(t);
                                     } else {
-                                        responseObserver.onNext(
-                                                GetStoreStateResponse.newBuilder().build());
+                                        responseObserver.onNext(response.build());
                                         responseObserver.onCompleted();
                                     }
                                 }

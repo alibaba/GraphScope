@@ -63,6 +63,16 @@ def projected_graph_giraph_app_class():
     return "com.alibaba.graphscope.example.giraph.MessageAppWithUserWritable"
 
 @pytest.fixture(scope="module")
+def projected_graph_stringApp_class():
+    return "com.alibaba.graphscope.example.stringApp.StringApp"
+
+
+@pytest.fixture(scope="module")
+def projected_graph_circle_class():
+    return "com.alibaba.graphscope.example.giraph.circle.Circle"
+
+
+@pytest.fixture(scope="module")
 def non_exist_java_class():
     return "com.alibaba.graphscope.example.non.existing.java.class"
 
@@ -177,9 +187,8 @@ def test_giraph_app_sssp(
 
     giraph_sssp = load_app(algo="giraph:com.alibaba.graphscope.example.giraph.SSSP")
     ctx = giraph_sssp(g, sourceId=6)
-    dataframe = ctx.to_dataframe({"node": "v.id", "r": "r"})
-    print (dataframe)
-    del g
+    frame = ctx.to_dataframe({"id": "v.id", "r": "r"})
+
 
 @pytest.mark.skipif(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
@@ -203,3 +212,55 @@ def test_giraph_app_user_writable(
     dataframe = ctx.to_dataframe({"node": "v.id", "r": "r"})
     print (dataframe)
     del g
+
+
+@pytest.mark.skipif(
+    os.environ.get("RUN_JAVA_TESTS") != "ON",
+    reason="Java SDK is disabled, skip this test.",
+)
+@pytest.mark.timeout(3600)
+def test_string_app(
+    demo_jar,
+    graphscope_session,
+    p2p_project_directed_graph_string_prop,
+    projected_graph_stringApp_class,
+):
+    graphscope_session.add_lib(demo_jar)
+    string_app = load_app(algo="java_pie:{}".format(projected_graph_stringApp_class))
+    ctx = string_app(p2p_project_directed_graph_string_prop._project_to_simple())
+
+    frame = ctx.to_dataframe({"id": "v.id", "r": "r"})
+    frame
+    num_rows = frame.shape[0]
+    for i in range(min(num_rows, 10)):
+        # size should large than 0
+        assert len(frame["r"][i]) > 0
+
+
+@pytest.mark.skipif(
+    os.environ.get("RUN_JAVA_TESTS") != "ON",
+    reason="Java SDK is disabled, skip this test.",
+)
+@pytest.mark.timeout(3600)
+def test_giraph_circle_app(
+    demo_jar,
+    graphscope_session,
+    projected_graph_circle_class,
+):
+    graphscope_session.add_lib(demo_jar)
+    vformat = (
+        "giraph:com.alibaba.graphscope.example.giraph.circle.CircleVertexInputFormat"
+    )
+    eformat = (
+        "giraph:com.alibaba.graphscope.example.giraph.circle.CircleEdgeInputFormat"
+    )
+    graph = projected_p2p_graph_loaded_by_giraph(
+        graphscope_session, demo_jar, vformat, eformat
+    )
+    giraph_circle = load_app(
+        algo="giraph:com.alibaba.graphscope.example.giraph.circle.Circle"
+    )
+    ctx = giraph_circle(graph)
+    frame = ctx.to_dataframe({"id": "v.id", "r": "r"})
+    for i in range(10):
+        assert frame["r"][i] == "No Circle"

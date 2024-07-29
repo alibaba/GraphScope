@@ -436,6 +436,7 @@ snapshotIncreaseIntervalMs: 1000
 offsetsPersistIntervalMs: 3000
 fileMetaStorePath: "/etc/groot/my.meta"
 logRecycleEnable: true
+logRecycleOffsetReserve: 86400
 
 ## Store Config
 storeDataPath: "/var/lib/graphscope-store"
@@ -487,6 +488,15 @@ zkBasePath: "/graphscope/groot"
 ## Frontend Config
 # gremlinServerPort: 12312
 
+## GOpt config
+## To adopt a CBO planner, set graphPlannerOpt to CBO, set gremlinScriptLanguageName to antlr_gremlin_calcite, and set graphPhysicalOpt to proto.
+graphPlannerIsOn: true
+graphPlannerOpt: RBO
+graphPlannerRules: FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule, ExpandGetVFusionRule
+gremlinScriptLanguageName: antlr_gremlin_traversal
+graphPhysicalOpt: ffi
+queryExecutionTimeoutMs: 600000
+
 ## Key-value pair separated by ;
 ## For example extraConfig="k1=v1;k2=v2"
 extraConfig: ""
@@ -531,3 +541,5 @@ uptrace:
 
 distributed:
   enabled: false
+
+collectStatistics: false

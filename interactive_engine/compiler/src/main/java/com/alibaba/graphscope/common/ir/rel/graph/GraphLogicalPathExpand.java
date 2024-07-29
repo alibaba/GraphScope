@@ -63,6 +63,8 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     private final boolean optional;
 
+    private final @Nullable RexNode untilCondition;
+
     protected GraphLogicalPathExpand(
             GraphOptCluster cluster,
             @Nullable List<RelHint> hints,
@@ -73,6 +75,7 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
+            @Nullable RexNode untilCondition,
             @Nullable String aliasName,
             AliasNameWithId startAlias,
             boolean optional) {
@@ -89,14 +92,8 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
         this.startAlias = Objects.requireNonNull(startAlias);
         this.optional = optional;
-        // Here, we set the result opt in a direct manner, where the opt represents what sort of
-        // vertex and edge information should be saved for the path.
-        // if the alias exists, then result opt is set to 'ALL_V_E' to cache all inner vertices or
-        // edges, otherwise set to 'END_V' to reduce the memory consumption.
-        this.resultOpt =
-                (this.aliasId == AliasInference.DEFAULT_ID)
-                        ? resultOpt
-                        : GraphOpt.PathExpandResult.ALL_V_E;
+        this.resultOpt = resultOpt;
+        this.untilCondition = untilCondition;
     }
 
     protected GraphLogicalPathExpand(
@@ -108,6 +105,7 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
+            @Nullable RexNode untilCondition,
             @Nullable String aliasName,
             AliasNameWithId startAlias,
             boolean optional) {
@@ -125,6 +123,7 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
         this.startAlias = Objects.requireNonNull(startAlias);
         this.optional = optional;
+        this.untilCondition = untilCondition;
     }
 
     public static GraphLogicalPathExpand create(
@@ -137,6 +136,7 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
+            @Nullable RexNode untilCondition,
             String aliasName,
             AliasNameWithId startAlias,
             boolean optional) {
@@ -150,6 +150,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 fetch,
                 resultOpt,
                 pathOpt,
+                untilCondition,
                 aliasName,
                 startAlias,
                 optional);
@@ -165,6 +166,7 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
+            @Nullable RexNode untilCondition,
             String aliasName,
             AliasNameWithId startAlias) {
         return create(
@@ -177,6 +179,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 fetch,
                 resultOpt,
                 pathOpt,
+                untilCondition,
                 aliasName,
                 startAlias,
                 false);
@@ -191,6 +194,7 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
+            @Nullable RexNode untilCondition,
             String aliasName,
             AliasNameWithId startAlias) {
         return create(
@@ -202,6 +206,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 fetch,
                 resultOpt,
                 pathOpt,
+                untilCondition,
                 aliasName,
                 startAlias,
                 false);
@@ -216,6 +221,7 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
+            @Nullable RexNode untilCondition,
             String aliasName,
             AliasNameWithId startAlias,
             boolean optional) {
@@ -231,6 +237,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 fetch,
                 resultOpt,
                 pathOpt,
+                untilCondition,
                 aliasName,
                 startAlias,
                 optional);
@@ -246,6 +253,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .itemIf("fetch", fetch, fetch != null)
                 .item("path_opt", getPathOpt())
                 .item("result_opt", getResultOpt())
+                .itemIf("until_condition", untilCondition, untilCondition != null)
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
                         "aliasId",
@@ -306,6 +314,10 @@ public class GraphLogicalPathExpand extends SingleRel {
         return optional;
     }
 
+    public @Nullable RexNode getUntilCondition() {
+        return untilCondition;
+    }
+
     @Override
     protected RelDataType deriveRowType() {
         return new RelRecordType(
@@ -352,6 +364,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                     getFetch(),
                     getResultOpt(),
                     getPathOpt(),
+                    getUntilCondition(),
                     getAliasName(),
                     getStartAlias(),
                     isOptional());
@@ -366,6 +379,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                     getFetch(),
                     getResultOpt(),
                     getPathOpt(),
+                    getUntilCondition(),
                     getAliasName(),
                     getStartAlias(),
                     isOptional());

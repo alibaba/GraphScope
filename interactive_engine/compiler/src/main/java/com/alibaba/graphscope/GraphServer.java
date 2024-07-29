@@ -23,11 +23,16 @@ import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
+import com.alibaba.graphscope.common.ir.meta.fetcher.DynamicIrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.*;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.alibaba.graphscope.cypher.service.CypherBootstrapper;
@@ -45,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -57,6 +63,7 @@ public class GraphServer {
     private final ChannelFetcher channelFetcher;
     private final IrMetaQueryCallback metaQueryCallback;
     private final GraphProperties testGraph;
+    private final GraphRelOptimizer optimizer;
 
     private IrGremlinServer gremlinServer;
     private CypherBootstrapper cypherBootstrapper;
@@ -65,11 +72,13 @@ public class GraphServer {
             Configs configs,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
-            GraphProperties testGraph) {
+            GraphProperties testGraph,
+            GraphRelOptimizer optimizer) {
         this.configs = configs;
         this.channelFetcher = channelFetcher;
         this.metaQueryCallback = metaQueryCallback;
         this.testGraph = testGraph;
+        this.optimizer = optimizer;
     }
 
     public void start() throws Exception {
@@ -83,7 +92,8 @@ public class GraphServer {
                                     new LogicalPlan(
                                             new GraphBuilderVisitor(builder)
                                                     .visit(new GremlinAntlr4Parser().parse(query))
-                                                    .build()));
+                                                    .build()),
+                            optimizer);
             QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.gremlinServer =
                     new IrGremlinServer(
@@ -102,7 +112,8 @@ public class GraphServer {
                             configs,
                             (GraphBuilder builder, IrMeta irMeta, String query) ->
                                     new LogicalPlanVisitor(builder, irMeta)
-                                            .visit(new CypherAntlr4Parser().parse(query)));
+                                            .visit(new CypherAntlr4Parser().parse(query)),
+                            optimizer);
             QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.cypherBootstrapper =
                     new CypherBootstrapper(
@@ -164,13 +175,29 @@ public class GraphServer {
             throw new IllegalArgumentException("usage: GraphServer '<path_to_config_file>'");
         }
         Configs configs = Configs.Factory.create(args[0]);
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
         IrMetaQueryCallback queryCallback =
-                new IrMetaQueryCallback(
-                        new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)));
+                new IrMetaQueryCallback(createIrMetaFetcher(configs, optimizer.getGlogueHolder()));
         GraphServer server =
                 new GraphServer(
-                        configs, getChannelFetcher(configs), queryCallback, getTestGraph(configs));
+                        configs,
+                        getChannelFetcher(configs),
+                        queryCallback,
+                        getTestGraph(configs),
+                        optimizer);
         server.start();
+    }
+
+    private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
+            throws IOException {
+        URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+        if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
+            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+        } else if (schemaUri.getScheme().equals("http")) {
+            return new DynamicIrMetaFetcher(configs, new HttpIrMetaReader(configs), tracker);
+        }
+        throw new IllegalArgumentException(
+                "unknown graph meta reader mode: " + schemaUri.getScheme());
     }
 
     private static GraphProperties getTestGraph(Configs configs) {

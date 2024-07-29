@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
@@ -55,10 +54,13 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
     @Override
     public void batchSubmit(
             BatchSubmitRequest request, StreamObserver<BatchSubmitResponse> responseObserver) {
+        RequestOptionsPb requestOptionsPb = request.getRequestOptions();
+        String traceId = requestOptionsPb == null ? null : requestOptionsPb.getTraceId();
         try {
             boolean simple = request.getSimpleResponse();
             DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
-            logger.info("Received DDL request: " + request);
+            builder.setTraceId(traceId);
+            logger.info("traceId: [{}], Received DDL request: [{}]", traceId, request);
             for (BatchSubmitRequest.DDLRequest ddlRequest : request.getValueList()) {
                 switch (ddlRequest.getValueCase()) {
                     case CREATE_VERTEX_TYPE_REQUEST:
@@ -68,12 +70,28 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
                                         .CreateVertexTypeRequest(
                                         parseTypeDefPb(cvtReq.getTypeDef())));
                         break;
+                    case ADD_VERTEX_TYPE_PROPERTIES_REQUEST:
+                        AddVertexTypePropertiesRequest avtpReq =
+                                ddlRequest.getAddVertexTypePropertiesRequest();
+                        builder.addDdlRequest(
+                                new com.alibaba.graphscope.groot.schema.request
+                                        .AddVertexTypePropertiesRequest(
+                                        parseTypeDefPb(avtpReq.getTypeDef())));
+                        break;
                     case CREATE_EDGE_TYPE_REQUEST:
                         CreateEdgeTypeRequest cetReq = ddlRequest.getCreateEdgeTypeRequest();
                         builder.addDdlRequest(
                                 new com.alibaba.graphscope.groot.schema.request
                                         .CreateEdgeTypeRequest(
                                         parseTypeDefPb(cetReq.getTypeDef())));
+                        break;
+                    case ADD_EDGE_TYPE_PROPERTIES_REQUEST:
+                        AddEdgeTypePropertiesRequest aetpReq =
+                                ddlRequest.getAddEdgeTypePropertiesRequest();
+                        builder.addDdlRequest(
+                                new com.alibaba.graphscope.groot.schema.request
+                                        .AddEdgeTypePropertiesRequest(
+                                        parseTypeDefPb(aetpReq.getTypeDef())));
                         break;
                     case ADD_EDGE_KIND_REQUEST:
                         AddEdgeKindRequest addEdgeKindRequest = ddlRequest.getAddEdgeKindRequest();
@@ -138,7 +156,10 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             String trace = sw.toString();
-            logger.error("Exception occurred when processing batch DDL request", e);
+            logger.error(
+                    "Exception occurred when processing batch DDL request. traceId:[{}]",
+                    traceId,
+                    e);
             responseObserver.onError(Status.INTERNAL.withDescription(trace).asRuntimeException());
         }
     }
@@ -156,7 +177,8 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
             for (EdgeKind edgeKind : edgeKinds) {
                 EdgeKindPb edgeKindPb =
                         EdgeKindPb.newBuilder()
-                                .setEdgeLabel(edgeKind.getEdgeLabel())
+                                .setEdgeLabel(
+                                        graphDef.getTypeDef(edgeKind.getEdgeLabelId()).getLabel())
                                 .setEdgeLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getEdgeLabelId().getId()))

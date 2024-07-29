@@ -14,6 +14,8 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.ServiceNotReadyException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
@@ -21,15 +23,21 @@ import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.ddl.DdlResult;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
+import com.alibaba.graphscope.proto.groot.EdgeKindPb;
+import com.alibaba.graphscope.proto.groot.LabelIdPb;
+import com.alibaba.graphscope.proto.groot.Statistics;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -42,26 +50,41 @@ public class SchemaManager {
     private final DdlExecutors ddlExecutors;
     private final GraphDefFetcher graphDefFetcher;
 
+    private final RoleClients<FrontendSnapshotClient> frontendSnapshotClients;
+
+    private final int frontendCount;
+
     private final AtomicReference<GraphDef> graphDefRef;
+    private final AtomicReference<Statistics> graphStatistics;
     private final int partitionCount;
     private volatile boolean ready = false;
 
+    private final boolean collectStatistics;
     private ExecutorService singleThreadExecutor;
-    private ScheduledExecutorService scheduler;
+    private ScheduledExecutorService syncSchemaScheduler;
+
+    private ScheduledExecutorService fetchStatisticsScheduler;
 
     public SchemaManager(
+            Configs configs,
             SnapshotManager snapshotManager,
             DdlExecutors ddlExecutors,
             DdlWriter ddlWriter,
             MetaService metaService,
-            GraphDefFetcher graphDefFetcher) {
+            GraphDefFetcher graphDefFetcher,
+            RoleClients<FrontendSnapshotClient> frontendSnapshotClients) {
         this.snapshotManager = snapshotManager;
         this.ddlExecutors = ddlExecutors;
         this.ddlWriter = ddlWriter;
         this.graphDefFetcher = graphDefFetcher;
+        this.frontendSnapshotClients = frontendSnapshotClients;
 
         this.graphDefRef = new AtomicReference<>();
         this.partitionCount = metaService.getPartitionCount();
+        this.graphStatistics = new AtomicReference<>();
+
+        this.frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
+        this.collectStatistics = CommonConfig.COLLECT_STATISTICS.get(configs);
     }
 
     public void start() {
@@ -78,11 +101,92 @@ public class SchemaManager {
         recover();
         logger.info(graphDefRef.get().toProto().toString());
 
-        this.scheduler =
+        this.syncSchemaScheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "recover", logger));
-        this.scheduler.scheduleWithFixedDelay(this::recover, 5, 2, TimeUnit.SECONDS);
+        this.syncSchemaScheduler.scheduleWithFixedDelay(this::recover, 5, 2, TimeUnit.SECONDS);
+
+        if (this.collectStatistics) {
+            this.fetchStatisticsScheduler =
+                    Executors.newSingleThreadScheduledExecutor(
+                            ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                    "fetch-statistics", logger));
+            this.fetchStatisticsScheduler.scheduleWithFixedDelay(
+                    this::syncStatistics, 5, 60, TimeUnit.MINUTES);
+        }
+    }
+
+    private void syncStatistics() {
+        try {
+            Map<Integer, Statistics> statisticsMap = graphDefFetcher.fetchStatistics();
+            Statistics statistics = aggregateStatistics(statisticsMap);
+            this.graphStatistics.set(statistics);
+        } catch (Exception e) {
+            logger.error("Fetch statistics failed", e);
+        }
+        sendStatisticsToFrontend();
+    }
+
+    private void sendStatisticsToFrontend() {
+        Statistics statistics = this.graphStatistics.get();
+        if (statistics != null) {
+            for (int i = 0; i < frontendCount; ++i) {
+                try {
+                    frontendSnapshotClients.getClient(i).syncStatistics(statistics);
+                    logger.debug("Sent statistics to frontend#{}", i);
+                } catch (Exception e) {
+                    logger.error("Failed to sync statistics to frontend", e);
+                }
+            }
+        }
+    }
+
+    private Statistics aggregateStatistics(Map<Integer, Statistics> statisticsMap) {
+        Statistics.Builder builder = Statistics.newBuilder();
+        long numVertices = 0;
+        long numEdges = 0;
+        Map<Integer, Long> vertexMap = new HashMap<>();
+        Map<EdgeKindPb, Long> edgeKindMap = new HashMap<>();
+
+        for (Statistics statistics : statisticsMap.values()) {
+            numVertices += statistics.getNumVertices();
+            numEdges += statistics.getNumEdges();
+
+            for (Statistics.VertexTypeStatistics subStatistics :
+                    statistics.getVertexTypeStatisticsList()) {
+                long count = subStatistics.getNumVertices();
+                int labelId = subStatistics.getLabelId().getId();
+                vertexMap.compute(labelId, (k, v) -> (v == null) ? count : v + count);
+            }
+
+            for (Statistics.EdgeTypeStatistics subStatistics :
+                    statistics.getEdgeTypeStatisticsList()) {
+                long count = subStatistics.getNumEdges();
+                EdgeKindPb edgeKindPb = subStatistics.getEdgeKind();
+                edgeKindMap.compute(edgeKindPb, (k, v) -> (v == null) ? count : v + count);
+            }
+        }
+        builder.setSnapshotId(0); // TODO(siyuan): set this
+        builder.setNumVertices(numVertices).setNumEdges(numEdges);
+        for (Map.Entry<Integer, Long> entry : vertexMap.entrySet()) {
+            int labelId = entry.getKey();
+            LabelIdPb labelIdPb = LabelIdPb.newBuilder().setId(labelId).build();
+            Long count = entry.getValue();
+            builder.addVertexTypeStatistics(
+                    Statistics.VertexTypeStatistics.newBuilder()
+                            .setLabelId(labelIdPb)
+                            .setNumVertices(count));
+        }
+        for (Map.Entry<EdgeKindPb, Long> entry : edgeKindMap.entrySet()) {
+            EdgeKindPb edgeKindPb = entry.getKey();
+            Long count = entry.getValue();
+            builder.addEdgeTypeStatistics(
+                    Statistics.EdgeTypeStatistics.newBuilder()
+                            .setEdgeKind(edgeKindPb)
+                            .setNumEdges(count));
+        }
+        return builder.build();
     }
 
     private void recover() {
@@ -95,7 +199,7 @@ public class SchemaManager {
             } catch (InterruptedException interruptedException) {
                 // Ignore
             }
-            this.singleThreadExecutor.execute(() -> recover());
+            this.singleThreadExecutor.execute(this::recover);
         }
     }
 
@@ -107,7 +211,7 @@ public class SchemaManager {
         GraphDef graphDef = this.graphDefFetcher.fetchGraphDef();
         this.graphDefRef.set(graphDef);
         this.ready = true;
-        // logger.info("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
+        logger.debug("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
     }
 
     public void stop() {
@@ -126,8 +230,10 @@ public class SchemaManager {
             String sessionId,
             DdlRequestBatch ddlRequestBatch,
             CompletionCallback<Long> callback) {
+        String traceId = ddlRequestBatch.getTraceId();
         logger.info(
-                "submitBatchDdl requestId [{}], sessionId [{}], request body [{}]",
+                "submitBatchDdl, traceId [{}] requestId [{}], sessionId [{}], request body [{}]",
+                traceId,
                 requestId,
                 sessionId,
                 ddlRequestBatch.toProto());
@@ -157,6 +263,7 @@ public class SchemaManager {
                             OperationBatch operationBatch =
                                     OperationBatch.newBuilder(ddlOperations)
                                             .setLatestSnapshotId(currentWriteSnapshotId)
+                                            .setTraceId(traceId)
                                             .build();
                             batchId = this.ddlWriter.writeOperations(requestId, operationBatch);
                         } finally {
@@ -174,13 +281,14 @@ public class SchemaManager {
                         callback.onCompleted(snapshotId);
                     } catch (Exception e) {
                         logger.error(
-                                "Error in Ddl requestId [{}], sessionId [{}]",
+                                "Error in Ddl traceId[{}], requestId [{}], sessionId [{}]",
+                                traceId,
                                 requestId,
                                 sessionId,
                                 e);
                         this.ready = false;
                         callback.onError(e);
-                        this.singleThreadExecutor.execute(() -> recover());
+                        this.singleThreadExecutor.execute(this::recover);
                     }
                 });
     }

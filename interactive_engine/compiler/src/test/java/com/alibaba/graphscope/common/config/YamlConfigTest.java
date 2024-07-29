@@ -16,9 +16,10 @@
 
 package com.alibaba.graphscope.common.config;
 
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
-import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 
 import org.junit.Assert;
@@ -36,8 +37,8 @@ public class YamlConfigTest {
     public void procedure_config_test() throws Exception {
         YamlConfigs configs =
                 new YamlConfigs("config/gs_interactive_hiactor.yaml", FileLoadType.RESOURCES);
-        GraphStoredProcedures procedures =
-                new GraphStoredProcedures(new LocalMetaDataReader(configs));
+        IrMeta irMeta = new LocalIrMetaReader(configs).readMeta();
+        GraphStoredProcedures procedures = irMeta.getStoredProcedures();
         StoredProcedureMeta meta = procedures.getStoredProcedure("ldbc_ic2");
         Assert.assertEquals(
                 "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(CHAR(1) name),"
@@ -62,7 +63,7 @@ public class YamlConfigTest {
         Assert.assertEquals(18, (int) PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs));
         Assert.assertEquals(
                 "./target/test-classes/config/modern/graph.yaml",
-                GraphConfig.GRAPH_SCHEMA.get(configs));
+                GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
         Assert.assertEquals("pegasus", FrontendConfig.ENGINE_TYPE.get(configs));
         Assert.assertEquals(false, FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs));
         Assert.assertEquals(8003, (int) FrontendConfig.GREMLIN_SERVER_PORT.get(configs));
@@ -75,7 +76,8 @@ public class YamlConfigTest {
     public void schema_config_test() throws Exception {
         YamlConfigs configs =
                 new YamlConfigs("config/gs_interactive_hiactor.yaml", FileLoadType.RESOURCES);
-        IrGraphSchema graphSchema = new IrGraphSchema(new LocalMetaDataReader(configs));
+        IrMeta irMeta = new LocalIrMetaReader(configs).readMeta();
+        IrGraphSchema graphSchema = irMeta.getSchema();
         Assert.assertEquals(
                 "DefaultGraphVertex{labelId=0, label=person,"
                         + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"

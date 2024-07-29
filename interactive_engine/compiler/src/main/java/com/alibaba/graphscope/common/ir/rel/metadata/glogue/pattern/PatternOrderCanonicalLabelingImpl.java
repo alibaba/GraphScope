@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
@@ -35,6 +36,9 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
     // the refined mapping of vertices <-> colors that each vertex is assigned a
     // unique color
     private Coloring<PatternVertex> uniqueColoring;
+
+    // the color class of the uniqueColoring
+    private List<PatternVertex> uniqueColorClass;
 
     // the mapping of vertex types <-> groups, used for pattern matching
     // filtering
@@ -90,11 +94,16 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             isUniqueColor = checkUniqueColor(newColor);
         }
         this.uniqueColoring = newColor;
+        this.uniqueColorClass =
+                newColor.getColorClasses().stream()
+                        .map(set -> set.iterator().next())
+                        .collect(Collectors.toList());
     }
 
     // check whether the color is uniquely determined.
     private boolean checkUniqueColor(Coloring<PatternVertex> patternColoring) {
-        for (Set<PatternVertex> coloredVertices : patternColoring.getColorClasses()) {
+        List<Set<PatternVertex>> colorClasses = patternColoring.getColorClasses();
+        for (Set<PatternVertex> coloredVertices : colorClasses) {
             if (coloredVertices.size() > 1) {
                 return false;
             }
@@ -107,8 +116,9 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             Graph<PatternVertex, PatternEdge> patternGraph,
             Coloring<PatternVertex> patternColoring) {
         Map<PatternVertex, Integer> initialColors = patternColoring.getColors();
-        int maxColorId = patternColoring.getColorClasses().size();
-        for (Set<PatternVertex> coloredVertices : patternColoring.getColorClasses()) {
+        List<Set<PatternVertex>> colorClasses = patternColoring.getColorClasses();
+        int maxColorId = colorClasses.size();
+        for (Set<PatternVertex> coloredVertices : colorClasses) {
             if (coloredVertices.size() > 1) {
                 // give the structurally-equalled vertex a new color
                 initialColors.put(coloredVertices.iterator().next(), maxColorId++);
@@ -125,7 +135,8 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
     private void setTypeGroupMapping(Coloring<PatternVertex> color) {
         mapCheckerToGroup = new TreeMap();
         Integer groupId = 0;
-        for (Set<PatternVertex> coloredPatternVertices : color.getColorClasses()) {
+        List<Set<PatternVertex>> colorClasses = color.getColorClasses();
+        for (Set<PatternVertex> coloredPatternVertices : colorClasses) {
             IsomorphismChecker checker =
                     coloredPatternVertices.iterator().next().getIsomorphismChecker();
             if (mapCheckerToGroup.containsKey(checker)) {
@@ -149,7 +160,7 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
     @Override
     public PatternVertex getVertexByOrder(Integer id) {
-        return uniqueColoring.getColorClasses().get(id).iterator().next();
+        return uniqueColorClass.get(id);
     }
 
     @Override
@@ -166,8 +177,8 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             PatternOrderCanonicalLabelingImpl other = (PatternOrderCanonicalLabelingImpl) obj;
             // should have the same number of types and groups
             if (this.mapCheckerToGroup.size() != other.mapCheckerToGroup.size()
-                    || this.initColoring.getColorClasses().size()
-                            != other.initColoring.getColorClasses().size()) {
+                    || this.initColoring.getNumberColors()
+                            != other.initColoring.getNumberColors()) {
                 return false;
             }
             // each type should have the same number of groups
@@ -216,6 +227,6 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
     @Override
     public int hashCode() {
-        return Objects.hash(initColoring, mapCheckerToGroup);
+        return Objects.hash(mapCheckerToGroup);
     }
 }

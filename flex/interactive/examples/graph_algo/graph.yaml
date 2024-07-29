@@ -44,7 +44,7 @@ schema:
         - property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
-        - property_name: category
+        - property_name: topic
           property_type:
             string:
               long_text:

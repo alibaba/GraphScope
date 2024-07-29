@@ -16,15 +16,11 @@
 
 package com.alibaba.graphscope.common.ir.rel.metadata.schema;
 
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
-import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
-import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
-import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
-import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
+import com.alibaba.graphscope.common.ir.meta.IrMetaStats;
+import com.alibaba.graphscope.groot.common.schema.api.*;
 
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DirectedPseudograph;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,15 +52,13 @@ public class GlogueSchema {
         this.edgeTypeCardinality = edgeTypeCardinality;
     }
 
-    public GlogueSchema(GraphSchema graphSchema, GraphStatistics statistics) {
+    public GlogueSchema(GraphSchema graphSchema) {
         schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
         vertexTypeCardinality = new HashMap<Integer, Double>();
         edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
         for (GraphVertex vertex : graphSchema.getVertexList()) {
             schemaGraph.addVertex(vertex.getLabelId());
-            vertexTypeCardinality.put(
-                    vertex.getLabelId(),
-                    statistics.getVertexTypeCount(vertex.getLabelId()).doubleValue());
+            vertexTypeCardinality.put(vertex.getLabelId(), 1.0);
         }
         for (GraphEdge edge : graphSchema.getEdgeList()) {
             for (EdgeRelation relation : edge.getRelationList()) {
@@ -72,20 +66,58 @@ public class GlogueSchema {
                 int targetType = relation.getTarget().getLabelId();
                 EdgeTypeId edgeType = new EdgeTypeId(sourceType, targetType, edge.getLabelId());
                 schemaGraph.addEdge(sourceType, targetType, edgeType);
-                edgeTypeCardinality.put(
-                        edgeType,
-                        statistics
-                                .getEdgeTypeCount(
-                                        Optional.of(sourceType),
-                                        Optional.of(edge.getLabelId()),
-                                        Optional.of(targetType))
-                                .doubleValue());
+                edgeTypeCardinality.put(edgeType, 1.0);
             }
         }
     }
 
-    public static GlogueSchema fromMeta(IrMeta irMeta) {
-        return new GlogueSchema(irMeta.getSchema(), irMeta.getStatistics());
+    public GlogueSchema(GraphSchema graphSchema, GraphStatistics statistics) {
+        schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
+        vertexTypeCardinality = new HashMap<Integer, Double>();
+        edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
+        for (GraphVertex vertex : graphSchema.getVertexList()) {
+            schemaGraph.addVertex(vertex.getLabelId());
+            Long vertexTypeCount = statistics.getVertexTypeCount(vertex.getLabelId());
+            if (vertexTypeCount == null) {
+                throw new IllegalArgumentException(
+                        "Vertex type count not found for vertex type: " + vertex.getLabelId());
+            } else if (vertexTypeCount == 0) {
+                vertexTypeCardinality.put(vertex.getLabelId(), 1.0);
+            } else {
+                vertexTypeCardinality.put(vertex.getLabelId(), vertexTypeCount.doubleValue());
+            }
+        }
+        for (GraphEdge edge : graphSchema.getEdgeList()) {
+            for (EdgeRelation relation : edge.getRelationList()) {
+                int sourceType = relation.getSource().getLabelId();
+                int targetType = relation.getTarget().getLabelId();
+                EdgeTypeId edgeType = new EdgeTypeId(sourceType, targetType, edge.getLabelId());
+                schemaGraph.addEdge(sourceType, targetType, edgeType);
+                Long edgeTypeCount =
+                        statistics.getEdgeTypeCount(
+                                Optional.of(sourceType),
+                                Optional.of(edge.getLabelId()),
+                                Optional.of(targetType));
+                if (edgeTypeCount == null) {
+                    throw new IllegalArgumentException(
+                            "Edge type count not found for edge type: " + edge.getLabelId());
+                } else if (edgeTypeCount == 0) {
+                    edgeTypeCardinality.put(edgeType, 1.0);
+                } else {
+                    edgeTypeCardinality.put(edgeType, edgeTypeCount.doubleValue());
+                }
+            }
+        }
+    }
+
+    public static GlogueSchema fromMeta(IrMetaStats irMeta) {
+        if (irMeta.getStatistics() == null) {
+            // build a default GlogueSchema by assuming all vertex and edge types have the same
+            // cardinality 1.0
+            return new GlogueSchema(irMeta.getSchema());
+        } else {
+            return new GlogueSchema(irMeta.getSchema(), irMeta.getStatistics());
+        }
     }
 
     public List<Integer> getVertexTypes() {

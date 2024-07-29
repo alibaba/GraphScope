@@ -509,14 +509,14 @@ if(ENABLE_JAVA_SDK)
         set(GAE_JAVA_JNI_LIB "${GAE_JAVA_DIR}/grape-runtime/target/native/libgrape-jni.so")
     endif()
 
-    add_custom_command(
-        OUTPUT "${GAE_JAVA_RUNTIME_JAR}"
-        COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} install -DskipTests --quiet
-        DEPENDS gs_proto
-        WORKING_DIRECTORY ${GAE_JAVA_DIR}
-        COMMENT "Building GAE-java..."
-        VERBATIM
-    )
+    # add_custom_command(
+    #     OUTPUT "${GAE_JAVA_RUNTIME_JAR}"
+    #     COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} install -DskipTests --quiet
+    #     DEPENDS gs_proto
+    #     WORKING_DIRECTORY ${GAE_JAVA_DIR}
+    #     COMMENT "Building GAE-java..."
+    #     VERBATIM
+    # )
     add_custom_target(grape_jni ALL
          DEPENDS "${GAE_JAVA_RUNTIME_JAR}"
     )

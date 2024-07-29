@@ -43,7 +43,7 @@ def cli():
     help="Coordinator endpoint, e.g. http://127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to a launched coordinator
+    """Connect to a launched coordinator.
 
     By default, it will read context from  ~/.gsctl. If '--coordinator-endpoint'
     is specified, use it as the current context and override the configuration file.
@@ -62,15 +62,18 @@ def connect(coordinator_endpoint):
     except Exception as e:
         err(f"Unable to connect to server: {str(e)}")
     else:
+        serving_mode = "frontend: {0}, engine: {1}, storage: {2}".format(
+            resp.frontend, resp.engine, resp.storage
+        )
         succ(
-            f"Connected to {coordinator_endpoint}, coordinator is serving with {resp.solution} mode.\n"
+            f"Connected to {coordinator_endpoint}, coordinator is serving with {serving_mode} mode.\n"
         )
         info("Try 'gsctl --help' for help.")
 
 
 @cli.command()
 def close():
-    """Disconnect from coordinator"""
+    """Disconnect from coordinator."""
     try:
         context = disconnect_coordinator()
     except Exception as e:

@@ -6,15 +6,15 @@ GraphScope Interactive use [OpenAPI](https://openapis.org) to define the http in
 
 To use Interactive Python SDK
 ```bash
-pip3 install interactive-sdk==0.0.3
+pip3 install interactive==0.3
 ```
 
 To use Interactive Java SDK
 ```xml
 <dependency>
     <groupId>com.alibaba.graphscope</groupId>
-    <artifactId>interactive-java-sdk</artifactId>
-    <version>0.0.3</version>
+    <artifactId>interactive</artifactId>
+    <version>0.3</version>
 </dependency>
 ```
 
@@ -41,9 +41,9 @@ export OPENAPI_GENERATOR_VERSION=7.2.0
 ### Generate SDKs
 
 ```bash
-# generate java sdk to java/interactive_sdk/
+# generate java sdk to java/
 bash generate_sdk.sh -g java
-# generate python sdk to python/interactive_sdk/
+# generate python sdk to python/interactive/
 bash generate_sdk.sh -g python
 ```
 

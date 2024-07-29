@@ -117,8 +117,8 @@ spec:
               value: {{ .Values.extraConfig | quote }}
             - name: WORKER_NUM
               value: {{ .Values.pegasusWorkerNum | quote }}
-            - name: TIMEOUT
-              value: {{ .Values.pegasusTimeout | quote }}
+            - name: QUERY_TIMEOUT
+              value: {{ .Values.queryExecutionTimeoutMS | quote }}
             - name: BATCH_SIZE
               value: {{ .Values.pegasusBatchSize | quote }}
             - name: OUTPUT_CAPACITY
@@ -127,8 +127,8 @@ spec:
               value: {{ .Values.frontendQueryPerSecondLimit | quote }}
             - name: GREMLIN_SCRIPT_LANGUAGE_NAME
               value: {{ .Values.gremlinScriptLanguageName | quote }}
-            - name: PHYSICAL_OPT_CONFIG
-              value: {{ .Values.physicalOptConfig}}
+            - name: GRAPH_PHYSICAL_OPT
+              value: {{ .Values.graphPhysicalOpt | quote }}
           ports:
             - name: gremlin
               containerPort: {{ .Values.frontend.service.gremlinPort }}

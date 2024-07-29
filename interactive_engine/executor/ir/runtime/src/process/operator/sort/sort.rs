@@ -276,4 +276,74 @@ mod tests {
         let expected_ids = vec![1, 2];
         assert_eq!(result_ids, expected_ids);
     }
+
+    // g.V().order().by('age',desc), where josh's age is null, and josh should be the last one
+    #[test]
+    fn sort_by_null_desc_test() {
+        let sort_opr = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable::from("@.age".to_string())),
+                order: 2, // descending
+            }],
+            limit: None,
+        };
+        let mut source = init_source();
+        // josh's age is null
+        let map3: HashMap<NameOrId, Object> =
+            vec![("id".into(), object!(1)), ("age".into(), Object::None), ("name".into(), object!("josh"))]
+                .into_iter()
+                .collect();
+        let v3 = Vertex::new(1, Some(PERSON_LABEL), DynDetails::new(map3));
+        source.push(Record::new(v3, None));
+        let mut result = sort_test(source, sort_opr);
+        let mut result_name = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
+                result_name.push(
+                    element
+                        .get_property(&"name".into())
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                );
+            }
+        }
+        let expected_names = vec![object!("marko"), object!("vadas"), object!("josh")];
+        assert_eq!(result_name, expected_names);
+    }
+
+    // g.V().order().by('age',asc), where josh's age is null, and josh should be the first one
+    #[test]
+    fn sort_by_null_asc_test() {
+        let sort_opr = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable::from("@.age".to_string())),
+                order: 1, // ascending
+            }],
+            limit: None,
+        };
+        let mut source = init_source();
+        // josh's age is null
+        let map3: HashMap<NameOrId, Object> =
+            vec![("id".into(), object!(1)), ("age".into(), Object::None), ("name".into(), object!("josh"))]
+                .into_iter()
+                .collect();
+        let v3 = Vertex::new(1, Some(PERSON_LABEL), DynDetails::new(map3));
+        source.push(Record::new(v3, None));
+        let mut result = sort_test(source, sort_opr);
+        let mut result_name = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
+                result_name.push(
+                    element
+                        .get_property(&"name".into())
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                );
+            }
+        }
+        let expected_names = vec![object!("josh"), object!("vadas"), object!("marko")];
+        assert_eq!(result_name, expected_names);
+    }
 }

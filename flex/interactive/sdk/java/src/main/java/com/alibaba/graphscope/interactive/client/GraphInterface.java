@@ -16,7 +16,7 @@
 package com.alibaba.graphscope.interactive.client;
 
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.alibaba.graphscope.interactive.models.*;
 
 import java.util.List;
 
@@ -31,6 +31,8 @@ public interface GraphInterface {
     Result<String> deleteGraph(String graphId);
 
     Result<GetGraphSchemaResponse> getGraphSchema(String graphId);
+
+    Result<GetGraphStatisticsResponse> getGraphStatistics(String graphId);
 
     Result<GetGraphResponse> getGraphMeta(String graphId);
 

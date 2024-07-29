@@ -31,17 +31,11 @@ class Schema {
   // How many built-in plugins are there.
   // Currently only one builtin plugin, SERVER_APP is supported.
   static constexpr uint8_t RESERVED_PLUGIN_NUM = 1;
-#ifdef BUILD_HQPS
   static constexpr uint8_t MAX_PLUGIN_ID = 253;
   static constexpr uint8_t HQPS_ADHOC_READ_PLUGIN_ID = 254;
   static constexpr uint8_t HQPS_ADHOC_WRITE_PLUGIN_ID = 255;
-  //   static constexpr uint8_t HQPS_PROCEDURE_PLUGIN_ID = 255;
   static constexpr const char* HQPS_ADHOC_READ_PLUGIN_ID_STR = "\xFE";
   static constexpr const char* HQPS_ADHOC_WRITE_PLUGIN_ID_STR = "\xFF";
-//   static constexpr const char* HQPS_PROCEDURE_PLUGIN_ID_STR = "\xFF";
-#else
-  static constexpr uint8_t MAX_PLUGIN_ID = 255;
-#endif  // BUILD_HQPS
   static constexpr const char* PRIMITIVE_TYPE_KEY = "primitive_type";
   static constexpr const char* VARCHAR_KEY = "varchar";
   static constexpr const char* MAX_LENGTH_KEY = "max_length";
@@ -158,6 +152,9 @@ class Schema {
   bool has_edge_label(const std::string& src_label,
                       const std::string& dst_label,
                       const std::string& edge_label) const;
+
+  bool has_edge_label(label_t src_label, label_t dst_label,
+                      label_t edge_label) const;
 
   bool valid_edge_property(const std::string& src_label,
                            const std::string& dst_label,

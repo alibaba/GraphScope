@@ -16,11 +16,88 @@ on:
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
   GSS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store
+  INTERACTIVE_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/interactive
   HELM_CHARTS_URL: https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
   OSS_REGION: oss-cn-beijing
   OSS_ENDPOINT: oss-cn-beijing.aliyuncs.com
 
 jobs:
+  build-gsctl-wheel-package:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build Wheel Package
+      run: |
+        # change the version for nightly release
+        # 0.15.0 -> 0.15.0a20220808
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        if [[ "${{ GITHUB.REF }}" == "refs/heads/main" ]]; then
+          echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION;
+        fi
+
+        cd ${GITHUB_WORKSPACE}/python
+        python3 setup_flex.py bdist_wheel
+        python3 setup_gsctl.py bdist_wheel
+        # move wheels into one folder to upload to PyPI
+        mkdir ${GITHUB_WORKSPACE}/upload_pypi
+        mv ${GITHUB_WORKSPACE}/python/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf gsctl.tar.gz ${GITHUB_WORKSPACE}/upload_pypi/*.whl
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: gsctl-${{ github.sha }}
+        path: |
+          gsctl.tar.gz
+        retention-days: 5
+
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PASSWORD }}
+        packages_dir: upload_pypi/
+
+  build-interactive-image-x86-64:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
+    - name: Build Interactive Image
+      run: |
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt && python3 setup.py build_proto
+        cd ${GITHUB_WORKSPACE}
+        python3 ./gsctl.py flexbuild interactive --app docker
+
+    - name: Extract Tag Name
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      id: tag
+      run: echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Release Image
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
+        sudo docker tag ${{ env.INTERACTIVE_IMAGE }}:${SHORT_SHA}-x86_64 ${{ env.INTERACTIVE_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker push ${{ env.INTERACTIVE_IMAGE }}:${{ steps.tag.outputs.TAG }}
+
   build-gss-image-x86-64:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04

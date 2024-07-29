@@ -22,41 +22,41 @@ import sys
 
 sys.path.append("../../interactive/sdk/python")
 
-from interactive_sdk.client.driver import Driver
-from interactive_sdk.openapi.models.base_edge_type_vertex_type_pair_relations_inner import (
+from gs_interactive.client.driver import Driver
+from gs_interactive.models.base_edge_type_vertex_type_pair_relations_inner import (
     BaseEdgeTypeVertexTypePairRelationsInner,
 )
-from interactive_sdk.openapi.models.create_edge_type import CreateEdgeType
-from interactive_sdk.openapi.models.create_graph_request import CreateGraphRequest
-from interactive_sdk.openapi.models.create_graph_schema_request import (
+from gs_interactive.models.create_edge_type import CreateEdgeType
+from gs_interactive.models.create_graph_request import CreateGraphRequest
+from gs_interactive.models.create_graph_schema_request import (
     CreateGraphSchemaRequest,
 )
-from interactive_sdk.openapi.models.create_procedure_request import (
+from gs_interactive.models.create_procedure_request import (
     CreateProcedureRequest,
 )
-from interactive_sdk.openapi.models.create_property_meta import CreatePropertyMeta
-from interactive_sdk.openapi.models.create_vertex_type import CreateVertexType
-from interactive_sdk.openapi.models.edge_mapping import EdgeMapping
-from interactive_sdk.openapi.models.edge_mapping_type_triplet import (
+from gs_interactive.models.create_property_meta import CreatePropertyMeta
+from gs_interactive.models.create_vertex_type import CreateVertexType
+from gs_interactive.models.edge_mapping import EdgeMapping
+from gs_interactive.models.edge_mapping_type_triplet import (
     EdgeMappingTypeTriplet,
 )
-from interactive_sdk.openapi.models.gs_data_type import GSDataType
-from interactive_sdk.openapi.models.typed_value import TypedValue
-from interactive_sdk.openapi.models.job_status import JobStatus
-from interactive_sdk.openapi.models.long_text import LongText
-from interactive_sdk.openapi.models.primitive_type import PrimitiveType
-from interactive_sdk.openapi.models.schema_mapping import SchemaMapping
-from interactive_sdk.openapi.models.schema_mapping_loading_config import (
+from gs_interactive.models.gs_data_type import GSDataType
+from gs_interactive.models.typed_value import TypedValue
+from gs_interactive.models.job_status import JobStatus
+from gs_interactive.models.long_text import LongText
+from gs_interactive.models.primitive_type import PrimitiveType
+from gs_interactive.models.schema_mapping import SchemaMapping
+from gs_interactive.models.schema_mapping_loading_config import (
     SchemaMappingLoadingConfig,
 )
-from interactive_sdk.openapi.models.schema_mapping_loading_config_format import (
+from gs_interactive.models.schema_mapping_loading_config_format import (
     SchemaMappingLoadingConfigFormat,
 )
-from interactive_sdk.openapi.models.start_service_request import StartServiceRequest
-from interactive_sdk.openapi.models.string_type import StringType
-from interactive_sdk.openapi.models.string_type_string import StringTypeString
-from interactive_sdk.openapi.models.vertex_mapping import VertexMapping
-from interactive_sdk.openapi.models.query_request import QueryRequest
+from gs_interactive.models.start_service_request import StartServiceRequest
+from gs_interactive.models.string_type import StringType
+from gs_interactive.models.string_type_string import StringTypeString
+from gs_interactive.models.vertex_mapping import VertexMapping
+from gs_interactive.models.query_request import QueryRequest
 
 # Among the above procedures, the correct input format for each is:
 # count_vertex_num: () -> (num: int64), CypherProcedure.
@@ -104,14 +104,21 @@ class ProcedureCaller():
             print("call count_vertex_num failed: ", resp.get_status_message())
             exit(1)
 
-        # plus_one, should be with id 3
-        # construct a byte array with bytes: the 4 bytes of integer 1, and a byte 3
-        byte_string = bytes([0,0,0,0,2]) # 4 bytes of integer 1, and a byte 3
+        # plus_one, should be with id 2
+        # construct a byte array with bytes: the 4 bytes of integer 1, and a byte 2
+        value = 1
+        byte_string = value.to_bytes(4, byteorder=sys.byteorder) + bytes([2])
+        # byte_string = bytes([1,0,0,0,2]) # 4 bytes of integer 1, and a byte 3
         params = byte_string.decode('utf-8')
         resp = self._sess.call_procedure_raw(graph_id, params)
         if not resp.is_ok():
             print("call plus_one failed: ", resp.get_status_message())
             exit(1)
+        res = resp.get_value()
+        assert len(res) == 4
+        # the four byte represent a integer
+        res = int.from_bytes(res, byteorder=sys.byteorder)
+        assert(res == 2)
 
 if __name__ == "__main__":
     #parse command line args

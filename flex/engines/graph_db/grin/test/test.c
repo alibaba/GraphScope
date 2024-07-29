@@ -369,7 +369,7 @@ void test_property_vertex_property_value(const char* uri_str) {
 #else
       printf("%s %zu: %lld\n", v_names[__vt][vid], j, pv);
 #endif
-    } else if (dt == String) {
+    } else if (dt == StringView) {
       const char* pv = grin_get_vertex_property_value_of_string(g, v, vp);
       assert(grin_get_last_error_code() == NO_ERROR);
 #ifdef GRIN_ENABLE_ROW
@@ -527,7 +527,7 @@ void test_property_edge_property_value(const char* uri_str,
 #else
         printf("%s %zu %lld: %lf\n", v_names[__vt][vid], j, uid, pv);
 #endif
-      } else if (dt == String) {
+      } else if (dt == StringView) {
         const char* pv = grin_get_edge_property_value_of_string(g, e, ep);
         assert(grin_get_last_error_code() == NO_ERROR);
 #ifdef GRIN_ENABLE_ROW

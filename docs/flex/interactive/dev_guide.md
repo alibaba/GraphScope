@@ -1,4 +1,4 @@
-# GraphScope Interactive Development guide
+# Development guide
 
 Users can develop C++ stored procedures and Cypher stored procedures based on `GraphScope Interactive`.
 Interactive also provides an Admin Service for managing graph data and stored procedures at runtime, and it can also retrieve the running status of the service.
@@ -8,9 +8,10 @@ Interactive also provides an Admin Service for managing graph data and stored pr
 caption:GraphScope Interactive Development
 maxdepth: 2
 ---
-development/cypher_procedure
-development/cpp_procedure
-development/restful_api
+development/dev_and_test
 development/java/java_sdk
 development/python/python_sdk
+development/restful_api
+development/stored_procedure/cypher_procedure
+development/stored_procedure/cpp_procedure
 ```

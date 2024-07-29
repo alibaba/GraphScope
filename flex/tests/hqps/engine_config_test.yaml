@@ -5,7 +5,7 @@ directories:
     logs: logs
     conf: conf
 log_level: INFO
-default_graph: ldbc
+default_graph: modern_graph
 compute_engine:
   type: hiactor
   workers:
@@ -23,6 +23,14 @@ compiler:
       - FilterIntoJoinRule
       - FilterMatchRule
       - NotMatchToAntiJoinRule
+  meta:
+    reader:
+      schema:
+        uri: http://localhost:7777/v1/service/status
+        interval: 1000 # ms
+      statistics:
+        uri: http://localhost:7777/v1/graph/%s/statistics
+        interval: 86400000 # ms
   endpoint:
     default_listen_address: localhost
     bolt_connector:

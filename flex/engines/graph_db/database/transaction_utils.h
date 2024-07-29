@@ -36,7 +36,10 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
     arc << prop.value.d.milli_second;
   } else if (prop.type == PropertyType::Day()) {
     arc << prop.value.day.to_u32();
-  } else if (prop.type == PropertyType::String()) {
+  } else if (prop.type.type_enum == impl::PropertyTypeImpl::kString) {
+    std::string_view s = *prop.value.s_ptr;
+    arc << s;
+  } else if (prop.type == PropertyType::StringView()) {
     arc << prop.value.s;
   } else if (prop.type == PropertyType::Int64()) {
     arc << prop.value.l;
@@ -47,6 +50,11 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
   } else if (prop.type == PropertyType::Float()) {
     arc << prop.value.f;
   } else if (prop.type == PropertyType::Empty()) {
+  } else if (prop.type == PropertyType::Record()) {
+    arc << prop.value.record.size();
+    for (auto& field : prop.value.record) {
+      serialize_field(arc, field);
+    }
   } else {
     LOG(FATAL) << "Unexpected property type" << int(prop.type.type_enum);
   }
@@ -67,7 +75,7 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
     uint32_t val;
     arc >> val;
     prop.value.day.from_u32(val);
-  } else if (prop.type == PropertyType::String()) {
+  } else if (prop.type == PropertyType::StringView()) {
     arc >> prop.value.s;
   } else if (prop.type == PropertyType::Int64()) {
     arc >> prop.value.l;
@@ -78,6 +86,15 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
   } else if (prop.type == PropertyType::Float()) {
     arc >> prop.value.f;
   } else if (prop.type == PropertyType::Empty()) {
+  } else if (prop.type == PropertyType::Record()) {
+    size_t len;
+    arc >> len;
+    Record r(len);
+    for (size_t i = 0; i < r.len; ++i) {
+      deserialize_field(arc, r.props[i]);
+    }
+    prop.set_record(r);
+
   } else {
     LOG(FATAL) << "Unexpected property type: "
                << static_cast<int>(prop.type.type_enum);

@@ -17,6 +17,8 @@ package gs.rpc.groot;
 
 import "graph_def.proto";
 import "schema_common.proto";
+import "request_option.proto";
+
 
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
@@ -27,19 +29,22 @@ service GrootDdlService {
 }
 
 message BatchSubmitRequest {
-  int32 format_version = 1;
-  bool simple_response = 2;
-  message DDLRequest {
-    oneof value {
-      CreateVertexTypeRequest create_vertex_type_request = 1;
-      CreateEdgeTypeRequest create_edge_type_request = 2;
-      AddEdgeKindRequest add_edge_kind_request = 3;
-      RemoveEdgeKindRequest remove_edge_kind_request = 4;
-      DropVertexTypeRequest drop_vertex_type_request = 5;
-      DropEdgeTypeRequest drop_edge_type_request = 6;
+    int32 format_version = 1;
+    bool simple_response = 2;
+    message DDLRequest {
+        oneof value {
+            CreateVertexTypeRequest create_vertex_type_request = 1;
+            CreateEdgeTypeRequest create_edge_type_request = 2;
+            AddEdgeKindRequest add_edge_kind_request = 3;
+            RemoveEdgeKindRequest remove_edge_kind_request = 4;
+            DropVertexTypeRequest drop_vertex_type_request = 5;
+            DropEdgeTypeRequest drop_edge_type_request = 6;
+            AddVertexTypePropertiesRequest add_vertex_type_properties_request = 7;
+            AddEdgeTypePropertiesRequest add_edge_type_properties_request = 8;
+        }
     }
-  }
-  repeated DDLRequest value = 3;
+    repeated DDLRequest value = 3;
+    gs.rpc.groot.RequestOptionsPb request_options = 4;
 }
 
 message BatchSubmitResponse {
@@ -53,7 +58,15 @@ message CreateVertexTypeRequest {
     gs.rpc.graph.TypeDefPb type_def = 1;
 }
 
+message AddVertexTypePropertiesRequest {
+    gs.rpc.graph.TypeDefPb type_def = 1;
+}
+
 message CreateEdgeTypeRequest {
+    gs.rpc.graph.TypeDefPb type_def = 1;
+}
+
+message AddEdgeTypePropertiesRequest {
     gs.rpc.graph.TypeDefPb type_def = 1;
 }
 

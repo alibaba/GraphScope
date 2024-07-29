@@ -1,7 +1,6 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
@@ -12,11 +11,13 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.common.util.*;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import com.alibaba.graphscope.groot.operation.EdgeId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
+import com.alibaba.graphscope.proto.groot.RequestOptionsPb;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -87,9 +88,11 @@ public class GraphWriter {
             String requestId,
             String writeSession,
             List<WriteRequest> writeRequests,
+            RequestOptionsPb optionsPb,
             CompletionCallback<Long> callback) {
         GraphSchema schema = snapshotCache.getSnapshotWithSchema().getGraphDef();
         OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
+        String upTraceId = optionsPb == null ? null : optionsPb.getTraceId();
         for (WriteRequest writeRequest : writeRequests) {
             OperationType operationType = writeRequest.getOperationType();
             DataRecord dataRecord = writeRequest.getDataRecord();
@@ -123,6 +126,7 @@ public class GraphWriter {
                             "Invalid operationType [" + operationType + "]");
             }
         }
+        batchBuilder.setTraceId(upTraceId);
         OperationBatch operationBatch = batchBuilder.build();
         long startTime = System.currentTimeMillis();
         AttributesBuilder attrs = Attributes.builder();

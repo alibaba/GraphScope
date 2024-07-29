@@ -49,7 +49,7 @@ typedef enum {
   UInt64 = 4,        ///< unsigned long int
   Float = 5,         ///< float
   Double = 6,        ///< double
-  String = 7,        ///< string
+  StringView = 7,    ///< string
   Date32 = 8,        ///< date
   Time32 = 9,        ///< Time32
   Timestamp64 = 10,  ///< Timestamp

@@ -15,18 +15,50 @@
  */
 package com.alibaba.graphscope.interactive.client.impl;
 
+import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gaia.proto.StoredProcedure;
+import com.alibaba.graphscope.interactive.ApiCallback;
+import com.alibaba.graphscope.interactive.ApiClient;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.ApiResponse;
+import com.alibaba.graphscope.interactive.api.*;
+import com.alibaba.graphscope.interactive.client.QueryInterface;
 import com.alibaba.graphscope.interactive.client.Session;
+import com.alibaba.graphscope.interactive.client.common.Config;
 import com.alibaba.graphscope.interactive.client.common.Result;
-import com.alibaba.graphscope.interactive.openapi.ApiClient;
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.ApiResponse;
-import com.alibaba.graphscope.interactive.openapi.api.*;
-import com.alibaba.graphscope.interactive.openapi.model.*;
+import com.alibaba.graphscope.interactive.client.common.Status;
+import com.alibaba.graphscope.interactive.client.utils.InputFormat;
+import com.alibaba.graphscope.interactive.models.*;
+import com.google.gson.reflect.TypeToken;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.semconv.SemanticAttributes;
+
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import org.jetbrains.annotations.Nullable;
+
 import java.io.Closeable;
+import java.io.File;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /***
  * A default implementation of the GraphScope interactive session interface.
@@ -40,57 +72,325 @@ public class DefaultSession implements Session {
     private final GraphServiceVertexManagementApi vertexApi;
     private final GraphServiceEdgeManagementApi edgeApi;
     private final QueryServiceApi queryApi;
-
-    private static final int DEFAULT_READ_TIMEOUT = 30000;
-    private static final int DEFAULT_WRITE_TIMEOUT = 30000;
-    private static String JSON_FORMAT_STRING = "json";
-    private static String PROTO_FORMAT_STRING = "proto";
-    private static String ENCODER_FORMAT_STRING = "encoder";
-
+    private final UtilsApi utilsApi;
     private final ApiClient client, queryClient;
+    private final Config config;
 
-    public static DefaultSession newInstance(String uri) {
-        return new DefaultSession(uri);
-    }
+    private OpenTelemetry openTelemetry;
+    private Tracer tracer;
 
-    public static DefaultSession newInstance(String host, int port) {
-        return new DefaultSession("http://" + host + ":" + port);
-    }
+    private final TextMapSetter<Request.Builder> setter =
+            new TextMapSetter<Request.Builder>() {
+                @Override
+                public void set(@Nullable Request.Builder builder, String s, String s1) {
+                    assert builder != null;
+                    builder.addHeader(s, s1);
+                }
+            };
 
     /**
      * Create a default GraphScope Interactive Session.
      *
      * @param uri should be in the format "http://host:port"
      */
-    private DefaultSession(String uri) {
-        client = new ApiClient();
-        client.setBasePath(uri);
-        client.setReadTimeout(DEFAULT_READ_TIMEOUT);
-        client.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
-
-        graphApi = new AdminServiceGraphManagementApi(client);
-        jobApi = new AdminServiceJobManagementApi(client);
-        procedureApi = new AdminServiceProcedureManagementApi(client);
-        serviceApi = new AdminServiceServiceManagementApi(client);
-        vertexApi = new GraphServiceVertexManagementApi(client);
-        edgeApi = new GraphServiceEdgeManagementApi(client);
-
-        Result<ServiceStatus> status = getServiceStatus();
-        if (!status.isOk()) {
-            throw new RuntimeException(
-                    "Failed to connect to the server: " + status.getStatusMessage());
+    private DefaultSession(String uri, String storedProcUri, Config config) {
+        this.config = config;
+        OkHttpClient httpClient = createHttpClient(config);
+        if (uri != null) {
+            client = new ApiClient(httpClient);
+            client.setBasePath(uri);
+            graphApi = new AdminServiceGraphManagementApi(client);
+            jobApi = new AdminServiceJobManagementApi(client);
+            procedureApi = new AdminServiceProcedureManagementApi(client);
+            serviceApi = new AdminServiceServiceManagementApi(client);
+            vertexApi = new GraphServiceVertexManagementApi(client);
+            edgeApi = new GraphServiceEdgeManagementApi(client);
+            utilsApi = new UtilsApi(client);
+        } else {
+            System.out.println("Creating session without admin uri specified");
+            client = null;
+            graphApi = null;
+            jobApi = null;
+            procedureApi = null;
+            serviceApi = null;
+            vertexApi = null;
+            edgeApi = null;
+            utilsApi = null;
         }
-        // TODO: should construct queryService from a endpoint, not a port
-        Integer queryPort = status.getValue().getHqpsPort();
 
-        // Replace the port with the query port, http:://host:port -> http:://host:queryPort
-        String queryUri = uri.replaceFirst(":[0-9]+", ":" + queryPort);
-        System.out.println("Query URI: " + queryUri);
-        queryClient = new ApiClient();
-        queryClient.setBasePath(queryUri);
-        queryClient.setReadTimeout(DEFAULT_READ_TIMEOUT);
-        queryClient.setWriteTimeout(DEFAULT_WRITE_TIMEOUT);
+        if (storedProcUri == null && graphApi != null) {
+            Result<ServiceStatus> status = getServiceStatus();
+            if (!status.isOk()) {
+                throw new RuntimeException(
+                        "Failed to connect to the server: " + status.getStatusMessage());
+            }
+            // TODO: should construct queryService from a endpoint, not a port
+            Integer queryPort = status.getValue().getHqpsPort();
+
+            // Replace the port with the query port, http:://host:port -> http:://host:queryPort
+            storedProcUri = uri.replaceFirst(":[0-9]+", ":" + queryPort);
+            System.out.println("Query URI: " + storedProcUri);
+        }
+        if (storedProcUri == null) {
+            throw new RuntimeException(
+                    "DefaultSession need at least stored procedure uri specified, current is null");
+        }
+        queryClient = new ApiClient(httpClient);
+        queryClient.setBasePath(storedProcUri);
         queryApi = new QueryServiceApi(queryClient);
+        initOpenTelemetry();
+    }
+
+    public static DefaultSession newInstance(String adminUri, Config config) {
+        return new DefaultSession(adminUri, null, config);
+    }
+
+    public static DefaultSession newInstance(String adminUri) {
+        return new DefaultSession(adminUri, null, new Config.ConfigBuilder().build());
+    }
+
+    public static DefaultSession newInstance(String adminUri, String storedProcUri, Config config) {
+        return new DefaultSession(adminUri, storedProcUri, config);
+    }
+
+    public static DefaultSession newInstance(String adminUri, String storedProcUri) {
+        return new DefaultSession(adminUri, storedProcUri, new Config.ConfigBuilder().build());
+    }
+
+    /**
+     * Create defaultSession in stored procedure only mode, which means the session will only connect to query service,
+     * for launching queries.
+     *
+     * @param storedProcUri http uri, points to query service.
+     * @return the procedure interface.
+     */
+    public static QueryInterface queryInterfaceOnly(String storedProcUri, Config config) {
+        return new DefaultSession(null, storedProcUri, config);
+    }
+
+    private void initOpenTelemetry() {
+        if (config.isEnableTracing()) {
+            this.openTelemetry = GlobalOpenTelemetry.get();
+            this.tracer = openTelemetry.getTracer(DefaultSession.class.getName());
+        } else {
+            this.openTelemetry = null;
+            this.tracer = null;
+        }
+    }
+
+    /**
+     * Try to upload the input files if they are specified with a starting @
+     * for input files in schema_mapping. Replace the path to the uploaded file with the
+     * path returned from the server.
+     * <p>
+     * The @ can be added to the beginning of data_source.location in schema_mapping.loading_config
+     * or added to each file in vertex_mappings and edge_mappings.
+     * <p>
+     * 1. location: @/path/to/dir
+     * inputs:
+     * - @/path/to/file1
+     * - @/path/to/file2
+     * 2. location: /path/to/dir
+     * inputs:
+     * - @/path/to/file1
+     * - @/path/to/file2
+     * 3. location: @/path/to/dir
+     * inputs:
+     * - /path/to/file1
+     * - /path/to/file2
+     * 4. location: /path/to/dir
+     * inputs:
+     * - /path/to/file1
+     * - /path/to/file2
+     * 4. location: None
+     * inputs:
+     * - @/path/to/file1
+     * - @/path/to/file2
+     * Among the above 4 cases, only the 1, 3, 5 case are valid, for 2,4 the file will not be uploaded
+     *
+     * @param schemaMapping schema mapping object
+     * @return true if all files are uploaded successfully, false otherwise
+     */
+    private static Result<SchemaMapping> validateSchemaMapping(SchemaMapping schemaMapping) {
+        if (schemaMapping == null) {
+            return new Result<SchemaMapping>(Status.badRequest("Schema mapping is null"), null);
+        }
+        boolean rootLocationMarkedUploaded = false;
+        String location = null;
+        SchemaMappingLoadingConfig config = schemaMapping.getLoadingConfig();
+        if (config != null) {
+            if (config.getDataSource() != null && config.getDataSource().getScheme() != null) {
+                if (config.getDataSource()
+                        .getScheme()
+                        .equals(SchemaMappingLoadingConfigDataSource.SchemeEnum.FILE)) {
+                    location = config.getDataSource().getLocation();
+                } else {
+                    return new Result<SchemaMapping>(
+                            Status.ok("Only FILE scheme is supported"), schemaMapping);
+                }
+            }
+        }
+        if (location != null && location.startsWith("@")) {
+            rootLocationMarkedUploaded = true;
+        }
+
+        List<String> extractedFiles = new ArrayList<>();
+        if (schemaMapping.getVertexMappings() != null) {
+            for (VertexMapping item : schemaMapping.getVertexMappings()) {
+                if (item.getInputs() != null) {
+                    for (int i = 0; i < item.getInputs().size(); ++i) {
+                        String input = item.getInputs().get(i);
+                        if (location != null && !rootLocationMarkedUploaded) {
+                            if (input.startsWith("@")) {
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest(
+                                                "Root location given without @, but the input file"
+                                                        + " starts with @"
+                                                        + input),
+                                        null);
+                            }
+                        }
+                        if (location != null) {
+                            input = location + "/" + trimPath(input);
+                        }
+                        item.getInputs().set(i, input);
+                        extractedFiles.add(input);
+                    }
+                }
+            }
+        }
+        if (schemaMapping.getEdgeMappings() != null) {
+            for (EdgeMapping item : schemaMapping.getEdgeMappings()) {
+                if (item.getInputs() != null) {
+                    for (int i = 0; i < item.getInputs().size(); ++i) {
+                        String input = item.getInputs().get(i);
+                        if (location != null && !rootLocationMarkedUploaded) {
+                            if (input.startsWith("@")) {
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest(
+                                                "Root location given without @, but the input file"
+                                                        + " starts with @"
+                                                        + input),
+                                        null);
+                            }
+                        }
+                        if (location != null) {
+                            input = location + "/" + trimPath(input);
+                        }
+                        item.getInputs().set(i, input);
+                        extractedFiles.add(input);
+                    }
+                }
+            }
+        }
+        {
+            int count = 0;
+            for (String file : extractedFiles) {
+                if (file.startsWith("@")) {
+                    count += 1;
+                }
+            }
+            if (count == 0) {
+                System.out.println("No files to upload");
+                return Result.ok(schemaMapping);
+            } else if (count != extractedFiles.size()) {
+                System.err.println("Can not mix uploading file and not uploading file");
+                return Result.error("Can not mix uploading file and not uploading file");
+            }
+        }
+        return Result.ok(schemaMapping);
+    }
+
+    private Result<SchemaMapping> uploadFilesAndUpdate(SchemaMapping schemaMapping) {
+        if (schemaMapping.getVertexMappings() != null) {
+            for (VertexMapping item : schemaMapping.getVertexMappings()) {
+                if (item.getInputs() != null) {
+                    for (int i = 0; i < item.getInputs().size(); ++i) {
+                        String input = item.getInputs().get(i);
+                        if (input.startsWith("@")) {
+                            input = input.substring(1);
+                            File file = new File(input);
+                            if (!file.exists()) {
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest("File does not exist: " + input),
+                                        schemaMapping);
+                            }
+
+                            Result<UploadFileResponse> uploadedFile = uploadFile(file);
+                            if (!uploadedFile.isOk()) {
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest(
+                                                "Failed to upload file: "
+                                                        + input
+                                                        + ", "
+                                                        + uploadedFile.getStatusMessage()),
+                                        schemaMapping);
+                            }
+                            item.getInputs().set(i, uploadedFile.getValue().getFilePath());
+                        }
+                    }
+                }
+            }
+        }
+        if (schemaMapping.getEdgeMappings() != null) {
+            for (EdgeMapping item : schemaMapping.getEdgeMappings()) {
+                if (item.getInputs() != null) {
+                    for (int i = 0; i < item.getInputs().size(); ++i) {
+                        String input = item.getInputs().get(i);
+                        if (input.startsWith("@")) {
+                            input = input.substring(1);
+                            File file = new File(input);
+                            if (!file.exists()) {
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest("File does not exist: " + input),
+                                        schemaMapping);
+                            }
+                            Result<UploadFileResponse> uploadedFile = uploadFile(file);
+                            if (!uploadedFile.isOk()) {
+                                return new Result<SchemaMapping>(
+                                        Status.badRequest(
+                                                "Failed to upload file: "
+                                                        + input
+                                                        + ", "
+                                                        + uploadedFile.getStatusMessage()),
+                                        schemaMapping);
+                            }
+                            item.getInputs().set(i, uploadedFile.getValue().getFilePath());
+                        }
+                    }
+                }
+            }
+        }
+        return Result.ok(schemaMapping);
+    }
+
+    /**
+     * Remove the @ if it is present in the path
+     *
+     * @param path
+     * @return
+     */
+    private static String trimPath(String path) {
+        if (path == null) {
+            throw new IllegalArgumentException("path cannot be null");
+        }
+        return path.startsWith("@") ? path.substring(1) : path;
+    }
+
+    private Result<SchemaMapping> tryUploadFile(SchemaMapping schemaMapping) {
+        Result<SchemaMapping> validateResult = validateSchemaMapping(schemaMapping);
+        if (!validateResult.isOk()) {
+            return new Result<SchemaMapping>(
+                    Status.badRequest("validation failed for schema mapping"), schemaMapping);
+        }
+        SchemaMapping validatedSchemaMapping = validateResult.getValue();
+        System.out.println("Schema mapping validated successfully");
+        Result<SchemaMapping> uploadResult = uploadFilesAndUpdate(validatedSchemaMapping);
+        if (!uploadResult.isOk()) {
+            return new Result<SchemaMapping>(
+                    Status.badRequest("upload failed for schema mapping"), schemaMapping);
+        }
+        return uploadResult;
     }
 
     @Override
@@ -159,9 +459,14 @@ public class DefaultSession implements Session {
 
     @Override
     public Result<JobResponse> bulkLoading(String graphId, SchemaMapping mapping) {
+        Result<SchemaMapping> result = tryUploadFile(mapping);
+        if (!result.isOk()) {
+            System.out.println("Failed to upload files" + result.getStatusMessage());
+            return new Result<JobResponse>(result.getStatus(), null);
+        }
         try {
             ApiResponse<JobResponse> response =
-                    graphApi.createDataloadingJobWithHttpInfo(graphId, mapping);
+                    graphApi.createDataloadingJobWithHttpInfo(graphId, result.getValue());
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -195,6 +500,18 @@ public class DefaultSession implements Session {
     public Result<GetGraphSchemaResponse> getGraphSchema(String graphId) {
         try {
             ApiResponse<GetGraphSchemaResponse> response = graphApi.getSchemaWithHttpInfo(graphId);
+            return Result.fromResponse(response);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        }
+    }
+
+    @Override
+    public Result<GetGraphStatisticsResponse> getGraphStatistics(String graphId) {
+        try {
+            ApiResponse<GetGraphStatisticsResponse> response =
+                    graphApi.getGraphStatisticWithHttpInfo(graphId);
             return Result.fromResponse(response);
         } catch (ApiException e) {
             e.printStackTrace();
@@ -319,95 +636,137 @@ public class DefaultSession implements Session {
         }
     }
 
+    //////////////////////////////// Submitting Queries//////////////////////////////////////
     @Override
-    public Result<IrResult.CollectiveResults> callProcedure(
-            String graphName, QueryRequest request) {
-        try {
-            // Interactive currently support four type of inputformat, see
-            // flex/engines/graph_db/graph_db_session.h
-            // Here we add byte of value 1 to denote the input format is in JSON format.
-            ApiResponse<byte[]> response =
-                    queryApi.procCallWithHttpInfo(
-                            graphName, JSON_FORMAT_STRING, request.toJson().getBytes());
-            if (response.getStatusCode() != 200) {
-                return Result.fromException(
-                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
-            }
-            IrResult.CollectiveResults results =
-                    IrResult.CollectiveResults.parseFrom(response.getData());
-            return new Result<>(results);
-        } catch (ApiException e) {
-            e.printStackTrace();
-            return Result.fromException(e);
-        } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
-            return Result.error(e.getMessage());
-        }
+    public Result<IrResult.CollectiveResults> callProcedure(String graphId, QueryRequest request) {
+        return parseBytesToCollectiveResults(
+                callProcedureImpl(
+                        graphId,
+                        appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON)));
+    }
+
+    @Override
+    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
+            String graphId, QueryRequest queryRequest) {
+        return callProcedureAsyncImpl(
+                        graphId,
+                        appendFormatByte(queryRequest.toJson().getBytes(), InputFormat.CYPHER_JSON))
+                .thenApply(this::parseBytesToCollectiveResults);
     }
 
     @Override
     public Result<IrResult.CollectiveResults> callProcedure(QueryRequest request) {
-        try {
-            // Interactive currently support four type of inputformat, see
-            // flex/engines/graph_db/graph_db_session.h
-            // Here we add byte of value 1 to denote the input format is in JSON format.
-            ApiResponse<byte[]> response =
-                    queryApi.procCallCurrentWithHttpInfo(
-                            JSON_FORMAT_STRING, request.toJson().getBytes());
-            if (response.getStatusCode() != 200) {
-                return Result.fromException(
-                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
-            }
-            IrResult.CollectiveResults results =
-                    IrResult.CollectiveResults.parseFrom(response.getData());
-            return new Result<>(results);
-        } catch (ApiException e) {
-            e.printStackTrace();
-            return Result.fromException(e);
-        } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
-            return Result.error(e.getMessage());
-        }
+        return parseBytesToCollectiveResults(
+                callProcedureImpl(
+                        null,
+                        appendFormatByte(request.toJson().getBytes(), InputFormat.CYPHER_JSON)));
     }
 
     @Override
-    public Result<byte[]> callProcedureRaw(String graphName, byte[] request) {
-        try {
-            // Interactive currently support four type of inputformat, see
-            // flex/engines/graph_db/graph_db_session.h
-            // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
-            // format.
-            ApiResponse<byte[]> response =
-                    queryApi.procCallWithHttpInfo(graphName, ENCODER_FORMAT_STRING, request);
-            if (response.getStatusCode() != 200) {
-                return Result.fromException(
-                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
-            }
-            return new Result<byte[]>(response.getData());
-        } catch (ApiException e) {
-            e.printStackTrace();
-            return Result.fromException(e);
-        }
+    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
+            QueryRequest queryRequest) {
+        return callProcedureAsyncImpl(
+                        null,
+                        appendFormatByte(queryRequest.toJson().getBytes(), InputFormat.CYPHER_JSON))
+                .thenApply(this::parseBytesToCollectiveResults);
+    }
+
+    @Override
+    public Result<IrResult.CollectiveResults> callProcedure(
+            String graphId, StoredProcedure.Query request) {
+        return parseBytesToCollectiveResults(
+                callProcedureImpl(
+                        graphId,
+                        appendFormatByte(
+                                request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE)));
+    }
+
+    @Override
+    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
+            String graphId, StoredProcedure.Query request) {
+        return callProcedureAsyncImpl(
+                        graphId,
+                        appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE))
+                .thenApply(this::parseBytesToCollectiveResults);
+    }
+
+    @Override
+    public Result<IrResult.CollectiveResults> callProcedure(StoredProcedure.Query request) {
+        return parseBytesToCollectiveResults(
+                callProcedureImpl(
+                        null,
+                        appendFormatByte(
+                                request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE)));
+    }
+
+    @Override
+    public CompletableFuture<Result<IrResult.CollectiveResults>> callProcedureAsync(
+            StoredProcedure.Query request) {
+        return callProcedureAsyncImpl(
+                        null,
+                        appendFormatByte(request.toByteArray(), InputFormat.CYPHER_PROTO_PROCEDURE))
+                .thenApply(this::parseBytesToCollectiveResults);
+    }
+
+    /***
+     * Call procedure with raw bytes.
+     */
+
+    @Override
+    public Result<byte[]> callProcedureRaw(String graphId, byte[] request) {
+        return callProcedureImpl(graphId, appendFormatByte(request, InputFormat.CPP_ENCODER));
+    }
+
+    @Override
+    public CompletableFuture<Result<byte[]>> callProcedureRawAsync(String graphId, byte[] request) {
+        return callProcedureAsyncImpl(graphId, appendFormatByte(request, InputFormat.CPP_ENCODER));
     }
 
     @Override
     public Result<byte[]> callProcedureRaw(byte[] request) {
-        try {
-            // Interactive currently support four type of inputformat, see
-            // flex/engines/graph_db/graph_db_session.h
-            // Here we add byte of value 0 to denote the input format is in raw encoder/decoder
-            // format.
-            ApiResponse<byte[]> response =
-                    queryApi.procCallCurrentWithHttpInfo(ENCODER_FORMAT_STRING, request);
-            if (response.getStatusCode() != 200) {
-                return Result.fromException(
-                        new ApiException(response.getStatusCode(), "Failed to call procedure"));
-            }
-            return new Result<byte[]>(response.getData());
-        } catch (ApiException e) {
-            e.printStackTrace();
-            return Result.fromException(e);
-        }
+        return callProcedureImpl(null, appendFormatByte(request, InputFormat.CPP_ENCODER));
+    }
+
+    @Override
+    public CompletableFuture<Result<byte[]>> callProcedureRawAsync(byte[] request) {
+        return callProcedureAsyncImpl(null, appendFormatByte(request, InputFormat.CPP_ENCODER));
+    }
+
+    /**
+     * Submit a adhoc query, represented via physical plan.
+     *
+     * @param graphId      the identifier of the graph
+     * @param physicalPlan physical execution plan.
+     * @return the results.
+     */
+    @Override
+    public Result<IrResult.CollectiveResults> runAdhocQuery(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+        return runAdhocQueryImpl(graphId, physicalPlan);
+    }
+
+    @Override
+    public CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsync(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+        return runAdhocQueryAsyncImpl(graphId, physicalPlan);
+    }
+
+    /**
+     * Submit a adhoc query, represented via physical plan.
+     *
+     * @param physicalPlan physical execution plan.
+     * @return the results.
+     */
+    @Override
+    public Result<IrResult.CollectiveResults> runAdhocQuery(
+            GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+        return runAdhocQueryImpl(null, physicalPlan);
+    }
+
+    @Override
+    public CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsync(
+            GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+        return runAdhocQueryAsyncImpl(null, physicalPlan);
     }
 
     @Override
@@ -547,4 +906,261 @@ public class DefaultSession implements Session {
      */
     @Override
     public void close() throws Exception {}
+
+    /**
+     * Upload a file to the server.
+     *
+     * @param fileStorage the file to upload
+     *                    (required)
+     * @return the response from the server
+     */
+    @Override
+    public Result<UploadFileResponse> uploadFile(File fileStorage) {
+        try {
+            ApiResponse<UploadFileResponse> response = utilsApi.uploadFileWithHttpInfo(fileStorage);
+            return Result.fromResponse(response);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            return Result.fromException(e);
+        }
+    }
+
+    private byte[] appendFormatByte(byte[] payload, InputFormat inputFormat) {
+        byte[] newBytes = new byte[payload.length + 1];
+        if (payload.length > 0) {
+            System.arraycopy(payload, 0, newBytes, 0, payload.length);
+        }
+        newBytes[payload.length] = (byte) inputFormat.ordinal();
+        return newBytes;
+    }
+
+    private static class RawBytesCallback implements ApiCallback<byte[]> {
+        private CompletableFuture<Result<byte[]>> future;
+        private final Span span;
+        private final Scope scope;
+
+        public RawBytesCallback(CompletableFuture<Result<byte[]>> future, Span span) {
+            this.future = future;
+            this.span = span;
+            this.scope = this.span.makeCurrent();
+        }
+
+        public RawBytesCallback(CompletableFuture<Result<byte[]>> future) {
+            this.future = future;
+            this.span = null;
+            this.scope = null;
+        }
+
+        /**
+         * This is called when the API call fails.
+         *
+         * @param e               The exception causing the failure
+         * @param statusCode      Status code of the response if available, otherwise it would be 0
+         * @param responseHeaders Headers of the response if available, otherwise it would be null
+         */
+        @Override
+        public void onFailure(
+                ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
+            future.complete(Result.fromException(e));
+            if (scope != null) {
+                scope.close();
+            }
+            if (span != null) {
+                span.recordException(e);
+                span.end();
+            }
+        }
+
+        /**
+         * This is called when the API call succeeded.
+         *
+         * @param result          The result deserialized from response
+         * @param statusCode      Status code of the response
+         * @param responseHeaders Headers of the response
+         */
+        @Override
+        public void onSuccess(
+                byte[] result, int statusCode, Map<String, List<String>> responseHeaders) {
+            future.complete(Result.ok(result));
+            if (scope != null) {
+                scope.close();
+                span.end();
+            }
+        }
+
+        /**
+         * This is called when the API upload processing.
+         *
+         * @param bytesWritten  bytes Written
+         * @param contentLength content length of request body
+         * @param done          write end
+         */
+        @Override
+        public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {}
+
+        /**
+         * This is called when the API download processing.
+         *
+         * @param bytesRead     bytes Read
+         * @param contentLength content length of the response
+         * @param done          Read end
+         */
+        @Override
+        public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {}
+    }
+
+    //////////////////////////////////// Implement adhoc/stored procedure query
+    // submission///////////////////////
+    private Result<IrResult.CollectiveResults> parseBytesToCollectiveResults(Result<byte[]> input) {
+        if (!input.isOk()) {
+            return new Result<>(input.getStatus());
+        } else {
+            try {
+                IrResult.CollectiveResults results =
+                        IrResult.CollectiveResults.parseFrom(input.getValue());
+                return new Result<IrResult.CollectiveResults>(results);
+            } catch (InvalidProtocolBufferException e) {
+                e.printStackTrace();
+                return Result.error(e.getMessage());
+            }
+        }
+    }
+
+    private Result<byte[]> callProcedureImpl(String graphId, byte[] body) {
+        Request.Builder builder = createCallProcRequestBuilder(graphId, body);
+        return submitSyncRequest(builder);
+    }
+
+    private Result<IrResult.CollectiveResults> runAdhocQueryImpl(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+        Request.Builder builder = createAdhocRequestBuilder(graphId, physicalPlan);
+        Result<byte[]> callRes = submitSyncRequest(builder);
+        if (callRes.isOk()) {
+            try {
+                return Result.ok(IrResult.CollectiveResults.parseFrom(callRes.getValue()));
+            } catch (Exception e) {
+                return Result.error(e.getMessage());
+            }
+        } else {
+            return new Result<>(callRes.getStatus());
+        }
+    }
+
+    private Result<byte[]> submitSyncRequest(Request.Builder builder) {
+        okhttp3.Call call = this.queryApi.getApiClient().getHttpClient().newCall(builder.build());
+        Span outgoing = null;
+        try {
+            Response response;
+            if (config.isEnableTracing()) {
+                outgoing = tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
+                outgoing.setAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "POST");
+                outgoing.setAttribute(
+                        SemanticAttributes.URL_FULL, builder.getUrl$okhttp().uri().toString());
+                try (Scope scope = outgoing.makeCurrent()) {
+                    openTelemetry
+                            .getPropagators()
+                            .getTextMapPropagator()
+                            .inject(Context.current(), builder, setter);
+                    response = call.execute();
+                }
+            } else {
+                response = call.execute();
+            }
+            if (response.code() != 200) {
+                return Result.error("fail to call procedure, " + response);
+            }
+            return Result.ok(response.body().bytes());
+        } catch (Exception e) {
+            if (config.isEnableTracing() && outgoing != null) {
+                outgoing.recordException(e);
+                outgoing.end();
+            }
+            return Result.error(e.getMessage());
+        }
+    }
+
+    private CompletableFuture<Result<byte[]>> callProcedureAsyncImpl(String graphId, byte[] body) {
+        Request.Builder builder = createCallProcRequestBuilder(graphId, body);
+        return submitAsyncRequest(builder);
+    }
+
+    // For adhoc query, we don't append format byte.
+    private CompletableFuture<Result<IrResult.CollectiveResults>> runAdhocQueryAsyncImpl(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+        Request.Builder builder = createAdhocRequestBuilder(graphId, physicalPlan);
+        return submitAsyncRequest(builder).thenApply(this::parseBytesToCollectiveResults);
+    }
+
+    private CompletableFuture<Result<byte[]>> submitAsyncRequest(Request.Builder builder) {
+        CompletableFuture<Result<byte[]>> future = new CompletableFuture<>();
+        Type localVarReturnType = new TypeToken<byte[]>() {}.getType();
+        RawBytesCallback callback;
+        if (config.isEnableTracing()) {
+            Span outgoing =
+                    tracer.spanBuilder("/submit").setSpanKind(SpanKind.INTERNAL).startSpan();
+            outgoing.setAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "POST");
+            outgoing.setAttribute(
+                    SemanticAttributes.URL_FULL, builder.getUrl$okhttp().uri().toString());
+            openTelemetry
+                    .getPropagators()
+                    .getTextMapPropagator()
+                    .inject(Context.current(), builder, setter);
+            callback = new RawBytesCallback(future, outgoing);
+            // The span will be closed in call back
+        } else {
+            callback = new RawBytesCallback(future);
+        }
+        queryClient.executeAsync(
+                this.queryApi.getApiClient().getHttpClient().newCall(builder.build()),
+                localVarReturnType,
+                callback);
+        return future;
+    }
+
+    // For adhoc query, we don't append format byte.
+    private Request.Builder createAdhocRequestBuilder(
+            String graphId, GraphAlgebraPhysical.PhysicalPlan physicalPlan) {
+        String localVarPath;
+        if (graphId != null) {
+            localVarPath =
+                    "/v1/graph/{graph_id}/adhoc_query"
+                            .replace("{" + "graph_id" + "}", graphId.toString());
+        } else {
+            localVarPath = "/v1/graph/current/adhoc_query";
+        }
+        String uri = queryClient.getBasePath() + localVarPath;
+        byte[] bs = physicalPlan.toByteArray();
+        RequestBody body = RequestBody.create(bs);
+        return new Request.Builder().url(uri).post(body);
+    }
+
+    // For stored procedure query, the format byte should be appended outside
+    private Request.Builder createCallProcRequestBuilder(String graphId, byte[] body) {
+        // Interactive currently support four type of inputformat, see
+        // flex/engines/graph_db/graph_db_session.h
+        String localVarPath;
+        if (graphId != null) {
+            localVarPath =
+                    "/v1/graph/{graph_id}/query"
+                            .replace("{" + "graph_id" + "}", graphId.toString());
+        } else {
+            localVarPath = "/v1/graph/current/query";
+        }
+        String uri = queryClient.getBasePath() + localVarPath;
+        RequestBody requestBody = RequestBody.create(body);
+        return new Request.Builder().url(uri).post(requestBody);
+    }
+
+    private static OkHttpClient createHttpClient(Config config) {
+        return new OkHttpClient.Builder()
+                .readTimeout(config.getReadTimeout(), TimeUnit.MILLISECONDS)
+                .writeTimeout(config.getWriteTimeout(), TimeUnit.MILLISECONDS)
+                .connectTimeout(config.getConnectionTimeout(), TimeUnit.MILLISECONDS)
+                .connectionPool(
+                        new ConnectionPool(
+                                config.getMaxIdleConnections(),
+                                config.getKeepAliveDuration(),
+                                TimeUnit.MILLISECONDS))
+                .build();
+    }
 }

@@ -12,8 +12,8 @@ use groot_store::db::api::{
 use groot_store::db::common::bytes::util::parse_pb;
 use groot_store::db::graph::store::GraphStore;
 use groot_store::db::proto::model::{
-    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeLocationPb,
-    OpTypePb, OperationBatchPb, OperationPb, VertexIdPb,
+    AddEdgeKindPb, AddVertexTypePropertiesPb, ConfigPb, CreateVertexTypePb, DataOperationPb,
+    DdlOperationPb, EdgeIdPb, EdgeLocationPb, OpTypePb, OperationBatchPb, OperationPb, VertexIdPb,
 };
 use groot_store::db::proto::model::{CommitDataLoadPb, PrepareDataLoadPb};
 use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
@@ -21,8 +21,18 @@ use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
 use crate::store::jna_response::JnaResponse;
 
 pub type GraphHandle = *const c_void;
+
+#[cfg(feature = "mimalloc")]
+use mimalloc_rust::*;
+
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
+
+#[cfg(not(feature = "mimalloc"))]
 use tikv_jemallocator::Jemalloc;
 
+#[cfg(not(feature = "mimalloc"))]
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 
@@ -127,6 +137,29 @@ pub extern "C" fn writeBatch(
     return ret;
 }
 
+#[no_mangle]
+pub extern "C" fn getGraphStatistics(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
+    trace!("getGraphStatistics");
+    unsafe {
+        let graph_store_ptr = &*(ptr as *const GraphStore);
+        match graph_store_ptr.get_graph_statistics_blob(snapshot_id) {
+            Ok(blob) => {
+                let mut response = JnaResponse::new_success();
+                if let Err(e) = response.data(blob) {
+                    response.success(false);
+                    let msg = format!("{:?}", e);
+                    response.err_msg(&msg);
+                }
+                response
+            }
+            Err(e) => {
+                let msg = format!("{:?}", e);
+                JnaResponse::new_error(&msg)
+            }
+        }
+    }
+}
+
 fn do_write_batch<G: MultiVersionGraph>(
     graph: &G, snapshot_id: SnapshotId, buf: &[u8],
 ) -> GraphResult<bool> {
@@ -155,8 +188,18 @@ fn do_write_batch<G: MultiVersionGraph>(
                     has_ddl = true;
                 }
             }
+            OpTypePb::ADD_VERTEX_TYPE_PROPERTIES => {
+                if add_vertex_type_properties(graph, snapshot_id, op)? {
+                    has_ddl = true;
+                }
+            }
             OpTypePb::CREATE_EDGE_TYPE => {
                 if create_edge_type(graph, snapshot_id, op)? {
+                    has_ddl = true;
+                }
+            }
+            OpTypePb::ADD_EDGE_TYPE_PROPERTIES => {
+                if add_edge_type_properties(graph, snapshot_id, op)? {
                     has_ddl = true;
                 }
             }
@@ -237,6 +280,21 @@ fn create_vertex_type<G: MultiVersionGraph>(
     graph.create_vertex_type(snapshot_id, schema_version, label_id, &typedef, table_id)
 }
 
+fn add_vertex_type_properties<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
+    trace!("add_vertex_type_properties");
+    let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
+    let schema_version = ddl_operation_pb.get_schemaVersion();
+    let add_vertex_type_properties_pb =
+        parse_pb::<AddVertexTypePropertiesPb>(ddl_operation_pb.get_ddlBlob())?;
+    let table_id = add_vertex_type_properties_pb.get_tableIdx();
+    let typedef_pb = add_vertex_type_properties_pb.get_typeDef();
+    let label_id = typedef_pb.get_label_id().get_id();
+    let typedef = TypeDef::from_proto(&typedef_pb)?;
+    graph.add_vertex_type_properties(snapshot_id, schema_version, label_id, &typedef, table_id)
+}
+
 fn drop_vertex_type<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<bool> {
@@ -258,6 +316,18 @@ fn create_edge_type<G: MultiVersionGraph>(
     let label_id = typedef_pb.get_label_id().get_id();
     let typedef = TypeDef::from_proto(&typedef_pb)?;
     graph.create_edge_type(snapshot_id, schema_version, label_id, &typedef)
+}
+
+fn add_edge_type_properties<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
+    trace!("add_edge_type_properties");
+    let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
+    let schema_version = ddl_operation_pb.get_schemaVersion();
+    let typedef_pb = parse_pb::<TypeDefPb>(ddl_operation_pb.get_ddlBlob())?;
+    let label_id = typedef_pb.get_label_id().get_id();
+    let typedef = TypeDef::from_proto(&typedef_pb)?;
+    graph.add_edge_type_properties(snapshot_id, schema_version, label_id, &typedef)
 }
 
 fn drop_edge_type<G: MultiVersionGraph>(

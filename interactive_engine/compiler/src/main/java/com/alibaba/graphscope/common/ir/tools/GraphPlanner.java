@@ -18,8 +18,14 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.config.GraphConfig;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMetaTracker;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
-import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.reader.HttpIrMetaReader;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalIrMetaReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
@@ -30,11 +36,8 @@ import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
-import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -46,9 +49,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
@@ -67,11 +73,14 @@ public class GraphPlanner {
     public static final Function<Configs, RexBuilder> rexBuilderFactory =
             (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
 
-    public GraphPlanner(Configs graphConfig, LogicalPlanFactory logicalPlanFactory) {
+    public GraphPlanner(
+            Configs graphConfig,
+            LogicalPlanFactory logicalPlanFactory,
+            GraphRelOptimizer optimizer) {
         this.graphConfig = graphConfig;
-        this.optimizer = new GraphRelOptimizer(this.graphConfig);
-        this.rexBuilder = rexBuilderFactory.apply(graphConfig);
+        this.optimizer = optimizer;
         this.logicalPlanFactory = logicalPlanFactory;
+        this.rexBuilder = rexBuilderFactory.apply(graphConfig);
     }
 
     public PlannerInstance instance(String query, IrMeta irMeta) {
@@ -128,7 +137,7 @@ public class GraphPlanner {
             if (logicalPlan.isReturnEmpty()) {
                 return PhysicalPlan.createEmpty();
             } else if (logicalPlan.getRegularQuery() != null) {
-                String physicalOpt = FrontendConfig.PHYSICAL_OPT_CONFIG.get(graphConfig);
+                String physicalOpt = FrontendConfig.GRAPH_PHYSICAL_OPT.get(graphConfig);
                 if ("proto".equals(physicalOpt.toLowerCase())) {
                     logger.debug("physical type is proto");
                     try (GraphRelProtoPhysicalBuilder physicalBuilder =
@@ -170,18 +179,33 @@ public class GraphPlanner {
         }
     }
 
-    private static Configs createExtraConfigs(@Nullable String keyValues) {
+    private static Configs createExtraConfigs(@Nullable String extraYamlFile) throws Exception {
         Map<String, String> keyValueMap = Maps.newHashMap();
-        if (!StringUtils.isEmpty(keyValues)) {
-            String[] pairs = keyValues.split(",");
-            for (String pair : pairs) {
-                String[] kv = pair.trim().split(":");
-                Preconditions.checkArgument(
-                        kv.length == 2, "invalid key value pair: " + pair + " in " + keyValues);
-                keyValueMap.put(kv[0], kv[1]);
-            }
+        if (!StringUtils.isEmpty(extraYamlFile)) {
+            String extraYaml =
+                    FileUtils.readFileToString(new File(extraYamlFile), StandardCharsets.UTF_8);
+            Yaml yaml = new Yaml();
+            Map<String, Object> yamlMap = yaml.load(extraYaml);
+            yamlMap.forEach(
+                    (k, v) -> {
+                        if (v != null) {
+                            keyValueMap.put(k, v.toString());
+                        }
+                    });
         }
         return new Configs(keyValueMap);
+    }
+
+    private static IrMetaFetcher createIrMetaFetcher(Configs configs, IrMetaTracker tracker)
+            throws IOException {
+        URI schemaUri = URI.create(GraphConfig.GRAPH_META_SCHEMA_URI.get(configs));
+        if (schemaUri.getScheme() == null || schemaUri.getScheme().equals("file")) {
+            return new StaticIrMetaFetcher(new LocalIrMetaReader(configs), tracker);
+        } else if (schemaUri.getScheme().equals("http")) {
+            return new StaticIrMetaFetcher(new HttpIrMetaReader(configs), tracker);
+        }
+        throw new IllegalArgumentException(
+                "unknown graph meta reader mode: " + schemaUri.getScheme());
     }
 
     public static void main(String[] args) throws Exception {
@@ -193,18 +217,19 @@ public class GraphPlanner {
             throw new IllegalArgumentException(
                     "usage: GraphPlanner '<path_to_config_file>' '<path_to_query_file>' "
                             + " '<path_to_physical_output_file>' '<path_to_procedure_file>'"
-                            + " 'optional <extra_key_value_config_pairs>'");
+                            + " 'optional <extra_key_value_config_file>'");
         }
         Configs configs = Configs.Factory.create(args[0]);
-        ExperimentalMetaFetcher metaFetcher =
-                new ExperimentalMetaFetcher(new LocalMetaDataReader(configs));
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
+        IrMetaFetcher metaFetcher = createIrMetaFetcher(configs, optimizer.getGlogueHolder());
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
         GraphPlanner planner =
                 new GraphPlanner(
                         configs,
                         (GraphBuilder builder, IrMeta irMeta, String q) ->
                                 new LogicalPlanVisitor(builder, irMeta)
-                                        .visit(new CypherAntlr4Parser().parse(q)));
+                                        .visit(new CypherAntlr4Parser().parse(q)),
+                        optimizer);
         PlannerInstance instance = planner.instance(query, metaFetcher.fetch().get());
         Summary summary = instance.plan();
         // write physical plan to file

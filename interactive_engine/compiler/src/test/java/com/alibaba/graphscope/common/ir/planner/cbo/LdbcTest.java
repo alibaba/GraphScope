@@ -2,10 +2,10 @@ package com.alibaba.graphscope.common.ir.planner.cbo;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -31,7 +31,11 @@ public class LdbcTest {
                                 "NotMatchToAntiJoinRule, FilterIntoJoinRule, FilterMatchRule,"
                                         + " ExtendIntersectRule, ExpandGetVFusionRule"));
         optimizer = new GraphRelOptimizer(configs);
-        irMeta = Utils.mockIrMeta("schema/ldbc.json", "statistics/ldbc30_statistics.json");
+        irMeta =
+                Utils.mockIrMeta(
+                        "schema/ldbc.json",
+                        "statistics/ldbc30_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     @Test
@@ -239,25 +243,25 @@ public class LdbcTest {
                     + " distinct=false}]])\n"
                     + "      LogicalFilter(condition=[<>(otherP, p)])\n"
                     + "        GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[PLACE]}],"
-                    + " alias=[countryX], fusedFilter=[[=(_.name, ?0)]], opt=[END],"
+                    + " alias=[countryY], fusedFilter=[[=(_.name, ?1)]], opt=[END],"
                     + " physicalOpt=[ITSELF])\n"
                     + "          GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISLOCATEDIN, COMMENT,"
                     + " PLACE), EdgeLabel(ISLOCATEDIN, POST, PLACE)]], alias=[_],"
-                    + " startAlias=[messageX], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + " startAlias=[messageY], opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "            GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[POST,"
-                    + " COMMENT]}], alias=[messageX], fusedFilter=[[AND(>=(_.creationDate, ?3),"
+                    + " COMMENT]}], alias=[messageY], fusedFilter=[[AND(>=(_.creationDate, ?3),"
                     + " <(_.creationDate, ?4))]], opt=[START], physicalOpt=[ITSELF])\n"
                     + "              GraphPhysicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[HASCREATOR]}], alias=[_], startAlias=[otherP], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
                     + "                GraphPhysicalGetV(tableConfig=[{isAll=false,"
-                    + " tables=[PLACE]}], alias=[countryY], fusedFilter=[[=(_.name, ?1)]],"
+                    + " tables=[PLACE]}], alias=[countryX], fusedFilter=[[=(_.name, ?0)]],"
                     + " opt=[END], physicalOpt=[ITSELF])\n"
                     + "                  GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISLOCATEDIN,"
                     + " COMMENT, PLACE), EdgeLabel(ISLOCATEDIN, POST, PLACE)]], alias=[_],"
-                    + " startAlias=[messageY], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + " startAlias=[messageX], opt=[OUT], physicalOpt=[VERTEX])\n"
                     + "                    GraphPhysicalGetV(tableConfig=[{isAll=false,"
-                    + " tables=[POST, COMMENT]}], alias=[messageY],"
+                    + " tables=[POST, COMMENT]}], alias=[messageX],"
                     + " fusedFilter=[[AND(>=(_.creationDate, ?3), <(_.creationDate, ?4))]],"
                     + " opt=[START], physicalOpt=[ITSELF])\n"
                     + "                      GraphPhysicalExpand(tableConfig=[{isAll=false,"

@@ -223,7 +223,10 @@ class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else bui
             else str(int(torch._C._GLIBCXX_USE_CXX11_ABI))
         )
         print(f"GCC_USE_CXX11_ABI for {extension.name}: {gcc_use_cxx_abi}")
-        self._add_compile_flag(extension, "-D_GLIBCXX_USE_CXX11_ABI=" + gcc_use_cxx_abi)
+        if gcc_use_cxx_abi is not None:
+            self._add_compile_flag(
+                extension, "-D_GLIBCXX_USE_CXX11_ABI=" + gcc_use_cxx_abi
+            )
 
 
 class CustomDevelop(develop):
@@ -285,7 +288,9 @@ def find_graphscope_packages():
     packages = []
 
     # add graphscope
-    for pkg in find_packages(".", exclude=["graphscope.flex.*"]):
+    for pkg in find_packages(
+        ".", exclude=["graphscope.flex.*", "graphscope.gsctl", "graphscope.gsctl.*"]
+    ):
         packages.append(pkg)
 
     return packages
@@ -303,8 +308,6 @@ def parsed_package_data():
         "graphscope": [
             "VERSION",
             "proto/*.pyi",
-            "gsctl/scripts/*.sh",
-            "gsctl/scripts/lib/*.sh",
         ],
     }
 
@@ -472,11 +475,6 @@ setup(
         "Documentation": "https://graphscope.io/docs",
         "Source": "https://github.com/alibaba/GraphScope",
         "Tracker": "https://github.com/alibaba/GraphScope/issues",
-    },
-    entry_points={
-        "console_scripts": [
-            "gsctl = graphscope.gsctl.gsctl:cli",
-        ],
     },
 )
 

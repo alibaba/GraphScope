@@ -20,7 +20,7 @@ info:
     
     QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
   version: "1.0.0"
-  title: GraphScope Interactive API v0.0.3
+  title: GraphScope Interactive API v0.3
   contact:
     email: graphscope@alibaba-inc.com
   license:
@@ -100,7 +100,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to get
+          description: The id of graph to get
       responses:
         '200':
           description: Successful operation
@@ -118,7 +118,7 @@ paths:
     delete:
       tags:
         - AdminService/GraphManagement
-      description: Delete a graph by name
+      description: Delete a graph by id
       operationId: delete_graph
       parameters:
         - name: graph_id
@@ -127,7 +127,7 @@ paths:
           schema:
             type: string
           description:
-            The name of graph to delete
+            The id of graph to delete
       responses:
         '200':
           description: Successful operation
@@ -154,7 +154,7 @@ paths:
     get:
       tags:
         - AdminService/GraphManagement
-      description: Get schema by graph name
+      description: Get schema by graph id
       operationId: get_schema
       parameters:
         - name: graph_id
@@ -162,7 +162,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to delete
+          description: The id of graph to delete
       responses:
         '200':
           description: successful operation
@@ -170,6 +170,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetGraphSchemaResponse'
+  /v1/graph/{graph_id}/statistics:
+    get:
+      tags:
+        - AdminService/GraphManagement
+      description: Get the statics info of a graph, including number of vertices for each label, number of edges for each label.
+      operationId: get_graph_statistic
+      parameters:
+        - name: graph_id
+          in : path
+          required: true
+          schema:
+            type: string
+          description: The id of graph to get statistics
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGraphStatisticsResponse'
+        '500':
+          description: Server Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example: "Internal error"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example: "Graph not running or graph not exists"
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              example: "Service unavailable, try again later"
 
   /v1/graph/{graph_id}/dataloading:
     post:
@@ -183,7 +224,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name of graph to do bulk loading.
+          description: The id of graph to do bulk loading.
       requestBody:
         content:
           application/json:
@@ -325,7 +366,7 @@ paths:
     get:
       tags:
         - AdminService/ProcedureManagement
-      description: Get a procedure by name
+      description: Get a procedure by id
       operationId: get_procedure
       parameters:
         - name: graph_id
@@ -355,7 +396,7 @@ paths:
     put:
       tags:
         - AdminService/ProcedureManagement
-      description:  Update procedure on a graph by name
+      description:  Update procedure on a graph by id
       operationId: update_procedure
       parameters:
         - name: graph_id
@@ -404,7 +445,7 @@ paths:
     delete:
       tags:
         - AdminService/ProcedureManagement
-      description: Delete a procedure on a graph by name
+      description: Delete a procedure on a graph by id
       operationId: delete_procedure
       parameters:
         - name: graph_id
@@ -513,7 +554,7 @@ paths:
         - name: graph_id
           in: path
           required: true
-          description: The name of the graph
+          description: The id of the graph
           schema:
             type: string
         - name: label
@@ -893,23 +934,15 @@ paths:
       tags:
         - QueryService
       summary: run queries on graph
-      operationId: proc_call
+      operationId: call_proc
       description: |
         After the procedure is created, user can use this API to run the procedure.
-        TODO: a full example cypher->plan->json.
-        TODO: make sure typeinfo can be passed.
       parameters:
         - name: graph_id
           in : path
           required: true
           schema:
             type: string
-        - name: X-Interactive-Request-Format
-          in: header
-          required: true
-          schema:
-            type: string
-            enum: [proto, encoder, json]
       requestBody:
         content:
           text/plain:
@@ -918,7 +951,7 @@ paths:
               format: byte
       responses:
         '200':
-          description: Successfully runned. Empty if failed?
+          description: Successfully runned.
           content:
             text/plain:
               schema:
@@ -931,16 +964,9 @@ paths:
       tags:
         - QueryService
       summary: run queries on the running graph
-      operationId: proc_call_current
+      operationId: call_proc_current
       description: |
         Submit a query to the running graph.
-      parameters:
-        - name: X-Interactive-Request-Format
-          in: header
-          required: true
-          schema:
-            type: string
-            enum: [proto, encoder, json]
       requestBody:
         content:
           text/plain:
@@ -957,6 +983,94 @@ paths:
                 format: byte
         '500':
           description: Server internal error
+  /v1/graph/current/adhoc_query:
+    post:
+      tags:
+        - QueryService
+      summary: Submit adhoc query to the Interactive Query Service.
+      operationId: run_adhoc_current
+      description: |
+        Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+        https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned. Empty if failed?
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
+        '500':
+          description: Server internal error
+  /v1/graph/{graph_id}/adhoc_query:
+    post:
+      tags:
+        - QueryService
+      summary: Submit adhoc query to the Interactive Query Service.
+      operationId: run_adhoc
+      description: |
+        Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+        https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+      parameters:
+          - name: graph_id
+            in : path
+            required: true
+            schema:
+              type: string
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: byte
+      responses:
+        '200':
+          description: Successfully runned.
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: byte
+        '500':
+          description: Server internal error
+  /v1/file/upload:
+    post:
+      tags: [Utils]
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filestorage:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+              example:
+                file_path: /home/graphscope/path/to/file.csv
+                # metadata:
+                #   datasource: file
+                #   file_type: csv
+        500:
+          description: Server Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
 components:
   schemas:
     AnyValue: {}
@@ -1257,6 +1371,8 @@ components:
               type: boolean
             creation_time:
               type: integer
+            update_time:
+              type: integer
     UpdateProcedureRequest:
       x-body-name: update_procedure_request
       type: object
@@ -1291,6 +1407,61 @@ components:
       x-body-name: api_response
       type: string
       example: "Response string"
+    VertexStatistics:
+      x-body-name: vertex_statistics
+      type: object
+      properties:
+        type_id:
+          type: integer
+        type_name:
+          type: string
+        count:
+          type: integer
+    VertexTypePairStatistics:
+      type: object
+      x-body-name: vertex_type_pair_statistics
+      required:
+        - source_vertex
+        - destination_vertex
+        - count
+      properties:
+        source_vertex: 
+          type: string
+        destination_vertex:
+          type: string
+        count:
+          type: integer
+    EdgeStatistics:
+      x-body-name: edge_statistics
+      type: object
+      properties:
+        type_id:
+          type: integer
+        type_name:
+          type: string
+        vertex_type_pair_statistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/VertexTypePairStatistics'
+    GetGraphStatisticsResponse:
+      x-body-name: graph_statistics_response
+      type: object
+      required:
+        - total_vertex_count
+        - total_edge_count
+      properties:
+        total_vertex_count:
+          type: integer
+        total_edge_count:
+          type: integer
+        vertex_type_statistics:
+          type: array
+          items: 
+            $ref: '#/components/schemas/VertexStatistics'
+        edge_type_statistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeStatistics'
     GetGraphResponse:
       x-body-name: get_graph_response
       type: object
@@ -1472,6 +1643,26 @@ components:
         loading_config:
           type: object
           properties:
+            x_csr_params:
+              type: object
+              description: mutable_csr specific parameters
+              properties:
+                parallelism: # how many thread used for bulk loading
+                  type: integer
+                build_csr_in_mem: # whether to build csr in memory
+                  type: boolean
+                use_mmap_vector: # whether to use mmap vector
+                  type: boolean
+            data_source:
+              type: object
+              properties:
+                scheme:
+                  type: string
+                  enum:
+                    - odps
+                    - file
+                location:
+                  type: string
             import_option:
               type: string
               enum:
@@ -1636,5 +1827,15 @@ components:
           type: string
           description: URL or log string
         detail:
+          type: object
+          additionalProperties: true
+    UploadFileResponse:
+      required:
+        - file_path
+        # - metadata
+      properties:
+        file_path:
+          type: string
+        metadata:
           type: object
           additionalProperties: true

@@ -13,11 +13,10 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
+import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphStatistics;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
-import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotRequest;
-import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotResponse;
-import com.alibaba.graphscope.proto.groot.FrontendSnapshotGrpc;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.stub.StreamObserver;
 
@@ -52,5 +51,16 @@ public class FrontendSnapshotService extends FrontendSnapshotGrpc.FrontendSnapsh
             logger.error("error advance query snapshot", e);
             observer.onError(e);
         }
+    }
+
+    @Override
+    public void syncStatistics(
+            SyncStatisticsRequest request,
+            StreamObserver<SyncStatisticsResponse> responseObserver) {
+        Statistics statistics = request.getStatistics();
+        GraphStatistics graphStatistics = DefaultGraphStatistics.parseProto(statistics);
+        snapshotCache.setGraphStatisticsRef(graphStatistics);
+        responseObserver.onNext(SyncStatisticsResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 }

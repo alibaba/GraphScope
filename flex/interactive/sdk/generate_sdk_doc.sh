@@ -18,7 +18,7 @@
 
 
 GENERATED_ENDPOINT="https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0"
-ENDPOINT_PLACE_HOLDER="{INTERACTIVE_ENDPOINT}"
+ENDPOINT_PLACE_HOLDER="{INTERACTIVE_ADMIN_ENDPOINT}"
 
 function usage() {
   echo "Usage: $0 [options]"
@@ -50,11 +50,13 @@ function do_gen() {
   echo "Running command: ${cmd}"
   eval $cmd
 
-  # Copy the generated docs to the output path
-  cmd="cp -r ./java/docs/* ${OUTPUT_PATH}/java/"
+  # # Copy the generated docs to the output path
+  cmd="find ./java/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/java/ \;"
   echo "Running command: ${cmd}"
   eval $cmd
-  cmd="cp -r ./python/docs/* ${OUTPUT_PATH}/python/"
+  echo "Running command: ${cmd}"
+  eval $cmd
+  cmd="find ./python/docs/* -type f ! -name "*Api*" -exec cp {} ${OUTPUT_PATH}/python/ \;"
   echo "Running command: ${cmd}"
   eval $cmd
 

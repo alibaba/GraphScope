@@ -16,10 +16,7 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
-import com.alibaba.graphscope.common.ir.tools.config.ExpandConfig;
-import com.alibaba.graphscope.common.ir.tools.config.GetVConfig;
-import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.PathExpandConfig;
+import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 
@@ -46,6 +43,12 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
         // set path expand alias
         if (expandConfig.getAlias() != null) {
             builder.alias(expandConfig.getAlias());
+            // Here, we set the result opt in a direct manner, where the opt represents what sort of
+            // vertex and edge information should be saved for the path.
+            // if the alias exists, then result opt is set to 'ALL_V_E' to cache all inner vertices
+            // or
+            // edges, otherwise keep the default value 'END_V' to reduce the memory consumption.
+            builder.resultOpt(GraphOpt.PathExpandResult.ALL_V_E);
         }
         // set path expand hops
         return visitOC_RangeLiteral(ctx.oC_RelationshipDetail().oC_RangeLiteral());
@@ -64,11 +67,10 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
     public PathExpandConfig.Builder visitOC_Properties(CypherGSParser.OC_PropertiesContext ctx) {
         return (ctx == null)
                 ? builder
-                : builder.filter(
-                        Utils.propertyFilters(
-                                this.builder.getInnerBuilder(),
-                                this.parent.getExpressionVisitor(),
-                                ctx));
+                : (PathExpandConfig.Builder)
+                        builder.filter(
+                                Utils.propertyFilters(
+                                        this.builder, this.parent.getExpressionVisitor(), ctx));
     }
 
     @Override

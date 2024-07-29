@@ -28,7 +28,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import java.io.IOException;
 
 public class P2PEdgeMultipleLongInputFormat
-        extends TextEdgeInputFormat<LongWritable, LongWritable> {
+        extends TextEdgeInputFormat<LongWritable, MultipleLongWritable> {
 
     /**
      * Create an edge reader for a given split. The framework will call {@link
@@ -40,7 +40,7 @@ public class P2PEdgeMultipleLongInputFormat
      * @throws IOException
      */
     @Override
-    public EdgeReader<LongWritable, LongWritable> createEdgeReader(
+    public EdgeReader<LongWritable, MultipleLongWritable> createEdgeReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new P2PEdgeReader();
     }
@@ -54,7 +54,7 @@ public class P2PEdgeMultipleLongInputFormat
         private LongWritable srcId;
 
         private LongWritable dstId;
-        private LongWritable edgeValue;
+        private MultipleLongWritable edgeValue;
 
         /**
          * Preprocess the line so other methods can easily read necessary information for creating
@@ -74,7 +74,7 @@ public class P2PEdgeMultipleLongInputFormat
             //            logger.debug(String.join(",", tokens));
             srcId = new LongWritable(Long.parseLong(tokens[0]));
             dstId = new LongWritable(Long.parseLong(tokens[1]));
-            edgeValue = new LongWritable(Long.parseLong(tokens[2]));
+            edgeValue = new MultipleLongWritable(Long.parseLong(tokens[2]));
             return tokens;
         }
 
@@ -110,7 +110,7 @@ public class P2PEdgeMultipleLongInputFormat
          * @throws IOException exception that can be thrown while reading
          */
         @Override
-        protected LongWritable getValue(String[] line) throws IOException {
+        protected MultipleLongWritable getValue(String[] line) throws IOException {
             return edgeValue;
         }
     }

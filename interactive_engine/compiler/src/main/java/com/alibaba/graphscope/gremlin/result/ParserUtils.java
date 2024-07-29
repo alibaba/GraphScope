@@ -217,11 +217,15 @@ public class ParserUtils {
                                 k -> {
                                     valueMap.put(
                                             ParserUtils.parseCommonValue(k.getKey()),
-                                            ParserUtils.parseElement(k.getValue()));
+                                            ParserUtils.parseElement(k));
                                 });
                 return valueMap;
             default:
                 throw new GremlinResultParserException("invalid " + entry.getInnerCase().name());
         }
+    }
+
+    public static Object parseElement(IrResult.KeyValues.KeyValue value) {
+        return parseEntry(value.getValue());
     }
 }

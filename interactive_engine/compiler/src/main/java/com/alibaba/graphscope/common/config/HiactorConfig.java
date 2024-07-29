@@ -22,4 +22,10 @@ public class HiactorConfig {
 
     public static final Config<Long> HIACTOR_TIMEOUT =
             Config.longConfig("hiactor.timeout", 6000000L);
+
+    public static final Config<String> INTERACTIVE_ADMIN_ENDPOINT =
+            Config.stringConfig("interactive.admin.endpoint", "localhost:7777");
+
+    public static final Config<String> INTERACTIVE_QUERY_ENDPOINT =
+            Config.stringConfig("interactive.query.endpoint", "localhost:10000");
 }

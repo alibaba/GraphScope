@@ -1,0 +1,122 @@
+graph: movies
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: "|"  # other loading configuration places here
+      header_row: true # whether to use the first row as the header
+      quoting: false
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: false
+vertex_mappings:
+  - type_name: Person  # must align with the schema
+    inputs:
+      - Person.csv
+  - type_name: User
+    inputs:
+      - User.csv
+  - type_name: Movie
+    inputs:
+      - Movie.csv
+edge_mappings:
+  - type_triplet:
+      edge: ACTED_IN
+      source_vertex:  Person
+      destination_vertex:  Movie
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    inputs:
+      - ACTED_IN.csv
+  - type_triplet:
+      edge: DIRECTED
+      source_vertex:  Person
+      destination_vertex:  Movie
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    inputs:
+      - DIRECTED.csv
+  - type_triplet:
+      edge: FOLLOWS
+      source_vertex:  User
+      destination_vertex:  Person
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    column_mappings:
+      - column:
+          index: 2
+          name: timestamp
+        property: timestamp
+    inputs:
+      - FOLLOWS_TIMESTAMP.csv
+  - type_triplet:
+      edge: PRODUCED
+      source_vertex:  Person
+      destination_vertex:  Movie
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    inputs:
+      - PRODUCED.csv
+  - type_triplet:
+      edge: REVIEW
+      source_vertex:  User
+      destination_vertex:  Movie
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    column_mappings:
+      - column:
+          index: 2
+          name: rating
+        property: rating
+    inputs:
+      - REVIEWED.csv
+  - type_triplet:
+      edge: WROTE
+      source_vertex:  Person
+      destination_vertex:  Movie
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    inputs:
+      - WROTE.csv

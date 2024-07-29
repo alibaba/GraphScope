@@ -30,7 +30,7 @@ class LoaderFactory {
  public:
   using loader_initializer_t = std::shared_ptr<IFragmentLoader> (*)(
       const std::string& work_dir, const Schema& schema,
-      const LoadingConfig& loading_config, int thread_num);
+      const LoadingConfig& loading_config);
 
   static void Init();
 
@@ -38,7 +38,7 @@ class LoaderFactory {
 
   static std::shared_ptr<IFragmentLoader> CreateFragmentLoader(
       const std::string& work_dir, const Schema& schema,
-      const LoadingConfig& loading_config, int thread_num);
+      const LoadingConfig& loading_config);
 
   static bool Register(const std::string& scheme_type,
                        const std::string& format_type,

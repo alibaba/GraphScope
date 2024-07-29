@@ -15,8 +15,8 @@
  */
 package com.alibaba.graphscope.interactive.client.common;
 
-import com.alibaba.graphscope.interactive.openapi.ApiException;
-import com.alibaba.graphscope.interactive.openapi.ApiResponse;
+import com.alibaba.graphscope.interactive.ApiException;
+import com.alibaba.graphscope.interactive.ApiResponse;
 
 /**
  * Mapping http status code to our status code, along with a message
@@ -48,12 +48,24 @@ public class Status {
         return message;
     }
 
+    public StatusCode getCode() {
+        return this.code;
+    }
+
     public Status(StatusCode code, String message) {
         this.code = code;
         this.message = message;
     }
 
-    public static Status ServerInternalError(String message) {
+    public static Status ok(String message) {
+        return new Status(StatusCode.kOk, message);
+    }
+
+    public static Status badRequest(String message) {
+        return new Status(StatusCode.kBadRequest, message);
+    }
+
+    public static Status serverInternalError(String message) {
         return new Status(StatusCode.kServerInternalError, message);
     }
 

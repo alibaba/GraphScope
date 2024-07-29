@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.manager;
 
-import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
 
 import java.util.Optional;
 
@@ -35,6 +35,10 @@ public class IrMetaQueryCallback {
             throw new RuntimeException("ir meta is not ready");
         }
         return metaOpt.get();
+    }
+
+    public IrMetaFetcher getMetaFetcher() {
+        return fetcher;
     }
 
     // do sth after the query is done

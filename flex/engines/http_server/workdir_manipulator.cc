@@ -105,7 +105,8 @@ gs::Result<bool> WorkDirManipulator::DumpGraphSchema(
       YAML::Node plugin_node;
       plugin_node["name"] = plugin.name;
       plugin_node["library"] = plugin.library;
-      plugin_node["description"] = plugin.description;
+      // quote the description, since it may contain space.
+      plugin_node["description"] = "\"" + plugin.description + "\"";
       if (plugin.params.size() > 0) {
         YAML::Node params_node;
         for (auto& param : plugin.params) {
@@ -525,7 +526,9 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
     auto new_description = json["description"];
     VLOG(10) << "Update description: "
              << new_description;  // update description
-    plugin_node["description"] = new_description.get<std::string>();
+    // quote the description, since it may contain space.
+    plugin_node["description"] =
+        "\"" + new_description.get<std::string>() + "\"";
   }
 
   bool enabled;
@@ -615,6 +618,14 @@ std::string WorkDirManipulator::GetLogDir() {
   return log_dir;
 }
 
+std::string WorkDirManipulator::GetUploadDir() {
+  auto upload_dir = workspace + UPLOAD_DIR;
+  if (!std::filesystem::exists(upload_dir)) {
+    std::filesystem::create_directory(upload_dir);
+  }
+  return upload_dir;
+}
+
 std::string WorkDirManipulator::GetCompilerLogFile() {
   // with timestamp
   auto time_stamp = std::to_string(
@@ -643,6 +654,30 @@ gs::Result<std::string> WorkDirManipulator::CommitTempIndices(
   }
   std::filesystem::rename(temp_indices_dir, indices_dir);
   return indices_dir;
+}
+
+gs::Result<std::string> WorkDirManipulator::CreateFile(
+    const seastar::sstring& content) {
+  if (content.size() == 0) {
+    return {gs::Status(gs::StatusCode::InValidArgument, "Content is empty")};
+  }
+  if (content.size() > MAX_CONTENT_SIZE) {
+    return {
+        gs::Status(gs::StatusCode::InValidArgument,
+                   "Content is too large" + std::to_string(content.size()))};
+  }
+
+  // get the timestamp as the file name
+  auto time_stamp = std::to_string(gs::GetCurrentTimeStamp());
+  auto file_name = GetUploadDir() + "/" + time_stamp;
+  std::ofstream fout(file_name);
+  if (!fout.is_open()) {
+    return {gs::Status(gs::StatusCode::PermissionError, "Fail to open file")};
+  }
+  fout << content;
+  fout.close();
+  LOG(INFO) << "Successfully create file: " << file_name;
+  return file_name;
 }
 
 // graph_name can be a path, first try as it is absolute path, or
@@ -919,6 +954,11 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
       .then_wrapped([plugin_id = plugin_id, output_dir](auto&& f) {
         try {
           auto res = f.get();
+          if (!res.ok()) {
+            return seastar::make_exception_future<seastar::sstring>(
+                std::runtime_error("Fail to generate procedure, error: " +
+                                   res.status().error_message()));
+          }
           std::string so_file;
           {
             std::stringstream ss;
@@ -1244,5 +1284,6 @@ const std::string WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME =
 const std::string WorkDirManipulator::RUNNING_GRAPH_FILE_NAME = "RUNNING";
 const std::string WorkDirManipulator::TMP_DIR = "/tmp";
 const std::string WorkDirManipulator::GRAPH_LOADER_BIN = "bulk_loader";
+const std::string WorkDirManipulator::UPLOAD_DIR = "upload";
 
 }  // namespace server

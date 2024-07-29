@@ -48,11 +48,14 @@ GraphDB::~GraphDB() {
     compact_thread_running_ = false;
     compact_thread_.join();
   }
-  showAppMetrics();
-  for (int i = 0; i < thread_num_; ++i) {
-    contexts_[i].~SessionLocalContext();
+  if (contexts_ != nullptr) {
+    showAppMetrics();
+    for (int i = 0; i < thread_num_; ++i) {
+      contexts_[i].~SessionLocalContext();
+    }
+
+    free(contexts_);
   }
-  free(contexts_);
 }
 
 GraphDB& GraphDB::get() {
@@ -245,6 +248,7 @@ void GraphDB::Close() {
       contexts_[i].~SessionLocalContext();
     }
     free(contexts_);
+    contexts_ = nullptr;
   }
   std::fill(app_paths_.begin(), app_paths_.end(), "");
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
@@ -400,12 +404,10 @@ void GraphDB::initApps(
   }
   // Builtin apps
   app_factories_[0] = std::make_shared<ServerAppFactory>();
-#ifdef BUILD_HQPS
   app_factories_[Schema::HQPS_ADHOC_READ_PLUGIN_ID] =
       std::make_shared<HQPSAdhocReadAppFactory>();
   app_factories_[Schema::HQPS_ADHOC_WRITE_PLUGIN_ID] =
       std::make_shared<HQPSAdhocWriteAppFactory>();
-#endif  // BUILD_HQPS
 
   size_t valid_plugins = 0;
   for (auto& path_and_index : plugins) {

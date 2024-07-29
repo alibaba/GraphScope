@@ -20,10 +20,10 @@ package com.alibaba.graphscope.common.ir.planner.cbo;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
@@ -52,7 +52,8 @@ public class BITest {
         irMeta =
                 Utils.mockIrMeta(
                         "schema/ldbc_schema_exp_hierarchy.json",
-                        "statistics/ldbc30_hierarchy_statistics.json");
+                        "statistics/ldbc30_hierarchy_statistics.json",
+                        optimizer.getGlogueHolder());
     }
 
     @Test
@@ -540,12 +541,12 @@ public class BITest {
                     + "        GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISLOCATEDIN, PERSON,"
                     + " CITY)]], alias=[PATTERN_VERTEX$1], startAlias=[a], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "          CommonTableScan(table=[[common#1257237722]])\n"
+                    + "          CommonTableScan(table=[[common#-1227130258]])\n"
                     + "        GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISPARTOF, CITY,"
                     + " COUNTRY)]], alias=[PATTERN_VERTEX$1], startAlias=[s], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "          CommonTableScan(table=[[common#1257237722]])\n"
-                    + "common#1257237722:\n"
+                    + "          CommonTableScan(table=[[common#-1227130258]])\n"
+                    + "common#-1227130258:\n"
                     + "MultiJoin(joinFilter=[=(a, a)], isFullOuterJoin=[false], joinTypes=[[INNER,"
                     + " INNER]], outerJoinConditions=[[NULL, NULL]], projFields=[[ALL, ALL]])\n"
                     + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[a],"
@@ -553,25 +554,25 @@ public class BITest {
                     + "    GraphLogicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
                     + " alias=[k1], startAlias=[b], fusedFilter=[[AND(>=(_.creationDate, ?0),"
                     + " <=(_.creationDate, ?1))]], opt=[BOTH])\n"
-                    + "      CommonTableScan(table=[[common#-393103770]])\n"
+                    + "      CommonTableScan(table=[[common#174543014]])\n"
                     + "  GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[a],"
                     + " opt=[OTHER])\n"
                     + "    GraphLogicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
                     + " alias=[k2], startAlias=[c], fusedFilter=[[AND(>=(_.creationDate, ?0),"
                     + " <=(_.creationDate, ?1))]], opt=[BOTH])\n"
-                    + "      CommonTableScan(table=[[common#-393103770]])\n"
-                    + "common#-393103770:\n"
-                    + "MultiJoin(joinFilter=[=(PATTERN_VERTEX$5, PATTERN_VERTEX$5)],"
+                    + "      CommonTableScan(table=[[common#174543014]])\n"
+                    + "common#174543014:\n"
+                    + "MultiJoin(joinFilter=[=(PATTERN_VERTEX$9, PATTERN_VERTEX$9)],"
                     + " isFullOuterJoin=[false], joinTypes=[[INNER, INNER]],"
                     + " outerJoinConditions=[[NULL, NULL]], projFields=[[ALL, ALL]])\n"
                     + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISLOCATEDIN, PERSON, CITY)]],"
-                    + " alias=[PATTERN_VERTEX$5], startAlias=[b], opt=[OUT],"
+                    + " alias=[PATTERN_VERTEX$9], startAlias=[b], opt=[OUT],"
                     + " physicalOpt=[VERTEX])\n"
-                    + "    CommonTableScan(table=[[common#1460176135]])\n"
+                    + "    CommonTableScan(table=[[common#-184198145]])\n"
                     + "  GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISPARTOF, CITY, COUNTRY)]],"
-                    + " alias=[PATTERN_VERTEX$5], startAlias=[s], opt=[IN], physicalOpt=[VERTEX])\n"
-                    + "    CommonTableScan(table=[[common#1460176135]])\n"
-                    + "common#1460176135:\n"
+                    + " alias=[PATTERN_VERTEX$9], startAlias=[s], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "    CommonTableScan(table=[[common#-184198145]])\n"
+                    + "common#-184198145:\n"
                     + "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}], alias=[b],"
                     + " opt=[OTHER])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
@@ -580,10 +581,10 @@ public class BITest {
                     + "    GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
                     + " alias=[c], opt=[START], physicalOpt=[ITSELF])\n"
                     + "      GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISLOCATEDIN, PERSON,"
-                    + " CITY)]], alias=[_], startAlias=[PATTERN_VERTEX$9], opt=[IN],"
+                    + " CITY)]], alias=[_], startAlias=[PATTERN_VERTEX$5], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
                     + "        GraphPhysicalExpand(tableConfig=[[EdgeLabel(ISPARTOF, CITY,"
-                    + " COUNTRY)]], alias=[PATTERN_VERTEX$9], startAlias=[s], opt=[IN],"
+                    + " COUNTRY)]], alias=[PATTERN_VERTEX$5], startAlias=[s], opt=[IN],"
                     + " physicalOpt=[VERTEX])\n"
                     + "          GraphLogicalSource(tableConfig=[{isAll=false, tables=[COUNTRY]}],"
                     + " alias=[s], fusedFilter=[[=(_.name, _UTF-8'India')]], opt=[VERTEX])",

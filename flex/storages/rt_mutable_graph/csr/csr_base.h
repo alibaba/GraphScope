@@ -66,6 +66,10 @@ class CsrBase {
                             const std::string& work_dir,
                             const std::vector<int>& degree,
                             double reserve_ratio = 1.2) = 0;
+
+  virtual size_t batch_init_in_memory(const std::vector<int>& degree,
+                                      double reserve_ratio = 1.2) = 0;
+
   virtual void batch_sort_by_edge_data(timestamp_t ts) {
     LOG(FATAL) << "not supported...";
   }
@@ -88,6 +92,13 @@ class CsrBase {
 
   virtual void resize(vid_t vnum) = 0;
   virtual size_t size() const = 0;
+
+  // Returns the number of edges in the graph. Note that the returned value is
+  // exactly the number of edges in this csr. Even if there may be some reserved
+  // space, the reserved space will count as 0.
+  virtual size_t edge_num() const = 0;
+
+  virtual void close() = 0;
 
   virtual std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const = 0;
   virtual CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const = 0;
@@ -125,6 +136,18 @@ class TypedMutableCsrBase : public TypedCsrBase<EDATA_T> {
  public:
   using slice_t = MutableNbrSlice<EDATA_T>;
 
+  virtual slice_t get_edges(vid_t v) const = 0;
+};
+
+template <>
+class TypedCsrBase<RecordView> : public CsrBase {
+ public:
+  using slice_t = MutableNbrSlice<RecordView>;
+
+  virtual void batch_put_edge_with_index(vid_t src, vid_t dst, size_t index,
+                                         timestamp_t ts = 0) = 0;
+  virtual void put_edge_with_index(vid_t src, vid_t dst, size_t index,
+                                   timestamp_t ts, Allocator& alloc) = 0;
   virtual slice_t get_edges(vid_t v) const = 0;
 };
 

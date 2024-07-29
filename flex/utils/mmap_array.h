@@ -102,6 +102,17 @@ class mmap_array {
     sync_to_file_ = false;
   }
 
+  void unlink() {
+    std::string old_filename = filename_;
+    reset();
+    if (old_filename != "" && std::filesystem::exists(old_filename)) {
+      if (std::filesystem::remove(old_filename) == 0) {
+        LOG(FATAL) << "Failed to remove file [ " << old_filename << " ] "
+                   << strerror(errno);
+      }
+    }
+  }
+
   void set_hugepage_prefered(bool val) {
     hugepage_prefered_ = (val && !sync_to_file_);
   }
@@ -346,6 +357,7 @@ class mmap_array {
     std::swap(size_, rhs.size_);
     std::swap(mmap_size_, rhs.mmap_size_);
     std::swap(hugepage_prefered_, rhs.hugepage_prefered_);
+    std::swap(sync_to_file_, rhs.sync_to_file_);
   }
 
   const std::string& filename() const { return filename_; }
@@ -426,6 +438,10 @@ class mmap_array<std::string_view> {
   void swap(mmap_array& rhs) {
     items_.swap(rhs.items_);
     data_.swap(rhs.data_);
+  }
+  void unlink() {
+    items_.unlink();
+    data_.unlink();
   }
 
  private:

@@ -56,6 +56,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,13 +72,15 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     private boolean preCacheEdgeProps;
     private final IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons;
     private final int depth;
+    private final HashMap<String, String> extraParams = new HashMap<>();
 
     public GraphRelToProtoConverter(
             boolean isColumnId,
             Configs configs,
             GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
-            IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons) {
-        this(isColumnId, configs, physicalBuilder, relToCommons, 0);
+            IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons,
+            HashMap<String, String> extraParams) {
+        this(isColumnId, configs, physicalBuilder, relToCommons, extraParams, 0);
     }
 
     public GraphRelToProtoConverter(
@@ -85,6 +88,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             Configs configs,
             GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
             IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons,
+            HashMap<String, String> extraParams,
             int depth) {
         this.isColumnId = isColumnId;
         this.rexBuilder = GraphPlanner.rexBuilderFactory.apply(configs);
@@ -97,6 +101,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         // precache edge properties.
         this.preCacheEdgeProps = true;
         this.relToCommons = relToCommons;
+        this.extraParams.putAll(extraParams);
         this.depth = depth;
     }
 
@@ -218,18 +223,21 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.PathExpand.ExpandBase.Builder expandBaseBuilder =
                 GraphAlgebraPhysical.PathExpand.ExpandBase.newBuilder();
         RelNode fused = pxd.getFused();
+        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpandBuilder;
+        GraphAlgebraPhysical.GetV.Builder getVBuilder = null;
+        // preserve the original fused logical getv to cache properties if necessary
+        GraphLogicalGetV originalGetV;
         RelDataType rowType;
         if (fused != null) {
             // the case that expand base is fused
             if (fused instanceof GraphPhysicalGetV) {
                 // fused into expand + auxilia
                 GraphPhysicalGetV fusedGetV = (GraphPhysicalGetV) fused;
-                GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(fusedGetV);
-                expandBaseBuilder.setGetV(auxilia);
+                getVBuilder = buildAuxilia(fusedGetV);
+                originalGetV = fusedGetV.getFusedGetV();
                 if (fusedGetV.getInput() instanceof GraphPhysicalExpand) {
                     GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fusedGetV.getInput();
-                    GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
-                    expandBaseBuilder.setEdgeExpand(expand);
+                    edgeExpandBuilder = buildEdgeExpand(fusedExpand);
                     rowType = fusedExpand.getRowType();
                 } else {
                     throw new UnsupportedOperationException(
@@ -239,8 +247,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             } else if (fused instanceof GraphPhysicalExpand) {
                 // fused into expand
                 GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fused;
-                GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
-                expandBaseBuilder.setEdgeExpand(expand);
+                edgeExpandBuilder = buildEdgeExpand(fusedExpand);
+                originalGetV = fusedExpand.getFusedGetV();
                 rowType = fusedExpand.getFusedExpand().getRowType();
             } else {
                 throw new UnsupportedOperationException(
@@ -248,18 +256,66 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             }
         } else {
             // the case that expand base is not fused
-            GraphAlgebraPhysical.EdgeExpand.Builder expand =
-                    buildEdgeExpand((GraphLogicalExpand) pxd.getExpand());
-            GraphAlgebraPhysical.GetV.Builder getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
-            expandBaseBuilder.setEdgeExpand(expand);
-            expandBaseBuilder.setGetV(getV);
+            edgeExpandBuilder = buildEdgeExpand((GraphLogicalExpand) pxd.getExpand());
+            originalGetV = (GraphLogicalGetV) pxd.getGetV();
+            getVBuilder = buildGetV(originalGetV);
             rowType = pxd.getExpand().getRowType();
+        }
+        expandBaseBuilder.setEdgeExpand(edgeExpandBuilder);
+        // specifically, for path expand (except that it has PathExpandResult as END_V), we need to
+        // cache properties for the expanded vertices if necessary, instead of fetch them lazily
+        Set<GraphNameOrId> vertexColumns =
+                Utils.extractColumnsFromRelDataType(originalGetV.getRowType(), isColumnId);
+        if (isPartitioned
+                && !vertexColumns.isEmpty()
+                && pxd.getResultOpt() != GraphOpt.PathExpandResult.END_V) {
+            // 1. build an auxilia to cache necessary properties for the start vertex of the path
+            GraphAlgebraPhysical.GetV.Builder startAuxiliaBuilder =
+                    GraphAlgebraPhysical.GetV.newBuilder();
+            startAuxiliaBuilder.setOpt(Utils.protoGetVOpt(PhysicalGetVOpt.ITSELF));
+            GraphAlgebra.QueryParams.Builder startParamsBuilder = defaultQueryParams();
+            addQueryColumns(startParamsBuilder, vertexColumns);
+            startAuxiliaBuilder.setParams(startParamsBuilder);
+            if (pxd.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+                startAuxiliaBuilder.setTag(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
+                startAuxiliaBuilder.setAlias(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
+            }
+            GraphAlgebraPhysical.PhysicalOpr.Builder startAuxiliaOprBuilder =
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+            startAuxiliaOprBuilder.setOpr(
+                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                            .setVertex(startAuxiliaBuilder));
+            startAuxiliaOprBuilder.addAllMetaData(
+                    Utils.physicalProtoRowType(originalGetV.getRowType(), isColumnId));
+            addRepartitionToAnother(pxd.getStartAlias().getAliasId());
+            physicalBuilder.addPlan(startAuxiliaOprBuilder.build());
+            // 2. build an auxilia to cache necessary properties for the expanded vertices during
+            // the path, in expand base
+            if (getVBuilder == null) {
+                // getVBuilder can be null if the expand base is ExpandV
+                // then create a new GetV to cache properties
+                getVBuilder = buildVertex(originalGetV, PhysicalGetVOpt.ITSELF);
+            }
+            GraphAlgebra.QueryParams.Builder paramsBuilder = getVBuilder.getParamsBuilder();
+            addQueryColumns(paramsBuilder, vertexColumns);
+            getVBuilder.setParams(paramsBuilder);
+            expandBaseBuilder.setGetV(getVBuilder);
+        } else {
+            if (getVBuilder != null) {
+                expandBaseBuilder.setGetV(getVBuilder);
+            }
         }
         pathExpandBuilder.setBase(expandBaseBuilder);
         pathExpandBuilder.setPathOpt(Utils.protoPathOpt(pxd.getPathOpt()));
         pathExpandBuilder.setResultOpt(Utils.protoPathResultOpt(pxd.getResultOpt()));
         GraphAlgebra.Range range = buildRange(pxd.getOffset(), pxd.getFetch());
         pathExpandBuilder.setHopRange(range);
+        if (pxd.getUntilCondition() != null) {
+            OuterExpression.Expression untilCondition =
+                    pxd.getUntilCondition()
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
+            pathExpandBuilder.setCondition(untilCondition);
+        }
         if (pxd.getAliasId() != AliasInference.DEFAULT_ID) {
             pathExpandBuilder.setAlias(Utils.asAliasId(pxd.getAliasId()));
         }
@@ -445,7 +501,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalPlan.newBuilder();
         query.rel.accept(
                 new GraphRelToProtoConverter(
-                        isColumnId, graphConfig, applyPlanBuilder, this.relToCommons, depth + 1));
+                        isColumnId,
+                        graphConfig,
+                        applyPlanBuilder,
+                        this.relToCommons,
+                        this.extraParams,
+                        depth + 1));
         GraphAlgebraPhysical.Apply.Builder applyBuilder =
                 GraphAlgebraPhysical.Apply.newBuilder()
                         .setSubPlan(applyPlanBuilder)
@@ -742,11 +803,21 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         RelNode left = join.getLeft();
         left.accept(
                 new GraphRelToProtoConverter(
-                        isColumnId, graphConfig, leftPlanBuilder, this.relToCommons, depth + 1));
+                        isColumnId,
+                        graphConfig,
+                        leftPlanBuilder,
+                        this.relToCommons,
+                        this.extraParams,
+                        depth + 1));
         RelNode right = join.getRight();
         right.accept(
                 new GraphRelToProtoConverter(
-                        isColumnId, graphConfig, rightPlanBuilder, this.relToCommons, depth + 1));
+                        isColumnId,
+                        graphConfig,
+                        rightPlanBuilder,
+                        this.relToCommons,
+                        this.extraParams,
+                        depth + 1));
         if (isPartitioned) {
 
             Map<Integer, Set<GraphNameOrId>> leftTagColumns =
@@ -787,6 +858,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                                 graphConfig,
                                 commonPlanBuilder,
                                 this.relToCommons,
+                                this.extraParams,
                                 depth + 1));
             }
             physicalBuilder.addAllPlan(commonPlanBuilder.getPlanList());
@@ -810,6 +882,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             graphConfig,
                             inputPlanBuilder,
                             this.relToCommons,
+                            this.extraParams,
                             depth + 1));
             unionBuilder.addSubPlans(inputPlanBuilder);
         }
@@ -835,6 +908,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                                 graphConfig,
                                 commonPlanBuilder,
                                 this.relToCommons,
+                                this.extraParams,
                                 depth + 1));
             }
             physicalBuilder.addAllPlan(commonPlanBuilder.getPlanList());
@@ -871,7 +945,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphAlgebraPhysical.PhysicalPlan.newBuilder();
             input.accept(
                     new GraphRelToProtoConverter(
-                            isColumnId, graphConfig, subPlanBuilder, this.relToCommons, depth + 1));
+                            isColumnId,
+                            graphConfig,
+                            subPlanBuilder,
+                            this.relToCommons,
+                            this.extraParams,
+                            depth + 1));
             intersectBuilder.addSubPlans(subPlanBuilder);
         }
         intersectOprBuilder.setOpr(
@@ -981,6 +1060,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebra.QueryParams.Builder paramsBuilder = GraphAlgebra.QueryParams.newBuilder();
         // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as default.
         paramsBuilder.setSampleRatio(1.0);
+        if (!this.extraParams.isEmpty()) {
+            paramsBuilder.putAllExtra(extraParams);
+        }
         return paramsBuilder;
     }
 
@@ -1055,22 +1137,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         auxiliaOprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(vertexBuilder));
         physicalBuilder.addPlan(auxiliaOprBuilder.build());
-    }
-
-    private void addAuxilia(
-            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
-            GraphPhysicalGetV physicalGetV) {
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
-                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(physicalGetV);
-        oprBuilder.setOpr(
-                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(auxilia));
-        oprBuilder.addAllMetaData(
-                Utils.physicalProtoRowType(physicalGetV.getRowType(), isColumnId));
-        if (isPartitioned) {
-            addRepartitionToAnother(physicalGetV.getStartAlias().getAliasId());
-        }
-        physicalBuilder.addPlan(oprBuilder.build());
     }
 
     private void lazyPropertyFetching(Map<Integer, Set<GraphNameOrId>> columns) {

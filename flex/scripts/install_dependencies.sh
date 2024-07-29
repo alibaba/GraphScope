@@ -32,11 +32,11 @@ pushd /tmp && sudo apt-get install -y -V ca-certificates lsb-release wget
 curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 if ! sudo apt-get install -y ./apache-arrow-apt-source-latest.deb; then
     pushd /tmp
-    git clone https://github.com/apache/arrow.git --single-branch --branch apache-arrow-8.0.1
+    git clone https://github.com/apache/arrow.git --single-branch --branch apache-arrow-15.0.2-1
     cd arrow/cpp && mkdir build && cd build && cmake .. -DARROW_CSV=ON && make -j ${parallelism} && sudo make install
     popd && rm -r /tmp/arrow/
 else
-    sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
+    sudo apt-get update && sudo apt-get install -y libarrow-dev=15.0.2-1
 fi
 popd && rm -rf /tmp/apache-arrow-apt-source-latest.deb
 

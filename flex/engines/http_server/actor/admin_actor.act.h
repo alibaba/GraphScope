@@ -70,6 +70,10 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) cancel_job(query_param&& param);
 
+  seastar::future<admin_query_result> ANNOTATION(actor:method) run_get_graph_statistic(query_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) upload_file(query_param&& param);
+
   // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.
   ACTOR_DO_WORK()

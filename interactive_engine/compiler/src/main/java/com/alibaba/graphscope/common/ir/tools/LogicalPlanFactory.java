@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 
 public interface LogicalPlanFactory {
     LogicalPlan create(GraphBuilder builder, IrMeta irMeta, String query);
