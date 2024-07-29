@@ -415,8 +415,11 @@ public class DriverTest {
                                                                 .SIGNED_INT32))));
         {
             // 1. call cpp procedure with graph id and procedure id, sync
-            Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
-            assertOk(resp);
+            // call 10 times to make sure all shard is working.
+            for (int i = 0; i < 10; i++) {
+                Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
+                assertOk(resp);
+            }
         }
         {
             // 2. call cpp procedure with graph id and procedure id, async
