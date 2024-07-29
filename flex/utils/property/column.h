@@ -749,6 +749,12 @@ class TypedRefColumn<GlobalId> : public RefColumnBase {
   label_t label_key_;
 };
 
+// Create a reference column from a ColumnBase that contains a const reference
+// to the actual column storage, offering a column-based store interface for
+// vertex properties.
+std::shared_ptr<RefColumnBase> CreateRefColumn(
+    std::shared_ptr<ColumnBase> column);
+
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_PROPERTY_COLUMN_H_

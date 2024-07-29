@@ -31,8 +31,8 @@ class EdgeMapping(BaseModel):
     """ # noqa: E501
     type_triplet: EdgeMappingTypeTriplet
     inputs: List[StrictStr]
-    source_vertex_mappings: List[ColumnMapping]
-    destination_vertex_mappings: List[ColumnMapping]
+    source_vertex_mappings: Optional[List[ColumnMapping]] = None
+    destination_vertex_mappings: Optional[List[ColumnMapping]] = None
     column_mappings: Optional[List[ColumnMapping]] = None
     __properties: ClassVar[List[str]] = ["type_triplet", "inputs", "source_vertex_mappings", "destination_vertex_mappings", "column_mappings"]
 

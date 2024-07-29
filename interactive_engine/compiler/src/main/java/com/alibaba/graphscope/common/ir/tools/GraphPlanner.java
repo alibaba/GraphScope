@@ -38,7 +38,6 @@ import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuild
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -50,6 +49,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -179,16 +179,19 @@ public class GraphPlanner {
         }
     }
 
-    private static Configs createExtraConfigs(@Nullable String keyValues) {
+    private static Configs createExtraConfigs(@Nullable String extraYamlFile) throws Exception {
         Map<String, String> keyValueMap = Maps.newHashMap();
-        if (!StringUtils.isEmpty(keyValues)) {
-            String[] pairs = keyValues.split(",");
-            for (String pair : pairs) {
-                String[] kv = pair.trim().split(":");
-                Preconditions.checkArgument(
-                        kv.length == 2, "invalid key value pair: " + pair + " in " + keyValues);
-                keyValueMap.put(kv[0], kv[1]);
-            }
+        if (!StringUtils.isEmpty(extraYamlFile)) {
+            String extraYaml =
+                    FileUtils.readFileToString(new File(extraYamlFile), StandardCharsets.UTF_8);
+            Yaml yaml = new Yaml();
+            Map<String, Object> yamlMap = yaml.load(extraYaml);
+            yamlMap.forEach(
+                    (k, v) -> {
+                        if (v != null) {
+                            keyValueMap.put(k, v.toString());
+                        }
+                    });
         }
         return new Configs(keyValueMap);
     }
@@ -214,7 +217,7 @@ public class GraphPlanner {
             throw new IllegalArgumentException(
                     "usage: GraphPlanner '<path_to_config_file>' '<path_to_query_file>' "
                             + " '<path_to_physical_output_file>' '<path_to_procedure_file>'"
-                            + " 'optional <extra_key_value_config_pairs>'");
+                            + " 'optional <extra_key_value_config_file>'");
         }
         Configs configs = Configs.Factory.create(args[0]);
         GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);

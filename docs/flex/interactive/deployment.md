@@ -22,10 +22,7 @@ $ helm install {your-release-name} ./graphscope-interactive/
 Now you can the endpoint via
 ```bash
 $ kubectl describe svc {your-release-name} -graphscope-interactive-frontend | grep "Endpoints:" | awk -F' ' '{print $2}'
-#192.168.0.44:8182
 #192.168.0.44:7687
-# the first is the gremlin endpoint(currently not supported)
-# the second is the cypher endpoint
 ```
 
 Delete the deployment via 
@@ -78,14 +75,14 @@ engine:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
-    tag: "v0.2.4"
+    tag: "0.27.0"
 
 # docker artifacts for frontend
 frontend:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
-    tag: "v0.2.4"
+    tag: "v0.27.0"
 ```
 
 - pvc
@@ -108,7 +105,7 @@ frontend:
 frontend:
   replicaCount: 1 # frontend num
     service:
-      gremlinPort: 8182 # gremlin service port
+      cypherPort: 8182 # cypher service port
     
 executor:
   replicaCount: 1 # executor num

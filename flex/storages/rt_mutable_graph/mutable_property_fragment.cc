@@ -102,7 +102,8 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
       return new DualCsr<std::string_view>(
           oes, ies, properties[0].additional_type_info.max_length);
     } else if (properties[0] == PropertyType::kStringView) {
-      return new DualCsr<std::string_view>(oes, ies, 256);
+      return new DualCsr<std::string_view>(
+          oes, ies, gs::PropertyType::STRING_DEFAULT_MAX_LENGTH);
     }
   } else {
     // TODO: fix me, storage strategy not set
@@ -392,6 +393,17 @@ const Table& MutablePropertyFragment::get_vertex_table(
 
 vid_t MutablePropertyFragment::vertex_num(label_t vertex_label) const {
   return static_cast<vid_t>(lf_indexers_[vertex_label].size());
+}
+
+size_t MutablePropertyFragment::edge_num(label_t src_label, label_t edge_label,
+                                         label_t dst_label) const {
+  size_t index = src_label * vertex_label_num_ * edge_label_num_ +
+                 dst_label * edge_label_num_ + edge_label;
+  if (dual_csr_list_[index] != NULL) {
+    return dual_csr_list_[index]->EdgeNum();
+  } else {
+    return 0;
+  }
 }
 
 bool MutablePropertyFragment::get_lid(label_t label, const Any& oid,

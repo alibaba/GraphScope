@@ -127,8 +127,6 @@ class EdgeMapping(Model):
         :param source_vertex_mappings: The source_vertex_mappings of this EdgeMapping.
         :type source_vertex_mappings: List[ColumnMapping]
         """
-        if source_vertex_mappings is None:
-            raise ValueError("Invalid value for `source_vertex_mappings`, must not be `None`")  # noqa: E501
 
         self._source_vertex_mappings = source_vertex_mappings
 
@@ -150,8 +148,6 @@ class EdgeMapping(Model):
         :param destination_vertex_mappings: The destination_vertex_mappings of this EdgeMapping.
         :type destination_vertex_mappings: List[ColumnMapping]
         """
-        if destination_vertex_mappings is None:
-            raise ValueError("Invalid value for `destination_vertex_mappings`, must not be `None`")  # noqa: E501
 
         self._destination_vertex_mappings = destination_vertex_mappings
 
