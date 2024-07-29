@@ -148,17 +148,14 @@ Result<std::string> GraphDBOperations::GetVertex(
   std::vector<std::string> property_names;
   const Schema& schema = session.schema();
   // input vertex data
-  try {
-    VertexData vertex;
-    std::string label = params["label"];
-    result["label"] = label;
-    vertex.pk_value = Any(std::string(params["primary_key_value"]));
-    checkVertexSchema(schema, vertex, label, property_names, true);
-    vertex_data.push_back(vertex);
-  } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    " Bad input parameter : " + std::string(e.what()));
+  VertexData vertex;
+  std::string label = params["label"];
+  result["label"] = label;
+  vertex.pk_value = Any(std::string(params["primary_key_value"]));
+  if (!checkVertexSchema(schema, vertex, label, property_names, true)) {
+    return response(StatusCode::InvalidSchema, " Bad input parameter");
   }
+  vertex_data.push_back(vertex);
   try {
     result["values"] =
         getVertex(std::move(vertex_data), property_names, session);
@@ -177,27 +174,24 @@ Result<std::string> GraphDBOperations::GetEdge(
   const Schema& schema = session.schema();
   std::string property_name;
   // input edge data
-  try {
-    EdgeData edge;
-    std::string src_label = params["src_label"];
-    std::string dst_label = params["dst_label"];
-    std::string edge_label = params["edge_label"];
-    std::string src_pk_value = params["src_primary_key_value"];
-    std::string dst_pk_value = params["dst_primary_key_value"];
-    edge.src_pk_value = Any(src_pk_value);
-    edge.dst_pk_value = Any(dst_pk_value);
-    property_name =
-        checkEdgeSchema(schema, edge, src_label, dst_label, edge_label, true);
-    edge_data.push_back(edge);
-    result["src_label"] = src_label;
-    result["dst_label"] = dst_label;
-    result["edge_label"] = edge_label;
-    result["src_primary_key_value"] = src_pk_value;
-    result["dst_primary_key_value"] = dst_pk_value;
-  } catch (std::exception& e) {
-    return response(StatusCode::InvalidSchema,
-                    " Bad input parameter : " + std::string(e.what()));
+  EdgeData edge;
+  std::string src_label = params["src_label"];
+  std::string dst_label = params["dst_label"];
+  std::string edge_label = params["edge_label"];
+  std::string src_pk_value = params["src_primary_key_value"];
+  std::string dst_pk_value = params["dst_primary_key_value"];
+  edge.src_pk_value = Any(src_pk_value);
+  edge.dst_pk_value = Any(dst_pk_value);
+  if (!checkEdgeSchema(schema, edge, src_label, dst_label, edge_label,
+                       property_name, true)) {
+    return response(StatusCode::InvalidSchema, " Bad input parameter");
   }
+  edge_data.push_back(edge);
+  result["src_label"] = src_label;
+  result["dst_label"] = dst_label;
+  result["edge_label"] = edge_label;
+  result["src_primary_key_value"] = src_pk_value;
+  result["dst_primary_key_value"] = dst_pk_value;
   try {
     result["properties"] =
         getEdge(std::move(edge_data), property_name, session);
@@ -239,7 +233,9 @@ VertexData GraphDBOperations::inputVertex(const nlohmann::json& vertex_json,
     }
     vertex.properties.emplace_back(value_string);
   }
-  checkVertexSchema(schema, vertex, label, property_names_arr);
+  if (!checkVertexSchema(schema, vertex, label, property_names_arr)) {
+    throw std::runtime_error(" Bad input parameter");
+  }
   return vertex;
 }
 EdgeData GraphDBOperations::inputEdge(const nlohmann::json& edge_json,
@@ -257,58 +253,76 @@ EdgeData GraphDBOperations::inputEdge(const nlohmann::json& edge_json,
         "size should be 1(only support single property edge)");
   }
   edge.property_value = Any(jsonToString(edge_json["properties"][0]["value"]));
-  checkEdgeSchema(schema, edge, src_label, dst_label, edge_label);
+  std::string property_name = edge_json["properties"][0]["name"];
+  if (!checkEdgeSchema(schema, edge, src_label, dst_label, edge_label,
+                       property_name)) {
+    throw std::runtime_error(" Bad input parameter");
+  }
   return edge;
 }
 
-void GraphDBOperations::checkVertexSchema(
+bool GraphDBOperations::checkVertexSchema(
     const Schema& schema, VertexData& vertex, const std::string& label,
     std::vector<std::string>& input_property_names, bool is_get) {
-  vertex.label_id = schema.get_vertex_label_id(label);
-  PropertyType colType =
-      std::get<0>(schema.get_vertex_primary_key(vertex.label_id)[0]);
-  vertex.pk_value = ConvertStringToAny(vertex.pk_value.to_string(), colType);
-  auto properties_type = schema.get_vertex_properties(vertex.label_id);
-  auto properties_name = schema.get_vertex_property_names(vertex.label_id);
-  if (vertex.properties.size() != properties_name.size() && is_get == false) {
-    throw std::runtime_error("properties size not match");
-  }
-  if (is_get) {
-    input_property_names = properties_name;
-    return;
-  }
-  for (int col_index = 0; col_index < int(properties_name.size());
-       col_index++) {
-    if (input_property_names[col_index] != properties_name[col_index]) {
-      throw std::runtime_error(
-          "properties name not match, pleace check the order and name");
+  try {
+    vertex.label_id = schema.get_vertex_label_id(label);
+    PropertyType colType =
+        std::get<0>(schema.get_vertex_primary_key(vertex.label_id)[0]);
+    vertex.pk_value = ConvertStringToAny(vertex.pk_value.to_string(), colType);
+    auto properties_type = schema.get_vertex_properties(vertex.label_id);
+    auto properties_name = schema.get_vertex_property_names(vertex.label_id);
+    if (vertex.properties.size() != properties_name.size() && is_get == false) {
+      throw std::runtime_error("properties size not match");
     }
-    vertex.properties[col_index] = ConvertStringToAny(
-        vertex.properties[col_index].to_string(), properties_type[col_index]);
-  }
+    if (is_get) {
+      input_property_names = properties_name;
+      return true;
+    }
+    for (int col_index = 0; col_index < int(properties_name.size());
+         col_index++) {
+      if (input_property_names[col_index] != properties_name[col_index]) {
+        throw std::runtime_error(
+            "properties name not match, pleace check the order and name");
+      }
+      vertex.properties[col_index] = ConvertStringToAny(
+          vertex.properties[col_index].to_string(), properties_type[col_index]);
+    }
+    return true;
+  } catch (...) { return false; }
 }
-std::string GraphDBOperations::checkEdgeSchema(
-    const Schema& schema, EdgeData& edge, const std::string& src_label,
-    const std::string& dst_label, const std::string& edge_label, bool is_get) {
-  edge.src_label_id = schema.get_vertex_label_id(src_label);
-  edge.dst_label_id = schema.get_vertex_label_id(dst_label);
-  edge.edge_label_id = schema.get_edge_label_id(edge_label);
-  auto property_name = schema.get_edge_property_names(
-      edge.src_label_id, edge.dst_label_id, edge.edge_label_id)[0];
-  if (is_get == false) {
-    // update or add
-    PropertyType colType = schema.get_edge_property(
-        edge.src_label_id, edge.dst_label_id, edge.edge_label_id);
-    edge.property_value =
-        ConvertStringToAny(edge.property_value.to_string(), colType);
-  }
-  edge.src_pk_value = ConvertStringToAny(
-      edge.src_pk_value.to_string(),
-      std::get<0>(schema.get_vertex_primary_key(edge.src_label_id)[0]));
-  edge.dst_pk_value = ConvertStringToAny(
-      edge.dst_pk_value.to_string(),
-      std::get<0>(schema.get_vertex_primary_key(edge.dst_label_id)[0]));
-  return property_name;
+bool GraphDBOperations::checkEdgeSchema(const Schema& schema, EdgeData& edge,
+                                        const std::string& src_label,
+                                        const std::string& dst_label,
+                                        const std::string& edge_label,
+                                        std::string& property_name,
+                                        bool is_get) {
+  try {
+    edge.src_label_id = schema.get_vertex_label_id(src_label);
+    edge.dst_label_id = schema.get_vertex_label_id(dst_label);
+    edge.edge_label_id = schema.get_edge_label_id(edge_label);
+    if (is_get) {
+      property_name = schema.get_edge_property_names(
+          edge.src_label_id, edge.dst_label_id, edge.edge_label_id)[0];
+    } else {
+      // update or add
+      if (property_name !=
+          schema.get_edge_property_names(edge.src_label_id, edge.dst_label_id,
+                                         edge.edge_label_id)[0]) {
+        return false;
+      }
+      PropertyType colType = schema.get_edge_property(
+          edge.src_label_id, edge.dst_label_id, edge.edge_label_id);
+      edge.property_value =
+          ConvertStringToAny(edge.property_value.to_string(), colType);
+    }
+    edge.src_pk_value = ConvertStringToAny(
+        edge.src_pk_value.to_string(),
+        std::get<0>(schema.get_vertex_primary_key(edge.src_label_id)[0]));
+    edge.dst_pk_value = ConvertStringToAny(
+        edge.dst_pk_value.to_string(),
+        std::get<0>(schema.get_vertex_primary_key(edge.dst_label_id)[0]));
+    return true;
+  } catch (...) { return false; }
 }
 
 void GraphDBOperations::checkEdgeExistsWithInsert(

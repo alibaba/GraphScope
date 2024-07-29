@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ENGINES_GRAPH_DB_OPERATIONS_H_
-#define ENGINES_GRAPH_DB_OPERATIONS_H_
+#ifndef ENGINES_GRAPH_DB_DATABASE_OPERATIONS_H_
+#define ENGINES_GRAPH_DB_DATABASE_OPERATIONS_H_
 
 #include <string>
 #include <unordered_map>
@@ -75,16 +75,16 @@ class GraphDBOperations {
   static EdgeData inputEdge(const nlohmann::json& edge_json,
                             const Schema& schema, GraphDBSession& session);
   // check schema
-  static void checkVertexSchema(const Schema& schema, VertexData& vertex,
+  static bool checkVertexSchema(const Schema& schema, VertexData& vertex,
                                 const std::string& label,
                                 std::vector<std::string>& input_property_names,
                                 bool is_get = false);
 
-  static std::string checkEdgeSchema(const Schema& schema, EdgeData& edge,
-                                     const std::string& src_label,
-                                     const std::string& dst_label,
-                                     const std::string& edge_label,
-                                     bool is_get = false);
+  static bool checkEdgeSchema(const Schema& schema, EdgeData& edge,
+                              const std::string& src_label,
+                              const std::string& dst_label,
+                              const std::string& edge_label,
+                              std::string& property_name, bool is_get = false);
 
   // The following interfaces are called after the Transaction is constructed
   // db check
@@ -122,4 +122,4 @@ class GraphDBOperations {
 
 }  // namespace gs
 
-#endif  // ENGINES_GRAPH_DB_OPERATIONS_H_
+#endif  // ENGINES_GRAPH_DB_DATABASE_OPERATIONS_H_
