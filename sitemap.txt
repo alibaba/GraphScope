@@ -2,8 +2,8 @@ https://graphscope.io
 https://graphscope.io/index.html
 
 https://graphscope.io/journey
-https://graphscope.io/journey/index.html
 https://graphscope.io/journey/cn
+https://graphscope.io/journey/index.html
 https://graphscope.io/journey/cn/index.html
 
 https://graphscope.io/publications
