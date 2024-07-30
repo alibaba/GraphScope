@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5V27DVHLP0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-5V27DVHLP0');
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>GraphScope 的图计算之旅</title>
+  <link rel="stylesheet" href="../index.css" />
+  <link rel="stylesheet" href="../section.css">
+
+  <meta name="keywords"
+    content="graph, graph computation, graph analytics, graph algorithms, gnn, graph learning, graph embedding, gremlin, graph query, graphscope, graphar, GRIN, grape">
+  <meta name="description" content="GraphScope Journey on Graph Computing">
+
+  <meta property="og:title" content="GraphScope Journey">
+  <meta property="og:description" content="GraphScope Journey on Graph Computing">
+  <meta property="og:image" content="/img/logo.png">
+  <meta property="og:url" content="http://graphscope.io">
+
+  <link rel="shortcut icon" href="/img/favicon.ico">
+</head>
+
+<body>
+  <svg id="timeline" xmlns="http://www.w3.org/2000/svg" class="container"></svg>
+  <nav class="navbar">
+    <a href="/">
+      <button class="nav-button">
+        <svg fill="#979797" width="16" height="16" viewBox="0 0 1024 1024" version="1.1"
+          xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M363.840919 472.978737C336.938714 497.358861 337.301807 537.486138 364.730379 561.486138L673.951902 832.05497C682.818816 839.813519 696.296418 838.915012 704.05497 830.048098 711.813519 821.181184 710.915012 807.703582 702.048098 799.94503L392.826577 529.376198C384.59578 522.174253 384.502227 511.835287 392.492414 504.59418L702.325747 223.807723C711.056111 215.895829 711.719614 202.404616 703.807723 193.674252 695.895829 184.943889 682.404617 184.280386 673.674253 192.192278L363.840919 472.978737Z">
+          </path>
+        </svg>
+        首页
+      </button>
+    </a>
+    <div>
+      <a class="github" href="https://github.com/alibaba/graphscope" target="_blank">
+        <button class="nav-button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512" width="24" heigth="24">
+            <!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+            <path
+              d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3 .3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5 .3-6.2 2.3zm44.2-1.7c-2.9 .7-4.9 2.6-4.6 4.9 .3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3 .7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3 .3 2.9 2.3 3.9 1.6 1 3.6 .7 4.3-.7 .7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3 .7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3 .7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z" />
+          </svg>
+          GITHUB</button>
+      </a>
+      <a href="../">
+        <button id="language" class="nav-button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width="30"
+            heigth="30"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+            <path
+              d="M0 128C0 92.7 28.7 64 64 64l192 0 48 0 16 0 256 0c35.3 0 64 28.7 64 64l0 256c0 35.3-28.7 64-64 64l-256 0-16 0-48 0L64 448c-35.3 0-64-28.7-64-64L0 128zm320 0l0 256 256 0 0-256-256 0zM178.3 175.9c-3.2-7.2-10.4-11.9-18.3-11.9s-15.1 4.7-18.3 11.9l-64 144c-4.5 10.1 .1 21.9 10.2 26.4s21.9-.1 26.4-10.2l8.9-20.1 73.6 0 8.9 20.1c4.5 10.1 16.3 14.6 26.4 10.2s14.6-16.3 10.2-26.4l-64-144zM160 233.2L179 276l-38 0 19-42.8zM448 164c11 0 20 9 20 20l0 4 44 0 16 0c11 0 20 9 20 20s-9 20-20 20l-2 0-1.6 4.5c-8.9 24.4-22.4 46.6-39.6 65.4c.9 .6 1.8 1.1 2.7 1.6l18.9 11.3c9.5 5.7 12.5 18 6.9 27.4s-18 12.5-27.4 6.9l-18.9-11.3c-4.5-2.7-8.8-5.5-13.1-8.5c-10.6 7.5-21.9 14-34 19.4l-3.6 1.6c-10.1 4.5-21.9-.1-26.4-10.2s.1-21.9 10.2-26.4l3.6-1.6c6.4-2.9 12.6-6.1 18.5-9.8l-12.2-12.2c-7.8-7.8-7.8-20.5 0-28.3s20.5-7.8 28.3 0l14.6 14.6 .5 .5c12.4-13.1 22.5-28.3 29.8-45L448 228l-72 0c-11 0-20-9-20-20s9-20 20-20l52 0 0-4c0-11 9-20 20-20z" />
+          </svg>
+          English
+        </button>
+      </a>
+    </div>
+  </nav>
+  <section>
+    <div id="particles-js"></div>
+    <div class="container" style="height: 100vh;">
+      <div class="title" id="title">
+        <svg class="animate" id="logo" viewBox="90 15 86 80" version="1.1" xmlns="http://www.w3.org/2000/svg"
+          xmlnsXlink="http://www.w3.org/1999/xlink">
+          <g xmlns="http://www.w3.org/2000/svg">
+            <path fill="#2281f2"
+              d="M132.84,45.54V36.22l2.94-2,6.44-4.45v-6.1l-14.13,9.43a26.21,26.21,0,0,0-6.4,5.84v.2Z" />
+            <path fill="#2281f2"
+              d="M108.61,37.91c2.88-6.29,11.59-13,11.59-13L149,6,137.81,0,116,14.15S94.35,27.31,96,48.93c1.3,17,22.42,22.2,22.42,22.2C106,66.08,104.57,46.73,108.61,37.91Z" />
+            <path fill="#1fb2fd"
+              d="M149,6l-28.77,19s-8.71,6.69-11.59,13c-4.32,9.42-2.34,31,12.51,34,0,0,6.2,1.49,17.19-4.72,5.75-3.25,13.35,3.22,13.35,3.22,8.66-6.62,2.16-13-4.81-15.33C140,52.8,135,57.41,127.63,59.3s-9.28-6.51-9.28-6.51-3.46-10.92,9.74-19.72l14.13-9.43v6.1l-9.38,6.48v9.32l16.45-10.95Z" />
+            <path fill="#37edd7"
+              d="M162.42,50.1c-8.19-6.77-19.52-6.33-28.5-3.55-4.87,1.51-15.56,6.24-15.56,6.24a10.74,10.74,0,0,0,.45,1.4c.06.15.13.32.21.49s.15.33.24.5.25.49.4.74.2.32.31.48.34.47.52.7.3.34.46.5a6.57,6.57,0,0,0,2.58,1.66l.5.14a7.28,7.28,0,0,0,3.6-.1h.05c4.75-1.23,8.34-3.55,12-4.34a12.16,12.16,0,0,1,7.2.17c7,2.38,13.47,8.71,4.81,15.33h0L128.77,85.21h0l-6.28-3.66,14.06-8.64-9.21-4.82L104.09,82h0l16.07,8.73h0l11.33,6.15,32-21.14S178.64,63.52,162.42,50.1Z" />
+            <path fill="#1fb2fd"
+              d="M169.9,63.41h0s0,.08,0,.12c-.18,7.18-6.44,12.25-6.44,12.25l-32,21.14v15.19l33-23c5.51-3.21,5.41-10.33,5.41-10.33Z" />
+            <polygon fill="#2281f2"
+              points="136.56 72.91 136.56 72.91 136.56 72.91 122.5 81.55 128.65 85.14 128.87 85.15 136.56 80.19 136.56 72.91" />
+            <polygon fill="#2281f2" points="131.49 96.92 104.09 82.03 104.1 96.21 131.5 112.11 131.49 96.92" />
+          </g>
+        </svg>
+        <h1 class="animate d1">GraphScope <br />图计算之旅</h1>
+      </div>
+    </div>
+  </section>
+  <section>
+    <div class="container left">
+      <div class="flex-row content-div-80 mobile-revert">
+        <img src="../images/bg-graph.jpg" alt="" class="section-2-bg" />
+        <div class="content-div">
+          <h3>背景</h3>
+          <h1>互联网环境下指数级增长的数据</h1>
+          <p>
+            在约十年前互联网高速发展的时代，随着业务的快速扩展，数据量也在迅速增长。许多数据可以很自然地建模为图，众多业务开始有了图计算的需求，例如：
+          </p>
+          <ul>
+            <li>电子商务交易</li>
+            <li>路线导航和 POI 推荐</li>
+            <li>视频创作平台上的评分/评论等</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section style="width:100%">
+    <div class="container center" id="init-addressed">
+      <!-- TODO: deal with the overlap of background and blue line -->
+      <div class="content-div large-title">
+        <h3 class="animate d1">早期方案</h3>
+        <h2 class="animate d2">面向特定任务的图计算系统</h2>
+        <h4 class="animate d3">2010 ~ 2020</h4>
+      </div>
+    </div>
+  </section>
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>为了图数据的洞察</h3>
+        <h1>图遍历 (Graph Traversal)</h1>
+        <p>
+          图遍历（Graph Traversal）是在线和交互式图查询应用中的关键原语，是一种从图中的一个或者若干顶点出发，按照一定的规则沿着边遍历图中其他顶点的操作，常见的应用场景包括：
+        </p>
+        <p>
+          <img src="../images/fig-graph-traversals.jpg" width="100%" />
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right" id="gremlin">
+      <div class="content-div content-div-60">
+        <h3>图遍历的查询语言</h3>
+        <h1><span class="code">Gremlin</span></h1>
+        <p>
+          <span class="code">Gremlin</span> 是图遍历中最常用的查询语言，允许对各种图操作进行高层次和声明性的编程。
+        </p>
+
+        <h5>示例</h5>
+        <p class="subp">
+          环检测：在图中查找从一个顶点出发最后又回到这个顶点的路径，从而形成一个环。
+        </p>
+        <pre><!-- TODO: prettify <pre> -->
+g.V().has('name','tom').as('a').repeat(out().simplePath())
+ .times(LENGTH).where(out().as('a')).path()</pre>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left" id="maxgraph">
+      <div class="content-div content-div-50">
+        <!-- <h3>Systems</h3> -->
+        <h1><span class="sname">MaxGraph</span> 和 <span class="sname">GAIA</span>, <br />
+          具有高可扩展性的 Gremlin 查询系统</h1>
+        <p>
+          <img src="../images/fig-maxgraph.jpg" width="90%" style="margin-top: 20px;">
+        <div class="fig-caption">
+          MaxGraph 的架构。其中，GAIA 是对 MaxGraph 的编译和执行优化的组件。
+        </div>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="gaia">
+    <div class="container right" id="gaia">
+      <div class="content-div content-div-60" id="gaia">
+        <h5>示例</h5>
+        <h1><code>Gremlin</code> 查询的编译</h1>
+        <p>如环检测示例所示，一个 Gremlin 查询可以是迭代和嵌套操作的任意组合。
+        <pre>
+g.V().has('firstname','Tom').as('a')
+  .repeat(out().simplePath()).times(k)
+  .where(out().eq('a')).path()</pre>
+        <img src="../images/gaia.jpg" width="150%" style="transform: translateX(-25%);" />
+        </p>
+        <div class="fig-caption">
+          Gremlin 查询被编译成数据流（Dataflow）执行计划，一些算子被分配到某个上下文中进行并行处理。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container left" id="entity-res">
+      <div class="content-div content-div-60">
+        <h1>基于全图计算的<br />
+          图分析 (Graph Analytics)</h1>
+        <h5>示例</h5>
+        <p><span class="b">实体分析：</span> 识别和链接在不同数据集中的同一实体。这并非易事，挑战包括：</p>
+
+        <ul>
+          <li>迭代式的密集计算；
+          <li>大规模和异构的数据，并且数据在动态变化（数百个数据源中拥有数十亿条记录的 PB 级数据，每日更新 TB 级数据）；
+          <li>两个实体之间可能存在着多种连接关系；
+          <li>噪声数据，不完整数据。
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container">
+      <div class="content-div content-div-60">
+        <h3>以前的解决方案</h3>
+        <h1>点中心的编程模型的局限性</h1>
+        <img src="../images/vertex-centric.jpg" width="100%">
+        <div class="fig-caption central">Pregel 和 GAS 是“像顶点一样思考”编程模型的代表。
+        </div>
+        <p>我们在阿里巴巴曾经致力于一个采用以顶点中心的编程模型的图系统 <span
+            class="sname b">ODPSGraph</span>，并行化地执行实体解析算法。然而，多年来随着业务的增长也显示出该系统的一些局限性。
+        <ul>
+          <li><span class="b">编程难度大</span>，有时需要完全重新设计算法。
+          <li><span class="b">不断在性能与算法的准确性之间做取舍。</span> 对于许多算法，在以顶点中心模型中高效并行化的执行往往意味着失去精度或质量。
+          <li><span class="b">耗时且成本巨大。 </span>通常需要几名资深工程师花费数月的努力才能将算法上线。
+          <li><span class="b">性能不佳。</span>
+        </ul>
+
+        <h2 class="hl central animate">是否有以顶点中心的编程模型的替代方案？</h2>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-50">
+        <h3>是的，有！</h3>
+        <h1>PIE 编程模型和 <span class="sname">GRAPE</span> 系统</h1>
+        <p>我们在 SIGMOD'2017 上提出了 PIE 和 GRAPE，并在 Github 开源。 <br />
+          <a class="git" href="https://github.com/alibaba/libgrape-lite">https://github.com/alibaba/libgrape-lite</a>
+        </p>
+        <p>给定一个查询 Q 和一个图 G，要计算 Q(G)，用户只需提供 3 个函数。
+        <ul>
+          <li><span class="b">PEval:</span> 一个用于 Q 的<span class="subp">（顺序的）</span>基于当前子图的部分计算算法；</li>
+          <li><span class="b">IncEval:</span> 一个用于 Q 的<span class="subp">（顺序的）</span>增量算法；</li>
+          <li><span class="b">Assemble:</span> 一个通常只需合并部分结果的函数。</li>
+        </ul>
+        <img src="../images/grape.jpg" width="100%" />
+        <div class="trophy-container">
+          <div class="trophy">
+            <p> SIGMOD'2017 </p>
+            <p> 最佳论文奖（Best Paper Award）</p>
+          </div>
+          <div class="trophy">
+            <p> VLDB'2017 </p>
+            <p> 最佳演示奖（Best Demo Award）</p>
+          </div>
+          <div class="trophy">
+            <p> SIGMOD'2018 </p>
+            <p> 研究亮点（Research Highlight）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h3>2018 年</h3>
+        <h1>图神经网络 GNN 崭露头角</h1>
+        <h5>示例</h5>
+        <p><span class="b">基于 GNN 的推荐</p>
+        <img src="../images/gnn-rec.jpg" width="100%" />
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h1><span class="sname">Graph-Learn</span>，高性能的分布式 GNN 框架</h1>
+        <p>在 VLDB'2019 上提出，并在 <br />
+          <a class="git" href="https://github.com/alibaba/graph-learn">https://github.com/alibaba/graph-learn</a><br />
+          开源。它已经成功应用于阿里巴巴内外的许多场景。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h1>以及一些其他在图模式匹配、图挖掘的工作...</h1>
+        <img src="../images/matching.jpg" class="img-Specialized"></img>
+        <p>在图模式匹配、图挖掘及其应用等方面，我们也做了一系列的工作：</p>
+        <div class="flex-row">
+          <ul>
+            <li><span class="b">[VLDB'2018]</span> Real-time Constrained Cycle Detection in Large Dynamic Graphs.
+            <li><span class="b">[VLDB'2020]</span> Maximum Biclique Search at Billion Scale.
+            <li>...
+          </ul>
+          <div>
+            <div class="trophy animate d2">
+              <p> VLDB'2020</p>
+              <p> Best Paper (Runner-up)</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="content-div content-div-60">
+        <h2 class="hl central animate">然而，一个个图系统变成了孤岛</h2>
+        <img src="../images/silos.jpg" width="100%" />
+      </div>
+    </div>
+  </section>
+
+  <section style="width: 100%;">
+    <div class="container center" id="em-gs">
+      <div class="content-div large-title">
+        <h3 class="animate d1">整合为一站式系统</h3>
+        <h2 class="animate d2">GraphScope 的诞生和发展</h2>
+        <h4 class="animate d3">2018 ~ 2024</h4>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h1>现实世界的图应用通常涉及多种类型的图计算</h1>
+        <h5>示例</h5>
+        <p>一个简化的电商平台欺诈检测工作流：
+        <ul>
+          <li>使用 SQL 从原始数据构建属性图；
+          <li>使用 Gremlin 提取一个子图；
+          <li>使用标签传播算法识别欺诈实体；
+          <li>图采样按权重进行 k-hop 采样；
+          <li>使用 TensorFlow 训练一个 GNN 模型。
+        </ul>
+        <img src="../images/workflow.jpg" width="100%">
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-80">
+        <h1><span class="sname">GraphScope</span>：超大规模的一站式图计算系统 </h1>
+        <p>我们在 VLDB'2021 上提出了 GraphScope，并在 Github 开源。 <br />
+          <a class="git" href="https://github.com/alibaba/graphscope">https://github.com/alibaba/graphscope</a>
+          <img src="../images/gs-overview.jpg" width="80%" class="central" />
+        </p>
+        <ul>
+          <li>简单而统一的编程接口；
+          <li>分布式数据流运行时，使每个图算子能在一个精心设计的框架中进行单独优化；
+          <li>分布式<span class="b">内存数据管理框架</span>，自动管理中间数据的表示、转换和移动；
+          <li>拥抱<span class="b"> Python 生态</span>，使我们能够将 GraphScope 与其他数据处理系统无缝结合；
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-100">
+        <h1>为什么选择 Python? </h1>
+        <div class="flex-row">
+          <div class="feat">
+            <h5 id="forange">交互式计算，所见即所得</h5>
+            <ul>
+              <li>Jupyter Notebook
+              <li>分析、建模、提取、可视化……
+            </ul>
+            <img src="../images/notebook.png" width="100%">
+          </div>
+          <div class="feat">
+            <h5 id="fblue">丰富的生态系统，端到端一站式的解决方案</h5>
+            处理各种数据和任务的能力，例如：
+            <ul>
+              <li>Json、文本、Tensor、SQL、图像、视频…
+              <li> 科学/图计算、机器学习…
+            </ul>
+            <img src="../images/pyeco.png" width="100%">
+          </div>
+          <div class="feat">
+            <h5 id="fgreen">高层次的数据和操作抽象
+            </h5>
+            <ul>
+              <li>Tensor、DataFrame、图、标量、Objects …
+              <li>在高层次上定义的算子和操作
+            </ul>
+            <img src="../images/vis.gif" width="100%">
+          </div>
+        </div>
+      </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h1>易用性：兼容 NetworkX</h1>
+        <pre>pip install graphscope</pre>
+        <p>与 NetworkX 兼容的图操作算子和算法 API
+        <h5>示例</h5>
+        <img src="../images/nx.jpg" width="140%">
+
+        <h2 class="hl animate">如何与其他 PyData 系统互操作？ </h2>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h1><span class="sname">Vineyard</span>：管理内存不可变数据</h1>
+        <p>我们在 SIGMOD'2023 上提出了 Vineyard，并在 <br />
+          <a class="git" href="https://github.com/v6d-io/v6d">https://github.com/v6d-io/v6d</a> 开源，现在 Vineyard 也是一个 CNCF
+          沙盒（Sandbox）项目。
+        </p>
+        <img src="../images/cncf.svg" width="300px" />
+
+        <p class="b">为什么需要 Vineyard？ </p>
+        <ul>
+          <li>许多大数据系统支持在不可变内存数据上工作，但是，
+          <li>适配 I/O 接口，实现数据分区/分块策略、容错机制、数据访问 RPC、扩容/缩容需要付出巨大的努力。
+          <li>尽管 I/O 成本通常很高，系统之间共享中间结果依赖于外部文件系统。
+          <li>没有高效的方法将不可变数据与外部可变数据源动态<span class="b">同步</span>。
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-70">
+        <h3>使用 Vineyard 可以重新定义跨系统数据共享</h3>
+        <h1>在 PyData 生态系统中共享数据</h1>
+        <p class="b">Vineyard 提供：</p>
+        <ul>
+          <li>开箱即用的高级抽象（例如图上的边/顶点迭代器，而不是键/值查找）和用于高级开发人员定制特定需求的中低级 API。
+          <li>通过共享内存以零拷贝的方式进行本地数据共享。
+          <li>无感的（或与访问本地数据非常相似的）远程数据访问，支持广泛的数据源/格式和数据分区策略。
+          <li>与可变数据源的（快速）同步。
+          <li>容错。
+          <li>...
+        </ul>
+        <img src="../images/vineyard-wf.jpg" width="100%" />
+        <h2 class="hl animate">这些够了吗？已经解决图计算所有问题了吗？</h2>
+      </div>
+    </div>
+  </section>
+
+  <section style="width: 100%;">
+    <div class="container center" id="em-gsf">
+      <div class="content-div large-title">
+        <h3 class="animate d1">持续迭代</h3>
+        <h2 class="central d2 animate">GraphScope Flex<br />
+          模块化的图计算</h2>
+        <h4 class="animate d3">2022 ~ 现在</h4>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>GraphScope 视角下的缺憾</h3>
+        <h1>一站式太过理想<br />“One-Size-Fits-All”的方法是不够的</h1>
+        <h5>示例</h5>
+        <p>这张图展示了现实世界中的图计算任务，它有如下特点：</p>
+        <ul>
+          <li>各种业务场景</li>
+          <li>多样的图工作负载</li>
+          <li>许多不同格式的图</li>
+        </ul>
+        <img src="../images/flex-example.jpg" width="80%" />
+      </div>
+    </div>
+  </section>
+
+
+  <section id="graphs">
+    <div class="container right">
+      <div class="content-div content-div-70" id="graphs">
+        <h3>多样性来自于</h3>
+        <h1>1. 各种图模型和组织方式</h1>
+        <p>即使是同一数据集，也可以根据其特定需求以不同的方式建模。</p>
+        <img src="../images/graphs.jpg" width="80%" />
+        <div class="fig-caption central">引自 SIGMOD'2024 Panel: The Future of Graph Analytics</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60" id="workloads">
+        <h1>2. 多样的图计算工作负载</h1>
+        <h1>和编程接口</h1>
+        <img src="../images/workloads.jpg" style="width: 100%;" />
+        <div class="flex-row justify-start">
+          <div class="animate d1">
+            <p class="b">图查询</p>
+            <ul>
+              <li>Cypher</li>
+              <li>Gremlin</li>
+              <li>ISO/GQL</li>
+            </ul>
+          </div>
+          <div class="animate d2">
+            <p class="b">图分析</p>
+            <ul>
+              <li>以顶点为中心：Pregel, Gather-Apply-Scatter(GAS)…</li>
+              <li>以子图为中心：Pregel++, Blogel, PIE…</li>
+              <li>其他 DSL：FLASH, GraphIt…</li>
+            </ul>
+          </div>
+          <div class="animate d3">
+            <p class="b">图学习</p>
+            <ul>
+              <li>主要使用 Python</li>
+              <li>PyG, DGL, …</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-80" id="perfconsdr">
+        <h1>3. 性能的考虑</h1>
+        <ul>
+          <li>追求系统的高吞吐还是单个查询的低延迟？
+          <li>数据存在于内存还是外存？
+          <li>追求系统的极致性能还是系统的整体资源利用？
+          <li>是否需要支持高可用？
+          <li>…
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container center">
+      <div class="content-div content-div-60" id="arch-gsf">
+        <h3>多样化的图计算促使 GraphScope 演进 </h3>
+        <h1><span class="sname">GraphScope Flex</span>，模块化的图计算系统</h1>
+        <ul>
+          <li>采用类似 LEGO 的模块化设计；
+          <li>由多个组件组成，每个组件都像一个 LEGO 积木；
+          <li>一个命令行工具 <span class="code">flexbuild</span>，用于选择组件并构建部署个性化的系统。
+        </ul>
+        <img src="../images/arch-gsf.jpg" width="100%" />
+        <div class="fig-caption central">GraphScope Flex 的架构</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>如何处理图存储的多样性？</h3>
+        <h1>理解图存储的复杂性</h1>
+        <p>图存储是多样的，计算引擎访问数据的需求也不同。
+        </p>
+        <img src="../images/redraw-tags.jpg" width="100%" />
+        <div class="fig-caption central">图存储的多样化功能需求。</div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h1><span class="sname">GRIN</span>：统一的图访问接口</h1>
+        <p>在 <a class="git" href="https://github.com/graphscope/GRIN">https://github.com/graphscope/GRIN</a> 上开源</p>
+        <p>GRIN 是 GraphScope Flex 提出的标准图访问接口，其目标是将不同计算引擎和存储引擎之间的集成从 M * N 简化为 M + N。</p>
+        <div class="flex-row">
+          <img src="../images/redraw-storage.jpg" width="45%" />
+          <img src="../images/GRIN.jpg" width="55%" class="hl-image" />
+        </div>
+        <div class="fig-caption central">GRIN 给计算引擎和存储对接带来的改变。</div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>支持 GRIN 的一种存储后端</h3>
+        <h1><span class="sname">GraphAr</span>：一个用于存档和交换图数据的开源文件格式</h1>
+        <p>作为 Apache 孵化项目开源 <br />
+          <a class="git" href="https://github.com/apache/GraphAr">https://github.com/apache/GraphAr</a>
+        </p>
+        <img src="../images/apache.png" width="300px" />
+        <p>GraphAr（"Graph Archive" 的缩写）是一个旨在让各种应用程序和系统能够更加方便和高效地构建、访问和共享图数据的项目。</p>
+        <div class="flex-row">
+          <img src="../images/redraw-graphar.jpg" width="40%" />
+          <img src="../images/graphar-2.jpg" width="60%" class="hl-image" />
+        </div>
+        <div class="fig-caption central">GraphAr 给图数据共享带来的改变。</div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-80">
+        <h3>如何处理图查询？</h3>
+        <h1>GraphScope Flex 中的图查询组件</h1>
+        <ul>
+          <li>前端<span class="b">同时支持</span>：<span class="code">Gremlin</span> 和 <span class="code">Cypher</span>；
+          <li>提供统一的<span class="b">中间表示(IR)</span>抽象，解析 Gremlin/Cypher 到统一的中间表示；
+          <li>基于 IR 的查询优化器，会根据任务目标的不同，分别生成以下两个引擎的物理执行计划：
+          <li><span class="b sname">Gaia</span>，使用数据流模型，用于类似 OLAP 的任务；
+          <li><span class="b sname">Hiactor</span>，使用 Actor 模型，用于类似 OLTP 的任务。
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section id="example-gie">
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h5>示例</h5>
+        <h1>实际应用：实时欺诈检测</h1>
+        <p><span class="b">问题：</span>通过检查每个订单与已知欺诈行为的关联关系，识别电子商务中的可疑交易。</p>
+        <img src="../images/gie-example.jpg" width="120%" />
+        <div class="fig-caption">基于 Cypher 的欺诈检测解决方案。</div>
+        <p>该问题可以通过部署带有这些模块的 GraphScope Flex 来解决。</p>
+        <img src="../images/gie.jpg" width="60%" />
+      </div>
+    </div>
+  </section>
+
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h3>性能如何？</h3>
+        <h1>在 LDBC SNB 基准测试中取得了 <span class="forange">No.1</span> 的成绩</h1>
+        <img src="../images/ldbc-result.jpg" width="80%" style="border: 1px solid #eee; border-radius: 12px;" />
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>如何处理图分析任务？</h3>
+        <h1>GraphScope Flex 中的图分析组件</h1>
+        <ul>
+          <li>支持多种接口
+            <ul>
+              <li>Python，兼容 NetworkX 的 API
+              <li>Java SDK，兼容 Pregel(Giraph)/GraphX 的 API
+              <li>C++ SDK，GRAPE API
+            </ul>
+          <li><span class="b">100+</span> 内置算法，开箱即用
+            <ul>
+              <li>PageRank，顶点重要性分析…
+              <li>可达性和最短路径…
+              <li>社区检测，LPA，Louvain…
+            </ul>
+          <li>其核心是 <span class="sname b">GRAPE</span> 引擎
+            <ul>
+              <li>支持自动并行化的分布式图计算引擎
+              <li>集成的 <span class="sname b">Ingress</span> 提供增量图算法的支持
+              <li>集成的 <span class="sname b">FLASH</span> 使得用户更加方便地编写复杂图算法
+              <li>支持 GPU 加速
+            </ul>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section id="example-gae">
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h5>示例</h5>
+        <h1>实际应用：股权分析</h1>
+        <p><span class="b">问题：</span>识别公司的实控人，即拥有超过 51% 股份的自然人。</p>
+        <img src="../images/equity.jpg" width="50%" />
+        <div class="fig-caption">自然人 C 通过公司 2（0.8*0.6 = 0.48）和公司 3（0.8*0.3*0.7 = 0.168）拥有公司 1 超过 51% 的股份。</div>
+        <p>通过 GraphScope Flex 图分析组件，使用基于标签传播的图分析算法来解决该问题。</p>
+        <img src="../images/gae.jpg" width="60%" />
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container">
+      <div class="content-div content-div-60">
+        <h3 class="animate d1">想要了解更多细节？</h3>
+        <h1 class="animate d2"><span class="sname">GraphScope Flex</span><br />技术预览版现已推出！</h1>
+        <a class="animate git d3" href="https://github.com/alibaba/graphscope">https://github.com/alibaba/graphscope</a>
+      </div>
+    </div>
+  </section>
+
+
+
+
+  <section>
+    <div class="container left" id="future">
+      <div class="content-div content-div-60">
+        <h1>未来工作</h1>
+        <ul>
+          <li>增强核心能力
+            <ul>
+              <li>支持 GQL
+              <li>新的存储后端
+              <li>GraphAr 与数据湖集成
+              <li>图上的 HTAP 处理
+              <li>在实际场景中的应用
+              <li>...
+            </ul>
+          <li>与其他系统的互操作性
+            <ul>
+              <li>专门用于图的 ETL，使来自同一数据集的不同图模型的应用集成更加流畅。
+              <li>在图任务与类 SQL 操作相结合的场景中，跨多个引擎的统一编译器能显著增强工作流的互操作性，并扩展图计算的范围。
+              <li>...</li>
+            </ul>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <section style="margin-bottom:20px">
+    <div class="container right" id="goal">
+      <div class="content-div flex-row">
+        <img src="../images/flag.jpg" alt="" style="width: 200px;">
+        <div style="margin-top: 40px;">
+          <h3 class="animate d1">我们的最终目标</h3>
+          <h1 class="animate d2">人人可用的图计算！</h1>
+          <p class="animate d3">欢迎加入我们！</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section style="height: auto; margin:20px auto 20px auto">
+    <div class="container">
+      <div id="readmore">
+        <h5>其它链接</h5>
+        <a href="https://github.com/alibaba/graphscope" target="_blank">
+          <div class="card" id="rm-git">
+            <h1>Github</h1>
+          </div>
+        </a>
+        <a href="https://graphscope.io/blog" target="_blank">
+          <div class="card" id="rm-blog">
+            <h1>Blog</h1>
+          </div>
+        </a>
+        <a href="https://graphscope.io/publications" target="_blank">
+          <div class="card" id="rm-paper">
+            <h1>Papers</h1>
+          </div>
+        </a>
+        <a href="https://try.graphscope.app" target="_blank">
+          <div class="card" id="rm-play">
+            <h1>Playground</h1>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section style="height: auto; margin-bottom:12px">
+    <div id="ref">
+      <p>参考文献</p>
+      <ol>
+        <li>GraphScope Flex: LEGO-like Graph Computing Stack, SIGMOD2024, Tao He, Shuxian Hu, Longbin Lai, Dongze Li,
+          Neng Li, Xue Li, Lexiao Liu, Xiaojian Luo, Binqing Lyu, Ke Meng, Sijie Shen, Li Su, Lei Wang, Jingbo Xu,
+          Wenyuan Yu, Weibin Zeng, Lei Zhang, Siyuan Zhang, Jingren Zhou, Xiaoli Zhou, Diwen Zhu.
+        <li>Dynamic Graph Sampling Service for Real-time GNN Inference at Scale, EuroSys 2023. Jie Sun, Li Su, Wenting
+          Shen, Zichao Zhang, Zuocheng Shi, Jingbo Xu, Yong Li, Wenyuan Yu, Zeke Wang, Fei Wu, Jingren Zhou.
+        <li>Bridging the Gap between Relational OLTP and Graph-based OLAP, USENIX ATC 2023. Sijie Shen, Zihang Yao, Lin
+          Shi, Lei Wang, Longbin Lai, Qian Tao, Li Su, Rong Chen, Wenyuan Yu, Haibo Chen, Binyu Zang, Jingren Zhou.
+        <li>GLogS: Interactive Graph Pattern Matching Query At Large Scale, USENIX ATC 2023. Longbin Lai, Yufan Yang,
+          Zhibin Wang, Yuxuan Liu, Haotian Ma, Sijie Shen, Bingqing Lyu, Xiaoli Zhou, Wenyuan Yu, Zhengping Qian, Chen
+          Tian, Sheng Zhong, Yeh-Ching Chung, Jingren Zhou.
+        <li>Legion: Automatically Pushing the Envelope of Multi-GPU System for Billion-Scale GNN Training, USENIX ATC
+          2023. Jie Sun, Li Su, Zuocheng Shi, Wenting Shen, Zeke Wang, Lei Wang, Jie Zhang, Wenyuan Yu, Yong Li, Jingren
+          Zhou, Fei Wu.
+        <li>Vineyard: Optimizing Data Sharing in Data-Intensive Analytics, SIGMOD 2023. Wenyuan Yu, Tao He, Lei Wang, Ke
+          Meng, Ye Cao, Diwen Zhu, Sanhong Li, Jingren Zhou.
+        <li>Efficient Multi-GPU Graph Processing with Remote Work Stealing, ICDE 2023. Ke Meng, Liang Geng, Xue Li, Qian
+          Tao, Wenyuan Yu, Jingren Zhou.
+        <li>FLASH: A Framework for Programming Distributed Graph Processing Algorithms, ICDE 2023. Xue Li, Ke Meng, Lu
+          Qin, Longbin Lai, Wenyuan Yu, Zhengping Qian, Xuemin Lin, Jingren Zhou.
+        <li>GNNLab: A Factored System for Sample-based GNN Training over GPUs, EuroSys 2022. Jianbang Yang, Dahai Tang,
+          Xiaoniu Song, Lei Wang, Qiang Yin, Rong Chen, Wenyuan Yu, and Jingren Zhou.
+        <li>GraphScope: A Unified Engine For Big Graph Processing, VLDB 2021. Wenfei Fan, Tao He, Longbin Lai, Xue Li,
+          Yong Li, Zhao Li, Zhengping Qian, Chao Tian, Lei Wang, Jingbo Xu, Youyang Yao, Qiang Yin, Wenyuan Yu, Jingren
+          Zhou, Diwen Zhu, and Rong Zhu.
+        <li>GraphScope: A One-Stop Large Graph Processing System. VLDB, demo, 2021. Jingbo Xu, Zhanning Bai, Wenfei Fan,
+          Longbin Lai, Xue Li, Zhao Li, Zhengping Qian, Lei Wang, Yanyan Wang, Wenyuan Yu, and Jingren Zhou.
+        <li>Automating Incremental Graph Processing with Flexible Memoization. VLDB 2021. Shufeng Gong, Chao Tian, Qiang
+          Yin, Wenyuan Yu, Yanfeng Zhang, Liang Geng, Song Yu, Ge Yu, and Jingren Zhou.
+        <li>GAIA: A System for Interactive Analysis on Distributed Graphs Using a High-Level Language, NSDI 2021.
+          Zhengping Qian, Chenqiang Min, Longbin Lai, Yong Fang, Gaofeng Li, Youyang Yao, Bingqing Lyu, Xiaoli Zhou,
+          Zhimin Chen, and Jingren Zhou.
+        <li>FlexGraph: A Flexible and Efficient Distributed Framework for GNN Training. EuroSys 2021. Lei Wang, Qiang
+          Yin, Chao Tian, Jianbang Yang, Rong Chen, Wenyuan Yu, Zihang Yao, and Jingren Zhou.
+        <li>Maximum Biclique Search at Billion Scale, VLDB 2020. Best Paper Runner-up Bingqing Lyu, Lu Qin, Xuemin Lin,
+          Ying Zhang, Zhengping Qian, and Jingren Zhou.
+        <li>Adaptive Asynchronous Parallelization of Graph Algorithms. TODS. 45(2): 6:1-6:45, 2020. Wenfei Fan, Ping Lu,
+          Wenyuan Yu, Jingbo Xu, Qiang Yin, Xiaojian Luo, Jingren Zhou, and Ruochun Jin.
+        <li>Parallelizing Sequential Graph Computations TODS 43(4): 18:1-18:39, 2018. Wenfei Fan, Wenyuan Yu, Jingbo Xu,
+          Jingren Zhou, Xiaojian Luo, Qiang Yin, Ping Lu, Yang Cao and Ruiqi Xu
+        <li>Real-time Constrained Cycle Detection in Large Dynamic Graphs. VLDB, 2018. Xiafei Qiu, Wubin Cen, Zhengping
+          Qian, You Peng, Ying Zhang, Xuemin Lin, and Jingren Zhou.
+        <li>GRAPE: Parallelizing Sequential Graph Computations. VLDB, demo, 2017. Wenfei Fan, Jingbo Xu , Yinghui Wu,
+          Wenyuan Yu, Jiaxin Jiang
+      </ol>
+      <p>Copyrights</p>
+      <ol>
+        <li>Some images are designed by Freepik (https://freepik.com).</li>
+        <li>Some fonts and icons from FontAwesome (https://fontawesome.com).</li>
+        <li>Other copyrights are reserved in GraphScope Team © 2020-2025. </li>
+      </ol>
+  </section>
+  <script src="../../js/particles.min.js"></script>
+  <script src="../index.js"></script>
+
+
+</body>
+
+</html>

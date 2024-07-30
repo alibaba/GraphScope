@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5V27DVHLP0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-5V27DVHLP0');
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>GraphScope's Journey</title>
+  <link rel="stylesheet" href="./index.css" />
+  <link rel="stylesheet" href="./section.css">
+  <meta name="keywords"
+    content="graph, graph computation, graph analytics, graph algorithms, gnn, graph learning, graph embedding, gremlin, graph query, graphscope, graphar, GRIN, grape">
+  <meta name="description" content="GraphScope Journey on Graph Computing">
+
+  <meta property="og:title" content="GraphScope Journey">
+  <meta property="og:description" content="GraphScope Journey on Graph Computing">
+  <meta property="og:image" content="/img/logo.png">
+  <meta property="og:url" content="http://graphscope.io">
+
+  <link rel="shortcut icon" href="/img/favicon.ico">
+</head>
+
+<body>
+  <svg id="timeline" xmlns="http://www.w3.org/2000/svg" class="container"></svg>
+  <nav class="navbar">
+    <a href="/">
+      <button class="nav-button">
+        <svg fill="#979797" width="16" height="16" viewBox="0 0 1024 1024" version="1.1"
+          xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M363.840919 472.978737C336.938714 497.358861 337.301807 537.486138 364.730379 561.486138L673.951902 832.05497C682.818816 839.813519 696.296418 838.915012 704.05497 830.048098 711.813519 821.181184 710.915012 807.703582 702.048098 799.94503L392.826577 529.376198C384.59578 522.174253 384.502227 511.835287 392.492414 504.59418L702.325747 223.807723C711.056111 215.895829 711.719614 202.404616 703.807723 193.674252 695.895829 184.943889 682.404617 184.280386 673.674253 192.192278L363.840919 472.978737Z">
+          </path>
+        </svg>
+        Home
+      </button>
+    </a>
+    <div>
+      <a class="github" href="https://github.com/alibaba/graphscope" target="_blank">
+        <button class="nav-button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512" width="24" heigth="24">
+            <!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+            <path
+              d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3 .3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5 .3-6.2 2.3zm44.2-1.7c-2.9 .7-4.9 2.6-4.6 4.9 .3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3 .7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3 .3 2.9 2.3 3.9 1.6 1 3.6 .7 4.3-.7 .7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3 .7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3 .7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z" />
+          </svg>
+          GITHUB</button>
+      </a>
+      <a href="./cn/">
+        <button id="language" class="nav-button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width="30"
+            heigth="30"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+            <path
+              d="M0 128C0 92.7 28.7 64 64 64l192 0 48 0 16 0 256 0c35.3 0 64 28.7 64 64l0 256c0 35.3-28.7 64-64 64l-256 0-16 0-48 0L64 448c-35.3 0-64-28.7-64-64L0 128zm320 0l0 256 256 0 0-256-256 0zM178.3 175.9c-3.2-7.2-10.4-11.9-18.3-11.9s-15.1 4.7-18.3 11.9l-64 144c-4.5 10.1 .1 21.9 10.2 26.4s21.9-.1 26.4-10.2l8.9-20.1 73.6 0 8.9 20.1c4.5 10.1 16.3 14.6 26.4 10.2s14.6-16.3 10.2-26.4l-64-144zM160 233.2L179 276l-38 0 19-42.8zM448 164c11 0 20 9 20 20l0 4 44 0 16 0c11 0 20 9 20 20s-9 20-20 20l-2 0-1.6 4.5c-8.9 24.4-22.4 46.6-39.6 65.4c.9 .6 1.8 1.1 2.7 1.6l18.9 11.3c9.5 5.7 12.5 18 6.9 27.4s-18 12.5-27.4 6.9l-18.9-11.3c-4.5-2.7-8.8-5.5-13.1-8.5c-10.6 7.5-21.9 14-34 19.4l-3.6 1.6c-10.1 4.5-21.9-.1-26.4-10.2s.1-21.9 10.2-26.4l3.6-1.6c6.4-2.9 12.6-6.1 18.5-9.8l-12.2-12.2c-7.8-7.8-7.8-20.5 0-28.3s20.5-7.8 28.3 0l14.6 14.6 .5 .5c12.4-13.1 22.5-28.3 29.8-45L448 228l-72 0c-11 0-20-9-20-20s9-20 20-20l52 0 0-4c0-11 9-20 20-20z" />
+          </svg>
+          中文
+        </button>
+      </a>
+    </div>
+  </nav>
+  <section>
+    <div id="particles-js"></div>
+    <div class="container" style="height: 100vh;">
+      <div class="title" id="title">
+        <svg class="animate" id="logo" viewBox="90 15 86 80" version="1.1" xmlns="http://www.w3.org/2000/svg"
+          xmlnsXlink="http://www.w3.org/1999/xlink">
+          <g xmlns="http://www.w3.org/2000/svg">
+            <path fill="#2281f2"
+              d="M132.84,45.54V36.22l2.94-2,6.44-4.45v-6.1l-14.13,9.43a26.21,26.21,0,0,0-6.4,5.84v.2Z" />
+            <path fill="#2281f2"
+              d="M108.61,37.91c2.88-6.29,11.59-13,11.59-13L149,6,137.81,0,116,14.15S94.35,27.31,96,48.93c1.3,17,22.42,22.2,22.42,22.2C106,66.08,104.57,46.73,108.61,37.91Z" />
+            <path fill="#1fb2fd"
+              d="M149,6l-28.77,19s-8.71,6.69-11.59,13c-4.32,9.42-2.34,31,12.51,34,0,0,6.2,1.49,17.19-4.72,5.75-3.25,13.35,3.22,13.35,3.22,8.66-6.62,2.16-13-4.81-15.33C140,52.8,135,57.41,127.63,59.3s-9.28-6.51-9.28-6.51-3.46-10.92,9.74-19.72l14.13-9.43v6.1l-9.38,6.48v9.32l16.45-10.95Z" />
+            <path fill="#37edd7"
+              d="M162.42,50.1c-8.19-6.77-19.52-6.33-28.5-3.55-4.87,1.51-15.56,6.24-15.56,6.24a10.74,10.74,0,0,0,.45,1.4c.06.15.13.32.21.49s.15.33.24.5.25.49.4.74.2.32.31.48.34.47.52.7.3.34.46.5a6.57,6.57,0,0,0,2.58,1.66l.5.14a7.28,7.28,0,0,0,3.6-.1h.05c4.75-1.23,8.34-3.55,12-4.34a12.16,12.16,0,0,1,7.2.17c7,2.38,13.47,8.71,4.81,15.33h0L128.77,85.21h0l-6.28-3.66,14.06-8.64-9.21-4.82L104.09,82h0l16.07,8.73h0l11.33,6.15,32-21.14S178.64,63.52,162.42,50.1Z" />
+            <path fill="#1fb2fd"
+              d="M169.9,63.41h0s0,.08,0,.12c-.18,7.18-6.44,12.25-6.44,12.25l-32,21.14v15.19l33-23c5.51-3.21,5.41-10.33,5.41-10.33Z" />
+            <polygon fill="#2281f2"
+              points="136.56 72.91 136.56 72.91 136.56 72.91 122.5 81.55 128.65 85.14 128.87 85.15 136.56 80.19 136.56 72.91" />
+            <polygon fill="#2281f2" points="131.49 96.92 104.09 82.03 104.1 96.21 131.5 112.11 131.49 96.92" />
+          </g>
+        </svg>
+        <h1 class="animate d2">GraphScope's Journey on <br />
+          Graph Processing</h1>
+      </div>
+    </div>
+  </section>
+  <section>
+    <div class="container left">
+      <div class="flex-row content-div-80 mobile-revert">
+        <img src="images/bg-graph.jpg" alt="" class="section-2-bg" />
+        <div class="content-div">
+          <h3>Background</h3>
+          <h1>Exponential Data Growth at Alibaba</h1>
+          <p>
+            It was nearly 10 years ago, business was expanding exponentially and, therefore, data was growing rapidly.
+            Many of them naturally could be modeled as graphs, and the need for graph computing emerged in many areas,
+            such as
+          </p>
+          <ul>
+            <li>E-commerce transactions</li>
+            <li>Navigation routes and POIs</li>
+            <li>Video creator ratings</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section style="width:100%">
+    <div class="container center" id="init-addressed">
+      <!-- TODO: deal with the overlap of background and blue line -->
+      <div class="content-div large-title">
+        <h3 class="animate d1">Early Adoptions</h3>
+        <h2 class="animate d2">Initial graph problems were addressed in isolation.</h2>
+        <h4 class="animate d3">2010 ~ 2020</h4>
+      </div>
+    </div>
+  </section>
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>Getting Insight of Graph Data</h3>
+        <h1>Graph Traversal for Exploration</h1>
+        <p>
+          Graph traversal - a process of visiting the nodes in a graph - is a key primitive in many online and
+          interactive graph applications, e.g.,
+        </p>
+        <p>
+          <img src="images/fig-graph-traversals.jpg" width="100%" />
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right" id="gremlin">
+      <div class="content-div content-div-60">
+        <h3>De-facto</h3>
+        <h1><span class="code">Gremlin</span>-based Graph Traversal</h1>
+        <p>
+          <span class="code">Gremlin</span> is the de-facto standard language that allows high-level and declarative
+          programming for various graph operations.
+        </p>
+
+        <h5>Example</h5>
+        <p class="subp">
+          Cycle detection: to find a cycle occurs in a graph where a path loops back on itself to the originating
+          vertex.
+        </p>
+        <pre><!-- TODO: prettify <pre> -->
+g.V().has('name','tom').as('a').repeat(out().simplePath())
+ .times(LENGTH).where(out().as('a')).path()</pre>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left" id="maxgraph">
+      <div class="content-div content-div-50">
+        <!-- <h3>Systems</h3> -->
+        <h1><span class="sname">MaxGraph</span> and <span class="sname">GAIA</span>, <br />
+          Systems Scaling Gremlin Queries</h1>
+        <p>
+          <img src="images/fig-maxgraph.jpg" width="90%" style="margin-top: 20px;">
+        <div class="fig-caption">
+          Architecture of MaxGraph. In which, GAIA is an optimization component for both compilation and execution based
+          on MaxGraph.
+        </div>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="gaia">
+    <div class="container right" id="gaia">
+      <div class="content-div content-div-60" id="gaia">
+        <h5>Example</h5>
+        <h1><code>Gremlin</code> Query Compilation</h1>
+        <p>As shown in the cycle-detection example, a Gremlin query can be
+          arbitrary composition of iterative and nested operations.
+        <pre>
+g.V().has('firstname','Tom').as('a')
+  .repeat(out().simplePath()).times(k)
+  .where(out().eq('a')).path()</pre>
+        <img src="images/gaia.jpg" class="image-gaia" />
+        </p>
+        <div class="fig-caption">
+          The gremlin query is compiled to a dataflow plan, some operators are assigned SCOPE with
+          context for parallel processing
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container left" id="entity-res">
+      <div class="content-div content-div-60">
+        <h1>Graph Analytics,<br />
+          Whole Graph Computation</h1>
+        <h5>Example</h5>
+        <p><span class="b">Entity Resolution:</span> Identify and link different representations of the same real-world
+          entity. It is nontrivial, challenges are:</p>
+
+        <ul>
+          <li>Iterative and intensive computation
+          <li>Large scale and heterogeneous data, dynamic changes (PBs of data with billions of records across hundreds
+            data sources with TBs of update daily)
+          <li>Multi-domain connections/relations between possible entities
+          <li>Noises and errors, incomplete/missing data
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container">
+      <div class="content-div content-div-60">
+        <h3>Previous solutions?</h3>
+        <h1>Limitations of the Vertex-Centric Model</h1>
+        <img src="images/vertex-centric.jpg" width="100%">
+        <div class="fig-caption central">Paradigm of Pregel and GAS, representatives of "Think-like-a-vertex" model.
+        </div>
+        <p>We used to work on an in-house vertex-centric graph system <span class="sname b">ODPSGraph</span>, to
+          parallelize the entity resolution. However, ever-growing challenges were emerged over the years.
+        <ul>
+          <li><span class="b">Difficult to program</span>, sometimes requiring a complete redesign algorithm.
+          <li><span class="b">Constant struggles over ad-hoc trade-offs.</span> For many algorithms, to parallelize them
+            efficiently in vertex-centric model often means losing precision or quality.
+          <li><span class="b">Time-consuming and huge cost. </span>It often took several senior engineers months of
+            effort to bring an algorithm online.
+          <li><span class="b">Subpar performance.</span>
+        </ul>
+
+        <h2 class="hl central animate">Alternative to Vertex-Centric?</h2>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-50">
+        <h3>We answer YES!</h3>
+        <h1>PIE Model and <span class="sname">GRAPE</span> System</h1>
+        <p>We presented PIE and GRAPE on SIGMOD'2017, and open sourced it at
+          <a class="git" href="https://github.com/alibaba/libgrape-lite">https://github.com/alibaba/libgrape-lite</a>
+        </p>
+        <p>Given a query Q and a graph G, to compute Q(G), users only need to provide 3 functions.
+        <ul>
+          <li><span class="b">PEval:</span> a <span class="subp">(sequential)</span> algorithm for Q, for partial
+            evaluation
+          <li><span class="b">IncEval:</span> a <span class="subp">(sequential)</span> incremental algorithm for Q
+          <li><span class="b">Assemble:</span> a function often just taking a union of partial results.
+        </ul>
+        <img src="images/grape.jpg" width="100%" />
+        <div class="trophy-container">
+          <div class="trophy">
+            <p> SIGMOD'2017 </p>
+            <p> Best Paper Award</p>
+          </div>
+          <div class="trophy">
+            <p> VLDB'2017 </p>
+            <p> Best Demo Award</p>
+          </div>
+          <div class="trophy">
+            <p> SIGMOD'2018 </p>
+            <p> Research Highlight</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h3>In 2018</h3>
+        <h1>GNN Emerges</h1>
+        <h5>Example</h5>
+        <p><span class="b">GNN-based Recommendation</p>
+        <img src="images/gnn-rec.jpg" width="100%" />
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h1><span class="sname">Graph-Learn</span>, a GNN Framework</h1>
+        <p>Presented on VLDB'2019, and open sourced at <br />
+          <a class="git" href="https://github.com/alibaba/graph-learn
+          ">https://github.com/alibaba/graph-learn</a><br />
+          It has been successfully applied to many scenarios inside and outside Alibaba.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h1>Specialized Graph Pattern Matching, Mining...</h1>
+        <img src="images/matching.jpg" class="img-Specialized"></img>
+        <p>Specialized graph applications were also widely adopted. We list a few of our studies...</p>
+        <div class="flex-row">
+          <ul>
+            <li><span class="b">[VLDB'2018]</span> Real-time Constrained Cycle Detection in Large Dynamic Graphs.
+            <li><span class="b">[VLDB'2020]</span> Maximum Biclique Search at Billion Scale.
+            <li>...
+          </ul>
+          <div>
+            <div class="trophy animate d2">
+              <p> VLDB'2020</p>
+              <p> Best Paper (Runner-up)</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="content-div content-div-60">
+        <h2 class="hl central animate">A Problem.. Graph Systems Became Silos</h2>
+        <img src="images/silos.jpg" width="100%" />
+      </div>
+    </div>
+  </section>
+
+  <section style="width: 100%;">
+    <div class="container center" id="em-gs">
+      <div class="content-div large-title">
+        <h3 class="animate d1">Consolidating our efforts</h3>
+        <h2 class="animate d2">The Emergence of GraphScope</h2>
+        <h4 class="animate d3">2018 ~ 2024</h4>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h1>Real-world Graph Applications Often Involve Multiple Types of Graph Computations</h1>
+        <h5>Example</h5>
+        <p>A simplified workflow for fraud-detection in E-commerce platform:
+        <ul>
+          <li>Construct a property graph from raw data using SQL;
+          <li>Extract a subgraph using Gremlin;
+          <li>A label-propagation algorithm for identifying fraudulent entities;
+          <li>Graph sampling to conduct k-hop sampling by weight;
+          <li>Train a GNN model using TensorFlow
+        </ul>
+        <img src="images/workflow.jpg" width="100%">
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-80">
+        <h1><span class="sname">GraphScope</span>: A Unified Engine for Big Graph Processing </h1>
+        <p>We presented GraphScope on VLDB'2021, and open sourced at <br />
+          <a class="git" href="https://github.com/alibaba/graphscope
+          ">https://github.com/alibaba/graphscope</a><br />
+          <img src="images/gs-overview.jpg" class="image-80" class="central" />
+        <ul>
+          <li>A simple and unified programming interface;
+          <li>A distributed dataflow runtime that enables a separate optimization for each
+            graph operation in one carefully designed coherent framework.
+          <li>An <span class="b">in-memory data store</span> that automatically manages the representation,
+            transformation, and movement of
+            intermediate data.
+          <li>Embracing <span class="b">Python</span>, which allowing us to seamlessly combine GraphScope
+            with other data processing systems
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-100">
+        <h1>Why Python? </h1>
+        <div class="flex-row">
+          <div class="feat">
+            <h5 id="forange">Interactive computing, WYSIWYG</h5>
+            <ul>
+              <li>Jupyter Notebook
+              <li>Analysis, model, extract, visualize…
+            </ul>
+            <img src="images/notebook.png" width="100%">
+          </div>
+          <div class="feat">
+            <h5 id="fblue">Rich ecosystem, end-2-end,
+              1-stop</h5>
+            Ability to process various data and tasks, e.g.,
+            <ul>
+              <li>Json, text, tensor, SQL, image, video…
+              <li> scientific/graph computing, ML…
+            </ul>
+            <img src="images/pyeco.png" width="100%">
+          </div>
+          <div class="feat">
+            <h5 id="fgreen">High-level data and
+              operation abstraction
+            </h5>
+            <ul>
+              <li>Tensor、Dataframe、Graph、Scalar、Objects …
+              <li>Operations defined on high-level
+            </ul>
+            <img src="images/vis.gif" width="100%">
+          </div>
+        </div>
+      </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h1>Ease of use: NetworkX compatible</h1>
+        <pre>pip install graphscope</pre>
+        <p>Compatible graph operations and algorithms API with NetworkX
+        <h5>Example</h5>
+        <img src="images/nx.jpg" class="image-140">
+
+        <h2 class="hl animate">How to interoperate with others PyData systems? </h2>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h1><span class="sname">Vineyard</span>: In-memory Immutable Data Management</h1>
+        <p>We presented Vineyard on SIGMOD'2023, and open sourced it at <br />
+          <a class="git" href="https://github.com/v6d-io/v6d
+          ">https://github.com/v6d-io/v6d</a>, Vineyard is a CNCF Sandbox Project.
+        </p>
+        <img src="images/cncf.svg" class="image-300px" />
+
+        <p class="b">Why do we need vineyard? </p>
+        <ul>
+          <li>many big data systems work with (partitioned) immutable in-memory data, however,
+          <li>it takes huge effort just to implement I/O adaptors, data partition/chunking strategies, fault-tolerance
+            mechanisms, data access RPC, scale in/out.
+          <li>sharing intermediate results between systems relies on external FS, although I/O cost is usually very
+            high.
+          <li>no efficient way to dynamically <span class="b">sync</span> immutable data with external mutable data
+            sources.
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-70">
+        <h3>Revisit the case study with Vineyard</h3>
+        <h1>Sharing Data across PyData ecosystem</h1>
+        <p class="b">Vineyard provides:</p>
+        <ul>
+          <li>Out-of-box high-level abstraction (e.g. Edge/Vertex Iterator over graphs instead of k/v lookup) and mid-to
+            low-level APIs for advanced developers to tailor special needs.
+          <li>zero-copy local data access through shared memory
+          <li>Transparent (or very similar to accessing local data) remote data access
+            support wide range of data sources/formats, data partition strategies
+          <li>(fast) sync with mutable data sources
+          <li>Fault-tolerant
+          <li>...
+        </ul>
+        <img src="images/vineyard-wf.jpg" width="100%" />
+        <h2 class="hl animate">Are we done yet? </h2>
+      </div>
+    </div>
+  </section>
+
+  <section style="width: 100%;">
+    <div class="container center" id="em-gsf">
+      <div class="content-div large-title">
+        <h3 class="animate d1">Next Iteration</h3>
+        <h2 class="central d2 animate">GraphScope Flex<br />
+          The Next Stage of GraphScope's Evolution</h2>
+        <h4 class="animate d3">2022 ~ Current</h4>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>Practical challenges of GraphScope</h3>
+        <h1>A One-Size-Fits-All Approach is Inadequate</h1>
+        <h5>Example</h5>
+        <p>The figure illustrate a simplified view of the graph system in real-life world. It features</p>
+        <ul>
+          <li>Various business scenarios</li>
+          <li>Diverse graph workloads</li>
+          <li>Many graphs in different formats</li>
+        </ul>
+        <img src="images/flex-example.jpg" class="image-80" />
+      </div>
+    </div>
+  </section>
+
+
+  <section id="graphs">
+    <div class="container right">
+      <div class="content-div content-div-70" id="graphs">
+        <h3>The variety comes from</h3>
+        <h1>1. Various Graph Models and Organizations</h1>
+        <p>Even a single dataset can be modeled in different ways, depending on its specific needs.</p>
+
+        <img src="images/graphs.jpg" class="image-80" />
+        <div class="fig-caption central">Cited from SIGMOD'2024 Panel: The Future of Graph Analytics</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60" id="workloads">
+        <h1>2. Diverse Graph Computing Workloads</h1>
+        <h1>and Programming Interfaces</h1>
+        <img src="images/workloads.jpg" style="width: 100%;" />
+        <div class="flex-row justify-start">
+          <div class="animate d1">
+            <p class="b">For graph querying</p>
+            <ul>
+              <li>Cypher</li>
+              <li>Gremlin</li>
+              <li>ISO/GQL</li>
+            </ul>
+          </div>
+          <div class="animate d2">
+            <p class="b">For graph analytics
+            </p>
+            <ul>
+              <li>Think-like-a-vertex: Pregel, Gather-Apply-Scatter(GAS) …</li>
+              <li>Think-like-a-graph: Pregel++, Blogel, PIE…</li>
+              <li>Other DSL: FLASH, GraphIt…</li>
+            </ul>
+          </div>
+          <div class="animate d3">
+            <p class="b">For graph learning</p>
+            <ul>
+              <li>Mostly in Python</li>
+              <li>PyG, DGL, …</li>
+            </ul>
+          </div>
+        </div>
+
+
+        </li>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-80" id="perfconsdr">
+        <h1>3. Performance Considerations</h1>
+        <ul>
+          <li>High request throughput? vs. low latency with data-parallel execution?
+          <li>In-memory vs. out-of-core?
+          <li>Efficient processing vs. resources utilization
+          <li>High availability?
+          <li>…
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container center">
+      <div class="content-div content-div-60" id="arch-gsf">
+        <h3>The diverse landscape of graph computing motivated GraphScope</h3>
+        <h1>Evolving to <span class="sname">GraphScope Flex</span></h1>
+        <ul>
+          <li>Employs a LEGO-like modularity;
+          <li>Comprises many components, each like a LEGO brick;
+          <li>A CLI utility <span class="code">flexbuild</span>, to select components and build artifacts for
+            deployments.
+        </ul>
+        <img src="images/arch-gsf.jpg" width="100%" />
+        <div class="fig-caption central">Architecture of GraphScope Flex</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>How to deal with the diversity of graph storage?</h3>
+        <h1>Understanding the Complexity of Graph Storage Abstraction</h1>
+        <p>Graph storages can be diverse. The requirements of computing engine accessing the data are different as well.
+        </p>
+        <img src="images/redraw-tags.jpg" width="100%" />
+        <div class="fig-caption central">Diversed feature requests of graph storage.</div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h1><span class="sname">GRIN</span>: Unified Graph Retrieval Interface</h1>
+        <p>Open sourced at
+          <a class="git" href="https://github.com/graphscope/GRIN">https://github.com/graphscope/GRIN</a>
+        </p>
+        <p>GRIN is a proposed standard graph retrieval interface in GraphScope. The goal is to simplify the integrations
+          between different computing engines and storage engines from M * N to M + N.</p>
+        <div class="flex-row">
+          <img src="images/redraw-storage.jpg" width="45%" />
+          <img src="images/GRIN.jpg" width="55%" class="hl-image" />
+        </div>
+        <div class="fig-caption central">Storages without/with GRIN.</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>One of the storage backends supports GRIN</h3>
+        <h1><span class="sname">GraphAr</span>: An Open Source File Format for Archiving and Exchanging Graph Data
+        </h1>
+        <p>Open sourced as an Apache Incubating Project <br />
+          <a class="git" href="https://github.com/apache/GraphAr">https://github.com/apache/GraphAr</a>
+        </p>
+        <img src="images/apache.png" class="image-300px" />
+        <p>GraphAr (short for“Graph Archive”) is a project that aims to make it easier for diverse applications and
+          systems (in-memory and out-of-core storages, databases, graph computing systems, and interactive graph query
+          frameworks) to build and access graph data conveniently and efficiently</p>
+
+        <div class="flex-row">
+          <img src="images/redraw-graphar.jpg" width="40%" />
+          <img src="images/graphar-2.jpg" width="60%" class="hl-image" />
+        </div>
+        <div class="fig-caption central">Data sharing without/with GraphAr.</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-80">
+        <h3>For graph querying</h3>
+        <h1>Querying Stack in GraphScope Flex</h1>
+        <ul>
+          <li>Supports <span class="b">both</span> <span class="code">Gremlin</span> and <span
+              class="code">Cypher</span> in front-ends;
+          <li>Provides a unified <span class="b">Intermediate Representation(IR)</span> Abstraction, parsing
+            Gremlin/Cypher…
+            to unified IR;
+          <li>And IR based Optimizer, and two engines,
+          <li><span class="b sname">Gaia</span>, using a dataflow model, for OLAP-like jobs;
+          <li><span class="b sname">Hiactor</span>, using the actor model, for OLTP-like jobs.
+      </div>
+    </div>
+  </section>
+
+
+  <section id="example-gie">
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h5>Example</h5>
+        <h1>Real-life Application: Real-time Fraud Detection</h1>
+        <p><span class="b">Problem:</span> To identify suspicious transactions in e-commerce by checking each order
+          against known frauds. </p>
+        <img src="images/gie-example.jpg" class="image-120" />
+        <div class="fig-caption">Fraud detection and its Cypher solution.</div>
+        <p>The problem can be tackled by a deployment of GraphScope Flex with these bricks.</p>
+        <img src="images/gie.jpg" class="image-60" />
+      </div>
+    </div>
+  </section>
+
+
+
+  <section>
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h3>Performance</h3>
+        <h1><span class="forange">No.1</span> in LDBC SNB Benchmark</h1>
+        <img src="images/ldbc-result.jpg" class="image-80" style="border: 1px solid #eee; border-radius: 12px;" />
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <div class="container left">
+      <div class="content-div content-div-60">
+        <h3>For graph analytics</h3>
+        <h1>Analytical Stack in GraphScope Flex</h1>
+        <ul>
+          <li>Supports multiple interfaces
+            <ul>
+              <li>Python, NetworkX compatible APIs
+              <li>Java SDK, Pregel(Giraph)/GraphX compatible APIs
+              <li>C++ SDK, GRAPE API
+            </ul>
+          <li><span class="b">100+</span> Built-in algorithms, out-of-the-box ready to use.
+            <ul>
+              <li>PageRank, Centralities…
+              <li>Reachability and shortest paths…
+              <li>Community detection, LPA, Louvain…
+            </ul>
+          <li>At its core, is the <span class="sname b">GRAPE</span> engine.
+            <ul>
+              <li>Supports distributed graph computing engine with auto-parallelization
+              <li>Integrated <span class="sname b">Ingress</span> for auto-incrementalization
+              <li>Integrated <span class="sname b">FLASH</span> model with great expressive capability
+              <li>Supports GPU acceleration
+            </ul>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="example-gae">
+    <div class="container right">
+      <div class="content-div content-div-60">
+        <h5>Example</h5>
+        <h1>Real-life Application: Equity Analysis</h1>
+        <p><span class="b">Problem:</span> To identify the dominant shareholders responsible for steering a company,
+          i.e., holds more than 51% shares.</p>
+        <img src="images/equity.jpg" width="50%" />
+        <div class="fig-caption">Person C holds more than 51% of Company 1, via Company 2, (0.8*0.6 = 0.48)
+          and Company 3, (0.8*0.3*0.7 = 0.168).</div>
+        <p>This problem is tackled by the GraphScope Flex analytical stack, with an analytical algorithm implemented
+          based on label propagation.</Label>.</p>
+        <img src="images/gae.jpg" width="60%" />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="content-div content-div-60">
+        <h3 class="animate d1">Interested in more details?</h3>
+        <h1 class="animate d2"><span class="sname">GraphScope Flex</span><br />Technical Preview is Available!</h1>
+        <a class="animate git d3" href="https://github.com/alibaba/graphscope">https://github.com/alibaba/graphscope</a>
+      </div>
+  </section>
+
+
+
+  <section>
+    <div class="container left" id="future">
+      <div class="content-div content-div-60">
+        <h1>Future Works</h1>
+        <ul>
+          <li>Enhancing the core capabilities
+            <ul>
+              <li>GQL support
+              <li>New storage backends
+              <li>GraphAr with Data Lakes
+              <li>HTAP processing on graphs
+              <li>Applications in real-life scenarios
+              <li>...
+            </ul>
+
+          <li>Inter-operations with other systems
+            <ul>
+              <li>Graph-specific ETL to streamline the integration of applications across different graph models derived
+                from the same dataset.
+              <li>In scenarios blending graph tasks with SQL-like operations, a unified compiler across multiple engines
+                can significantly enhance work- flow interoperability and expand the scope of graph computations.
+              <li>...</li>
+            </ul>
+        </ul>
+      </div>
+  </section>
+
+  <section style="margin-bottom:20px">
+    <div class="container right" id="goal">
+      <div class="content-div flex-row">
+        <img src="./images/flag.jpg" alt="" style="width: 200px;">
+        <div style="margin-top: 40px;">
+          <h3 class="animate d1">Our ultimate goal</h3>
+          <h1 class="animate d2">Make Graph Computing Easy and Available for Everyone!</h1>
+          <p class="animate d3">Welcome join forces with us!</p>
+        </div>
+      </div>
+  </section>
+
+  <section style="height: auto; margin:20px auto 20px auto">
+    <div class="container">
+      <div id="readmore">
+        <h5>Read More and Useful Links</h5>
+        <a href="https://github.com/alibaba/graphscope" target="_blank">
+          <div class="card" id="rm-git">
+            <h1>Github</h1>
+          </div>
+        </a>
+        <a href="https://graphscope.io/blog" target="_blank">
+          <div class="card" id="rm-blog">
+            <h1>Blog</h1>
+          </div>
+        </a>
+        <a href="https://graphscope.io/publications" target="_blank">
+          <div class="card" id="rm-paper">
+            <h1>Papers</h1>
+          </div>
+        </a>
+        <a href="https://try.graphscope.app" target="_blank">
+          <div class="card" id="rm-play">
+            <h1>Playground</h1>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section style="height: auto; margin-bottom:12px">
+    <div id="ref">
+      <p>References</p>
+      <ol>
+        <li>GraphScope Flex: LEGO-like Graph Computing Stack, SIGMOD2024, Tao He, Shuxian Hu, Longbin Lai, Dongze Li,
+          Neng Li, Xue Li, Lexiao Liu, Xiaojian Luo, Binqing Lyu, Ke Meng, Sijie Shen, Li Su, Lei Wang, Jingbo Xu,
+          Wenyuan Yu, Weibin Zeng, Lei Zhang, Siyuan Zhang, Jingren Zhou, Xiaoli Zhou, Diwen Zhu.
+        <li>Dynamic Graph Sampling Service for Real-time GNN Inference at Scale, EuroSys 2023. Jie Sun, Li Su, Wenting
+          Shen, Zichao Zhang, Zuocheng Shi, Jingbo Xu, Yong Li, Wenyuan Yu, Zeke Wang, Fei Wu, Jingren Zhou.
+        <li>Bridging the Gap between Relational OLTP and Graph-based OLAP, USENIX ATC 2023. Sijie Shen, Zihang Yao, Lin
+          Shi, Lei Wang, Longbin Lai, Qian Tao, Li Su, Rong Chen, Wenyuan Yu, Haibo Chen, Binyu Zang, Jingren Zhou.
+        <li>GLogS: Interactive Graph Pattern Matching Query At Large Scale, USENIX ATC 2023. Longbin Lai, Yufan Yang,
+          Zhibin Wang, Yuxuan Liu, Haotian Ma, Sijie Shen, Bingqing Lyu, Xiaoli Zhou, Wenyuan Yu, Zhengping Qian, Chen
+          Tian, Sheng Zhong, Yeh-Ching Chung, Jingren Zhou.
+        <li>Legion: Automatically Pushing the Envelope of Multi-GPU System for Billion-Scale GNN Training, USENIX ATC
+          2023. Jie Sun, Li Su, Zuocheng Shi, Wenting Shen, Zeke Wang, Lei Wang, Jie Zhang, Wenyuan Yu, Yong Li, Jingren
+          Zhou, Fei Wu.
+        <li>Vineyard: Optimizing Data Sharing in Data-Intensive Analytics, SIGMOD 2023. Wenyuan Yu, Tao He, Lei Wang, Ke
+          Meng, Ye Cao, Diwen Zhu, Sanhong Li, Jingren Zhou.
+        <li>Efficient Multi-GPU Graph Processing with Remote Work Stealing, ICDE 2023. Ke Meng, Liang Geng, Xue Li, Qian
+          Tao, Wenyuan Yu, Jingren Zhou.
+        <li>FLASH: A Framework for Programming Distributed Graph Processing Algorithms, ICDE 2023. Xue Li, Ke Meng, Lu
+          Qin, Longbin Lai, Wenyuan Yu, Zhengping Qian, Xuemin Lin, Jingren Zhou.
+        <li>GNNLab: A Factored System for Sample-based GNN Training over GPUs, EuroSys 2022. Jianbang Yang, Dahai Tang,
+          Xiaoniu Song, Lei Wang, Qiang Yin, Rong Chen, Wenyuan Yu, and Jingren Zhou.
+        <li>GraphScope: A Unified Engine For Big Graph Processing, VLDB 2021. Wenfei Fan, Tao He, Longbin Lai, Xue Li,
+          Yong Li, Zhao Li, Zhengping Qian, Chao Tian, Lei Wang, Jingbo Xu, Youyang Yao, Qiang Yin, Wenyuan Yu, Jingren
+          Zhou, Diwen Zhu, and Rong Zhu.
+        <li>GraphScope: A One-Stop Large Graph Processing System. VLDB, demo, 2021. Jingbo Xu, Zhanning Bai, Wenfei Fan,
+          Longbin Lai, Xue Li, Zhao Li, Zhengping Qian, Lei Wang, Yanyan Wang, Wenyuan Yu, and Jingren Zhou.
+        <li>Automating Incremental Graph Processing with Flexible Memoization. VLDB 2021. Shufeng Gong, Chao Tian, Qiang
+          Yin, Wenyuan Yu, Yanfeng Zhang, Liang Geng, Song Yu, Ge Yu, and Jingren Zhou.
+        <li>GAIA: A System for Interactive Analysis on Distributed Graphs Using a High-Level Language, NSDI 2021.
+          Zhengping Qian, Chenqiang Min, Longbin Lai, Yong Fang, Gaofeng Li, Youyang Yao, Bingqing Lyu, Xiaoli Zhou,
+          Zhimin Chen, and Jingren Zhou.
+        <li>FlexGraph: A Flexible and Efficient Distributed Framework for GNN Training. EuroSys 2021. Lei Wang, Qiang
+          Yin, Chao Tian, Jianbang Yang, Rong Chen, Wenyuan Yu, Zihang Yao, and Jingren Zhou.
+        <li>Maximum Biclique Search at Billion Scale, VLDB 2020. Best Paper Runner-up Bingqing Lyu, Lu Qin, Xuemin Lin,
+          Ying Zhang, Zhengping Qian, and Jingren Zhou.
+        <li>Adaptive Asynchronous Parallelization of Graph Algorithms. TODS. 45(2): 6:1-6:45, 2020. Wenfei Fan, Ping Lu,
+          Wenyuan Yu, Jingbo Xu, Qiang Yin, Xiaojian Luo, Jingren Zhou, and Ruochun Jin.
+        <li>Parallelizing Sequential Graph Computations TODS 43(4): 18:1-18:39, 2018. Wenfei Fan, Wenyuan Yu, Jingbo Xu,
+          Jingren Zhou, Xiaojian Luo, Qiang Yin, Ping Lu, Yang Cao and Ruiqi Xu
+        <li>Real-time Constrained Cycle Detection in Large Dynamic Graphs. VLDB, 2018. Xiafei Qiu, Wubin Cen, Zhengping
+          Qian, You Peng, Ying Zhang, Xuemin Lin, and Jingren Zhou.
+        <li>GRAPE: Parallelizing Sequential Graph Computations. VLDB, demo, 2017. Wenfei Fan, Jingbo Xu , Yinghui Wu,
+          Wenyuan Yu, Jiaxin Jiang
+      </ol>
+      <p>Copyrights</p>
+      <ol>
+        <li>Some images are designed by Freepik (https://freepik.com).</li>
+        <li>Some fonts and icons from FontAwesome (https://fontawesome.com).</li>
+        <li>Other copyrights are reserved in GraphScope Team © 2020-2025. </li>
+      </ol>
+  </section>
+  <script src="../js/particles.min.js"></script>
+  <script src="./index.js"></script>
+
+
+</body>
+
+</html>
