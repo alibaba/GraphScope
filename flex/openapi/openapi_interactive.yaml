@@ -1058,6 +1058,7 @@ components:
           example: DT_SIGNED_INT32
     LongText:
       x-body-name: long_text
+      additionalProperties: false 
       type: object
       required:
         - long_text
@@ -1067,6 +1068,7 @@ components:
           nullable: true
     FixedChar:
       x-body-name: fixed_char
+      additionalProperties: false 
       type: object
       required:
         - char
@@ -1074,11 +1076,12 @@ components:
         char:
           type: object
           required:
-            - fixed_char
+            - fixed_length
           properties:
             fixed_char:
               type: integer
     VarChar:
+      additionalProperties: false 
       x-body-name: var_char
       type: object
       required:
@@ -1105,8 +1108,6 @@ components:
     TimeStampType:
       x-body-name: time_stamp_type
       type: object
-      required:
-        - timestamp
       properties:
         timestamp:
           type: string
