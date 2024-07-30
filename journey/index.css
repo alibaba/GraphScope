@@ -915,3 +915,8 @@ section {
     transform: translateX(0);
   }
 }
+
+
+.no-delay{
+  transition: all 0s ease !important;
+}

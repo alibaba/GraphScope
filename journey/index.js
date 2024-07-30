@@ -206,35 +206,44 @@ const visibleAnimate = (targets, { visiableClass, hiddenClass }) => {
   targets.forEach((target) => observer.observe(target));
 };
 
+
+
+
 /** 针对 A->B 变化的元素（图片） */
 const hl_images = document.querySelectorAll(".hl-image");
+const animate_targets = document.querySelectorAll(".animate");
+/** 针对 highlight 强调元素 */
+const hl_targets = document.querySelectorAll(".hl");
+
+
+const doDelay  = ()=>{
+  const cls = "animate visible no-delay"
+  animate_targets.forEach((target) => {
+    target.classList.add(...cls.split(" "));
+  });
+  hl_images.forEach((target) => {
+    target.classList.add(...cls.split(" "));
+  });
+  hl_targets.forEach((target) => {
+    target.classList.add(...cls.split(" "));
+  });
+}
+
+
+/** 截图的时候，执行该函数 */
+// doDelay()
+
+
 visibleAnimate(hl_images, {
   visiableClass: "animate-x",
   hiddenClass: "animate-x-hidden",
 });
-
-// document.querySelectorAll("section").forEach(item=>{
-//   item.classList.add('animate')
-// })
-
-// document
-//   .querySelectorAll("p,h1,h3,h2,h4,h5,img,pre,ul,#logo")
-//   .forEach((item) => {
-//     item.classList.add("animate");
-//   });
-
-/** 针对 text 依次出现 */
-// const text_targets = document.querySelectorAll(".animate-text");
-
-const animate_targets = document.querySelectorAll(".animate");
 
 visibleAnimate(animate_targets, {
   visiableClass: "visible",
   hiddenClass: "hidden",
 });
 
-/** 针对 highlight 强调元素 */
-const hl_targets = document.querySelectorAll(".hl");
 visibleAnimate(hl_targets, {
   visiableClass: "visible",
   hiddenClass: "hidden",
@@ -268,3 +277,4 @@ languageDOM.onclick = switchLanguage;
 window.onload = () => {
   drawPaths();
 };
+
