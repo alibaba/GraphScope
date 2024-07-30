@@ -258,9 +258,15 @@ function debounce(func, wait) {
   };
 }
 
+let lastWidth = window.innerWidth;
+
 const handleResize = () => {
-  clearPaths();
-  drawPaths();
+  const currentWidth = window.innerWidth;
+  if (currentWidth !== lastWidth) {
+      lastWidth = currentWidth;
+      clearPaths();
+      drawPaths();
+  }
 };
 
 window.addEventListener("resize", debounce(handleResize, 200));
