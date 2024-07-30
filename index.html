@@ -16,13 +16,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="keywords"
-        content="graph, graph computation, graph analytics, graph algorithms, gnn, graph learning, graph embedding, gremlin, graph query">
+        content="graph, graph computation, graph analytics, graph algorithms, gnn, graph learning, graph embedding, gremlin, graph query, grape, graphscope, graphscope flex, graphar, grin">
     <meta name="description" content="GraphScope, A One-Stop Large-Scale Graph Computing System">
     <meta name="author" content="yecol">
 
     <meta property="og:title" content="GraphScope">
     <meta property="og:description" content="A One-Stop Large-Scale Graph Computing System.">
-    <meta property="og:image" content="img/logo.png">
+    <meta property="og:image" content="/img/logo.png">
     <meta property="og:url" content="http://graphscope.io">
 
     <title>GraphScope</title>
@@ -66,6 +66,9 @@
             <ul class="nav navbar-nav navbar-right">
                 <li>
                     <a class="page-scroll" href="index.html">Introduction</a>
+                </li>
+                <li>
+                    <a class="page-scroll" href="https://graphscope.io/journey" target="_blank">Journey</a>
                 </li>
                 <li>
                     <a class="page-scroll" href="https://graphscope.io/docs" target="_blank">Docs</a>
@@ -121,6 +124,10 @@
                     respectively, and the vineyard store that offers efficient in-memory data transfers.
                 </p>
                 <p class="social-icons">
+                    <a href="https://graphscope.io/journey" target="_blank">
+                        <i class="fab">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M438.6 155.7c-7.2 11.5-15 22.6-22.6 32.7c-7.5-10.1-15.4-21.2-22.6-32.7C375.7 127.3 368 106.3 368 96c0-26.5 21.5-48 48-48s48 21.5 48 48c0 10.3-7.7 31.3-25.4 59.7zM427.4 251C452.9 221.1 512 146.2 512 96c0-53-43-96-96-96s-96 43-96 96c0 33.3 25.9 77.3 50.8 112L328 208c-48.6 0-88 39.4-88 88s39.4 88 88 88l96 0c22.1 0 40 17.9 40 40s-17.9 40-40 40l-246.2 0c-2.7 3.8-5.5 7.6-8.2 11.2c-10.7 14.2-21.3 26.9-30 36.8L424 512c48.6 0 88-39.4 88-88s-39.4-88-88-88l-96 0c-22.1 0-40-17.9-40-40s17.9-40 40-40l84.9 0c5.1 1.1 10.7-.6 14.5-5zM118.9 408.4c-7.3 11-15.3 21.7-22.9 31.2c-7.6-9.5-15.6-20.2-22.9-31.2C55.4 381.7 48 361.9 48 352c0-26.5 21.5-48 48-48s48 21.5 48 48c0 9.9-7.4 29.7-25.1 56.4zm19 55.6c25.9-33.1 54.1-77.3 54.1-112c0-53-43-96-96-96s-96 43-96 96c0 50.5 59.8 121 85 148.4c6 6.5 16 6.5 21.9 0c.1-.1 .2-.2 .3-.3c.3-.3 .6-.7 .9-1c2.8-3.1 6-6.7 9.5-10.7c.1-.1 .1-.1 .2-.2c6.1-7 13-15.2 20-24.2z"/></svg>
+                        </i>Journey</a>
                     <a href="https://slack.graphscope.io" target="_blank">
                         <i class="fab">
                             <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M94.12 315.1c0 25.9-21.16 47.06-47.06 47.06S0 341 0 315.1c0-25.9 21.16-47.06 47.06-47.06h47.06v47.06zm23.72 0c0-25.9 21.16-47.06 47.06-47.06s47.06 21.16 47.06 47.06v117.84c0 25.9-21.16 47.06-47.06 47.06s-47.06-21.16-47.06-47.06V315.1zm47.06-188.98c-25.9 0-47.06-21.16-47.06-47.06S139 32 164.9 32s47.06 21.16 47.06 47.06v47.06H164.9zm0 23.72c25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06H47.06C21.16 243.96 0 222.8 0 196.9s21.16-47.06 47.06-47.06H164.9zm188.98 47.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06h-47.06V196.9zm-23.72 0c0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06V79.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06V196.9zM283.1 385.88c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06v-47.06h47.06zm0-23.72c-25.9 0-47.06-21.16-47.06-47.06 0-25.9 21.16-47.06 47.06-47.06h117.84c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06H283.1z"/></svg>
