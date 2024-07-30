@@ -69,14 +69,12 @@ document.querySelectorAll("section").forEach((item, index) => {
 
 const calcPointY = (targetDOM) => {
   const { y, height } = targetDOM.getBoundingClientRect();
-  console.log(targetDOM.getBoundingClientRect());
   return y + window.scrollY + height;
 };
 
 const getPaths = (startPoint, endPoint, { width, gapHeight }) => {
   const height = endPoint.y - startPoint.y;
   const gapNumber = Math.round(height / gapHeight);
-  console.log(height, gapHeight, gapNumber);
 
   return Array.from({ length: gapNumber }).map((_section, index) => {
     const isEven = index % 2 === 0;
@@ -132,8 +130,6 @@ const drawPaths = () => {
   };
   const totalHeight = feturePath.endPoint.y - 0;
 
-  console.log(journeyPath, feturePath);
-
   /** 设置画布的高度 */
   svg.setAttribute("height", totalHeight);
   const gapHeight = innerHeight * 0.6;
@@ -171,7 +167,6 @@ const drawPaths = () => {
   });
 
   const last_point = paths[gapNumber - 3].split(",")[2];
-  console.log(last_point, paths[gapNumber - 1].split(",")[2]);
 
   drawPath({
     d: `M ${last_point}` + paths.slice(gapNumber - 2, gapNumber).join(""),
@@ -194,7 +189,6 @@ const visibleAnimate = (targets, { visiableClass, hiddenClass }) => {
       entries.forEach((entry) => {
         const delay = entry.target.getAttribute("data-delay") || "0s";
         const duration = entry.target.getAttribute("data-duration") || "1s";
-        console.log(`all ${duration} ease ${delay}`);
         if (entry.isIntersecting) {
           entry.target.classList.add(...visiableClass.split(" "));
           entry.target.classList.remove(...hiddenClass.split(" "));
