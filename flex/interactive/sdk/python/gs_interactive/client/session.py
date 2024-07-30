@@ -286,8 +286,6 @@ class DefaultSession(Session):
         self._job_api = AdminServiceJobManagementApi(self._client)
         self._procedure_api = AdminServiceProcedureManagementApi(self._client)
         self._service_api = AdminServiceServiceManagementApi(self._client)
-        self._edge_api = GraphServiceEdgeManagementApi(self._client)
-        self._vertex_api = GraphServiceVertexManagementApi(self._client)
         self._utils_api = UtilsApi(self._client)
         if stored_proc_uri is None:
             service_status = self.get_service_status()
@@ -303,6 +301,8 @@ class DefaultSession(Session):
             stored_proc_uri = ":".join(splitted)
         self._query_client = ApiClient(Configuration(host=stored_proc_uri))
         self._query_api = QueryServiceApi(self._query_client)
+        self._edge_api = GraphServiceEdgeManagementApi(self._query_client)
+        self._vertex_api = GraphServiceVertexManagementApi(self._query_client)
 
     def __enter__(self):
         self._client.__enter__()
