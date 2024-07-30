@@ -679,8 +679,10 @@ Functions</h2></td></tr>
 <tr class="separator:acc802485c1c9944d8af4141aabd72dfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3028a43d611f541b1e613560c8beead2"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a3028a43d611f541b1e613560c8beead2">put_boolean_option</a> (arrow::csv::ConvertOptions &amp;convert_options)</td></tr>
 <tr class="separator:a3028a43d611f541b1e613560c8beead2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada900f68d6182d2afa8f37d695bdee48"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ada900f68d6182d2afa8f37d695bdee48">put_column_names_option</a> (const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, bool header_row, const std::string &amp;file_path, char delimiter, arrow::csv::ReadOptions &amp;read_options)</td></tr>
-<tr class="separator:ada900f68d6182d2afa8f37d695bdee48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1fafcbcf88193c0e2bcafb58b37acfa"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#af1fafcbcf88193c0e2bcafb58b37acfa">put_column_names_option</a> (const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, bool header_row, const std::string &amp;file_path, char delimiter, arrow::csv::ReadOptions &amp;read_options, size_t len)</td></tr>
+<tr class="separator:af1fafcbcf88193c0e2bcafb58b37acfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18e3693d4fd05a332fb28771d8e5e299"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a18e3693d4fd05a332fb28771d8e5e299">put_null_values</a> (const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, arrow::csv::ConvertOptions &amp;convert_options)</td></tr>
+<tr class="separator:a18e3693d4fd05a332fb28771d8e5e299"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c47ae883e5905ea7bebfe0361cd8202"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1DualCsrBase.html">DualCsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a7c47ae883e5905ea7bebfe0361cd8202">create_csr</a> (<a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> oes, <a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> ies, const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;properties, bool oe_mutable, bool ie_mutable, const std::vector&lt; std::string &gt; &amp;prop_names)</td></tr>
 <tr class="separator:a7c47ae883e5905ea7bebfe0361cd8202"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f5efd5e7155cf96e43cd92fc6fb3a9c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1AppWrapper.html">AppWrapper</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a4f5efd5e7155cf96e43cd92fc6fb3a9c">loadAdhocQuery</a> (const std::string &amp;input_lib_path, std::shared_ptr&lt; <a class="el" href="classgs_1_1SharedLibraryAppFactory.html">SharedLibraryAppFactory</a> &gt; app_factory, const <a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;graph)</td></tr>
@@ -3390,8 +3392,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="ada900f68d6182d2afa8f37d695bdee48"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ada900f68d6182d2afa8f37d695bdee48">&#9670;&nbsp;</a></span>put_column_names_option()</h2>
+<a id="af1fafcbcf88193c0e2bcafb58b37acfa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af1fafcbcf88193c0e2bcafb58b37acfa">&#9670;&nbsp;</a></span>put_column_names_option()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3427,7 +3429,13 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">arrow::csv::ReadOptions &amp;&#160;</td>
-          <td class="paramname"><em>read_options</em>&#160;</td>
+          <td class="paramname"><em>read_options</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -3500,6 +3508,42 @@ template&lt;typename T &gt; </div>
           <td></td>
           <td class="paramtype">arrow::csv::ParseOptions &amp;&#160;</td>
           <td class="paramname"><em>parse_options</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a18e3693d4fd05a332fb28771d8e5e299"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18e3693d4fd05a332fb28771d8e5e299">&#9670;&nbsp;</a></span>put_null_values()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void gs::put_null_values </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td>
+          <td class="paramname"><em>loading_config</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">arrow::csv::ConvertOptions &amp;&#160;</td>
+          <td class="paramname"><em>convert_options</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

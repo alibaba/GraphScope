@@ -100,7 +100,10 @@ Collaboration diagram for gs::GraphDBSession:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a60ae67bef4e68204f781709f953a5ceb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceb">InputFormat</a> : uint8_t { <a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceba7d2e268866b64e015468781407146b7c">InputFormat::kCppEncoder</a> = 0
+<tr class="memitem:a60ae67bef4e68204f781709f953a5ceb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceb">InputFormat</a> : uint8_t { <a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceba7d2e268866b64e015468781407146b7c">InputFormat::kCppEncoder</a> = 0, 
+<a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceba5fcdd7a395717d945d9ddca1ac7451fe">InputFormat::kCypherJson</a> = 1, 
+<a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceba991b093d3d4ac591e19fc325ac2ae9b3">InputFormat::kCypherProtoAdhoc</a> = 2, 
+<a class="el" href="classgs_1_1GraphDBSession.html#a60ae67bef4e68204f781709f953a5ceba684a75c8e8e8270e847b1a8a7a3e4df8">InputFormat::kCypherProtoProcedure</a> = 3
  }</td></tr>
 <tr class="separator:a60ae67bef4e68204f781709f953a5ceb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -159,9 +162,21 @@ Static Public Attributes</h2></td></tr>
 <tr class="separator:abf103e090b592dcc4e95811a2f7f02ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a782c0ee0f294f7babe55d6ebf5f192c1"><td class="memItemLeft" align="right" valign="top">static constexpr int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a> = 256</td></tr>
 <tr class="separator:a782c0ee0f294f7babe55d6ebf5f192c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af53ddb6881d449f684904a908f7f1c39"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#af53ddb6881d449f684904a908f7f1c39">kCppEncoderStr</a> = &quot;\x00&quot;</td></tr>
+<tr class="separator:af53ddb6881d449f684904a908f7f1c39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a560b0fc6d0c7d7d1708a0c1c01d549a4"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a560b0fc6d0c7d7d1708a0c1c01d549a4">kCypherJsonStr</a> = &quot;\x01&quot;</td></tr>
+<tr class="separator:a560b0fc6d0c7d7d1708a0c1c01d549a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e4f61224e3153979458c68ecc08f96b"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a6e4f61224e3153979458c68ecc08f96b">kCypherProtoAdhocStr</a> = &quot;\x02&quot;</td></tr>
+<tr class="separator:a6e4f61224e3153979458c68ecc08f96b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac861185ff596f1f6080eec225bea423a"><td class="memItemLeft" align="right" valign="top">static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ac861185ff596f1f6080eec225bea423a">kCypherProtoProcedureStr</a> = &quot;\x03&quot;</td></tr>
+<tr class="separator:ac861185ff596f1f6080eec225bea423a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
+<tr class="memitem:a10ab5da403e5bc1e9869eb3aafa723cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::pair&lt; uint8_t, std::string_view &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a10ab5da403e5bc1e9869eb3aafa723cd">parse_query_type_from_cypher_json</a> (const std::string_view &amp;input)</td></tr>
+<tr class="separator:a10ab5da403e5bc1e9869eb3aafa723cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4ebda1353c1332fef84b636d0d1bf3b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::pair&lt; uint8_t, std::string_view &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ab4ebda1353c1332fef84b636d0d1bf3b">parse_query_type_from_cypher_internal</a> (const std::string_view &amp;input)</td></tr>
+<tr class="separator:ab4ebda1353c1332fef84b636d0d1bf3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8c4b0fae678940c48a34f9da0ae71a4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::pair&lt; uint8_t, std::string_view &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ae8c4b0fae678940c48a34f9da0ae71a4">parse_query_type</a> (const std::string &amp;input)</td></tr>
 <tr class="memdesc:ae8c4b0fae678940c48a34f9da0ae71a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the input format of the query. There are four formats: 0. CppEncoder: This format will be used by interactive-sdk to submit c++ stored prcoedure queries. The second last byte is the query id.  <a href="classgs_1_1GraphDBSession.html#ae8c4b0fae678940c48a34f9da0ae71a4">More...</a><br /></td></tr>
 <tr class="separator:ae8c4b0fae678940c48a34f9da0ae71a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -211,6 +226,9 @@ Private Attributes</h2></td></tr>
 </div><div class="memdoc">
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a60ae67bef4e68204f781709f953a5ceba7d2e268866b64e015468781407146b7c"></a>kCppEncoder&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a60ae67bef4e68204f781709f953a5ceba5fcdd7a395717d945d9ddca1ac7451fe"></a>kCypherJson&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a60ae67bef4e68204f781709f953a5ceba991b093d3d4ac591e19fc325ac2ae9b3"></a>kCypherProtoAdhoc&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a60ae67bef4e68204f781709f953a5ceba684a75c8e8e8270e847b1a8a7a3e4df8"></a>kCypherProtoProcedure&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 </div>
@@ -659,6 +677,58 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ab4ebda1353c1332fef84b636d0d1bf3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab4ebda1353c1332fef84b636d0d1bf3b">&#9670;&nbsp;</a></span>parse_query_type_from_cypher_internal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::pair&lt; uint8_t, std::string_view &gt; &gt; gs::GraphDBSession::parse_query_type_from_cypher_internal </td>
+          <td>(</td>
+          <td class="paramtype">const std::string_view &amp;&#160;</td>
+          <td class="paramname"><em>input</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a10ab5da403e5bc1e9869eb3aafa723cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10ab5da403e5bc1e9869eb3aafa723cd">&#9670;&nbsp;</a></span>parse_query_type_from_cypher_json()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::pair&lt; uint8_t, std::string_view &gt; &gt; gs::GraphDBSession::parse_query_type_from_cypher_json </td>
+          <td>(</td>
+          <td class="paramtype">const std::string_view &amp;&#160;</td>
+          <td class="paramname"><em>input</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a2105047554184e5aac30acc26cd51e82"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2105047554184e5aac30acc26cd51e82">&#9670;&nbsp;</a></span>query_num()</h2>
 
@@ -837,6 +907,94 @@ Private Attributes</h2></td></tr>
   </td>
   <td class="mlabels-right">
 <span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af53ddb6881d449f684904a908f7f1c39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af53ddb6881d449f684904a908f7f1c39">&#9670;&nbsp;</a></span>kCppEncoderStr</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::GraphDBSession::kCppEncoderStr = &quot;\x00&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a560b0fc6d0c7d7d1708a0c1c01d549a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a560b0fc6d0c7d7d1708a0c1c01d549a4">&#9670;&nbsp;</a></span>kCypherJsonStr</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::GraphDBSession::kCypherJsonStr = &quot;\x01&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a6e4f61224e3153979458c68ecc08f96b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e4f61224e3153979458c68ecc08f96b">&#9670;&nbsp;</a></span>kCypherProtoAdhocStr</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::GraphDBSession::kCypherProtoAdhocStr = &quot;\x02&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac861185ff596f1f6080eec225bea423a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac861185ff596f1f6080eec225bea423a">&#9670;&nbsp;</a></span>kCypherProtoProcedureStr</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr const char* gs::GraphDBSession::kCypherProtoProcedureStr = &quot;\x03&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">

@@ -2006,11 +2006,17 @@ ul.nav-tabs {
                       <a href="#api-GraphServiceVertexManagement-updateVertex">updateVertex</a>
                     </li>
                   <li class="nav-header" data-group="QueryService"><a href="#api-QueryService">API Methods - QueryService</a></li>
-                    <li data-group="QueryService" data-name="procCall" class="">
-                      <a href="#api-QueryService-procCall">procCall</a>
+                    <li data-group="QueryService" data-name="callProc" class="">
+                      <a href="#api-QueryService-callProc">callProc</a>
                     </li>
-                    <li data-group="QueryService" data-name="procCallCurrent" class="">
-                      <a href="#api-QueryService-procCallCurrent">procCallCurrent</a>
+                    <li data-group="QueryService" data-name="callProcCurrent" class="">
+                      <a href="#api-QueryService-callProcCurrent">callProcCurrent</a>
+                    </li>
+                    <li data-group="QueryService" data-name="runAdhoc" class="">
+                      <a href="#api-QueryService-runAdhoc">runAdhoc</a>
+                    </li>
+                    <li data-group="QueryService" data-name="runAdhocCurrent" class="">
+                      <a href="#api-QueryService-runAdhocCurrent">runAdhocCurrent</a>
                     </li>
                   <li class="nav-header" data-group="Utils"><a href="#api-Utils">API Methods - Utils</a></li>
                     <li data-group="Utils" data-name="uploadFile" class="">
@@ -16182,18 +16188,16 @@ $(document).ready(function() {
                   </section>
                 <section id="api-QueryService">
                   <h1>QueryService</h1>
-                    <div id="api-QueryService-procCall">
-                      <article id="api-QueryService-procCall-0" data-group="User" data-name="procCall" data-version="0">
+                    <div id="api-QueryService-callProc">
+                      <article id="api-QueryService-callProc-0" data-group="User" data-name="callProc" data-version="0">
                         <div class="pull-left">
-                          <h1>procCall</h1>
+                          <h1>callProc</h1>
                           <p>run queries on graph</p>
                         </div>
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
                         <p class="marked">After the procedure is created, user can use this API to run the procedure.
-TODO: a full example cypher-&gt;plan-&gt;json.
-TODO: make sure typeinfo can be passed.
 </p>
                         <p></p>
                         <br />
@@ -16202,23 +16206,23 @@ TODO: make sure typeinfo can be passed.
                           <h3>Usage and SDK Samples</h3>
                         </p>
                         <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-QueryService-procCall-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-QueryService-procCall-0-java">Java</a></li>
-                          <li class=""><a href="#examples-QueryService-procCall-0-dart">Dart</a></li>
-                          <li class=""><a href="#examples-QueryService-procCall-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-QueryService-procCall-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-QueryService-procCall-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-QueryService-procCall-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-QueryService-procCall-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-QueryService-procCall-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-QueryService-procCall-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-QueryService-procCall-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-QueryService-procCall-0-python">Python</a></li>
-                          <li class=""><a href="#examples-QueryService-procCall-0-rust">Rust</a></li>
+                          <li class="active"><a href="#examples-QueryService-callProc-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-QueryService-callProc-0-java">Java</a></li>
+                          <li class=""><a href="#examples-QueryService-callProc-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-QueryService-callProc-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-QueryService-callProc-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-QueryService-callProc-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-QueryService-callProc-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-QueryService-callProc-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-QueryService-callProc-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-QueryService-callProc-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-QueryService-callProc-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-QueryService-callProc-0-python">Python</a></li>
+                          <li class=""><a href="#examples-QueryService-callProc-0-rust">Rust</a></li>
                         </ul>
 
                         <div class="tab-content">
-                          <div class="tab-pane active" id="examples-QueryService-procCall-0-curl">
+                          <div class="tab-pane active" id="examples-QueryService-callProc-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: text/plain" \
  -H "Content-Type: text/plain" \
@@ -16226,7 +16230,7 @@ TODO: make sure typeinfo can be passed.
  -d 'Custom MIME type example not yet supported: text/plain'
 </code></pre>
                           </div>
-                          <div class="tab-pane" id="examples-QueryService-procCall-0-java">
+                          <div class="tab-pane" id="examples-QueryService-callProc-0-java">
                             <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
 import org.openapitools.client.auth.*;
 import org.openapitools.client.model.*;
@@ -16241,14 +16245,13 @@ public class QueryServiceApiExample {
         // Create an instance of the API class
         QueryServiceApi apiInstance = new QueryServiceApi();
         String graphId = graphId_example; // String | 
-        String xInteractiveRequestFormat = xInteractiveRequestFormat_example; // String | 
         byte[] body = BYTE_ARRAY_DATA_HERE; // byte[] | 
 
         try {
-            byte[] result = apiInstance.procCall(graphId, xInteractiveRequestFormat, body);
+            byte[] result = apiInstance.callProc(graphId, body);
             System.out.println(result);
         } catch (ApiException e) {
-            System.err.println("Exception when calling QueryServiceApi#procCall");
+            System.err.println("Exception when calling QueryServiceApi#callProc");
             e.printStackTrace();
         }
     }
@@ -16256,61 +16259,57 @@ public class QueryServiceApiExample {
 </code></pre>
                           </div>
 
-                          <div class="tab-pane" id="examples-QueryService-procCall-0-dart">
+                          <div class="tab-pane" id="examples-QueryService-callProc-0-dart">
                             <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
 
 final api_instance = DefaultApi();
 
 final String graphId = new String(); // String | 
-final String xInteractiveRequestFormat = new String(); // String | 
 final byte[] body = new byte[](); // byte[] | 
 
 try {
-    final result = await api_instance.procCall(graphId, xInteractiveRequestFormat, body);
+    final result = await api_instance.callProc(graphId, body);
     print(result);
 } catch (e) {
-    print('Exception when calling DefaultApi->procCall: $e\n');
+    print('Exception when calling DefaultApi->callProc: $e\n');
 }
 
 </code></pre>
                           </div>
 
-                          <div class="tab-pane" id="examples-QueryService-procCall-0-android">
+                          <div class="tab-pane" id="examples-QueryService-callProc-0-android">
                             <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.QueryServiceApi;
 
 public class QueryServiceApiExample {
     public static void main(String[] args) {
         QueryServiceApi apiInstance = new QueryServiceApi();
         String graphId = graphId_example; // String | 
-        String xInteractiveRequestFormat = xInteractiveRequestFormat_example; // String | 
         byte[] body = BYTE_ARRAY_DATA_HERE; // byte[] | 
 
         try {
-            byte[] result = apiInstance.procCall(graphId, xInteractiveRequestFormat, body);
+            byte[] result = apiInstance.callProc(graphId, body);
             System.out.println(result);
         } catch (ApiException e) {
-            System.err.println("Exception when calling QueryServiceApi#procCall");
+            System.err.println("Exception when calling QueryServiceApi#callProc");
             e.printStackTrace();
         }
     }
 }</code></pre>
                           </div>
   <!--
-  <div class="tab-pane" id="examples-QueryService-procCall-0-groovy">
+  <div class="tab-pane" id="examples-QueryService-callProc-0-groovy">
   <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
   </div> -->
-                            <div class="tab-pane" id="examples-QueryService-procCall-0-objc">
+                            <div class="tab-pane" id="examples-QueryService-callProc-0-objc">
                               <pre class="prettyprint"><code class="language-cpp">
 
 // Create an instance of the API class
 QueryServiceApi *apiInstance = [[QueryServiceApi alloc] init];
 String *graphId = graphId_example; //  (default to null)
-String *xInteractiveRequestFormat = xInteractiveRequestFormat_example; //  (default to null)
 byte[] *body = BYTE_ARRAY_DATA_HERE; //  (optional)
 
 // run queries on graph
-[apiInstance procCallWith:graphId
-    xInteractiveRequestFormat:xInteractiveRequestFormat
+[apiInstance callProcWith:graphId
     body:body
               completionHandler: ^(byte[] output, NSError* error) {
     if (output) {
@@ -16323,13 +16322,12 @@ byte[] *body = BYTE_ARRAY_DATA_HERE; //  (optional)
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCall-0-javascript">
+                            <div class="tab-pane" id="examples-QueryService-callProc-0-javascript">
                               <pre class="prettyprint"><code class="language-js">var GraphScopeInteractiveApiV03 = require('graph_scope_interactive_api_v0_3');
 
 // Create an instance of the API class
 var api = new GraphScopeInteractiveApiV03.QueryServiceApi()
 var graphId = graphId_example; // {String} 
-var xInteractiveRequestFormat = xInteractiveRequestFormat_example; // {String} 
 var opts = {
   'body': BYTE_ARRAY_DATA_HERE // {byte[]} 
 };
@@ -16341,14 +16339,14 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.procCall(graphId, xInteractiveRequestFormat, opts, callback);
+api.callProc(graphId, opts, callback);
 </code></pre>
                             </div>
 
-                            <!--<div class="tab-pane" id="examples-QueryService-procCall-0-angular">
+                            <!--<div class="tab-pane" id="examples-QueryService-callProc-0-angular">
               <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
             </div>-->
-                            <div class="tab-pane" id="examples-QueryService-procCall-0-csharp">
+                            <div class="tab-pane" id="examples-QueryService-callProc-0-csharp">
                               <pre class="prettyprint"><code class="language-cs">using System;
 using System.Diagnostics;
 using Org.OpenAPITools.Api;
@@ -16357,7 +16355,7 @@ using Org.OpenAPITools.Model;
 
 namespace Example
 {
-    public class procCallExample
+    public class callProcExample
     {
         public void main()
         {
@@ -16365,15 +16363,14 @@ namespace Example
             // Create an instance of the API class
             var apiInstance = new QueryServiceApi();
             var graphId = graphId_example;  // String |  (default to null)
-            var xInteractiveRequestFormat = xInteractiveRequestFormat_example;  // String |  (default to null)
             var body = BYTE_ARRAY_DATA_HERE;  // byte[] |  (optional) 
 
             try {
                 // run queries on graph
-                byte[] result = apiInstance.procCall(graphId, xInteractiveRequestFormat, body);
+                byte[] result = apiInstance.callProc(graphId, body);
                 Debug.WriteLine(result);
             } catch (Exception e) {
-                Debug.Print("Exception when calling QueryServiceApi.procCall: " + e.Message );
+                Debug.Print("Exception when calling QueryServiceApi.callProc: " + e.Message );
             }
         }
     }
@@ -16381,26 +16378,25 @@ namespace Example
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCall-0-php">
+                            <div class="tab-pane" id="examples-QueryService-callProc-0-php">
                               <pre class="prettyprint"><code class="language-php"><&#63;php
 require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\QueryServiceApi();
 $graphId = graphId_example; // String | 
-$xInteractiveRequestFormat = xInteractiveRequestFormat_example; // String | 
 $body = BYTE_ARRAY_DATA_HERE; // byte[] | 
 
 try {
-    $result = $api_instance->procCall($graphId, $xInteractiveRequestFormat, $body);
+    $result = $api_instance->callProc($graphId, $body);
     print_r($result);
 } catch (Exception $e) {
-    echo 'Exception when calling QueryServiceApi->procCall: ', $e->getMessage(), PHP_EOL;
+    echo 'Exception when calling QueryServiceApi->callProc: ', $e->getMessage(), PHP_EOL;
 }
 ?></code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCall-0-perl">
+                            <div class="tab-pane" id="examples-QueryService-callProc-0-perl">
                               <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
 use WWW::OPenAPIClient::Configuration;
 use WWW::OPenAPIClient::QueryServiceApi;
@@ -16408,19 +16404,18 @@ use WWW::OPenAPIClient::QueryServiceApi;
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::QueryServiceApi->new();
 my $graphId = graphId_example; # String | 
-my $xInteractiveRequestFormat = xInteractiveRequestFormat_example; # String | 
 my $body = WWW::OPenAPIClient::Object::byte[]->new(); # byte[] | 
 
 eval {
-    my $result = $api_instance->procCall(graphId => $graphId, xInteractiveRequestFormat => $xInteractiveRequestFormat, body => $body);
+    my $result = $api_instance->callProc(graphId => $graphId, body => $body);
     print Dumper($result);
 };
 if ($@) {
-    warn "Exception when calling QueryServiceApi->procCall: $@\n";
+    warn "Exception when calling QueryServiceApi->callProc: $@\n";
 }</code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCall-0-python">
+                            <div class="tab-pane" id="examples-QueryService-callProc-0-python">
                               <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
 import time
 import openapi_client
@@ -16430,27 +16425,25 @@ from pprint import pprint
 # Create an instance of the API class
 api_instance = openapi_client.QueryServiceApi()
 graphId = graphId_example # String |  (default to null)
-xInteractiveRequestFormat = xInteractiveRequestFormat_example # String |  (default to null)
 body = BYTE_ARRAY_DATA_HERE # byte[] |  (optional)
 
 try:
     # run queries on graph
-    api_response = api_instance.proc_call(graphId, xInteractiveRequestFormat, body=body)
+    api_response = api_instance.call_proc(graphId, body=body)
     pprint(api_response)
 except ApiException as e:
-    print("Exception when calling QueryServiceApi->procCall: %s\n" % e)</code></pre>
+    print("Exception when calling QueryServiceApi->callProc: %s\n" % e)</code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCall-0-rust">
+                            <div class="tab-pane" id="examples-QueryService-callProc-0-rust">
                               <pre class="prettyprint"><code class="language-rust">extern crate QueryServiceApi;
 
 pub fn main() {
     let graphId = graphId_example; // String
-    let xInteractiveRequestFormat = xInteractiveRequestFormat_example; // String
     let body = BYTE_ARRAY_DATA_HERE; // byte[]
 
     let mut context = QueryServiceApi::Context::default();
-    let result = client.procCall(graphId, xInteractiveRequestFormat, body, &context).wait();
+    let result = client.callProc(graphId, body, &context).wait();
 
     println!("{:?}", result);
 }
@@ -16475,7 +16468,7 @@ pub fn main() {
 <td>
 
 
-    <div id="d2e199_procCall_graphId">
+    <div id="d2e199_callProc_graphId">
         <div class="json-schema-view">
             <div class="primitive">
                 <span class="type">
@@ -16493,33 +16486,6 @@ pub fn main() {
 
                             </table>
 
-                            <div class="methodsubtabletitle">Header parameters</div>
-                            <table id="methodsubtable">
-                              <tr>
-                                <th width="150px">Name</th>
-                                <th>Description</th>
-                              </tr>
-                                  <tr><td style="width:150px;">X-Interactive-Request-Format*</td>
-<td>
-
-
-    <div id="d2e199_procCall_xInteractiveRequestFormat">
-        <div class="json-schema-view">
-            <div class="primitive">
-                <span class="type">
-                    String
-                </span>
-
-            </div>
-                <div class="inner required">
-                    Required
-                </div>
-        </div>
-    </div>
-</td>
-</tr>
-
-                            </table>
 
                             <div class="methodsubtabletitle">Body parameters</div>
                             <table id="methodsubtable">
@@ -16559,12 +16525,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_procCall_body');
+  var result = $('#d2e199_callProc_body');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_procCall_body"></div>
+<div id="d2e199_callProc_body"></div>
 </td>
 </tr>
 
@@ -16573,23 +16539,23 @@ $(document).ready(function() {
 
 
                           <h2>Responses</h2>
-                            <h3 id="examples-QueryService-procCall-title-200"></h3>
-                            <p id="examples-QueryService-procCall-description-200" class="marked"></p>
+                            <h3 id="examples-QueryService-callProc-title-200"></h3>
+                            <p id="examples-QueryService-callProc-description-200" class="marked"></p>
                             <script>
-                              var responseQueryService200_description = `Successfully runned. Empty if failed?`;
+                              var responseQueryService200_description = `Successfully runned.`;
                               var responseQueryService200_description_break = responseQueryService200_description.indexOf('\n');
                               if (responseQueryService200_description_break == -1) {
-                                $("#examples-QueryService-procCall-title-200").text("Status: 200 - " + responseQueryService200_description);
+                                $("#examples-QueryService-callProc-title-200").text("Status: 200 - " + responseQueryService200_description);
                               } else {
-                                $("#examples-QueryService-procCall-title-200").text("Status: 200 - " + responseQueryService200_description.substring(0, responseQueryService200_description_break));
-                                $("#examples-QueryService-procCall-description-200").html(responseQueryService200_description.substring(responseQueryService200_description_break));
+                                $("#examples-QueryService-callProc-title-200").text("Status: 200 - " + responseQueryService200_description.substring(0, responseQueryService200_description_break));
+                                $("#examples-QueryService-callProc-description-200").html(responseQueryService200_description.substring(responseQueryService200_description_break));
                               }
                             </script>
 
 
-                            <ul id="responses-detail-QueryService-procCall-200" class="nav nav-tabs nav-tabs-examples" >
+                            <ul id="responses-detail-QueryService-callProc-200" class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
-                                  <a data-toggle="tab" href="#responses-QueryService-procCall-200-schema">Schema</a>
+                                  <a data-toggle="tab" href="#responses-QueryService-callProc-200-schema">Schema</a>
                                 </li>
 
 
@@ -16598,13 +16564,13 @@ $(document).ready(function() {
                             </ul>
 
 
-                            <div class="tab-content" id="responses-QueryService-procCall-200-wrapper" style='margin-bottom: 10px;'>
-                              <div class="tab-pane active" id="responses-QueryService-procCall-200-schema">
-                                <div id="responses-QueryService-procCall-schema-200" class="exampleStyle">
+                            <div class="tab-content" id="responses-QueryService-callProc-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-QueryService-callProc-200-schema">
+                                <div id="responses-QueryService-callProc-schema-200" class="exampleStyle">
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "description" : "Successfully runned. Empty if failed?",
+  "description" : "Successfully runned.",
   "content" : {
     "text/plain" : {
       "schema" : {
@@ -16640,39 +16606,39 @@ $(document).ready(function() {
                                       }
 
                                       var view = new JSONSchemaView(schema, 3);
-                                      $('#responses-QueryService-procCall-200-schema-data').val(JSON.stringify(schema));
-                                      var result = $('#responses-QueryService-procCall-schema-200');
+                                      $('#responses-QueryService-callProc-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-QueryService-callProc-schema-200');
                                       result.empty();
                                       result.append(view.render());
                                     });
                                   </script>
                                 </div>
-                                <input id='responses-QueryService-procCall-200-schema-data' type='hidden' value=''></input>
+                                <input id='responses-QueryService-callProc-200-schema-data' type='hidden' value=''></input>
                               </div>
                             </div>
-                            <h3 id="examples-QueryService-procCall-title-500"></h3>
-                            <p id="examples-QueryService-procCall-description-500" class="marked"></p>
+                            <h3 id="examples-QueryService-callProc-title-500"></h3>
+                            <p id="examples-QueryService-callProc-description-500" class="marked"></p>
                             <script>
                               var responseQueryService500_description = `Server internal error`;
                               var responseQueryService500_description_break = responseQueryService500_description.indexOf('\n');
                               if (responseQueryService500_description_break == -1) {
-                                $("#examples-QueryService-procCall-title-500").text("Status: 500 - " + responseQueryService500_description);
+                                $("#examples-QueryService-callProc-title-500").text("Status: 500 - " + responseQueryService500_description);
                               } else {
-                                $("#examples-QueryService-procCall-title-500").text("Status: 500 - " + responseQueryService500_description.substring(0, responseQueryService500_description_break));
-                                $("#examples-QueryService-procCall-description-500").html(responseQueryService500_description.substring(responseQueryService500_description_break));
+                                $("#examples-QueryService-callProc-title-500").text("Status: 500 - " + responseQueryService500_description.substring(0, responseQueryService500_description_break));
+                                $("#examples-QueryService-callProc-description-500").html(responseQueryService500_description.substring(responseQueryService500_description_break));
                               }
                             </script>
 
 
-                            <ul id="responses-detail-QueryService-procCall-500" class="nav nav-tabs nav-tabs-examples" >
+                            <ul id="responses-detail-QueryService-callProc-500" class="nav nav-tabs nav-tabs-examples" >
 
 
                             </ul>
 
 
-                            <div class="tab-content" id="responses-QueryService-procCall-500-wrapper" style='margin-bottom: 10px;'>
-                              <div class="tab-pane active" id="responses-QueryService-procCall-500-schema">
-                                <div id="responses-QueryService-procCall-schema-500" class="exampleStyle">
+                            <div class="tab-content" id="responses-QueryService-callProc-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-QueryService-callProc-500-schema">
+                                <div id="responses-QueryService-callProc-schema-500" class="exampleStyle">
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
@@ -16704,23 +16670,23 @@ $(document).ready(function() {
                                       }
 
                                       var view = new JSONSchemaView(schema, 3);
-                                      $('#responses-QueryService-procCall-500-schema-data').val(JSON.stringify(schema));
-                                      var result = $('#responses-QueryService-procCall-schema-500');
+                                      $('#responses-QueryService-callProc-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-QueryService-callProc-schema-500');
                                       result.empty();
                                       result.append(view.render());
                                     });
                                   </script>
                                 </div>
-                                <input id='responses-QueryService-procCall-500-schema-data' type='hidden' value=''></input>
+                                <input id='responses-QueryService-callProc-500-schema-data' type='hidden' value=''></input>
                               </div>
                             </div>
                         </article>
                       </div>
                       <hr>
-                    <div id="api-QueryService-procCallCurrent">
-                      <article id="api-QueryService-procCallCurrent-0" data-group="User" data-name="procCallCurrent" data-version="0">
+                    <div id="api-QueryService-callProcCurrent">
+                      <article id="api-QueryService-callProcCurrent-0" data-group="User" data-name="callProcCurrent" data-version="0">
                         <div class="pull-left">
-                          <h1>procCallCurrent</h1>
+                          <h1>callProcCurrent</h1>
                           <p>run queries on the running graph</p>
                         </div>
                         <div class="pull-right"></div>
@@ -16735,23 +16701,23 @@ $(document).ready(function() {
                           <h3>Usage and SDK Samples</h3>
                         </p>
                         <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-QueryService-procCallCurrent-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-java">Java</a></li>
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-dart">Dart</a></li>
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-QueryService-procCallCurrent-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-QueryService-procCallCurrent-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-python">Python</a></li>
-                          <li class=""><a href="#examples-QueryService-procCallCurrent-0-rust">Rust</a></li>
+                          <li class="active"><a href="#examples-QueryService-callProcCurrent-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-java">Java</a></li>
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-QueryService-callProcCurrent-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-QueryService-callProcCurrent-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-python">Python</a></li>
+                          <li class=""><a href="#examples-QueryService-callProcCurrent-0-rust">Rust</a></li>
                         </ul>
 
                         <div class="tab-content">
-                          <div class="tab-pane active" id="examples-QueryService-procCallCurrent-0-curl">
+                          <div class="tab-pane active" id="examples-QueryService-callProcCurrent-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: text/plain" \
  -H "Content-Type: text/plain" \
@@ -16759,7 +16725,7 @@ $(document).ready(function() {
  -d 'Custom MIME type example not yet supported: text/plain'
 </code></pre>
                           </div>
-                          <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-java">
+                          <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-java">
                             <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
 import org.openapitools.client.auth.*;
 import org.openapitools.client.model.*;
@@ -16773,14 +16739,13 @@ public class QueryServiceApiExample {
 
         // Create an instance of the API class
         QueryServiceApi apiInstance = new QueryServiceApi();
-        String xInteractiveRequestFormat = xInteractiveRequestFormat_example; // String | 
         byte[] body = BYTE_ARRAY_DATA_HERE; // byte[] | 
 
         try {
-            byte[] result = apiInstance.procCallCurrent(xInteractiveRequestFormat, body);
+            byte[] result = apiInstance.callProcCurrent(body);
             System.out.println(result);
         } catch (ApiException e) {
-            System.err.println("Exception when calling QueryServiceApi#procCallCurrent");
+            System.err.println("Exception when calling QueryServiceApi#callProcCurrent");
             e.printStackTrace();
         }
     }
@@ -16788,58 +16753,54 @@ public class QueryServiceApiExample {
 </code></pre>
                           </div>
 
-                          <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-dart">
+                          <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-dart">
                             <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
 
 final api_instance = DefaultApi();
 
-final String xInteractiveRequestFormat = new String(); // String | 
 final byte[] body = new byte[](); // byte[] | 
 
 try {
-    final result = await api_instance.procCallCurrent(xInteractiveRequestFormat, body);
+    final result = await api_instance.callProcCurrent(body);
     print(result);
 } catch (e) {
-    print('Exception when calling DefaultApi->procCallCurrent: $e\n');
+    print('Exception when calling DefaultApi->callProcCurrent: $e\n');
 }
 
 </code></pre>
                           </div>
 
-                          <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-android">
+                          <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-android">
                             <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.QueryServiceApi;
 
 public class QueryServiceApiExample {
     public static void main(String[] args) {
         QueryServiceApi apiInstance = new QueryServiceApi();
-        String xInteractiveRequestFormat = xInteractiveRequestFormat_example; // String | 
         byte[] body = BYTE_ARRAY_DATA_HERE; // byte[] | 
 
         try {
-            byte[] result = apiInstance.procCallCurrent(xInteractiveRequestFormat, body);
+            byte[] result = apiInstance.callProcCurrent(body);
             System.out.println(result);
         } catch (ApiException e) {
-            System.err.println("Exception when calling QueryServiceApi#procCallCurrent");
+            System.err.println("Exception when calling QueryServiceApi#callProcCurrent");
             e.printStackTrace();
         }
     }
 }</code></pre>
                           </div>
   <!--
-  <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-groovy">
+  <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-groovy">
   <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
   </div> -->
-                            <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-objc">
+                            <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-objc">
                               <pre class="prettyprint"><code class="language-cpp">
 
 // Create an instance of the API class
 QueryServiceApi *apiInstance = [[QueryServiceApi alloc] init];
-String *xInteractiveRequestFormat = xInteractiveRequestFormat_example; //  (default to null)
 byte[] *body = BYTE_ARRAY_DATA_HERE; //  (optional)
 
 // run queries on the running graph
-[apiInstance procCallCurrentWith:xInteractiveRequestFormat
-    body:body
+[apiInstance callProcCurrentWith:body
               completionHandler: ^(byte[] output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
@@ -16851,12 +16812,11 @@ byte[] *body = BYTE_ARRAY_DATA_HERE; //  (optional)
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-javascript">
+                            <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-javascript">
                               <pre class="prettyprint"><code class="language-js">var GraphScopeInteractiveApiV03 = require('graph_scope_interactive_api_v0_3');
 
 // Create an instance of the API class
 var api = new GraphScopeInteractiveApiV03.QueryServiceApi()
-var xInteractiveRequestFormat = xInteractiveRequestFormat_example; // {String} 
 var opts = {
   'body': BYTE_ARRAY_DATA_HERE // {byte[]} 
 };
@@ -16868,14 +16828,14 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.procCallCurrent(xInteractiveRequestFormat, opts, callback);
+api.callProcCurrent(opts, callback);
 </code></pre>
                             </div>
 
-                            <!--<div class="tab-pane" id="examples-QueryService-procCallCurrent-0-angular">
+                            <!--<div class="tab-pane" id="examples-QueryService-callProcCurrent-0-angular">
               <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
             </div>-->
-                            <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-csharp">
+                            <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-csharp">
                               <pre class="prettyprint"><code class="language-cs">using System;
 using System.Diagnostics;
 using Org.OpenAPITools.Api;
@@ -16884,22 +16844,21 @@ using Org.OpenAPITools.Model;
 
 namespace Example
 {
-    public class procCallCurrentExample
+    public class callProcCurrentExample
     {
         public void main()
         {
 
             // Create an instance of the API class
             var apiInstance = new QueryServiceApi();
-            var xInteractiveRequestFormat = xInteractiveRequestFormat_example;  // String |  (default to null)
             var body = BYTE_ARRAY_DATA_HERE;  // byte[] |  (optional) 
 
             try {
                 // run queries on the running graph
-                byte[] result = apiInstance.procCallCurrent(xInteractiveRequestFormat, body);
+                byte[] result = apiInstance.callProcCurrent(body);
                 Debug.WriteLine(result);
             } catch (Exception e) {
-                Debug.Print("Exception when calling QueryServiceApi.procCallCurrent: " + e.Message );
+                Debug.Print("Exception when calling QueryServiceApi.callProcCurrent: " + e.Message );
             }
         }
     }
@@ -16907,44 +16866,42 @@ namespace Example
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-php">
+                            <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-php">
                               <pre class="prettyprint"><code class="language-php"><&#63;php
 require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\QueryServiceApi();
-$xInteractiveRequestFormat = xInteractiveRequestFormat_example; // String | 
 $body = BYTE_ARRAY_DATA_HERE; // byte[] | 
 
 try {
-    $result = $api_instance->procCallCurrent($xInteractiveRequestFormat, $body);
+    $result = $api_instance->callProcCurrent($body);
     print_r($result);
 } catch (Exception $e) {
-    echo 'Exception when calling QueryServiceApi->procCallCurrent: ', $e->getMessage(), PHP_EOL;
+    echo 'Exception when calling QueryServiceApi->callProcCurrent: ', $e->getMessage(), PHP_EOL;
 }
 ?></code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-perl">
+                            <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-perl">
                               <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
 use WWW::OPenAPIClient::Configuration;
 use WWW::OPenAPIClient::QueryServiceApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::QueryServiceApi->new();
-my $xInteractiveRequestFormat = xInteractiveRequestFormat_example; # String | 
 my $body = WWW::OPenAPIClient::Object::byte[]->new(); # byte[] | 
 
 eval {
-    my $result = $api_instance->procCallCurrent(xInteractiveRequestFormat => $xInteractiveRequestFormat, body => $body);
+    my $result = $api_instance->callProcCurrent(body => $body);
     print Dumper($result);
 };
 if ($@) {
-    warn "Exception when calling QueryServiceApi->procCallCurrent: $@\n";
+    warn "Exception when calling QueryServiceApi->callProcCurrent: $@\n";
 }</code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-python">
+                            <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-python">
                               <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
 import time
 import openapi_client
@@ -16953,26 +16910,24 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.QueryServiceApi()
-xInteractiveRequestFormat = xInteractiveRequestFormat_example # String |  (default to null)
 body = BYTE_ARRAY_DATA_HERE # byte[] |  (optional)
 
 try:
     # run queries on the running graph
-    api_response = api_instance.proc_call_current(xInteractiveRequestFormat, body=body)
+    api_response = api_instance.call_proc_current(body=body)
     pprint(api_response)
 except ApiException as e:
-    print("Exception when calling QueryServiceApi->procCallCurrent: %s\n" % e)</code></pre>
+    print("Exception when calling QueryServiceApi->callProcCurrent: %s\n" % e)</code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-QueryService-procCallCurrent-0-rust">
+                            <div class="tab-pane" id="examples-QueryService-callProcCurrent-0-rust">
                               <pre class="prettyprint"><code class="language-rust">extern crate QueryServiceApi;
 
 pub fn main() {
-    let xInteractiveRequestFormat = xInteractiveRequestFormat_example; // String
     let body = BYTE_ARRAY_DATA_HERE; // byte[]
 
     let mut context = QueryServiceApi::Context::default();
-    let result = client.procCallCurrent(xInteractiveRequestFormat, body, &context).wait();
+    let result = client.callProcCurrent(body, &context).wait();
 
     println!("{:?}", result);
 }
@@ -16988,33 +16943,6 @@ pub fn main() {
                           <h2>Parameters</h2>
 
 
-                            <div class="methodsubtabletitle">Header parameters</div>
-                            <table id="methodsubtable">
-                              <tr>
-                                <th width="150px">Name</th>
-                                <th>Description</th>
-                              </tr>
-                                  <tr><td style="width:150px;">X-Interactive-Request-Format*</td>
-<td>
-
-
-    <div id="d2e199_procCallCurrent_xInteractiveRequestFormat">
-        <div class="json-schema-view">
-            <div class="primitive">
-                <span class="type">
-                    String
-                </span>
-
-            </div>
-                <div class="inner required">
-                    Required
-                </div>
-        </div>
-    </div>
-</td>
-</tr>
-
-                            </table>
 
                             <div class="methodsubtabletitle">Body parameters</div>
                             <table id="methodsubtable">
@@ -17054,12 +16982,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_procCallCurrent_body');
+  var result = $('#d2e199_callProcCurrent_body');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_procCallCurrent_body"></div>
+<div id="d2e199_callProcCurrent_body"></div>
 </td>
 </tr>
 
@@ -17068,23 +16996,23 @@ $(document).ready(function() {
 
 
                           <h2>Responses</h2>
-                            <h3 id="examples-QueryService-procCallCurrent-title-200"></h3>
-                            <p id="examples-QueryService-procCallCurrent-description-200" class="marked"></p>
+                            <h3 id="examples-QueryService-callProcCurrent-title-200"></h3>
+                            <p id="examples-QueryService-callProcCurrent-description-200" class="marked"></p>
                             <script>
                               var responseQueryService200_description = `Successfully runned. Empty if failed?`;
                               var responseQueryService200_description_break = responseQueryService200_description.indexOf('\n');
                               if (responseQueryService200_description_break == -1) {
-                                $("#examples-QueryService-procCallCurrent-title-200").text("Status: 200 - " + responseQueryService200_description);
+                                $("#examples-QueryService-callProcCurrent-title-200").text("Status: 200 - " + responseQueryService200_description);
                               } else {
-                                $("#examples-QueryService-procCallCurrent-title-200").text("Status: 200 - " + responseQueryService200_description.substring(0, responseQueryService200_description_break));
-                                $("#examples-QueryService-procCallCurrent-description-200").html(responseQueryService200_description.substring(responseQueryService200_description_break));
+                                $("#examples-QueryService-callProcCurrent-title-200").text("Status: 200 - " + responseQueryService200_description.substring(0, responseQueryService200_description_break));
+                                $("#examples-QueryService-callProcCurrent-description-200").html(responseQueryService200_description.substring(responseQueryService200_description_break));
                               }
                             </script>
 
 
-                            <ul id="responses-detail-QueryService-procCallCurrent-200" class="nav nav-tabs nav-tabs-examples" >
+                            <ul id="responses-detail-QueryService-callProcCurrent-200" class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
-                                  <a data-toggle="tab" href="#responses-QueryService-procCallCurrent-200-schema">Schema</a>
+                                  <a data-toggle="tab" href="#responses-QueryService-callProcCurrent-200-schema">Schema</a>
                                 </li>
 
 
@@ -17093,9 +17021,9 @@ $(document).ready(function() {
                             </ul>
 
 
-                            <div class="tab-content" id="responses-QueryService-procCallCurrent-200-wrapper" style='margin-bottom: 10px;'>
-                              <div class="tab-pane active" id="responses-QueryService-procCallCurrent-200-schema">
-                                <div id="responses-QueryService-procCallCurrent-schema-200" class="exampleStyle">
+                            <div class="tab-content" id="responses-QueryService-callProcCurrent-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-QueryService-callProcCurrent-200-schema">
+                                <div id="responses-QueryService-callProcCurrent-schema-200" class="exampleStyle">
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
@@ -17135,39 +17063,39 @@ $(document).ready(function() {
                                       }
 
                                       var view = new JSONSchemaView(schema, 3);
-                                      $('#responses-QueryService-procCallCurrent-200-schema-data').val(JSON.stringify(schema));
-                                      var result = $('#responses-QueryService-procCallCurrent-schema-200');
+                                      $('#responses-QueryService-callProcCurrent-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-QueryService-callProcCurrent-schema-200');
                                       result.empty();
                                       result.append(view.render());
                                     });
                                   </script>
                                 </div>
-                                <input id='responses-QueryService-procCallCurrent-200-schema-data' type='hidden' value=''></input>
+                                <input id='responses-QueryService-callProcCurrent-200-schema-data' type='hidden' value=''></input>
                               </div>
                             </div>
-                            <h3 id="examples-QueryService-procCallCurrent-title-500"></h3>
-                            <p id="examples-QueryService-procCallCurrent-description-500" class="marked"></p>
+                            <h3 id="examples-QueryService-callProcCurrent-title-500"></h3>
+                            <p id="examples-QueryService-callProcCurrent-description-500" class="marked"></p>
                             <script>
                               var responseQueryService500_description = `Server internal error`;
                               var responseQueryService500_description_break = responseQueryService500_description.indexOf('\n');
                               if (responseQueryService500_description_break == -1) {
-                                $("#examples-QueryService-procCallCurrent-title-500").text("Status: 500 - " + responseQueryService500_description);
+                                $("#examples-QueryService-callProcCurrent-title-500").text("Status: 500 - " + responseQueryService500_description);
                               } else {
-                                $("#examples-QueryService-procCallCurrent-title-500").text("Status: 500 - " + responseQueryService500_description.substring(0, responseQueryService500_description_break));
-                                $("#examples-QueryService-procCallCurrent-description-500").html(responseQueryService500_description.substring(responseQueryService500_description_break));
+                                $("#examples-QueryService-callProcCurrent-title-500").text("Status: 500 - " + responseQueryService500_description.substring(0, responseQueryService500_description_break));
+                                $("#examples-QueryService-callProcCurrent-description-500").html(responseQueryService500_description.substring(responseQueryService500_description_break));
                               }
                             </script>
 
 
-                            <ul id="responses-detail-QueryService-procCallCurrent-500" class="nav nav-tabs nav-tabs-examples" >
+                            <ul id="responses-detail-QueryService-callProcCurrent-500" class="nav nav-tabs nav-tabs-examples" >
 
 
                             </ul>
 
 
-                            <div class="tab-content" id="responses-QueryService-procCallCurrent-500-wrapper" style='margin-bottom: 10px;'>
-                              <div class="tab-pane active" id="responses-QueryService-procCallCurrent-500-schema">
-                                <div id="responses-QueryService-procCallCurrent-schema-500" class="exampleStyle">
+                            <div class="tab-content" id="responses-QueryService-callProcCurrent-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-QueryService-callProcCurrent-500-schema">
+                                <div id="responses-QueryService-callProcCurrent-schema-500" class="exampleStyle">
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
@@ -17199,14 +17127,968 @@ $(document).ready(function() {
                                       }
 
                                       var view = new JSONSchemaView(schema, 3);
-                                      $('#responses-QueryService-procCallCurrent-500-schema-data').val(JSON.stringify(schema));
-                                      var result = $('#responses-QueryService-procCallCurrent-schema-500');
+                                      $('#responses-QueryService-callProcCurrent-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-QueryService-callProcCurrent-schema-500');
                                       result.empty();
                                       result.append(view.render());
                                     });
                                   </script>
                                 </div>
-                                <input id='responses-QueryService-procCallCurrent-500-schema-data' type='hidden' value=''></input>
+                                <input id='responses-QueryService-callProcCurrent-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-QueryService-runAdhoc">
+                      <article id="api-QueryService-runAdhoc-0" data-group="User" data-name="runAdhoc" data-version="0">
+                        <div class="pull-left">
+                          <h1>runAdhoc</h1>
+                          <p>Submit adhoc query to the Interactive Query Service.</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/v1/graph/{graph_id}/adhoc_query</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-QueryService-runAdhoc-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-java">Java</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-QueryService-runAdhoc-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-QueryService-runAdhoc-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-python">Python</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhoc-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-QueryService-runAdhoc-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: text/plain" \
+ -H "Content-Type: text/plain" \
+ "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/adhoc_query" \
+ -d 'Custom MIME type example not yet supported: text/plain'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-QueryService-runAdhoc-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.QueryServiceApi;
+
+import java.io.File;
+import java.util.*;
+
+public class QueryServiceApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        QueryServiceApi apiInstance = new QueryServiceApi();
+        String graphId = graphId_example; // String | 
+        byte[] body = BYTE_ARRAY_DATA_HERE; // byte[] | 
+
+        try {
+            byte[] result = apiInstance.runAdhoc(graphId, body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling QueryServiceApi#runAdhoc");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-QueryService-runAdhoc-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final String graphId = new String(); // String | 
+final byte[] body = new byte[](); // byte[] | 
+
+try {
+    final result = await api_instance.runAdhoc(graphId, body);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->runAdhoc: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-QueryService-runAdhoc-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.QueryServiceApi;
+
+public class QueryServiceApiExample {
+    public static void main(String[] args) {
+        QueryServiceApi apiInstance = new QueryServiceApi();
+        String graphId = graphId_example; // String | 
+        byte[] body = BYTE_ARRAY_DATA_HERE; // byte[] | 
+
+        try {
+            byte[] result = apiInstance.runAdhoc(graphId, body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling QueryServiceApi#runAdhoc");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-QueryService-runAdhoc-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-QueryService-runAdhoc-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+QueryServiceApi *apiInstance = [[QueryServiceApi alloc] init];
+String *graphId = graphId_example; //  (default to null)
+byte[] *body = BYTE_ARRAY_DATA_HERE; //  (optional)
+
+// Submit adhoc query to the Interactive Query Service.
+[apiInstance runAdhocWith:graphId
+    body:body
+              completionHandler: ^(byte[] output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhoc-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var GraphScopeInteractiveApiV03 = require('graph_scope_interactive_api_v0_3');
+
+// Create an instance of the API class
+var api = new GraphScopeInteractiveApiV03.QueryServiceApi()
+var graphId = graphId_example; // {String} 
+var opts = {
+  'body': BYTE_ARRAY_DATA_HERE // {byte[]} 
+};
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.runAdhoc(graphId, opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-QueryService-runAdhoc-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-QueryService-runAdhoc-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class runAdhocExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new QueryServiceApi();
+            var graphId = graphId_example;  // String |  (default to null)
+            var body = BYTE_ARRAY_DATA_HERE;  // byte[] |  (optional) 
+
+            try {
+                // Submit adhoc query to the Interactive Query Service.
+                byte[] result = apiInstance.runAdhoc(graphId, body);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling QueryServiceApi.runAdhoc: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhoc-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\QueryServiceApi();
+$graphId = graphId_example; // String | 
+$body = BYTE_ARRAY_DATA_HERE; // byte[] | 
+
+try {
+    $result = $api_instance->runAdhoc($graphId, $body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling QueryServiceApi->runAdhoc: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhoc-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::QueryServiceApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::QueryServiceApi->new();
+my $graphId = graphId_example; # String | 
+my $body = WWW::OPenAPIClient::Object::byte[]->new(); # byte[] | 
+
+eval {
+    my $result = $api_instance->runAdhoc(graphId => $graphId, body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling QueryServiceApi->runAdhoc: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhoc-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.QueryServiceApi()
+graphId = graphId_example # String |  (default to null)
+body = BYTE_ARRAY_DATA_HERE # byte[] |  (optional)
+
+try:
+    # Submit adhoc query to the Interactive Query Service.
+    api_response = api_instance.run_adhoc(graphId, body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling QueryServiceApi->runAdhoc: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhoc-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate QueryServiceApi;
+
+pub fn main() {
+    let graphId = graphId_example; // String
+    let body = BYTE_ARRAY_DATA_HERE; // byte[]
+
+    let mut context = QueryServiceApi::Context::default();
+    let result = client.runAdhoc(graphId, body, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">graph_id*</td>
+<td>
+
+
+    <div id="d2e199_runAdhoc_graphId">
+        <div class="json-schema-view">
+            <div class="primitive">
+                <span class="type">
+                    String
+                </span>
+
+            </div>
+                <div class="inner required">
+                    Required
+                </div>
+        </div>
+    </div>
+</td>
+</tr>
+
+                            </table>
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "text/plain" : {
+      "schema" : {
+        "type" : "string",
+        "format" : "byte"
+      }
+    }
+  }
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_runAdhoc_body');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_runAdhoc_body"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-QueryService-runAdhoc-title-200"></h3>
+                            <p id="examples-QueryService-runAdhoc-description-200" class="marked"></p>
+                            <script>
+                              var responseQueryService200_description = `Successfully runned.`;
+                              var responseQueryService200_description_break = responseQueryService200_description.indexOf('\n');
+                              if (responseQueryService200_description_break == -1) {
+                                $("#examples-QueryService-runAdhoc-title-200").text("Status: 200 - " + responseQueryService200_description);
+                              } else {
+                                $("#examples-QueryService-runAdhoc-title-200").text("Status: 200 - " + responseQueryService200_description.substring(0, responseQueryService200_description_break));
+                                $("#examples-QueryService-runAdhoc-description-200").html(responseQueryService200_description.substring(responseQueryService200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-QueryService-runAdhoc-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-QueryService-runAdhoc-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-QueryService-runAdhoc-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-QueryService-runAdhoc-200-schema">
+                                <div id="responses-QueryService-runAdhoc-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Successfully runned.",
+  "content" : {
+    "text/plain" : {
+      "schema" : {
+        "type" : "string",
+        "format" : "byte"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-QueryService-runAdhoc-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-QueryService-runAdhoc-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-QueryService-runAdhoc-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-QueryService-runAdhoc-title-500"></h3>
+                            <p id="examples-QueryService-runAdhoc-description-500" class="marked"></p>
+                            <script>
+                              var responseQueryService500_description = `Server internal error`;
+                              var responseQueryService500_description_break = responseQueryService500_description.indexOf('\n');
+                              if (responseQueryService500_description_break == -1) {
+                                $("#examples-QueryService-runAdhoc-title-500").text("Status: 500 - " + responseQueryService500_description);
+                              } else {
+                                $("#examples-QueryService-runAdhoc-title-500").text("Status: 500 - " + responseQueryService500_description.substring(0, responseQueryService500_description_break));
+                                $("#examples-QueryService-runAdhoc-description-500").html(responseQueryService500_description.substring(responseQueryService500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-QueryService-runAdhoc-500" class="nav nav-tabs nav-tabs-examples" >
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-QueryService-runAdhoc-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-QueryService-runAdhoc-500-schema">
+                                <div id="responses-QueryService-runAdhoc-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Server internal error"
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-QueryService-runAdhoc-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-QueryService-runAdhoc-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-QueryService-runAdhoc-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-QueryService-runAdhocCurrent">
+                      <article id="api-QueryService-runAdhocCurrent-0" data-group="User" data-name="runAdhocCurrent" data-version="0">
+                        <div class="pull-left">
+                          <h1>runAdhocCurrent</h1>
+                          <p>Submit adhoc query to the Interactive Query Service.</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
+https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
+</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/v1/graph/current/adhoc_query</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-QueryService-runAdhocCurrent-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-java">Java</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-QueryService-runAdhocCurrent-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-QueryService-runAdhocCurrent-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-python">Python</a></li>
+                          <li class=""><a href="#examples-QueryService-runAdhocCurrent-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-QueryService-runAdhocCurrent-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: text/plain" \
+ -H "Content-Type: text/plain" \
+ "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/current/adhoc_query" \
+ -d 'Custom MIME type example not yet supported: text/plain'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.QueryServiceApi;
+
+import java.io.File;
+import java.util.*;
+
+public class QueryServiceApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        QueryServiceApi apiInstance = new QueryServiceApi();
+        byte[] body = BYTE_ARRAY_DATA_HERE; // byte[] | 
+
+        try {
+            byte[] result = apiInstance.runAdhocCurrent(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling QueryServiceApi#runAdhocCurrent");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final byte[] body = new byte[](); // byte[] | 
+
+try {
+    final result = await api_instance.runAdhocCurrent(body);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->runAdhocCurrent: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.QueryServiceApi;
+
+public class QueryServiceApiExample {
+    public static void main(String[] args) {
+        QueryServiceApi apiInstance = new QueryServiceApi();
+        byte[] body = BYTE_ARRAY_DATA_HERE; // byte[] | 
+
+        try {
+            byte[] result = apiInstance.runAdhocCurrent(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling QueryServiceApi#runAdhocCurrent");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+QueryServiceApi *apiInstance = [[QueryServiceApi alloc] init];
+byte[] *body = BYTE_ARRAY_DATA_HERE; //  (optional)
+
+// Submit adhoc query to the Interactive Query Service.
+[apiInstance runAdhocCurrentWith:body
+              completionHandler: ^(byte[] output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var GraphScopeInteractiveApiV03 = require('graph_scope_interactive_api_v0_3');
+
+// Create an instance of the API class
+var api = new GraphScopeInteractiveApiV03.QueryServiceApi()
+var opts = {
+  'body': BYTE_ARRAY_DATA_HERE // {byte[]} 
+};
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.runAdhocCurrent(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class runAdhocCurrentExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new QueryServiceApi();
+            var body = BYTE_ARRAY_DATA_HERE;  // byte[] |  (optional) 
+
+            try {
+                // Submit adhoc query to the Interactive Query Service.
+                byte[] result = apiInstance.runAdhocCurrent(body);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling QueryServiceApi.runAdhocCurrent: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\QueryServiceApi();
+$body = BYTE_ARRAY_DATA_HERE; // byte[] | 
+
+try {
+    $result = $api_instance->runAdhocCurrent($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling QueryServiceApi->runAdhocCurrent: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::QueryServiceApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::QueryServiceApi->new();
+my $body = WWW::OPenAPIClient::Object::byte[]->new(); # byte[] | 
+
+eval {
+    my $result = $api_instance->runAdhocCurrent(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling QueryServiceApi->runAdhocCurrent: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.QueryServiceApi()
+body = BYTE_ARRAY_DATA_HERE # byte[] |  (optional)
+
+try:
+    # Submit adhoc query to the Interactive Query Service.
+    api_response = api_instance.run_adhoc_current(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling QueryServiceApi->runAdhocCurrent: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-QueryService-runAdhocCurrent-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate QueryServiceApi;
+
+pub fn main() {
+    let body = BYTE_ARRAY_DATA_HERE; // byte[]
+
+    let mut context = QueryServiceApi::Context::default();
+    let result = client.runAdhocCurrent(body, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "text/plain" : {
+      "schema" : {
+        "type" : "string",
+        "format" : "byte"
+      }
+    }
+  }
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_runAdhocCurrent_body');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_runAdhocCurrent_body"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-QueryService-runAdhocCurrent-title-200"></h3>
+                            <p id="examples-QueryService-runAdhocCurrent-description-200" class="marked"></p>
+                            <script>
+                              var responseQueryService200_description = `Successfully runned. Empty if failed?`;
+                              var responseQueryService200_description_break = responseQueryService200_description.indexOf('\n');
+                              if (responseQueryService200_description_break == -1) {
+                                $("#examples-QueryService-runAdhocCurrent-title-200").text("Status: 200 - " + responseQueryService200_description);
+                              } else {
+                                $("#examples-QueryService-runAdhocCurrent-title-200").text("Status: 200 - " + responseQueryService200_description.substring(0, responseQueryService200_description_break));
+                                $("#examples-QueryService-runAdhocCurrent-description-200").html(responseQueryService200_description.substring(responseQueryService200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-QueryService-runAdhocCurrent-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-QueryService-runAdhocCurrent-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-QueryService-runAdhocCurrent-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-QueryService-runAdhocCurrent-200-schema">
+                                <div id="responses-QueryService-runAdhocCurrent-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Successfully runned. Empty if failed?",
+  "content" : {
+    "text/plain" : {
+      "schema" : {
+        "type" : "string",
+        "format" : "byte"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-QueryService-runAdhocCurrent-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-QueryService-runAdhocCurrent-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-QueryService-runAdhocCurrent-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-QueryService-runAdhocCurrent-title-500"></h3>
+                            <p id="examples-QueryService-runAdhocCurrent-description-500" class="marked"></p>
+                            <script>
+                              var responseQueryService500_description = `Server internal error`;
+                              var responseQueryService500_description_break = responseQueryService500_description.indexOf('\n');
+                              if (responseQueryService500_description_break == -1) {
+                                $("#examples-QueryService-runAdhocCurrent-title-500").text("Status: 500 - " + responseQueryService500_description);
+                              } else {
+                                $("#examples-QueryService-runAdhocCurrent-title-500").text("Status: 500 - " + responseQueryService500_description.substring(0, responseQueryService500_description_break));
+                                $("#examples-QueryService-runAdhocCurrent-description-500").html(responseQueryService500_description.substring(responseQueryService500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-QueryService-runAdhocCurrent-500" class="nav nav-tabs nav-tabs-examples" >
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-QueryService-runAdhocCurrent-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-QueryService-runAdhocCurrent-500-schema">
+                                <div id="responses-QueryService-runAdhocCurrent-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Server internal error"
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-QueryService-runAdhocCurrent-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-QueryService-runAdhocCurrent-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-QueryService-runAdhocCurrent-500-schema-data' type='hidden' value=''></input>
                               </div>
                             </div>
                         </article>

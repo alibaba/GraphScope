@@ -135,6 +135,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a3d6d9280882ffd93eba2b41edce3e690"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a056e5d8c894b0a248c20605385faf26f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a056e5d8c894b0a248c20605385faf26f">GetIsDoubleQuoting</a> () const</td></tr>
 <tr class="separator:a056e5d8c894b0a248c20605385faf26f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cb91da71d03bceded1f921e8a14fd56"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a7cb91da71d03bceded1f921e8a14fd56">GetNullValues</a> () const</td></tr>
+<tr class="separator:a7cb91da71d03bceded1f921e8a14fd56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2693c83cd2774ec3e2d5476eeb84328c"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a2693c83cd2774ec3e2d5476eeb84328c">GetBatchSize</a> () const</td></tr>
 <tr class="separator:a2693c83cd2774ec3e2d5476eeb84328c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2db5fd9052e9db7a51bca20f213ec5fd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a2db5fd9052e9db7a51bca20f213ec5fd">GetIsBatchReader</a> () const</td></tr>
@@ -187,6 +189,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a78151040a85d074479ed5be10b02f1a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e77bda0c34ca87563fc2cfd67f52ebf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a9e77bda0c34ca87563fc2cfd67f52ebf">use_mmap_vector_</a></td></tr>
 <tr class="separator:a9e77bda0c34ca87563fc2cfd67f52ebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad016a0d2062ac17ffb485043265ae323"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#ad016a0d2062ac17ffb485043265ae323">null_values_</a></td></tr>
+<tr class="separator:ad016a0d2062ac17ffb485043265ae323"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3af76d1d684972934ca2e12e0d5fb0c0"><td class="memItemLeft" align="right" valign="top">std::unordered_map&lt; std::string, std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a3af76d1d684972934ca2e12e0d5fb0c0">metadata_</a></td></tr>
 <tr class="separator:a3af76d1d684972934ca2e12e0d5fb0c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adae6512efeba424510ecb916e0923127"><td class="memItemLeft" align="right" valign="top">std::unordered_map&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a9f995d0f77a0cafa2944219b3e439a86">schema_label_type</a>, std::vector&lt; std::string &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#adae6512efeba424510ecb916e0923127">vertex_loading_meta_</a></td></tr>
@@ -671,6 +675,23 @@ Friends</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">const <a class="el" href="namespacegs.html#a4d1c2b2b0e6a301398c640d8cfe2d1b1">BulkLoadMethod</a> &amp; gs::LoadingConfig::GetMethod </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7cb91da71d03bceded1f921e8a14fd56"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7cb91da71d03bceded1f921e8a14fd56">&#9670;&nbsp;</a></span>GetNullValues()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt; std::string &gt; &amp; gs::LoadingConfig::GetNullValues </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -1232,6 +1253,28 @@ Friends</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="namespacegs.html#a4d1c2b2b0e6a301398c640d8cfe2d1b1">BulkLoadMethod</a> gs::LoadingConfig::method_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad016a0d2062ac17ffb485043265ae323"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad016a0d2062ac17ffb485043265ae323">&#9670;&nbsp;</a></span>null_values_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::string&gt; gs::LoadingConfig::null_values_</td>
         </tr>
       </table>
   </td>

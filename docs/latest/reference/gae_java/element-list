@@ -13,6 +13,7 @@ com.alibaba.graphscope.ds.adaptor
 com.alibaba.graphscope.example.bfs
 com.alibaba.graphscope.example.giraph
 com.alibaba.graphscope.example.giraph.aggregator
+com.alibaba.graphscope.example.giraph.circle
 com.alibaba.graphscope.example.giraph.format
 com.alibaba.graphscope.example.giraph.writable
 com.alibaba.graphscope.example.pagerank
