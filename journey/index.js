@@ -107,11 +107,11 @@ const drawPath = (styles, id) => {
 const drawPaths = () => {
   const svg = document.getElementById("timeline");
   const { width } = svg.getBoundingClientRect();
-  const startPointDOM = document.querySelectorAll("h1")[1];
+  const startPointDOM = document.querySelector("#start-point");
   const endPointDOM = document.getElementById("s-35");
   const featureDOM = document.getElementById("s-37");
   const lineWidth = innerWidth < 740 ? 4 : 8;
-  console.log(featureDOM.getBoundingClientRect().y, document.body.clientHeight);
+ 
 
   const journeyPath = {
     startPoint: {
