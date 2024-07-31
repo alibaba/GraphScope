@@ -418,7 +418,7 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> addEdge(String graphName, EdgeRequest edgeRequest) {
+    public Result<String> addEdge(String graphName, List<EdgeRequest> edgeRequest) {
         try {
             ApiResponse<String> response = edgeApi.addEdgeWithHttpInfo(graphName, edgeRequest);
             return Result.fromResponse(response);
@@ -814,7 +814,7 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> addVertex(String graphId, VertexRequest request) {
+    public Result<String> addVertex(String graphId, VertexEdgeRequest request) {
         try {
             ApiResponse<String> response = vertexApi.addVertexWithHttpInfo(graphId, request);
             return Result.fromResponse(response);
