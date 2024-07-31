@@ -29,10 +29,23 @@ inline int64_t get_oid_from_encoded_vid(ReadTransaction& txn,
 inline std::string status_to_str(int64_t status_code) {
   if (status_code == 1) {
     return "在营";
-  } else if (status_code == 0) {
+  } else if (status_code == 2) {
     return "注销";
-  } else
+  } else if (status_code == 3) {
+    return "停业";
+  } else if (status_code == 4) {
+    return "迁入";
+  } else if (status_code == 5) {
+    return "清算";
+  } else if (status_code == 6) {
+    return "吊销";
+  } else if (status_code == 7) {
+    return "未知";
+  } else if (status_code == 8) {
+    return "迁出";
+  } else {
     return std::to_string(status_code);
+  }
 }
 
 inline std::string rel_type_to_string(int64_t rel_type) {
@@ -71,6 +84,12 @@ struct Results {
   std::unordered_map<uint32_t, std::vector<Path>> path_to_end_node;
 
   void clear() { path_to_end_node.clear(); }
+};
+
+enum class AddResultRet {
+  Success = 0,
+  Fail = 1,
+  Full = 2,
 };
 
 struct ResultsCreator {
@@ -145,22 +164,25 @@ struct ResultsCreator {
   }
 
   // TODO: support multiple properties on edge.
-  bool add_result(const std::vector<vid_t>& cur_path,
-                  const std::vector<double>& weights,
-                  const std::vector<int32_t>& rel_types,
-                  const std::vector<std::string_view>& rel_infos,
-                  const std::vector<Direction>& directions) {
+  AddResultRet add_result(int32_t result_limit,
+                          const std::vector<vid_t>& cur_path,
+                          const std::vector<double>& weights,
+                          const std::vector<int32_t>& rel_types,
+                          const std::vector<std::string_view>& rel_infos,
+                          const std::vector<Direction>& directions) {
     if (cur_path.size() < 2) {
       LOG(ERROR) << "Path size is less than 2";
-      return false;
+      return AddResultRet::Fail;
     }
     if (rel_types.size() + 1 != cur_path.size()) {
       LOG(ERROR) << "miss match between rel_types and cur_path size:"
                  << rel_types.size() << " " << cur_path.size();
+      return AddResultRet::Fail;
     }
     if (directions.size() + 1 != cur_path.size()) {
       LOG(ERROR) << "miss match between directions and cur_path size:"
                  << directions.size() << " " << cur_path.size();
+      return AddResultRet::Fail;
     }
     auto start_node_id = cur_path[0];
     auto end_node_id = cur_path.back();
@@ -179,8 +201,11 @@ struct ResultsCreator {
     //            << gs::to_string(path.rel_types) << ", "
     //            << gs::to_string(path.rel_infos) << ", "
     //            << gs::to_string(path.directions);
+    if (results_.path_to_end_node[end_node_id].size() >= result_limit) {
+      return AddResultRet::Full;
+    }
     results_.path_to_end_node[end_node_id].push_back(path);
-    return true;
+    return AddResultRet::Success;
   }
 
   inline std::string build_edge_id(int64_t encoded_start_id,
@@ -292,9 +317,9 @@ struct ResultsCreator {
  */
 
 class HuoYan : public WriteAppBase {
-public:
+ public:
   static constexpr double timeout_sec = 90;
-  static constexpr int32_t REL_TYPE_MAX = 8; // 1 ~ 7
+  static constexpr int32_t REL_TYPE_MAX = 8;  // 1 ~ 7
   HuoYan() : is_initialized_(false) {}
   ~HuoYan() {}
   bool is_simple(const std::vector<vid_t>& path) {
@@ -322,8 +347,9 @@ public:
                    std::vector<std::vector<int32_t>>& next_rel_types,
                    std::vector<std::vector<std::string_view>>& next_rel_infos,
                    std::vector<std::vector<Direction>>& next_directions,
-                   size_t& result_size, int result_limit, Encoder& output,
-                   double& cur_time_left, Direction direction) {
+                   size_t& result_size, int single_result_limit,
+                   int32_t result_limit, Encoder& output, double& cur_time_left,
+                   Direction direction) {
     auto& cur_path = cur_paths[cur_ind];
     auto& cur_rel_type = cur_rel_types[cur_ind];
     auto& cur_weight = cur_weights[cur_ind];
@@ -369,10 +395,18 @@ public:
             throw std::runtime_error("Error Internal state");
           }
           // VLOG(10) << "put path of size: " << cur_rel_type.size();
-          if (!results_creator_->add_result(cur_path, cur_weight, cur_rel_type,
-                                            cur_rel_info, cur_direction)) {
+          auto res = results_creator_->add_result(single_result_limit, cur_path,
+                                                  cur_weight, cur_rel_type,
+                                                  cur_rel_info, cur_direction);
+
+          if (res == AddResultRet::Fail) {
             LOG(ERROR) << "Failed to add result";
             return false;
+          }
+          if (res == AddResultRet::Full) {
+            // then set dst to invalid.
+            valid_comp_vids_[dst] = false;
+            continue;
           }
           // for (auto k = 0; k < cur_rel_type.size(); ++k) {
           //   output.put_long(get_oid_from_encoded_vid(txn, cur_path[k]));
@@ -512,9 +546,11 @@ public:
 
     auto txn = graph.GetReadTransaction();
     int32_t hop_limit = input.get_int();
-    int32_t result_limit = input.get_int();
+    int32_t single_result_limit = input.get_int();
+    // single_result_limit is the max number of paths for 1v1 relations.
+    // the max number of all paths is  result_limit * vid_vec.size()
     int32_t rel_type_num = input.get_int();
-    LOG(INFO) << "result limit: " << result_limit
+    LOG(INFO) << "result limit: " << single_result_limit
               << " rel type num: " << rel_type_num;
     // valid rel type ids
     std::vector<bool> valid_rel_type_ids(REL_TYPE_MAX, false);
@@ -539,7 +575,7 @@ public:
 
     int32_t vec_size = input.get_int();
     LOG(INFO) << "Group Query: hop limit " << hop_limit << ", result limit "
-              << result_limit << ", ids size " << vec_size;
+              << single_result_limit << ", ids size " << vec_size;
     std::vector<vid_t> vid_vec;
     int count = 0;
 
@@ -562,6 +598,7 @@ public:
         vid_vec.emplace_back(vid);
       }
     }
+    int32_t result_limit = single_result_limit * vec_size;
     LOG(INFO) << count << " out of " << vec_size << " vertices not found";
     for (auto& vid : vid_vec) {
       valid_comp_vids_[vid] = true;
@@ -612,12 +649,13 @@ public:
         auto label = decode_label(last_vid_encoded);
         if (label == comp_label_id_) {
           const auto& oedges = cmp_invest_outgoing_view.get_edges(last_vid);
-          if (edge_expand(
-                  txn, vid_vec, comp_label_id_, oedges, valid_rel_type_ids, j,
-                  cur_paths, cur_weights, cur_rel_types, cur_rel_infos,
-                  cur_directions, next_paths, next_weights, next_rel_types,
-                  next_rel_infos, next_directions, result_size, result_limit,
-                  output, cur_time_left, Direction::Out)) {
+          if (edge_expand(txn, vid_vec, comp_label_id_, oedges,
+                          valid_rel_type_ids, j, cur_paths, cur_weights,
+                          cur_rel_types, cur_rel_infos, cur_directions,
+                          next_paths, next_weights, next_rel_types,
+                          next_rel_infos, next_directions, result_size,
+                          single_result_limit, result_limit, output,
+                          cur_time_left, Direction::Out)) {
             return true;  // early terminate.
           }
 
@@ -627,7 +665,8 @@ public:
                           cur_rel_types, cur_rel_infos, cur_directions,
                           next_paths, next_weights, next_rel_types,
                           next_rel_infos, next_directions, result_size,
-                          result_limit, output, cur_time_left, Direction::In)) {
+                          single_result_limit, result_limit, output,
+                          cur_time_left, Direction::In)) {
             return true;  // early terminate.
           }
 
@@ -637,18 +676,20 @@ public:
                           cur_rel_types, cur_rel_infos, cur_directions,
                           next_paths, next_weights, next_rel_types,
                           next_rel_infos, next_directions, result_size,
-                          result_limit, output, cur_time_left, Direction::In)) {
+                          single_result_limit, result_limit, output,
+                          cur_time_left, Direction::In)) {
             return true;  // early terminate.
           }
         } else if (label == person_label_id_) {
           const auto& oedges = person_invest_outgoing_view.get_edges(last_vid);
           double t0 = -grape::GetCurrentTime();
-          if (edge_expand(
-                  txn, vid_vec, comp_label_id_, oedges, valid_rel_type_ids, j,
-                  cur_paths, cur_weights, cur_rel_types, cur_rel_infos,
-                  cur_directions, next_paths, next_weights, next_rel_types,
-                  next_rel_infos, next_directions, result_size, result_limit,
-                  output, cur_time_left, Direction::Out)) {
+          if (edge_expand(txn, vid_vec, comp_label_id_, oedges,
+                          valid_rel_type_ids, j, cur_paths, cur_weights,
+                          cur_rel_types, cur_rel_infos, cur_directions,
+                          next_paths, next_weights, next_rel_types,
+                          next_rel_infos, next_directions, result_size,
+                          single_result_limit, result_limit, output,
+                          cur_time_left, Direction::Out)) {
             return true;  // early terminate.
           }
         } else {
@@ -717,4 +758,3 @@ void DeleteApp(void* app) {
   delete casted;
 }
 }
-
