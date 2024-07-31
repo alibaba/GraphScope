@@ -47,9 +47,9 @@ from graphscope.framework.utils import PipeMerger
 from graphscope.framework.utils import i_to_attr
 from graphscope.framework.utils import s_to_attr
 from graphscope.proto import coordinator_service_pb2_grpc
-from graphscope.proto.error import coordinator_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import types_pb2
+from graphscope.proto.error import coordinator_pb2
 
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
