@@ -1100,6 +1100,7 @@ components:
     LongText:
       x-body-name: long_text
       type: object
+      additionalProperties: false 
       required:
         - long_text
       properties:
@@ -1109,19 +1110,21 @@ components:
     FixedChar:
       x-body-name: fixed_char
       type: object
+      additionalProperties: false 
       required:
         - char
       properties:
         char:
           type: object
           required:
-            - fixed_char
+            - fixed_length
           properties:
-            fixed_char:
+            fixed_length:
               type: integer
     VarChar:
       x-body-name: var_char
       type: object
+      additionalProperties: false 
       required:
         - var_char
       properties:
