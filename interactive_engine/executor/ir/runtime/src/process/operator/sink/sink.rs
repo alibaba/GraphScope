@@ -355,13 +355,13 @@ impl RecordSinkEncoder {
     fn path_to_pb(&self, p: &GraphPath) -> result_pb::GraphPath {
         let mut graph_path_pb = vec![];
         match p {
-            GraphPath::AllPath(path) | GraphPath::SimpleAllPath(path) => {
+            GraphPath::AllPath(path) | GraphPath::SimpleAllPath(path) | GraphPath::TrailAllPath(path) => {
                 for vertex_or_edge in path {
                     let vertex_or_edge_pb = self.vertex_or_edge_to_pb(vertex_or_edge);
                     graph_path_pb.push(vertex_or_edge_pb);
                 }
             }
-            GraphPath::EndV((path_end, _)) | GraphPath::SimpleEndV((path_end, _, _)) => {
+            GraphPath::EndV((path_end, _)) | GraphPath::SimpleEndV((path_end, _, _)) | GraphPath::TrailEndV((path_end, _, _)) => {
                 let vertex_or_edge_pb = self.vertex_or_edge_to_pb(path_end);
                 graph_path_pb.push(vertex_or_edge_pb);
             }
