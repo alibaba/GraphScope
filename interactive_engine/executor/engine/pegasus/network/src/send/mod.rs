@@ -164,7 +164,8 @@ pub(crate) fn remove_remote_sender(local_id: u64, remote_id: u64, other: &Arc<Se
         .write()
         .expect("REMOTE_MSG_SENDER write lock poisoned");
     if let Some((_, tx)) = lock.get(&(local_id, remote_id)) {
-        if !Weak::ptr_eq(tx, other) {
+        let weak = Arc::downgrade(other);
+        if !Weak::ptr_eq(tx, &weak) {
             return;
         }
     }
