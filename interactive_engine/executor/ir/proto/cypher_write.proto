@@ -46,7 +46,7 @@ message Set {
     }
     repeated Item items = 1;
 }
-  
+
 // Init data source from external input files.
 // Example1:
 // LOAD CSV FROM $csv_file AS row FIELDTERMINATOR '|'
@@ -105,9 +105,16 @@ message Load {
             string property = 2;
         }
 
+        message Input {
+            oneof input {
+            string path = 1;
+            common.DynamicParam dyn_path = 2;
+            }
+        }
+
         message VertexMapping {
             string type_name = 1;
-            repeated string inputs = 2;
+            repeated Input inputs = 2;
             repeated ColumnMapping column_mappings = 3;
             // a query given alias name for latter fetching
             common.NameOrId alias = 4;
@@ -122,7 +129,7 @@ message Load {
                 string destination_vertex = 3;
             }
             TypeTriplet type_triplet = 1;
-            repeated string inputs = 2;
+            repeated Input inputs = 2;
             repeated ColumnMapping.Column source_vertex_mappings = 3;
             repeated ColumnMapping.Column destination_vertex_mappings = 4;
             repeated ColumnMapping column_mappings = 5;
@@ -135,7 +142,7 @@ message Load {
     Kind kind = 1;
     ColumnMappings mappings = 2;
 }
-  
+
 // Examples:
 // MATCH (n:Person {name: 'Tom Hanks'}) DETACH DELETE n;
 // MATCH (n:Person {name: 'Laurence Fishburne'})-[r:ACTED_IN]->() DELETE r;
