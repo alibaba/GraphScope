@@ -49,7 +49,7 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     std::stringstream TOKENPASTE2(_ss, __LINE__);                           \
     vineyard::backtrace_info::backtrace(TOKENPASTE2(_ss, __LINE__), true);  \
     LOG(ERROR) << "graphscope error in frame: code = "                      \
-               << vineyard::formatEnumValue(code) << " at "                          \
+               << vineyard::formatEnumValue(code) << " at "                 \
                << (std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
                    ": " + std::string(__FUNCTION__))                        \
                << " -> " << (msg)                                           \
@@ -68,7 +68,7 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     std::stringstream TOKENPASTE2(_ss, __LINE__);                           \
     vineyard::backtrace_info::backtrace(TOKENPASTE2(_ss, __LINE__), true);  \
     LOG(ERROR) << "graphscope error in frame: code = "                      \
-               << vineyard::formatEnumValue(code) << " at "                          \
+               << vineyard::formatEnumValue(code) << " at "                 \
                << (std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
                    ": " + std::string(__FUNCTION__))                        \
                << " -> " << (msg)                                           \
