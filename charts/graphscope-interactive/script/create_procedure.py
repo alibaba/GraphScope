@@ -657,11 +657,4 @@ if __name__ == "__main__":
     get_service_status(sess)
     print("-----------------Finish getting service status-----------------")
 
-    if args.remove_old_graph:
-        print("remove old graph")
-        delete_graph = sess.delete_graph(old_graph)
-        print("delete graph res: ", delete_graph)
-    else:
-        print("keep old graph", old_graph)
-
     list_graph(sess)
