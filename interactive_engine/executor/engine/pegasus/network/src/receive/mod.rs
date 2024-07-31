@@ -82,12 +82,12 @@ fn add_remote_register(local: u64, remote: u64, register: InboxRegister) {
     lock.insert((local, remote), register);
 }
 
-fn remove_remote_register(local: u64, remote: u64, register: InboxRegister) -> Option<InboxRegister> {
+fn remove_remote_register(local: u64, remote: u64, other: InboxRegister) -> Option<InboxRegister> {
     let mut lock = REMOTE_RECV_REGISTER
         .write()
         .expect("failure to lock REMOTE_RECV_REGISTER");
     if let Some(register) = lock.get(&(local, remote)) {
-        if !register.from_same_receiver(&register) {
+        if !register.from_same_receiver(&other) {
             return None;
         }
     }
