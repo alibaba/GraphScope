@@ -7,7 +7,7 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**fixedChar** | **Integer** |  |  |
+|**fixedLength** | **Integer** |  |  |
 
 
 

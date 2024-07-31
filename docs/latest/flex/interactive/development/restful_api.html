@@ -1252,13 +1252,14 @@ ul.nav-tabs {
       "$ref" : "#/components/schemas/FixedChar_char"
     }
   },
+  "additionalProperties" : false,
   "x-body-name" : "fixed_char"
 };
     defs["FixedChar_char"] = {
-  "required" : [ "fixed_char" ],
+  "required" : [ "fixed_length" ],
   "type" : "object",
   "properties" : {
-    "fixed_char" : {
+    "fixed_length" : {
       "type" : "integer"
     }
   }
@@ -1487,6 +1488,7 @@ ul.nav-tabs {
       "nullable" : true
     }
   },
+  "additionalProperties" : false,
   "x-body-name" : "long_text"
 };
     defs["Parameter"] = {
@@ -1795,6 +1797,7 @@ ul.nav-tabs {
       "$ref" : "#/components/schemas/VarChar_var_char"
     }
   },
+  "additionalProperties" : false,
   "x-body-name" : "var_char"
 };
     defs["VarChar_var_char"] = {

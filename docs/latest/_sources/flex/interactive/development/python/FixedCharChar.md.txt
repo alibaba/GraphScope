@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**fixed_char** | **int** |  | 
+**fixed_length** | **int** |  | 
 
 ## Example
 
