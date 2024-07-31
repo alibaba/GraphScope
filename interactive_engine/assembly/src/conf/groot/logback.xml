@@ -13,12 +13,12 @@
             <totalSizeCap>${log_total_size_cap}</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>[%d{ISO8601}][%p][%t][%c{3}][%X] %m%n</pattern>
+            <pattern>[%d{ISO8601}][%p][%t][%c{3}] %m%n %X</pattern>
         </encoder>
     </appender>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%d{ISO8601}][%p][%t][%c{3}][%X] %m%n</pattern>
+            <pattern>[%d{ISO8601}][%p][%t][%c{3}] %m%n %X</pattern>
         </encoder>
     </appender>
     <appender name="Metric" class="ch.qos.logback.core.rolling.RollingFileAppender">

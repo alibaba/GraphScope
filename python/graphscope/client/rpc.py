@@ -29,7 +29,6 @@ from graphscope.client.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from graphscope.client.utils import GRPCUtils
 from graphscope.client.utils import handle_grpc_error
 from graphscope.client.utils import suppress_grpc_error
-from graphscope.framework.errors import error_code_to_str
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import message_pb2
 from graphscope.proto.error import coordinator_pb2
