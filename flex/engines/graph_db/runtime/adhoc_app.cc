@@ -1,16 +1,31 @@
-#include "flex/engines/graph_db/runtime/adhoc/runtime.h"
+/** Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
+#include "flex/engines/graph_db/runtime/adhoc/runtime.h"
 
 #include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
-class Runtime : public ReadAppBase {
+class AdhocApp : public ReadAppBase {
  public:
-  Runtime(GraphDB& graph) {}
-  ~Runtime() {}
+  AdhocApp(GraphDB& graph) {}
+  ~AdhocApp() {}
 
   bool Query(const GraphDBSession& graph_, Decoder& input,
              Encoder& output) override {
@@ -46,12 +61,12 @@ class Runtime : public ReadAppBase {
 
 extern "C" {
 void* CreateApp(gs::GraphDB& db) {
-  gs::Runtime* app = new gs::Runtime(db);
+  gs::AdhocApp* app = new gs::AdhocApp(db);
   return static_cast<void*>(app);
 }
 
 void DeleteApp(void* app) {
-  gs::Runtime* casted = static_cast<gs::Runtime*>(app);
+  gs::AdhocApp* casted = static_cast<gs::AdhocApp*>(app);
   delete casted;
 }
 }
