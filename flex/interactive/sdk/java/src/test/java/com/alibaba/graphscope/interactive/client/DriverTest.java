@@ -15,7 +15,9 @@
  */
 package com.alibaba.graphscope.interactive.client;
 
+import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.alibaba.graphscope.interactive.client.common.Result;
 import com.alibaba.graphscope.interactive.client.utils.Encoder;
 import com.alibaba.graphscope.interactive.models.*;
@@ -33,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 public class DriverTest {
@@ -113,6 +116,7 @@ public class DriverTest {
         test9CallCppProcedure1Current();
         test9CallCppProcedure2();
         test10CallCypherProcedureViaNeo4j();
+        testCallCypherProcedureProto();
         testQueryInterface();
         test11CreateDriver();
     }
@@ -409,8 +413,21 @@ public class DriverTest {
                                                 .primitiveType(
                                                         PrimitiveType.PrimitiveTypeEnum
                                                                 .SIGNED_INT32))));
-        Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
-        assertOk(resp);
+        {
+            // 1. call cpp procedure with graph id and procedure id, sync
+            // call 10 times to make sure all shard is working.
+            for (int i = 0; i < 10; i++) {
+                Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, request);
+                assertOk(resp);
+            }
+        }
+        {
+            // 2. call cpp procedure with graph id and procedure id, async
+            CompletableFuture<Result<IrResult.CollectiveResults>> future =
+                    session.callProcedureAsync(graphId, request);
+            Result<IrResult.CollectiveResults> results = future.join();
+            logger.info("Got result: {}" + results.toString());
+        }
     }
 
     public void test9CallCppProcedure1Current() {
@@ -425,19 +442,44 @@ public class DriverTest {
                                                 .primitiveType(
                                                         PrimitiveType.PrimitiveTypeEnum
                                                                 .SIGNED_INT32))));
-        Result<IrResult.CollectiveResults> resp = session.callProcedure(request);
-        assertOk(resp);
+        {
+            // 1. call cpp procedure with procedure id, sync
+            Result<IrResult.CollectiveResults> resp = session.callProcedure(request);
+            assertOk(resp);
+        }
+        {
+            // 2. call cpp procedure with procedure id, async
+            CompletableFuture<Result<IrResult.CollectiveResults>> future =
+                    session.callProcedureAsync(request);
+            Result<IrResult.CollectiveResults> results = future.join();
+            logger.info("Got result: {}" + results.toString());
+        }
     }
 
     public void test9CallCppProcedure2() {
         byte[] bytes = new byte[4 + 1];
         Encoder encoder = new Encoder(bytes);
         encoder.put_int(1);
-        encoder.put_byte(
-                (byte) 3); // Assume the procedure index is 3. since the procedures are sorted by
-        // creation time.
-        Result<byte[]> resp = session.callProcedureRaw(graphId, bytes);
-        assertOk(resp);
+        encoder.put_byte((byte) 3); // Assume the procedure index is 1
+        {
+            Result<byte[]> resp = session.callProcedureRaw(graphId, bytes);
+            assertOk(resp);
+        }
+        {
+            Result<byte[]> resp = session.callProcedureRaw(bytes);
+            assertOk(resp);
+        }
+        {
+            CompletableFuture<Result<byte[]>> future =
+                    session.callProcedureRawAsync(graphId, bytes);
+            Result<byte[]> resp = future.join();
+            assertOk(resp);
+        }
+        {
+            CompletableFuture<Result<byte[]>> future = session.callProcedureRawAsync(bytes);
+            Result<byte[]> resp = future.join();
+            assertOk(resp);
+        }
     }
 
     public void test10CallCypherProcedureViaNeo4j() {
@@ -447,15 +489,48 @@ public class DriverTest {
         logger.info("result: " + result.toString());
     }
 
+    public void testCallCypherProcedureProto() {
+        // Call stored procedure via StoredProcedure.Query
+        StoredProcedure.Query.Builder builder = StoredProcedure.Query.newBuilder();
+        builder.setQueryName(Common.NameOrId.newBuilder().setName(cypherProcedureId).build());
+        builder.addArguments(
+                StoredProcedure.Argument.newBuilder()
+                        .setParamInd(0)
+                        .setParamName("personName")
+                        .setValue(Common.Value.newBuilder().setStr(personNameValue).build())
+                        .build());
+        StoredProcedure.Query query = builder.build();
+        {
+            Result<IrResult.CollectiveResults> resp = session.callProcedure(graphId, query);
+            assertOk(resp);
+        }
+        {
+            Result<IrResult.CollectiveResults> resp = session.callProcedure(query);
+            assertOk(resp);
+        }
+        {
+            CompletableFuture<Result<IrResult.CollectiveResults>> future =
+                    session.callProcedureAsync(graphId, query);
+            Result<IrResult.CollectiveResults> resp = future.join();
+            assertOk(resp);
+        }
+        {
+            CompletableFuture<Result<IrResult.CollectiveResults>> future =
+                    session.callProcedureAsync(query);
+            Result<IrResult.CollectiveResults> resp = future.join();
+            assertOk(resp);
+        }
+    }
+
     public void testQueryInterface() {
         String queryEndpoint =
                 System.getProperty("interactive.procedure.endpoint", "http://localhost:10000");
-        QueryInterface queryInterface = Driver.queryServiceOnly(queryEndpoint);
+        QueryInterface procedureInterface = Driver.queryServiceOnly(queryEndpoint);
         byte[] bytes = new byte[4 + 1];
         Encoder encoder = new Encoder(bytes);
         encoder.put_int(1);
-        encoder.put_byte((byte) 3); // Assume the procedure index is 3
-        Result<byte[]> resp = queryInterface.callProcedureRaw(graphId, bytes);
+        encoder.put_byte((byte) 3); // Assume the procedure index is 1
+        Result<byte[]> resp = procedureInterface.callProcedureRaw(graphId, bytes);
         assertOk(resp);
     }
 

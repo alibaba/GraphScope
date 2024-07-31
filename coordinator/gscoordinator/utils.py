@@ -252,7 +252,7 @@ def get_app_sha256(attr, java_class_path: str):
         app_sha256 = hashlib.sha256(
             f"{app_type}.{app_class}.{graph_type}".encode("utf-8", errors="ignore")
         ).hexdigest()
-    elif app_type == "java_pie":
+    elif app_type == "java_pie" or app_type == "giraph":
         s = hashlib.sha256()
         s.update(f"{graph_type}.{vd_type}".encode("utf-8", errors="ignore"))
         app_sha256 = s.hexdigest()
@@ -314,6 +314,40 @@ def check_java_app_graph_consistency(
                     i, graph_actual_type_param, java_app_type_param
                 )
             )
+    return True
+
+
+def check_giraph_app_graph_consistency(
+    app_class, cpp_graph_type, java_class_template_str
+):
+    # Split the C++ graph type to get the parameters
+    split_cpp_graph_type = cpp_graph_type.split("<")
+    java_app_type_params = java_class_template_str[:-1].split("<")[-1].split(",")
+
+    # Ensure the graph type is supported
+    if split_cpp_graph_type[0] != "gs::ArrowProjectedFragment":
+        raise RuntimeError("Giraph app only supports projected graph")
+
+    # Extract actual type parameters from the graph
+    graph_actual_type_params = split_cpp_graph_type[1][:-1].split(",")
+
+    # Define expected mapping between graph and app parameters
+    # (cpp index: java index)
+    index_mapping = {0: 0, 2: 1, 3: 2}  # oid_t  # vdata_t  # edata_t
+
+    # Check consistency between graph and app type parameters
+    for cpp_index, java_index in index_mapping.items():
+        if not _type_param_consistent(
+            graph_actual_type_params[cpp_index], java_app_type_params[java_index]
+        ):
+            raise RuntimeError(
+                "Error in check app and graph consistency, type params index {}, cpp: {}, java: {}".format(
+                    cpp_index,
+                    graph_actual_type_params[cpp_index],
+                    java_app_type_params[java_index],
+                )
+            )
+
     return True
 
 
@@ -487,6 +521,13 @@ def compile_app(
             graph_type,
         )
         check_java_app_graph_consistency(app_class, graph_type, java_app_class)
+    if app_type == "giraph":
+        logger.info(
+            "Check consistent between giraph app %s and graph %s",
+            java_app_class,
+            graph_type,
+        )
+        check_giraph_app_graph_consistency(app_class, graph_type, java_app_class)
 
     os.chdir(library_dir)
 
@@ -512,7 +553,7 @@ def compile_app(
 
     if os.environ.get("GRAPHSCOPE_ANALYTICAL_DEBUG", "") == "1":
         cmake_commands.append("-DCMAKE_BUILD_TYPE=Debug")
-    if app_type == "java_pie":
+    if app_type == "java_pie" or app_type == "giraph":
         # for java need to run preprocess, and the generated files can be reused,
         # if the fragment & vd type is same.
         java_codegen_out_dir = os.path.join(
@@ -693,6 +734,10 @@ def _type_param_consistent(graph_actucal_type_param, java_app_type_param):
         return False
     if java_app_type_param == "java.lang.Integer":
         if graph_actucal_type_param in {"int32_t", "uint32_t"}:
+            return True
+        return False
+    if java_app_type_param == "com.alibaba.graphscope.ds.StringView":
+        if graph_actucal_type_param in {"std::string"}:
             return True
         return False
     return False
@@ -1622,13 +1667,13 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     algo = attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
     # for algo start with giraph:, we don't find info in meta
     if algo.startswith("giraph:") or algo.startswith("java_pie:"):
-        real_algo = algo.split(":")[1]
+        (app_type, real_algo) = algo.split(":")
         logger.info("codegen app info for java app: %s", real_algo)
         src_header, app_class, vd_type, java_app_template_str = _probe_for_java_app(
             attr, java_class_path, real_algo
         )
         return (
-            "java_pie",
+            app_type,
             src_header,
             "{}<_GRAPH_TYPE>".format(app_class),
             vd_type,

@@ -17,7 +17,7 @@ public class StringApp
         implements ParallelAppBase<Long, Long, StringView, StringView, StringAppContext>,
                 ParallelEngine {
 
-    private static Logger logger = LoggerFactory.getLogger(ParallelAppBase.class);
+    private static Logger logger = LoggerFactory.getLogger(StringApp.class);
 
     /**
      * Partial Evaluation to implement.

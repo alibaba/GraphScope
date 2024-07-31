@@ -25,7 +25,54 @@ import pytest
 
 from gs_interactive.client.driver import Driver
 from gs_interactive.models import *
+from gs_interactive.client.status import StatusCode
 
+
+test_graph_def = {
+    "name": "modern_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"var_char": {"max_length" : 16}}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            }
+        ],
+    },
+}
 
 class TestDriver(unittest.TestCase):
     """Test usage of driver"""
@@ -61,6 +108,7 @@ class TestDriver(unittest.TestCase):
             print("delete graph: ", rep2)
 
     def test_example(self):
+        self.createGraphFromDict()
         self._graph_id = self.createGraph()
         self.bulkLoading()
         self.bulkLoadingUploading()
@@ -77,7 +125,17 @@ class TestDriver(unittest.TestCase):
         self.callProcedure()
         self.callProcedureWithHttp()
         self.callProcedureWithHttpCurrent()
+        # test stop the service, and submit queries
+        self.queryWithServiceStop()
         self.createDriver()
+    
+    def createGraphFromDict(self):
+        create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
+        resp = self._sess.create_graph(create_graph_request)
+        assert resp.is_ok()
+        graph_id = resp.get_value().graph_id
+        print("Graph id: ", graph_id)
+        return graph_id
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
@@ -327,6 +385,35 @@ class TestDriver(unittest.TestCase):
         resp = self._sess.get_service_status()
         assert resp.is_ok()
         print("get service status: ", resp.get_value())
+
+    def queryWithServiceStop(self):
+        # stop service
+        print("stop service: ")
+        stop_res = self._sess.stop_service()
+        assert stop_res.is_ok()
+        # submit query on stopped service should raise exception
+        req = QueryRequest(
+            query_name=self._cpp_proc_name,
+            arguments=[
+                TypedValue(
+                    type=GSDataType(PrimitiveType(primitive_type="DT_SIGNED_INT32")),
+                    value=1,
+                )
+            ],
+        )
+        resp = self._sess.call_procedure_current(params=req)
+        assert not resp.is_ok()
+        print("call procedure failed: ", resp.get_status_message())
+        assert resp.get_status().get_code() == StatusCode.SERVICE_UNAVAILABLE
+
+        # start service
+        print("start service: ")
+        start_res = self._sess.start_service(
+            start_service_request=StartServiceRequest(graph_id=self._graph_id)
+        )
+        assert start_res.is_ok()
+        # wait 5 seconds
+        time
 
     def restartOnNewGraph(self):
         original_graph_id = None

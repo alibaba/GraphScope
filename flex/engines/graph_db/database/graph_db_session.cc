@@ -20,10 +20,8 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/utils/app_utils.h"
 
-#ifdef BUILD_HQPS
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "nlohmann/json.hpp"
-#endif  // BUILD_HQPS
 
 namespace gs {
 
@@ -229,7 +227,6 @@ AppBase* GraphDBSession::GetApp(int type) {
 
 #undef likely  // likely
 
-#ifdef BUILD_HQPS
 Result<std::pair<uint8_t, std::string_view>>
 GraphDBSession::parse_query_type_from_cypher_json(
     const std::string_view& str_view) {
@@ -282,7 +279,6 @@ GraphDBSession::parse_query_type_from_cypher_internal(
   }
   return std::make_pair(app_name_to_path_index.at(query_name).second, str_view);
 }
-#endif
 
 const AppMetric& GraphDBSession::GetAppMetric(int idx) const {
   return app_metrics_[idx];
