@@ -46,14 +46,14 @@ void LoaderFactory::Finalize() {}
 
 std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
     const std::string& work_dir, const Schema& schema,
-    const LoadingConfig& loading_config, int thread_num) {
+    const LoadingConfig& loading_config) {
   auto scheme = loading_config.GetScheme();
   auto format = loading_config.GetFormat();
   auto key = scheme + format;
   auto& known_loaders_ = getKnownLoaders();
   auto iter = known_loaders_.find(key);
   if (iter != known_loaders_.end()) {
-    return iter->second(work_dir, schema, loading_config, thread_num);
+    return iter->second(work_dir, schema, loading_config);
   } else {
     LOG(FATAL) << "Unsupported format: " << format;
   }

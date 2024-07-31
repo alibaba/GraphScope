@@ -1,0 +1,71 @@
+name: modern_graph # then must have a modern dir under ${data} directory
+store_type: mutable_csr  # v6d, groot, gart
+schema:
+  vertex_types:
+    - type_id: 0
+      type_name: person
+      x_csr_params:
+        max_vertex_num: 100
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            string:
+              long_text: ""
+        - property_id: 1
+          property_name: name
+          property_type:
+            varchar:
+              max_length: 64
+        - property_id: 2
+          property_name: age
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+      primary_keys:
+        - id
+    - type_id: 1
+      type_name: software
+      x_csr_params:
+        max_vertex_num: 100
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            varchar:
+              max_length: 64
+        - property_id: 1
+          property_name: name
+          property_type:
+            varchar:
+              max_length: 64
+        - property_id: 2
+          property_name: lang
+          property_type:
+            varchar:
+              max_length: 64
+      primary_keys:
+        - id
+  edge_types:
+    - type_id: 0
+      type_name: knows
+      vertex_type_pair_relations:
+        - source_vertex: person
+          destination_vertex: person
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: weight
+          property_type:
+            primitive_type: DT_DOUBLE
+    - type_id: 1
+      type_name: created
+      vertex_type_pair_relations:
+        - source_vertex: person
+          destination_vertex: software
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: weight
+          property_type:
+            varchar:
+              max_length: 64

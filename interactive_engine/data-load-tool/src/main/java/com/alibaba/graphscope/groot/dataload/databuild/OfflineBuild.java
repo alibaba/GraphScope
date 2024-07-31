@@ -18,8 +18,10 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
+import com.alibaba.graphscope.groot.dataload.unified.UniConfig;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
+import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.hadoop.conf.Configuration;
@@ -35,9 +37,7 @@ import org.apache.hadoop.mapreduce.lib.output.LazyOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 public class OfflineBuild {
@@ -45,34 +45,14 @@ public class OfflineBuild {
 
     public static void main(String[] args)
             throws IOException, ClassNotFoundException, InterruptedException {
-        String propertiesFile = args[0];
-        Properties properties = new Properties();
-        try (InputStream is = new FileInputStream(propertiesFile)) {
-            properties.load(is);
-        }
+        String configFile = args[0];
+        UniConfig properties = UniConfig.fromFile(configFile);
+
         String inputPath = properties.getProperty(DataLoadConfig.INPUT_PATH);
         String outputPath = properties.getProperty(DataLoadConfig.OUTPUT_PATH);
-        String configStr = properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
-
         String uniquePath =
                 properties.getProperty(DataLoadConfig.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
-
-        String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
-        String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
-
-        GrootClient client = Utils.getClient(graphEndpoint, username, password);
-
-        Map<String, FileColumnMapping> columnMappingConfig = Utils.parseColumnMapping(configStr);
-        List<DataLoadTargetPb> targets = Utils.getDataLoadTargets(columnMappingConfig);
-        GraphSchema schema = GraphDef.parseProto(client.prepareDataLoad(targets));
-        int partitionNum = client.getPartitionNum();
-
-        Map<String, ColumnMappingInfo> info = new HashMap<>();
-        columnMappingConfig.forEach(
-                (fileName, fileColumnMapping) -> {
-                    info.put(fileName, fileColumnMapping.toColumnMappingInfo(schema));
-                });
 
         String _tmp = properties.getProperty(DataLoadConfig.SPLIT_SIZE, "256");
         long splitSize = Long.parseLong(_tmp) * 1024 * 1024;
@@ -82,6 +62,29 @@ public class OfflineBuild {
         boolean skipHeader = Utils.parseBoolean(_tmp);
         String separator = properties.getProperty(DataLoadConfig.SEPARATOR, "\\|");
 
+        String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
+        String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
+
+        GrootClient client = Utils.getClient(graphEndpoint, username, password);
+
+        String configStr = properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
+        Map<String, FileColumnMapping> mappingConfig;
+        if (configStr == null) {
+            mappingConfig = Utils.parseColumnMappingFromUniConfig(properties);
+        } else {
+            mappingConfig = Utils.parseColumnMapping(configStr);
+        }
+        List<DataLoadTargetPb> targets = Utils.getDataLoadTargets(mappingConfig);
+        GraphDefPb pb = client.prepareDataLoad(targets);
+        GraphSchema schema = GraphDef.parseProto(pb);
+        System.out.println("GraphSchema " + pb);
+        int partitionNum = client.getPartitionNum();
+
+        Map<String, ColumnMappingInfo> info = new HashMap<>();
+        mappingConfig.forEach(
+                (fileName, fileColumnMapping) -> {
+                    info.put(fileName, fileColumnMapping.toColumnMappingInfo(schema));
+                });
         ObjectMapper mapper = new ObjectMapper();
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
 

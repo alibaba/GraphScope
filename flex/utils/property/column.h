@@ -18,6 +18,7 @@
 
 #include <string>
 #include <string_view>
+#include "grape/utils/concurrent_queue.h"
 
 #include "flex/utils/mmap_array.h"
 #include "flex/utils/property/types.h"
@@ -183,8 +184,13 @@ class TypedColumn : public ColumnBase {
   PropertyType type() const override { return AnyConverter<T>::type(); }
 
   void set_value(size_t index, const T& val) {
-    assert(index >= basic_size_ && index < basic_size_ + extra_size_);
-    extra_buffer_.set(index - basic_size_, val);
+    if (index >= basic_size_ && index < basic_size_ + extra_size_) {
+      extra_buffer_.set(index - basic_size_, val);
+    } else if (index < basic_size_) {
+      basic_buffer_.set(index, val);
+    } else {
+      LOG(FATAL) << "Index out of range";
+    }
   }
 
   void set_any(size_t index, const Any& value) override {
@@ -245,8 +251,10 @@ class TypedColumn<std::string_view> : public ColumnBase {
     if (std::filesystem::exists(basic_path + ".items")) {
       basic_buffer_.open(basic_path, false);
       basic_size_ = basic_buffer_.size();
+      basic_pos_ = basic_buffer_.data_size();
     } else {
       basic_size_ = 0;
+      basic_pos_ = 0;
     }
     if (work_dir == "") {
       extra_size_ = 0;
@@ -261,6 +269,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   void open_in_memory(const std::string& prefix) override {
     basic_buffer_.open(prefix, false);
     basic_size_ = basic_buffer_.size();
+    basic_pos_ = basic_buffer_.data_size();
 
     extra_buffer_.reset();
     extra_size_ = 0;
@@ -271,6 +280,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     if (strategy_ == StorageStrategy::kMem || force) {
       basic_buffer_.open_with_hugepages(prefix);
       basic_size_ = basic_buffer_.size();
+      basic_pos_ = basic_buffer_.data_size();
 
       extra_buffer_.reset();
       extra_buffer_.set_hugepage_prefered(true);
@@ -299,6 +309,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     }
 
     basic_size_ = 0;
+    basic_pos_ = 0;
     basic_buffer_.reset();
     extra_size_ = tmp.size();
     extra_buffer_.swap(tmp);
@@ -323,6 +334,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
 
     extra_size_ = basic_size_ + extra_size_;
     basic_size_ = 0;
+    basic_pos_ = 0;
     basic_buffer_.reset();
     tmp.open(tmp_path, true);
     extra_buffer_.swap(tmp);
@@ -332,6 +344,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
 
   void dump(const std::string& filename) override {
     if (basic_size_ != 0 && extra_size_ == 0) {
+      basic_buffer_.resize(basic_size_, basic_pos_.load());
       basic_buffer_.dump(filename);
     } else if (basic_size_ == 0 && extra_size_ != 0) {
       extra_buffer_.resize(extra_size_, pos_.load());
@@ -375,18 +388,30 @@ class TypedColumn<std::string_view> : public ColumnBase {
         extra_buffer_.resize(extra_size_, extra_size_ * width_);
       }
     }
+    // resize `data` of basic_buffer
+    {
+      size_t pos = basic_pos_.load();
+      pos = pos + (pos + 4) / 5;
+      basic_buffer_.resize(basic_size_, pos);
+    }
   }
 
   PropertyType type() const override { return PropertyType::Varchar(width_); }
 
   void set_value(size_t idx, const std::string_view& val) {
-    assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
-    size_t offset = pos_.fetch_add(val.size());
-    extra_buffer_.set(idx - basic_size_, offset, val);
+    if (idx >= basic_size_ && idx < basic_size_ + extra_size_) {
+      size_t offset = pos_.fetch_add(val.size());
+      extra_buffer_.set(idx - basic_size_, offset, val);
+    } else if (idx < basic_size_) {
+      size_t offset = basic_pos_.fetch_add(val.size());
+      basic_buffer_.set(idx, offset, val);
+    } else {
+      LOG(FATAL) << "Index out of range";
+    }
   }
 
   void set_any(size_t idx, const Any& value) override {
-    set_value(idx, AnyConverter<std::string_view>::from_any(value));
+    set_value(idx, value.AsStringView());
   }
 
   std::string_view get_view(size_t idx) const {
@@ -403,6 +428,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     arc >> val;
     set_value(index, val);
   }
+
   const mmap_array<std::string_view>& basic_buffer() const {
     return basic_buffer_;
   }
@@ -423,6 +449,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   mmap_array<std::string_view> extra_buffer_;
   size_t extra_size_;
   std::atomic<size_t> pos_;
+  std::atomic<size_t> basic_pos_;
   StorageStrategy strategy_;
   uint16_t width_;
 };
@@ -479,7 +506,7 @@ class StringMapColumn : public ColumnBase {
   void set_value(size_t idx, const std::string_view& val);
 
   void set_any(size_t idx, const Any& value) override {
-    set_value(idx, AnyConverter<std::string_view>::from_any(value));
+    set_value(idx, value.AsStringView());
   }
 
   std::string_view get_view(size_t idx) const;
@@ -504,6 +531,7 @@ class StringMapColumn : public ColumnBase {
  private:
   TypedColumn<INDEX_T> index_col_;
   LFIndexer<INDEX_T>* meta_map_;
+  grape::SpinLock lock_;
 };
 
 template <typename INDEX_T>
@@ -547,10 +575,16 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
                                          const std::string_view& val) {
   INDEX_T lid;
   if (!meta_map_->get_index(val, lid)) {
-    lid = meta_map_->insert(val);
+    lock_.lock();
+    if (!meta_map_->get_index(val, lid)) {
+      lid = meta_map_->insert(val);
+    }
+    lock_.unlock();
   }
   index_col_.set_value(idx, lid);
 }
+
+using DefaultStringMapColumn = StringMapColumn<uint8_t>;
 
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem);
@@ -714,6 +748,12 @@ class TypedRefColumn<GlobalId> : public RefColumnBase {
  private:
   label_t label_key_;
 };
+
+// Create a reference column from a ColumnBase that contains a const reference
+// to the actual column storage, offering a column-based store interface for
+// vertex properties.
+std::shared_ptr<RefColumnBase> CreateRefColumn(
+    std::shared_ptr<ColumnBase> column);
 
 }  // namespace gs
 

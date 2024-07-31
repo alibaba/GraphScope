@@ -1,0 +1,661 @@
+{
+  "plan": [{
+    "opr": {
+      "join": {
+        "leftKeys": [{
+          "tag": {
+            "id": 4
+          },
+          "nodeType": {
+            "graphType": {
+              "graphDataType": [{
+                "label": {
+                  "label": 1
+                },
+                "props": [{
+                  "propId": {
+                    "name": "id"
+                  },
+                  "type": "INT64"
+                }, {
+                  "propId": {
+                    "name": "firstName"
+                  },
+                  "type": "STRING"
+                }, {
+                  "propId": {
+                    "name": "lastName"
+                  },
+                  "type": "STRING"
+                }, {
+                  "propId": {
+                    "name": "gender"
+                  },
+                  "type": "STRING"
+                }, {
+                  "propId": {
+                    "name": "birthday"
+                  },
+                  "type": "INT64"
+                }, {
+                  "propId": {
+                    "name": "creationDate"
+                  },
+                  "type": "INT64"
+                }, {
+                  "propId": {
+                    "name": "locationIP"
+                  },
+                  "type": "STRING"
+                }, {
+                  "propId": {
+                    "name": "browserUsed"
+                  },
+                  "type": "STRING"
+                }]
+              }]
+            }
+          }
+        }],
+        "rightKeys": [{
+          "tag": {
+            "id": 4
+          },
+          "nodeType": {
+            "graphType": {
+              "graphDataType": [{
+                "label": {
+                  "label": 1
+                },
+                "props": [{
+                  "propId": {
+                    "name": "id"
+                  },
+                  "type": "INT64"
+                }, {
+                  "propId": {
+                    "name": "firstName"
+                  },
+                  "type": "STRING"
+                }, {
+                  "propId": {
+                    "name": "lastName"
+                  },
+                  "type": "STRING"
+                }, {
+                  "propId": {
+                    "name": "gender"
+                  },
+                  "type": "STRING"
+                }, {
+                  "propId": {
+                    "name": "birthday"
+                  },
+                  "type": "INT64"
+                }, {
+                  "propId": {
+                    "name": "creationDate"
+                  },
+                  "type": "INT64"
+                }, {
+                  "propId": {
+                    "name": "locationIP"
+                  },
+                  "type": "STRING"
+                }, {
+                  "propId": {
+                    "name": "browserUsed"
+                  },
+                  "type": "STRING"
+                }]
+              }]
+            }
+          }
+        }],
+        "leftPlan": {
+          "plan": [{
+            "opr": {
+              "scan": {
+                "alias": 0,
+                "params": {
+                  "tables": [{
+                    "id": 1
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "idxPredicate": {
+                  "orPredicates": [{
+                    "predicates": [{
+                      "key": {
+                        "key": {
+                          "name": "id"
+                        }
+                      },
+                      "const": {
+                        "i32": 1
+                      }
+                    }]
+                  }]
+                }
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "graphDataType": [{
+                    "label": {
+                      "label": 1
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "id"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "firstName"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "lastName"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "gender"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "birthday"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "creationDate"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "locationIP"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "browserUsed"
+                      },
+                      "type": "STRING"
+                    }]
+                  }]
+                }
+              }
+            }]
+          }, {
+            "opr": {
+              "path": {
+                "base": {
+                  "edgeExpand": {
+                    "params": {
+                      "tables": [{
+                        "id": 12
+                      }],
+                      "columns": [{
+                        "name": "creationDate"
+                      }],
+                      "predicate": {
+                        "operators": [{
+                          "var": {
+                            "property": {
+                              "key": {
+                                "name": "creationDate"
+                              }
+                            },
+                            "nodeType": {
+                              "dataType": "INT64"
+                            }
+                          },
+                          "nodeType": {
+                            "dataType": "INT64"
+                          }
+                        }, {
+                          "logical": "EQ",
+                          "nodeType": {
+                            "dataType": "BOOLEAN"
+                          }
+                        }, {
+                          "const": {
+                            "i32": 2012
+                          },
+                          "nodeType": {
+                            "dataType": "INT32"
+                          }
+                        }]
+                      },
+                      "sampleRatio": 1.0
+                    },
+                    "expandOpt": "EDGE"
+                  },
+                  "getV": {
+                    "opt": "END",
+                    "params": {
+                      "tables": [{
+                        "id": 1
+                      }],
+                      "sampleRatio": 1.0
+                    }
+                  }
+                },
+                "startTag": 0,
+                "alias": 3,
+                "hopRange": {
+                  "lower": 3,
+                  "upper": 4
+                },
+                "resultOpt": "ALL_V_E"
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "elementOpt": "EDGE",
+                  "graphDataType": [{
+                    "label": {
+                      "label": 12,
+                      "srcLabel": 1,
+                      "dstLabel": 1
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "creationDate"
+                      },
+                      "type": "INT64"
+                    }]
+                  }]
+                }
+              },
+              "alias": -1
+            }]
+          }, {
+            "opr": {
+              "vertex": {
+                "opt": "END",
+                "params": {
+                  "tables": [{
+                    "id": 1
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 4
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "graphDataType": [{
+                    "label": {
+                      "label": 1
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "id"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "firstName"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "lastName"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "gender"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "birthday"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "creationDate"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "locationIP"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "browserUsed"
+                      },
+                      "type": "STRING"
+                    }]
+                  }]
+                }
+              },
+              "alias": 4
+            }]
+          }]
+        },
+        "rightPlan": {
+          "plan": [{
+            "opr": {
+              "scan": {
+                "alias": 2,
+                "params": {
+                  "tables": [{
+                    "id": 1
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "idxPredicate": {
+                  "orPredicates": [{
+                    "predicates": [{
+                      "key": {
+                        "key": {
+                          "name": "id"
+                        }
+                      },
+                      "const": {
+                        "i32": 2
+                      }
+                    }]
+                  }]
+                }
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "graphDataType": [{
+                    "label": {
+                      "label": 1
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "id"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "firstName"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "lastName"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "gender"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "birthday"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "creationDate"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "locationIP"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "browserUsed"
+                      },
+                      "type": "STRING"
+                    }]
+                  }]
+                }
+              },
+              "alias": 2
+            }]
+          }, {
+            "opr": {
+              "path": {
+                "base": {
+                  "edgeExpand": {
+                    "direction": "IN",
+                    "params": {
+                      "tables": [{
+                        "id": 12
+                      }],
+                      "columns": [{
+                        "name": "creationDate"
+                      }],
+                      "predicate": {
+                        "operators": [{
+                          "var": {
+                            "property": {
+                              "key": {
+                                "name": "creationDate"
+                              }
+                            },
+                            "nodeType": {
+                              "dataType": "INT64"
+                            }
+                          },
+                          "nodeType": {
+                            "dataType": "INT64"
+                          }
+                        }, {
+                          "logical": "EQ",
+                          "nodeType": {
+                            "dataType": "BOOLEAN"
+                          }
+                        }, {
+                          "const": {
+                            "i32": 2012
+                          },
+                          "nodeType": {
+                            "dataType": "INT32"
+                          }
+                        }]
+                      },
+                      "sampleRatio": 1.0
+                    },
+                    "expandOpt": "EDGE"
+                  },
+                  "getV": {
+                    "params": {
+                      "tables": [{
+                        "id": 1
+                      }],
+                      "sampleRatio": 1.0
+                    }
+                  }
+                },
+                "startTag": 2,
+                "alias": 5,
+                "hopRange": {
+                  "lower": 3,
+                  "upper": 4
+                },
+                "resultOpt": "ALL_V_E"
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "elementOpt": "EDGE",
+                  "graphDataType": [{
+                    "label": {
+                      "label": 12,
+                      "srcLabel": 1,
+                      "dstLabel": 1
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "creationDate"
+                      },
+                      "type": "INT64"
+                    }]
+                  }]
+                }
+              },
+              "alias": -1
+            }]
+          }, {
+            "opr": {
+              "vertex": {
+                "opt": "END",
+                "params": {
+                  "tables": [{
+                    "id": 1
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 4
+              }
+            },
+            "metaData": [{
+              "type": {
+                "graphType": {
+                  "graphDataType": [{
+                    "label": {
+                      "label": 1
+                    },
+                    "props": [{
+                      "propId": {
+                        "name": "id"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "firstName"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "lastName"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "gender"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "birthday"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "creationDate"
+                      },
+                      "type": "INT64"
+                    }, {
+                      "propId": {
+                        "name": "locationIP"
+                      },
+                      "type": "STRING"
+                    }, {
+                      "propId": {
+                        "name": "browserUsed"
+                      },
+                      "type": "STRING"
+                    }]
+                  }]
+                }
+              },
+              "alias": 4
+            }]
+          }]
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "project": {
+        "mappings": [{
+          "expr": {
+            "operators": [{
+              "pathConcat": {
+                "left": {
+                  "pathTag": {
+                    "tag": {
+                      "id": 3
+                    },
+                    "nodeType": {
+                    }
+                  },
+                  "endpoint": "END"
+                },
+                "right": {
+                  "pathTag": {
+                    "tag": {
+                      "id": 5
+                    },
+                    "nodeType": {
+                    }
+                  },
+                  "endpoint": "END"
+                }
+              }
+            }]
+          },
+          "alias": 1
+        }],
+        "isAppend": true
+      }
+    },
+    "metaData": [{
+      "type": {
+      },
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "project": {
+        "mappings": [{
+          "expr": {
+            "operators": [{
+              "var": {
+                "tag": {
+                  "id": 1
+                },
+                "nodeType": {
+                }
+              },
+              "nodeType": {
+              }
+            }]
+          },
+          "alias": 1
+        }]
+      }
+    },
+    "metaData": [{
+      "type": {
+      },
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "sink": {
+        "tags": [{
+          "tag": 1
+        }],
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

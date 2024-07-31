@@ -75,7 +75,6 @@
       <modules>
         <module>assembly</module>
         <module>common</module>
-        <module>data-load-tool</module>
         <module>executor</module>
         <module>groot-module</module>
         <module>groot-server</module>
@@ -226,6 +225,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
 
     <neo4j.version>4.4.0</neo4j.version>
+    <interactive.sdk.version>0.4</interactive.sdk.version>
   </properties>
 
   <dependencyManagement>
@@ -515,6 +515,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs-client</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minicluster</artifactId>
         <version>${hadoop.version}</version>
         <scope>test</scope>
@@ -654,9 +659,14 @@
       <dependency>
         <groupId>io.opentelemetry</groupId>
         <artifactId>opentelemetry-bom</artifactId>
-        <version>1.35.0</version>
+        <version>1.37.0</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>interactive</artifactId>
+        <version>${interactive.sdk.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

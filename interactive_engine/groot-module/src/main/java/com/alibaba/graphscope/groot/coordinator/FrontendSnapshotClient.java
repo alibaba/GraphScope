@@ -15,10 +15,9 @@ package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotRequest;
-import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotResponse;
-import com.alibaba.graphscope.proto.groot.FrontendSnapshotGrpc;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
@@ -29,16 +28,16 @@ import org.slf4j.LoggerFactory;
 public class FrontendSnapshotClient extends RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(FrontendSnapshotClient.class);
 
-    private FrontendSnapshotGrpc.FrontendSnapshotStub stub;
-
-    public FrontendSnapshotClient(ManagedChannel channel) {
+    public FrontendSnapshotClient(RpcChannel channel) {
         super(channel);
-        this.stub = FrontendSnapshotGrpc.newStub(this.channel);
     }
 
     public FrontendSnapshotClient(FrontendSnapshotGrpc.FrontendSnapshotStub stub) {
         super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
+    }
+
+    private FrontendSnapshotGrpc.FrontendSnapshotStub getStub() {
+        return FrontendSnapshotGrpc.newStub(rpcChannel.getChannel());
     }
 
     public void advanceQuerySnapshot(
@@ -48,22 +47,41 @@ public class FrontendSnapshotClient extends RpcClient {
         if (graphDef != null) {
             builder.setGraphDef(graphDef.toProto());
         }
-        stub.advanceQuerySnapshot(
-                builder.build(),
-                new StreamObserver<>() {
-                    @Override
-                    public void onNext(AdvanceQuerySnapshotResponse response) {
-                        long previousSnapshotId = response.getPreviousSnapshotId();
-                        callback.onCompleted(previousSnapshotId);
-                    }
+        getStub()
+                .advanceQuerySnapshot(
+                        builder.build(),
+                        new StreamObserver<>() {
+                            @Override
+                            public void onNext(AdvanceQuerySnapshotResponse response) {
+                                long previousSnapshotId = response.getPreviousSnapshotId();
+                                callback.onCompleted(previousSnapshotId);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
+    }
+
+    public void syncStatistics(Statistics statistics) {
+        getStub()
+                .syncStatistics(
+                        SyncStatisticsRequest.newBuilder().setStatistics(statistics).build(),
+                        new StreamObserver<SyncStatisticsResponse>() {
+                            @Override
+                            public void onNext(SyncStatisticsResponse value) {}
+
+                            @Override
+                            public void onError(Throwable t) {
+                                logger.error("Failed sync statistics to frontend", t);
+                            }
+
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

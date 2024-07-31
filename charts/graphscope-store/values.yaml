@@ -25,7 +25,7 @@ image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/graphscope-store
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.23.0"
+  tag: "0.28.0"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -74,20 +74,6 @@ store:
     size: 1Gi
     selector: {}
 
-  ## GraphScope store Service parameters
-  ##
-  service:
-    ## Service type
-    ##
-    type: ClusterIP
-    ## Service port
-    ##
-    port: 55555
-    gaiaRpc: 60000
-    gaiaEngine: 60001
-
-    annotations: {}
-
   ## @param hostAliases pods host aliases
   ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
   ##
@@ -113,6 +99,22 @@ store:
   ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
   ##
   schedulerName: ""
+
+  ## @param extraVolumes Optionally specify extra list of additional volumes for the Store pod(s)
+  ## e.g:
+  ## extraVolumes:
+  ##   - name: kafka-jaas
+  ##     secret:
+  ##       secretName: kafka-jaas
+  ##
+  extraVolumes: []
+  ## @param extraVolumeMounts Optionally specify extra list of additional volumeMounts for the Store container(s)
+  ## extraVolumeMounts:
+  ##   - name: kafka-jaas
+  ##     mountPath: /bitnami/kafka/config/kafka_jaas.conf
+  ##     subPath: kafka_jaas.conf
+  ##
+  extraVolumeMounts: []
 
 ## GraphScope Frontend parameters
 ##
@@ -223,14 +225,6 @@ coordinator:
     size: 100Mi
     selector: {}
 
-
-  ## Coordinator Service parameters
-  ##
-  service:
-    type: ClusterIP
-    port: 55555
-    annotations: {}
-
   ## @param hostAliases pods host aliases
   ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
   ##
@@ -284,26 +278,26 @@ commonAnnotations: {}
 ## Configure extra options for containers' liveness, readiness and startup probes
 livenessProbe:
   enabled: false
-  initialDelaySeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
+  initialDelaySeconds: 30
   periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
   successThreshold: 1
 
 readinessProbe:
-  enabled: false
-  initialDelaySeconds: 5
-  failureThreshold: 6
-  timeoutSeconds: 5
+  enabled: true
+  initialDelaySeconds: 30
   periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
   successThreshold: 1
 
 startupProbe:
   enabled: false
   initialDelaySeconds: 30
   periodSeconds: 10
-  timeoutSeconds: 1
-  failureThreshold: 15
+  timeoutSeconds: 5
+  failureThreshold: 5
   successThreshold: 1
 
 command:
@@ -427,6 +421,33 @@ serviceAccount:
   ##
   annotations: {}
 
+
+## Configure GraphScope Components with a custom groot.config file
+##
+javaOpts: ""
+
+rpcMaxBytesMb: 20
+
+## choose between "file" or "zookeeper"
+discoveryMode: "file"
+
+## Coordinator Config
+snapshotIncreaseIntervalMs: 1000
+offsetsPersistIntervalMs: 3000
+fileMetaStorePath: "/etc/groot/my.meta"
+logRecycleEnable: true
+logRecycleOffsetReserve: 86400
+
+## Store Config
+storeDataPath: "/var/lib/graphscope-store"
+storeDataDownloadPath: "/var/lib/graphscope-store/download"
+storeDataSecondaryPath: "/home/graphscope/secondary"
+storeWriteThreadCount: 1
+storeQueueBufferSize: 102400
+
+storeGcIntervalMs: 5000
+
+## Kafka Config
 ##
 ## Kafka chart configuration
 ##
@@ -441,6 +462,9 @@ kafka:
     port: 9092
   socketRequestMaxBytes: _1048576000
 
+## Zk Config
+zkBasePath: "/graphscope/groot"
+
 ## This value is only used when kafka.enabled is set to false
 ##
 externalKafka:
@@ -448,35 +472,30 @@ externalKafka:
   ##
   servers: []
 
-
-## Configure GraphScope Components with a custom groot.config file
-##
-javaOpts: ""
-
-rpcMaxBytesMb: 20
-
-discoveryMode: "file"
-
-## Coordinator Config
-snapshotIncreaseIntervalMs: 1000
-offsetsPersistIntervalMs: 3000
-fileMetaStorePath: "/etc/groot/my.meta"
-logRecycleEnable: true
-
-## Store Config
-storeDataPath: "/var/lib/graphscope-store"
-storeWriteThreadCount: 1
-storeQueueBufferSize: 102400
-
-storeGcIntervalMs: 5000
-
-## Kafka Config
 kafkaTopic: "graphscope"
 kafkaProducerCustomConfigs: ""
 
+
+## Zk Config
+
+## If set, the externalZookeeper.servers will be used to connect to the zookeeper
+## If not set, the bundled zookeeper in kafka cluster will be used
+externalZookeeper:
+  servers: []
+
+zkBasePath: "/graphscope/groot"
+
 ## Frontend Config
-enableHashGenerateEid: false
 # gremlinServerPort: 12312
+
+## GOpt config
+## To adopt a CBO planner, set graphPlannerOpt to CBO, set gremlinScriptLanguageName to antlr_gremlin_calcite, and set graphPhysicalOpt to proto.
+graphPlannerIsOn: true
+graphPlannerOpt: RBO
+graphPlannerRules: FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule, ExpandGetVFusionRule
+gremlinScriptLanguageName: antlr_gremlin_traversal
+graphPhysicalOpt: ffi
+queryExecutionTimeoutMs: 600000
 
 ## Key-value pair separated by ;
 ## For example extraConfig="k1=v1;k2=v2"
@@ -494,3 +513,33 @@ pegasus:
 secondary:
   enabled: false
   storeDataPath: "./data_secondary"
+
+
+backup:
+  enabled: false
+
+otel:
+  enabled: false
+  collector:
+    image:
+      registry: docker.io
+      repository: jaegertracing/all-in-one
+      tag: "latest"
+  # https://opentelemetry.io/docs/languages/sdk-configuration/general/#otel_traces_sampler
+  traces:
+    sampler:
+      name: "traceidratio"
+      arg: "0.1"
+
+uptrace:
+  enabled: false
+  # uptrace service endpoint, could be DNS name of uptrace service
+  # for example: "service-name.namespace", "my-uptrace.uptrace"
+  service: "uptrace"
+  # token is set within uptrace config
+  token: "project2_secret_token"
+
+distributed:
+  enabled: false
+
+collectStatistics: false

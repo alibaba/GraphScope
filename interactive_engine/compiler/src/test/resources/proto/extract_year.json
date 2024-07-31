@@ -1,0 +1,24 @@
+{
+  "operators": [{
+    "extract": {
+      "interval": "DAY"
+    },
+    "nodeType": {
+      "dataType": "INT64"
+    }
+  }, {
+    "var": {
+      "property": {
+        "key": {
+          "name": "creationDate"
+        }
+      },
+      "nodeType": {
+        "dataType": "DATE32"
+      }
+    },
+    "nodeType": {
+      "dataType": "DATE32"
+    }
+  }]
+}

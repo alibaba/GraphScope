@@ -76,6 +76,34 @@ function find_resources(){
   #fi
 }
 
+# Generate a yaml contains the metadata about the c++ procedure
+generate_cpp_yaml() {
+  if [ $# -ne 5 ]; then
+    echo "Usage: generate_cpp_yaml <procedure_name> <procedure_description> <output_so_name> <procedure_query_string> <output_yaml_file>"
+    echo " but receive: "$#
+    exit 1
+  fi
+  local procedure_name=$1
+  local procedure_description=$2
+  local output_so_name=$3
+  local procedure_query=$4
+  local output_yaml_file=$5
+  local template_str="""
+name: ${procedure_name}
+description: \"${procedure_description}\"
+library: ${output_so_name}
+type: cpp
+query: |
+  """
+  # for each line in procedure_query, add 2 spaces
+  while IFS= read -r line; do
+    # add newline after each line
+    template_str="${template_str}  ${line}\n"
+  done <<< "'${procedure_query}'"
+  echo "${template_str}" > ${output_yaml_file}
+  info "Generate yaml file to ${output_yaml_file}"
+}
+
 
 cypher_to_plan() {
   if [ $# -ne 8 ]; then
@@ -133,15 +161,18 @@ cypher_to_plan() {
     err "Compiler jar = ${COMPILER_JAR} not exists."
     exit 1
   fi
-  # add extra_key_value_config
-  extra_config="name:${procedure_name}"
-  extra_config="${extra_config},description:${procedure_description}"
-  extra_config="${extra_config},type:cypher"
+  # dump extra_key_value_config to a temp yaml, containing the extra config
+  extra_arg_config_file="${real_output_yaml}_extra_config.yaml"
+  cat <<EOM > ${extra_arg_config_file}
+name: ${procedure_name}
+description: "${procedure_description}"
+type: cypher
+EOM
 
   cmd="java -cp ${COMPILER_LIB_DIR}/*:${COMPILER_JAR}"
   cmd="${cmd} -Dgraph.schema=${graph_schema_path}"
   cmd="${cmd} -Djna.library.path=${IR_CORE_LIB_DIR}"
-  cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} '${extra_config}'"
+  cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} ${extra_arg_config_file}"
   info "running physical plan generation with ${cmd}"
   eval ${cmd}
 
@@ -223,10 +254,14 @@ compile_hqps_so() {
   dst_yaml_path="${output_dir}/${procedure_name}.yaml"
   if [[ $(uname) == "Linux" ]]; then
     output_so_path="${cur_dir}/lib${procedure_name}.so"
+    output_yaml_path="${cur_dir}/${procedure_name}.yaml"
     dst_so_path="${output_dir}/lib${procedure_name}.so"
+    dst_so_name="lib${procedure_name}.so"
   elif [[ $(uname) == "Darwin" ]]; then
     output_so_path="${cur_dir}/lib${procedure_name}.dylib"
+    output_yaml_path="${cur_dir}/${procedure_name}.yaml"
     dst_so_path="${output_dir}/lib${procedure_name}.dylib"
+    dst_so_name="lib${procedure_name}.dylib"
   else
     err "Not support OS."
     exit 1
@@ -242,7 +277,6 @@ compile_hqps_so() {
     info "Generating code from cypher query, procedure name: ${procedure_name}, description: ${procedure_description}"
     # first do .cypher to .pb
     output_pb_path="${cur_dir}/${procedure_name}.pb"
-    output_yaml_path="${cur_dir}/${procedure_name}.yaml"
     cypher_to_plan ${procedure_name} ${input_path} ${output_pb_path} \
       ${output_yaml_path} ${ir_compiler_properties} ${graph_schema_path} \
       ${procedure_name} "${procedure_description}"
@@ -255,7 +289,16 @@ compile_hqps_so() {
     eval ${cmd}
     # then. do .pb to .cc
   elif [[ $last_file_name == *.cc ]]; then
-    cp $input_path ${output_cc_path}
+    # read the input_path into a long string into procedure_query_str
+    procedure_query_str=$(cat ${input_path})
+    echo "Procedure query string: ${procedure_query_str}"
+    # Generate the .yaml file
+    echo "Generating yaml file for ${procedure_name}, description: ${procedure_description}"
+    generate_cpp_yaml ${procedure_name} "${procedure_description}" ${dst_so_name} "${procedure_query_str}" ${output_yaml_path}
+    # copy if path is not equal
+    if [ ${input_path} != ${output_cc_path} ]; then
+      cp $input_path ${output_cc_path}
+    fi
   fi
   info "Start running cmake and make"
   #check output_cc_path exists
@@ -268,7 +311,7 @@ compile_hqps_so() {
   cp ${CMAKE_TEMPLATE_PATH} ${cur_dir}/CMakeLists.txt
   # run cmake and make in output path.
   pushd ${cur_dir}
-  cmd="cmake . -DQUERY_NAME=${query_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE_PREFIX}"
+  cmd="cmake . -DQUERY_NAME=${procedure_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE_PREFIX}"
   # if CMAKE_CXX_COMPILER is set, use it.
   if [ ! -z ${CMAKE_CXX_COMPILER} ]; then
     cmd="${cmd} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
@@ -326,12 +369,18 @@ compile_hqps_so() {
     exit 1
   fi
   # copy the generated yaml
-  cp ${output_yaml_path} ${output_dir}
-  if [ ! -f ${dst_yaml_path} ]; then
-    err "Copy failed, ${dst_yaml_path} not exists."
+  if [ ! -z ${output_yaml_path} ]; then
+    cp ${output_yaml_path} ${output_dir}
+    if [ ! -f ${dst_yaml_path} ]; then
+      err "Copy failed, ${dst_yaml_path} not exists."
+      exit 1
+    fi
+    info "Generate yaml file to ${dst_yaml_path}"
+  else
+    err "No yaml file generated."
     exit 1
   fi
-  info "Finish copying, output to ${dst_so_path}"
+  info "Finish compiling and copying, output to ${dst_so_path}"
 }
 
 compile_pegasus_so() {

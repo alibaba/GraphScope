@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.groot.coordinator.backup;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.rpc.RpcChannel;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.store.backup.StoreBackupId;
 import com.alibaba.graphscope.proto.groot.*;
@@ -28,38 +29,41 @@ import java.util.List;
 import java.util.Map;
 
 public class StoreBackupClient extends RpcClient {
-    private final StoreBackupGrpc.StoreBackupStub stub;
-
-    public StoreBackupClient(ManagedChannel channel) {
+    public StoreBackupClient(RpcChannel channel) {
         super(channel);
-        this.stub = StoreBackupGrpc.newStub(channel);
     }
 
     public StoreBackupClient(StoreBackupGrpc.StoreBackupStub stub) {
         super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
+    }
+
+    private StoreBackupGrpc.StoreBackupStub getStub() {
+        return StoreBackupGrpc.newStub(rpcChannel.getChannel());
     }
 
     public void createStoreBackup(int globalBackupId, CompletionCallback<StoreBackupId> callback) {
         CreateStoreBackupRequest req =
                 CreateStoreBackupRequest.newBuilder().setGlobalBackupId(globalBackupId).build();
-        stub.createStoreBackup(
-                req,
-                new StreamObserver<CreateStoreBackupResponse>() {
-                    @Override
-                    public void onNext(CreateStoreBackupResponse response) {
-                        StoreBackupIdPb finishedStoreBackupIdPb = response.getStoreBackupId();
-                        callback.onCompleted(StoreBackupId.parseProto(finishedStoreBackupIdPb));
-                    }
+        getStub()
+                .createStoreBackup(
+                        req,
+                        new StreamObserver<CreateStoreBackupResponse>() {
+                            @Override
+                            public void onNext(CreateStoreBackupResponse response) {
+                                StoreBackupIdPb finishedStoreBackupIdPb =
+                                        response.getStoreBackupId();
+                                callback.onCompleted(
+                                        StoreBackupId.parseProto(finishedStoreBackupIdPb));
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void clearUnavailableBackups(
@@ -78,24 +82,25 @@ public class StoreBackupClient extends RpcClient {
                 ClearUnavailableStoreBackupsRequest.newBuilder()
                         .putAllPartitionToReadyBackupIds(partitionToBackupIdListPb)
                         .build();
-        stub.clearUnavailableStoreBackups(
-                req,
-                new StreamObserver<ClearUnavailableStoreBackupsResponse>() {
-                    @Override
-                    public void onNext(
-                            ClearUnavailableStoreBackupsResponse
-                                    clearUnavailableStoreBackupsResponse) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .clearUnavailableStoreBackups(
+                        req,
+                        new StreamObserver<ClearUnavailableStoreBackupsResponse>() {
+                            @Override
+                            public void onNext(
+                                    ClearUnavailableStoreBackupsResponse
+                                            clearUnavailableStoreBackupsResponse) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void restoreFromStoreBackup(
@@ -107,23 +112,24 @@ public class StoreBackupClient extends RpcClient {
                         .setStoreBackupId(storeBackupId.toProto())
                         .setRestoreRootPath(storeRestoreRootPath)
                         .build();
-        stub.restoreFromStoreBackup(
-                req,
-                new StreamObserver<RestoreFromStoreBackupResponse>() {
-                    @Override
-                    public void onNext(
-                            RestoreFromStoreBackupResponse restoreFromStoreBackupResponse) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .restoreFromStoreBackup(
+                        req,
+                        new StreamObserver<RestoreFromStoreBackupResponse>() {
+                            @Override
+                            public void onNext(
+                                    RestoreFromStoreBackupResponse restoreFromStoreBackupResponse) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 
     public void verifyStoreBackup(StoreBackupId storeBackupId, CompletionCallback<Void> callback) {
@@ -131,21 +137,23 @@ public class StoreBackupClient extends RpcClient {
                 VerifyStoreBackupRequest.newBuilder()
                         .setStoreBackupId(storeBackupId.toProto())
                         .build();
-        stub.verifyStoreBackup(
-                req,
-                new StreamObserver<VerifyStoreBackupResponse>() {
-                    @Override
-                    public void onNext(VerifyStoreBackupResponse verifyStoreBackupResponse) {
-                        callback.onCompleted(null);
-                    }
+        getStub()
+                .verifyStoreBackup(
+                        req,
+                        new StreamObserver<VerifyStoreBackupResponse>() {
+                            @Override
+                            public void onNext(
+                                    VerifyStoreBackupResponse verifyStoreBackupResponse) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
+                            @Override
+                            public void onError(Throwable throwable) {
+                                callback.onError(throwable);
+                            }
 
-                    @Override
-                    public void onCompleted() {}
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

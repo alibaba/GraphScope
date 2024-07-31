@@ -17,16 +17,19 @@
 package com.alibaba.graphscope.common.ir.type;
 
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFamily;
 import org.apache.calcite.sql.type.AbstractSqlType;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Objects;
-
 public class GraphPathType extends ArraySqlType {
     public GraphPathType(ElementType elementType) {
-        super(elementType, false);
+        this(elementType, false);
+    }
+
+    public GraphPathType(ElementType elementType, boolean nullable) {
+        super(elementType, nullable);
     }
 
     @Override
@@ -48,7 +51,7 @@ public class GraphPathType extends ArraySqlType {
         public ElementType(RelDataType expandType, RelDataType getVType) {
             super(SqlTypeName.OTHER, false, null);
             this.expandType = expandType;
-            this.getVType = Objects.requireNonNull(getVType);
+            this.getVType = getVType;
             computeDigest();
         }
 
@@ -75,5 +78,10 @@ public class GraphPathType extends ArraySqlType {
             generateTypeString(sb, true);
             return sb.toString();
         }
+    }
+
+    @Override
+    public RelDataTypeFamily getFamily() {
+        return GraphTypeFamily.PATH;
     }
 }

@@ -275,6 +275,7 @@ impl<'a> EvalPred for BorrowObject<'a> {
                 }
                 Ok(true)
             }
+            // When dealing with filtering, None is considered as false; otherwise, it is considered as a `NULL` or `UNKNOWN`
             BorrowObject::None => Ok(false),
             _ => Ok(true),
         }
@@ -342,6 +343,7 @@ impl EvalPred for Operand {
                 }
                 Ok(true)
             }
+            Operand::Concat(_) => Err(ExprEvalError::Unsupported("Concat".to_string())),
         }
     }
 }
@@ -540,6 +542,7 @@ fn process_predicates(
                 Item::Extract(extract) => {
                     return Err(ExprError::unsupported(format!("Extract {:?}", extract)))
                 }
+                _ => return Err(ExprError::unsupported(format!("Item {:?}", item))),
             }
         }
     }

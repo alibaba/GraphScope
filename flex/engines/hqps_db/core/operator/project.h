@@ -42,8 +42,8 @@ struct ResultOfContextKeyAlias<
     Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
     IdentityMapper<in_col_id, PropertySelector<T>>> {
   using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  using ctx_node_t = std::remove_reference_t<decltype(
-      std::declval<context_t>().template GetNode<in_col_id>())>;
+  using ctx_node_t = std::remove_reference_t<
+      decltype(std::declval<context_t>().template GetNode<in_col_id>())>;
   using result_t = Collection<T>;
 };
 
@@ -54,8 +54,8 @@ struct ResultOfContextKeyAlias<
     Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
     IdentityMapper<in_col_id, PropertySelector<grape::EmptyType>>> {
   using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  using ctx_node_t = std::remove_reference_t<decltype(
-      std::declval<context_t>().template GetNode<in_col_id>())>;
+  using ctx_node_t = std::remove_reference_t<
+      decltype(std::declval<context_t>().template GetNode<in_col_id>())>;
   using result_t = ctx_node_t;
 };
 
@@ -266,8 +266,8 @@ class ProjectOp {
       const GRAPH_INTERFACE& graph, CTX_T& ctx,
       IdentityMapper<in_col_id, PropertySelector<SelectorValueType>>& mapper) {
     auto& node = ctx.template GetNode<in_col_id>();
-    static_assert(std::remove_reference_t<decltype(
-                      node)>::is_vertex_set);  // edge_set not supported
+    static_assert(std::remove_reference_t<
+                  decltype(node)>::is_vertex_set);  // edge_set not supported
     // Create a empty copy.
     auto offset_array = ctx.ObtainOffsetFromTag(in_col_id);
     auto repeat_array = offset_array_to_repeat_array(std::move(offset_array));
@@ -522,6 +522,30 @@ class ProjectOp {
         std::move(lengths_vec));
   }
 
+  // apply project on path set，the type must be lengthKey
+  template <typename PROP_T, typename VID_T, typename LabelT,
+            typename std::enable_if<std::is_same_v<PROP_T, LengthKey>>::type* =
+                nullptr>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph, PathSet<VID_T, LabelT>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    VLOG(10) << "Finish fetching properties";
+
+    std::vector<typename LengthKey::length_data_type> lengths_vec;
+    for (size_t i = 0; i < node.Size(); ++i) {
+      const auto& path = node.get(i);
+      if (repeat_array[i] > 0) {
+        auto length = path.length();
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
+          lengths_vec.push_back(length);
+        }
+      }
+    }
+
+    return Collection<typename LengthKey::length_data_type>(
+        std::move(lengths_vec));
+  }
+
   ///////////////////Apply KeyValueMapper to all data structures.
   template <typename CTX_T, typename... MAPPER>
   static auto apply_single_project(
@@ -560,7 +584,8 @@ class ProjectOp {
       const EXPR& expr, std::tuple<ELE...>& eles,
       std::tuple<PROP_GETTER...>& prop_getter_tuple,
       std::index_sequence<Is...>) {
-    return expr(std::get<Is>(prop_getter_tuple).get_from_all_element(eles)...);
+    return expr(
+        std::get<Is>(prop_getter_tuple).get_from_all_index_element(eles)...);
   }
 
   // create prop desc from mappers

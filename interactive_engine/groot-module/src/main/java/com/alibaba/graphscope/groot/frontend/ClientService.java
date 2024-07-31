@@ -14,13 +14,12 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
+import com.alibaba.graphscope.groot.common.schema.unified.Graph;
 import com.alibaba.graphscope.groot.common.schema.wrapper.*;
 import com.alibaba.graphscope.groot.common.util.DataLoadTarget;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.request.AddEdgeKindRequest;
 import com.alibaba.graphscope.groot.schema.request.CreateEdgeTypeRequest;
@@ -46,19 +45,16 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
 
     private final SnapshotCache snapshotCache;
-    private final MetricsAggregator metricsAggregator;
     private final RoleClients<FrontendStoreClient> frontendStoreClients;
     private final MetaService metaService;
     private final BatchDdlClient batchDdlClient;
 
     public ClientService(
             SnapshotCache snapshotCache,
-            MetricsAggregator metricsAggregator,
             RoleClients<FrontendStoreClient> frontendStoreClients,
             MetaService metaService,
             BatchDdlClient batchDdlClient) {
         this.snapshotCache = snapshotCache;
-        this.metricsAggregator = metricsAggregator;
         this.frontendStoreClients = frontendStoreClients;
         this.metaService = metaService;
         this.batchDdlClient = batchDdlClient;
@@ -78,6 +74,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     public void prepareDataLoad(
             PrepareDataLoadRequest request,
             StreamObserver<PrepareDataLoadResponse> responseObserver) {
+        logger.info("Preparing data load");
         DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
         for (DataLoadTargetPb dataLoadTargetPb : request.getDataLoadTargetsList()) {
             DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(dataLoadTargetPb);
@@ -140,12 +137,17 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
-    public void loadJsonSchema(
-            LoadJsonSchemaRequest request,
-            StreamObserver<LoadJsonSchemaResponse> responseObserver) {
+    public void loadSchema(
+            LoadSchemaRequest request, StreamObserver<LoadSchemaResponse> responseObserver) {
         try {
-            String schemaJson = request.getSchemaJson();
-            GraphSchema graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
+            String schemaStr = request.getSchemaStr();
+            int schemaType = request.getSchemaType();
+            GraphSchema graphSchema;
+            if (schemaType == 0) {
+                graphSchema = GraphSchemaMapper.parseFromJson(schemaStr).toGraphSchema();
+            } else {
+                graphSchema = Graph.parseFromYaml(schemaStr);
+            }
             DdlRequestBatch.Builder ddlBatchBuilder = DdlRequestBatch.newBuilder();
             for (GraphVertex graphVertex : graphSchema.getVertexList()) {
                 String label = graphVertex.getLabel();
@@ -221,7 +223,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                     snapshotId,
                     () -> {
                         responseObserver.onNext(
-                                LoadJsonSchemaResponse.newBuilder()
+                                LoadSchemaResponse.newBuilder()
                                         .setGraphDef(
                                                 this.snapshotCache
                                                         .getSnapshotWithSchema()
@@ -285,28 +287,6 @@ public class ClientService extends ClientGrpc.ClientImplBase {
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
-    }
-
-    @Override
-    public void getMetrics(
-            GetMetricsRequest request, StreamObserver<GetMetricsResponse> responseObserver) {
-        String roleNames = request.getRoleNames();
-        this.metricsAggregator.aggregateMetricsJson(
-                roleNames,
-                new CompletionCallback<String>() {
-                    @Override
-                    public void onCompleted(String res) {
-                        responseObserver.onNext(
-                                GetMetricsResponse.newBuilder().setMetricsJson(res).build());
-                        responseObserver.onCompleted();
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        logger.error("get metrics failed", t);
-                        responseObserver.onError(t);
-                    }
-                });
     }
 
     @Override
@@ -546,8 +526,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                                     if (t != null) {
                                         responseObserver.onError(t);
                                     } else {
-                                        responseObserver.onNext(
-                                                GetStoreStateResponse.newBuilder().build());
+                                        responseObserver.onNext(response.build());
                                         responseObserver.onCompleted();
                                     }
                                 }

@@ -20,6 +20,8 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.rex.operator.CaseOperator;
 import com.alibaba.graphscope.common.ir.rex.operator.SqlArrayValueConstructor;
 import com.alibaba.graphscope.common.ir.rex.operator.SqlMapValueConstructor;
+import com.alibaba.graphscope.common.ir.type.GraphTypeFamily;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.ExtSqlPosixRegexOperator;
@@ -55,6 +57,16 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     ReturnTypes.NULLABLE_SUM,
                     GraphInferTypes.FIRST_KNOWN,
                     GraphOperandTypes.MINUS_OPERATOR);
+
+    public static final SqlOperator DATETIME_MINUS =
+            new SqlSpecialOperator(
+                    "DATETIME_MINUS",
+                    SqlKind.OTHER,
+                    40,
+                    true,
+                    ReturnTypes.ARG2_NULLABLE,
+                    InferTypes.FIRST_KNOWN,
+                    GraphOperandTypes.DATETIME_DATETIME_INTERVAL);
 
     public static final SqlBinaryOperator BIT_AND =
             new SqlMonotonicBinaryOperator(
@@ -276,4 +288,51 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
     public static final SqlOperator POSIX_REGEX_CASE_SENSITIVE =
             new ExtSqlPosixRegexOperator(
                     "POSIX REGEX CASE SENSITIVE", SqlKind.POSIX_REGEX_CASE_SENSITIVE, true, false);
+
+    public static final SqlOperator IN =
+            new SqlBinaryOperator(
+                    "IN",
+                    SqlKind.OTHER,
+                    32,
+                    true,
+                    ReturnTypes.BOOLEAN_NULLABLE,
+                    GraphInferTypes.IN_OPERANDS_TYPE,
+                    OperandTypes.ANY);
+
+    public static final SqlOperator PATH_CONCAT =
+            new SqlFunction(
+                    "PATH_CONCAT",
+                    SqlKind.OTHER,
+                    ReturnTypes.ARG0,
+                    null,
+                    GraphOperandTypes.operandMetadata(
+                            ImmutableList.of(
+                                    GraphTypeFamily.PATH,
+                                    SqlTypeFamily.IGNORE,
+                                    GraphTypeFamily.PATH,
+                                    SqlTypeFamily.IGNORE),
+                            typeFactory -> ImmutableList.of(),
+                            i ->
+                                    ImmutableList.of(
+                                                    "LeftPath",
+                                                    "LeftDirection",
+                                                    "RightPath",
+                                                    "RightDirection")
+                                            .get(i),
+                            i -> false),
+                    SqlFunctionCategory.SYSTEM);
+
+    public static final SqlOperator PATH_FUNCTION =
+            new SqlFunction(
+                    "PATH_FUNCTION",
+                    SqlKind.OTHER,
+                    ReturnTypes.ARG2.andThen(SqlTypeTransforms.TO_ARRAY),
+                    null,
+                    GraphOperandTypes.operandMetadata(
+                            ImmutableList.of(
+                                    GraphTypeFamily.PATH, SqlTypeFamily.IGNORE, SqlTypeFamily.ANY),
+                            typeFactory -> ImmutableList.of(),
+                            i -> ImmutableList.of("Path", "FuncOpt", "PropertyProjection").get(i),
+                            i -> false),
+                    SqlFunctionCategory.SYSTEM);
 }

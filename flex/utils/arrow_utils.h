@@ -36,6 +36,11 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
                   bool* out_zone_offset_present = NULLPTR) const override {
     using seconds_type = std::chrono::duration<arrow::TimestampType::c_type>;
 
+    // We allow the following zone offset formats:
+    // - (none)
+    // - Z
+    // - [+-]HH(:?MM)?
+    //
     // We allow the following formats for all units:
     // - "YYYY-MM-DD"
     // - "YYYY-MM-DD[ T]hhZ?"
@@ -58,8 +63,13 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
       return false;
 
     seconds_type seconds_since_epoch;
+#if defined(ARROW_VERSION) && ARROW_VERSION < 15000000
     if (ARROW_PREDICT_FALSE(!arrow::internal::detail::ParseYYYY_MM_DD(
             s, &seconds_since_epoch))) {
+#else
+    if (ARROW_PREDICT_FALSE(
+            !arrow::internal::ParseYYYY_MM_DD(s, &seconds_since_epoch))) {
+#endif
       return false;
     }
 
@@ -74,14 +84,61 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
       return false;
     }
 
+    // In the implementation of arrow ISO8601 timestamp parser, the zone offset
+    // is set to true if the input string contains a zone offset. However, we
+    // parse the zone offset here but don't set the boolean flag.
+    // https://github.com/apache/arrow/blob/3e7ae5340a123c1040f98f1c36687b81362fab52/cpp/src/arrow/csv/converter.cc#L373
+    // The reason is that, if we want the zone offset to be set, we need to
+    // to declare the zone offset in the schema and construct TimeStampType with
+    // that offset. However, we just want to parse the timestamp string and
+    // convert it to a timestamp value, we have no assumption of the local time
+    // zone, and we don't require the zone offset to be set in the schema.
+    // Same for following commented code.
+    //-------------------------------------------------------------------------
+    // if (out_zone_offset_present) {
+    //   *out_zone_offset_present = false;
+    // }
+    //-------------------------------------------------------------------------
+
+    seconds_type zone_offset(0);
     if (s[length - 1] == 'Z') {
       --length;
-    }
-
-    // if the back the s is '+0000', we should ignore it
-    auto time_zones = std::string_view(s + length - 5, 5);
-    if (time_zones == "+0000") {
+      // if (out_zone_offset_present)
+      //   *out_zone_offset_present = true;
+    } else if (s[length - 3] == '+' || s[length - 3] == '-') {
+      // [+-]HH
+      length -= 3;
+      if (ARROW_PREDICT_FALSE(!arrow::internal::detail::ParseHH(
+              s + length + 1, &zone_offset))) {
+        return false;
+      }
+      if (s[length] == '+')
+        zone_offset *= -1;
+      // if (out_zone_offset_present)
+      //   *out_zone_offset_present = true;
+    } else if (s[length - 5] == '+' || s[length - 5] == '-') {
+      // [+-]HHMM
       length -= 5;
+      if (ARROW_PREDICT_FALSE(!arrow::internal::detail::ParseHHMM(
+              s + length + 1, &zone_offset))) {
+        return false;
+      }
+      if (s[length] == '+')
+        zone_offset *= -1;
+      // if (out_zone_offset_present)
+      //   *out_zone_offset_present = true;
+    } else if ((s[length - 6] == '+' || s[length - 6] == '-') &&
+               (s[length - 3] == ':')) {
+      // [+-]HH:MM
+      length -= 6;
+      if (ARROW_PREDICT_FALSE(!arrow::internal::detail::ParseHH_MM(
+              s + length + 1, &zone_offset))) {
+        return false;
+      }
+      if (s[length] == '+')
+        zone_offset *= -1;
+      // if (out_zone_offset_present)
+      //   *out_zone_offset_present = true;
     }
 
     seconds_type seconds_since_midnight;
@@ -119,6 +176,7 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
     }
 
     seconds_since_epoch += seconds_since_midnight;
+    seconds_since_epoch += zone_offset;
 
     if (length <= 19) {
       *out =
@@ -254,7 +312,7 @@ struct TypeConverter<float> {
 };
 template <>
 struct TypeConverter<std::string> {
-  static PropertyType property_type() { return PropertyType::kString; }
+  static PropertyType property_type() { return PropertyType::kStringView; }
   using ArrowType = arrow::LargeStringType;
   using ArrowArrayType = arrow::LargeStringArray;
   static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
@@ -264,7 +322,7 @@ struct TypeConverter<std::string> {
 
 template <>
 struct TypeConverter<std::string_view> {
-  static PropertyType property_type() { return PropertyType::kString; }
+  static PropertyType property_type() { return PropertyType::kStringView; }
   using ArrowType = arrow::LargeStringType;
   using ArrowArrayType = arrow::LargeStringArray;
   static std::shared_ptr<arrow::DataType> ArrowTypeValue() {

@@ -68,6 +68,7 @@ class CSVOptions(object):
         # If true, column names will be read from the first CSV row
         # If false, column names will be of the form "f0", "f1"...
         self.header_row = True
+        self.filetype = "CSV"
 
     def to_dict(self) -> Dict:
         options = {}
@@ -80,6 +81,7 @@ class CSVOptions(object):
             options["column_types"] = ",".join(cpp_types)
         if self.force_include_all:
             options["include_all_columns"] = self.force_include_all
+        options["filetype"] = self.filetype
         return options
 
     def __str__(self) -> str:
@@ -95,7 +97,7 @@ class Loader(object):
     """
 
     def __init__(
-        self, source, delimiter=",", sep=",", header_row=True, filetype=None, **kwargs
+        self, source, delimiter=",", sep=",", header_row=True, filetype="CSV", **kwargs
     ):
         """Initialize a loader with configurable options.
         Note: Loader cannot be reused since it may change inner state when constructing
@@ -146,13 +148,13 @@ class Loader(object):
         )
         self.options.delimiter = delimiter
         self.options.header_row = header_row
+        self.options.filetype = filetype
         # meta for data source is numpy or dataframe
         self.deduced_properties = None
         # extra args directly passed to storage system
         # find more details in fsspec
         #   https://filesystem-spec.readthedocs.io/en/latest/
         self.storage_options = kwargs
-        self.storage_options["filetype"] = filetype
         # also parse protocol and source in `resolve` method
         self.resolve(source)
 
@@ -255,8 +257,7 @@ class Loader(object):
                 self.source.endswith(".orc")
                 or self.source.endswith(".parquet")
                 or self.source.endswith(".pq")
-                or str(self.storage_options.get("filetype")).upper()
-                in ["ORC", "PARQUET"]
+                or str(self.options.filetype).upper() in ["ORC", "PARQUET"]
             ):
                 # orc and parquet: handled by vineyard
                 config[types_pb2.SOURCE] = utils.s_to_attr(self.source)

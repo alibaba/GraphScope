@@ -102,10 +102,16 @@ public class KafkaProcessor {
         this.pollThread.setName("store-kafka-poller");
         this.pollThread.setDaemon(true);
         this.pollThread.start();
+        logger.info("Kafka processor started");
     }
 
     public void stop() {
         this.shouldStop = true;
+        try {
+            updateQueueOffsets();
+        } catch (IOException ex) {
+            logger.error("update queue offset failed", ex);
+        }
         if (this.persistOffsetsScheduler != null) {
             this.persistOffsetsScheduler.shutdown();
             try {
@@ -162,8 +168,7 @@ public class KafkaProcessor {
         boolean changed = false;
         List<Long> consumedOffsets = writerAgent.getConsumedQueueOffsets();
         for (int qId = 0; qId < queueOffsets.size(); qId++) {
-            long minOffset = Long.MAX_VALUE;
-            minOffset = Math.min(consumedOffsets.get(qId), minOffset);
+            long minOffset = Math.min(consumedOffsets.get(qId), Long.MAX_VALUE);
             if (minOffset != Long.MAX_VALUE && minOffset > newQueueOffsets.get(qId)) {
                 newQueueOffsets.set(qId, minOffset);
                 changed = true;
@@ -220,6 +225,7 @@ public class KafkaProcessor {
                         .requestId("")
                         .queueId(storeId)
                         .snapshotId(snapshotId)
+                        .traceId(operationBatch.getTraceId())
                         .offset(offset);
         for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();
@@ -249,7 +255,7 @@ public class KafkaProcessor {
         long replayFrom = queueOffsetsRef.get().get(0) + 1;
         logger.info("replay WAL of queue#[{}] from offset [{}]", storeId, replayFrom);
         if (replayFrom == 0) {
-            logger.error("It's not normal to replay from the 0 offset, skipped");
+            logger.warn("It may not useful to replay from the 0 offset, skipped");
             return;
         }
         int replayCount = 0;
@@ -273,6 +279,8 @@ public class KafkaProcessor {
         types.add(OperationType.REMOVE_EDGE_KIND);
         types.add(OperationType.PREPARE_DATA_LOAD);
         types.add(OperationType.COMMIT_DATA_LOAD);
+        types.add(OperationType.ADD_VERTEX_TYPE_PROPERTIES);
+        types.add(OperationType.ADD_EDGE_TYPE_PROPERTIES);
         types.add(OperationType.MARKER); // For advance ID
         return types;
     }

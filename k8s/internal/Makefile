@@ -42,15 +42,14 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.21.3
+VINEYARD_VERSION ?= v0.22.0
 PROFILE ?= release
 CI ?= false
 
 graphscope:
 	cd $(WORKING_DIR)/../.. && \
 	git submodule update --init && \
-	docker build --progress=$(BUILD_PROGRESS) \
-				 --build-arg CI=${CI} \
+	docker build --build-arg CI=${CI} \
 				 -t graphscope/graphscope:${SHORT_SHA} \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile .
 
@@ -105,6 +104,8 @@ graphscope-darwin-py3:
 
 graphscope-manylinux2014-py3-nodocker:
 	# TODO(siyuan) Remove after newer wheel image are released
+	sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+	sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* && \
 	sudo yum install java-11-openjdk-devel -y && \
 	sudo yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
 	cd $(WORKING_DIR)/../.. && \
@@ -174,7 +175,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		python3 -m pip install ${PIP_ARGS} -U pip; \
-		python3 -m pip install ${PIP_ARGS} "torch==1.13.1" --index-url https://download.pytorch.org/whl/cpu --user; \
+		python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" --index-url https://download.pytorch.org/whl/cpu --user; \
 		if [[ "$$py" == "cp311-cp311" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -218,7 +219,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../python && \
-		python3 -m pip install ${PIP_ARGS} "torch==1.13.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install ${PIP_ARGS} "torch<=2.2.1" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 		python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		(git submodule update --init third_party/pybind11 || true) && \

@@ -44,7 +44,7 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "// DO NOT EDIT\n"
     "\n"
     "#include \"flex/engines/hqps_db/core/sync_engine.h\"\n"
-    "#include \"flex/engines/graph_db/app/app_base.h\"\n"  // app_base_header.h
+    "#include \"flex/engines/hqps_db/app/interactive_app_base.h\"\n"
     "#include \"%1%\"\n"  // graph_interface_header.h
     "\n"
     "\n"
@@ -53,22 +53,25 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "%2%\n"
     "\n"
     "// Auto generated query class definition\n"
-    "class %3% : public AppBase {\n"
+    "class %3% : public %11% {\n"
     " public:\n"
     "  using Engine = SyncEngine<%4%>;\n"
     "  using label_id_t = typename %4%::label_id_t;\n"
     "  using vertex_id_t = typename %4%::vertex_id_t;\n"
     "  using gid_t = typename %4%::gid_t;\n"
     " // constructor\n"
-    "  %3%(const GraphDBSession& session) : %6%(session) {}\n"
+    "  %3%() {}\n"
     "// Query function for query class\n"
     "  %5% Query(%7%) const{\n"
     "     %8%\n"
     "  }\n"
     "// Wrapper query function for query class\n"
-    "  bool Query(Decoder& decoder, Encoder& encoder) override {\n"
+    "  bool DoQuery(gs::GraphDBSession& sess, Decoder& decoder, Encoder& "
+    "encoder) "
+    "override {\n"
     "    //decoding params from decoder, and call real query func\n"
     "    %9%\n"
+    "    %4% %6%(sess);"
     "    auto res =  Query(%10%);\n"
     "    // dump results to string\n"
     "    std::string res_str = res.SerializeAsString();\n"
@@ -80,14 +83,13 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "  }\n"
     "  //private members\n"
     " private:\n"
-    "  %4% %6%;\n"
     "};\n"
     "} // namespace gs\n"
     "\n"
     "// extern c interfaces\n"
     "extern \"C\" {\n"
     "void* CreateApp(gs::GraphDBSession& db) {\n"
-    "  gs::%3%* app = new gs::%3%(db);\n"
+    "  gs::%3%* app = new gs::%3%();\n"
     "  return static_cast<void*>(app);\n"
     "}\n"
     "void DeleteApp(void* app) {\n"
@@ -230,15 +232,24 @@ class QueryGenerator {
       ss << std::endl;
       expr_code = ss.str();
     }
-    std::string dynamic_vars_str = concat_param_vars(ctx_.GetParameterVars());
+    std::string dynamic_vars_str =
+        ctx_.GetGraphInterface() + "& " + ctx_.GraphVar();
+    if (ctx_.GetParameterVars().size() > 0) {
+      dynamic_vars_str += ", ";
+      dynamic_vars_str += concat_param_vars(ctx_.GetParameterVars());
+    }
     std::string decoding_params_code, decoded_params_str;
     std::tie(decoding_params_code, decoded_params_str) =
         decode_params_from_decoder(ctx_.GetParameterVars());
+    std::string call_query_input_code = ctx_.GraphVar();
+    if (decoded_params_str.size() > 0) {
+      call_query_input_code += ", " + decoded_params_str;
+    }
     boost::format formater(QUERY_TEMPLATE_STR);
     formater % ctx_.GetGraphHeader() % expr_code % ctx_.GetQueryClassName() %
         ctx_.GetGraphInterface() % ctx_.GetQueryRet() % ctx_.GraphVar() %
         dynamic_vars_str % query_code % decoding_params_code %
-        decoded_params_str;
+        call_query_input_code % get_app_base_name();
     return formater.str();
   }
 
@@ -251,6 +262,13 @@ class QueryGenerator {
   }
 
  private:
+  // Interactive separate app into read app and write app.
+  // Different app may have different base name.
+  // This info should be parse from physical plan.
+  // Currently always return writeAppBase, since physical plan hasn't
+  // provided this info.
+  std::string get_app_base_name() { return "CypherInternalPbWriteAppBase"; }
+
   // copy the param vars to sort
   std::string concat_param_vars(
       std::vector<codegen::ParamConst> param_vars) const {
@@ -518,18 +536,12 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kIntersect: {
         LOG(INFO) << "Found a intersect operator";
-        // a intersect op must be followed by a unfold op
-        CHECK(i + 1 < size) << " intersect op must be followed by a unfold op";
-        auto& next_op = plan_.plan(i + 1).opr();
-        CHECK(next_op.op_kind_case() ==
-              physical::PhysicalOpr::Operator::kUnfold)
-            << "intersect op must be followed by a unfold op";
+        // Note that intersect operator will not be followed by unfold anymore.
         auto& intersect_op = opr.intersect();
         auto intersect_opt_code = BuildIntersectOp<LabelT>(ctx_, intersect_op);
         for (auto& line : intersect_opt_code) {
           ss << line << std::endl;
         }
-        i += 1;  // skip unfold
         break;
       }
 
@@ -773,7 +785,6 @@ static std::array<std::string, 4> BuildIntersectOp(
   std::string intersect_code;
 
   auto right_context = ctx.CreateSubTaskContext("right_");
-  CHECK(!ctx.EmptyContext());
 
   {
     std::stringstream cur_ss;

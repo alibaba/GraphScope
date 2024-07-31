@@ -27,17 +27,17 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class TypeDef implements GraphElement {
-    private int versionId;
+    private final int versionId;
 
-    private String label;
-    private LabelId labelId;
+    private final String label;
+    private final LabelId labelId;
     private String comment = "";
 
-    private List<PropertyDef> properties;
-    private List<Integer> pkIdxs;
-    private Map<String, Integer> nameToIdx;
-    private Map<Integer, Integer> idToIdx;
-    private TypeEnum typeEnum;
+    private final List<PropertyDef> properties;
+    private final List<Integer> pkIdxs;
+    private final Map<String, Integer> nameToIdx;
+    private final Map<Integer, Integer> idToIdx;
+    private final TypeEnum typeEnum;
 
     private TypeDef(
             TypeEnum typeEnum,
@@ -163,6 +163,7 @@ public class TypeDef implements GraphElement {
     public TypeDefPb toDdlProto() {
         TypeDefPb.Builder builder = TypeDefPb.newBuilder();
         builder.setLabel(label);
+        builder.setVersionId(versionId);
         for (PropertyDef property : properties) {
             builder.addProps(property.toProto());
         }
@@ -256,6 +257,11 @@ public class TypeDef implements GraphElement {
 
         public Builder setComment(String comment) {
             this.comment = comment;
+            return this;
+        }
+
+        public Builder setVersionId(int versionId) {
+            this.versionId = versionId;
             return this;
         }
 

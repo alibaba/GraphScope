@@ -43,8 +43,8 @@ if [ ! -d ${GS_TEST_DIR} ]; then
   exit 1
 fi
 
-GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/movies/movies_schema.yaml
-GRAPH_BULK_LOAD_YAML=${GS_TEST_DIR}/flex/movies/movies_import.yaml
+GRAPH_SCHEMA_YAML=${FLEX_HOME}/interactive/examples/movies/graph.yaml
+GRAPH_BULK_LOAD_YAML=${FLEX_HOME}/interactive/examples/movies/import.yaml
 RAW_CSV_FILES=${FLEX_HOME}/interactive/examples/movies/
 GRAPH_CSR_DATA_DIR=${HOME}/csr-data-dir/
 TEST_CYPHER_QUERIES="${FLEX_HOME}/interactive/examples/movies/0_get_user.cypher ${FLEX_HOME}/interactive/examples/movies/5_recommend_rule.cypher"
@@ -83,10 +83,10 @@ start_engine_service(){
     fi
 
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} --enable-admin-service true "
-    cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} "
+    cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} &"
 
     echo "Start engine service with command: ${cmd}"
-    ${cmd} &
+    eval ${cmd} 
     sleep 5
     #check interactive_server is running, if not, exit
     ps -ef | grep "interactive_server" | grep -v grep

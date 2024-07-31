@@ -1,9 +1,12 @@
 name: modern_graph # then must have a modern dir under ${data} directory
+version: v0.1
 store_type: mutable_csr  # v6d, groot, gart
+description: A graph with 2 vertex types and 2 edge types
 schema:
   vertex_types:
     - type_id: 0
       type_name: person
+      description: A person vertex type
       x_csr_params:
         max_vertex_num: 100
       properties:
@@ -14,7 +17,8 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_id: 2
           property_name: age
           property_type:
@@ -23,6 +27,7 @@ schema:
         - id
     - type_id: 1
       type_name: software
+      description: A software vertex type
       x_csr_params:
         max_vertex_num: 100
       properties:
@@ -33,16 +38,19 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
         - property_id: 2
           property_name: lang
           property_type:
-            primitive_type: DT_STRING
+            string:
+              long_text:
       primary_keys:
         - id
   edge_types:
     - type_id: 0
       type_name: knows
+      description: A knows edge type
       vertex_type_pair_relations:
         - source_vertex: person
           destination_vertex: person
@@ -56,6 +64,7 @@ schema:
             primitive_type: DT_DOUBLE
     - type_id: 1
       type_name: created
+      description: A created edge type
       vertex_type_pair_relations:
         - source_vertex: person
           destination_vertex: software

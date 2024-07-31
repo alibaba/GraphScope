@@ -74,6 +74,13 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Mathematical  | Division  | /  | / | <input type="checkbox" disabled checked /> |  |
 | Mathematical  | Modulo division | %  | % |  <input type="checkbox" disabled checked /> |  |
 | Mathematical  | Exponentiation | ^ | power(a, b) |  <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Add a duration to a temporal type | \<temporal\> + \<duration\> | \<temporal\> + \<duration\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Subtract a duration from a temporal type | \<temporal\> - \<duration\> | \<temporal\> - \<duration\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Subtract two temporal types, returning a duration in milliseconds | \<temporal\> - \<temporal\> | \<temporal\> - \<temporal\> | <input type="checkbox" disabled checked /> |  |
+| Temporal Mathematical | Add two durations | \<duration\> + \<duration\> | \<duration\> + \<duration\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Subtract two durations | \<duration\> - \<duration\> | \<duration\> - \<duration\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Multiply a duration by a numeric value | \<duration\> * \<numeric\> | \<duration\> * \<numeric\> | <input type="checkbox" disabled checked /> |  |
+|Temporal Mathematical | Divide a duration by a numeric value | \<duration\> / \<numeric\> | \<duration\> / \<numeric\> | <input type="checkbox" disabled checked /> |  |
 | Comparison | Equality | = | = |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Inequality| <> | <> |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Less than | < | < |  <input type="checkbox" disabled checked /> |  |
@@ -100,6 +107,7 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | ListLiteral | Fold expressions into a single list | [] | [] | <input type="checkbox" disabled checked /> |   |
 | MapLiteral | Fold expressions with keys into a single map | {} | {} | <input type="checkbox" disabled checked /> |   |
 | Labels | Get label name of a vertex type | labels() | labels() | <input type="checkbox" disabled checked /> |   |
+| elementId | Get a vertex or an edge identifier, unique by an object type and a database | elementId() | elementId() | <input type="checkbox" disabled checked /> |   |
 | Type | Get label name of an edge type | type() | type() | <input type="checkbox" disabled checked /> |   |
 | Extract | Get interval value from a temporal type | \<temporal\>.\<interval\> | \<temporal\>.\<interval\> | <input type="checkbox" disabled checked /> |   |
 

@@ -50,19 +50,19 @@ IS : ( 'I' | 'i' ) ( 'S' | 's' ) ;
 NULL : ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
 
 oC_ComparisonExpression
-                    :  oC_StringPredicateExpression ( SP? oC_PartialComparisonExpression )* ;
+                    :  oC_StringOrListPredicateExpression ( SP? oC_PartialComparisonExpression )* ;
 
 oC_PartialComparisonExpression
-                           :  ( '=' SP? oC_StringPredicateExpression )
-                               | ( '<>' SP? oC_StringPredicateExpression )
-                               | ( '<' SP? oC_StringPredicateExpression )
-                               | ( '>' SP? oC_StringPredicateExpression )
-                               | ( '<=' SP? oC_StringPredicateExpression )
-                               | ( '>=' SP? oC_StringPredicateExpression )
+                           :  ( '=' SP? oC_StringOrListPredicateExpression )
+                               | ( '<>' SP? oC_StringOrListPredicateExpression )
+                               | ( '<' SP? oC_StringOrListPredicateExpression )
+                               | ( '>' SP? oC_StringOrListPredicateExpression )
+                               | ( '<=' SP? oC_StringOrListPredicateExpression )
+                               | ( '>=' SP? oC_StringOrListPredicateExpression )
                                ;
 
-oC_StringPredicateExpression
-                         :  oC_AddOrSubtractOrBitManipulationExpression ( ( ( SP? STARTS SP? WITH ) | ( SP? ENDS SP? WITH ) | ( SP? CONTAINS ) ) SP? oC_AddOrSubtractOrBitManipulationExpression )? ;
+oC_StringOrListPredicateExpression
+                         :  oC_AddOrSubtractOrBitManipulationExpression ( ( ( SP? STARTS SP? WITH ) | ( SP? ENDS SP? WITH ) | ( SP? CONTAINS ) | ( SP? IN ) ) SP? oC_AddOrSubtractOrBitManipulationExpression )? ;
 
 STARTS : ( 'S' | 's' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'S' | 's' ) ;
 
@@ -71,6 +71,8 @@ ENDS : ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'D' | 'd' ) ( 'S' | 's' ) ;
 WITH : ( 'W' | 'w' ) ( 'I' | 'i' ) ( 'T' | 't' ) ( 'H' | 'h' ) ;
 
 CONTAINS : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'S' | 's' ) ;
+
+IN : ( 'I' | 'i' ) ( 'N' | 'n' ) ;
 
 oC_AddOrSubtractOrBitManipulationExpression
                 : oC_MultiplyDivideModuloExpression ( SP? ( '+' | '-' | | '&' | '|' | '^' | '<<' | '>>' ) SP? oC_MultiplyDivideModuloExpression )* ;
@@ -126,7 +128,7 @@ FOLD : ( 'F' | 'f' ) ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'D' | 'd' );
 MEAN : ( 'M' | 'm' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'N' | 'n' );
 
 oC_ScalarFunctionInvocation
-    :  ( LENGTH | POWER | LABELS | TYPE | HEAD ) SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
+    :  ( LENGTH | POWER | LABELS | ELEMENTID | TYPE | HEAD | DURATION ) SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
 
 LENGTH : ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'G' | 'g' ) ( 'T' | 't' ) ( 'H' | 'h' );
 
@@ -134,9 +136,13 @@ POWER : ( 'P' | 'p' ) ( 'O' | 'o' ) ( 'W' | 'w' ) ( 'E' | 'e' ) ( 'R' | 'r' );
 
 LABELS : ( 'L' | 'l' ) ( 'A' | 'a' ) ( 'B' | 'b' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'S' | 's' );
 
+ELEMENTID: ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'D' | 'd' );
+
 TYPE : ( 'T' | 't' ) ( 'Y' | 'y' ) ( 'P' | 'p' ) ( 'E' | 'e' );
 
 HEAD : ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'D' | 'd' );
+
+DURATION: ( 'D' | 'd' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'O' | 'o' ) ( 'N' | 'n' );
 
 oC_FunctionName
     :  oC_Namespace oC_SymbolicName ;
@@ -357,6 +363,7 @@ oC_SymbolicName
 
 oC_ReservedWord
             : LABELS
+            | ELEMENTID
             | TYPE
             | LENGTH
             | POWER
@@ -370,6 +377,7 @@ oC_ReservedWord
             | FOLD
             | MEAN
             | 'd' | 'D' | 'f' | 'F' | 'l' | 'L'
+            | 'id' // lexer rule for ID conflicts with parser rule definition in gremlin grammar, include 'id' as reserved word so it can be used to denote a symbolic name
             ;
 
 UnescapedSymbolicName

@@ -117,15 +117,68 @@ message Variable {
   common.IrDataType node_type = 3;
 }
 
+// Path function to rechieve properties of each vertex or edge (or both) in a path.
+// e.g., project `a.name`, `a.[name, age]`, or `a.{name, age}`, where `a` refers to a path
+message PathFunction {
+  // rechieve properties from a path to a list
+  message PathElementKeys {
+    repeated Property keys = 1;
+  }
+  // rechieve properties from a path to a map
+  message PathElementKeyValues {
+    message PathElementKeyValue {
+      common.Value key = 1;
+      Property val = 2;
+    }
+    repeated PathElementKeyValue key_vals = 1;
+  }
+  // the option of PathFunction, e.g., rechieve the properties of each vertex, edge, or both, in a path
+  enum FuncOpt {
+    VERTEX = 0;
+    EDGE = 1;
+    VERTEX_EDGE = 2;
+  }
+  // The alias of a graph path
+  common.NameOrId tag = 1;
+  oneof path_key {
+    // e.g., project name, and return the property of each entry in the path, 
+    // and return [marko, josh]
+    Property property = 2;
+    // e.g., project [name, age] to a list of properties of each entry in the path, 
+    // and [[marko, 29], [josh, 27]]
+    PathElementKeys vars = 3;
+    // e.g., project {name, age} to a map of properties of each entry in the path,
+    // and return [{name: marko, age: 29}, {name: josh, age: 27}]
+    PathElementKeyValues map = 4;
+  }
+  FuncOpt opt = 5;
+  common.IrDataType node_type = 6;
+}
+
 message VariableKeys {
   repeated Variable keys = 1;
 }
 
 message VariableKeyValue {
   common.Value key = 1;
-  Variable value = 2;
+  oneof value {
+    Variable val = 2;
+    PathFunction path_func = 3;
+    VariableKeyValues nested = 4;
+  }
 }
 
+// A nested kv projection, which is used to project a nested structure of key-value pairs
+// e.g., for a single kv projection,
+// to project [VariableKeyValue('name', a.name), VariableKeyValue('age', a.age)], where `a` refers to a vertex,
+// it outputs a map of {'name': 'marko', 'age': 27};
+// or to project [VariableKeyValue('tagP', PathFunction{tag: a, path_key: PathElementKeys{keys: [name, age]}})], where `a` refers to a path (with two vertices in it),
+// it outputs a map of {'tagP': [{'name': 'marko', 'age': 27}, {'name': 'josh', 'age', 29}]}.
+// For a more complex nested projection, 
+// to project [VariableKeyValue('tagA', nested{[VariableKeyValue('name', a.name), VariableKeyValue('age', a.age)]}), 
+//             VariableKeyValue('tagP', nested{[VariableKeyValue('name', p.name), VariableKeyValue('age', p.age)]})],
+// where `a` refers to a vertex, and `p` refers to a path (with two vertices in it),
+// it outputs a map of {'tagA': {'name': 'marko', 'age': 27}, 'tagP': [{'name': 'marko', 'age': 27}, {'name': 'josh', 'age', 29}]}.
 message VariableKeyValues {
   repeated VariableKeyValue key_vals = 1;
 }
@@ -165,6 +218,36 @@ message Extract {
   Interval interval = 1;
 }
 
+// denote time interval, i.e. 3 DAYS, 4 HOURS, 5 MINUTES
+message TimeInterval {
+    Extract.Interval interval = 1;
+
+    oneof value {
+        common.Value const = 2;
+        DynamicParam param = 3;
+    }
+}
+
+message DateTimeMinus {
+    Extract.Interval interval = 1;
+}
+
+// e.g., supposing p1 refers to path[v1->v2->v3], p2 refers to path[v5->v4->v3],
+// then PathCONCAT((p1, END), (p2, END))) outputs [v1->v2->v3->v4->v5]
+message PathConcat {
+   // Enum that defines the endpoint of a path where the concatenation will occur.
+  enum Endpoint {
+    START = 0;
+    END = 1;
+  }
+  message ConcatPathInfo {
+    Variable path_tag = 1;
+    Endpoint endpoint = 2;
+  }
+  ConcatPathInfo left = 1;
+  ConcatPathInfo right = 2;
+}
+
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   enum Brace {
@@ -183,8 +266,12 @@ message ExprOpr {
     DynamicParam param = 9;
     Case case = 10;
     Extract extract = 11;
-    // TODO: the new definition for var_map, that allows user-given key name. Will remove the old var_map soon.
+    // TODO: the new definition for var_map, that allows user-given key name, and nested maps. Will remove the old var_map finally.
     VariableKeyValues map = 13;
+    TimeInterval time_interval = 14;
+    DateTimeMinus date_time_minus = 15;
+    PathConcat path_concat = 16;
+    PathFunction path_func = 17;
   }
   // The data of type of ExprOpr
   common.IrDataType node_type = 12;

@@ -40,6 +40,12 @@ enum class StatusCode {
   IOError = 12,
   NotFound = 13,
   QueryFailed = 14,
+  ReopenError = 15,
+  ErrorOpenMeta = 16,
+  SQlExecutionError = 17,
+  SqlBindingError = 18,
+  Unimplemented = 19,
+  AlreadyLocked = 20,
 };
 
 class Status {
@@ -110,6 +116,12 @@ struct is_gs_result_type : std::false_type {};
 template <typename T>
 struct is_gs_result_type<Result<T>> : std::true_type {};
 
+template <typename T>
+struct is_gs_status_type : std::false_type {};
+
+template <>
+struct is_gs_status_type<Status> : std::true_type {};
+
 // define a macro, which checks the return status of a function, if ok, continue
 // to execute, otherwise, return the status.
 // the macro accept the calling code of a function, and the function name.
@@ -127,7 +139,7 @@ struct is_gs_result_type<Result<T>> : std::true_type {};
 // function, the function name, and the variable name.
 // reference:
 // https://github.com/boostorg/leaf/blob/develop/include/boost/leaf/error.hpp
-#define ASSIGN_AND_RETURN_IF_NOT_OK(var, expr)                                 \
+#define ASSIGN_AND_RETURN_IF_RESULT_NOT_OK(var, expr)                          \
   auto&& FLEX_TMP_VAR = expr;                                                  \
   static_assert(::gs::is_gs_result_type<                                       \
                     typename std::decay<decltype(FLEX_TMP_VAR)>::type>::value, \
@@ -136,6 +148,16 @@ struct is_gs_result_type<Result<T>> : std::true_type {};
     return FLEX_TMP_VAR;                                                       \
   }                                                                            \
   var = std::forward<decltype(FLEX_TMP_VAR)>(FLEX_TMP_VAR).move_value()
+
+#define ASSIGN_AND_RETURN_IF_STATUS_NOT_OK(var, expr)                          \
+  auto&& FLEX_TMP_VAR = expr;                                                  \
+  static_assert(::gs::is_gs_status_type<                                       \
+                    typename std::decay<decltype(FLEX_TMP_VAR)>::type>::value, \
+                "The expression must return a Status type");                   \
+  if (!FLEX_TMP_VAR.ok()) {                                                    \
+    return FLEX_TMP_VAR;                                                       \
+  }                                                                            \
+  var = std::forward<decltype(FLEX_TMP_VAR)>(FLEX_TMP_VAR)
 
 // A Marco automatically use a auto variable to store the return value of a
 // function, which returns result, and check the status of the result, if ok,

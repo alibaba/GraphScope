@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
-import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
@@ -121,11 +120,6 @@ public class WhereTest {
                                 "Match (a:person)-[]->()-[]->(b:person) Where Not a=b AND NOT"
                                         + " (a:person)-[]->(b:person) Return a, b")
                         .build();
-        RelOptPlanner planner =
-                com.alibaba.graphscope.common.ir.Utils.mockPlanner(
-                        NotMatchToAntiJoinRule.Config.DEFAULT);
-        planner.setRoot(before);
-        RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
                     + "  LogicalFilter(condition=[<>(a, b)])\n"
@@ -150,7 +144,7 @@ public class WhereTest {
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
-                after.explain().trim());
+                before.explain().trim());
     }
 
     // 'b is null' cannot be pushed down, for the conversion will change the semantics
@@ -278,5 +272,16 @@ public class WhereTest {
             return;
         }
         Assert.fail("should have thrown exceptions for property 'name' is not a date type");
+    }
+
+    @Test
+    public void where_11_test() {
+        // the condition is fused into source and identified as primary key filtering
+        RelNode where = Utils.eval("Match (a:person) Where elementId(a) = 2 Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX], uniqueKeyFilters=[=(_.~id, 2)])",
+                where.explain().trim());
     }
 }

@@ -15,7 +15,9 @@
 
 #include <boost/format.hpp>
 #include <string>
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
+#include "flex/storages/metadata/graph_meta_store.h"
 #include "flex/third_party/httplib.h"
 #include "flex/utils/yaml_utils.h"
 #include "nlohmann/json.hpp"
@@ -31,32 +33,38 @@ static constexpr const char* CREATE_PROCEDURE_PAYLOAD_TEMPLATE =
     "\"query\": \"%4%\","
     "\"type\": \"cypher\"}";
 
-std::string generate_start_service_payload(const std::string& graph_name) {
-  boost::format formater("{\"graph_name\": \"%1%\"}");
-  return (formater % graph_name).str();
+std::string generate_start_service_payload(const std::string& graph_id) {
+  boost::format formater("{\"graph_id\": \"%1%\"}");
+  return (formater % graph_id).str();
 }
 
 std::string get_file_name_from_path(const std::string& file_path) {
   auto file_name = file_path.substr(file_path.find_last_of('/') + 1);
   // remove extension
   file_name = file_name.substr(0, file_name.find_last_of('.'));
+  // prepend query_ before filename, to avoid name start with number
+  file_name = "query_" + file_name;
   return file_name;
 }
 
-std::string generate_call_procedure_payload(const std::string& graph_name,
-                                            const std::string& procedure_name) {
-  query::Query query;
-  query.mutable_query_name()->set_name(procedure_name);
-  return query.SerializeAsString();
+std::string generate_call_procedure_payload(const std::string& procedure_id) {
+  procedure::Query query;
+  query.mutable_query_name()->set_name(procedure_id);
+  std::string str = query.SerializeAsString();
+  // append byte at the tail
+  str.push_back(static_cast<uint8_t>(
+      gs::GraphDBSession::InputFormat::kCypherProtoProcedure));
+  LOG(INFO) << "call procedure payload: " << str.size();
+  return str;
 }
 
-std::string generate_update_procedure_payload(const std::string& procedure_name,
+std::string generate_update_procedure_payload(const std::string& description,
                                               bool enabled) {
-  boost::format formater("{\"enable\": %1%, \"name\": \"%2%\"}");
-  return (formater % (enabled ? "true" : "false") % procedure_name).str();
+  boost::format formater("{\"enable\": %1%, \"description\": \"%2%\"}");
+  return (formater % (enabled ? "true" : "false") % description).str();
 }
 
-std::string generate_create_procedure_payload(const std::string& graph_name,
+std::string generate_create_procedure_payload(const std::string& graph_id,
                                               const std::string& procedure_path,
                                               bool enabled) {
   boost::format formater(CREATE_PROCEDURE_PAYLOAD_TEMPLATE);
@@ -68,7 +76,7 @@ std::string generate_create_procedure_payload(const std::string& graph_name,
   std::replace(query.begin(), query.end(), '\n', ' ');
   // get file name
   auto file_name = get_file_name_from_path(procedure_path);
-  return (formater % graph_name % (enabled ? "true" : "false") % file_name %
+  return (formater % graph_id % (enabled ? "true" : "false") % file_name %
           query)
       .str();
 }
@@ -95,38 +103,42 @@ std::string insert_raw_csv_dir(const std::string& raw_csv_dir,
 
 void run_builtin_graph_test(
     httplib::Client& admin_client, httplib::Client& query_client,
-    const std::string& graph_name,
+    const std::string& graph_id,
     const std::vector<std::pair<std::string, std::string>>& queries) {
   //-------0. get graph schema--------------------------------
-  auto res = admin_client.Get("/v1/graph/" + graph_name + "/schema");
+  auto res = admin_client.Get("/v1/graph/" + graph_id + "/schema");
   if (res->status != 200) {
-    LOG(FATAL) << "get graph schema failed for builtin graph" << graph_name
+    LOG(FATAL) << "get graph schema failed for builtin graph" << graph_id
                << ": " << res->body;
   }
+  std::vector<gs::PluginId> plugin_ids;
   //-------1. create procedures--------------------------------
   {
     for (auto& pair : queries) {
       auto query_name = pair.first;
       auto query_str = pair.second;
       boost::format formater(CREATE_PROCEDURE_PAYLOAD_TEMPLATE);
-      formater % graph_name % "true" % query_name % query_str;
+      formater % graph_id % "true" % query_name % query_str;
       std::string create_proc_payload0 = formater.str();
-      auto res = admin_client.Post("/v1/graph/" + graph_name + "/procedure",
+      auto res = admin_client.Post("/v1/graph/" + graph_id + "/procedure",
                                    create_proc_payload0, "text/plain");
       CHECK(res->status == 200) << "create procedure failed: " << res->body
                                 << ", for query: " << create_proc_payload0;
       LOG(INFO) << "Create procedure: " << create_proc_payload0
                 << ",response:" << res->body;
+      auto json = nlohmann::json::parse(res->body);
+      if (!json.contains("procedure_id")) {
+        LOG(FATAL) << "create procedure response does not contain plugin_id: "
+                   << res->body;
+      }
+      plugin_ids.emplace_back(json["procedure_id"].get<std::string>());
     }
   }
   //-------2. now call procedure should fail
   {
-    for (auto& pair : queries) {
-      auto query_name = pair.first;
-      auto query_str = pair.second;
-      query::Query query;
-      query.mutable_query_name()->set_name(query_name);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
+    for (auto& proc_id : plugin_ids) {
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   generate_call_procedure_payload(proc_id),
                                    "text/plain");
       CHECK(res->status != 200);
       LOG(INFO) << "call procedure response: " << res->body;
@@ -137,7 +149,7 @@ void run_builtin_graph_test(
   }
   //-------3.restart service
   {
-    // graph_name is not specified, should restart on current graph.
+    // graph_id is not specified, should restart on current graph.
     std::string empty_payload;
     auto res =
         admin_client.Post("/v1/service/restart", empty_payload, "text/plain");
@@ -145,31 +157,28 @@ void run_builtin_graph_test(
   }
   {
     //-----3.1 get all procedures.
-    auto res = admin_client.Get("/v1/graph/" + graph_name + "/procedure");
+    auto res = admin_client.Get("/v1/graph/" + graph_id + "/procedure");
     CHECK(res->status == 200) << "get all procedures failed: " << res->body;
     LOG(INFO) << "get all procedures response: " << res->body;
   }
   //------4. now do the query
   {
-    for (auto& pair : queries) {
-      auto query_name = pair.first;
-      auto query_str = pair.second;
-      query::Query query;
-      query.mutable_query_name()->set_name(query_name);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
+    for (auto& plugin_id : plugin_ids) {
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   generate_call_procedure_payload(plugin_id),
                                    "text/plain");
       CHECK(res->status == 200)
           << "call procedure should success: " << res->body
-          << ", for query: " << query.DebugString();
+          << ", for query: " << plugin_id;
     }
   }
   LOG(INFO) << "Pass builtin graph test";
 }
 
-void run_graph_tests(httplib::Client& cli, const std::string& graph_name,
-                     const std::string& schema_path,
-                     const std::string& import_path,
-                     const std::string& raw_data_dir) {
+gs::GraphId run_graph_tests(httplib::Client& cli,
+                            const std::string& schema_path,
+                            const std::string& import_path,
+                            const std::string& raw_data_dir) {
   //-------0. create graph--------------------------------
   // load schema_path to yaml and output yaml as json
   YAML::Node node;
@@ -193,9 +202,15 @@ void run_graph_tests(httplib::Client& cli, const std::string& graph_name,
     LOG(FATAL) << "Empty response: ";
   }
   LOG(INFO) << "create graph response: " << body;
+  // parse graph_id from response
+  nlohmann::json j = nlohmann::json::parse(body);
+  if (!j.contains("graph_id")) {
+    LOG(FATAL) << "create graph response does not contain graph_id: " << body;
+  }
+  gs::GraphId graph_id = j["graph_id"].get<std::string>();
 
   ///----1. get graph schema----------------------------
-  res = cli.Get("/v1/graph/" + graph_name + "/schema");
+  res = cli.Get("/v1/graph/" + graph_id + "/schema");
   if (res->status != 200) {
     LOG(FATAL) << "get graph schema failed: " << res->body;
   }
@@ -217,7 +232,7 @@ void run_graph_tests(httplib::Client& cli, const std::string& graph_name,
   LOG(INFO) << "list graph response: " << body;
 
   //----3. load graph-----------------------------------
-  res = cli.Post("/v1/graph/" + graph_name + "/dataloading",
+  res = cli.Post("/v1/graph/" + graph_id + "/dataloading",
                  insert_raw_csv_dir(raw_data_dir, import_path),
                  "application/json");
   if (res->status != 200) {
@@ -228,102 +243,108 @@ void run_graph_tests(httplib::Client& cli, const std::string& graph_name,
     LOG(FATAL) << "Empty response: ";
   }
   LOG(INFO) << "load graph response: " << body;
+  return graph_id;
 }
 
 // Create the procedure and call the procedure.
 void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
-                        const std::string& graph_name,
+                        const std::string& graph_id,
                         const std::vector<std::pair<std::string, std::string>>&
                             builtin_graph_queries,
                         const std::vector<std::string>& procedures) {
   // First create the procedure with disabled state, then update with enabled
   // state.
   //-----0. get all procedures, should be empty----------------------
-  auto res = client.Get("/v1/graph/" + graph_name + "/procedure");
+  auto res = client.Get("/v1/graph/" + graph_id + "/procedure");
   CHECK(res->status == 200) << "get all procedures failed: " << res->body;
 
+  std::vector<gs::PluginId> plugin_ids;
   //-----1. create procedures----------------------------------------
   for (auto& procedure : procedures) {
     auto create_proc_payload =
-        generate_create_procedure_payload(graph_name, procedure, false);
+        generate_create_procedure_payload(graph_id, procedure, false);
     LOG(INFO) << "Creating procedure:" << create_proc_payload;
-    res = client.Post("/v1/graph/" + graph_name + "/procedure",
+    res = client.Post("/v1/graph/" + graph_id + "/procedure",
                       create_proc_payload, "text/plain");
     CHECK(res->status == 200) << "create procedure failed: " << res->body
                               << ", for query: " << create_proc_payload;
     LOG(INFO) << "response:" << res->body;
+    auto json = nlohmann::json::parse(res->body);
+    if (!json.contains("procedure_id")) {
+      LOG(FATAL) << "create procedure response does not contain plugin_id: "
+                 << res->body;
+    }
+    plugin_ids.emplace_back(json["procedure_id"].get<std::string>());
   }
   //-----2. get all procedures--------------------------------------
-  res = client.Get("/v1/graph/" + graph_name + "/procedure");
+  res = client.Get("/v1/graph/" + graph_id + "/procedure");
   CHECK(res->status == 200) << "get all procedures failed: " << res->body;
   LOG(INFO) << "get all procedures response: " << res->body;
   // Step4: update procedures
-  for (auto& procedure : procedures) {
-    auto proc_name = get_file_name_from_path(procedure);
+  for (size_t i = 0; i < plugin_ids.size(); ++i) {
+    auto& proc_id = plugin_ids[i];
     auto update_proc_payload =
-        generate_update_procedure_payload(proc_name, true);
-    res = client.Put("/v1/graph/" + graph_name + "/procedure/" + proc_name,
+        generate_update_procedure_payload("a example procedure", true);
+    res = client.Put("/v1/graph/" + graph_id + "/procedure/" + proc_id,
                      update_proc_payload, "text/plain");
     CHECK(res->status == 200) << "update procedure failed: " << res->body
                               << ", for query: " << update_proc_payload;
   }
 
   //-----3. start service on new graph-----------------------------------
-  auto start_service_payload = generate_start_service_payload(graph_name);
+  auto start_service_payload = generate_start_service_payload(graph_id);
   res = client.Post("/v1/service/start", start_service_payload, "text/plain");
   CHECK(res->status == 200) << "start service failed: " << res->body
                             << ", for query: " << start_service_payload;
   {
     //----3.1 call proc on previous procedures on previous graph, should fail.
+    auto res = client.Get("/v1/graph/" + graph_id + "/procedure");
+    LOG(INFO) << "Current graph has plugins: " << res->body;
     for (auto& pair : builtin_graph_queries) {
       auto query_name = pair.first;
       auto query_str = pair.second;
-      query::Query query;
-      query.mutable_query_name()->set_name(query_name);
-      auto res = query_client.Post("/v1/query", query.SerializeAsString(),
+      auto res = query_client.Post("/v1/graph/current/query",
+                                   generate_call_procedure_payload(query_name),
                                    "text/plain");
       CHECK(res->status != 200)
           << "call previous procedure on current graph should fail: "
-          << res->body;
+          << res->body << ", query name; " << query_name;
     }
   }
 
   //----4. call procedures-----------------------------------------------
-  for (auto& procedure : procedures) {
-    auto proc_name = get_file_name_from_path(procedure);
-    auto call_proc_payload =
-        generate_call_procedure_payload(graph_name, proc_name);
-    res = query_client.Post("/v1/query", call_proc_payload, "text/plain");
+  for (auto& proc_id : plugin_ids) {
+    auto call_proc_payload = generate_call_procedure_payload(proc_id);
+    res = query_client.Post("/v1/graph/current/query", call_proc_payload,
+                            "text/plain");
     CHECK(res->status == 200) << "call procedure failed: " << res->body
                               << ", for query: " << call_proc_payload;
   }
   //----5. delete procedure by name-----------------------------------------
   if (procedures.size() > 0) {
-    auto proc_name = get_file_name_from_path(procedures[0]);
-    res = client.Delete("/v1/graph/" + graph_name + "/procedure/" + proc_name);
+    auto proc_id = plugin_ids[0];
+    res = client.Delete("/v1/graph/" + graph_id + "/procedure/" + proc_id);
     CHECK(res->status == 200) << "delete procedure failed: " << res->body;
   }
   //-----6. call procedure on deleted procedure------------------------------
   // Should return success, since the procedure will be deleted when restart
   // the service.
   if (procedures.size() > 0) {
-    auto proc_name = get_file_name_from_path(procedures[0]);
-    auto call_proc_payload =
-        generate_call_procedure_payload(graph_name, proc_name);
-    res = query_client.Post("/v1/query", call_proc_payload, "text/plain");
+    auto call_proc_payload = generate_call_procedure_payload(plugin_ids[0]);
+    res = query_client.Post("/v1/graph/current/query", call_proc_payload,
+                            "text/plain");
     CHECK(res->status == 200) << "call procedure failed: " << res->body
                               << ", for query: " << call_proc_payload;
   }
   //-----7. get procedure by name--------------------------------------------
   // get the second procedure by name
   if (procedures.size() > 1) {
-    auto proc_name = get_file_name_from_path(procedures[1]);
-    res = client.Get("/v1/graph/" + graph_name + "/procedure/" + proc_name);
+    res = client.Get("/v1/graph/" + graph_id + "/procedure/" + plugin_ids[1]);
     CHECK(res->status == 200) << "get procedure failed: " << res->body;
   }
 }
 
-void run_get_node_status(httplib::Client& cli) {
+void run_get_node_status(httplib::Client& cli, const std::string& graph_id) {
   auto res = cli.Get("/v1/node/status");
   if (res->status != 200) {
     LOG(FATAL) << "get node status failed: " << res->body;
@@ -343,10 +364,35 @@ void run_get_node_status(httplib::Client& cli) {
     LOG(FATAL) << "Empty response: ";
   }
   LOG(INFO) << "get service status response: " << body;
+  // Get current running graph's status
+  {
+    auto res = cli.Get("/v1/graph/" + graph_id + "/statistics");
+    if (res->status != 200) {
+      LOG(FATAL) << "get current graph status failed: " << res->body;
+    }
+    auto body = res->body;
+    if (body.empty()) {
+      LOG(FATAL) << "Empty response: ";
+    }
+    // check whether has total_edge_count, total_vertex_count, and the value
+    // should be greater than 0
+    nlohmann::json j = nlohmann::json::parse(body);
+    if (!j.contains("total_edge_count") || !j.contains("total_vertex_count")) {
+      LOG(FATAL) << "get current graph status response does not contain "
+                    "total_edge_count or total_vertex_count: "
+                 << body;
+    }
+    if (j["total_edge_count"].get<int>() <= 0 ||
+        j["total_vertex_count"].get<int>() <= 0) {
+      LOG(FATAL) << "get current graph status response total_edge_count or "
+                    "total_vertex_count should be greater than 0: "
+                 << body;
+    }
+  }
 }
 
-void test_delete_graph(httplib::Client& cli, const std::string& graph_name) {
-  auto res = cli.Delete("/v1/graph/" + graph_name);
+void test_delete_graph(httplib::Client& cli, const std::string& graph_id) {
+  auto res = cli.Delete("/v1/graph/" + graph_id);
   if (res->status != 200) {
     LOG(FATAL) << "delete graph failed: " << res->body;
   }
@@ -357,12 +403,11 @@ void test_delete_graph(httplib::Client& cli, const std::string& graph_name) {
   LOG(INFO) << "delete graph response: " << body;
 }
 
-void remove_graph_if_exists(httplib::Client& cli,
-                            const std::string& graph_name) {
-  auto res = cli.Get("/v1/graph/" + graph_name + "/schema");
+void remove_graph_if_exists(httplib::Client& cli, const std::string& graph_id) {
+  auto res = cli.Get("/v1/graph/" + graph_id + "/schema");
   if (res->status == 200) {
-    LOG(INFO) << "graph " << graph_name << " exists, delete it";
-    test_delete_graph(cli, graph_name);
+    LOG(INFO) << "graph " << graph_id << " exists, delete it";
+    test_delete_graph(cli, graph_id);
   }
 }
 
@@ -389,21 +434,7 @@ int main(int argc, char** argv) {
   auto raw_data_dir = argv[5];
   std::vector<std::string> procedure_paths;
 
-  std::string builtin_graph_name = "modern_graph";
-
-  std::string graph_name;
-  {
-    // load yaml from schema_path
-    YAML::Node node;
-    try {
-      node = YAML::LoadFile(schema_path);
-    } catch (YAML::BadFile& e) {
-      LOG(ERROR) << "load schema file failed: " << e.what();
-      return -1;
-    }
-    graph_name = node["name"].as<std::string>();
-  }
-  LOG(INFO) << "graph name: " << graph_name;
+  std::string builtin_graph_id = "1";
 
   for (auto i = 6; i < argc; ++i) {
     procedure_paths.emplace_back(argv[i]);
@@ -417,18 +448,17 @@ int main(int argc, char** argv) {
   cli_query.set_read_timeout(60, 0);
   cli_query.set_write_timeout(60, 0);
 
-  remove_graph_if_exists(cli, graph_name);
+  // remove_graph_if_exists(cli, graph_id);
   std::vector<std::pair<std::string, std::string>> builtin_graph_queries = {
       {"query0", "MATCH(a) return COUNT(a);"}};
-  run_builtin_graph_test(cli, cli_query, builtin_graph_name,
+  run_builtin_graph_test(cli, cli_query, builtin_graph_id,
                          builtin_graph_queries);
-  run_graph_tests(cli, graph_name, schema_path, import_path, raw_data_dir);
+  auto graph_id = run_graph_tests(cli, schema_path, import_path, raw_data_dir);
   LOG(INFO) << "run graph tests done";
-  run_procedure_test(cli, cli_query, graph_name, builtin_graph_queries,
+  run_procedure_test(cli, cli_query, graph_id, builtin_graph_queries,
                      procedure_paths);
   LOG(INFO) << "run procedure tests done";
-  run_get_node_status(cli);
-  test_delete_graph(cli, graph_name);
+  run_get_node_status(cli, graph_id);
   LOG(INFO) << "test delete graph done";
   return 0;
 }

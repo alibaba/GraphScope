@@ -82,20 +82,22 @@ void generate_label_tuples(
   }
 }
 
-bool ServerApp::Query(Decoder& input, Encoder& output) {
+AppBase::AppType ServerApp::type() const { return AppType::kBuiltIn; }
+
+bool ServerApp::Query(GraphDBSession& graph, Decoder& input, Encoder& output) {
   std::string op = std::string(input.get_string());
   for (auto& c : op) {
     c = toupper(c);
   }
   if (op == "SHOW_STORED_PROCEDURES") {
     CHECK(input.empty());
-    graph_.GetAppInfo(output);
+    graph.GetAppInfo(output);
     return true;
   } else if (op == "QUERY_VERTEX") {
     std::string vertex_label = std::string(input.get_string());
     int64_t vertex_id = input.get_long();
     CHECK(input.empty());
-    auto txn = graph_.GetReadTransaction();
+    auto txn = graph.GetReadTransaction();
     uint8_t vertex_label_id = txn.schema().get_vertex_label_id(vertex_label);
     auto vit = txn.GetVertexIterator(vertex_label_id);
     for (; vit.IsValid(); vit.Next()) {
@@ -123,7 +125,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
         edge_label != "_ANY_LABEL" &&
         src_id != std::numeric_limits<int64_t>::max() &&
         dst_id != std::numeric_limits<int64_t>::max()) {
-      auto txn = graph_.GetReadTransaction();
+      auto txn = graph.GetReadTransaction();
       uint8_t src_label_id, dst_label_id, edge_label_id;
       if (!txn.schema().contains_vertex_label(src_label)) {
         output.put_int(0);
@@ -188,7 +190,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
       output.put_int(0);
       return true;
     } else {
-      auto txn = graph_.GetReadTransaction();
+      auto txn = graph.GetReadTransaction();
       std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> label_tuples;
       generate_label_tuples(src_label, dst_label, edge_label, txn.schema(),
                             label_tuples);
@@ -294,7 +296,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
       return true;
     }
   } else if (op == "COMPACTION") {
-    bool ret = graph_.Compact();
+    bool ret = graph.Compact();
     if (ret) {
       output.put_string("SUCCESS");
     } else {
@@ -305,8 +307,8 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
   return false;
 }
 
-AppWrapper ServerAppFactory::CreateApp(GraphDBSession& graph) {
-  AppBase* app = new ServerApp(graph);
+AppWrapper ServerAppFactory::CreateApp(const GraphDB& graph) {
+  AppBase* app = new ServerApp();
   return AppWrapper(app, NULL);
 }
 

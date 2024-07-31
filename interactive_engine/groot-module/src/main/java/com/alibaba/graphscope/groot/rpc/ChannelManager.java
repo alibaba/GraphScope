@@ -21,6 +21,9 @@ import com.alibaba.graphscope.groot.common.exception.NodeConnectException;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.NameResolver;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +45,14 @@ public class ChannelManager {
 
     private final int rpcMaxBytes;
 
+    private final GrpcTelemetry grpcTelemetry;
+
     public ChannelManager(Configs configs, NameResolver.Factory nameResolverFactory) {
         this.configs = configs;
         this.nameResolverFactory = nameResolverFactory;
         this.rpcMaxBytes = CommonConfig.RPC_MAX_BYTES_MB.get(configs) * 1024 * 1024;
+        OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+        this.grpcTelemetry = GrpcTelemetry.create(openTelemetry);
     }
 
     public void start() {
@@ -66,6 +73,7 @@ public class ChannelManager {
                                     .nameResolverFactory(this.nameResolverFactory)
                                     .maxInboundMessageSize(this.rpcMaxBytes)
                                     .usePlaintext()
+                                    .intercept(grpcTelemetry.newClientInterceptor())
                                     .build();
                     idxToChannel.put(i, channel);
                 }
@@ -96,21 +104,32 @@ public class ChannelManager {
         logger.debug("role [" + role.getName() + "] registered");
     }
 
+    private ManagedChannel createChannel(RoleType role, int idx) {
+        String host = Utils.getHostTemplate(configs, role).replace("{}", String.valueOf(idx));
+        int port = Utils.getPort(configs, role, idx);
+        logger.info("Create channel to {}#{}, {}:{}", role.getName(), idx, host, port);
+        ManagedChannel channel =
+                ManagedChannelBuilder.forAddress(host, port)
+                        .maxInboundMessageSize(this.rpcMaxBytes)
+                        .usePlaintext()
+                        .intercept(grpcTelemetry.newClientInterceptor())
+                        .build();
+        return channel;
+    }
+
     public ManagedChannel getChannel(RoleType role, int idx) {
         Map<Integer, ManagedChannel> idToChannel = this.roleToChannels.get(role);
         if (idToChannel == null) {
             throw new NodeConnectException("invalid role [" + role + "]");
         }
+        // to avoid thread competition
         if (idToChannel.get(idx) == null) {
-            String host = Utils.getHostTemplate(configs, role).replace("{}", String.valueOf(idx));
-            int port = Utils.getPort(configs, role, idx);
-            logger.info("Create channel to {}#{}, {}:{}", role.getName(), idx, host, port);
-            ManagedChannel channel =
-                    ManagedChannelBuilder.forAddress(host, port)
-                            .maxInboundMessageSize(this.rpcMaxBytes)
-                            .usePlaintext()
-                            .build();
-            idToChannel.put(idx, channel);
+            synchronized (this) {
+                if (idToChannel.get(idx) == null) {
+                    ManagedChannel channel = createChannel(role, idx);
+                    idToChannel.put(idx, channel);
+                }
+            }
         }
         return idToChannel.get(idx);
     }

@@ -28,15 +28,84 @@
 #include <string>
 #include <vector>
 
+#include "flex/utils/property/types.h"
 #include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
 #include "nlohmann/json.hpp"
 
 #include <glog/logging.h>
+#include <boost/filesystem.hpp>
 
 namespace gs {
 
 static constexpr const char* CODEGEN_BIN = "load_plan_and_gen.sh";
+
+/// Util functions.
+inline int64_t GetCurrentTimeStamp() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::system_clock::now().time_since_epoch())
+      .count();
+}
+
+// With the help of the following functions, we can serialize and deserialize
+// by json.get<PropertyType>() and operator <</operator =;
+// These two functions are inlined to avoid linking library in codegen.
+inline void to_json(nlohmann::json& j, const PropertyType& p) {
+  if (p == PropertyType::Empty()) {
+    j = "empty";
+  } else if (p == PropertyType::Bool() || p == PropertyType::UInt8() ||
+             p == PropertyType::UInt16() || p == PropertyType::Int32() ||
+             p == PropertyType::UInt32() || p == PropertyType::Float() ||
+             p == PropertyType::Int64() || p == PropertyType::UInt64() ||
+             p == PropertyType::Double()) {
+    j["primitive_type"] = config_parsing::PrimitivePropertyTypeToString(p);
+  } else if (p == PropertyType::Date()) {
+    j["temporal"]["timestamp"] = {};
+  } else if (p == PropertyType::Day()) {
+    j["temporal"]["date32"] = {};
+  } else if (p == PropertyType::StringView() ||
+             p == PropertyType::StringMap()) {
+    j["string"]["long_text"] = {};
+  } else if (p.IsVarchar()) {
+    j["string"]["var_char"]["max_length"] = p.additional_type_info.max_length;
+  } else {
+    LOG(ERROR) << "Unknown property type";
+  }
+}
+
+inline void from_json(const nlohmann::json& j, PropertyType& p) {
+  if (j.contains("primitive_type")) {
+    p = config_parsing::StringToPrimitivePropertyType(
+        j["primitive_type"].get<std::string>());
+  } else if (j.contains("string")) {
+    if (j["string"].contains("long_text")) {
+      p = PropertyType::StringView();
+    } else if (j.contains("string") && j["string"].contains("var_char")) {
+      if (j["string"]["var_char"].contains("max_length")) {
+        p = PropertyType::Varchar(
+            j["string"]["var_char"]["max_length"].get<int32_t>());
+      } else {
+        p = PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
+      }
+    } else {
+      throw std::invalid_argument("Unknown string type");
+    }
+  } else if (j.contains("temporal")) {
+    if (j["temporal"].contains("timestamp")) {
+      p = PropertyType::Date();
+    } else if (j["temporal"].contains("date32")) {
+      p = PropertyType::Day();
+    } else {
+      throw std::invalid_argument("Unknown temporal type");
+    }
+  } else {
+    LOG(ERROR) << "Unknown property type";
+  }
+}
+
+inline boost::filesystem::path get_current_binary_directory() {
+  return boost::filesystem::canonical("/proc/self/exe").parent_path();
+}
 
 class FlexException : public std::exception {
  public:

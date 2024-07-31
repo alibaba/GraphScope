@@ -36,8 +36,8 @@ struct CommonBuilderT;
 
 template <typename CTX_T, int col_id>
 struct CommonBuilderT<CTX_T, GroupKey<col_id, grape::EmptyType>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<
+      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
   using builder_t = typename set_t::builder_t;
   using result_t = typename builder_t::result_t;
   using result_ele_t = typename result_t::element_type;
@@ -45,8 +45,8 @@ struct CommonBuilderT<CTX_T, GroupKey<col_id, grape::EmptyType>> {
 
 template <typename CTX_T, int col_id, typename T>
 struct CommonBuilderT<CTX_T, GroupKey<col_id, T>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<
+      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
   using builder_t = CollectionBuilder<T>;
   using result_t = typename builder_t::result_t;
   using result_ele_t = typename result_t::element_type;
@@ -57,8 +57,8 @@ struct GroupKeyResT;
 
 template <typename CTX_T, int col_id, typename T>
 struct GroupKeyResT<CTX_T, GroupKey<col_id, T>> {
-  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using set_t = std::remove_const_t<std::remove_reference_t<
+      decltype(std::declval<CTX_T>().template GetNode<col_id>())>>;
   using result_t = typename KeyedT<set_t, PropertySelector<T>>::keyed_set_t;
 };
 
@@ -75,8 +75,9 @@ struct GroupValueResT<CTX_T,
                       AggregateProp<agg_func, std::tuple<SELECTOR...>,
                                     std::integer_sequence<int, Is...>>,
                       typename std::enable_if<(sizeof...(Is) == 1)>::type> {
-  using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<FirstElement<Is...>::value>())>>;
+  using old_set_t = std::remove_const_t<std::remove_reference_t<
+      decltype(std::declval<CTX_T>()
+                   .template GetNode<FirstElement<Is...>::value>())>>;
   using result_t =
       typename GroupValueResTImpl<old_set_t, agg_func,
                                   std::tuple<SELECTOR...>>::result_t;
@@ -89,8 +90,8 @@ struct GroupValueResT<CTX_T,
                                     std::integer_sequence<int, Is...>>,
                       typename std::enable_if<(sizeof...(Is) > 1)>::type> {
   using old_set_tuple_t =
-      std::tuple<std::remove_const_t<std::remove_reference_t<decltype(
-          std::declval<CTX_T>().template GetNode<Is>())>>...>;
+      std::tuple<std::remove_const_t<std::remove_reference_t<
+          decltype(std::declval<CTX_T>().template GetNode<Is>())>>...>;
   using result_t =
       typename GroupValueResTImpl<old_set_tuple_t, agg_func,
                                   std::tuple<SELECTOR...>>::result_t;
@@ -389,10 +390,7 @@ class GroupByOp {
                           std::integer_sequence<int32_t, 0>>>) {
       auto& builder = std::get<0>(value_set_builder_tuple);
       auto size = ctx.GetHead().Size();
-      std::tuple<std::tuple<grape::EmptyType>> empty_tuple;
-      for (size_t i = 0; i < size; ++i) {
-        builder.insert(0, empty_tuple, empty_tuple);
-      }
+      builder.inc_count(0, size);
     } else {
       for (auto iter : ctx) {
         auto ele_tuple = iter.GetAllIndexElement();
@@ -409,22 +407,6 @@ class GroupByOp {
                               std::make_index_sequence<grouped_value_num>());
     return RES_T(std::move(std::get<0>(value_set_built)),
                  ctx.get_sub_task_start_tag());
-
-    // // create offset array with one-one mapping.
-    // if (grouped_value_num == 1) {
-    // } else {
-    //   auto offset_vec = make_offset_vector(
-    //       grouped_value_num - 1, std::get<0>(value_set_built).size() + 1);
-    //   VLOG(10) << "after group by, the set size: " << keyed_set_built.Size();
-    //   VLOG(10) << "offset vec: " << offset_vec.size();
-    //   VLOG(10) << "," << offset_vec[0].size();
-
-    //   RES_T res(std::move(std::get<grouped_value_num - 1>(value_set_built)),
-    //             std::move(gs::tuple_slice<0, grouped_value_num - 1>(
-    //                 std::move(value_set_built))),
-    //             std::move(offset_vec));
-    //   return res;
-    // }
   }
 
   // group by only one key_alias

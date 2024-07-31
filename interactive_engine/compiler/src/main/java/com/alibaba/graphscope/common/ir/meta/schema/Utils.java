@@ -19,6 +19,8 @@ package com.alibaba.graphscope.common.ir.meta.schema;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.impl.*;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
+import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -49,6 +51,8 @@ public abstract class Utils {
         Map<String, GraphVertex> vertexMap = Maps.newHashMap();
         Map<String, GraphEdge> edgeMap = Maps.newHashMap();
         Map<String, Integer> propNameToIdMap = Maps.newHashMap();
+        GSDataTypeConvertor<DataType> typeConvertor =
+                GSDataTypeConvertor.Factory.create(DataType.class, null);
         builderGraphElementFromYaml(
                 (List)
                         Objects.requireNonNull(
@@ -57,15 +61,20 @@ public abstract class Utils {
                 "VERTEX",
                 vertexMap,
                 edgeMap,
-                propNameToIdMap);
-        builderGraphElementFromYaml(
-                (List)
-                        Objects.requireNonNull(
-                                schemaMap.get("edge_types"), "edge_types not exist in yaml config"),
-                "EDGE",
-                vertexMap,
-                edgeMap,
-                propNameToIdMap);
+                propNameToIdMap,
+                typeConvertor);
+        if (schemaMap.get("edge_types") != null) {
+            builderGraphElementFromYaml(
+                    (List)
+                            Objects.requireNonNull(
+                                    schemaMap.get("edge_types"),
+                                    "edge_types not exist in yaml config"),
+                    "EDGE",
+                    vertexMap,
+                    edgeMap,
+                    propNameToIdMap,
+                    typeConvertor);
+        }
         return new DefaultGraphSchema(vertexMap, edgeMap, propNameToIdMap);
     }
 
@@ -74,7 +83,8 @@ public abstract class Utils {
             String type,
             Map<String, GraphVertex> vertexMap,
             Map<String, GraphEdge> edgeMap,
-            Map<String, Integer> propNameToIdMap) {
+            Map<String, Integer> propNameToIdMap,
+            GSDataTypeConvertor<DataType> typeConvertor) {
         for (Object element : elementList) {
             if (element instanceof Map) {
                 Map<String, Object> elementMap = (Map<String, Object>) element;
@@ -105,7 +115,9 @@ public abstract class Utils {
                                     new DefaultGraphProperty(
                                             propertyId,
                                             propertyName,
-                                            toDataType(propertyMap.get("property_type"))));
+                                            toDataType(
+                                                    propertyMap.get("property_type"),
+                                                    typeConvertor)));
                         }
                     }
                 }
@@ -141,37 +153,8 @@ public abstract class Utils {
         }
     }
 
-    public static DataType toDataType(Object type) {
-        if (type instanceof Map) {
-            Map<String, Object> typeMap = (Map<String, Object>) type;
-            Object value;
-            if ((value = typeMap.get("primitive_type")) != null) {
-                switch (value.toString()) {
-                    case "DT_SIGNED_INT32":
-                        return DataType.INT;
-                    case "DT_SIGNED_INT64":
-                        return DataType.LONG;
-                    case "DT_BOOL":
-                        return DataType.BOOL;
-                    case "DT_FLOAT":
-                        return DataType.FLOAT;
-                    case "DT_DOUBLE":
-                        return DataType.DOUBLE;
-                    case "DT_STRING":
-                        return DataType.STRING;
-                    case "DT_DATE32":
-                        return DataType.DATE;
-                    case "DT_TIME32":
-                        return DataType.TIME32;
-                    case "TIMESTAMP":
-                        return DataType.TIMESTAMP;
-                    default:
-                        throw new UnsupportedOperationException(
-                                "unsupported primitive type: " + value);
-                }
-            }
-        }
-        throw new UnsupportedOperationException("unsupported type: " + type);
+    public static DataType toDataType(Object type, GSDataTypeConvertor<DataType> typeConvertor) {
+        return typeConvertor.convert(new GSDataTypeDesc((Map<String, Object>) type));
     }
 
     /**
@@ -281,6 +264,79 @@ public abstract class Utils {
             default:
                 throw new UnsupportedOperationException(
                         "convert from ir core type " + ordinal + " to DataType is unsupported yet");
+        }
+    }
+
+    /**
+     * build {@link GraphStatistics} from statistics json
+     * @param statisticsJson
+     * @return
+     */
+    public static final GraphStatistics buildStatisticsFromJson(String statisticsJson) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            JsonNode jsonNode = mapper.readTree(statisticsJson);
+            Map<LabelId, Long> vertexTypeCounts = Maps.newHashMap();
+            Map<EdgeKind, Long> edgeTypeCounts = Maps.newHashMap();
+            Map<String, Integer> vertexTypeNameIdMap = Maps.newHashMap();
+            Long num_vertices = jsonNode.get("total_vertex_count").asLong();
+            Long num_edges = jsonNode.get("total_edge_count").asLong();
+            JsonNode vertexTypeCountsNode = jsonNode.get("vertex_type_statistics");
+            JsonNode edgeTypeCountsNode = jsonNode.get("edge_type_statistics");
+            buildGraphElementStatisticsFromJson(
+                    vertexTypeCountsNode,
+                    "VERTEX",
+                    vertexTypeCounts,
+                    edgeTypeCounts,
+                    vertexTypeNameIdMap);
+            buildGraphElementStatisticsFromJson(
+                    edgeTypeCountsNode,
+                    "EDGE",
+                    vertexTypeCounts,
+                    edgeTypeCounts,
+                    vertexTypeNameIdMap);
+
+            return new DefaultGraphStatistics(
+                    vertexTypeCounts, edgeTypeCounts, num_vertices, num_edges);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final void buildGraphElementStatisticsFromJson(
+            JsonNode typeCountsNode,
+            String type,
+            Map<LabelId, Long> vertexTypeCounts,
+            Map<EdgeKind, Long> edgeTypeCounts,
+            Map<String, Integer> vertexTypeNameIdMap) {
+        Iterator var1 = typeCountsNode.iterator();
+        while (var1.hasNext()) {
+            JsonNode typeStatisticJsonNode = (JsonNode) var1.next();
+            int typeId = typeStatisticJsonNode.get("type_id").asInt();
+            String typeName = typeStatisticJsonNode.get("type_name").asText();
+            if (type.equals("VERTEX")) {
+                Long typeCount = typeStatisticJsonNode.get("count").asLong();
+                vertexTypeCounts.put(new LabelId(typeId), typeCount);
+                vertexTypeNameIdMap.put(typeName, typeId);
+            } else {
+                JsonNode entityPairs = typeStatisticJsonNode.get("vertex_type_pair_statistics");
+                Iterator var2 = entityPairs.iterator();
+                while (var2.hasNext()) {
+                    JsonNode pair = (JsonNode) var2.next();
+                    String sourceLabel = pair.get("source_vertex").asText();
+                    String dstLabel = pair.get("destination_vertex").asText();
+                    Long typeCount = pair.get("count").asLong();
+                    EdgeKind edgeKind =
+                            EdgeKind.newBuilder()
+                                    .setEdgeLabelId(new LabelId(typeId))
+                                    .setSrcVertexLabelId(
+                                            new LabelId(vertexTypeNameIdMap.get(sourceLabel)))
+                                    .setDstVertexLabelId(
+                                            new LabelId(vertexTypeNameIdMap.get(dstLabel)))
+                                    .build();
+                    edgeTypeCounts.put(edgeKind, typeCount);
+                }
+            }
         }
     }
 }

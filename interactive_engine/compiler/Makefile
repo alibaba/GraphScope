@@ -59,7 +59,10 @@ run:
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
 	  -Dgremlin.script.language.name=${gremlin.script.language.name} \
-	  -Dphysical.opt.config=${physical.opt.config} \
+	  -Dgraph.physical.opt=${graph.physical.opt} \
+	  -Dgraph.planner.rules=${graph.planner.rules} \
+	  -Dgraph.planner.opt=${graph.planner.opt} \
+	  -Dgraph.statistics=${graph.statistics} \
 	  com.alibaba.graphscope.GraphServer ${config.path}
 
 # make physical_plan config.path='<path to the config file>'
@@ -80,6 +83,9 @@ ldbc_test:
 	# todo: need to rewrite gremlin ldbc queries
 	# mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.ldbc.IrLdbcTest
 	mvn test -Dtest=com.alibaba.graphscope.cypher.integration.ldbc.IrLdbcTest
+
+simple_test:
+	mvn test -Dtest=com.alibaba.graphscope.cypher.integration.ldbc.SimpleMatchTest
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json

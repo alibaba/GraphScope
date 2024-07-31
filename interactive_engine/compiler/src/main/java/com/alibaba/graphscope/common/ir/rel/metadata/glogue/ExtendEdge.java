@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.ElementDetails;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.google.common.collect.ImmutableList;
@@ -33,17 +34,42 @@ public class ExtendEdge {
     // the weight of the extend edge, which indicates the cost to expand the edge.
     private Double weight;
 
+    // contain extra metadata for the edge
+    private final ElementDetails elementDetails;
+
     public ExtendEdge(int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction) {
-        this.srcVertexOrder = srcVertexOrder;
-        this.edgeTypeIds = ImmutableList.of(edgeTypeId);
-        this.direction = direction;
+        this(srcVertexOrder, edgeTypeId, direction, null);
     }
 
     public ExtendEdge(
             int srcVertexOrder, List<EdgeTypeId> edgeTypeIds, PatternDirection direction) {
+        this(srcVertexOrder, edgeTypeIds, direction, null);
+    }
+
+    public ExtendEdge(
+            int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction, Double weight) {
+        this(srcVertexOrder, ImmutableList.of(edgeTypeId), direction, weight, new ElementDetails());
+    }
+
+    public ExtendEdge(
+            int srcVertexOrder,
+            List<EdgeTypeId> edgeTypeIds,
+            PatternDirection direction,
+            Double weight) {
+        this(srcVertexOrder, edgeTypeIds, direction, weight, new ElementDetails());
+    }
+
+    public ExtendEdge(
+            int srcVertexOrder,
+            List<EdgeTypeId> edgeTypeIds,
+            PatternDirection direction,
+            Double weight,
+            ElementDetails elementDetails) {
         this.srcVertexOrder = srcVertexOrder;
         this.edgeTypeIds = edgeTypeIds;
         this.direction = direction;
+        this.weight = weight;
+        this.elementDetails = elementDetails;
     }
 
     public int getSrcVertexOrder() {
@@ -68,6 +94,10 @@ public class ExtendEdge {
 
     public Double getWeight() {
         return weight;
+    }
+
+    public ElementDetails getElementDetails() {
+        return elementDetails;
     }
 
     @Override

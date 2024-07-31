@@ -1,7 +1,6 @@
 # Set max threads will be created in the executor pool;
 # It will be set to CPU cores by default;
 max_pool_size = 8
-enable_tracing = false
 
 [network]
 # Set server id of current config belongs to;

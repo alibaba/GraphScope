@@ -833,8 +833,8 @@ class MutableCSRInterface {
     } else {
       auto ptr = db_session_.get_vertex_property_column(label_id, prop_name);
       if (ptr) {
-        column = std::dynamic_pointer_cast<TypedRefColumn<T>>(
-            create_ref_column(ptr));
+        column =
+            std::dynamic_pointer_cast<TypedRefColumn<T>>(CreateRefColumn(ptr));
       } else {
         return nullptr;
       }
@@ -849,7 +849,7 @@ class MutableCSRInterface {
     } else if (prop_name == "Label" || prop_name == "LabelKey") {
       return std::make_shared<TypedRefColumn<LabelKey>>(label_id);
     } else {
-      return create_ref_column(
+      return CreateRefColumn(
           db_session_.get_vertex_property_column(label_id, prop_name));
     }
   }
@@ -862,40 +862,6 @@ class MutableCSRInterface {
   }
 
  private:
-  std::shared_ptr<RefColumnBase> create_ref_column(
-      std::shared_ptr<ColumnBase> column) const {
-    auto type = column->type();
-    if (type == PropertyType::kBool) {
-      return std::make_shared<TypedRefColumn<bool>>(
-          *std::dynamic_pointer_cast<TypedColumn<bool>>(column));
-    } else if (type == PropertyType::kInt32) {
-      return std::make_shared<TypedRefColumn<int>>(
-          *std::dynamic_pointer_cast<TypedColumn<int>>(column));
-    } else if (type == PropertyType::kInt64) {
-      return std::make_shared<TypedRefColumn<int64_t>>(
-          *std::dynamic_pointer_cast<TypedColumn<int64_t>>(column));
-    } else if (type == PropertyType::kUInt32) {
-      return std::make_shared<TypedRefColumn<uint32_t>>(
-          *std::dynamic_pointer_cast<TypedColumn<uint32_t>>(column));
-    } else if (type == PropertyType::kUInt64) {
-      return std::make_shared<TypedRefColumn<uint64_t>>(
-          *std::dynamic_pointer_cast<TypedColumn<uint64_t>>(column));
-    } else if (type == PropertyType::kDate) {
-      return std::make_shared<TypedRefColumn<Date>>(
-          *std::dynamic_pointer_cast<TypedColumn<Date>>(column));
-    } else if (type == PropertyType::kString) {
-      return std::make_shared<TypedRefColumn<std::string_view>>(
-          *std::dynamic_pointer_cast<TypedColumn<std::string_view>>(column));
-    } else if (type == PropertyType::kFloat) {
-      return std::make_shared<TypedRefColumn<float>>(
-          *std::dynamic_pointer_cast<TypedColumn<float>>(column));
-    } else {
-      LOG(FATAL) << "unexpected type to create column, "
-                 << static_cast<int>(type.type_enum);
-      return nullptr;
-    }
-  }
-
   template <typename PropT>
   auto get_single_column_from_graph_with_property(
       label_t label, const PropertySelector<PropT>& selector) const {

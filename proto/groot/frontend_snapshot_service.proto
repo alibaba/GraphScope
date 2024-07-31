@@ -23,6 +23,7 @@ option java_multiple_files = true;
 
 service FrontendSnapshot {
   rpc advanceQuerySnapshot(AdvanceQuerySnapshotRequest) returns (AdvanceQuerySnapshotResponse);
+  rpc syncStatistics(SyncStatisticsRequest) returns (SyncStatisticsResponse);
 }
 
 message AdvanceQuerySnapshotRequest {
@@ -32,4 +33,12 @@ message AdvanceQuerySnapshotRequest {
 
 message AdvanceQuerySnapshotResponse {
   int64 previousSnapshotId = 1;
+}
+
+message SyncStatisticsRequest {
+  Statistics statistics = 1;
+}
+
+message SyncStatisticsResponse {
+
 }

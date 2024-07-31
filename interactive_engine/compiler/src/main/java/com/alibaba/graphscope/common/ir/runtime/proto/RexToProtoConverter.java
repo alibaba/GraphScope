@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -28,6 +29,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.util.Sarg;
 
 import java.util.List;
@@ -57,13 +59,153 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitArrayValueConstructor(call);
         } else if (operator.getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR) {
             return visitMapValueConstructor(call);
+        } else if (operator.getKind() == SqlKind.OTHER
+                && operator.getName().equals("PATH_CONCAT")) {
+            return visitPathConcat(call);
+        } else if (operator.getKind() == SqlKind.OTHER
+                && operator.getName().equals("PATH_FUNCTION")) {
+            return visitPathFunction(call);
         } else if (operator.getKind() == SqlKind.EXTRACT) {
             return visitExtract(call);
+        } else if (operator.getKind() == SqlKind.OTHER
+                && operator.getName().equals("DATETIME_MINUS")) {
+            return visitDateMinus(call);
         } else if (call.getOperands().size() == 1) {
             return visitUnaryOperator(call);
         } else {
             return visitBinaryOperator(call);
         }
+    }
+
+    private OuterExpression.Expression visitPathFunction(RexCall call) {
+        List<RexNode> operands = call.getOperands();
+        RexGraphVariable variable = (RexGraphVariable) operands.get(0);
+        OuterExpression.PathFunction.Builder builder = OuterExpression.PathFunction.newBuilder();
+        if (variable.getAliasId() != AliasInference.DEFAULT_ID) {
+            builder.setTag(Common.NameOrId.newBuilder().setId(variable.getAliasId()).build());
+        }
+        GraphOpt.PathExpandFunction funcOpt =
+                ((RexLiteral) operands.get(1)).getValueAs(GraphOpt.PathExpandFunction.class);
+        builder.setOpt(OuterExpression.PathFunction.FuncOpt.valueOf(funcOpt.name()));
+        setPathFunctionProjection(builder, operands.get(2));
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setPathFunc(builder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private void setPathFunctionProjection(
+            OuterExpression.PathFunction.Builder builder, RexNode projection) {
+        switch (projection.getKind()) {
+            case MAP_VALUE_CONSTRUCTOR:
+                List<RexNode> operands = ((RexCall) projection).getOperands();
+                OuterExpression.PathFunction.PathElementKeyValues.Builder keyValuesBuilder =
+                        OuterExpression.PathFunction.PathElementKeyValues.newBuilder();
+                for (int i = 0; i < operands.size(); i += 2) {
+                    keyValuesBuilder.addKeyVals(
+                            OuterExpression.PathFunction.PathElementKeyValues.PathElementKeyValue
+                                    .newBuilder()
+                                    .setKey(operands.get(i).accept(this).getOperators(0).getConst())
+                                    .setVal(visitPathFunctionProperty(operands.get(i + 1))));
+                }
+                builder.setMap(keyValuesBuilder);
+                break;
+            case ARRAY_VALUE_CONSTRUCTOR:
+                OuterExpression.PathFunction.PathElementKeys.Builder valuesBuilder =
+                        OuterExpression.PathFunction.PathElementKeys.newBuilder();
+                ((RexCall) projection)
+                        .getOperands()
+                        .forEach(
+                                operand ->
+                                        valuesBuilder.addKeys(visitPathFunctionProperty(operand)));
+                builder.setVars(valuesBuilder);
+                break;
+            default:
+                builder.setProperty(visitPathFunctionProperty(projection));
+        }
+    }
+
+    private OuterExpression.Property visitPathFunctionProperty(RexNode variable) {
+        Preconditions.checkArgument(
+                variable instanceof RexGraphVariable
+                        && ((RexGraphVariable) variable).getProperty() != null,
+                "cannot get path function property from variable [" + variable + "]");
+        return Utils.protoProperty(((RexGraphVariable) variable).getProperty());
+    }
+
+    private OuterExpression.Expression visitPathConcat(RexCall call) {
+        List<RexNode> operands = call.getOperands();
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setPathConcat(
+                                        OuterExpression.PathConcat.newBuilder()
+                                                .setLeft(convertPathInfo(operands))
+                                                .setRight(
+                                                        convertPathInfo(
+                                                                operands.subList(
+                                                                        2, operands.size())))))
+                .build();
+    }
+
+    private OuterExpression.PathConcat.ConcatPathInfo convertPathInfo(List<RexNode> operands) {
+        Preconditions.checkArgument(
+                operands.size() >= 2
+                        && operands.get(0) instanceof RexGraphVariable
+                        && operands.get(1) instanceof RexLiteral);
+        OuterExpression.Variable variable = operands.get(0).accept(this).getOperators(0).getVar();
+        GraphOpt.GetV direction = ((RexLiteral) operands.get(1)).getValueAs(GraphOpt.GetV.class);
+        return OuterExpression.PathConcat.ConcatPathInfo.newBuilder()
+                .setPathTag(variable)
+                .setEndpoint(convertPathDirection(direction))
+                .build();
+    }
+
+    private OuterExpression.PathConcat.Endpoint convertPathDirection(GraphOpt.GetV direction) {
+        switch (direction) {
+            case START:
+                return OuterExpression.PathConcat.Endpoint.START;
+            case END:
+                return OuterExpression.PathConcat.Endpoint.END;
+            default:
+                throw new IllegalArgumentException(
+                        "invalid path concat direction ["
+                                + direction.name()
+                                + "], cannot convert to any physical expression");
+        }
+    }
+
+    private OuterExpression.Expression visitDateMinus(RexCall call) {
+        OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
+        RexLiteral interval = (RexLiteral) call.getOperands().get(2);
+        SqlOperator operator = call.getOperator();
+        for (int i = 0; i < 2; ++i) {
+            RexNode operand = call.getOperands().get(i);
+            if (i != 0) {
+                exprBuilder.addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setDateTimeMinus(
+                                        OuterExpression.DateTimeMinus.newBuilder()
+                                                .setInterval(Utils.protoInterval(interval)))
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)));
+            }
+            if (needBrace(operator, operand)) {
+                exprBuilder.addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE)
+                                .build());
+            }
+            exprBuilder.addAllOperators(operand.accept(this).getOperatorsList());
+            if (needBrace(operator, operand)) {
+                exprBuilder.addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE)
+                                .build());
+            }
+        }
+        return exprBuilder.build();
     }
 
     private OuterExpression.Expression visitCase(RexCall call) {
@@ -118,15 +260,27 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                     key instanceof RexLiteral,
                     "key type of 'MAP_VALUE_CONSTRUCTOR' should be 'literal', but is "
                             + key.getClass());
-            Preconditions.checkArgument(
-                    value instanceof RexGraphVariable,
-                    "value type of 'MAP_VALUE_CONSTRUCTOR' should be 'variable', but is "
-                            + value.getClass());
-            varMapBuilder.addKeyVals(
+            OuterExpression.ExprOpr valueOpr = value.accept(this).getOperators(0);
+            OuterExpression.VariableKeyValue.Builder keyValueBuilder =
                     OuterExpression.VariableKeyValue.newBuilder()
-                            .setKey(key.accept(this).getOperators(0).getConst())
-                            .setValue(value.accept(this).getOperators(0).getVar())
-                            .build());
+                            .setKey(key.accept(this).getOperators(0).getConst());
+            switch (valueOpr.getItemCase()) {
+                case VAR:
+                    keyValueBuilder.setVal(valueOpr.getVar());
+                    break;
+                case MAP:
+                    keyValueBuilder.setNested(valueOpr.getMap());
+                    break;
+                case PATH_FUNC:
+                    keyValueBuilder.setPathFunc(valueOpr.getPathFunc());
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "can not convert value ["
+                                    + value
+                                    + "] of 'MAP_VALUE_CONSTRUCTOR' to physical plan");
+            }
+            varMapBuilder.addKeyVals(keyValueBuilder);
         }
         return OuterExpression.Expression.newBuilder()
                 .addOperators(
@@ -333,10 +487,21 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
 
     @Override
     public OuterExpression.Expression visitLiteral(RexLiteral literal) {
+        OuterExpression.ExprOpr.Builder oprBuilder = OuterExpression.ExprOpr.newBuilder();
+        if (literal.getType() instanceof IntervalSqlType) {
+            // convert to time interval
+            oprBuilder.setTimeInterval(
+                    OuterExpression.TimeInterval.newBuilder()
+                            .setInterval(Utils.protoInterval(literal))
+                            .setConst(
+                                    Common.Value.newBuilder()
+                                            .setI64(literal.getValueAs(Number.class).longValue())));
+        } else {
+            oprBuilder.setConst(Utils.protoValue(literal));
+        }
         return OuterExpression.Expression.newBuilder()
                 .addOperators(
-                        OuterExpression.ExprOpr.newBuilder()
-                                .setConst(Utils.protoValue(literal))
+                        oprBuilder
                                 .setNodeType(Utils.protoIrDataType(literal.getType(), isColumnId))
                                 .build())
                 .build();
@@ -362,7 +527,9 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
 
     @Override
     public OuterExpression.Expression visitSubQuery(RexSubQuery subQuery) {
-        throw new UnsupportedOperationException(
-                "conversion from subQuery to ir core structure is unsupported yet");
+        throw new IllegalArgumentException(
+                "cannot convert sub query ["
+                        + subQuery
+                        + "] to physical expression, please use 'apply' instead");
     }
 }

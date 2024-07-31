@@ -22,57 +22,32 @@ END
 
 # a function to setup common variable and env
 _setup_env() {
-	declare script="$0"
+	SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 	if [ -z "${GROOT_HOME}" ]; then
-		# set GROOT_HOME base location of the script
-		while [ -h "${script}" ]; do
-			ls=$(ls -ld "${script}")
-			# Drop everything prior to ->
-			link=$(expr "${ls}" : '.*-> \(.*\)$')
-			if expr "${link}" : '/.*' >/dev/null; then
-				script="${link}"
-			else
-				script="$(dirname ${script})/${link}"
-			fi
-		done
-		GROOT_HOME=$(dirname "${script}")
-		GROOT_HOME=$(
-			cd "${GROOT_HOME}"
-			pwd
-		)
-		readonly GROOT_HOME=$(dirname ${GROOT_HOME})
-	fi
-
-	if [ -z "${GROOT_CONF_DIR}" ]; then
-		readonly GROOT_CONF_DIR="${GROOT_HOME}/conf"
+		GROOT_HOME=$(dirname "$SCRIPT_DIR")
 	fi
 
 	if [ -z "${GROOT_LOGBACK_FILE}" ]; then
-		readonly GROOT_LOGBACK_FILE="${GROOT_CONF_DIR}/logback.xml"
+		readonly GROOT_LOGBACK_FILE="${GROOT_HOME}/conf/logback.xml"
 	fi
 
 	if [ -z "${GROOT_CONF_FILE}" ]; then
-		readonly GROOT_CONF_FILE="${GROOT_CONF_DIR}/groot.config"
+		readonly GROOT_CONF_FILE="${GROOT_HOME}/conf/groot.config"
 	fi
 
 	if [ -z "${LOG_NAME}" ]; then
-		readonly LOG_NAME="groot"
+		readonly LOG_NAME="graphscope-store"
 	fi
 
-	export LD_LIBRARY_PATH=${GROOT_HOME}/native:${GROOT_HOME}/native/lib:${LD_LIBRARY_PATH}:/usr/local/lib
-
 	if [ -z "${LOG_DIR}" ]; then
-		GS_LOG="/var/log/graphscope"
-		if [[ ! -d "${GS_LOG}" || ! -w "${GS_LOG}" ]]; then
-			# /var/log/graphscope is not existed/writable, switch to ${HOME}/.local/log/graphscope
-			GS_LOG=${HOME}/.local/log/graphscope
-		fi
-		readonly GS_LOG
-		export LOG_DIR=${GS_LOG}
+		export LOG_DIR="/var/log/graphscope"
 	fi
 
 	mkdir -p ${LOG_DIR}
 
+	export OTEL_SDK_DISABLED="${OTEL_SDK_DISABLED:-true}"
+
+	export LD_LIBRARY_PATH=${GROOT_HOME}/native:${GROOT_HOME}/native/lib:${LD_LIBRARY_PATH}:/usr/local/lib
 	libpath="$(echo "${GROOT_HOME}"/lib/*.jar | tr ' ' ':')"
 }
 

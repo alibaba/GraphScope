@@ -17,9 +17,7 @@
 package com.alibaba.graphscope.graph;
 
 import com.alibaba.fastffi.llvm4jni.runtime.JavaRuntime;
-import com.alibaba.graphscope.ds.PrimitiveTypedArray;
-import com.alibaba.graphscope.ds.PropertyNbrUnit;
-import com.alibaba.graphscope.ds.Vertex;
+import com.alibaba.graphscope.ds.*;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
@@ -94,8 +92,12 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         }
         this.vidClass = vidClass;
         edata_t = grapeEdata2Int();
-        PrimitiveTypedArray<GRAPE_ED_T> newTypedArray =
-                FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+        BaseTypedArray<GRAPE_ED_T> newTypedArray;
+        if (edataClass.equals(StringView.class)) {
+            newTypedArray = (BaseTypedArray<GRAPE_ED_T>) FFITypeFactoryhelper.newStringTypedArray();
+        } else {
+            newTypedArray = FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+        }
         newTypedArray.setAddress(this.fragment.getEdataArrayAccessor().getAddress());
         csrHolder = new CSRHolder(newTypedArray, consumer);
         edgeIterable = new TupleIterable(csrHolder);
@@ -199,7 +201,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         private BiConsumer<FFIByteVectorInputStream, PrimitiveArray<BIZ_EDATA_T>> consumer;
 
         public CSRHolder(
-                PrimitiveTypedArray<GRAPE_ED_T> edataArray,
+                BaseTypedArray<GRAPE_ED_T> edataArray,
                 BiConsumer<FFIByteVectorInputStream, PrimitiveArray<BIZ_EDATA_T>> consumer) {
             this.consumer = consumer;
             totalNumOfEdges = getTotalNumOfEdges();
@@ -215,6 +217,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             // totalNumOfEdges);
             //            dstLids = (VID_T[]) Array.newInstance(vidClass, (int) totalNumOfEdges);
             //            dstLids = (VID_T[]) new Object[(int) totalNumOfEdges];
+            logger.info("edatas class: {}", bizEdataClass.getClass().getName());
             edatas = PrimitiveArray.create(bizEdataClass, (int) totalNumOfEdges);
             dstOids = PrimitiveArray.create(bizOidClass, (int) totalNumOfEdges);
             dstLids = PrimitiveArray.create(vidClass, (int) totalNumOfEdges);
@@ -233,7 +236,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             return largest - smallest;
         }
 
-        private void initArrays(PrimitiveTypedArray<GRAPE_ED_T> edataArray) throws IOException {
+        private void initArrays(BaseTypedArray<GRAPE_ED_T> edataArray) throws IOException {
             int tmpSum = 0;
             long oeBeginOffset, oeEndOffset;
             for (long lid = 0; lid < innerVerticesNum; ++lid) {
@@ -269,17 +272,24 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             fillInEdataArray(edataArray);
         }
 
-        private void fillInEdataArray(PrimitiveTypedArray<GRAPE_ED_T> edataArray)
-                throws IOException {
+        private void fillInEdataArray(BaseTypedArray<GRAPE_ED_T> edataArray) throws IOException {
             // first try to set directly.
             int index = 0;
             if (bizEdataClass.equals(edataClass)) {
-                logger.info("biz edata {} == grape edata, try to read direct", edata_t);
+                logger.info(
+                        "biz edata {} == grape edata, try to read direct, biz edata class {}, edata"
+                                + " class {}",
+                        edata_t,
+                        bizEdataClass,
+                        edataClass);
+                PrimitiveTypedArray<BIZ_EDATA_T> primitiveTypedArray =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(bizEdataClass);
+                primitiveTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid] + VID_SIZE_IN_BYTE;
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
                         long eid = JavaRuntime.getLong(curAddr);
-                        edatas.set(index++, (BIZ_EDATA_T) edataArray.get(eid));
+                        edatas.set(index++, primitiveTypedArray.get(eid));
                         curAddr += nbrUnitEleSize;
                     }
                 }
@@ -366,21 +376,27 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         } else if (edataClass.equals(String.class)) {
             logger.info("edata: String");
             return 4;
+        } else if (edataClass.equals(StringView.class)) {
+            logger.info("edata: StringView");
+            return 5;
         }
         throw new IllegalStateException("Cannot recognize edata type " + edataClass);
     }
 
     private FFIByteVector generateEdataString(
-            long[] nbrUnitAddrs, long[] numOfEdges, PrimitiveTypedArray<GRAPE_ED_T> edataArray)
+            long[] nbrUnitAddrs, long[] numOfEdges, BaseTypedArray<GRAPE_ED_T> edataArray)
             throws IOException {
         FFIByteVectorOutputStream outputStream = new FFIByteVectorOutputStream();
         switch (edata_t) {
             case 0:
+                PrimitiveTypedArray<GRAPE_ED_T> longTypedArray =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+                longTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
                         long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
-                        GRAPE_ED_T edata = edataArray.get(eid);
+                        GRAPE_ED_T edata = longTypedArray.get(eid);
                         Long longValue = (Long) edata;
                         outputStream.writeLong(longValue);
                         curAddr += nbrUnitEleSize;
@@ -388,11 +404,14 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
                 }
                 break;
             case 1:
+                PrimitiveTypedArray<GRAPE_ED_T> intTypedArray =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+                intTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
                         long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
-                        GRAPE_ED_T edata = edataArray.get(eid);
+                        GRAPE_ED_T edata = intTypedArray.get(eid);
                         Integer longValue = (Integer) edata;
                         outputStream.writeInt(longValue);
                         curAddr += nbrUnitEleSize;
@@ -400,11 +419,14 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
                 }
                 break;
             case 2:
+                PrimitiveTypedArray<GRAPE_ED_T> doubleTypedArray =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+                doubleTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
                         long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
-                        GRAPE_ED_T edata = edataArray.get(eid);
+                        GRAPE_ED_T edata = doubleTypedArray.get(eid);
                         Double longValue = (Double) edata;
                         outputStream.writeDouble(longValue);
                         curAddr += nbrUnitEleSize;
@@ -412,11 +434,14 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
                 }
                 break;
             case 3:
+                PrimitiveTypedArray<GRAPE_ED_T> floatTypedArray =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+                floatTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
                         long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
-                        GRAPE_ED_T edata = edataArray.get(eid);
+                        GRAPE_ED_T edata = floatTypedArray.get(eid);
                         Float longValue = (Float) edata;
                         outputStream.writeFloat(longValue);
                         curAddr += nbrUnitEleSize;
@@ -424,13 +449,28 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
                 }
                 break;
             case 4:
+                PrimitiveTypedArray<GRAPE_ED_T> stringTypedArray =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+                stringTypedArray.setAddress(edataArray.getAddress());
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
                     long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
                         long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
-                        GRAPE_ED_T edata = edataArray.get(eid);
+                        GRAPE_ED_T edata = stringTypedArray.get(eid);
                         String longValue = (String) edata;
                         outputStream.writeBytes(longValue);
+                        curAddr += nbrUnitEleSize;
+                    }
+                }
+            case 5:
+                StringTypedArray stringViewTypedArray = FFITypeFactoryhelper.newStringTypedArray();
+                stringViewTypedArray.setAddress(edataArray.getAddress());
+                for (int lid = 0; lid < innerVerticesNum; ++lid) {
+                    long curAddr = nbrUnitAddrs[lid];
+                    for (int j = 0; j < numOfEdges[lid]; ++j) {
+                        long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
+                        StringView edata = stringViewTypedArray.get(eid);
+                        outputStream.writeBytes(edata);
                         curAddr += nbrUnitEleSize;
                     }
                 }

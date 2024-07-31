@@ -16,10 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.tools.config;
 
-import org.apache.calcite.rel.type.RelDataTypeFamily;
-
 public abstract class GraphOpt {
-    public enum Source implements RelDataTypeFamily {
+    public enum Source {
         VERTEX,
         EDGE
     }
@@ -68,5 +66,11 @@ public abstract class GraphOpt {
         END_V,
         ALL_V,
         ALL_V_E
+    }
+
+    public enum PathExpandFunction {
+        VERTEX,
+        EDGE,
+        VERTEX_EDGE
     }
 }

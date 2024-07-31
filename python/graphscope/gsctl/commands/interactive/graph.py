@@ -20,23 +20,24 @@ import click
 import yaml
 
 from graphscope.gsctl.config import get_current_context
-from graphscope.gsctl.impl import create_dataloading_job
-from graphscope.gsctl.impl import create_procedure
-from graphscope.gsctl.impl import delete_job_by_id
-from graphscope.gsctl.impl import delete_procedure_by_name
-from graphscope.gsctl.impl import get_dataloading_config
-from graphscope.gsctl.impl import get_job_by_id
+from graphscope.gsctl.impl import create_stored_procedure
+from graphscope.gsctl.impl import delete_stored_procedure_by_id
+from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import get_graph_name_by_id
 from graphscope.gsctl.impl import list_graphs
-from graphscope.gsctl.impl import list_jobs
-from graphscope.gsctl.impl import list_procedures
+from graphscope.gsctl.impl import list_service_status
+from graphscope.gsctl.impl import list_stored_procedures
+from graphscope.gsctl.impl import restart_service
+from graphscope.gsctl.impl import start_service
+from graphscope.gsctl.impl import stop_service
 from graphscope.gsctl.impl import switch_context
-from graphscope.gsctl.impl import update_procedure
 from graphscope.gsctl.utils import TreeDisplay
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
 from graphscope.gsctl.utils import is_valid_file_path
 from graphscope.gsctl.utils import read_yaml_file
 from graphscope.gsctl.utils import succ
+from graphscope.gsctl.utils import terminal_display
 
 
 @click.group()
@@ -46,25 +47,25 @@ def cli():
 
 @cli.group()
 def create():
-    """Create stored procedure, loader job from file"""
+    """Create stored procedure from file"""
     pass
 
 
 @cli.group()
 def delete():
-    """Delete stored procedure, loader job by identifier"""
-    pass
-
-
-@cli.group()
-def update():
-    """Update stored procedure from file"""
+    """Delete stored procedure by id"""
     pass
 
 
 @cli.group()
 def desc():
-    """Show details of job status and stored procedure by identifier"""
+    """Show stored procedure's details by id"""
+    pass
+
+
+@cli.group()
+def service():
+    """Start, stop, and restart the database service"""
     pass
 
 
@@ -76,7 +77,7 @@ def use():
 
 @cli.command()
 def ls():  # noqa: F811
-    """Display schema, stored procedure, and job information"""
+    """Display schema and stored procedure information"""
     tree = TreeDisplay()
     # context
     current_context = get_current_context()
@@ -84,20 +85,17 @@ def ls():  # noqa: F811
         graphs = list_graphs()
         using_graph = None
         for g in graphs:
-            if g.name == current_context.context:
+            if g.id == current_context.context:
                 using_graph = g
                 break
         # schema
         tree.create_graph_node(using_graph)
-        # get data source from job configuration
-        job_config = get_dataloading_config(using_graph.name)
-        tree.create_datasource_node_for_interactive(using_graph, job_config)
+        # data source mapping
+        datasource_mapping = get_datasource_by_id(using_graph.id)
+        tree.create_datasource_mapping_node(using_graph, datasource_mapping)
         # stored procedure
-        procedures = list_procedures(using_graph.name)
-        tree.create_procedure_node(using_graph, procedures)
-        # job
-        jobs = list_jobs()
-        tree.create_job_node(using_graph, jobs)
+        stored_procedures = list_stored_procedures(using_graph.id)
+        tree.create_stored_procedure_node(using_graph, stored_procedures)
     except Exception as e:
         err(f"Failed to display graph information: {str(e)}")
     else:
@@ -111,134 +109,143 @@ def ls():  # noqa: F811
     required=True,
     help="Path of yaml file",
 )
-def procedure(filename):
+def storedproc(filename):
     """Create a stored procedure from file"""
     if not is_valid_file_path(filename):
         err(f"Invalid file: {filename}")
         return
     current_context = get_current_context()
-    graph_name = current_context.context
+    graph_identifier = current_context.context
     try:
-        procedure = read_yaml_file(filename)
-        # overwrite graph name
-        procedure["bound_graph"] = graph_name
-        create_procedure(graph_name, procedure)
+        stored_procedure = read_yaml_file(filename)
+        create_stored_procedure(graph_identifier, stored_procedure)
     except Exception as e:
         err(f"Failed to create stored procedure: {str(e)}")
     else:
-        succ(f"Create stored procedure {procedure['name']} successfully.")
+        succ(f"Create stored procedure {stored_procedure['name']} successfully.")
 
 
 @delete.command()
 @click.argument("identifier", required=True)
-def procedure(identifier):  # noqa: F811
+def storedproc(identifier):  # noqa: F811
     """Delete a stored procedure, see identifier with `ls` command"""
     current_context = get_current_context()
-    graph_name = current_context.context
+    graph_identifier = current_context.context
     try:
-        delete_procedure_by_name(graph_name, identifier)
+        if click.confirm("Do you want to continue?"):
+            delete_stored_procedure_by_id(graph_identifier, identifier)
+            succ(f"Delete stored procedure {identifier} successfully.")
     except Exception as e:
         err(f"Failed to delete stored procedure: {str(e)}")
-    else:
-        succ(f"Delete stored procedure {identifier} successfully.")
-
-
-@update.command()
-@click.option(
-    "-f",
-    "--filename",
-    required=True,
-    help="Path of yaml file",
-)
-def procedure(filename):  # noqa: F811
-    """Update a stored procedure from file"""
-    if not is_valid_file_path(filename):
-        err(f"Invalid file: {filename}")
-        return
-    current_context = get_current_context()
-    graph_name = current_context.context
-    try:
-        procedure = read_yaml_file(filename)
-        # overwrite graph name
-        procedure["bound_graph"] = graph_name
-        update_procedure(graph_name, procedure)
-    except Exception as e:
-        err(f"Failed to update stored procedure: {str(e)}")
-    else:
-        succ(f"Update stored procedure {procedure['name']} successfully.")
-
-
-@create.command()
-@click.option(
-    "-f",
-    "--filename",
-    required=True,
-    help="Path of yaml file",
-)
-def loaderjob(filename):  # noqa: F811
-    """Create a dataloading job from file"""
-    if not is_valid_file_path(filename):
-        err(f"Invalid file: {filename}")
-        return
-    current_context = get_current_context()
-    graph_name = current_context.context
-    try:
-        config = read_yaml_file(filename)
-        # overwrite graph name
-        config["graph"] = graph_name
-        jobid = create_dataloading_job(graph_name, config)
-    except Exception as e:
-        err(f"Failed to create a job: {str(e)}")
-    else:
-        succ(f"Create job {jobid} successfully.")
-
-
-@delete.command()
-@click.argument("identifier", required=True)
-def job(identifier):  # noqa: F811
-    """Cancel a job, see identifier with `ls` command"""
-    try:
-        delete_job_by_id(identifier)
-    except Exception as e:
-        err(f"Failed to delete job {identifier}: {str(e)}")
-    else:
-        succ(f"Delete job {identifier} successfully.")
 
 
 @desc.command()
 @click.argument("identifier", required=True)
-def job(identifier):  # noqa: F811
-    """Show details of job, see identifier with `ls` command"""
-    try:
-        job = get_job_by_id(identifier)
-    except Exception as e:
-        err(f"Failed to get job: {str(e)}")
-    else:
-        info(yaml.dump(job.to_dict()))
-
-
-@desc.command()
-@click.argument("identifier", required=True)
-def procedure(identifier):  # noqa: F811
+def storedproc(identifier):  # noqa: F811
     """Show details of stored procedure, see identifier with `ls` command"""
     current_context = get_current_context()
-    graph_name = current_context.context
+    graph_id = current_context.context
     try:
-        procedures = list_procedures(graph_name)
+        stored_procedures = list_stored_procedures(graph_id)
     except Exception as e:
-        err(f"Failed to list procedures: {str(e)}")
+        err(f"Failed to list stored procedures: {str(e)}")
     else:
-        if not procedures:
-            info(f"No stored procedures found on {graph_name}.")
+        if not stored_procedures:
+            info(f"No stored procedures found on {graph_id}.")
             return
-        specific_procedure_exist = False
-        for procedure in procedures:
-            if identifier == procedure.name:
-                info(yaml.dump(procedure.to_dict()))
-                specific_procedure_exist = True
+        specific_stored_procedure_exist = False
+        for stored_procedure in stored_procedures:
+            if identifier == stored_procedure.id:
+                info(yaml.dump(stored_procedure.to_dict()))
+                specific_stored_procedure_exist = True
                 break
-        if not specific_procedure_exist:
-            err(f"Procedure {identifier} not found on {graph_name}.")
+        if not specific_stored_procedure_exist:
+            err(f"Stored Procedure {identifier} not found on {graph_id}.")
+
+
+@service.command
+def stop():  # noqa: F811
+    """Stop current database service"""
+    try:
+        stop_service()
+    except Exception as e:
+        err(f"Failed to stop service: {str(e)}")
+    else:
+        succ("Service stopped.")
+
+
+@service.command
+def start():  # noqa: F811
+    """Start current database service"""
+    try:
+        current_context = get_current_context()
+        graph_identifier = current_context.context
+
+        status = list_service_status()
+        for s in status:
+            if s.graph_id == graph_identifier:
+                if s.status != "Running":
+                    info(f"Starting service on graph {graph_identifier}...")
+                    start_service(graph_identifier)
+                    succ("Service restarted.")
+                else:
+                    info("Service is running...")
+    except Exception as e:
+        err(f"Failed to start service: {str(e)}")
+
+
+@service.command
+def restart():  # noqa: F811
+    """Start current database service"""
+    try:
+        restart_service()
+    except Exception as e:
+        err(f"Failed to restart service: {str(e)}")
+    else:
+        succ("Service restarted.")
+
+
+@service.command
+def status():  # noqa: F811
+    """Display current service status"""
+
+    def _construct_and_display_data(status):
+        current_context = get_current_context()
+        graph_identifier = current_context.context
+        graph_name = current_context.graph_name
+
+        head = [
+            "STATUS",
+            "SERVING_GRAPH(IDENTIFIER)",
+            "CYPHER_ENDPOINT",
+            "HQPS_ENDPOINT",
+            "GREMLIN_ENDPOINT",
+        ]
+        data = [head]
+        for s in status:
+            if s.graph_id == graph_identifier:
+                if s.status == "Stopped":
+                    data.append(
+                        [s.status, f"{graph_name}(id={s.graph_id})", "-", "-", "-"]
+                    )
+                else:
+                    data.append(
+                        [
+                            s.status,
+                            f"{graph_name}(id={s.graph_id})",
+                            s.sdk_endpoints.cypher,
+                            s.sdk_endpoints.hqps,
+                            s.sdk_endpoints.gremlin,
+                        ]
+                    )
+        terminal_display(data)
+
+    try:
+        status = list_service_status()
+    except Exception as e:
+        err(f"Failed to list service status: {str(e)}")
+    else:
+        _construct_and_display_data(status)
 
 
 @use.command(name="GLOBAL")

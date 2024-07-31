@@ -53,8 +53,16 @@
       <artifactId>jackson-module-paranamer</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
     </dependency>
   </dependencies>
 
@@ -112,6 +120,7 @@
                 <include>schema_common.proto</include>
                 <include>ddl_service.proto</include>
                 <include>write_service.proto</include>
+                <include>request_option.proto</include>
               </includes>
             </configuration>
             <goals>

@@ -10,7 +10,7 @@ endif
 ARCH := $(shell uname -m)
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.21.3
+VINEYARD_VERSION ?= v0.22.0
 # This is the version of builder base image in most cases, except for graphscope-dev
 BUILDER_VERSION ?= $(VINEYARD_VERSION)
 # This is the version of runtime base image
@@ -45,7 +45,6 @@ dev-wheel:
 	cd $(WORKING_DIR) && \
 	cd ../python/graphscope && \
 	docker build \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}-${ARCH} \
@@ -56,7 +55,6 @@ manylinux2014-ext:
 	cd $(WORKING_DIR) && \
 	cd ../python/graphscope  && \
 	docker build \
-		--progress=$(BUILD_PROGRESS) \
 		-t graphscope/manylinux2014:ext-${ARCH} \
 		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
 
@@ -64,7 +62,6 @@ graphscope-dev:
 	cd $(WORKING_DIR) && \
 	cd ../python/graphscope  && \
 	docker build \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/graphscope-dev:${VINEYARD_VERSION}-${ARCH} \
@@ -74,7 +71,6 @@ vineyard-dev:
 	cd $(WORKING_DIR) && \
 	cd ../python/graphscope  && \
 	docker build \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/vineyard-dev:${VINEYARD_VERSION}-${ARCH} \
@@ -83,7 +79,6 @@ vineyard-dev:
 vineyard-runtime:
 	cd $(WORKING_DIR) && \
 	docker build \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		-t graphscope/vineyard-runtime:${VINEYARD_VERSION}-${ARCH} \
@@ -93,7 +88,6 @@ coordinator:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target coordinator \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg CI=${CI} \
@@ -104,7 +98,6 @@ analytical:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target analytical \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -116,7 +109,6 @@ analytical-java:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target analytical-java \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -128,7 +120,6 @@ interactive-frontend:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target frontend \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -141,7 +132,6 @@ interactive-executor:
 	cd $(WORKING_DIR)/.. \
 	&& docker build \
 	    --target executor \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -155,7 +145,6 @@ interactive-experimental:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target experimental \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		-t graphscope/interactive-experimental:${VERSION} \
@@ -165,7 +154,6 @@ learning:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target learning \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -173,10 +161,20 @@ learning:
 		-t graphscope/learning:${VERSION} \
 		-f $(DOCKERFILES_DIR)/learning.Dockerfile .
 
+graphlearn-torch:
+	cd $(WORKING_DIR)/.. && \
+	docker build \
+	    --target graphlearn-torch \
+		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
+		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
+		--build-arg CI=${CI} \
+		-t graphscope/graphlearn-torch:${VERSION} \
+		-f $(DOCKERFILES_DIR)/graphlearn-torch.Dockerfile .
+
 graphscope-store:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
-		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg profile=${PROFILE} \

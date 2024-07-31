@@ -1,9 +1,56 @@
-# Engine Configuration
+# Configuration
+## Configurable Items for Deploying Interactive with gsctl
+
+When deploying Interactive using `gsctl`, various items can be configured. For a given configurable item named `item-name`, you can set its value as follows:
+
+```bash
+gsctl instance deploy --type interactive [--item-name=value]
+```
+
+Below is a list of all configurable items:
+
+| Item Name         | Default | Description               | Since Version |
+|-------------------|---------|---------------------------|---------------|
+| coordinator-port  | 8080    | The port of the coordinator service  | v0.3          |
+| admin-port       | 7777    | The port of the interactive admin service       | v0.3          |
+| storedproc-port   | 10000    | The port of the interactive stored procedure service      | v0.3          |
+| cypher-port       | 7687    | The port of the cypher service       | v0.3          |
+<!-- | gremlin-port       | None    | The port of the gremlin service       | v0.3          | -->
+
+
+<!-- *Note: The default value for `gremlin-port` is `None`, meaning the Gremlin service will not be initiated by default. -->
+
+### Default Ports
+
+By default, Interactive will launch the following services on these ports:
+
+- Coordinator Service: 8080
+- Interactive Meta Service: 7777
+- Interactive Cypher Service: 7687
+- Stored Procedure Service: 10000
+
+You can customize these ports as needed. For example:
+
+```bash
+gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001
+```
+
+<!-- ### Enabling Gremlin Service
+
+The Gremlin service is disabled by default. To enable it, add the `--gremlin-port` option:
+
+```bash
+gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 7778 --cypher-port 7688 --storedproc-port 10001 --gremlin-port 8183
+``` -->
+
+
+<!-- Those content are commented but not deleted, since we will support those configurations later.
+> TODO: Currently `gsctl` doesn't support the following command!
 
 Starting your GraphScope Interactive service can be straightforward, as demonstrated in our [getting_started](./getting_started.md) guide. By default, executing the command:
 
 ```bash
-bin/gs_interactive service start
+gsctl use GRAPH <name>
 ```
 
 will initialize the service with its default settings. However, GraphScope is designed to be flexible and adaptable to your specific needs. This means you can tailor the service's behavior using custom configurations.
@@ -12,7 +59,7 @@ will initialize the service with its default settings. However, GraphScope is de
 To customize the service's settings, you can provide a YAML configuration file. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:
 
 ```bash
-bin/gs_interactive service start -c ./conf/engine_config.yaml
+gsctl use GRAPH <name> -c ./engine_config.yaml
 ```
 
 Note: Please be aware that you're not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the sections that follow.
@@ -22,7 +69,7 @@ If you already have an Interactive service running and wish to apply a new set o
 
 To restart the service with your custom configuration, use the following command:
 ```bash
-bin/gs_interactive service restart -c ./conf/engine_config.yaml
+gsctl service restart -c ./conf/engine_config.yaml
 ```
 Remember, any changes made in the configuration file will only take effect after the service has been restarted with the updated file.
 
@@ -84,6 +131,6 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.endpoint.gremlin_connector.port | 8182 | The port for compiler's cypher endpoint.| 0.0.3 |
 | http_service.default_listen_address | localhost | The address for http service to bind | 0.0.2 |
 | http_service.admin_port | 7777 | The port for admin service to listen on | 0.0.2 |
-| http_service.query_port | 10000 | The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved | 0.0.2 |
+| http_service.query_port | 10000 | The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved | 0.0.2 | -->
 
 

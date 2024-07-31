@@ -307,6 +307,8 @@ message EdgeExpand {
   // Expand option, i.e., expand vertices/edges/degree.
   ExpandOpt expand_opt = 5;
   MetaData meta_data = 6;
+  // Whether the expand is optional, if true, the expand will return a `None` if the edge does not exist
+  bool is_optional = 7;
 }
 
 message PathExpand {
@@ -347,6 +349,8 @@ message PathExpand {
   ResultOpt result_opt = 6;
   // A condition formulated as an expression predicate
   common.Expression condition = 7;
+  // Whether the expand is optional, if true, the expand will return a `None` if the path does not exist
+  bool is_optional = 8;
 }
 
 /*

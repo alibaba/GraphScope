@@ -19,17 +19,23 @@
 import click
 import yaml
 
+from graphscope.gsctl.impl import bind_datasource_in_batch
 from graphscope.gsctl.impl import create_graph
-from graphscope.gsctl.impl import delete_graph_by_name
-from graphscope.gsctl.impl import get_dataloading_config
-from graphscope.gsctl.impl import get_service_status
+from graphscope.gsctl.impl import delete_graph_by_id
+from graphscope.gsctl.impl import delete_job_by_id
+from graphscope.gsctl.impl import get_datasource_by_id
+from graphscope.gsctl.impl import get_graph_id_by_name
+from graphscope.gsctl.impl import get_graph_name_by_id
+from graphscope.gsctl.impl import get_job_by_id
 from graphscope.gsctl.impl import list_graphs
 from graphscope.gsctl.impl import list_jobs
-from graphscope.gsctl.impl import list_procedures
-from graphscope.gsctl.impl import restart_service
+from graphscope.gsctl.impl import list_service_status
+from graphscope.gsctl.impl import list_stored_procedures
 from graphscope.gsctl.impl import start_service
-from graphscope.gsctl.impl import stop_service
+from graphscope.gsctl.impl import submit_dataloading_job
 from graphscope.gsctl.impl import switch_context
+from graphscope.gsctl.impl import unbind_edge_datasource
+from graphscope.gsctl.impl import unbind_vertex_datasource
 from graphscope.gsctl.utils import TreeDisplay
 from graphscope.gsctl.utils import err
 from graphscope.gsctl.utils import info
@@ -46,19 +52,19 @@ def cli():
 
 @cli.group()
 def create():
-    """Create a new graph in database"""
+    """Create graph, data source, loader job from file"""
     pass
 
 
 @cli.group()
 def delete():
-    """Delete a graph by identifier"""
+    """Delete graph, data source, loader job by id"""
     pass
 
 
 @cli.group()
-def service():
-    """Start, stop, and restart the database service"""
+def desc():
+    """Show job's details by id"""
     pass
 
 
@@ -70,21 +76,20 @@ def service():
 def use(context, graph_identifier):
     """Switch to GRAPH context, see identifier with `ls` command"""
     try:
-        graphs = list_graphs()
-        graph_exist = False
-        for g in graphs:
-            if graph_identifier == g.name:
-                graph_exist = True
-                break
-        if not graph_exist:
-            raise RuntimeError(
-                f"Graph '{graph_identifier}' not exists, see graph identifier with `ls` command."
-            )
-        switch_context(graph_identifier)
+        graph_identifier = get_graph_id_by_name(graph_identifier)
+        graph_name = get_graph_name_by_id(graph_identifier)
+        status = list_service_status()
+        for s in status:
+            if s.graph_id == graph_identifier and s.status != "Running":
+                info(
+                    f"Starting service on graph {graph_name}(id={graph_identifier})..."
+                )
+                start_service(graph_identifier)
+        switch_context(graph_identifier, graph_name)
     except Exception as e:
         err(f"Failed to switch context: {str(e)}")
     else:
-        click.secho(f"Using GRAPH {graph_identifier}", fg="green")
+        click.secho(f"Using GRAPH {graph_name}(id={graph_identifier})", fg="green")
 
 
 @cli.command()
@@ -98,12 +103,12 @@ def ls(l):  # noqa: F811, E741
             # schema
             tree.create_graph_node(g, recursive=l)
             if l:
-                # get data source from job configuration
-                job_config = get_dataloading_config(g.name)
-                tree.create_datasource_node_for_interactive(g, job_config)
+                # data source mapping
+                datasource_mapping = get_datasource_by_id(g.id)
+                tree.create_datasource_mapping_node(g, datasource_mapping)
                 # stored procedure
-                procedures = list_procedures(g.name)
-                tree.create_procedure_node(g, procedures)
+                stored_procedures = list_stored_procedures(g.id)
+                tree.create_stored_procedure_node(g, stored_procedures)
                 # job
                 jobs = list_jobs()
                 tree.create_job_node(g, jobs)
@@ -129,11 +134,11 @@ def graph(filename):  # noqa: F811
         return
     try:
         graph = read_yaml_file(filename)
-        create_graph(graph)
+        graph_id = create_graph(graph)
     except Exception as e:
         err(f"Failed to create graph: {str(e)}")
     else:
-        succ(f"Create graph {graph['name']} successfully.")
+        succ(f"Create graph {graph['name']}(id={graph_id}) successfully.")
 
 
 @delete.command()
@@ -141,75 +146,134 @@ def graph(filename):  # noqa: F811
 def graph(graph_identifier):  # noqa: F811
     """Delete a graph, see graph identifier with `ls` command"""
     try:
-        delete_graph_by_name(graph_identifier)
+        if click.confirm("Do you want to continue?"):
+            delete_graph_by_id(get_graph_id_by_name(graph_identifier))
+            succ(f"Delete graph {graph_identifier} successfully.")
     except Exception as e:
         err(f"Failed to delete graph {graph_identifier}: {str(e)}")
-    else:
-        succ(f"Delete graph {graph_identifier} successfully.")
 
 
-@service.command
-def stop():  # noqa: F811
-    """Stop current database service"""
-    try:
-        stop_service()
-    except Exception as e:
-        err(f"Failed to stop service: {str(e)}")
-    else:
-        succ("Service stopped.")
-
-
-@service.command
+@create.command
 @click.option(
     "-g",
     "--graph_identifier",
     required=True,
     help="See graph identifier with `ls` command",
 )
-def start(graph_identifier):  # noqa: F811
-    """Start database service on a certain graph"""
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file",
+)
+def datasource(graph_identifier, filename):  # noqa: F811
+    """Bind data source mapping from file"""
+    if not is_valid_file_path(filename):
+        err(f"Invalid file: {filename}")
+        return
+    graph_identifier = get_graph_id_by_name(graph_identifier)
     try:
-        start_service(graph_identifier)
+        datasource = read_yaml_file(filename)
+        bind_datasource_in_batch(graph_identifier, datasource)
     except Exception as e:
-        err(f"Failed to start service on graph {graph_identifier}: {str(e)}")
+        err(f"Failed to bind data source: {str(e)}")
     else:
-        succ(f"Start service on graph {graph_identifier} successfully")
+        succ("Bind data source successfully.")
 
 
-@service.command
-def restart():  # noqa: F811
-    """Restart database service on current graph"""
+@delete.command
+@click.option(
+    "-g",
+    "--graph_identifier",
+    required=True,
+    help="See graph identifier with `ls` command",
+)
+@click.option(
+    "-t",
+    "--type",
+    required=True,
+    help="Vertex or edge type",
+)
+@click.option(
+    "-s",
+    "--source_vertex_type",
+    required=False,
+    help="Source vertex type of the edge [edge only]",
+)
+@click.option(
+    "-d",
+    "--destination_vertex_type",
+    required=False,
+    help="Destination vertex type of the edge [edge only]",
+)
+def datasource(  # noqa: F811
+    graph_identifier, type, source_vertex_type, destination_vertex_type
+):
+    """Unbind data source mapping on vertex or edge type"""
     try:
-        restart_service()
+        graph_identifier = get_graph_id_by_name(graph_identifier)
+        if source_vertex_type is not None and destination_vertex_type is not None:
+            unbind_edge_datasource(
+                graph_identifier, type, source_vertex_type, destination_vertex_type
+            )
+        else:
+            unbind_vertex_datasource(graph_identifier, type)
     except Exception as e:
-        err(f"Failed to restart service: {str(e)}")
+        err(f"Failed to unbind data source: {str(e)}")
     else:
-        succ("Service restarted.")
+        succ("Unbind data source successfully.")
 
 
-@service.command
-def ls():  # noqa: F811
-    """Display current service status"""
-
-    def _construct_and_display_data(status):
-        head = ["STATUS", "SERVING_GRAPH", "CYPHER_ENDPOINT", "HQPS_ENDPOINT"]
-        data = [head]
-        data.append(
-            [
-                status.status,
-                status.graph_name,
-                status.sdk_endpoints.cypher,
-                status.sdk_endpoints.hqps,
-            ]
-        )
-        terminal_display(data)
-
+@create.command()
+@click.option(
+    "-g",
+    "--graph_identifier",
+    required=True,
+    help="See graph identifier with `ls` command",
+)
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file",
+)
+def loaderjob(graph_identifier, filename):  # noqa: F811
+    """Create a data loading job from file"""
+    if not is_valid_file_path(filename):
+        err(f"Invalid file: {filename}")
+        return
+    graph_identifier = get_graph_id_by_name(graph_identifier)
     try:
-        status = get_service_status()
+        config = read_yaml_file(filename)
+        jobid = submit_dataloading_job(graph_identifier, config)
     except Exception as e:
-        err(f"Failed to get service status: {str(e)}")
+        err(f"Failed to create a job: {str(e)}")
     else:
-        _construct_and_display_data(status)
+        succ(f"Create job {jobid} successfully.")
+
+
+@delete.command()
+@click.argument("identifier", required=True)
+def job(identifier):  # noqa: F811
+    """Cancel a job, see identifier with `ls` command"""
+    try:
+        if click.confirm("Do you want to continue?"):
+            delete_job_by_id(identifier)
+            succ(f"Delete job {identifier} successfully.")
+    except Exception as e:
+        err(f"Failed to delete job {identifier}: {str(e)}")
+
+
+@desc.command()
+@click.argument("identifier", required=True)
+def job(identifier):  # noqa: F811
+    """Show details of job, see identifier with `ls` command"""
+    try:
+        job = get_job_by_id(identifier)
+    except Exception as e:
+        err(f"Failed to get job: {str(e)}")
+    else:
+        info(yaml.dump(job.to_dict()))
 
 
 if __name__ == "__main__":

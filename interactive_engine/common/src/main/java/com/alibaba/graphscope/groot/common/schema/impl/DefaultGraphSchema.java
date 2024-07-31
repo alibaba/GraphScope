@@ -38,10 +38,10 @@ import java.util.Map;
 
 public class DefaultGraphSchema implements GraphSchema {
     private static final Logger logger = LoggerFactory.getLogger(DefaultGraphSchema.class);
-    private Map<String, GraphVertex> vertexList;
-    private Map<String, GraphEdge> edgeList;
-    private Map<String, Integer> propNameToIdList;
-    private Map<Integer, String> idToLabelList = Maps.newHashMap();
+    private final Map<String, GraphVertex> vertexList;
+    private final Map<String, GraphEdge> edgeList;
+    private final Map<String, Integer> propNameToIdList;
+    private final Map<Integer, String> idToLabelList = Maps.newHashMap();
 
     public DefaultGraphSchema(
             Map<String, GraphVertex> vertexList,
@@ -136,8 +136,8 @@ public class DefaultGraphSchema implements GraphSchema {
     }
 
     @Override
-    public int getVersion() {
-        return 0;
+    public String getVersion() {
+        return "0";
     }
 
     public static GraphSchema buildSchemaFromJson(String schemaJson) {

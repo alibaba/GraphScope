@@ -25,7 +25,7 @@ service Client {
   rpc getSchema(GetSchemaRequest) returns (GetSchemaResponse);
   rpc ingestData(IngestDataRequest) returns (IngestDataResponse);
   rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
-  rpc loadJsonSchema(LoadJsonSchemaRequest) returns (LoadJsonSchemaResponse);
+  rpc loadSchema(LoadSchemaRequest) returns (LoadSchemaResponse);
   rpc dropSchema(DropSchemaRequest) returns (DropSchemaResponse);
   rpc prepareDataLoad(PrepareDataLoadRequest) returns (PrepareDataLoadResponse);
   rpc commitDataLoad(CommitDataLoadRequest) returns (CommitDataLoadResponse);
@@ -53,11 +53,13 @@ message GetMetricsResponse {
   string metricsJson = 1;
 }
 
-message LoadJsonSchemaRequest {
-  string schemaJson = 1;
+message LoadSchemaRequest {
+  string schemaStr = 1;
+  // 0 for json, 1 for unified yaml
+  int32 schemaType = 2;
 }
 
-message LoadJsonSchemaResponse {
+message LoadSchemaResponse {
   GraphDefPb graphDef = 1;
 }
 

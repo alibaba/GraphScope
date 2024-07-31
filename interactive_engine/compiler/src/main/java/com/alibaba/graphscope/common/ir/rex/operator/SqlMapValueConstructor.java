@@ -16,10 +16,14 @@
 
 package com.alibaba.graphscope.common.ir.rex.operator;
 
+import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
+import com.alibaba.graphscope.common.ir.type.ArbitraryMapType;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
+import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperatorBinding;
@@ -31,6 +35,7 @@ import org.apache.calcite.util.Util;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * This operator is used to fold columns into a map, i.e. {name: a.name, age: a.age} in cypher queries.
@@ -42,6 +47,7 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
         super("MAP", SqlKind.MAP_VALUE_CONSTRUCTOR);
     }
 
+    @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         List<RelDataType> argTypes = opBinding.collectOperandTypes();
@@ -55,8 +61,16 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
                 && valueType.getSqlTypeName() != SqlTypeName.ANY) {
             return SqlTypeUtil.createMapType(opBinding.getTypeFactory(), keyType, valueType, false);
         } else {
+            Map<RexNode, ArbitraryMapType.KeyValueType> keyValueTypeMap = Maps.newHashMap();
+            List<RexNode> operands = ((RexCallBinding) opBinding).getRexOperands();
+            for (int i = 0; i < operands.size(); i += 2) {
+                keyValueTypeMap.put(
+                        operands.get(i),
+                        new ArbitraryMapType.KeyValueType(
+                                keyTypes.get(i / 2), valueTypes.get(i / 2)));
+            }
             return ((GraphTypeFactoryImpl) typeFactory)
-                    .createArbitraryMapType(keyTypes, valueTypes, false);
+                    .createArbitraryMapType(keyValueTypeMap, false);
         }
     }
 

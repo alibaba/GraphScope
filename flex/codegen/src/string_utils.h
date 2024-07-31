@@ -72,6 +72,17 @@ std::string res_alias_to_append_opt(int res_alias) {
   return res_alias == -1 ? APPEND_OPT_TEMP : APPEND_OPT_PERSIST;
 }
 
+std::string res_alias_to_append_opt(int res_alias, int in_alias) {
+  if (res_alias == -1) {
+    return APPEND_OPT_TEMP;
+  } else if (res_alias == in_alias) {
+    return APPEND_OPT_REPLACE;
+  } else {
+    return APPEND_OPT_PERSIST;
+  }
+}
+
+
 template <typename LabelIdT>
 std::string ensure_label_id(LabelIdT label_id) {
   return std::string(LABEL_ID_T_CASTER) + std::string(" ") +

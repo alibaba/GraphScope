@@ -239,6 +239,13 @@ class LFIndexer {
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       keys_ = new StringColumn(StorageStrategy::kMem,
                                type.additional_type_info.max_length);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kStringView) {
+      LOG(WARNING) << "String type is a deprecated type, use varchar instead.";
+      LOG(WARNING) << "Use default max length"
+                   << PropertyType::STRING_DEFAULT_MAX_LENGTH
+                   << " for varchar type.";
+      keys_ = new StringColumn(StorageStrategy::kMem,
+                               PropertyType::STRING_DEFAULT_MAX_LENGTH);
     } else {
       LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
     }
@@ -322,7 +329,8 @@ class LFIndexer {
     while (true) {
       INDEX_T ind = indices_.get(index);
       if (ind == sentinel) {
-        LOG(FATAL) << "cannot find " << oid.to_string() << " in lf_indexer";
+        VLOG(10) << "cannot find " << oid.to_string() << " in lf_indexer";
+        return ind;
       } else if (keys_->get(ind) == oid) {
         return ind;
       } else {
@@ -414,6 +422,7 @@ class LFIndexer {
     keys_->dump(snapshot_dir + "/" + name + ".keys");
     indices_.dump(snapshot_dir + "/" + name + ".indices");
     dump_meta(snapshot_dir + "/" + name + ".meta");
+    close();
   }
 
   void close() {
@@ -881,7 +890,8 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
     int8_t new_max_lookups = compute_max_lookups(num_buckets);
 
     dist_buffer_t new_distances(num_buckets + new_max_lookups);
-    ind_buffer_t new_indices(num_buckets + new_max_lookups);
+    ind_buffer_t new_indices(num_buckets + new_max_lookups,
+                             std::numeric_limits<INDEX_T>::max());
 
     size_t special_end_index = num_buckets + new_max_lookups - 1;
     for (size_t i = 0; i != special_end_index; ++i) {
@@ -910,7 +920,8 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
 
     indices_.clear();
     distances_.clear();
-    indices_.resize(id_indexer_impl::min_lookups);
+    indices_.resize(id_indexer_impl::min_lookups,
+                    std::numeric_limits<INDEX_T>::max());
     distances_.resize(id_indexer_impl::min_lookups, -1);
     distances_[id_indexer_impl::min_lookups - 1] = 0;
 
@@ -981,39 +992,30 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
 
   lf.indices_.open(snapshot_dir + "/" + filename + ".indices", true);
   lf.indices_.resize(input.num_slots_minus_one_ + 1);
-  for (size_t k = 0; k != input.num_slots_minus_one_ + 1; ++k) {
-    lf.indices_[k] = std::numeric_limits<INDEX_T>::max();
-  }
+
   lf.indices_size_ = input.indices_.size();
 
   lf.hash_policy_.set_mod_function_by_index(
       input.hash_policy_.get_mod_function_index());
   lf.num_slots_minus_one_ = input.num_slots_minus_one_;
-  std::vector<std::pair<KEY_T, INDEX_T>> res;
-  for (size_t idx = 0; idx < input.keys_.size(); ++idx) {
-    const auto& oid = input.keys_[idx];
-    size_t index = input.hash_policy_.index_for_hash(
-        input.hasher_(oid), input.num_slots_minus_one_);
-    for (int8_t distance = 0; input.distances_[index] >= distance;
-         ++distance, ++index) {
-      INDEX_T ret = input.indices_[index];
-      if (input.keys_[ret] == oid) {
-        if (index > input.num_slots_minus_one_) {
-          res.emplace_back(oid, ret);
-        } else {
-          lf.indices_[index] = ret;
-        }
-        break;
-      }
-    }
-  }
+  memcpy(lf.indices_.data(), input.indices_.data(),
+         lf.indices_.size() * sizeof(INDEX_T));
   static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
 
-  for (const auto& [oid, lid] : res) {
+  std::vector<INDEX_T> residuals;
+  for (size_t idx = lf.indices_.size(); idx < lf.indices_size_; ++idx) {
+    if (input.indices_[idx] != sentinel) {
+      residuals.push_back(input.indices_[idx]);
+    }
+  }
+  for (const auto& lid : residuals) {
+    auto oid = input.keys_[lid];
     size_t index = input.hash_policy_.index_for_hash(
         input.hasher_(oid), input.num_slots_minus_one_);
     while (true) {
-      if (lf.indices_[index] == sentinel) {
+      if (lf.indices_[index] == lid) {
+        break;
+      } else if (lf.indices_[index] == sentinel) {
         lf.indices_[index] = lid;
         break;
       }

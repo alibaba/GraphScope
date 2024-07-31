@@ -68,7 +68,11 @@ message Collection {
 message KeyValues {
   message KeyValue {
     common.Value key = 1;
-    Element value = 2;
+    // the value is an entry, which includes cases of:
+    // 1. element, e.g., results of vertex.valueMap('name');
+    // 2. collection, e.g., results of select('a','b'), where a is a Path, the result value of 'a' is a collection;
+    // 3. nested map, e.g., results of select('a','b').valueMap('name').
+    Entry value = 2;
   }
   repeated KeyValue key_values = 1;
 }

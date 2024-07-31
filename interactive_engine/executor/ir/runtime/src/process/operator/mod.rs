@@ -29,13 +29,13 @@ pub mod subtask;
 use std::convert::TryFrom;
 
 use dyn_type::Object;
-use graph_proxy::apis::{Element, PropKey};
+use graph_proxy::apis::PropKey;
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
-use ir_common::{KeyId, NameOrId};
+use ir_common::KeyId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::error::{FnExecError, FnExecResult};
+use crate::error::FnExecResult;
 use crate::process::entry::DynEntry;
 use crate::process::record::Record;
 
@@ -50,65 +50,13 @@ impl TagKey {
     pub fn get_arc_entry(&self, input: &Record) -> FnExecResult<DynEntry> {
         if let Some(entry) = input.get(self.tag) {
             if let Some(prop_key) = self.key.as_ref() {
-                let prop = self.get_key(entry, prop_key)?;
-                Ok(prop)
+                let prop = prop_key.get_key(entry)?;
+                Ok(DynEntry::new(prop))
             } else {
                 Ok(entry.clone())
             }
         } else {
             Ok(DynEntry::new(Object::None))
-        }
-    }
-
-    fn get_key(&self, entry: &DynEntry, prop_key: &PropKey) -> FnExecResult<DynEntry> {
-        if let PropKey::Len = prop_key {
-            let obj: Object = (entry.len() as u64).into();
-            Ok(DynEntry::new(obj))
-        } else {
-            if let Some(element) = entry.as_graph_element() {
-                let prop_obj = match prop_key {
-                    PropKey::Id => element.id().into(),
-                    PropKey::Label => element
-                        .label()
-                        .map(|label| label.into())
-                        .unwrap_or(Object::None),
-                    PropKey::Len => unreachable!(),
-                    PropKey::All => {
-                        if let Some(properties) = element.get_all_properties() {
-                            properties
-                                .into_iter()
-                                .map(|(key, value)| {
-                                    let obj_key: Object = match key {
-                                        NameOrId::Str(str) => str.into(),
-                                        NameOrId::Id(id) => id.into(),
-                                    };
-                                    (obj_key, value)
-                                })
-                                .collect::<Vec<(Object, Object)>>()
-                                .into()
-                        } else {
-                            Object::None
-                        }
-                    }
-                    PropKey::Key(key) => {
-                        if let Some(properties) = element.get_property(key) {
-                            properties.try_to_owned().ok_or_else(|| {
-                                FnExecError::unexpected_data_error("unable to own the `BorrowObject`")
-                            })?
-                        } else {
-                            Object::None
-                        }
-                    }
-                };
-
-                Ok(DynEntry::new(prop_obj))
-            } else {
-                Err(FnExecError::unexpected_data_error(&format!(
-                    "
-                Get key failed since get details from a none-graph element {:?} ",
-                    entry
-                )))
-            }
         }
     }
 }
@@ -175,7 +123,7 @@ pub(crate) mod tests {
     use ahash::HashMap;
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
-    use ir_common::{KeyId, LabelId};
+    use ir_common::{KeyId, LabelId, NameOrId};
 
     use super::*;
     use crate::process::entry::Entry;
@@ -245,11 +193,14 @@ pub(crate) mod tests {
         vec![r1]
     }
 
+    pub fn to_prop_pb(key: NameOrId) -> common_pb::Property {
+        common_pb::Property { item: Some(common_pb::property::Item::Key(key.into())) }
+    }
+
     pub fn to_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Variable {
         common_pb::Variable {
             tag: tag.map(|t| t.into()),
-            property: key
-                .map(|k| common_pb::Property { item: Some(common_pb::property::Item::Key(k.into())) }),
+            property: key.map(|k| to_prop_pb(k)),
             node_type: None,
         }
     }
@@ -289,7 +240,7 @@ pub(crate) mod tests {
             .into_iter()
             .map(|(key, value)| common_pb::VariableKeyValue {
                 key: Some(common_pb::Value::from(key)),
-                value: Some(to_var_pb(value.0, value.1)),
+                value: Some(common_pb::variable_key_value::Value::Val(to_var_pb(value.0, value.1))),
             })
             .collect();
         common_pb::Expression {

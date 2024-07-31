@@ -220,7 +220,12 @@ bl::result<void> GrapeInstance::archiveGraph(const rpc::GSParams& params) {
     bool exists = false;
     VY_OK_OR_RAISE(client_->Exists(frag_group_id, exists));
     if (exists) {
-      graph_utils->ArchiveGraph(frag_group_id, comm_spec_, *client_, params);
+      BOOST_LEAF_CHECK(graph_utils->ArchiveGraph(frag_group_id, comm_spec_,
+                                                 *client_, params));
+    } else {
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                      "Fragment group " + std::to_string(frag_group_id) +
+                          " does not exist");
     }
   }
   return {};

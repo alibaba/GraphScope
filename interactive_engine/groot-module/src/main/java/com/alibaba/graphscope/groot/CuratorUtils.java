@@ -21,14 +21,19 @@ import com.alibaba.graphscope.groot.common.config.ZkConfig;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.api.ACLProvider;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateErrorPolicy;
 import org.apache.curator.retry.BoundedExponentialBackoffRetry;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class CuratorUtils {
+    private static final Logger logger = LoggerFactory.getLogger(CuratorUtils.class);
 
     public static CuratorFramework makeCurator(Configs configs) {
         String connectionString = ZkConfig.ZK_CONNECT_STRING.get(configs);
@@ -41,11 +46,13 @@ public class CuratorUtils {
         String authUser = ZkConfig.ZK_AUTH_USER.get(configs);
         String authPassword = ZkConfig.ZK_AUTH_PASSWORD.get(configs);
 
-        BoundedExponentialBackoffRetry policy =
+        BoundedExponentialBackoffRetry retryPolicy =
                 new BoundedExponentialBackoffRetry(baseSleepMs, maxSleepMs, maxRetry);
+        ConnectionStateErrorPolicy errorPolicy = state -> state == ConnectionState.LOST;
         CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
         builder.connectString(connectionString)
-                .retryPolicy(policy)
+                .retryPolicy(retryPolicy)
+                .connectionStateErrorPolicy(errorPolicy)
                 .sessionTimeoutMs(sessionTimeoutMs)
                 .connectionTimeoutMs(connectionTimeoutMs);
         if (authEnable) {

@@ -33,10 +33,10 @@ import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
@@ -58,11 +58,11 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.*;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.sdk.trace.IdGenerator;
 
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
@@ -82,8 +82,11 @@ import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -96,6 +99,8 @@ import java.util.function.Supplier;
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
+    private static final Logger defaultLogger =
+            LoggerFactory.getLogger(IrStandardOpProcessor.class);
     protected final Graph graph;
     protected final GraphTraversalSource g;
     protected final Configs configs;
@@ -109,6 +114,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected final QueryCache queryCache;
     protected final ExecutionClient executionClient;
     Tracer tracer;
+    LongHistogram queryHistogram;
+    /**
+     * for success query
+     * Print if the threshold is exceeded
+     */
+    private long printThreshold;
+
+    private IdGenerator opentelemetryIdGenerator;
 
     public IrStandardOpProcessor(
             Configs configs,
@@ -125,10 +138,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // hack implementation here: rpc client is the old way to submit job (gremlin -> traversal
         // -> ir_core -> pegasus), we should remove it after replacing it with gremlin-calcite
         // stack.
-        if (FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME
-                        .get(this.configs)
-                        .equals(AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)
-                && FrontendConfig.ENGINE_TYPE.get(this.configs).equals("pegasus")) {
+        if (FrontendConfig.ENGINE_TYPE.get(this.configs).equals("pegasus")) {
             this.rpcClient = new RpcClient(fetcher.fetch());
         } else {
             this.rpcClient = null;
@@ -137,7 +147,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
         this.executionClient = executionClient;
-        this.tracer = GlobalOpenTelemetry.getTracer("compiler");
+        this.printThreshold = Long.parseLong(configs.get("query.print.threshold.ms", "200"));
+        this.opentelemetryIdGenerator = IdGenerator.random();
+        initTracer();
+        initMetrics();
     }
 
     @Override
@@ -149,6 +162,12 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         GremlinExecutor gremlinExecutor = gremlinExecutorSupplier.get();
         Map<String, Object> args = msg.getArgs();
         String script = (String) args.get("gremlin");
+        Map<String, Object> bindings =
+                args.get("bindings") == null ? null : (Map<String, Object>) args.get("bindings");
+        String upTraceId =
+                (bindings == null || bindings.get("X-Trace-ID") == null)
+                        ? null
+                        : String.valueOf(bindings.get("X-Trace-ID"));
 
         String defaultValidateQuery = "''";
         // ad-hoc handling for connection validation
@@ -156,12 +175,20 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SUCCESS).create());
             return;
         }
-        long jobId = idGenerator.generateId();
+        BigInteger jobId = idGenerator.generateId();
         String jobName = idGenerator.generateName(jobId);
-        IrMeta irMeta = metaQueryCallback.beforeExec();
-        QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
-        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
+        IrMeta irMeta = metaQueryCallback.beforeExec();
+        // If the current graph schema is empty (as service startup can occur before data loading in
+        // Groot), we temporarily switch to the original IR core.
+        // In the future, once schema-free support is implemented, we will replace this temporary
+        // solution.
+        if (irMeta.getSchema().getVertexList().isEmpty()
+                && irMeta.getSchema().getEdgeList().isEmpty()) {
+            language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
+        }
+        QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId, upTraceId);
+        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         GremlinExecutor.LifeCycle lifeCycle;
         switch (language) {
             case AntlrGremlinScriptEngineFactory.LANGUAGE_NAME:
@@ -199,7 +226,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         metaQueryCallback.afterExec(irMeta);
                         // TimeoutException has been handled in ResultProcessor, skip it here
                         if (t != null && !(t instanceof TimeoutException)) {
-                            statusCallback.onEnd(false, t.getMessage());
+                            statusCallback.onErrorEnd(t.getMessage());
                             Optional<Throwable> possibleTemporaryException =
                                     determineIfTemporaryException(t);
                             if (possibleTemporaryException.isPresent()) {
@@ -284,7 +311,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         return null;
                     });
         } catch (RejectedExecutionException var17) {
-            statusCallback.getQueryLogger().error(var17.getMessage());
+            statusCallback.getQueryLogger().error(var17);
             ctx.writeAndFlush(
                     ResponseMessage.build(msg)
                             .code(ResponseStatusCode.TOO_MANY_REQUESTS)
@@ -293,9 +320,28 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
     }
 
-    protected QueryStatusCallback createQueryStatusCallback(String query, long queryId) {
+    protected QueryStatusCallback createQueryStatusCallback(String query, BigInteger queryId) {
         return new QueryStatusCallback(
-                new MetricsCollector(evalOpTimer), new QueryLogger(query, queryId));
+                new MetricsCollector(evalOpTimer),
+                queryHistogram,
+                new QueryLogger(query, queryId),
+                this.printThreshold);
+    }
+
+    /**
+     *
+     * @param query
+     * @param queryId
+     * @param upTraceId 上游传下来的traceId, 用于做全链路追踪
+     * @return
+     */
+    protected QueryStatusCallback createQueryStatusCallback(
+            String query, BigInteger queryId, String upTraceId) {
+        return new QueryStatusCallback(
+                new MetricsCollector(evalOpTimer),
+                queryHistogram,
+                new QueryLogger(query, queryId, upTraceId),
+                printThreshold);
     }
 
     protected GremlinExecutor.LifeCycle createLifeCycle(
@@ -365,14 +411,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // add sink operator
         InterOpCollection.process(opCollection);
 
-        long jobId = queryLogger.getQueryId();
+        BigInteger jobId = queryLogger.getQueryId();
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
         queryLogger.info("Submitted query");
         // Too verbose, since all identical queries produce identical plans, it's no need to print
-        // every plan in production.
+        // every plan in production.de
         String irPlanStr = irPlan.getPlanAsJson();
         queryLogger.debug("ir plan {}", irPlanStr);
+        queryLogger.setIrPlan(irPlanStr);
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
         irPlan.close();
 
@@ -383,7 +430,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         String jobName = "ir_plan_" + jobId;
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
-                        .setJobId(jobId)
+                        .setJobId(jobId.longValue())
                         .setJobName(jobName)
                         .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(queryConfigs))
                         .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(queryConfigs))
@@ -393,12 +440,30 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
-        Span outgoing =
-                tracer.spanBuilder("/evalOpInternal").setSpanKind(SpanKind.CLIENT).startSpan();
-        try (Scope scope = outgoing.makeCurrent()) {
-            outgoing.setAttribute("query.id", queryLogger.getQueryId());
+        Span outgoing;
+        // if exist up trace, useUpTraceId as current traceId
+        if (TraceId.isValid(queryLogger.getUpstreamId())) {
+            SpanContext spanContext =
+                    SpanContext.createFromRemoteParent(
+                            queryLogger.getUpstreamId(),
+                            this.opentelemetryIdGenerator.generateSpanId(),
+                            TraceFlags.getDefault(),
+                            TraceState.getDefault());
+            outgoing =
+                    tracer.spanBuilder("frontend/query")
+                            .setParent(
+                                    io.opentelemetry.context.Context.current()
+                                            .with(Span.wrap(spanContext)))
+                            .setSpanKind(SpanKind.CLIENT)
+                            .startSpan();
+        } else {
+            outgoing =
+                    tracer.spanBuilder("frontend/query").setSpanKind(SpanKind.CLIENT).startSpan();
+        }
+        try (Scope ignored = outgoing.makeCurrent()) {
+            outgoing.setAttribute("query.id", queryLogger.getQueryId().toString());
             outgoing.setAttribute("query.statement", queryLogger.getQuery());
-            outgoing.setAttribute("query.plan.logical", irPlanStr);
+            outgoing.setAttribute("query.plan", irPlanStr);
             this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
             // request results from remote engine service in blocking way
             resultProcessor.request();
@@ -451,5 +516,19 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         if (this.rpcClient != null) {
             this.rpcClient.shutdown();
         }
+    }
+
+    public void initTracer() {
+        this.tracer = GlobalOpenTelemetry.getTracer("default");
+    }
+
+    public void initMetrics() {
+        Meter meter = GlobalOpenTelemetry.getMeter("default");
+        this.queryHistogram =
+                meter.histogramBuilder("groot.frontend.query.duration")
+                        .setDescription("Duration of gremlin queries.")
+                        .setUnit("ms")
+                        .ofLongs()
+                        .build();
     }
 }

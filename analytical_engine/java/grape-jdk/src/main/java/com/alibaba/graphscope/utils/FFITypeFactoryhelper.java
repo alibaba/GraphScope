@@ -33,6 +33,7 @@ import com.alibaba.graphscope.ds.EmptyType;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.PrimitiveTypedArray;
 import com.alibaba.graphscope.ds.StringTypedArray;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
@@ -80,8 +81,14 @@ public class FFITypeFactoryhelper {
             return "int32_t";
         } else if (clz.getName() == Double.class.getName()) {
             return "double";
+        } else if (clz.getName() == String.class.getName()) {
+            return "std::string";
+        } else if (clz.getName() == StringView.class.getName()) {
+            return "std::string";
+        } else if (clz.getName() == StdString.class.getName()) {
+            return "std::string";
         } else {
-            logger.error("Must be one of long, double, integer");
+            logger.error("Must be one of long, double, integer, but got: " + clz.getName());
             return "null";
         }
     }

@@ -32,6 +32,7 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -164,17 +165,38 @@ public class GraphTypeInference {
         if (child instanceof GraphLogicalSource
                         && ((GraphLogicalSource) child).getOpt() == GraphOpt.Source.VERTEX
                 || child instanceof GraphLogicalGetV) {
+            GraphSchemaType childType = (GraphSchemaType) getType(child);
+            GraphLabelType childLabelType = childType.getLabelType();
             if (parent instanceof GraphLogicalPathExpand) {
-                parent = ((GraphLogicalPathExpand) parent).getExpand();
-                parentType = ((GraphPathType) parentType).getComponentType().getExpandType();
+                GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) parent;
+                int minHop =
+                        (pxd.getOffset() == null)
+                                ? 0
+                                : ((Number) ((RexLiteral) pxd.getOffset()).getValue()).intValue();
+                int maxHop =
+                        pxd.getFetch() == null
+                                ? Integer.MAX_VALUE
+                                : ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue()
+                                        + minHop
+                                        - 1;
+                GraphPathTypeInference pathTypeInfer =
+                        new GraphPathTypeInference(
+                                childLabelType,
+                                null,
+                                (GraphPathType) parentType,
+                                ((GraphLogicalExpand) pxd.getExpand()).getOpt(),
+                                minHop,
+                                maxHop);
+                return createSchemaType(
+                        GraphOpt.Source.VERTEX,
+                        pathTypeInfer.inferStartVType().getLabelsEntry(),
+                        childType);
             }
             if (parent instanceof GraphLogicalExpand) {
                 GraphLogicalExpand expand = (GraphLogicalExpand) parent;
-                GraphSchemaType childType = (GraphSchemaType) getType(child);
-                GraphLabelType childLabelType = childType.getLabelType();
                 GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
                 List<GraphLabelType.Entry> commonLabels =
-                        commonLabels(childLabelType, parentLabelType, expand.getOpt(), true);
+                        commonLabels(childLabelType, parentLabelType, expand.getOpt(), true, false);
                 return createSchemaType(GraphOpt.Source.VERTEX, commonLabels, childType);
             }
             throw new IllegalArgumentException(
@@ -220,22 +242,25 @@ public class GraphTypeInference {
                     child,
                     parent);
             GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) child;
-            RelDataType innerGetVType =
-                    ((GraphPathType) getType(pxd)).getComponentType().getGetVType();
-            GraphLabelType innerGetVLabelType = ((GraphSchemaType) innerGetVType).getLabelType();
-            GraphLabelType outerGetVLabelType = ((GraphSchemaType) parentType).getLabelType();
-            List<GraphLabelType.Entry> commonLabels =
-                    commonLabels(innerGetVLabelType, outerGetVLabelType);
-            RelDataType newGetVType =
-                    createSchemaType(
-                            GraphOpt.Source.VERTEX, commonLabels, (GraphSchemaType) innerGetVType);
-            RelDataType newExpandType =
-                    restrictChild(
-                            relGraph,
-                            pxd.getExpand().copy(pxd.getTraitSet(), pxd.getInputs()),
-                            pxd.getGetV(),
-                            newGetVType);
-            return new GraphPathType(new GraphPathType.ElementType(newExpandType, newGetVType));
+            int minHop =
+                    (pxd.getOffset() == null)
+                            ? 0
+                            : ((Number) ((RexLiteral) pxd.getOffset()).getValue()).intValue();
+            int maxHop =
+                    pxd.getFetch() == null
+                            ? Integer.MAX_VALUE
+                            : ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue()
+                                    + minHop
+                                    - 1;
+            GraphPathTypeInference pathTypeInfer =
+                    new GraphPathTypeInference(
+                            ((GraphSchemaType) getType(child.getInput(0))).getLabelType(),
+                            ((GraphSchemaType) parentType).getLabelType(),
+                            (GraphPathType) getType(child),
+                            ((GraphLogicalExpand) pxd.getExpand()).getOpt(),
+                            minHop,
+                            maxHop);
+            return pathTypeInfer.inferPathType();
         }
         throw new IllegalArgumentException(
                 "graph generic type error: unable to establish an extension relationship between"
@@ -263,29 +288,32 @@ public class GraphTypeInference {
                 GraphLabelType childLabelType = ((GraphSchemaType) getType(child)).getLabelType();
                 GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
                 List<GraphLabelType.Entry> commonLabels =
-                        commonLabels(childLabelType, parentLabelType, expand.getOpt(), false);
+                        commonLabels(
+                                childLabelType, parentLabelType, expand.getOpt(), false, false);
                 return createSchemaType(
                         GraphOpt.Source.EDGE, commonLabels, (GraphSchemaType) parentType);
             }
             if (parent instanceof GraphLogicalPathExpand) {
                 GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) parent;
-                RelDataType newExpandType =
-                        restrictParent(
-                                relGraph,
-                                child,
-                                pxd.getExpand(),
-                                ((GraphPathType) parentType).getComponentType().getExpandType());
-                RelNode oldExpand =
-                        pxd.getExpand()
-                                .copy(pxd.getExpand().getTraitSet(), ImmutableList.of(child));
-                RelNode newExpand = newRel(oldExpand, newExpandType);
-                RelDataType newGetVType =
-                        restrictParent(
-                                relGraph,
-                                newExpand,
-                                pxd.getGetV(),
-                                ((GraphPathType) parentType).getComponentType().getGetVType());
-                return new GraphPathType(new GraphPathType.ElementType(newExpandType, newGetVType));
+                int minHop =
+                        (pxd.getOffset() == null)
+                                ? 0
+                                : ((Number) ((RexLiteral) pxd.getOffset()).getValue()).intValue();
+                int maxHop =
+                        pxd.getFetch() == null
+                                ? Integer.MAX_VALUE
+                                : ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue()
+                                        + minHop
+                                        - 1;
+                GraphPathTypeInference pathTypeInfer =
+                        new GraphPathTypeInference(
+                                ((GraphSchemaType) getType(child)).getLabelType(),
+                                ((GraphSchemaType) getType(pxd.getGetV())).getLabelType(),
+                                (GraphPathType) parentType,
+                                ((GraphLogicalExpand) pxd.getExpand()).getOpt(),
+                                minHop,
+                                maxHop);
+                return pathTypeInfer.inferPathType();
             }
             throw new IllegalArgumentException(
                     "graph generic type error: unable to establish an extension relationship"
@@ -329,15 +357,30 @@ public class GraphTypeInference {
                             + " between node %s with node %s",
                     child,
                     parent);
-            GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) child;
-            RelDataType innerGetVType =
-                    ((GraphPathType) getType(pxd)).getComponentType().getGetVType();
-            GraphLabelType innerGetVLabelType = ((GraphSchemaType) innerGetVType).getLabelType();
             GraphLabelType outerGetVLabelType = ((GraphSchemaType) parentType).getLabelType();
-            List<GraphLabelType.Entry> commonLabels =
-                    commonLabels(innerGetVLabelType, outerGetVLabelType);
+            GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) child;
+            int minHop =
+                    (pxd.getOffset() == null)
+                            ? 0
+                            : ((Number) ((RexLiteral) pxd.getOffset()).getValue()).intValue();
+            int maxHop =
+                    pxd.getFetch() == null
+                            ? Integer.MAX_VALUE
+                            : ((Number) ((RexLiteral) pxd.getFetch()).getValue()).intValue()
+                                    + minHop
+                                    - 1;
+            GraphPathTypeInference pathTypeInfer =
+                    new GraphPathTypeInference(
+                            null,
+                            outerGetVLabelType,
+                            (GraphPathType) getType(pxd),
+                            ((GraphLogicalExpand) pxd.getExpand()).getOpt(),
+                            minHop,
+                            maxHop);
             return createSchemaType(
-                    GraphOpt.Source.VERTEX, commonLabels, (GraphSchemaType) parentType);
+                    GraphOpt.Source.VERTEX,
+                    pathTypeInfer.inferGetVType().getLabelsEntry(),
+                    (GraphSchemaType) parentType);
         }
         throw new IllegalArgumentException(
                 "graph generic type error: unable to establish an extension relationship between"
@@ -483,7 +526,8 @@ public class GraphTypeInference {
             GraphLabelType getVType,
             GraphLabelType expandType,
             GraphOpt.Expand expandOpt,
-            boolean recordGetV) {
+            boolean recordGetV,
+            boolean containsZeroPath) {
         List<GraphLabelType.Entry> commonLabels = Lists.newArrayList();
         for (GraphLabelType.Entry entry1 : getVType.getLabelsEntry()) {
             for (GraphLabelType.Entry entry2 : expandType.getLabelsEntry()) {
@@ -495,6 +539,11 @@ public class GraphTypeInference {
                             commonLabels.add(entry2);
                         }
                     }
+                    if (containsZeroPath
+                            && recordGetV
+                            && entry1.getLabel().equals(entry2.getSrcLabel())) {
+                        commonLabels.add(entry1);
+                    }
                 }
                 if (expandOpt != GraphOpt.Expand.IN) {
                     if (entry1.getLabel().equals(entry2.getSrcLabel())) {
@@ -503,6 +552,11 @@ public class GraphTypeInference {
                         } else {
                             commonLabels.add(entry2);
                         }
+                    }
+                    if (containsZeroPath
+                            && recordGetV
+                            && entry1.getLabel().equals(entry2.getDstLabel())) {
+                        commonLabels.add(entry1);
                     }
                 }
             }
@@ -556,13 +610,13 @@ public class GraphTypeInference {
                                 newTableConfig,
                                 expand.getAliasName(),
                                 expand.getStartAlias());
-                newExpand.setRowType((GraphSchemaType) newType);
+                newExpand.setSchemaType((GraphSchemaType) newType);
                 if (ObjectUtils.isNotEmpty(expand.getFilters())) {
                     return builder.push(newExpand).filter(expand.getFilters()).build();
                 }
                 return newExpand;
             } else {
-                expand.setRowType((GraphSchemaType) newType);
+                expand.setSchemaType((GraphSchemaType) newType);
             }
         }
         if (rel instanceof GraphLogicalGetV) {
@@ -604,6 +658,7 @@ public class GraphTypeInference {
                     pxd.getFetch(),
                     pxd.getResultOpt(),
                     pxd.getPathOpt(),
+                    pxd.getUntilCondition(),
                     pxd.getAliasName(),
                     pxd.getStartAlias());
         }
@@ -747,6 +802,227 @@ public class GraphTypeInference {
                 return ((GraphLogicalPathExpand) rel).getAliasName();
             }
             return null;
+        }
+    }
+
+    private class GraphPathTypeInference {
+        private final GraphLabelType startVType;
+        private final GraphLabelType endVType;
+        private final GraphPathType pxdType;
+        private final GraphOpt.Expand expandOpt;
+        private final List<CompositePathType> allValidPathTypes;
+        private final int minHop;
+        private final int maxHop;
+
+        public GraphPathTypeInference(
+                GraphLabelType startVType,
+                GraphLabelType endVType,
+                GraphPathType pxdType,
+                GraphOpt.Expand expandOpt,
+                int minHop,
+                int maxHop) {
+            this.startVType = startVType;
+            this.endVType = endVType;
+            this.pxdType = pxdType;
+            this.expandOpt = expandOpt;
+            this.minHop = minHop;
+            this.maxHop = maxHop;
+            this.allValidPathTypes = Lists.newArrayList();
+        }
+
+        public GraphPathType inferPathType() {
+            recursive(startVType, new CompositePathType(Lists.newArrayList()), 0);
+            List<GraphLabelType.Entry> expandTypes = Lists.newArrayList();
+            List<GraphLabelType.Entry> getVTypes = Lists.newArrayList();
+            allValidPathTypes.forEach(
+                    k -> {
+                        k.getElementTypes()
+                                .forEach(
+                                        k1 -> {
+                                            if (k1.getExpandType() != null) {
+                                                expandTypes.addAll(
+                                                        ((GraphLabelType) k1.getExpandType())
+                                                                .getLabelsEntry());
+                                            }
+                                            if (k1.getGetVType() != null) {
+                                                getVTypes.addAll(
+                                                        ((GraphLabelType) k1.getGetVType())
+                                                                .getLabelsEntry());
+                                            }
+                                        });
+                    });
+            Preconditions.checkArgument(
+                    !expandTypes.isEmpty() && !getVTypes.isEmpty(),
+                    "cannot find any path within hops of [%s, %s] between startV type [%s] and endV"
+                            + " type [%s] with the expand type constraints [%s]",
+                    minHop,
+                    maxHop,
+                    startVType,
+                    endVType,
+                    pxdType);
+            GraphSchemaType expandType =
+                    (GraphSchemaType) pxdType.getComponentType().getExpandType();
+            GraphSchemaType getVType = (GraphSchemaType) pxdType.getComponentType().getGetVType();
+            return new GraphPathType(
+                    new GraphPathType.ElementType(
+                            createSchemaType(
+                                    GraphOpt.Source.EDGE,
+                                    expandTypes.stream().distinct().collect(Collectors.toList()),
+                                    expandType),
+                            createSchemaType(
+                                    GraphOpt.Source.VERTEX,
+                                    getVTypes.stream().distinct().collect(Collectors.toList()),
+                                    getVType)));
+        }
+
+        public GraphLabelType inferStartVType() {
+            GraphLabelType expandType =
+                    ((GraphSchemaType) pxdType.getComponentType().getExpandType()).getLabelType();
+            return new GraphLabelType(
+                    commonLabels(startVType, expandType, expandOpt, true, minHop == 0));
+        }
+
+        public GraphLabelType inferGetVType() {
+            GraphLabelType innerGetVLabelType =
+                    ((GraphSchemaType) pxdType.getComponentType().getGetVType()).getLabelType();
+            List<GraphLabelType.Entry> commonLabels = commonLabels(innerGetVLabelType, endVType);
+            return new GraphLabelType(commonLabels);
+        }
+
+        private void recursive(
+                GraphLabelType curEndVType, CompositePathType curPathType, int curHop) {
+            if (curHop > maxHop) {
+                return;
+            }
+            if (curHop >= minHop && curHop <= maxHop) {
+                List<GraphLabelType.Entry> candidates =
+                        Lists.newArrayList(curEndVType.getLabelsEntry());
+                candidates.retainAll(endVType.getLabelsEntry());
+                if (!candidates.isEmpty()) {
+                    if (curPathType.isEmpty()
+                            || candidates.size() < curEndVType.getLabelsEntry().size()) {
+                        curPathType.setEndVType(new GraphLabelType(candidates));
+                    }
+                    allValidPathTypes.add(curPathType);
+                }
+            }
+            GraphLabelType expandType =
+                    ((GraphSchemaType) pxdType.getComponentType().getExpandType()).getLabelType();
+            curEndVType
+                    .getLabelsEntry()
+                    .forEach(
+                            v -> {
+                                expandType
+                                        .getLabelsEntry()
+                                        .forEach(
+                                                e -> {
+                                                    GraphLabelType nextEndVType = null;
+                                                    switch (expandOpt) {
+                                                        case OUT:
+                                                            if (e.getSrcLabel() == v.getLabel()) {
+                                                                nextEndVType =
+                                                                        new GraphLabelType(
+                                                                                new GraphLabelType
+                                                                                                .Entry()
+                                                                                        .label(
+                                                                                                e
+                                                                                                        .getDstLabel())
+                                                                                        .labelId(
+                                                                                                e
+                                                                                                        .getDstLabelId()));
+                                                            }
+                                                            break;
+                                                        case IN:
+                                                            if (e.getDstLabel() == v.getLabel()) {
+                                                                nextEndVType =
+                                                                        new GraphLabelType(
+                                                                                new GraphLabelType
+                                                                                                .Entry()
+                                                                                        .label(
+                                                                                                e
+                                                                                                        .getSrcLabel())
+                                                                                        .labelId(
+                                                                                                e
+                                                                                                        .getSrcLabelId()));
+                                                            }
+                                                            break;
+                                                        case BOTH:
+                                                            if (e.getSrcLabel() == v.getLabel()) {
+                                                                nextEndVType =
+                                                                        new GraphLabelType(
+                                                                                new GraphLabelType
+                                                                                                .Entry()
+                                                                                        .label(
+                                                                                                e
+                                                                                                        .getDstLabel())
+                                                                                        .labelId(
+                                                                                                e
+                                                                                                        .getDstLabelId()));
+                                                            } else if (e.getDstLabel()
+                                                                    == v.getLabel()) {
+                                                                nextEndVType =
+                                                                        new GraphLabelType(
+                                                                                new GraphLabelType
+                                                                                                .Entry()
+                                                                                        .label(
+                                                                                                e
+                                                                                                        .getSrcLabel())
+                                                                                        .labelId(
+                                                                                                e
+                                                                                                        .getSrcLabelId()));
+                                                            }
+                                                            break;
+                                                    }
+                                                    if (nextEndVType != null) {
+                                                        recursive(
+                                                                nextEndVType,
+                                                                curPathType.copy(
+                                                                        new GraphPathType
+                                                                                .ElementType(
+                                                                                new GraphLabelType(
+                                                                                        e),
+                                                                                nextEndVType)),
+                                                                curHop + 1);
+                                                    }
+                                                });
+                            });
+        }
+
+        private class CompositePathType {
+            private final List<GraphPathType.ElementType> elementTypes;
+
+            public CompositePathType(List<GraphPathType.ElementType> elementTypes) {
+                this.elementTypes = elementTypes;
+            }
+
+            public void setEndVType(GraphLabelType endVType) {
+                if (elementTypes.isEmpty()) {
+                    elementTypes.add(new GraphPathType.ElementType(null, endVType));
+                } else {
+                    GraphPathType.ElementType last = elementTypes.get(elementTypes.size() - 1);
+                    elementTypes.set(
+                            elementTypes.size() - 1,
+                            new GraphPathType.ElementType(last.getExpandType(), endVType));
+                }
+            }
+
+            public void add(GraphPathType.ElementType last) {
+                elementTypes.add(last);
+            }
+
+            public List<GraphPathType.ElementType> getElementTypes() {
+                return elementTypes;
+            }
+
+            public CompositePathType copy(GraphPathType.ElementType addOne) {
+                List<GraphPathType.ElementType> newElementTypes = Lists.newArrayList(elementTypes);
+                newElementTypes.add(addOne);
+                return new CompositePathType(newElementTypes);
+            }
+
+            public boolean isEmpty() {
+                return elementTypes.isEmpty();
+            }
         }
     }
 }

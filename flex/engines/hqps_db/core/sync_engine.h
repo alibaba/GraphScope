@@ -416,14 +416,12 @@ class SyncEngine : public BaseEngine {
   static auto EdgeExpandV(
       const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      EdgeExpandOpt<label_id_t, EDGE_FILTER_T, SELECTOR...>&& edge_expand_opt,
-      size_t limit = INT_MAX) {
+      EdgeExpandOpt<label_id_t, EDGE_FILTER_T, SELECTOR...>&& edge_expand_opt) {
     auto& select_node = gs::Get<input_col_id>(ctx);
 
     auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandV(
         graph, select_node, edge_expand_opt.dir_, edge_expand_opt.edge_label_,
-        edge_expand_opt.other_label_, std::move(edge_expand_opt.edge_filter_),
-        limit);
+        edge_expand_opt.other_label_, std::move(edge_expand_opt.edge_filter_));
     return ctx.template AddNode<append_opt>(
         std::move(pair.first), std::move(pair.second), input_col_id);
   }
@@ -1110,7 +1108,8 @@ class SyncEngine : public BaseEngine {
   static inline bool run_expr_filter_impl(
       const EXPR& expr, std::tuple<PROP_GETTER...>& prop_getter_tuple,
       std::tuple<ELE...>& eles, std::index_sequence<Is...>) {
-    return expr(std::get<Is>(prop_getter_tuple).get_from_all_element(eles)...);
+    return expr(
+        std::get<Is>(prop_getter_tuple).get_from_all_index_element(eles)...);
   }
 
   //////////////////////////////////////Group/////////////////////////

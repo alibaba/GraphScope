@@ -49,6 +49,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    :maxdepth: 1
    :caption: GraphScope Flex
 
+   flex/coordinator
    flex/interactive_intro
 
 .. toctree::

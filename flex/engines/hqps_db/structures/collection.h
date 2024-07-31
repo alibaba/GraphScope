@@ -53,6 +53,9 @@ class TwoLabelVertexSetImpl;
 template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetImplBuilder;
 
+template <typename VID_T, typename LabelT, typename... T>
+class GeneralVertexSetBuilder;
+
 // untypedEdgeSet
 template <typename VID_T, typename LabelT, typename SUB_GRAPH_T>
 class UnTypedEdgeSet;
@@ -418,14 +421,20 @@ class CountBuilder {
         VLOG(10) << "ele is null";
       }
     } else {
-      VLOG(10) << "inc:" << ind << ", " << gs::to_string(tuple);
       ++vec_[ind];
     }
     return true;
   }
 
+  bool inc_count(size_t ind, int32_t v) {
+    while (vec_.size() <= ind) {
+      vec_.emplace_back(0);
+    }
+    vec_[ind] += v;
+    return true;
+  }
+
   Collection<int64_t> Build() {
-    // VLOG(10) << "Finish building counter" << gs::to_string(vec_);
     return Collection<int64_t>(std::move(vec_));
   }
 

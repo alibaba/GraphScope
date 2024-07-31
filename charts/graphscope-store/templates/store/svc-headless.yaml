@@ -1,3 +1,4 @@
+{{- if .Values.distributed.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -18,13 +19,8 @@ spec:
   publishNotReadyAddresses: true
   ports:
     - name: port
-      port: {{ .Values.store.service.port }}
-      targetPort: port
-    - name: gaia-rpc
-      port: {{ .Values.store.service.gaiaRpc }}
-      targetPort: gaia-rpc
-    - name: gaia-engine
-      port: {{ .Values.store.service.gaiaEngine }}
-      targetPort: gaia-engine
+      port: 55555
+      targetPort: inner-rpc
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: store
+{{- end -}}

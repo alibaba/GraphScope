@@ -1,10 +1,4 @@
-{{- $frontendFullname := include "graphscope-store.frontend.fullname" . }}
-{{- $coordinatorFullname := include "graphscope-store.coordinator.fullname" . }}
-{{- $storeFullname := include "graphscope-store.store.fullname" . }}
-{{- $kafkaFullname := include "graphscope-store.kafka.fullname" . -}}
-{{- $releaseNamespace := .Release.Namespace }}
-{{- $clusterDomain := .Values.clusterDomain }}
-
+{{- if .Values.distributed.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -20,7 +14,7 @@ metadata:
   {{- end }}
 spec:
   podManagementPolicy: {{ .Values.podManagementPolicy }}
-  replicas: {{ .Values.coordinator.replicaCount }}
+  replicas: 1
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: coordinator
@@ -49,14 +43,6 @@ spec:
       hostIPC: {{ .Values.coordinator.hostIPC }}
       {{- if .Values.coordinator.schedulerName }}
       schedulerName: {{ .Values.coordinator.schedulerName | quote }}
-      {{- end }}
-      {{- if .Values.affinity }}
-      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.affinity "context" $) | nindent 8 }}
-      {{- else }}
-      affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAffinityPreset "component" "coordinator" "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAntiAffinityPreset "component" "coordinator" "context" $) | nindent 10 }}
-        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.nodeAffinityPreset.type "key" .Values.nodeAffinityPreset.key "values" .Values.nodeAffinityPreset.values) | nindent 10 }}
       {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
@@ -90,7 +76,7 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-        - name: coordinator
+        - name: default
           image: {{ include "graphscope-store.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           {{- if .Values.containerSecurityContext.enabled }}
@@ -101,33 +87,28 @@ spec:
           args: {{- include "common.tplvalues.render" (dict "value" .Values.args "context" $) | nindent 12 }}
           {{- end }}
           env:
-            - name: GRAPH_NAME
-              value: {{ .Values.graphName | quote }}
-            - name: GROOT_JAVA_OPTS
-              value: {{ .Values.javaOpts | quote }}
             - name: ROLE
               value: "coordinator"
-            - name: FRONTEND_COUNT
-              value: {{ .Values.frontend.replicaCount | quote }}
-            - name: COORDINATOR_COUNT
-              value: {{ .Values.coordinator.replicaCount | quote }}
-            - name: STORE_COUNT
-              value: {{ .Values.store.replicaCount | quote }}
-            - name: DNS_NAME_PREFIX_FRONTEND
-              value: {{ $frontendFullname }}-{}.{{ $frontendFullname }}-headless
-            - name: DNS_NAME_PREFIX_COORDINATOR
-              value: {{ $coordinatorFullname }}-{}.{{ $coordinatorFullname }}-headless
-            - name: DNS_NAME_PREFIX_STORE
-              value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless
-            - name: DNS_NAME_SERVICE_KAFKA
-              value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}
-            - name: KAFKA_SERVERS
-              value: {{ include "graphscope-store.kafka.brokerlist" . }}
           ports:
-            - name: port
+            - name: inner-rpc
               containerPort: 55555
           {{- if .Values.coordinator.resources }}
           resources: {{- toYaml .Values.coordinator.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: inner-rpc
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: inner-rpc
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: inner-rpc
           {{- end }}
           volumeMounts:
             - name: meta
@@ -146,7 +127,7 @@ spec:
   {{- if and .Values.coordinator.persistence.enabled .Values.coordinator.persistence.existingClaim }}
         - name: meta
           persistentVolumeClaim:
-            claimName: {{ tpl .Values.coordinator.persistence.existingClaim . }}
+            claimName: {{ printf "%s" (tpl .Values.coordinator.persistence.existingClaim .) }}
   {{- else if not .Values.coordinator.persistence.enabled }}
         - name: meta
           emptyDir: {}
@@ -173,3 +154,4 @@ spec:
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.coordinator.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
   {{- end }}
+{{- end -}}

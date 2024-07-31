@@ -21,6 +21,7 @@
 #include <dlfcn.h>
 #include <string.h>
 
+#include <iostream>
 #include <limits>
 #include <string>
 #include <vector>
@@ -29,12 +30,49 @@
 
 namespace gs {
 
+class GraphDBSession;
+class GraphDB;
 class AppBase {
  public:
-  AppBase() {}
-  virtual ~AppBase() {}
+  enum class AppType : uint8_t {
+    kCppProcedure = 0,
+    kCypherProcedure = 1,
+    kCypherAdhoc = 2,
+    kBuiltIn = 3,
+  };
 
-  virtual bool Query(Decoder& input, Encoder& output) = 0;
+  enum class AppMode : uint8_t {
+    kRead = 0,
+    kWrite = 1,
+  };
+
+  virtual AppType type() const = 0;
+  virtual AppMode mode() const = 0;
+  virtual bool run(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
+  virtual ~AppBase() {}
+};
+
+class ReadAppBase : public AppBase {
+ public:
+  AppMode mode() const override;
+
+  AppType type() const override;
+
+  bool run(GraphDBSession& db, Decoder& input, Encoder& output) override;
+
+  virtual bool Query(const GraphDBSession& db, Decoder& input,
+                     Encoder& output) = 0;
+};
+
+class WriteAppBase : public AppBase {
+ public:
+  AppMode mode() const override;
+
+  AppType type() const override;
+
+  bool run(GraphDBSession& db, Decoder& input, Encoder& output) override;
+
+  virtual bool Query(GraphDBSession& db, Decoder& input, Encoder& output) = 0;
 };
 
 class AppWrapper {
@@ -79,7 +117,7 @@ class AppFactoryBase {
   AppFactoryBase() {}
   virtual ~AppFactoryBase() {}
 
-  virtual AppWrapper CreateApp(GraphDBSession& db) = 0;
+  virtual AppWrapper CreateApp(const GraphDB& db) = 0;
 };
 
 class SharedLibraryAppFactory : public AppFactoryBase {
@@ -88,13 +126,13 @@ class SharedLibraryAppFactory : public AppFactoryBase {
 
   ~SharedLibraryAppFactory();
 
-  AppWrapper CreateApp(GraphDBSession& db) override;
+  AppWrapper CreateApp(const GraphDB& db) override;
 
  private:
   std::string app_path_;
   void* app_handle_;
 
-  void* (*func_creator_)(GraphDBSession&);
+  void* (*func_creator_)(const GraphDB&);
   void (*func_deletor_)(void*);
 };
 
@@ -140,5 +178,14 @@ struct AppMetric {
 };
 
 }  // namespace gs
+
+namespace std {
+std::istream& operator>>(std::istream& in, gs::AppBase::AppType& type);
+std::ostream& operator<<(std::ostream& out, const gs::AppBase::AppType& type);
+
+std::istream& operator>>(std::istream& in, gs::AppBase::AppMode& mode);
+std::ostream& operator<<(std::ostream& out, const gs::AppBase::AppMode& mode);
+
+}  // namespace std
 
 #endif  // GRAPHSCOPE_APP_BASE_H_

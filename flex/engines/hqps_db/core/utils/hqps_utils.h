@@ -599,12 +599,6 @@ using SharedPtrTypeOf = std::shared_ptr<gs::TypedColumn<T>>;
 template <typename T>
 using GetterTypeOf = typename T::GetterType;
 
-template <typename GETTER_T>
-using ElementTypeOf = typename GETTER_T::element_type;
-
-template <typename T>
-using DataOfColumnPtr = typename T::element_type::value_type;
-
 template <typename T>
 using IterOf = typename T::iterator;
 
@@ -766,6 +760,8 @@ struct to_string_impl<AppendOpt> {
       return "Persist";
     } else if (empty == AppendOpt::Temp) {
       return "Temp";
+    } else if (empty == AppendOpt::Replace) {
+      return "Replace";
     } else {
       throw std::runtime_error("Unknown AppendOpt");
     }

@@ -20,7 +20,7 @@ use std::hash::{Hash, Hasher};
 use ahash::HashMap;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as pb;
+use ir_common::generated::physical as pb;
 use ir_common::generated::results as result_pb;
 use ir_common::{LabelId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -152,10 +152,24 @@ impl GraphPath {
         }
     }
 
+    pub fn get_path_start(&self) -> Option<&VertexOrEdge> {
+        match self {
+            GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) => p.first(),
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
     pub fn get_path_end(&self) -> &VertexOrEdge {
         match self {
             GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) => p.last().unwrap(),
             GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _, _)) => e,
+        }
+    }
+
+    pub fn get_path_end_mut(&mut self) -> &mut VertexOrEdge {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => p.last_mut().unwrap(),
+            GraphPath::EndV((ref mut e, _)) | GraphPath::SimpleEndV((ref mut e, _, _)) => e,
         }
     }
 
@@ -170,6 +184,57 @@ impl GraphPath {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
             GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
+    // append another path to the current path, and return the flag of whether the path has been appended or not.
+    // notice that, if the path is a simple path, we simply concatenate the two paths, without checking the duplication (this may not be as expected)
+    // e.g., [1,2,3] + [4,5] = [1,2,3,4,5]
+    pub fn append_path(&mut self, other: GraphPath) -> bool {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => {
+                if let Some(other_path) = other.take_path() {
+                    p.extend(other_path);
+                    true
+                } else {
+                    false
+                }
+            }
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => false,
+        }
+    }
+
+    // pop the last element from the path, and return the element.
+    pub fn pop(&mut self) -> Option<VertexOrEdge> {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => p.pop(),
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
+    // reverse the path.
+    pub fn reverse(&mut self) {
+        match self {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => {
+                p.reverse();
+            }
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => {}
+        }
+    }
+
+    // get the element ids in the path, including both vertices and edges.
+    pub fn get_elem_ids(&self) -> Vec<ID> {
+        match self {
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => p.iter().map(|e| e.id()).collect(),
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => vec![e.id()],
+        }
+    }
+
+    // get the element labels in the path, including both vertices and edges.
+    pub fn get_elem_labels(&self) -> Vec<Option<LabelId>> {
+        match self {
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => p.iter().map(|e| e.label()).collect(),
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => vec![e.label()],
         }
     }
 }
@@ -276,13 +341,22 @@ impl GraphElement for GraphPath {
                 for v_or_e in path {
                     if let Some(p) = v_or_e.get_property(key) {
                         properties.push(p.try_to_owned().unwrap());
+                    } else {
+                        // Fill with None if the property is not found. Otherwise, the property order will be inconsistent.
+                        properties.push(Object::None);
                     }
                 }
                 Some(PropertyValue::Owned(Object::Vector(properties)))
             }
 
             GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) => {
-                v_or_e.get_property(key)
+                if let Some(prop) = v_or_e.get_property(key) {
+                    if let Some(obj) = prop.try_to_owned() {
+                        // make the type consistent with the all path.
+                        return Some(PropertyValue::Owned(Object::Vector(vec![obj])));
+                    }
+                }
+                Some(PropertyValue::Owned(Object::Vector(vec![Object::None])))
             }
         }
     }

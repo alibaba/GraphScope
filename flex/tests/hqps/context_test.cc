@@ -60,8 +60,8 @@ auto make_vertex_set_a() {
   std::vector<gs::vid_t> vids{0, 1};
   std::vector<std::tuple<int32_t, double>> datas{std::make_tuple(1, 1.0),
                                                  std::make_tuple(2, 2.0)};
-  auto res = gs::make_row_vertex_set(std::move(vids), "0", std::move(datas),
-                                     {"a", "b"});
+  auto res =
+      gs::make_row_vertex_set(std::move(vids), 0, std::move(datas), {"a", "b"});
   return res;
 }
 
@@ -70,20 +70,20 @@ auto make_vertex_set_b() {
   std::vector<std::tuple<int32_t, double>> datas{
       std::make_tuple(2, 2.0), std::make_tuple(3, 3.0), std::make_tuple(4, 4.0),
       std::make_tuple(5, 5.0)};
-  auto res = gs::make_row_vertex_set(std::move(vids), "0", std::move(datas),
-                                     {"a", "b"});
+  auto res =
+      gs::make_row_vertex_set(std::move(vids), 0, std::move(datas), {"a", "b"});
   return res;
 }
 
 auto make_vertex_set_c() {
   std::vector<gs::vid_t> vids{0, 1, 4};
-  auto res = gs::make_default_row_vertex_set(std::move(vids), "0");
+  auto res = gs::make_default_row_vertex_set(std::move(vids), 0);
   return res;
 }
 
 auto make_vertex_set_d() {
   std::vector<gs::vid_t> vids{2, 3, 1, 0};
-  auto res = gs::make_default_row_vertex_set(std::move(vids), "0");
+  auto res = gs::make_default_row_vertex_set(std::move(vids), 0);
   return res;
 }
 
@@ -116,7 +116,7 @@ int main() {
   {
     // test two label set
     std::vector<int64_t> vec{1, 2, 3, 4, 5, 6};
-    std::array<std::string, 2> labels{"a", "b"};
+    std::array<uint8_t, 2> labels{0, 1};
     grape::Bitset set;
     set.init(6);
     {
@@ -130,7 +130,7 @@ int main() {
     {
       int32_t cnt = 1;
       for (auto iter : two_label_set) {
-        CHECK(iter.GetElement().second == cnt);
+        CHECK((int32_t) iter.GetElement().vid() == cnt);
         cnt += 1;
       }
     }
@@ -152,7 +152,7 @@ int main() {
 
     col1->resize(limit);
     for (size_t i = 0; i < limit; ++i) {
-      col1->set_value(i, (int32_t)(i));
+      col1->set_value(i, (int32_t) (i));
     }
     {
       int32_t res = 0;
@@ -205,7 +205,7 @@ int main() {
     col1->resize(limit);
     col2->resize(limit);
     for (size_t i = 0; i < limit; ++i) {
-      col1->set_value(i, (int32_t)(i));
+      col1->set_value(i, (int32_t) (i));
       col2->set_value(i, (int64_t) i);
     }
     {
@@ -298,10 +298,10 @@ int main() {
       col1->resize(limit);
       col2->resize(limit);
       for (size_t i = 0; i < limit; i += 2) {
-        col1->set_value(i, (int32_t)(i));
+        col1->set_value(i, (int32_t) (i));
       }
       for (size_t i = 1; i < limit; i += 2) {
-        col2->set_value(i, (int32_t)(i));
+        col2->set_value(i, (int32_t) (i));
       }
       // test two label vertex set prop getter.
       auto ref_col1 = std::make_shared<gs::TypedRefColumn<int32_t>>(*col1);

@@ -20,6 +20,7 @@ import static org.apache.giraph.conf.GiraphConstants.EDGE_MANAGER;
 import static org.apache.giraph.conf.GiraphConstants.TYPES_HOLDER_CLASS;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.fragment.IFragment;
 
 import org.apache.giraph.combiner.MessageCombiner;
@@ -294,6 +295,9 @@ public class ConfigurationUtils {
         }
         if (grapeTypeClass.equals(Float.class)) {
             return giraphTypeClass.equals(FloatWritable.class);
+        }
+        if (grapeTypeClass.equals(String.class) || grapeTypeClass.equals(StringView.class)) {
+            return true;
         }
         logger.error(
                 "Unsupported grape type and giraph type: "

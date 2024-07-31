@@ -10,19 +10,15 @@ project (
   LANGUAGES CXX)
 
 
-option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" OFF)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
-
 option(USE_PTHASH "Whether to use pthash" OFF)
 
 #print options
-message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
 message(STATUS "Build test: ${BUILD_TEST}")
 message(STATUS "Build doc: ${BUILD_DOC}")
 message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
-
 message(STATUS "Use pthash indexer : ${USE_PTHASH}")
 
 # ------------------------------------------------------------------------------
@@ -38,11 +34,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-if (BUILD_HQPS)
-    message("Build HighQPS Engine")
-    add_definitions(-DBUILD_HQPS)
-endif ()
 
 if(USE_PTHASH)
     message("Use PTHash")
@@ -117,17 +108,33 @@ else ()
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 endif ()
 
+# find yaml-cpp-----------------------------------------------------------------
+find_package(yaml-cpp REQUIRED)
+include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
+if (NOT yaml-cpp_FOUND)
+    message(FATAL_ERROR "yaml-cpp not found, please install the yaml-cpp library")
+endif ()
+
 #find boost----------------------------------------------------------------------
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
              context program_options regex thread date_time)
+add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
+
+#find hiactor----------------------------------------------------------------------
+find_package(Hiactor)
+if (NOT Hiactor_FOUND)
+    message(STATUS "hiactor not found, please install the hiactor library")
+else ()
+    include_directories(SYSTEM ${Hiactor_INCLUDE_DIRS})
+endif()
 
 #find arrow----------------------------------------------------------------------
-include("cmake/FindArrow.cmake")
-if (NOT ARROW_FOUND)
+find_package(Arrow REQUIRED)
+if (NOT Arrow_FOUND)
     message(FATAL_ERROR "arrow not found, please install the arrow library")
 else ()
-    include_directories(SYSTEM ${ARROW_INCLUDE_DIRS})
+    include_directories(SYSTEM ${ARROW_INCLUDE_DIR})
     if (TARGET arrow_shared)
         set(ARROW_SHARED_LIB arrow_shared)
     endif()
@@ -138,9 +145,12 @@ endif ()
 
 find_package(opentelemetry-cpp CONFIG)
 if (OPENTELEMETRY_CPP_FOUND)
+    message(STATUS "opentelemetry-cpp found")
     find_package(Protobuf REQUIRED)
     find_package(CURL REQUIRED)
     add_definitions(-DHAVE_OPENTELEMETRY_CPP)
+else()
+    message(STATUS "opentelemetry-cpp not found, build without opentelemetry-cpp")
 endif ()
 
 # Find Doxygen
@@ -158,6 +168,7 @@ if (BUILD_DOC)
                 VERBATIM)
     endif(DOXYGEN_FOUND)
 endif()
+
 
 # Check whether ${CMAKE_SOURCE_DIR}/third_party/single_include/nlohmann/json.hpp exists
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp)
@@ -250,6 +261,8 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
+#install header-only nlohmann-json.hpp to include/
+install(FILES ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp DESTINATION include/nlohmann)
 
 if(USE_PTHASH)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash

@@ -29,6 +29,9 @@ function usage() {
                  inside container. If you want to use a workspace outside the 
                  container, you should mount it to the container. 
                  Default is /tmp/interactive_workspace
+                -c, --enable-coordinator: Launch the Interactive service along
+                 with Coordinator. Must enable this option if you want to use
+                 `gsctl` command-line tool.
 EOF
 }
 
@@ -82,33 +85,60 @@ function launch_service() {
     start_cmd="${start_cmd} --enable-admin-service true"
     start_cmd="${start_cmd} --start-compiler true"
     echo "Starting the service with command: $start_cmd"
+    if $ENABLE_COORDINATOR; then start_cmd="${start_cmd} &"; fi
     eval $start_cmd
+}
+
+function launch_coordinator() {
+  if $ENABLE_COORDINATOR;
+  then
+    coordinator_config_file="/tmp/coordinator-config.yaml"
+    cat > $coordinator_config_file << EOF
+coordinator:
+  http_port: 8080
+
+launcher_type: hosts
+
+session:
+  instance_id: demo
+EOF
+    python3 -m gscoordinator --config-file $coordinator_config_file
+  fi
 }
 
 
 ####################  Entry ####################
 
+ENABLE_COORDINATOR=false
 WORKSPACE=/tmp/interactive_workspace
 while [[ $# -gt 0 ]]; do
-  key="$1"
-
-  case $key in
-  -h | --help)
-    usage
-    exit
-    ;;
-  -w | --workspace)
-    shift
-    WORKSPACE="$1"
-    exit 0
-    ;;
-  *) # unknown option
-    err "unknown option $1"
-    usage
-    exit 1
-    ;;
+  case $1 in
+    -w | --workspace)
+      shift
+      if [[ $# -eq 0 || $1 == -* ]]; then
+        echo "Option -w requires an argument." >&2
+        exit 1
+      fi
+      WORKSPACE=$1
+      shift
+      ;;
+    -c | --enable-coordinator)
+      ENABLE_COORDINATOR=true
+      shift
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Invalid option: $1" >&2
+      usage
+      exit 1
+      ;;
   esac
 done
 
+
 prepare_workspace $WORKSPACE
 launch_service $WORKSPACE
+launch_coordinator

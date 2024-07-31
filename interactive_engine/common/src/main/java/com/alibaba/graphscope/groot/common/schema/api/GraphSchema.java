@@ -43,5 +43,5 @@ public interface GraphSchema {
      *
      * @return The schema version
      */
-    int getVersion();
+    String getVersion();
 }

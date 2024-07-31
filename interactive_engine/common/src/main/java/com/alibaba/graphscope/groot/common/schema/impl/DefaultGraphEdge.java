@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Objects;
 
 public class DefaultGraphEdge implements GraphEdge {
-    private int id;
-    private String label;
-    private List<GraphProperty> propertyList;
-    private List<EdgeRelation> relationList;
+    private final int id;
+    private final String label;
+    private final List<GraphProperty> propertyList;
+    private final List<EdgeRelation> relationList;
     private List<String> primaryKeyList;
 
     private final int versionId;

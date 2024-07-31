@@ -18,6 +18,9 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
+import com.alibaba.graphscope.common.ir.meta.IrMeta;
+import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
@@ -44,6 +47,7 @@ import org.junit.Test;
 import java.util.Collections;
 
 public class GraphRelToProtoTest {
+
     @Test
     public void scan_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -60,7 +64,7 @@ public class GraphRelToProtoTest {
                 scan.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(scan))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(scan), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/scan_test.json"), plan.explain().trim());
@@ -83,7 +87,7 @@ public class GraphRelToProtoTest {
                 scan.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(scan))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(scan), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/scan_edge_test.json"),
@@ -112,7 +116,7 @@ public class GraphRelToProtoTest {
                 scan.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(scan))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(scan), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/scan_filter_test.json"),
@@ -142,7 +146,7 @@ public class GraphRelToProtoTest {
                 expand.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(expand))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(expand), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/edge_expand_test.json"),
@@ -189,7 +193,7 @@ public class GraphRelToProtoTest {
                 getV.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(getV))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(getV), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/getv_test.json"), plan.explain().trim());
@@ -197,7 +201,10 @@ public class GraphRelToProtoTest {
 
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedGraphConfig(), Utils.schemaMeta, new LogicalPlan(getV))) {
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(getV),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_getv_test.json"),
@@ -238,7 +245,7 @@ public class GraphRelToProtoTest {
                 getV.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(getV))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(getV), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/getv_with_filter_test.json"),
@@ -248,7 +255,12 @@ public class GraphRelToProtoTest {
 
     @Test
     public void path_expand_test() throws Exception {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -263,7 +275,7 @@ public class GraphRelToProtoTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode pxd =
                 builder.source(
                                 new SourceConfig(
@@ -284,7 +296,7 @@ public class GraphRelToProtoTest {
                 pxd.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(pxd))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(pxd), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/path_expand_test.json"),
@@ -312,7 +324,7 @@ public class GraphRelToProtoTest {
                 project.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/project_test.json"),
@@ -322,7 +334,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(project))) {
+                        new LogicalPlan(project),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_project_test.json"),
@@ -360,7 +373,7 @@ public class GraphRelToProtoTest {
                 project.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/project_test_2.json"),
@@ -370,7 +383,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(project))) {
+                        new LogicalPlan(project),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_project_test_2.json"),
@@ -399,7 +413,7 @@ public class GraphRelToProtoTest {
                 filter.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/filter_test.json"),
@@ -436,7 +450,7 @@ public class GraphRelToProtoTest {
                 filter.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/filter_test_2.json"),
@@ -446,7 +460,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(filter))) {
+                        new LogicalPlan(filter),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_filter_test_2.json"),
@@ -476,7 +491,7 @@ public class GraphRelToProtoTest {
                 aggregate.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/aggregate_test.json"),
@@ -486,7 +501,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(aggregate))) {
+                        new LogicalPlan(aggregate),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_aggregate_test.json"),
@@ -528,20 +544,10 @@ public class GraphRelToProtoTest {
                 aggregate.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/aggregate_test_2.json"),
-                    plan.explain().trim());
-        }
-        try (PhysicalBuilder protoBuilder =
-                new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedGraphConfig(),
-                        Utils.schemaMeta,
-                        new LogicalPlan(aggregate))) {
-            PhysicalPlan plan = protoBuilder.build();
-            Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/partitioned_aggregate_test_2.json"),
                     plan.explain().trim());
         }
     }
@@ -566,7 +572,7 @@ public class GraphRelToProtoTest {
                 dedup.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(dedup))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(dedup), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/dedup_test_1.json"),
@@ -576,7 +582,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(dedup))) {
+                        new LogicalPlan(dedup),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_dedup_test_1.json"),
@@ -602,7 +609,7 @@ public class GraphRelToProtoTest {
                 dedup.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(dedup))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(dedup), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/dedup_test_2.json"),
@@ -612,7 +619,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(dedup))) {
+                        new LogicalPlan(dedup),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_dedup_test_2.json"),
@@ -656,7 +664,7 @@ public class GraphRelToProtoTest {
                 join.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(join))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(join), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/join_test_1.json"),
@@ -664,7 +672,10 @@ public class GraphRelToProtoTest {
         }
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedGraphConfig(), Utils.schemaMeta, new LogicalPlan(join))) {
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(join),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_join_test_1.json"),
@@ -737,7 +748,7 @@ public class GraphRelToProtoTest {
                 join.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(join))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(join), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/join_test_2.json"),
@@ -745,7 +756,10 @@ public class GraphRelToProtoTest {
         }
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedGraphConfig(), Utils.schemaMeta, new LogicalPlan(join))) {
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(join),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_join_test_2.json"),
@@ -770,14 +784,17 @@ public class GraphRelToProtoTest {
                 sort.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(sort))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(sort), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/sort_test.json"), plan.explain().trim());
         }
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockPartitionedGraphConfig(), Utils.schemaMeta, new LogicalPlan(sort))) {
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(sort),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/partitioned_sort_test.json"),
@@ -802,7 +819,7 @@ public class GraphRelToProtoTest {
                 limit.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(limit))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(limit), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/limit_test.json"), plan.explain().trim());
@@ -843,7 +860,7 @@ public class GraphRelToProtoTest {
                 after.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/edge_expand_degree_test.json"),
@@ -854,7 +871,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(after))) {
+                        new LogicalPlan(after),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource(
@@ -863,7 +881,7 @@ public class GraphRelToProtoTest {
         }
     }
 
-    // g.V().hasLabel("person").outE("knows").inV()
+    // g.V().hasLabel("person").outE("knows").inV().as("a")
     @Test
     public void expand_vertex_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -879,11 +897,12 @@ public class GraphRelToProtoTest {
                         .getV(
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
-                                        new LabelConfig(false).addLabel("person")))
+                                        new LabelConfig(false).addLabel("person"),
+                                        "a"))
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[_], opt=[END])\n"
+                        + " alias=[a], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
@@ -894,14 +913,14 @@ public class GraphRelToProtoTest {
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[a],"
                         + " opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/edge_expand_vertex_test.json"),
@@ -912,7 +931,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(after))) {
+                        new LogicalPlan(after),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource(
@@ -921,7 +941,7 @@ public class GraphRelToProtoTest {
         }
     }
 
-    // g.V().hasLabel("person").outE("knows").inV().has("age",10), can be fused into
+    // g.V().hasLabel("person").outE("knows").inV().as("a").has("age",10), can be fused into
     // GraphPhysicalExpand + GraphPhysicalGetV
     @Test
     public void expand_vertex_filter_test() throws Exception {
@@ -961,7 +981,7 @@ public class GraphRelToProtoTest {
         RelNode after = planner.findBestExp();
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/edge_expand_vertex_filter_test.json"),
@@ -972,7 +992,8 @@ public class GraphRelToProtoTest {
                 new GraphRelProtoPhysicalBuilder(
                         getMockPartitionedGraphConfig(),
                         Utils.schemaMeta,
-                        new LogicalPlan(after))) {
+                        new LogicalPlan(after),
+                        true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource(
@@ -1015,17 +1036,17 @@ public class GraphRelToProtoTest {
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
                         + " fusedFilter=[[=(_.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[a], fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT],"
+                        + " alias=[_], fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT],"
                         + " physicalOpt=[VERTEX])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource(
@@ -1036,7 +1057,12 @@ public class GraphRelToProtoTest {
 
     @Test
     public void path_expand_fused_test() throws Exception {
-        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")));
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder
@@ -1051,7 +1077,7 @@ public class GraphRelToProtoTest {
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
-                        .build();
+                        .buildConfig();
         RelNode pxd =
                 builder.source(
                                 new SourceConfig(
@@ -1076,12 +1102,176 @@ public class GraphRelToProtoTest {
         RelNode after = planner.findBestExp();
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after), true)) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/path_fused_expand_test.json"),
                     plan.explain().trim());
         }
+    }
+
+    @Test
+    public void intersect_test() throws Exception {
+        GraphRelOptimizer optimizer = getMockCBO();
+        IrMeta irMeta = getMockCBOMeta(optimizer);
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (message:COMMENT|POST)-[:HASCREATOR]->(person:PERSON), \n"
+                                        + "      (message:COMMENT|POST)-[:HASTAG]->(tag:TAG), \n"
+                                        + "      (person:PERSON)-[:HASINTEREST]->(tag:TAG)\n"
+                                        + "Return count(person);",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  MultiJoin(joinFilter=[=(tag, tag)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
+                    + " projFields=[[ALL, ALL]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[[EdgeLabel(HASTAG, COMMENT, TAG),"
+                    + " EdgeLabel(HASTAG, POST, TAG)]], alias=[tag], startAlias=[message],"
+                    + " opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-697155798]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + " alias=[tag], startAlias=[person], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#-697155798]])\n"
+                    + "common#-697155798:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
+                    + " alias=[message], startAlias=[person], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after),
+                        true)) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/intersect_test.json"),
+                    plan.explain().trim());
+        }
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after),
+                        true)) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/partitioned_intersect_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    @Test
+    public void intersect_test_02() throws Exception {
+        GraphRelOptimizer optimizer = getMockCBO();
+        IrMeta irMeta = getMockCBOMeta(optimizer);
+        GraphBuilder builder = Utils.mockGraphBuilder(optimizer, irMeta);
+        RelNode before =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (message:COMMENT|POST)-[e1:HASCREATOR]->(person:PERSON), \n"
+                                        + "      (message:COMMENT|POST)-[e2:HASTAG]->(tag:TAG), \n"
+                                        + "      (person:PERSON)-[e3:HASINTEREST]->(tag:TAG)\n"
+                                        + "Return count(person);",
+                                builder)
+                        .build();
+        RelNode after = optimizer.optimize(before, new GraphIOProcessor(builder, irMeta));
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[person], aggFunction=COUNT, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  MultiJoin(joinFilter=[=(tag, tag)], isFullOuterJoin=[false],"
+                    + " joinTypes=[[INNER, INNER]], outerJoinConditions=[[NULL, NULL]],"
+                    + " projFields=[[ALL, ALL]])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[TAG]}], alias=[tag],"
+                    + " opt=[END])\n"
+                    + "      GraphLogicalExpand(tableConfig=[[EdgeLabel(HASTAG, COMMENT, TAG),"
+                    + " EdgeLabel(HASTAG, POST, TAG)]], alias=[e2], startAlias=[message],"
+                    + " opt=[OUT])\n"
+                    + "        CommonTableScan(table=[[common#-676410541]])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[TAG]}], alias=[tag],"
+                    + " opt=[END])\n"
+                    + "      GraphLogicalExpand(tableConfig=[{isAll=false, tables=[HASINTEREST]}],"
+                    + " alias=[e3], startAlias=[person], opt=[OUT])\n"
+                    + "        CommonTableScan(table=[[common#-676410541]])\n"
+                    + "common#-676410541:\n"
+                    + "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[POST, COMMENT]}],"
+                    + " alias=[message], opt=[START])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[HASCREATOR]}],"
+                    + " alias=[e1], startAlias=[person], opt=[IN])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                    + " alias=[person], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after),
+                        true)) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/intersect_test_2.json"),
+                    plan.explain().trim());
+        }
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedCBOConfig(),
+                        getMockCBOMeta(optimizer),
+                        new LogicalPlan(after),
+                        true)) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/partitioned_intersect_test_2.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    private Configs getMockCBOConfig() {
+        return new Configs(
+                ImmutableMap.of(
+                        "graph.planner.is.on",
+                        "true",
+                        "graph.planner.opt",
+                        "CBO",
+                        "graph.planner.rules",
+                        "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                + " ExpandGetVFusionRule"));
+    }
+
+    private Configs getMockPartitionedCBOConfig() {
+        return new Configs(
+                ImmutableMap.of(
+                        "graph.planner.is.on",
+                        "true",
+                        "graph.planner.opt",
+                        "CBO",
+                        "graph.planner.rules",
+                        "FilterIntoJoinRule, FilterMatchRule, ExtendIntersectRule,"
+                                + " ExpandGetVFusionRule",
+                        "pegasus.hosts",
+                        "host1,host2"));
+    }
+
+    private GraphRelOptimizer getMockCBO() {
+        return new GraphRelOptimizer(getMockCBOConfig());
+    }
+
+    private IrMeta getMockCBOMeta(GraphRelOptimizer optimizer) {
+        return Utils.mockIrMeta(
+                "schema/ldbc_schema_exp_hierarchy.json",
+                "statistics/ldbc30_hierarchy_statistics.json",
+                optimizer.getGlogueHolder());
     }
 
     private Configs getMockGraphConfig() {

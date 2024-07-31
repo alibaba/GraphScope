@@ -1242,6 +1242,7 @@ mod test {
                     alias: None,
                     expand_opt: if is_edge { 1 } else { 0 },
                     meta_data: None,
+                    is_optional: false,
                 })),
             }],
             end: y.and_then(|s| s.try_into().ok()),
@@ -1265,6 +1266,7 @@ mod test {
                     expand_opt: 0,
                     alias: None,
                     meta_data: None,
+                    is_optional: false,
                 })),
             }],
             end: y.and_then(|s| s.try_into().ok()),
@@ -1567,7 +1569,8 @@ mod test {
                 params: Some(query_params()),
                 expand_opt: 0,
                 alias: None,
-                meta_data: None
+                meta_data: None,
+                is_optional: false,
             }
             .into()
         );
@@ -1750,7 +1753,8 @@ mod test {
                 params: Some(query_params()),
                 expand_opt: 0,
                 alias: None,
-                meta_data: None
+                meta_data: None,
+                is_optional: false,
             }
             .into()
         );

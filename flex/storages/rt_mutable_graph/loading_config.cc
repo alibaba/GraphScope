@@ -148,15 +148,24 @@ static bool parse_column_mappings(
       LOG(ERROR) << "column_mappings should have field [column]";
       return false;
     }
-    int32_t column_id;
+    int32_t column_id = -1;
     if (!get_scalar(column_mapping, "index", column_id)) {
-      LOG(ERROR) << "Expect column index for column mapping";
-      return false;
+      VLOG(10) << "Column index for column mapping is not set, skip";
+    } else {
+      if (column_id < 0) {
+        LOG(ERROR) << "Column index for column mapping should be non-negative";
+        return false;
+      }
     }
-    std::string column_name;
+    std::string column_name = "";
     if (!get_scalar(column_mapping, "name", column_name)) {
       VLOG(10) << "Column name for col_id: " << column_id
                << " is not set, make it empty";
+    }
+    // At least one need to be specified.
+    if (column_id == -1 && column_name.empty()) {
+      LOG(ERROR) << "Expect column index or name for column mapping";
+      return false;
     }
 
     std::string property_name;  // property name is optional.
@@ -260,11 +269,16 @@ static Status parse_vertex_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
+      if (file_path.empty()) {
+        LOG(ERROR) << "file path is empty";
+        return Status(StatusCode::InvalidImportFile,
+                      "The input for vertex [" + label_name + "] is empty");
+      }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
-          LOG(ERROR) << "vertex file - " << file_path << " file not found...";
+          LOG(ERROR) << "vertex file - [" << file_path << "] file not found...";
           return Status(StatusCode::InvalidImportFile,
-                        "vertex file - " + file_path + " file not found...");
+                        "vertex file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
         files[label_id].emplace_back(std::filesystem::canonical(path));
@@ -448,11 +462,16 @@ static Status parse_edge_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
+      if (file_path.empty()) {
+        LOG(ERROR) << "file path is empty";
+        return Status(StatusCode::InvalidImportFile,
+                      "The input for edge [" + edge_label + "] is empty");
+      }
       if (scheme == "file") {
         if (!access_file(data_location, file_path)) {
-          LOG(ERROR) << "edge file - " << file_path << " file not found...";
+          LOG(ERROR) << "edge file - [" << file_path << "] file not found...";
           return Status(StatusCode::InvalidImportFile,
-                        "edge file - " + file_path + " file not found...");
+                        "edge file - [" + file_path + "] file not found...");
         }
         std::filesystem::path path(file_path);
         VLOG(10) << "src " << src_label << " dst " << dst_label << " edge "
@@ -545,6 +564,25 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
       get_scalar(data_source_node, "location", data_location);
     }
 
+    if (loading_config_node["x_csr_params"]) {
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::PARALLELISM, load_config.parallelism_)) {
+        VLOG(10) << "Parallelism is set to: " << load_config.parallelism_;
+      }
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::BUILD_CSR_IN_MEM,
+                     load_config.build_csr_in_mem_)) {
+        VLOG(10) << "Build csr in memory is set to: "
+                 << load_config.build_csr_in_mem_;
+      }
+      if (get_scalar(loading_config_node["x_csr_params"],
+                     loader_options::USE_MMAP_VECTOR,
+                     load_config.use_mmap_vector_)) {
+        VLOG(10) << "Use mmap vector is set to: "
+                 << load_config.use_mmap_vector_;
+      }
+    }
+
     RETURN_IF_NOT_OK(
         parse_bulk_load_method(loading_config_node, load_config.method_));
     auto format_node = loading_config_node["format"];
@@ -569,8 +607,10 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
                ++it) {
             // override previous settings.
             auto key = it->first.as<std::string>();
-            VLOG(1) << "Got metadata key: " << key
-                    << " value: " << it->second.as<std::string>();
+            if (key != reader_options::NULL_VALUES) {
+              VLOG(1) << "Got metadata key: " << key
+                      << " value: " << it->second.as<std::string>();
+            }
             if (reader_options::CSV_META_KEY_WORDS.find(key) !=
                 reader_options::CSV_META_KEY_WORDS.end()) {
               if (key == reader_options::BATCH_SIZE_KEY) {
@@ -580,6 +620,10 @@ Status parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
                 auto block_size = parse_block_size(block_size_str);
                 load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
                     std::to_string(block_size);
+              } else if (key == reader_options::NULL_VALUES) {
+                // special case for null values
+                auto null_values = it->second.as<std::vector<std::string>>();
+                load_config.null_values_ = null_values;
               } else {
                 load_config.metadata_[key] = it->second.as<std::string>();
               }
@@ -707,14 +751,23 @@ LoadingConfig::LoadingConfig(const Schema& schema)
     : schema_(schema),
       scheme_("file"),
       method_(BulkLoadMethod::kInit),
-      format_("csv") {}
+      format_("csv"),
+      parallelism_(loader_options::DEFAULT_PARALLELISM),
+      build_csr_in_mem_(loader_options::DEFAULT_BUILD_CSR_IN_MEM),
+      use_mmap_vector_(loader_options::DEFAULT_USE_MMAP_VECTOR) {}
 
 LoadingConfig::LoadingConfig(const Schema& schema,
                              const std::string& data_source,
                              const std::string& delimiter,
                              const BulkLoadMethod& method,
                              const std::string& format)
-    : schema_(schema), scheme_(data_source), method_(method), format_(format) {
+    : schema_(schema),
+      scheme_(data_source),
+      method_(method),
+      format_(format),
+      parallelism_(loader_options::DEFAULT_PARALLELISM),
+      build_csr_in_mem_(loader_options::DEFAULT_BUILD_CSR_IN_MEM),
+      use_mmap_vector_(loader_options::DEFAULT_USE_MMAP_VECTOR) {
   metadata_[reader_options::DELIMITER] = delimiter;
 }
 
@@ -766,8 +819,12 @@ const std::string& LoadingConfig::GetFormat() const { return format_; }
 
 const BulkLoadMethod& LoadingConfig::GetMethod() const { return method_; }
 
-const std::string& LoadingConfig::GetEscapeChar() const {
-  return metadata_.at(reader_options::ESCAPE_CHAR);
+char LoadingConfig::GetEscapeChar() const {
+  const auto& escape_char = metadata_.at(reader_options::ESCAPE_CHAR);
+  if (escape_char.size() != 1) {
+    throw std::runtime_error("Escape char should be a single character");
+  }
+  return escape_char[0];
 }
 
 bool LoadingConfig::GetIsEscaping() const {
@@ -775,8 +832,12 @@ bool LoadingConfig::GetIsEscaping() const {
   return str == "true" || str == "True" || str == "TRUE";
 }
 
-const std::string& LoadingConfig::GetQuotingChar() const {
-  return metadata_.at(reader_options::QUOTE_CHAR);
+char LoadingConfig::GetQuotingChar() const {
+  const auto& quote_char = metadata_.at(reader_options::QUOTE_CHAR);
+  if (quote_char.size() != 1) {
+    throw std::runtime_error("Quoting char should be a single character");
+  }
+  return quote_char[0];
 }
 
 bool LoadingConfig::GetIsQuoting() const {
@@ -789,6 +850,10 @@ bool LoadingConfig::GetIsDoubleQuoting() const {
   return str == "true" || str == "True" || str == "TRUE";
 }
 
+const std::vector<std::string>& LoadingConfig::GetNullValues() const {
+  return null_values_;
+}
+
 int32_t LoadingConfig::GetBatchSize() const {
   if (metadata_.find(reader_options::BATCH_SIZE_KEY) == metadata_.end()) {
     return reader_options::DEFAULT_BLOCK_SIZE;
@@ -798,6 +863,9 @@ int32_t LoadingConfig::GetBatchSize() const {
 }
 
 bool LoadingConfig::GetIsBatchReader() const {
+  if (metadata_.find(reader_options::BATCH_READER) == metadata_.end()) {
+    return reader_options::DEFAULT_BATCH_READER;
+  }
   auto str = metadata_.at(reader_options::BATCH_READER);
   return str == "true" || str == "True" || str == "TRUE";
 }

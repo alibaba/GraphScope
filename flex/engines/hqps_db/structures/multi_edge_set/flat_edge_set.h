@@ -38,6 +38,7 @@ class FlatEdgeSetBuilder {
  public:
   using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
+  using untyped_ele_tuple_t = std::tuple<size_t, VID_T, VID_T, EDATA_T>;
   using result_t = FlatEdgeSet<VID_T, LabelT, EDATA_T>;
 
   static constexpr bool is_flat_edge_set_builder = true;
@@ -61,6 +62,15 @@ class FlatEdgeSetBuilder {
   // There could be null record.
   void Insert(const index_ele_tuple_t& tuple) {
     vec_.push_back(std::get<1>(tuple));
+    if (!IsNull(std::get<1>(tuple))) {
+      label_triplet_ind_new_.push_back(label_triplet_ind_[std::get<0>(tuple)]);
+    } else {
+      label_triplet_ind_new_.push_back(NullRecordCreator<LabelT>::GetNull());
+    }
+  }
+
+  void Insert(const untyped_ele_tuple_t& tuple) {
+    vec_.push_back(gs::tuple_slice<1, 4>(tuple));
     if (!IsNull(std::get<1>(tuple))) {
       label_triplet_ind_new_.push_back(label_triplet_ind_[std::get<0>(tuple)]);
     } else {
@@ -308,7 +318,8 @@ class FlatEdgeSet {
                        std::move(copied_directions));
   }
 
-  void fillBuiltinPropsImpl(std::vector<EDATA_T>& tuples,
+  template <typename T>
+  void fillBuiltinPropsImpl(std::vector<T>& tuples,
                             const std::vector<std::string>& prop_names,
                             const std::vector<size_t>& repeat_array) {
     // Make sure this is correct.
@@ -333,23 +344,36 @@ class FlatEdgeSet {
       } else {
         for (size_t j = 0; j < repeat_times; ++j) {
           CHECK(cur_ind < tuples.size());
-          std::get<0>(tuples[cur_ind]) = std::get<0>(std::get<2>(vec_[i]));
+          if constexpr (std::is_same_v<T, EDATA_T>) {
+            std::get<0>(tuples[cur_ind]) = std::get<0>(std::get<2>(vec_[i]));
+          } else if constexpr (std::is_same_v<EDATA_T, Any>) {
+            std::get<0>(tuples[cur_ind]) =
+                AnyConverter<std::tuple_element_t<0, T>>::from_any(
+                    std::get<2>(vec_[i]));
+          } else {
+            static_assert(
+                std::is_same_v<T, EDATA_T>,
+                "EDATA_T should be the same as T, or EDATA_T should be any");
+          }
           cur_ind += 1;
         }
       }
     }
   }
 
-  void fillBuiltinProps(std::vector<EDATA_T>& tuples,
-                        const PropNameArray<EDATA_T>& prop_names,
+  // In case EDATA is any, we need to convert to the actual type.
+  template <typename T>
+  void fillBuiltinProps(std::vector<T>& tuples,
+                        const PropNameArray<T>& prop_names,
                         const std::vector<size_t>& repeat_array) {
     auto vec = array_to_vec(prop_names);
     fillBuiltinPropsImpl(tuples, vec, repeat_array);
   }
 
-  // fill builtin props without repeat array.
-  void fillBuiltinProps(std::vector<EDATA_T>& tuples,
-                        const PropNameArray<EDATA_T>& prop_names) {
+  // In case EDATA is any, we need to convert to the actual type.
+  template <typename T>
+  void fillBuiltinProps(std::vector<T>& tuples,
+                        const PropNameArray<T>& prop_names) {
     std::vector<size_t> repeat_array(vec_.size(), 1);
     auto vec = array_to_vec(prop_names);
     fillBuiltinPropsImpl(tuples, vec, repeat_array);

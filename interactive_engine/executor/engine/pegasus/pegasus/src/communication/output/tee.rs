@@ -351,7 +351,7 @@ impl<D: Data> BlockPush for Tee<D> {
     fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
         let mut would_block = self.main_push.try_unblock(tag)?;
         for o in self.other_pushes.iter_mut() {
-            would_block |= o.try_unblock(tag)?;
+            would_block &= o.try_unblock(tag)?;
         }
         Ok(would_block)
     }

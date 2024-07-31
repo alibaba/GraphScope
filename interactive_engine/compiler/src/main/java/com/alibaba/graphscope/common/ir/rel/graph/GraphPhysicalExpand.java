@@ -32,6 +32,7 @@ import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -46,6 +47,8 @@ public class GraphPhysicalExpand extends SingleRel {
     private final String aliasName;
     private final int aliasId;
 
+    private final boolean optional;
+
     protected GraphPhysicalExpand(
             RelOptCluster cluster,
             List<RelHint> hints,
@@ -53,7 +56,8 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt,
-            String aliasName) {
+            String aliasName,
+            boolean optional) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.physicalOpt = physicalOpt;
         this.fusedExpand = fusedExpand;
@@ -62,6 +66,7 @@ public class GraphPhysicalExpand extends SingleRel {
                 AliasInference.inferDefault(
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = ((GraphOptCluster) cluster).getIdGenerator().generate(this.aliasName);
+        this.optional = optional;
     }
 
     public static GraphPhysicalExpand create(
@@ -71,9 +76,38 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt,
-            String alias) {
+            String aliasName) {
+        GraphLogicalGetV newGetV = null;
+        if (fusedGetV != null) {
+            // if fused to output vertices, build a new getV if a new aliasName is given, to make
+            // sure the derived row type is correct (which is derived by getV)
+            if (fusedGetV.getAliasName().equals(aliasName)) {
+                newGetV = fusedGetV;
+            } else {
+                newGetV =
+                        GraphLogicalGetV.create(
+                                (GraphOptCluster) fusedGetV.getCluster(),
+                                fusedGetV.getHints(),
+                                input,
+                                fusedGetV.getOpt(),
+                                fusedGetV.getTableConfig(),
+                                aliasName,
+                                fusedGetV.getStartAlias());
+                if (ObjectUtils.isNotEmpty(fusedGetV.getFilters())) {
+                    // should not have filters, as it would built as a new PhysicalGetV
+                    newGetV.setFilters(fusedGetV.getFilters());
+                }
+            }
+        }
         return new GraphPhysicalExpand(
-                cluster, hints, input, fusedExpand, fusedGetV, physicalOpt, alias);
+                cluster,
+                hints,
+                input,
+                fusedExpand,
+                newGetV,
+                physicalOpt,
+                aliasName,
+                fusedExpand.isOptional());
     }
 
     public GraphOpt.PhysicalExpandOpt getPhysicalOpt() {
@@ -100,11 +134,15 @@ public class GraphPhysicalExpand extends SingleRel {
         return fusedExpand.getFilters();
     }
 
+    public boolean isOptional() {
+        return optional;
+    }
+
     @Override
     public RelDataType deriveRowType() {
         switch (physicalOpt) {
             case EDGE:
-                return fusedExpand.deriveRowType();
+                return fusedExpand.getRowType();
             case DEGREE:
                 {
                     RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
@@ -117,7 +155,7 @@ public class GraphPhysicalExpand extends SingleRel {
                 }
             case VERTEX:
             default:
-                return fusedGetV.deriveRowType();
+                return fusedGetV.getRowType();
         }
     }
 
@@ -129,18 +167,27 @@ public class GraphPhysicalExpand extends SingleRel {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return pw.itemIf("input", input, !Objects.isNull(input))
-                .item("tableConfig", fusedExpand.tableConfig)
+                .item("tableConfig", fusedExpand.explainTableConfig())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
+                        "aliasId",
+                        getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
+                .itemIf(
                         "startAlias",
-                        fusedExpand.getStartAlias(),
+                        fusedExpand.getStartAlias().getAliasName(),
                         fusedExpand.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf(
+                        "startAliasId",
+                        fusedExpand.getStartAlias().getAliasId(),
+                        pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
                 .itemIf(
                         "fusedFilter",
                         fusedExpand.getFilters(),
                         !ObjectUtils.isEmpty(fusedExpand.getFilters()))
                 .item("opt", fusedExpand.getOpt())
-                .item("physicalOpt", getPhysicalOpt());
+                .item("physicalOpt", getPhysicalOpt())
+                .itemIf("optional", optional, optional);
     }
 
     @Override
@@ -149,5 +196,9 @@ public class GraphPhysicalExpand extends SingleRel {
             return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
+    }
+
+    public GraphLogicalGetV getFusedGetV() {
+        return fusedGetV;
     }
 }

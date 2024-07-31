@@ -1,0 +1,594 @@
+name: GraphScope GIE HighQPS DB CI
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'flex/**'
+      - 'interactive_engine/**'
+      - '.github/workflows/hqps-db-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'flex/**'
+      - 'interactive_engine/**'
+      - '.github/workflows/hqps-db-ci.yml'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  test-hqps-engine:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+            ${{ runner.os }}-maven-
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cache/sccache
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install latest libgrape-lite
+      if: false
+      run: |
+        git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        mkdir -p build && cd build
+        cmake ..
+        make -j$(nproc)
+        make install
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v3
+
+    - name: Build
+      env:
+        GIE_HOME: ${{ github.workspace }}/interactive_engine/
+        HOME: /home/graphscope/
+      run: |
+        . /home/graphscope/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/
+        git submodule update --init
+        cd ${GITHUB_WORKSPACE}/flex
+        mkdir build && cd build
+        cmake .. && sudo make -j$(nproc)
+        sudo make install
+
+        # cargo
+        . /home/graphscope/.cargo/env
+        which cargo
+
+        # build compiler
+        cd ${GIE_HOME}/
+        mvn clean install -Pexperimental -DskipTests
+
+    - name: Prepare dataset and workspace
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        # download dataset
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/ldbc
+        GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml
+        BUILD_LOAD_FILE=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml
+        cp ${GRAPH_SCHEMA_YAML} ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml
+        cp ${BUILD_LOAD_FILE} ${INTERACTIVE_WORKSPACE}/data/ldbc/import.yaml
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/movies
+        cp ${GS_TEST_DIR}/flex/movies/movies_schema.yaml ${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml
+        cp ${GS_TEST_DIR}/flex/movies/movies_import.yaml ${INTERACTIVE_WORKSPACE}/data/movies/import.yaml
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/graph_algo
+        cp ${GITHUB_WORKSPACE}/flex/tests/interactive/graph_algo_test.yaml ${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml
+        cp ${GITHUB_WORKSPACE}/flex/interactive/examples/graph_algo/import.yaml ${INTERACTIVE_WORKSPACE}/data/graph_algo/import.yaml
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/modern_graph
+        cp ${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml ${INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+
+        # load graph
+        cd ${GITHUB_WORKSPACE}/flex/build
+        export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
+        GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/ldbc/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/ldbc/indices/
+        export FLEX_DATA_DIR=../interactive/examples/movies
+        GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/movies/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/movies/indices/
+        export FLEX_DATA_DIR=../interactive/examples/graph_algo
+        GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/graph_algo/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/graph_algo/indices/
+        export FLEX_DATA_DIR=../interactive/examples/modern_graph
+        GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml -l ../interactive/examples/modern_graph/bulk_load.yaml -d ${INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
+
+    - name: Test HQPS admin http service
+      env: 
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
+        TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
+      run: |
+        rm -rf ${TMP_INTERACTIVE_WORKSPACE}
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+        mkdir -p ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/
+        cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
+
+    - name: Build and test Interactive Java/Python SDK
+      env: 
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
+        TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/
+
+        bash generate_sdk.sh -g java
+        bash generate_sdk.sh -g python
+        cd java
+        mvn clean install -DskipTests -q
+        cd ../python
+        pip3 install -r requirements.txt
+        pip3 install -r test-requirements.txt
+        export PATH=${HOME}/.local/bin:$PATH
+        python3 setup.py build_proto
+
+        rm -rf ${TMP_INTERACTIVE_WORKSPACE}     
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+        mkdir -p ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/
+        cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        sed -i 's/interactive_workspace/temp_workspace/g' ./engine_config_test.yaml
+        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml java
+        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml python
+        sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
+
+    - name: Sample Query test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/build
+        export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
+        ./bin/bulk_loader -g ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml \
+        -l ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml -d /tmp/csr-data-dir/
+        rm -r /tmp/csr-data-dir/runtime/* 
+        rm -r /tmp/csr-data-dir/wal
+        ./tests/hqps/query_test ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml \
+        /tmp/csr-data-dir/
+
+    - name: Test get graph meta from admin service
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        pip3 install argparse
+        pip3 install neo4j
+        bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./engine_config_test.yaml
+
+    - name: Run codegen test.
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/bin
+        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
+
+        for i in 1 2 3 4 5 6 7 8 9 10 11 12;
+        do
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codegen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
+          echo $cmd
+          eval ${cmd} || exit 1
+        done
+
+        for i in 1 2 3 4 5 6 7 8 9 11 12; # 10 is not supported now
+        do
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codegen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
+          echo $cmd
+          eval ${cmd} || exit 1
+        done
+
+        # test movie graph, 8,9,10 are not supported now
+        # change the default_graph config in ../tests/hqps/engine_config_test.yaml to movies
+        sed -i 's/default_graph: ldbc/default_graph: movies/g' ../tests/hqps/engine_config_test.yaml
+        for i in 1 2 3 4 5 6 7 11 12 13 14 15;
+        do
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../tests/hqps/queries/movie/query${i}.cypher -w=/tmp/codegen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml"
+          echo $cmd
+          eval ${cmd} || exit 1
+        done
+
+        # test graph_algo plugin building
+        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ../tests/hqps/engine_config_test.yaml
+        cypher_files=$(ls ${GITHUB_WORKSPACE}/flex/interactive/examples/graph_algo/*.cypher)
+        for cypher_file in ${cypher_files};
+        do
+          cmd="./load_plan_and_gen.sh -e=hqps -i=${cypher_file} -w=/tmp/codegen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml"
+          cmd=${cmd}" --procedure_name=$(basename ${cypher_file} .cypher)"
+          cmd=${cmd}" --procedure_desc=\"This is test procedure, change the description if needed.\""
+          echo $cmd
+          eval ${cmd} || exit 1
+        done
+
+        #set back
+        sed -i 's/default_graph: graph_algo/default_graph: ldbc/g' ../tests/hqps/engine_config_test.yaml
+
+    - name: Test cypher&cpp procedure generation and loading
+      env:
+        TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
+        PLUGIN_DIR: /tmp/temp_workspace/data/modern_graph/plugins
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
+        LD_LIBRARY_PATH: /usr/local/lib
+      run: |
+        rm -rf ${TMP_INTERACTIVE_WORKSPACE}
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+        mkdir -p ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/
+        cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
+  
+        mkdir -p ${PLUGIN_DIR}
+        pip3 install argparse
+        
+        cd ${GITHUB_WORKSPACE}/flex/bin
+        ./load_plan_and_gen.sh -e=hqps -i=../tests/interactive/plus_one.cc -w=/tmp/codegen \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
+          --procedure_name=plus_one \
+          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml \
+          --procedure_desc="This is test procedure, and the input is a number, and the output is the number plus one."
+        
+        ./load_plan_and_gen.sh -e=hqps -i=../interactive/sdk/java/src/test/resources/sample_app.cc -w=/tmp/codegen \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml -o=${PLUGIN_DIR} \
+          --procedure_name=sample_app \
+          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
+
+        ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/count_vertex_num.cypher -w=/tmp/codegen \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml  -o=${PLUGIN_DIR} \
+          --procedure_name=count_vertex_num \
+          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
+        
+        # Among the above procedures, the correct input format for each is:
+        # count_vertex_num: () -> (num: int64), CypherProcedure.
+        # plus_one: (num: int64) -> (num: int64), CppEncoder
+        # sample_app: (num: int64) -> (num: int64), kCypherJson
+
+        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        cd ${GITHUB_WORKSPACE}/flex/tests/interactive/
+        bash test_plugin_loading.sh ${TMP_INTERACTIVE_WORKSPACE} modern_graph \
+           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
+           ./modern_graph_schema_v0_0.yaml  ./modern_graph_schema_v0_1.yaml
+        sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+        sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+      
+    - name: Let compiler use latest interactive java sdk
+      env:
+        HOME: /home/graphscope/
+      run: |
+        . /home/graphscope/.graphscope_env
+        . /home/graphscope/.cargo/env
+        # replace the <interactive.sdk.version>0.4</interactive.sdk.version> with the latest version in flex/interactive/sdk/java/pom.xml
+        sdk_version=$(grep -oPm1 "(?<=<version>)[^<]+" ${GITHUB_WORKSPACE}/flex/interactive/sdk/java/pom.xml)
+        sed -i "s/<interactive.sdk.version>.*<\/interactive.sdk.version>/<interactive.sdk.version>${sdk_version}<\/interactive.sdk.version>/" ${GITHUB_WORKSPACE}/interactive_engine/pom.xml
+        cd ${GITHUB_WORKSPACE}/interactive_engine/
+        mvn clean install -Pexperimental -DskipTests
+
+    - name: Run End-to-End cypher adhoc ldbc query test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
+        export ENGINE_TYPE=hiactor
+        # change the default_graph config in ./engine_config_test.yaml to ldbc
+        sed -i 's/default_graph: movies/default_graph: ldbc/g' ./engine_config_test.yaml
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc \
+              ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+
+    - name: Run End-to-End cypher adhoc movie query test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
+        export ENGINE_TYPE=hiactor
+        # change the default_graph config in ./engine_config_test.yaml to movies
+        sed -i 's/default_graph: ldbc/default_graph: movies/g' ./engine_config_test.yaml
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} movies \
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+
+    - name: Run End-to-End cypher adhoc graph_algo query test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
+        export ENGINE_TYPE=hiactor
+        # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to graph_algo
+        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ./engine_config_test.yaml
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} graph_algo \
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+
+    - name: Run Gremlin test on modern graph
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
+        export ENGINE_TYPE=hiactor
+        sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ./engine_config_test.yaml
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} modern_graph \
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml gremlin
+
+  test-build-flex:
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        platform: [x86_64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        bash ./scripts/install_dependencies.sh 4
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Build
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build # only test default build
+        cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && sudo make -j 4
+
+  # test the different combination of cmake options: -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
+  test-cmake-options:
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
+    strategy:
+      matrix:
+        BUILD_TEST: [ON, OFF]
+        BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build
+        cmake .. -DBUILD_TEST=${{ matrix.BUILD_TEST }} \
+                 -DBUILD_ODPS_FRAGMENT_LOADER=${{ matrix.BUILD_ODPS_FRAGMENT_LOADER }}
+        sudo make -j4
+
+  test-AOCC-compilation:
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download aocc compiler
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        wget https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0_1_amd64.deb
+        sudo apt-get update && sudo apt-get install -y libncurses-dev libncurses5-dev
+        sudo dpkg -i aocc-compiler-4.1.0_1_amd64.deb
+    
+    - name: Test AOCC compiler
+      env:
+        CC: clang
+        CXX: clang++
+        OMPI_CC: clang
+        OMPI_CXX: clang++
+      run: |
+        . /opt/AMD/aocc-compiler-4.1.0/setenv_AOCC.sh
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build
+        cmake .. -DBUILD_DOC=OFF -DCMAKE_BUILD_TYPE=DEBUG
+        sudo make -j4
+
+  test-flex:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install latest libgrape-lite
+      if: false
+      run: |
+        git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        mkdir -p build && cd build
+        cmake ..
+        make -j$(nproc)
+        make install
+
+    - name: Build
+      env:
+        HOME: /home/graphscope/
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build
+        cmake .. && sudo make -j$(nproc)
+
+    - name: Test GRIN on mutable csr 
+      run: |
+        git submodule update --init
+        cd flex/engines/graph_db/grin
+        mkdir build && cd build
+        cmake .. && sudo make -j$(nproc)
+        export FLEX_DATA_DIR=../../../../interactive/examples/modern_graph/
+        ${GITHUB_WORKSPACE}/flex/build/bin/bulk_loader -g ../../../../interactive/examples/modern_graph/graph.yaml -l ../../../../interactive/examples/modern_graph/bulk_load.yaml -d ./data/
+        rm -r ./data/wal
+        rm -r ./data/runtime/*
+        ./run_grin_test 'flex://schema_file=../../../../interactive/examples/modern_graph/graph.yaml&data_dir=./data/'
+
+    - name: Prepare test dataset
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+      run: |
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+
+    - name: Test String primary key on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_string_pk.yaml 
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+
+    - name: Test String edge property on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_string_edge.yaml 
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/string_edge_property_test ${SCHEMA_FILE} /tmp/csr-data-dir/
+    
+
+    - name: Test update transaction
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_string_edge.yaml 
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/test_update_transaction ${SCHEMA_FILE} /tmp/csr-data-dir/
+
+    - name: Test multiple properties edge
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_multiple_props_edge.yaml
+        BULK_LOAD_FILE=../tests/rt_mutable_graph/modern_graph_multiple_props_edge_import.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/multiple_props_edge_test ${SCHEMA_FILE} /tmp/csr-data-dir/
+
+    - name: Test schema parsing and loading on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_unified_schema.yaml
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+
+    - name: Test build empty graph
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        GLOG_v=10 ./tests/rt_mutable_graph/test_empty_graph /tmp/csr-data-dir/
+    - name: Test ACID
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        GLOG_v=10 ./tests/rt_mutable_graph/test_acid 8 /tmp/csr-data-dir/
+
+    - name: Test Graph Loading on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+
+    - name: Test Graph Loading on type_test graph
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/type_test/
+      run: |
+        # remove modern graph indices
+        rm -rf /tmp/csr-data-dir/
+
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GS_TEST_DIR}/flex/type_test/graph.yaml
+        BULK_LOAD_FILE=${GS_TEST_DIR}/flex/type_test/import.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/ -p 2
+
+    - name: Test Graph Loading on LDBC SNB sf0.1
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/ldbc-sf01-long-date/
+      run: |
+        # remove previous graph indices
+        rm -rf /tmp/csr-data-dir/
+
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${FLEX_DATA_DIR}/audit_graph_schema.yaml
+        BULK_LOAD_FILE=${FLEX_DATA_DIR}/audit_bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/ -p 2
+
+    - name: Test graph load on movie graph
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/movies/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_schema_test.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/tests/rt_mutable_graph/movie_import_test.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/

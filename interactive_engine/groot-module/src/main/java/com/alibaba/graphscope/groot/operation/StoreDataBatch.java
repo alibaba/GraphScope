@@ -30,14 +30,16 @@ public class StoreDataBatch {
     // List [ partition -> OperationBatch ]
     private final List<Map<Integer, OperationBatch>> dataBatch;
     private int size;
+    private final String traceId;
 
     private StoreDataBatch(
             String requestId,
             int queueId,
             long snapshotId,
             long offset,
-            List<Map<Integer, OperationBatch>> dataBatch) {
-        this(requestId, queueId, snapshotId, offset, dataBatch, -1);
+            List<Map<Integer, OperationBatch>> dataBatch,
+            String traceId) {
+        this(requestId, queueId, snapshotId, offset, dataBatch, -1, traceId);
     }
 
     private StoreDataBatch(
@@ -46,13 +48,15 @@ public class StoreDataBatch {
             long snapshotId,
             long offset,
             List<Map<Integer, OperationBatch>> dataBatch,
-            int size) {
+            int size,
+            String traceId) {
         this.requestId = requestId;
         this.queueId = queueId;
         this.snapshotId = snapshotId;
         this.offset = offset;
         this.dataBatch = Collections.unmodifiableList(new ArrayList<>(dataBatch));
         this.size = size;
+        this.traceId = traceId;
     }
 
     public static StoreDataBatch parseProto(StoreDataBatchPb proto) {
@@ -68,7 +72,8 @@ public class StoreDataBatch {
                     .forEach((pid, pb) -> batch.put(pid, OperationBatch.parseProto(pb)));
             dataBatch.add(batch);
         }
-        return new StoreDataBatch(requestId, queueId, snapshotId, offset, dataBatch);
+        return new StoreDataBatch(
+                requestId, queueId, snapshotId, offset, dataBatch, proto.getTraceId());
     }
 
     public String getRequestId() {
@@ -111,6 +116,9 @@ public class StoreDataBatch {
                 .setQueueId(queueId)
                 .setSnapshotId(snapshotId)
                 .setOffset(offset);
+        if (traceId != null) {
+            builder.setTraceId(traceId);
+        }
         for (Map<Integer, OperationBatch> batch : dataBatch) {
             PartitionToBatchPb.Builder batchBuilder = PartitionToBatchPb.newBuilder();
             batch.forEach((pid, ops) -> batchBuilder.putPartitionToBatch(pid, ops.toProto()));
@@ -131,11 +139,13 @@ public class StoreDataBatch {
         private List<Map<Integer, OperationBatch>> dataBatch;
         private Map<Integer, OperationBatch.Builder> partitionBatchBuilder;
         private int size;
+        private String traceId;
 
         public Builder() {
             this.dataBatch = new ArrayList<>();
             this.partitionBatchBuilder = new HashMap<>();
             this.size = 0;
+            this.traceId = null;
         }
 
         public Builder requestId(String requestId) {
@@ -155,6 +165,11 @@ public class StoreDataBatch {
 
         public Builder offset(long offset) {
             this.offset = offset;
+            return this;
+        }
+
+        public Builder traceId(String traceId) {
+            this.traceId = traceId;
             return this;
         }
 
@@ -179,6 +194,9 @@ public class StoreDataBatch {
                     partitionBatchBuilder.computeIfAbsent(
                             partitionId, k -> OperationBatch.newBuilder());
             builder.addOperationBlob(operationBlob);
+            if (traceId != null) {
+                builder.setTraceId(traceId);
+            }
             this.size++;
             return this;
         }
@@ -189,7 +207,8 @@ public class StoreDataBatch {
                 partitionBatchBuilder.forEach((pid, builder) -> batch.put(pid, builder.build()));
                 addBatch(batch);
             }
-            return new StoreDataBatch(requestId, queueId, snapshotId, offset, dataBatch, size);
+            return new StoreDataBatch(
+                    requestId, queueId, snapshotId, offset, dataBatch, size, traceId);
         }
     }
 }

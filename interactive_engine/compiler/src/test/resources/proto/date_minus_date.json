@@ -1,0 +1,60 @@
+{
+  "operators": [{
+    "brace": "LEFT_BRACE"
+  }, {
+    "var": {
+      "tag": {
+        "id": 0
+      },
+      "property": {
+        "key": {
+          "name": "creationDate"
+        }
+      },
+      "nodeType": {
+        "dataType": "DATE32"
+      }
+    },
+    "nodeType": {
+      "dataType": "DATE32"
+    }
+  }, {
+    "nodeType": {
+      "dataType": "INT64"
+    },
+    "dateTimeMinus": {
+      "interval": "MILLISECOND"
+    }
+  }, {
+    "var": {
+      "tag": {
+        "id": 1
+      },
+      "property": {
+        "key": {
+          "name": "creationDate"
+        }
+      },
+      "nodeType": {
+        "dataType": "DATE32"
+      }
+    },
+    "nodeType": {
+      "dataType": "DATE32"
+    }
+  }, {
+    "brace": "RIGHT_BRACE"
+  }, {
+    "arith": "DIV",
+    "nodeType": {
+      "dataType": "INT64"
+    }
+  }, {
+    "const": {
+      "i32": 1000
+    },
+    "nodeType": {
+      "dataType": "INT32"
+    }
+  }]
+}

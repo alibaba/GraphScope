@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.graph.impl;
 
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.graph.VertexDataManager;
@@ -111,9 +112,9 @@ public class VertexDataManagerImpl<
             // We need to form all vdata as a stream, so java writables can read from this stream.
             Iterable<Vertex<GRAPE_VID_T>> iterable;
             if (conf.getGrapeVidClass().equals(Long.class)) {
-                iterable = (Iterable<Vertex<GRAPE_VID_T>>) fragment.vertices().longIterable();
+                iterable = (Iterable<Vertex<GRAPE_VID_T>>) fragment.innerVertices().longIterable();
             } else if (conf.getGrapeVidClass().equals(Integer.class)) {
-                iterable = (Iterable<Vertex<GRAPE_VID_T>>) fragment.vertices().intIterable();
+                iterable = (Iterable<Vertex<GRAPE_VID_T>>) fragment.innerVertices().intIterable();
             } else {
                 throw new IllegalStateException(
                         "No recognizable vid" + conf.getGrapeVidClass().getName());
@@ -143,8 +144,13 @@ public class VertexDataManagerImpl<
                     String value = (String) fragment.getData(vertex);
                     outputStream.writeBytes(value);
                 }
+            } else if (conf.getGrapeVdataClass().equals(StringView.class)) {
+                for (Vertex<GRAPE_VID_T> vertex : iterable) {
+                    StringView value = (StringView) fragment.getData(vertex);
+                    outputStream.writeBytes(value);
+                }
             } else {
-                logger.error("Unsupported oid class: " + conf.getGrapeOidClass().getName());
+                logger.error("Unsupported vdata class: " + conf.getGrapeVdataClass().getName());
             }
             // else if (conf.getGrapeVdataClass().equals the userDefined class...
             outputStream.finishSetting();

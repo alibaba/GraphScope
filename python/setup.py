@@ -127,9 +127,11 @@ class GenerateFlexSDK(Command):
             "graphscope.flex.rest",
         ]
         print(" ".join(cmd))
+        env = os.environ.copy()
+        env["OPENAPI_GENERATOR_VERSION"] = "7.3.0"
         subprocess.check_call(
             cmd,
-            env=os.environ.copy(),
+            env=env,
         )
         # cp
         subprocess.run(
@@ -221,7 +223,10 @@ class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else bui
             else str(int(torch._C._GLIBCXX_USE_CXX11_ABI))
         )
         print(f"GCC_USE_CXX11_ABI for {extension.name}: {gcc_use_cxx_abi}")
-        self._add_compile_flag(extension, "-D_GLIBCXX_USE_CXX11_ABI=" + gcc_use_cxx_abi)
+        if gcc_use_cxx_abi is not None:
+            self._add_compile_flag(
+                extension, "-D_GLIBCXX_USE_CXX11_ABI=" + gcc_use_cxx_abi
+            )
 
 
 class CustomDevelop(develop):
@@ -283,7 +288,9 @@ def find_graphscope_packages():
     packages = []
 
     # add graphscope
-    for pkg in find_packages(".", exclude=["graphscope.flex.*"]):
+    for pkg in find_packages(
+        ".", exclude=["graphscope.flex.*", "graphscope.gsctl", "graphscope.gsctl.*"]
+    ):
         packages.append(pkg)
 
     return packages
@@ -301,8 +308,6 @@ def parsed_package_data():
         "graphscope": [
             "VERSION",
             "proto/*.pyi",
-            "gsctl/scripts/*.sh",
-            "gsctl/scripts/lib/*.sh",
         ],
     }
 
@@ -313,8 +318,8 @@ def build_learning_engine():
         sys.path.insert(
             0, os.path.join(glt_root_path, "graphlearn_torch", "python", "utils")
         )
-        from build import glt_ext_module
-        from build import glt_v6d_ext_module
+        from build_glt import glt_ext_module
+        from build_glt import glt_v6d_ext_module
 
         ext_modules.append(
             glt_ext_module(
@@ -470,11 +475,6 @@ setup(
         "Documentation": "https://graphscope.io/docs",
         "Source": "https://github.com/alibaba/GraphScope",
         "Tracker": "https://github.com/alibaba/GraphScope/issues",
-    },
-    entry_points={
-        "console_scripts": [
-            "gsctl = graphscope.gsctl.gsctl:cli",
-        ],
     },
 )
 
