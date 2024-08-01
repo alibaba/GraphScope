@@ -98,9 +98,11 @@ bool Schema::contains_vertex_label(const std::string& label) const {
 
 label_t Schema::get_vertex_label_id(const std::string& label) const {
   label_t ret;
-  CHECK(vlabel_indexer_.get_index(label, ret))
-      << "Fail to get vertex label: " << label;
-  return ret;
+  if (vlabel_indexer_.get_index(label, ret)) {
+    return ret;
+  } else {
+    throw std::runtime_error("Fail to get vertex label: " + label);
+  }
 }
 
 void Schema::set_vertex_properties(
@@ -133,8 +135,12 @@ const std::vector<std::string>& Schema::get_vertex_property_names(
 
 const std::vector<std::string>& Schema::get_vertex_property_names(
     label_t label) const {
-  CHECK(label < vprop_names_.size());
-  return vprop_names_[label];
+  if (label < vprop_names_.size()) {
+    return vprop_names_[label];
+  } else {
+    throw std::runtime_error("Fail to get vertex property names: " +
+                             std::to_string(label));
+  }
 }
 
 const std::string& Schema::get_vertex_description(
@@ -334,8 +340,11 @@ std::string Schema::get_edge_label_name(label_t index) const {
 
 const std::vector<std::tuple<PropertyType, std::string, size_t>>&
 Schema::get_vertex_primary_key(label_t index) const {
-  CHECK(v_primary_keys_.size() > index);
-  return v_primary_keys_.at(index);
+  if (v_primary_keys_.size() > index) {
+    return v_primary_keys_.at(index);
+  }
+  throw std::runtime_error("Fail to get vertex primary key: " +
+                             std::to_string(index));
 }
 
 // Note that plugin_dir_ and plugin_name_to_path_and_id_ are not serialized.

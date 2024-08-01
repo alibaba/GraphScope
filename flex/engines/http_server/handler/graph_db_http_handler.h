@@ -20,6 +20,8 @@
 #include "flex/engines/http_server/generated/actor/codegen_actor_ref.act.autogen.h"
 #include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 
+#include <array>
+
 #include <seastar/http/httpd.hh>
 
 namespace server {
@@ -105,6 +107,11 @@ class StoppableHandler : public seastar::httpd::handler_base {
 
 class graph_db_http_handler {
  public:
+  static constexpr int NUM_OPERATION = 4;  // (PUT/GET/POST/DELETE)
+  static constexpr seastar::httpd::operation_type OPERATIONS[NUM_OPERATION] = {
+      seastar::httpd::operation_type::PUT, seastar::httpd::operation_type::GET,
+      seastar::httpd::operation_type::POST,
+      seastar::httpd::operation_type::DELETE};
   graph_db_http_handler(uint16_t http_port, int32_t shard_num,
                         bool enable_adhoc_handlers = false);
 
@@ -138,6 +145,9 @@ class graph_db_http_handler {
   std::vector<StoppableHandler*> current_graph_query_handlers_;
   std::vector<StoppableHandler*> all_graph_query_handlers_;
   std::vector<StoppableHandler*> adhoc_query_handlers_;
+  // shard_num * operation time(PUT/GET/POST/DELETE)
+  std::vector<std::array<StoppableHandler*, NUM_OPERATION>> vertex_handlers_;
+  std::vector<std::array<StoppableHandler*, NUM_OPERATION>> edge_handlers_;
 };
 
 }  // namespace server
