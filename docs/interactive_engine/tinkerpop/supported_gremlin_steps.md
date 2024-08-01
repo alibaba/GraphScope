@@ -593,7 +593,7 @@ Below are the supported values and descriptions for `PATH_OPT` and `RESULT_OPT` 
 -----------|-------------------|------------------------------------------------
  PATH_OPT  | ARBITRARY         | Allow vertices or edges to be duplicated.     
  PATH_OPT  | SIMPLE            | No duplicated nodes.            
- PATH_OPT  | TRAIL             | No duplicated edges (works only with RESULT_OPT=ALL_V_E).            
+ PATH_OPT  | TRAIL             | No duplicated edges.            
  RESULT_OPT| END_V             | Only keep the end vertex.                      
  RESULT_OPT| ALL_V             | Keep all vertices along the path.              
  RESULT_OPT| ALL_V_E           | Keep all vertices and edges along the path.    
