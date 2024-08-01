@@ -133,7 +133,10 @@ const std::vector<std::string>& Schema::get_vertex_property_names(
 
 const std::vector<std::string>& Schema::get_vertex_property_names(
     label_t label) const {
-  CHECK(label < vprop_names_.size());
+  if (label >= vprop_names_.size()) {
+    throw std::runtime_error("label out of range, " + std::to_string(label) +
+                             " >= " + std::to_string(vprop_names_.size()));
+  }
   return vprop_names_[label];
 }
 

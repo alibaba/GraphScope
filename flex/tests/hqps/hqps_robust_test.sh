@@ -83,8 +83,8 @@ start_engine_service(){
 
 
 run_robust_test(){
-    pushd ${FLEX_HOME}/interactive/sdk/python/
-    cmd="python3 -m pytest -s test/robust_test.py"
+    pushd ${FLEX_HOME}/interactive/sdk/python/gs_interactive
+    cmd="python3 -m pytest -s tests/test_robustness.py"
     echo "Run robust test with command: ${cmd}"
     eval ${cmd} || (err "Run robust test failed"; exit 1)
     info "Run robust test success"

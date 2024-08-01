@@ -16,6 +16,7 @@
 #ifndef TESTS_HQPS_MATCH_QUERY_H_
 #define TESTS_HQPS_MATCH_QUERY_H_
 
+#include "flex/engines/hqps_db/app/interactive_app_base.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/utils/app_utils.h"
 
@@ -1052,8 +1053,8 @@ class MatchQuery16 : public CypherInternalPbWriteAppBase {
   MatchQuery16() {}
   // Query function for query class
   results::CollectiveResults Query(gs::MutableCSRInterface& graph) const {
-    auto expr0 =
-        gs::make_filter(Query0expr0(), gs::PropertySelector<LabelKey>("label"));
+    auto expr0 = gs::make_filter(MatchQuery16expr0(),
+                                 gs::PropertySelector<LabelKey>("label"));
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, std::array<label_id_t, 2>{0, 2}, std::move(expr0));
 
@@ -1113,5 +1114,6 @@ class MatchQuery16 : public CypherInternalPbWriteAppBase {
   // private members
  private:
 };
+
 }  // namespace gs
 #endif  // TESTS_HQPS_MATCH_QUERY_H_

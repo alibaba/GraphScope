@@ -482,7 +482,7 @@ class SinkOp {
         for (size_t i : repeat_offsets) {
           num_rows += i;
         }
-        CHECK(num_rows == results_vec.results_size())
+        CHECK((int32_t) num_rows == results_vec.results_size())
             << num_rows << " " << results_vec.results_size();
       }
       size_t cur_ind = 0;
