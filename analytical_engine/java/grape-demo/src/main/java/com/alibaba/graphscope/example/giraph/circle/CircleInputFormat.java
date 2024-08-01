@@ -5,7 +5,7 @@
 
 package com.alibaba.graphscope.example.giraph.circle;
 
-import com.alibaba.graphscope.example.giraph.format.VertexAttrWritable;
+import com.alibaba.graphscope.example.giraph.circle.VertexAttrWritable;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.List;

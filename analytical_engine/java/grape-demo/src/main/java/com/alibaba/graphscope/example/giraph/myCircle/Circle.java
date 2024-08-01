@@ -1,6 +1,6 @@
 package com.alibaba.graphscope.example.giraph.myCircle;
 
-import com.alibaba.graphscope.example.giraph.format.VertexAttrWritable;
+import com.alibaba.graphscope.example.giraph.circle.VertexAttrWritable;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.LongWritable;
