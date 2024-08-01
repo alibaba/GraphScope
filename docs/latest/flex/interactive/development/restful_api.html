@@ -1531,19 +1531,6 @@ ul.nav-tabs {
   },
   "x-body-name" : "property"
 };
-    defs["PropertyArray"] = {
-  "required" : [ "properties" ],
-  "type" : "object",
-  "properties" : {
-    "properties" : {
-      "type" : "array",
-      "items" : {
-        "$ref" : "#/components/schemas/Property"
-      }
-    }
-  },
-  "x-body-name" : "property_array"
-};
     defs["QueryRequest"] = {
   "required" : [ "query_name" ],
   "type" : "object",
@@ -1826,6 +1813,24 @@ ul.nav-tabs {
   },
   "x-body-name" : "vertex_data"
 };
+    defs["VertexEdgeRequest"] = {
+  "required" : [ "edge_request", "vertex_request" ],
+  "type" : "object",
+  "properties" : {
+    "vertex_request" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/VertexRequest"
+      }
+    },
+    "edge_request" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/EdgeRequest"
+      }
+    }
+  }
+};
     defs["VertexMapping"] = {
   "type" : "object",
   "properties" : {
@@ -1849,7 +1854,7 @@ ul.nav-tabs {
   "x-body-name" : "vertex_mapping"
 };
     defs["VertexRequest"] = {
-  "required" : [ "label", "primary_key_value" ],
+  "required" : [ "label", "primary_key_value", "properties" ],
   "type" : "object",
   "properties" : {
     "label" : {
@@ -1860,7 +1865,10 @@ ul.nav-tabs {
       "$ref" : "#/components/schemas/AnyValue"
     },
     "properties" : {
-      "$ref" : "#/components/schemas/PropertyArray"
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/Property"
+      }
     }
   },
   "x-body-name" : "vertex_request"
@@ -10858,7 +10866,7 @@ public class GraphServiceEdgeManagementApiExample {
         // Create an instance of the API class
         GraphServiceEdgeManagementApi apiInstance = new GraphServiceEdgeManagementApi();
         String graphId = graphId_example; // String | 
-        EdgeRequest edgeRequest = {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}; // EdgeRequest | 
+        array[EdgeRequest] edgeRequest = [{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]; // array[EdgeRequest] | 
 
         try {
             'String' result = apiInstance.addEdge(graphId, edgeRequest);
@@ -10878,7 +10886,7 @@ public class GraphServiceEdgeManagementApiExample {
 final api_instance = DefaultApi();
 
 final String graphId = new String(); // String | 
-final EdgeRequest edgeRequest = new EdgeRequest(); // EdgeRequest | 
+final array[EdgeRequest] edgeRequest = new array[EdgeRequest](); // array[EdgeRequest] | 
 
 try {
     final result = await api_instance.addEdge(graphId, edgeRequest);
@@ -10897,7 +10905,7 @@ public class GraphServiceEdgeManagementApiExample {
     public static void main(String[] args) {
         GraphServiceEdgeManagementApi apiInstance = new GraphServiceEdgeManagementApi();
         String graphId = graphId_example; // String | 
-        EdgeRequest edgeRequest = {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}; // EdgeRequest | 
+        array[EdgeRequest] edgeRequest = [{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]; // array[EdgeRequest] | 
 
         try {
             'String' result = apiInstance.addEdge(graphId, edgeRequest);
@@ -10919,7 +10927,7 @@ public class GraphServiceEdgeManagementApiExample {
 // Create an instance of the API class
 GraphServiceEdgeManagementApi *apiInstance = [[GraphServiceEdgeManagementApi alloc] init];
 String *graphId = graphId_example; //  (default to null)
-EdgeRequest *edgeRequest = {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}; //  (optional)
+array[EdgeRequest] *edgeRequest = [{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]; // 
 
 // Add edge to the graph
 [apiInstance addEdgeWith:graphId
@@ -10941,9 +10949,7 @@ EdgeRequest *edgeRequest = {"src_label":"person","dst_label":"software","edge_la
 // Create an instance of the API class
 var api = new GraphScopeInteractiveApiV03.GraphServiceEdgeManagementApi()
 var graphId = graphId_example; // {String} 
-var opts = {
-  'edgeRequest': {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]} // {EdgeRequest} 
-};
+var edgeRequest = [{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]; // {array[EdgeRequest]} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -10952,7 +10958,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.addEdge(graphId, opts, callback);
+api.addEdge(graphId, edgeRequest, callback);
 </code></pre>
                             </div>
 
@@ -10976,7 +10982,7 @@ namespace Example
             // Create an instance of the API class
             var apiInstance = new GraphServiceEdgeManagementApi();
             var graphId = graphId_example;  // String |  (default to null)
-            var edgeRequest = new EdgeRequest(); // EdgeRequest |  (optional) 
+            var edgeRequest = new array[EdgeRequest](); // array[EdgeRequest] | 
 
             try {
                 // Add edge to the graph
@@ -10998,7 +11004,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\GraphServiceEdgeManagementApi();
 $graphId = graphId_example; // String | 
-$edgeRequest = {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}; // EdgeRequest | 
+$edgeRequest = [{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]; // array[EdgeRequest] | 
 
 try {
     $result = $api_instance->addEdge($graphId, $edgeRequest);
@@ -11017,7 +11023,7 @@ use WWW::OPenAPIClient::GraphServiceEdgeManagementApi;
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::GraphServiceEdgeManagementApi->new();
 my $graphId = graphId_example; # String | 
-my $edgeRequest = WWW::OPenAPIClient::Object::EdgeRequest->new(); # EdgeRequest | 
+my $edgeRequest = [WWW::OPenAPIClient::Object::array[EdgeRequest]->new()]; # array[EdgeRequest] | 
 
 eval {
     my $result = $api_instance->addEdge(graphId => $graphId, edgeRequest => $edgeRequest);
@@ -11038,11 +11044,11 @@ from pprint import pprint
 # Create an instance of the API class
 api_instance = openapi_client.GraphServiceEdgeManagementApi()
 graphId = graphId_example # String |  (default to null)
-edgeRequest = {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]} # EdgeRequest |  (optional)
+edgeRequest = [{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}] # array[EdgeRequest] | 
 
 try:
     # Add edge to the graph
-    api_response = api_instance.add_edge(graphId, edgeRequest=edgeRequest)
+    api_response = api_instance.add_edge(graphId, edgeRequest)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling GraphServiceEdgeManagementApi->addEdge: %s\n" % e)</code></pre>
@@ -11053,7 +11059,7 @@ except ApiException as e:
 
 pub fn main() {
     let graphId = graphId_example; // String
-    let edgeRequest = {"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}; // EdgeRequest
+    let edgeRequest = [{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]; // array[EdgeRequest]
 
     let mut context = GraphServiceEdgeManagementApi::Context::default();
     let result = client.addEdge(graphId, edgeRequest, &context).wait();
@@ -11106,7 +11112,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">edgeRequest </td>
+                                <tr><td style="width:150px;">edgeRequest <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -11115,9 +11121,12 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/EdgeRequest"
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/components/schemas/EdgeRequest"
+        }
       },
-      "example" : {
+      "example" : [ {
         "src_label" : "person",
         "dst_label" : "software",
         "edge_label" : "created",
@@ -11129,9 +11138,10 @@ $(document).ready(function() {
           "name" : "weight",
           "value" : 0.2
         } ]
-      }
+      } ]
     }
-  }
+  },
+  "required" : true
 };
 
   var schema = findNode('schema',schemaWrapper).schema;
@@ -13583,9 +13593,9 @@ $(document).ready(function() {
  -H "Content-Type: application/json" \
  "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/vertex" \
  -d '{
-  &quot;label&quot; : &quot;person&quot;,
-  &quot;primary_key_value&quot; : &quot;&quot;,
-  &quot;properties&quot; : {
+  &quot;vertex_request&quot; : [ {
+    &quot;label&quot; : &quot;person&quot;,
+    &quot;primary_key_value&quot; : &quot;&quot;,
     &quot;properties&quot; : [ {
       &quot;name&quot; : &quot;id&quot;,
       &quot;value&quot; : &quot;&quot;
@@ -13593,7 +13603,44 @@ $(document).ready(function() {
       &quot;name&quot; : &quot;id&quot;,
       &quot;value&quot; : &quot;&quot;
     } ]
-  }
+  }, {
+    &quot;label&quot; : &quot;person&quot;,
+    &quot;primary_key_value&quot; : &quot;&quot;,
+    &quot;properties&quot; : [ {
+      &quot;name&quot; : &quot;id&quot;,
+      &quot;value&quot; : &quot;&quot;
+    }, {
+      &quot;name&quot; : &quot;id&quot;,
+      &quot;value&quot; : &quot;&quot;
+    } ]
+  } ],
+  &quot;edge_request&quot; : [ {
+    &quot;src_label&quot; : &quot;person&quot;,
+    &quot;src_primary_key_value&quot; : &quot;&quot;,
+    &quot;dst_label&quot; : &quot;software&quot;,
+    &quot;edge_label&quot; : &quot;created&quot;,
+    &quot;dst_primary_key_value&quot; : &quot;&quot;,
+    &quot;properties&quot; : [ {
+      &quot;name&quot; : &quot;id&quot;,
+      &quot;value&quot; : &quot;&quot;
+    }, {
+      &quot;name&quot; : &quot;id&quot;,
+      &quot;value&quot; : &quot;&quot;
+    } ]
+  }, {
+    &quot;src_label&quot; : &quot;person&quot;,
+    &quot;src_primary_key_value&quot; : &quot;&quot;,
+    &quot;dst_label&quot; : &quot;software&quot;,
+    &quot;edge_label&quot; : &quot;created&quot;,
+    &quot;dst_primary_key_value&quot; : &quot;&quot;,
+    &quot;properties&quot; : [ {
+      &quot;name&quot; : &quot;id&quot;,
+      &quot;value&quot; : &quot;&quot;
+    }, {
+      &quot;name&quot; : &quot;id&quot;,
+      &quot;value&quot; : &quot;&quot;
+    } ]
+  } ]
 }'
 </code></pre>
                           </div>
@@ -13612,10 +13659,10 @@ public class GraphServiceVertexManagementApiExample {
         // Create an instance of the API class
         GraphServiceVertexManagementApi apiInstance = new GraphServiceVertexManagementApi();
         String graphId = graphId_example; // String | 
-        VertexRequest vertexRequest = {"label":"person","primimary_key_value":1,"properties":{"age":2,"name":"Bob"}}; // VertexRequest | 
+        VertexEdgeRequest vertexEdgeRequest = {"vertex_request":[{"label":"person","primary_key_value":2,"properties":{"age":24,"name":"Cindy"}}],"edge_request":[{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]}; // VertexEdgeRequest | 
 
         try {
-            'String' result = apiInstance.addVertex(graphId, vertexRequest);
+            'String' result = apiInstance.addVertex(graphId, vertexEdgeRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling GraphServiceVertexManagementApi#addVertex");
@@ -13632,10 +13679,10 @@ public class GraphServiceVertexManagementApiExample {
 final api_instance = DefaultApi();
 
 final String graphId = new String(); // String | 
-final VertexRequest vertexRequest = new VertexRequest(); // VertexRequest | 
+final VertexEdgeRequest vertexEdgeRequest = new VertexEdgeRequest(); // VertexEdgeRequest | 
 
 try {
-    final result = await api_instance.addVertex(graphId, vertexRequest);
+    final result = await api_instance.addVertex(graphId, vertexEdgeRequest);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->addVertex: $e\n');
@@ -13651,10 +13698,10 @@ public class GraphServiceVertexManagementApiExample {
     public static void main(String[] args) {
         GraphServiceVertexManagementApi apiInstance = new GraphServiceVertexManagementApi();
         String graphId = graphId_example; // String | 
-        VertexRequest vertexRequest = {"label":"person","primimary_key_value":1,"properties":{"age":2,"name":"Bob"}}; // VertexRequest | 
+        VertexEdgeRequest vertexEdgeRequest = {"vertex_request":[{"label":"person","primary_key_value":2,"properties":{"age":24,"name":"Cindy"}}],"edge_request":[{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]}; // VertexEdgeRequest | 
 
         try {
-            'String' result = apiInstance.addVertex(graphId, vertexRequest);
+            'String' result = apiInstance.addVertex(graphId, vertexEdgeRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling GraphServiceVertexManagementApi#addVertex");
@@ -13673,11 +13720,11 @@ public class GraphServiceVertexManagementApiExample {
 // Create an instance of the API class
 GraphServiceVertexManagementApi *apiInstance = [[GraphServiceVertexManagementApi alloc] init];
 String *graphId = graphId_example; //  (default to null)
-VertexRequest *vertexRequest = {"label":"person","primimary_key_value":1,"properties":{"age":2,"name":"Bob"}}; //  (optional)
+VertexEdgeRequest *vertexEdgeRequest = {"vertex_request":[{"label":"person","primary_key_value":2,"properties":{"age":24,"name":"Cindy"}}],"edge_request":[{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]}; // 
 
 // Add vertex to the graph
 [apiInstance addVertexWith:graphId
-    vertexRequest:vertexRequest
+    vertexEdgeRequest:vertexEdgeRequest
               completionHandler: ^('String' output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
@@ -13695,9 +13742,7 @@ VertexRequest *vertexRequest = {"label":"person","primimary_key_value":1,"proper
 // Create an instance of the API class
 var api = new GraphScopeInteractiveApiV03.GraphServiceVertexManagementApi()
 var graphId = graphId_example; // {String} 
-var opts = {
-  'vertexRequest': {"label":"person","primimary_key_value":1,"properties":{"age":2,"name":"Bob"}} // {VertexRequest} 
-};
+var vertexEdgeRequest = {"vertex_request":[{"label":"person","primary_key_value":2,"properties":{"age":24,"name":"Cindy"}}],"edge_request":[{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]}; // {VertexEdgeRequest} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -13706,7 +13751,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.addVertex(graphId, opts, callback);
+api.addVertex(graphId, vertexEdgeRequest, callback);
 </code></pre>
                             </div>
 
@@ -13730,11 +13775,11 @@ namespace Example
             // Create an instance of the API class
             var apiInstance = new GraphServiceVertexManagementApi();
             var graphId = graphId_example;  // String |  (default to null)
-            var vertexRequest = new VertexRequest(); // VertexRequest |  (optional) 
+            var vertexEdgeRequest = new VertexEdgeRequest(); // VertexEdgeRequest | 
 
             try {
                 // Add vertex to the graph
-                'String' result = apiInstance.addVertex(graphId, vertexRequest);
+                'String' result = apiInstance.addVertex(graphId, vertexEdgeRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling GraphServiceVertexManagementApi.addVertex: " + e.Message );
@@ -13752,10 +13797,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\GraphServiceVertexManagementApi();
 $graphId = graphId_example; // String | 
-$vertexRequest = {"label":"person","primimary_key_value":1,"properties":{"age":2,"name":"Bob"}}; // VertexRequest | 
+$vertexEdgeRequest = {"vertex_request":[{"label":"person","primary_key_value":2,"properties":{"age":24,"name":"Cindy"}}],"edge_request":[{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]}; // VertexEdgeRequest | 
 
 try {
-    $result = $api_instance->addVertex($graphId, $vertexRequest);
+    $result = $api_instance->addVertex($graphId, $vertexEdgeRequest);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling GraphServiceVertexManagementApi->addVertex: ', $e->getMessage(), PHP_EOL;
@@ -13771,10 +13816,10 @@ use WWW::OPenAPIClient::GraphServiceVertexManagementApi;
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::GraphServiceVertexManagementApi->new();
 my $graphId = graphId_example; # String | 
-my $vertexRequest = WWW::OPenAPIClient::Object::VertexRequest->new(); # VertexRequest | 
+my $vertexEdgeRequest = WWW::OPenAPIClient::Object::VertexEdgeRequest->new(); # VertexEdgeRequest | 
 
 eval {
-    my $result = $api_instance->addVertex(graphId => $graphId, vertexRequest => $vertexRequest);
+    my $result = $api_instance->addVertex(graphId => $graphId, vertexEdgeRequest => $vertexEdgeRequest);
     print Dumper($result);
 };
 if ($@) {
@@ -13792,11 +13837,11 @@ from pprint import pprint
 # Create an instance of the API class
 api_instance = openapi_client.GraphServiceVertexManagementApi()
 graphId = graphId_example # String |  (default to null)
-vertexRequest = {"label":"person","primimary_key_value":1,"properties":{"age":2,"name":"Bob"}} # VertexRequest |  (optional)
+vertexEdgeRequest = {"vertex_request":[{"label":"person","primary_key_value":2,"properties":{"age":24,"name":"Cindy"}}],"edge_request":[{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]} # VertexEdgeRequest | 
 
 try:
     # Add vertex to the graph
-    api_response = api_instance.add_vertex(graphId, vertexRequest=vertexRequest)
+    api_response = api_instance.add_vertex(graphId, vertexEdgeRequest)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling GraphServiceVertexManagementApi->addVertex: %s\n" % e)</code></pre>
@@ -13807,10 +13852,10 @@ except ApiException as e:
 
 pub fn main() {
     let graphId = graphId_example; // String
-    let vertexRequest = {"label":"person","primimary_key_value":1,"properties":{"age":2,"name":"Bob"}}; // VertexRequest
+    let vertexEdgeRequest = {"vertex_request":[{"label":"person","primary_key_value":2,"properties":{"age":24,"name":"Cindy"}}],"edge_request":[{"src_label":"person","dst_label":"software","edge_label":"created","src_pk_name":"id","src_pk_value":1,"dst_pk_name":"id","dst_pk_value":3,"properties":[{"name":"weight","value":0.2}]}]}; // VertexEdgeRequest
 
     let mut context = GraphServiceVertexManagementApi::Context::default();
-    let result = client.addVertex(graphId, vertexRequest, &context).wait();
+    let result = client.addVertex(graphId, vertexEdgeRequest, &context).wait();
 
     println!("{:?}", result);
 }
@@ -13860,28 +13905,43 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">vertexRequest </td>
+                                <tr><td style="width:150px;">vertexEdgeRequest <span style="color:red;">*</span></td>
 <td>
-<p class="marked">Add vertex to graph.</p>
+<p class="marked"></p>
 <script>
 $(document).ready(function() {
   var schemaWrapper = {
-  "description" : "Add vertex to graph.",
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/VertexRequest"
+        "$ref" : "#/components/schemas/VertexEdgeRequest"
       },
       "example" : {
-        "label" : "person",
-        "primimary_key_value" : 1,
-        "properties" : {
-          "age" : 2,
-          "name" : "Bob"
-        }
+        "vertex_request" : [ {
+          "label" : "person",
+          "primary_key_value" : 2,
+          "properties" : {
+            "age" : 24,
+            "name" : "Cindy"
+          }
+        } ],
+        "edge_request" : [ {
+          "src_label" : "person",
+          "dst_label" : "software",
+          "edge_label" : "created",
+          "src_pk_name" : "id",
+          "src_pk_value" : 1,
+          "dst_pk_name" : "id",
+          "dst_pk_value" : 3,
+          "properties" : [ {
+            "name" : "weight",
+            "value" : 0.2
+          } ]
+        } ]
       }
     }
-  }
+  },
+  "required" : true
 };
 
   var schema = findNode('schema',schemaWrapper).schema;
@@ -13900,12 +13960,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_addVertex_vertexRequest');
+  var result = $('#d2e199_addVertex_vertexEdgeRequest');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_addVertex_vertexRequest"></div>
+<div id="d2e199_addVertex_vertexEdgeRequest"></div>
 </td>
 </tr>
 
@@ -15586,15 +15646,13 @@ The primary key value of querying vertex.
  -d '{
   &quot;label&quot; : &quot;person&quot;,
   &quot;primary_key_value&quot; : &quot;&quot;,
-  &quot;properties&quot; : {
-    &quot;properties&quot; : [ {
-      &quot;name&quot; : &quot;id&quot;,
-      &quot;value&quot; : &quot;&quot;
-    }, {
-      &quot;name&quot; : &quot;id&quot;,
-      &quot;value&quot; : &quot;&quot;
-    } ]
-  }
+  &quot;properties&quot; : [ {
+    &quot;name&quot; : &quot;id&quot;,
+    &quot;value&quot; : &quot;&quot;
+  }, {
+    &quot;name&quot; : &quot;id&quot;,
+    &quot;value&quot; : &quot;&quot;
+  } ]
 }'
 </code></pre>
                           </div>

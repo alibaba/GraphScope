@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2024.07.18 -->
-        <title>PropertyArray - GraphScope documentation</title>
+        <title>VertexEdgeRequest - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -707,12 +707,12 @@ MathJax = {
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/alibaba/GraphScope/blob/main/docs/flex/interactive/development/python/PropertyArray.md?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/blob/main/docs/flex/interactive/development/python/VertexEdgeRequest.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/flex/interactive/development/python/PropertyArray.md" title="Edit this page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/flex/interactive/development/python/VertexEdgeRequest.md" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -731,8 +731,8 @@ MathJax = {
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="propertyarray">
-<h1>PropertyArray<a class="headerlink" href="#propertyarray" title="Permalink to this heading">¶</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="vertexedgerequest">
+<h1>VertexEdgeRequest<a class="headerlink" href="#vertexedgerequest" title="Permalink to this heading">¶</a></h1>
 <section id="properties">
 <h2>Properties<a class="headerlink" href="#properties" title="Permalink to this heading">¶</a></h2>
 <div class="table-wrapper colwidths-auto docutils container">
@@ -745,8 +745,13 @@ MathJax = {
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><strong>properties</strong></p></td>
-<td><p><a class="reference internal" href="ModelProperty.html"><span class="std std-doc"><strong>List[ModelProperty]</strong></span></a></p></td>
+<tr class="row-even"><td><p><strong>vertex_request</strong></p></td>
+<td><p><a class="reference internal" href="VertexRequest.html"><span class="std std-doc"><strong>List[VertexRequest]</strong></span></a></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>edge_request</strong></p></td>
+<td><p><a class="reference internal" href="EdgeRequest.html"><span class="std std-doc"><strong>List[EdgeRequest]</strong></span></a></p></td>
 <td><p></p></td>
 <td><p></p></td>
 </tr>
@@ -756,19 +761,19 @@ MathJax = {
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.models.property_array</span> <span class="kn">import</span> <span class="n">PropertyArray</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gs_interactive.models.vertex_edge_request</span> <span class="kn">import</span> <span class="n">VertexEdgeRequest</span>
 
 <span class="c1"># TODO update the JSON string below</span>
 <span class="n">json</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span>
-<span class="c1"># create an instance of PropertyArray from a JSON string</span>
-<span class="n">property_array_instance</span> <span class="o">=</span> <span class="n">PropertyArray</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
+<span class="c1"># create an instance of VertexEdgeRequest from a JSON string</span>
+<span class="n">vertex_edge_request_instance</span> <span class="o">=</span> <span class="n">VertexEdgeRequest</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
 <span class="c1"># print the JSON string representation of the object</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">PropertyArray</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">VertexEdgeRequest</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span>
 
 <span class="c1"># convert the object into a dict</span>
-<span class="n">property_array_dict</span> <span class="o">=</span> <span class="n">property_array_instance</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-<span class="c1"># create an instance of PropertyArray from a dict</span>
-<span class="n">property_array_from_dict</span> <span class="o">=</span> <span class="n">PropertyArray</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">property_array_dict</span><span class="p">)</span>
+<span class="n">vertex_edge_request_dict</span> <span class="o">=</span> <span class="n">vertex_edge_request_instance</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+<span class="c1"># create an instance of VertexEdgeRequest from a dict</span>
+<span class="n">vertex_edge_request_from_dict</span> <span class="o">=</span> <span class="n">VertexEdgeRequest</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">vertex_edge_request_dict</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="#../README.md#documentation-for-models"><span class="xref myst">[Back to Model list]</span></a> <a class="reference internal" href="#../README.md#documentation-for-api-endpoints"><span class="xref myst">[Back to API list]</span></a> <a class="reference internal" href="#../README.md"><span class="xref myst">[Back to README]</span></a></p>
@@ -815,7 +820,7 @@ MathJax = {
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">PropertyArray</a><ul>
+<li><a class="reference internal" href="#">VertexEdgeRequest</a><ul>
 <li><a class="reference internal" href="#properties">Properties</a></li>
 <li><a class="reference internal" href="#example">Example</a></li>
 </ul>

@@ -9,7 +9,7 @@
 |------------ | ------------- | ------------- | -------------|
 |**label** | **String** |  |  |
 |**primaryKeyValue** | **Object** |  |  |
-|**properties** | [**PropertyArray**](PropertyArray.md) |  |  [optional] |
+|**properties** | [**List&lt;Property&gt;**](Property.md) |  |  |
 
 
 

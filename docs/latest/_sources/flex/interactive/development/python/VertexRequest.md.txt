@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **label** | **str** |  | 
 **primary_key_value** | **object** |  | 
-**properties** | [**PropertyArray**](PropertyArray.md) |  | [optional] 
+**properties** | [**List[ModelProperty]**](ModelProperty.md) |  | 
 
 ## Example
 

@@ -1,10 +1,19 @@
 var searchData=
 [
-  ['wal_5fdir_2447',['wal_dir',['../namespacegs.html#aeb5dcd35cbb0caf6251e2e521e401d01',1,'gs']]],
-  ['walsparser_2448',['WalsParser',['../classgs_1_1WalsParser.html#af3ee48c472f4628c399d18b289badd63',1,'gs::WalsParser']]],
-  ['walwriter_2449',['WalWriter',['../classgs_1_1WalWriter.html#a661cf24cdd007edb1ce20d0944faa223',1,'gs::WalWriter']]],
-  ['warmup_2450',['Warmup',['../classgs_1_1DualCsrBase.html#a29d9dc883a7218111f93af89f2848398',1,'gs::DualCsrBase::Warmup()'],['../classgs_1_1MutablePropertyFragment.html#a9b69e179db63fdaed2be5a0881eb06d3',1,'gs::MutablePropertyFragment::Warmup()'],['../classgs_1_1CsrBase.html#ac1880120e61895ff831ee99af6c4ce7b',1,'gs::CsrBase::warmup()'],['../classgs_1_1ImmutableCsr.html#a3d24f3ac38636e5cc4bfe452fa1c05ea',1,'gs::ImmutableCsr::warmup()'],['../classgs_1_1SingleImmutableCsr.html#a3b7dbbcd53287228c3689f324aac6607',1,'gs::SingleImmutableCsr::warmup()'],['../classgs_1_1SingleImmutableCsr_3_01std_1_1string__view_01_4.html#aa781f7e9a62f889c889142b84f800b7d',1,'gs::SingleImmutableCsr&lt; std::string_view &gt;::warmup()'],['../classgs_1_1MutableCsr.html#ab3af7a5159150ec930bb00fce0080eb0',1,'gs::MutableCsr::warmup()'],['../classgs_1_1MutableCsr_3_01std_1_1string__view_01_4.html#a7e20cd6f115fcb52484ed821131692b8',1,'gs::MutableCsr&lt; std::string_view &gt;::warmup()'],['../classgs_1_1MutableCsr_3_01RecordView_01_4.html#a02e65a117207fd177852a92d147e9678',1,'gs::MutableCsr&lt; RecordView &gt;::warmup()'],['../classgs_1_1SingleMutableCsr.html#a1e3fdecd3a7a5d844af574d97ad2b1b0',1,'gs::SingleMutableCsr::warmup()'],['../classgs_1_1SingleMutableCsr_3_01std_1_1string__view_01_4.html#a900a2bdc9644c1b3eb1a194a77dac888',1,'gs::SingleMutableCsr&lt; std::string_view &gt;::warmup()'],['../classgs_1_1SingleMutableCsr_3_01RecordView_01_4.html#ac94e60f96b1e67b4de737bac16064298',1,'gs::SingleMutableCsr&lt; RecordView &gt;::warmup()'],['../classgs_1_1EmptyCsr.html#af0cedcea87ea64b69518401dc4ba57ee',1,'gs::EmptyCsr::warmup()'],['../classgs_1_1EmptyCsr_3_01std_1_1string__view_01_4.html#a4edcd457575b04a62309a83626221ab2',1,'gs::EmptyCsr&lt; std::string_view &gt;::warmup()'],['../classgs_1_1EmptyCsr_3_01RecordView_01_4.html#a35c96deff6a89310bfecb248647f2a0d',1,'gs::EmptyCsr&lt; RecordView &gt;::warmup()'],['../classgs_1_1LFIndexer.html#a089fe337652e63564c6a1e323961e70c',1,'gs::LFIndexer::warmup()']]],
-  ['what_2451',['what',['../classgs_1_1FlexException.html#a31911582a652af20e4001ed628621022',1,'gs::FlexException']]],
-  ['work_5fdir_2452',['work_dir',['../classgs_1_1BasicFragmentLoader.html#aff4335ce26b5d7c1abc93e19c8d71d1c',1,'gs::BasicFragmentLoader']]],
-  ['write_5fyaml_5fnode_5fto_5fyaml_5fstring_2453',['write_yaml_node_to_yaml_string',['../namespacegs.html#a80409f5198585560fe2a6a9ef8ba3932',1,'gs']]]
+  ['valid_5fedge_5fproperty_2495',['valid_edge_property',['../classgs_1_1Schema.html#ad3f6e5e8bb60df39a446da78780bb134',1,'gs::Schema']]],
+  ['value_2496',['value',['../classgs_1_1Result.html#aa5ca04d8b2231c5732e2058e541b8e0e',1,'gs::Result']]],
+  ['varchar_2497',['Varchar',['../structgs_1_1PropertyType.html#a8c06aab48a9e34c001931ba6ef4d0caa',1,'gs::PropertyType']]],
+  ['versionmanager_2498',['VersionManager',['../classgs_1_1VersionManager.html#a6a7a5ca1b47b53b6342673fb6a68e9bb',1,'gs::VersionManager']]],
+  ['vertex_5fhas_5fprimary_5fkey_2499',['vertex_has_primary_key',['../classgs_1_1Schema.html#a30a924160e24b07cb9ceddbf920b33cc',1,'gs::Schema']]],
+  ['vertex_5fhas_5fproperty_2500',['vertex_has_property',['../classgs_1_1Schema.html#a86c4bb765e95875dd4b5ab00f07a9aaf',1,'gs::Schema']]],
+  ['vertex_5fiterator_2501',['vertex_iterator',['../classgs_1_1ReadTransaction_1_1vertex__iterator.html#a3c7ef6bbb429d22e954f18f5d08808b9',1,'gs::ReadTransaction::vertex_iterator::vertex_iterator()'],['../classgs_1_1UpdateTransaction_1_1vertex__iterator.html#a60142aa142eeaebd5569ea126ce735ea',1,'gs::UpdateTransaction::vertex_iterator::vertex_iterator()']]],
+  ['vertex_5flabel_5fnum_2502',['vertex_label_num',['../classgs_1_1Schema.html#ab06c8ca6362124bc4fad4b491057fda9',1,'gs::Schema']]],
+  ['vertex_5flabel_5fto_5findex_2503',['vertex_label_to_index',['../classgs_1_1Schema.html#a6707ac4dee36e2d0a74906037d572edf',1,'gs::Schema']]],
+  ['vertex_5fmap_5fprefix_2504',['vertex_map_prefix',['../namespacegs.html#a1b293b0a1a5c34a729488040b76696db',1,'gs']]],
+  ['vertex_5fnum_2505',['vertex_num',['../classgs_1_1MutablePropertyFragment.html#a8302974d0c4eed29ec30ed30b4aad03b',1,'gs::MutablePropertyFragment']]],
+  ['vertex_5frange_2506',['vertex_range',['../structgs_1_1ServerApp_1_1vertex__range.html#a730b95a4b63ed7aa49d03b166236ff26',1,'gs::ServerApp::vertex_range']]],
+  ['vertex_5ftable_5fprefix_2507',['vertex_table_prefix',['../namespacegs.html#a4b599110acf995f31a67e1f9003cd336',1,'gs']]],
+  ['vertexdata_2508',['VertexData',['../structgs_1_1VertexData.html#ab5e9e759fef175e6c3310d7860a34f44',1,'gs::VertexData']]],
+  ['vertexglobalid_2509',['VertexGlobalId',['../structgs_1_1PropertyType.html#aa07a12848ab569dd6606f30debbe4ae9',1,'gs::PropertyType']]],
+  ['vid_2510',['vid',['../structgs_1_1GlobalId.html#afcb282c105a3167e17e1f5a7431454bb',1,'gs::GlobalId']]]
 ];

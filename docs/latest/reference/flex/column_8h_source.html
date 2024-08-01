@@ -247,7 +247,7 @@ $(function() {
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (index &lt; <a class="code" href="classgs_1_1TypedColumn.html#aea256ae956d986ffd62e883448a006f0">basic_size_</a>) {</div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;      <a class="code" href="classgs_1_1TypedColumn.html#a29e63e175a0bf1be638a0ab54cd2c319">basic_buffer_</a>.set(index, val);</div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;      LOG(FATAL) &lt;&lt; <span class="stringliteral">&quot;Index out of range&quot;</span>;</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;      <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Index out of range&quot;</span>);</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    }</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  }</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160; </div>
