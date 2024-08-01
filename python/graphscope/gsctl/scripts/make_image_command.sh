@@ -71,6 +71,12 @@ make_interactive-executor() {
     make interactive-executor REGISTRY=${registry} VERSION=${tag}
 }
 
+# make the new flex interactive
+make_flex-interactive() {
+    cd k8s
+    make flex-interactive REGISTRY=${registry} VERSION=${tag}
+}
+
 make_learning() {
     cd k8s
     make learning REGISTRY=${registry} VERSION=${tag}

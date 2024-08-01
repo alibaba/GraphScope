@@ -1,8 +1,10 @@
-ARG ARCH=x86_64
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:v0.0.4 AS builder
+# Coordinator of graphscope engines
 
-ARG ARCH
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
+ARG BUILDER_VERSION=latest
+ARG ARCH=x86_64
 ARG ENABLE_COORDINATOR="false"
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
 
 # change bash as default
 SHELL ["/bin/bash", "-c"]
@@ -55,7 +57,7 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
 
 ########################### RUNTIME IMAGE ###########################
 
-from ubuntu:22.04 as final_image
+from ubuntu:22.04 as runtime
 ARG ARCH
 ARG ENABLE_COORDINATOR="false"
 
@@ -90,7 +92,7 @@ COPY --from=builder /opt/flex /opt/flex
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/engine_config_test.yaml /opt/flex/share/engine_config.yaml
-COPY --from=builder /home/graphscope/GraphScope/flex/interactive/docker/entrypoint.sh /opt/flex/bin/entrypoint.sh
+COPY --from=builder /home/graphscope/GraphScope/k8s/dockerfiles/interactive-entrypoint.sh /opt/flex/bin/entrypoint.sh
 COPY --from=builder /home/graphscope/GraphScope/flex/third_party/nlohmann-json/single_include/* /opt/flex/include/
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml
 # change the default graph name.
