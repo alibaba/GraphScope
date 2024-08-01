@@ -102,7 +102,7 @@ message Load {
             }
 
             Column column = 1;
-            string property = 2;
+            common.Property property = 2;
         }
 
         message Input {
@@ -116,8 +116,6 @@ message Load {
             string type_name = 1;
             repeated Input inputs = 2;
             repeated ColumnMapping column_mappings = 3;
-            // a query given alias name for latter fetching
-            common.NameOrId alias = 4;
         }
 
         repeated VertexMapping vertex_mappings = 2;
@@ -130,10 +128,9 @@ message Load {
             }
             TypeTriplet type_triplet = 1;
             repeated Input inputs = 2;
-            repeated ColumnMapping.Column source_vertex_mappings = 3;
-            repeated ColumnMapping.Column destination_vertex_mappings = 4;
+            repeated ColumnMapping source_vertex_mappings = 3;
+            repeated ColumnMapping destination_vertex_mappings = 4;
             repeated ColumnMapping column_mappings = 5;
-            common.NameOrId alias = 6;
         }
 
         repeated EdgeMapping edge_mappings = 3;

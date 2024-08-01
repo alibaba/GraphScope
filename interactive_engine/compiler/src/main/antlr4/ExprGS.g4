@@ -75,7 +75,7 @@ CONTAINS : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'A' | 'a' )
 IN : ( 'I' | 'i' ) ( 'N' | 'n' ) ;
 
 oC_AddOrSubtractOrBitManipulationExpression
-                : oC_MultiplyDivideModuloExpression ( SP? ( '+' | '-' | | '&' | '|' | '^' | '<<' | '>>' ) SP? oC_MultiplyDivideModuloExpression )* ;
+                : oC_MultiplyDivideModuloExpression ( SP? ( '+' | '-' | '&' | '|' | '^' | '<<' | '>>' ) SP? oC_MultiplyDivideModuloExpression )* ;
 
 oC_MultiplyDivideModuloExpression
                               :  oC_UnaryAddOrSubtractExpression ( ( SP? '*' SP? oC_UnaryAddOrSubtractExpression ) | ( SP? '/' SP? oC_UnaryAddOrSubtractExpression ) | ( SP? '%' SP? oC_UnaryAddOrSubtractExpression ) )* ;
@@ -102,7 +102,13 @@ oC_Atom
         | oC_PatternPredicate
         | oC_ParenthesizedExpression
         | oC_FunctionInvocation
-        | oC_Variable ;
+        | oC_Variable
+        | oC_ExtractColumn
+        ;
+
+oC_ExtractColumn
+     : oC_Variable '[' SP? oC_Expression SP? ']'
+     ;
 
 // todo: support user defined function
 oC_FunctionInvocation

@@ -19,10 +19,16 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
+import com.alibaba.graphscope.common.ir.meta.schema.LoadCSVTable;
 import com.alibaba.graphscope.common.ir.rel.*;
+import com.alibaba.graphscope.common.ir.rel.ddl.GraphTableModify;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.alibaba.graphscope.common.ir.rel.type.DataFormat;
+import com.alibaba.graphscope.common.ir.rel.type.DataSource;
+import com.alibaba.graphscope.common.ir.rel.type.FieldMappings;
+import com.alibaba.graphscope.common.ir.rel.type.TargetGraph;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
@@ -33,7 +39,10 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt.PhysicalGetVOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
+import com.alibaba.graphscope.gaia.proto.GraphAlgebraCypherWrite;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
@@ -56,11 +65,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GraphRelToProtoConverter extends GraphShuttle {
@@ -103,6 +108,104 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         this.relToCommons = relToCommons;
         this.extraParams.putAll(extraParams);
         this.depth = depth;
+    }
+
+    @Override
+    public RelNode visit(GraphTableModify.Insert insert) {
+        physicalBuilder.addPlan(
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                        .setOpr(
+                                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                        .setLoad(
+                                                GraphAlgebraCypherWrite.Load.newBuilder()
+                                                        .setKind(
+                                                                GraphAlgebraCypherWrite.Load.Kind
+                                                                        .CREATE)
+                                                        .setMappings(protoColumnMappings(insert)))
+                                        .build())
+                        .addAllMetaData(
+                                Utils.physicalProtoRowType(insert.getRowType(), isColumnId)));
+        return insert;
+    }
+
+    @Override
+    public RelNode visit(GraphTableModify.Update update) {
+        visitChildren(update);
+        FieldMappings updateMappings = update.getUpdateMappings();
+        RexToProtoConverter converter = new RexToProtoConverter(true, isColumnId, rexBuilder);
+        // todo(yihe.zxl): set item kind from cypher query, currently always set 'MUTATE_PROPERTY'
+        List<GraphAlgebraCypherWrite.Set.Item> items =
+                updateMappings.getMappings().stream()
+                        .map(
+                                item ->
+                                        GraphAlgebraCypherWrite.Set.Item.newBuilder()
+                                                .setKey(
+                                                        item.getTarget()
+                                                                .accept(converter)
+                                                                .getOperators(0)
+                                                                .getVar())
+                                                .setValue(item.getSource().accept(converter))
+                                                .setKind(
+                                                        GraphAlgebraCypherWrite.Set.Item.Kind
+                                                                .MUTATE_PROPERTY)
+                                                .build())
+                        .collect(Collectors.toList());
+        physicalBuilder.addPlan(
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                        .setOpr(
+                                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                        .setSet(
+                                                GraphAlgebraCypherWrite.Set.newBuilder()
+                                                        .addAllItems(items))
+                                        .build())
+                        .addAllMetaData(
+                                Utils.physicalProtoRowType(update.getRowType(), isColumnId)));
+        return update;
+    }
+
+    @Override
+    public RelNode visit(GraphTableModify.Delete delete) {
+        visitChildren(delete);
+        List<RexNode> deleteExprs = delete.getDeleteExprs();
+        RexToProtoConverter converter = new RexToProtoConverter(true, isColumnId, rexBuilder);
+        // todo(yihe.zxl): set detached from cypher query
+        physicalBuilder.addPlan(
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                        .setOpr(
+                                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                        .setDelete(
+                                                GraphAlgebraCypherWrite.Delete.newBuilder()
+                                                        .setDetached(true)
+                                                        .addAllKeys(
+                                                                deleteExprs.stream()
+                                                                        .map(
+                                                                                expr ->
+                                                                                        expr.accept(
+                                                                                                converter))
+                                                                        .collect(
+                                                                                Collectors
+                                                                                        .toList())))
+                                        .build())
+                        .addAllMetaData(
+                                Utils.physicalProtoRowType(delete.getRowType(), isColumnId)));
+        return delete;
+    }
+
+    @Override
+    public RelNode visit(DataSourceTableScan scan) {
+        physicalBuilder.addPlan(
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                        .setOpr(
+                                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                        .setLoad(
+                                                GraphAlgebraCypherWrite.Load.newBuilder()
+                                                        .setKind(
+                                                                GraphAlgebraCypherWrite.Load.Kind
+                                                                        .MATCH)
+                                                        .setMappings(protoColumnMappings(scan)))
+                                        .build())
+                        .addAllMetaData(Utils.physicalProtoRowType(scan.getRowType(), isColumnId)));
+        return scan;
     }
 
     @Override
@@ -1175,5 +1278,161 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     public RelNode visit(GraphLogicalMultiMatch match) {
         throw new UnsupportedOperationException(
                 "converting logical match to physical plan is unsupported yet");
+    }
+
+    private GraphAlgebraCypherWrite.Load.ColumnMappings protoColumnMappings(
+            DataSourceOperation operation) {
+        TargetGraph targetGraph = operation.getTargetGraph();
+        FieldMappings mappings = targetGraph.getMappings();
+        RelNode source = operation.getExternalSource();
+        Preconditions.checkArgument(
+                source instanceof LoadCSVTableScan,
+                "[LOAD CSV]: cannot convert external source [" + source + "] to ir physical");
+        LoadCSVTable csvTable = ((LoadCSVTableScan) source).getCSVTable();
+        GraphSchemaType targetType = (GraphSchemaType) targetGraph.getOptTable().getRowType();
+        Preconditions.checkArgument(
+                !targetType.fuzzy(),
+                "[LOAD CSV]: cannot convert optTable graph with fuzzy types ["
+                        + targetType
+                        + "] to ir physical");
+        GraphLabelType.Entry labelEntry = targetType.getLabelType().getLabelsEntry().get(0);
+        // current we only support loading from a single csv
+        GraphAlgebraCypherWrite.Load.ColumnMappings.Input singleInput =
+                protoLoadInput(csvTable.getSource());
+        GraphAlgebraCypherWrite.Load.ColumnMappings.Builder mappingsBuilder =
+                GraphAlgebraCypherWrite.Load.ColumnMappings.newBuilder();
+        mappingsBuilder.setLoadConfig(protoLoadConfig(csvTable));
+        if (targetGraph instanceof TargetGraph.Vertex) {
+            mappingsBuilder.addVertexMappings(
+                    GraphAlgebraCypherWrite.Load.ColumnMappings.VertexMapping.newBuilder()
+                            .setTypeName(labelEntry.getLabel())
+                            .addInputs(singleInput)
+                            .addAllColumnMappings(protoColumnMappings(mappings)));
+        } else {
+            TargetGraph.Edge edgeMappings = (TargetGraph.Edge) targetGraph;
+            Preconditions.checkArgument(
+                    edgeMappings.getSrcVertex() != null && edgeMappings.getDstVertex() != null,
+                    "[LOAD CSV]: src and dst cannot be null in edge optTable graph");
+            GraphAlgebraCypherWrite.Load.ColumnMappings.EdgeMapping.TypeTriplet typeTriplet =
+                    GraphAlgebraCypherWrite.Load.ColumnMappings.EdgeMapping.TypeTriplet.newBuilder()
+                            .setEdge(labelEntry.getLabel())
+                            .setSourceVertex(labelEntry.getSrcLabel())
+                            .setDestinationVertex(labelEntry.getDstLabel())
+                            .build();
+            mappingsBuilder.addEdgeMappings(
+                    GraphAlgebraCypherWrite.Load.ColumnMappings.EdgeMapping.newBuilder()
+                            .setTypeTriplet(typeTriplet)
+                            .addInputs(singleInput)
+                            .addAllColumnMappings(protoColumnMappings(mappings))
+                            .addAllSourceVertexMappings(
+                                    protoColumnMappings(edgeMappings.getSrcVertex().getMappings()))
+                            .addAllDestinationVertexMappings(
+                                    protoColumnMappings(
+                                            edgeMappings.getDstVertex().getMappings())));
+        }
+        return mappingsBuilder.build();
+    }
+
+    private GraphAlgebraCypherWrite.Load.ColumnMappings.LoadingConfig protoLoadConfig(
+            LoadCSVTable csvTable) {
+        return GraphAlgebraCypherWrite.Load.ColumnMappings.LoadingConfig.newBuilder()
+                .setFormat(protoLoadFormat(csvTable.getFormat()))
+                .setDataSource(protoLoadSource(csvTable.getSource()))
+                .build();
+    }
+
+    private GraphAlgebraCypherWrite.Load.ColumnMappings.LoadingConfig.Format protoLoadFormat(
+            DataFormat format) {
+        return GraphAlgebraCypherWrite.Load.ColumnMappings.LoadingConfig.Format.newBuilder()
+                .setMetadata(
+                        GraphAlgebraCypherWrite.Load.ColumnMappings.LoadingConfig.Format.Metadata
+                                .newBuilder()
+                                .setDelimiter(format.getDelimiter())
+                                .setHeaderRow(format.hasHeader())
+                                .build())
+                .build();
+    }
+
+    private GraphAlgebraCypherWrite.Load.ColumnMappings.LoadingConfig.DataSource protoLoadSource(
+            DataSource source) {
+        return GraphAlgebraCypherWrite.Load.ColumnMappings.LoadingConfig.DataSource.newBuilder()
+                .setLocation(source.getName().get(0))
+                .build();
+    }
+
+    private GraphAlgebraCypherWrite.Load.ColumnMappings.Input protoLoadInput(DataSource source) {
+        GraphAlgebraCypherWrite.Load.ColumnMappings.Input.Builder inputBuilder =
+                GraphAlgebraCypherWrite.Load.ColumnMappings.Input.newBuilder();
+        Preconditions.checkArgument(
+                source instanceof DataSource.Location,
+                "[LOAD CSV]: cannot convert data source ["
+                        + source
+                        + "] to load input in ir physical");
+        RexNode location = ((DataSource.Location) source).getLocation();
+        OuterExpression.ExprOpr protoExpr =
+                location.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
+                        .getOperators(0);
+        switch (protoExpr.getItemCase()) {
+            case CONST:
+                inputBuilder.setPath(protoExpr.getConst().getStr());
+                break;
+            case PARAM:
+                inputBuilder.setDynPath(protoExpr.getParam());
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "[LOAD CSV]: cannot convert location ["
+                                + location
+                                + "] to load input ir physical");
+        }
+        return inputBuilder.build();
+    }
+
+    private List<GraphAlgebraCypherWrite.Load.ColumnMappings.ColumnMapping> protoColumnMappings(
+            FieldMappings mappings) {
+        return mappings.getMappings().stream()
+                .map(
+                        column ->
+                                GraphAlgebraCypherWrite.Load.ColumnMappings.ColumnMapping
+                                        .newBuilder()
+                                        .setColumn(protoSourceColumn(column.getSource()))
+                                        .setProperty(protoTargetProperty(column.getTarget()))
+                                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private GraphAlgebraCypherWrite.Load.ColumnMappings.ColumnMapping.Column protoSourceColumn(
+            RexNode source) {
+        Preconditions.checkArgument(
+                source instanceof RexGraphVariable
+                        && ((RexGraphVariable) source).getProperty() != null,
+                "[LOAD CSV]: cannot convert source column ["
+                        + source
+                        + "] to column in ir physical");
+        GraphProperty property = ((RexGraphVariable) source).getProperty();
+        Preconditions.checkArgument(
+                property.getOpt() == GraphProperty.Opt.KEY,
+                "[LOAD CSV]: invalid source column index [" + property + "]");
+        switch (property.getKey().getOpt()) {
+            case NAME:
+                return GraphAlgebraCypherWrite.Load.ColumnMappings.ColumnMapping.Column.newBuilder()
+                        .setName(property.getKey().getName())
+                        .build();
+            case ID:
+            default:
+                return GraphAlgebraCypherWrite.Load.ColumnMappings.ColumnMapping.Column.newBuilder()
+                        .setIndex(property.getKey().getId())
+                        .build();
+        }
+    }
+
+    private OuterExpression.Property protoTargetProperty(RexNode target) {
+        Preconditions.checkArgument(
+                target instanceof RexGraphVariable
+                        && ((RexGraphVariable) target).getProperty() != null,
+                "[LOAD CSV]: cannot convert optTable column ["
+                        + target
+                        + "] to property in ir physical");
+        return Utils.protoProperty(((RexGraphVariable) target).getProperty());
     }
 }

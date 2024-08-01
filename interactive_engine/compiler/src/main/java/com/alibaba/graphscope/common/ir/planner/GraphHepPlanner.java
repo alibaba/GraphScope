@@ -2,6 +2,7 @@ package com.alibaba.graphscope.common.ir.planner;
 
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.*;
+import com.alibaba.graphscope.common.ir.rel.ddl.GraphTableModify;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
@@ -137,6 +138,15 @@ public class GraphHepPlanner extends HepPlanner {
         @Override
         public RelNode visit(MultiJoin join) {
             return findBestIfRoot(join, visitChildren(join));
+        }
+
+        @Override
+        public RelNode visit(GraphTableModify.Update update) {
+            return findBestIfRoot(update, visitChildren(update));
+        }
+
+        public RelNode visit(GraphTableModify.Delete delete) {
+            return findBestIfRoot(delete, visitChildren(delete));
         }
 
         @Override

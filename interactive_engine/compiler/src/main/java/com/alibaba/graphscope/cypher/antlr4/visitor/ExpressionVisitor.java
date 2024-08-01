@@ -545,6 +545,13 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         return new ExprVisitorResult(builder.call(GraphStdOperatorTable.CASE, operands));
     }
 
+    @Override
+    public ExprVisitorResult visitOC_ExtractColumn(CypherGSParser.OC_ExtractColumnContext ctx) {
+        String alias = ctx.oC_Variable() != null ? ctx.oC_Variable().getText() : null;
+        int fieldIdx = (Integer) LiteralVisitor.INSTANCE.visit(ctx.oC_Expression());
+        return new ExprVisitorResult(builder.field(alias, fieldIdx));
+    }
+
     private class ParamManager {
         private final AtomicInteger idGenerator;
         private Map<String, Integer> paramNameToIdMap;

@@ -18,23 +18,38 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
+import com.alibaba.graphscope.common.ir.meta.schema.LoadCSVTable;
+import com.alibaba.graphscope.common.ir.rel.DataSourceTableScan;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
+import com.alibaba.graphscope.common.ir.rel.LoadCSVTableScan;
+import com.alibaba.graphscope.common.ir.rel.ddl.GraphTableModify;
+import com.alibaba.graphscope.common.ir.rel.type.DataFormat;
+import com.alibaba.graphscope.common.ir.rel.type.DataSource;
+import com.alibaba.graphscope.common.ir.rel.type.FieldMappings;
+import com.alibaba.graphscope.common.ir.rel.type.TargetGraph;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rex.RexGraphDynamicParam;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.TableModify;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -64,7 +79,120 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     }
 
     @Override
+    public GraphBuilder visitOC_Set(CypherGSParser.OC_SetContext ctx) {
+        FieldMappings updateMappings = createFieldMappings(ctx);
+        TableModify update =
+                new GraphTableModify.Update(builder.getCluster(), builder.build(), updateMappings);
+        return builder.push(update);
+    }
+
+    private FieldMappings createFieldMappings(CypherGSParser.OC_SetContext ctx) {
+        List<FieldMappings.Entry> mappings =
+                ctx.oC_SetItem().stream()
+                        .map(
+                                item -> {
+                                    RexNode target = null, source = null;
+                                    if (item.oC_PropertyOrLabelsExpression() != null) {
+                                        target =
+                                                expressionVisitor
+                                                        .visitOC_PropertyOrLabelsExpression(
+                                                                item
+                                                                        .oC_PropertyOrLabelsExpression())
+                                                        .getExpr();
+                                    } else if (item.oC_Variable() != null) {
+                                        target =
+                                                expressionVisitor
+                                                        .visitOC_Variable(item.oC_Variable())
+                                                        .getExpr();
+                                    }
+                                    if (item.oC_Expression() != null) {
+                                        source =
+                                                expressionVisitor
+                                                        .visitOC_Expression(item.oC_Expression())
+                                                        .getExpr();
+                                    }
+                                    Preconditions.checkArgument(
+                                            source != null && target != null,
+                                            "source and target should not be null in set item");
+                                    return new FieldMappings.Entry(source, target);
+                                })
+                        .collect(Collectors.toList());
+        return new FieldMappings(mappings);
+    }
+
+    @Override
+    public GraphBuilder visitOC_Delete(CypherGSParser.OC_DeleteContext ctx) {
+        List<RexNode> deleteExprs =
+                ctx.oC_Expression().stream()
+                        .map(item -> expressionVisitor.visitOC_Expression(item).getExpr())
+                        .collect(Collectors.toList());
+        TableModify delete =
+                new GraphTableModify.Delete(builder.getCluster(), builder.build(), deleteExprs);
+        return builder.push(delete);
+    }
+
+    @Override
+    public GraphBuilder visitOC_LoadCSV(CypherGSParser.OC_LoadCSVContext ctx) {
+        RexNode location = expressionVisitor.visitOC_Expression(ctx.oC_Expression()).getExpr();
+        if (location instanceof RexGraphDynamicParam
+                && location.getType().getSqlTypeName() == SqlTypeName.UNKNOWN) {
+            RexGraphDynamicParam param = (RexGraphDynamicParam) location;
+            ;
+            location =
+                    ((GraphRexBuilder) builder.getRexBuilder())
+                            .makeGraphDynamicParam(
+                                    builder.getCluster()
+                                            .getTypeFactory()
+                                            .createSqlType(SqlTypeName.CHAR),
+                                    param.getName(),
+                                    param.getIndex());
+        }
+        DataSource source = new DataSource.Location(location);
+        String aliasName = ctx.oC_Variable() != null ? ctx.oC_Variable().getText() : null;
+        TableScan tableScan =
+                new LoadCSVTableScan(
+                        (GraphOptCluster) builder.getCluster(),
+                        ImmutableList.of(),
+                        new LoadCSVTable(source, createFormat(ctx), null),
+                        aliasName);
+        return builder.push(tableScan);
+    }
+
+    private DataFormat createFormat(CypherGSParser.OC_LoadCSVContext ctx) {
+        DataFormat format = new DataFormat();
+        if (ctx.oC_WithHeaders() != null) {
+            format.withHeader(true);
+        }
+        if (ctx.oC_FieldTerminator() != null) {
+            format.withDelimiter(
+                    (String)
+                            LiteralVisitor.INSTANCE.visit(
+                                    ctx.oC_FieldTerminator().oC_Expression()));
+        }
+        return format;
+    }
+
+    @Override
+    public GraphBuilder visitOC_Create(CypherGSParser.OC_CreateContext ctx) {
+        TargetGraph target = new TargetGraphVisitor(this).visit(ctx.oC_Pattern());
+        TableModify insert =
+                new GraphTableModify.Insert(builder.getCluster(), builder.build(), target);
+        return builder.push(insert);
+    }
+
+    @Override
     public GraphBuilder visitOC_Match(CypherGSParser.OC_MatchContext ctx) {
+        // convert the match to DataSourceTableScan if its input is a LoadCSVTableScan
+        if (builder.size() > 0 && builder.peek() instanceof LoadCSVTableScan) {
+            TargetGraph target = new TargetGraphVisitor(this).visit(ctx.oC_Pattern());
+            TableScan scan =
+                    new DataSourceTableScan(
+                            (GraphOptCluster) builder.getCluster(),
+                            ImmutableList.of(),
+                            builder.build(),
+                            target);
+            return builder.push(scan);
+        }
         int childCnt = ctx.oC_Pattern().getChildCount();
         List<RelNode> sentences = new ArrayList<>();
         for (int i = 0; i < childCnt; ++i) {
