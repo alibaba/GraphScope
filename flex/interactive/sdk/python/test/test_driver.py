@@ -25,7 +25,54 @@ import pytest
 
 from gs_interactive.client.driver import Driver
 from gs_interactive.models import *
+from gs_interactive.client.status import StatusCode
 
+
+test_graph_def = {
+    "name": "modern_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"var_char": {"max_length" : 16}}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            }
+        ],
+    },
+}
 
 class TestDriver(unittest.TestCase):
     """Test usage of driver"""
@@ -61,10 +108,11 @@ class TestDriver(unittest.TestCase):
             print("delete graph: ", rep2)
 
     def test_example(self):
+        self.createGraphFromDict()
         self._graph_id = self.createGraph()
         self.bulkLoading()
-        self.bulkLoadingUploading()
         self.bulkLoadingFailure()
+        self.bulkLoadingUploading()
         self.list_graph()
         self.get_graph_meta()
         self.runCypherQuery()
@@ -72,12 +120,23 @@ class TestDriver(unittest.TestCase):
         self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
+        self.callVertexEdgeQuery()
         self.restartOnNewGraph()
         self.getStatistics()
         self.callProcedure()
         self.callProcedureWithHttp()
         self.callProcedureWithHttpCurrent()
+        # test stop the service, and submit queries
+        self.queryWithServiceStop()
         self.createDriver()
+    
+    def createGraphFromDict(self):
+        create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
+        resp = self._sess.create_graph(create_graph_request)
+        assert resp.is_ok()
+        graph_id = resp.get_value().graph_id
+        print("Graph id: ", graph_id)
+        return graph_id
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
@@ -328,6 +387,35 @@ class TestDriver(unittest.TestCase):
         assert resp.is_ok()
         print("get service status: ", resp.get_value())
 
+    def queryWithServiceStop(self):
+        # stop service
+        print("stop service: ")
+        stop_res = self._sess.stop_service()
+        assert stop_res.is_ok()
+        # submit query on stopped service should raise exception
+        req = QueryRequest(
+            query_name=self._cpp_proc_name,
+            arguments=[
+                TypedValue(
+                    type=GSDataType(PrimitiveType(primitive_type="DT_SIGNED_INT32")),
+                    value=1,
+                )
+            ],
+        )
+        resp = self._sess.call_procedure_current(params=req)
+        assert not resp.is_ok()
+        print("call procedure failed: ", resp.get_status_message())
+        assert resp.get_status().get_code() == StatusCode.SERVICE_UNAVAILABLE
+
+        # start service
+        print("start service: ")
+        start_res = self._sess.start_service(
+            start_service_request=StartServiceRequest(graph_id=self._graph_id)
+        )
+        assert start_res.is_ok()
+        # wait 5 seconds
+        time
+
     def restartOnNewGraph(self):
         original_graph_id = None
         status_res = self._sess.get_service_status()
@@ -451,6 +539,116 @@ class TestDriver(unittest.TestCase):
         driver = Driver()
         sess = driver.getDefaultSession()
         print("create driver: ", sess)
+
+    def callVertexEdgeQuery(self):
+        # add vertex and edge
+        vertex_request = [
+            VertexRequest(
+                label="person",
+                primary_key_value=8,
+                properties=[
+                    ModelProperty(name="name", type="string", value="mike"),
+                    ModelProperty(name="age", type="integer", value=12),
+                ],
+            ),
+        ]
+        edge_request = [
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=8,
+                dst_primary_key_value=1,
+                properties=[ModelProperty(name="weight", value=7)],
+            ),
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=8,
+                dst_primary_key_value=2,
+                properties=[ModelProperty(name="weight", value=5)],
+            ),
+        ]
+        resp = self._sess.add_vertex(
+            self._graph_id,
+            VertexEdgeRequest(vertex_request=vertex_request, edge_request=edge_request),
+        )
+        assert resp.is_ok()
+        # get vertex
+        resp = self._sess.get_vertex(self._graph_id, "person", 8)
+        assert resp.is_ok()
+        for k, v in resp.get_value().values:
+            if k == "name":
+                assert v == "mike"
+            if k == "age":
+                assert v == 12
+        vertex_request = VertexRequest(
+            label="person",
+            primary_key_value=1,
+            properties=[
+                ModelProperty(name="name", type="string", value="Cindy"),
+                ModelProperty(name="age", type="integer", value=24),
+            ],
+        )
+        # update vertex
+        resp = self._sess.update_vertex(self._graph_id, vertex_request)
+        assert resp.is_ok()
+        resp = self._sess.get_vertex(self._graph_id, "person", 8)
+        assert resp.is_ok()
+        for k, v in resp.get_value().values:
+            if k == "age":
+                assert v == 13
+        edge_request = [
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=2,
+                dst_primary_key_value=4,
+                properties=[ModelProperty(name="weight", value=9.123)],
+            ),
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=2,
+                dst_primary_key_value=6,
+                properties=[ModelProperty(name="weight", value=3.233)],
+            ),
+        ]
+        # add edge
+        resp = self._sess.add_edge(self._graph_id, edge_request)
+        assert resp.is_ok()
+        # get edge
+        resp = self._sess.get_edge(self._graph_id, "knows", "person", 2, "person", 4)
+        assert resp.is_ok()
+        for k, v in resp.get_value().properties:
+            if k == "weight":
+                assert v == 9.123
+        resp = self._sess.get_edge(self._graph_id, "knows", "person", 8, "person", 1)
+        assert resp.is_ok()
+        for k, v in resp.get_value().properties:
+            if k == "weight":
+                assert v == 7
+        # update edge
+        resp = self._sess.update_edge(
+            self._graph_id,
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=2,
+                dst_primary_key_value=4,
+                properties=[ModelProperty(name="weight", value=3)],
+            ),
+        )
+        assert resp.is_ok()
+        resp = self._sess.get_edge(self._graph_id, "knows", "person", 2, "person", 4)
+        assert resp.is_ok()
+        for k, v in resp.get_value().properties:
+            if k == "weight":
+                assert v == 3
 
 
 if __name__ == "__main__":

@@ -1243,6 +1243,7 @@ struct AnyConverter<LabelKey> {
     return value.label_key;
   }
 };
+Any ConvertStringToAny(const std::string& value, const gs::PropertyType& type);
 
 template <>
 struct AnyConverter<RecordView> {

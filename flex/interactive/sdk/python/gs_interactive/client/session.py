@@ -39,7 +39,7 @@ from gs_interactive.client.generated.results_pb2 import CollectiveResults
 
 class EdgeInterface(metaclass=ABCMeta):
     @abstractmethod
-    def add_edge(self, graph_id: StrictStr, edge_request: EdgeRequest) -> Result[str]:
+    def add_edge(self, graph_id: StrictStr, edge_request: List[EdgeRequest]) -> Result[str]:
         raise NotImplementedError
 
     @abstractmethod
@@ -65,6 +65,9 @@ class EdgeInterface(metaclass=ABCMeta):
     def get_edge(
         self,
         graph_id: StrictStr,
+        edge_label: Annotated[
+            StrictStr, Field(description="The label name of edge.")
+        ],
         src_label: Annotated[
             StrictStr, Field(description="The label name of src vertex.")
         ],
@@ -90,7 +93,9 @@ class EdgeInterface(metaclass=ABCMeta):
 class VertexInterface(metaclass=ABCMeta):
     @abstractmethod
     def add_vertex(
-        self, graph_id: StrictStr, vertex_request: VertexRequest
+        self,
+        graph_id: StrictStr,
+        vertex_edge_request: VertexEdgeRequest,
     ) -> Result[StrictStr]:
         raise NotImplementedError
 
@@ -281,8 +286,6 @@ class DefaultSession(Session):
         self._job_api = AdminServiceJobManagementApi(self._client)
         self._procedure_api = AdminServiceProcedureManagementApi(self._client)
         self._service_api = AdminServiceServiceManagementApi(self._client)
-        self._edge_api = GraphServiceEdgeManagementApi(self._client)
-        self._vertex_api = GraphServiceVertexManagementApi(self._client)
         self._utils_api = UtilsApi(self._client)
         if stored_proc_uri is None:
             service_status = self.get_service_status()
@@ -298,6 +301,8 @@ class DefaultSession(Session):
             stored_proc_uri = ":".join(splitted)
         self._query_client = ApiClient(Configuration(host=stored_proc_uri))
         self._query_api = QueryServiceApi(self._query_client)
+        self._edge_api = GraphServiceEdgeManagementApi(self._query_client)
+        self._vertex_api = GraphServiceVertexManagementApi(self._query_client)
 
     def __enter__(self):
         self._client.__enter__()
@@ -309,9 +314,17 @@ class DefaultSession(Session):
     # implementations of the methods from the interfaces
     ################ Vertex Interfaces ##########
     def add_vertex(
-        self, graph_id: StrictStr, vertex_request: VertexRequest
+        self,
+        graph_id: StrictStr,
+        vertex_edge_request: VertexEdgeRequest,
     ) -> Result[StrictStr]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._vertex_api.add_vertex_with_http_info(graph_id, vertex_edge_request)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
+        
 
     def delete_vertex(
         self,
@@ -331,16 +344,32 @@ class DefaultSession(Session):
             Any, Field(description="The primary key value of vertex.")
         ],
     ) -> Result[VertexRequest]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._vertex_api.get_vertex_with_http_info(graph_id, label, primary_key_value)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
+
 
     def update_vertex(
         self, graph_id: StrictStr, vertex_request: VertexRequest
     ) -> Result[str]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._vertex_api.update_vertex_with_http_info(graph_id, vertex_request)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     ################ Edge Interfaces ##########
-    def add_edge(self, graph_id: StrictStr, edge_request: EdgeRequest) -> Result[str]:
-        raise NotImplementedError
+    def add_edge(self, graph_id: StrictStr, edge_request: List[EdgeRequest]) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._edge_api.add_edge_with_http_info(graph_id, edge_request)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     def delete_edge(
         self,
@@ -363,6 +392,9 @@ class DefaultSession(Session):
     def get_edge(
         self,
         graph_id: StrictStr,
+        edge_label: Annotated[
+            StrictStr, Field(description="The label name of edge.")
+        ],
         src_label: Annotated[
             StrictStr, Field(description="The label name of src vertex.")
         ],
@@ -376,12 +408,24 @@ class DefaultSession(Session):
             Any, Field(description="The primary key value of dst vertex.")
         ],
     ) -> Result[Union[None, EdgeRequest]]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._edge_api.get_edge_with_http_info(
+                graph_id, edge_label, src_label, src_primary_key_value, dst_label, dst_primary_key_value
+            )
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     def update_edge(
         self, graph_id: StrictStr, edge_request: EdgeRequest
     ) -> Result[str]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._edge_api.update_edge_with_http_info(graph_id, edge_request)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     ################ Graph Interfaces ##########
     def create_graph(self, graph: CreateGraphRequest) -> Result[CreateGraphResponse]:

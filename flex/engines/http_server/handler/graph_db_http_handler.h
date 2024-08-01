@@ -20,21 +20,28 @@
 #include "flex/engines/http_server/generated/actor/codegen_actor_ref.act.autogen.h"
 #include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 
+#include <array>
+
 #include <seastar/http/httpd.hh>
 
 namespace server {
 
 class StoppableHandler : public seastar::httpd::handler_base {
  public:
+  static constexpr const char* ACTOR_SCOPE_CANCEL_MESSAGE =
+      "Unable to send message";
   StoppableHandler(uint32_t init_group_id, uint32_t max_group_id,
                    uint32_t group_inc_step, uint32_t shard_concurrency)
       : is_cancelled_(false),
         cur_group_id_(init_group_id),
         max_group_id_(max_group_id),
         group_inc_step_(group_inc_step),
-        shard_concurrency_(shard_concurrency) {}
+        shard_concurrency_(shard_concurrency),
+        shard_id_(hiactor::local_shard_id()) {}
 
   inline bool is_stopped() const { return is_cancelled_; }
+
+  inline uint32_t shard_id() const { return shard_id_; }
 
   virtual seastar::future<> stop() = 0;
   virtual bool start() = 0;
@@ -47,7 +54,7 @@ class StoppableHandler : public seastar::httpd::handler_base {
       return seastar::make_ready_future<>();
     }
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder.set_shard(shard_id_)
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
     return hiactor::actor_engine()
@@ -83,12 +90,9 @@ class StoppableHandler : public seastar::httpd::handler_base {
     }
     cur_group_id_ += group_inc_step_;
     hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
+    builder.set_shard(shard_id_)
         .enter_sub_scope(hiactor::scope<executor_group>(0))
         .enter_sub_scope(hiactor::scope<hiactor::actor_group>(cur_group_id_));
-    // for (unsigned i = 0; i < shard_concurrency_; ++i) {
-    // executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
-    // }
     func(builder);
     is_cancelled_ = false;  // locked outside
     return true;
@@ -98,10 +102,16 @@ class StoppableHandler : public seastar::httpd::handler_base {
   uint32_t cur_group_id_;
   const uint32_t max_group_id_, group_inc_step_;
   const uint32_t shard_concurrency_;
+  const uint32_t shard_id_;
 };
 
 class graph_db_http_handler {
  public:
+  static constexpr int NUM_OPERATION = 4;  // (PUT/GET/POST/DELETE)
+  static constexpr seastar::httpd::operation_type OPERATIONS[NUM_OPERATION] = {
+      seastar::httpd::operation_type::PUT, seastar::httpd::operation_type::GET,
+      seastar::httpd::operation_type::POST,
+      seastar::httpd::operation_type::DELETE};
   graph_db_http_handler(uint16_t http_port, int32_t shard_num,
                         bool enable_adhoc_handlers = false);
 
@@ -122,6 +132,7 @@ class graph_db_http_handler {
 
  private:
   seastar::future<> set_routes();
+  seastar::future<> stop_query_actors(size_t index);
 
  private:
   const uint16_t http_port_;
@@ -134,6 +145,9 @@ class graph_db_http_handler {
   std::vector<StoppableHandler*> current_graph_query_handlers_;
   std::vector<StoppableHandler*> all_graph_query_handlers_;
   std::vector<StoppableHandler*> adhoc_query_handlers_;
+  // shard_num * operation time(PUT/GET/POST/DELETE)
+  std::vector<std::array<StoppableHandler*, NUM_OPERATION>> vertex_handlers_;
+  std::vector<std::array<StoppableHandler*, NUM_OPERATION>> edge_handlers_;
 };
 
 }  // namespace server

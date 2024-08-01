@@ -604,6 +604,31 @@ paths:
             type: string
       description: |
         Add the provided vertex to the specified graph.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VertexEdgeRequest'
+            example:
+              vertex_request:
+                - label: "person"
+                  primary_key_value: 2
+                  properties:
+                    age: 24
+                    name: "Cindy"
+              edge_request:
+                - src_label: "person"
+                  dst_label: "software"
+                  edge_label: "created"
+                  src_pk_name: "id"
+                  src_pk_value: 1
+                  dst_pk_name: "id"
+                  dst_pk_value: 3
+                  properties:
+                    - name: "weight"
+                      value: 0.2
+
       responses:
         '200':
           description: Successfully created vertex
@@ -621,18 +646,6 @@ paths:
           description: Vertex already exists
         '500':
           description: Server internal error
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VertexRequest'
-            example:
-              label: "person"
-              primimary_key_value: 1
-              properties:
-                age: 2
-                name: "Bob"
-        description: Add vertex to graph.
     put:
       tags:
         - GraphService/VertexManagement
@@ -813,21 +826,24 @@ paths:
         '500':
           description: Server internal error
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EdgeRequest'
+              type: array
+              items:
+                $ref: '#/components/schemas/EdgeRequest'
             example:
-              src_label: "person"
-              dst_label: "software"
-              edge_label: "created"
-              src_pk_name: "id"
-              src_pk_value: 1
-              dst_pk_name: "id"
-              dst_pk_value: 3
-              properties:
-                - name: "weight"
-                  value: 0.2
+              - src_label: "person"
+                dst_label: "software"
+                edge_label: "created"
+                src_pk_name: "id"
+                src_pk_value: 1
+                dst_pk_name: "id"
+                dst_pk_value: 3
+                properties:
+                  - name: "weight"
+                    value: 0.2
     put:
       tags:
         - GraphService/EdgeManagement
@@ -1100,6 +1116,7 @@ components:
     LongText:
       x-body-name: long_text
       type: object
+      additionalProperties: false 
       required:
         - long_text
       properties:
@@ -1109,19 +1126,21 @@ components:
     FixedChar:
       x-body-name: fixed_char
       type: object
+      additionalProperties: false 
       required:
         - char
       properties:
         char:
           type: object
           required:
-            - fixed_char
+            - fixed_length
           properties:
-            fixed_char:
+            fixed_length:
               type: integer
     VarChar:
       x-body-name: var_char
       type: object
+      additionalProperties: false 
       required:
         - var_char
       properties:
@@ -1188,16 +1207,6 @@ components:
         value:
           $ref: '#/components/schemas/AnyValue'
           # type: object
-    PropertyArray:
-      x-body-name: property_array
-      type: object
-      required:
-        - properties
-      properties:
-        properties:
-          type: array
-          items:
-            $ref: '#/components/schemas/Property'
     Parameter:
       x-body-name: parameter
       type: object
@@ -1216,6 +1225,7 @@ components:
       required:
         - label
         - primary_key_value
+        - properties
       properties:
         label:
           type: string
@@ -1223,7 +1233,9 @@ components:
         primary_key_value:
           $ref: '#/components/schemas/AnyValue'
         properties:
-          $ref: '#/components/schemas/PropertyArray'
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
     VertexData:
       x-body-name: vertex_data
       type: object
@@ -1839,3 +1851,18 @@ components:
         metadata:
           type: object
           additionalProperties: true
+    VertexEdgeRequest:
+      type: object
+      required:
+        - vertex_request
+        - edge_request
+      properties:
+        vertex_request:
+          type: array
+          items:
+            $ref: '#/components/schemas/VertexRequest'
+        edge_request:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeRequest'
+
