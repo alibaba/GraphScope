@@ -91,8 +91,8 @@ pub enum GraphPath {
     EndV((VertexOrEdge, usize)),
     /// Simple path with only end vertex preserved.
     SimpleEndV((VertexOrEdge, Vec<ID>, usize)),
-    /// Trail with only end vertex preserved.
-    TrailEndV((VertexOrEdge, Vec<ID>, usize)),
+    /// Trail with only end vertex, all edges are preserved for checking duplications 
+    TrailEndV((VertexOrEdge, Vec<VertexOrEdge>, usize)),
 }
 
 impl GraphPath {
@@ -109,8 +109,7 @@ impl GraphPath {
                 },
                 pb::path_expand::PathOpt::Trail => {
                     let entry = entry.into();
-                    let id = entry.id();
-                    GraphPath::TrailEndV((entry, vec![id], 1))
+                    GraphPath::TrailEndV((entry.clone(), vec![entry], 1))
                 }
             },
             pb::path_expand::ResultOpt::AllV | pb::path_expand::ResultOpt::AllVE => match path_opt {
@@ -130,7 +129,7 @@ impl GraphPath {
             }
             GraphPath::SimpleAllPath(ref mut path) => {
                 let entry = entry.into();
-                if path.contains(&entry) {
+                if entry.is_vertex() && path.contains(&entry) {
                     false
                 } else {
                     path.push(entry);
@@ -156,7 +155,7 @@ impl GraphPath {
             }
             GraphPath::SimpleEndV((ref mut e, ref mut path, ref mut weight)) => {
                 let entry = entry.into();
-                if path.contains(&entry.id()) {
+                if entry.is_vertex() && path.contains(&entry.id()) {
                     false
                 } else {
                     path.push(entry.id());
@@ -170,11 +169,11 @@ impl GraphPath {
             }
             GraphPath::TrailEndV((ref mut e, ref mut path, ref mut weight)) => {
                 let entry = entry.into();
-                if entry.is_edge() && path.contains(&entry.id()) {
+                if entry.is_edge() && path.contains(&entry) {
                     false
                 } else {
-                    path.push(entry.id());
-                    *e = entry;
+                    *e = entry.clone();
+                    path.push(entry);
                     // we only increase the weight when the entry is a vertex.
                     if e.is_vertex() {
                         *weight += 1;
@@ -225,9 +224,21 @@ impl GraphPath {
     // e.g., [1,2,3] + [4,5] = [1,2,3,4,5]
     pub fn append_path(&mut self, other: GraphPath) -> bool {
         match self {
-            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) | GraphPath::TrailAllPath(ref mut p) => {
+            GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) => {
                 if let Some(other_path) = other.take_path() {
                     p.extend(other_path);
+                    true
+                } else {
+                    false
+                }
+            }
+            GraphPath::TrailAllPath(_) => {
+                if let Some(other_path) = other.take_path() {
+                    for e in other_path {
+                        if !self.append(e) {
+                            return false;
+                        }
+                    }
                     true
                 } else {
                     false
@@ -553,7 +564,7 @@ impl Decode for GraphPath {
             }
             5 => {
                 let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
-                let path = <Vec<ID>>::read_from(reader)?;
+                let path = <Vec<VertexOrEdge>>::read_from(reader)?;
                 let weight = <u64>::read_from(reader)? as usize;
                 Ok(GraphPath::TrailEndV((vertex_or_edge, path, weight)))
             }

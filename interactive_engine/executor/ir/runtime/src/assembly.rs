@@ -786,11 +786,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                             base
                         )))
                     })?;
-                    if pb::path_expand::PathOpt::Trail == unsafe { std::mem::transmute(path.path_opt) }
-                        && pb::path_expand::ResultOpt::AllVE != unsafe { std::mem::transmute(path.result_opt) } {
-                        Err(FnGenError::unsupported_error("path opt TRAIL with RESULT OPT other than ALLVE is unsupported."))?
-                    }
-                    if pb::path_expand::ResultOpt::AllVE == unsafe { std::mem::transmute(path.result_opt) }
+                    if (pb::path_expand::ResultOpt::AllVE == unsafe { std::mem::transmute(path.result_opt) } || pb::path_expand::PathOpt::Trail == unsafe { std::mem::transmute(path.path_opt) })
                         && pb::edge_expand::ExpandOpt::Vertex
                             == unsafe { std::mem::transmute(edge_expand.expand_opt) }
                     {
