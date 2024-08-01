@@ -41,6 +41,8 @@ return_reply_with_result(std::unique_ptr<seastar::httpd::reply> rep,
 static constexpr seastar::httpd::operation_type SEASTAR_DELETE =
     seastar::httpd::operation_type::DELETE;
 
+std::string trim_slash(const std::string& origin);
+
 }  // namespace server
 
 namespace gs {

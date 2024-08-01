@@ -103,8 +103,6 @@ public class DefaultSession implements Session {
             jobApi = new AdminServiceJobManagementApi(client);
             procedureApi = new AdminServiceProcedureManagementApi(client);
             serviceApi = new AdminServiceServiceManagementApi(client);
-            vertexApi = new GraphServiceVertexManagementApi(client);
-            edgeApi = new GraphServiceEdgeManagementApi(client);
             utilsApi = new UtilsApi(client);
         } else {
             System.out.println("Creating session without admin uri specified");
@@ -113,8 +111,6 @@ public class DefaultSession implements Session {
             jobApi = null;
             procedureApi = null;
             serviceApi = null;
-            vertexApi = null;
-            edgeApi = null;
             utilsApi = null;
         }
 
@@ -138,6 +134,8 @@ public class DefaultSession implements Session {
         queryClient = new ApiClient(httpClient);
         queryClient.setBasePath(storedProcUri);
         queryApi = new QueryServiceApi(queryClient);
+        vertexApi = new GraphServiceVertexManagementApi(queryClient);
+        edgeApi = new GraphServiceEdgeManagementApi(queryClient);
         initOpenTelemetry();
     }
 
@@ -418,7 +416,7 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> addEdge(String graphName, EdgeRequest edgeRequest) {
+    public Result<String> addEdge(String graphName, List<EdgeRequest> edgeRequest) {
         try {
             ApiResponse<String> response = edgeApi.addEdgeWithHttpInfo(graphName, edgeRequest);
             return Result.fromResponse(response);
@@ -814,7 +812,7 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Result<String> addVertex(String graphId, VertexRequest request) {
+    public Result<String> addVertex(String graphId, VertexEdgeRequest request) {
         try {
             ApiResponse<String> response = vertexApi.addVertexWithHttpInfo(graphId, request);
             return Result.fromResponse(response);
