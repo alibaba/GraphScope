@@ -82,7 +82,7 @@ jobs:
 
         # build compiler
         cd ${GIE_HOME}/
-        mvn clean install -Pexperimental -DskipTests
+        mvn clean install -Pexperimental -DskipTests -q
 
     - name: Prepare dataset and workspace
       env:
@@ -312,7 +312,7 @@ jobs:
         sdk_version=$(grep -oPm1 "(?<=<version>)[^<]+" ${GITHUB_WORKSPACE}/flex/interactive/sdk/java/pom.xml)
         sed -i "s/<interactive.sdk.version>.*<\/interactive.sdk.version>/<interactive.sdk.version>${sdk_version}<\/interactive.sdk.version>/" ${GITHUB_WORKSPACE}/interactive_engine/pom.xml
         cd ${GITHUB_WORKSPACE}/interactive_engine/
-        mvn clean install -Pexperimental -DskipTests
+        mvn clean install -Pexperimental -DskipTests -q
 
     - name: Run End-to-End cypher adhoc ldbc query test
       env:

@@ -356,9 +356,8 @@ class TestDriver(unittest.TestCase):
 
     def createCppProcedure(self):
         self._cpp_proc_name = "test_procedure_cpp"
-        # read strings from file ../../java/src/test/resources/sample_app.cc
         app_path = os.path.join(
-            os.path.dirname(__file__), "../../java/src/test/resources/sample_app.cc"
+            os.path.dirname(__file__), "../../../java/src/test/resources/sample_app.cc"
         )
         if not os.path.exists(app_path):
             raise Exception("sample_app.cc not found")
