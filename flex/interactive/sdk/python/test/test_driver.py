@@ -120,6 +120,7 @@ class TestDriver(unittest.TestCase):
         self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
+        self.testVertexEdgeQuery()
         self.restartOnNewGraph()
         self.getStatistics()
         self.callProcedure()
@@ -538,6 +539,116 @@ class TestDriver(unittest.TestCase):
         driver = Driver()
         sess = driver.getDefaultSession()
         print("create driver: ", sess)
+
+    def testVertexEdgeQuery(self):
+        # add vertex and edge
+        vertex_request = [
+            VertexRequest(
+                label="person",
+                primary_key_value=8,
+                properties=[
+                    ModelProperty(name="name", type="string", value="mike"),
+                    ModelProperty(name="age", type="integer", value=12),
+                ],
+            ),
+        ]
+        edge_request = [
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=8,
+                dst_primary_key_value=1,
+                properties=[ModelProperty(name="weight", value=7)],
+            ),
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=8,
+                dst_primary_key_value=2,
+                properties=[ModelProperty(name="weight", value=5)],
+            ),
+        ]
+        resp = self._sess.add_vertex(
+            self._graph_id,
+            VertexEdgeRequest(vertex_request=vertex_request, edge_request=edge_request),
+        )
+        assert resp.is_ok()
+        # get vertex
+        resp = self._sess.get_vertex(self._graph_id, "person", 8)
+        assert resp.is_ok()
+        for k, v in resp.get_value().values:
+            if k == "name":
+                assert v == "mike"
+            if k == "age":
+                assert v == 12
+        vertex_request = VertexRequest(
+            label="person",
+            primary_key_value=1,
+            properties=[
+                ModelProperty(name="name", type="string", value="Cindy"),
+                ModelProperty(name="age", type="integer", value=24),
+            ],
+        )
+        # update vertex
+        resp = self._sess.update_vertex(self._graph_id, vertex_request)
+        assert resp.is_ok()
+        resp = self._sess.get_vertex(self._graph_id, "person", 8)
+        assert resp.is_ok()
+        for k, v in resp.get_value().values:
+            if k == "age":
+                assert v == 13
+        edge_request = [
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=2,
+                dst_primary_key_value=4,
+                properties=[ModelProperty(name="weight", value=9.123)],
+            ),
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=2,
+                dst_primary_key_value=6,
+                properties=[ModelProperty(name="weight", value=3.233)],
+            ),
+        ]
+        # add edge
+        resp = self._sess.add_edge(self._graph_id, edge_request)
+        assert resp.is_ok()
+        # get edge
+        resp = self._sess.get_edge(self._graph_id, "knows", "person", 2, "person", 4)
+        assert resp.is_ok()
+        for k, v in resp.get_value().properties:
+            if k == "weight":
+                assert v == 9.123
+        resp = self._sess.get_edge(self._graph_id, "knows", "person", 8, "person", 1)
+        assert resp.is_ok()
+        for k, v in resp.get_value().properties:
+            if k == "weight":
+                assert v == 7
+        # update edge
+        resp = self._sess.update_edge(
+            self._graph_id,
+            EdgeRequest(
+                src_label="person",
+                dst_label="person",
+                edge_label="knows",
+                src_primary_key_value=2,
+                dst_primary_key_value=4,
+                properties=[ModelProperty(name="weight", value=3)],
+            ),
+        )
+        assert resp.is_ok()
+        resp = self._sess.get_edge(self._graph_id, "knows", "person", 2, "person", 4)
+        assert resp.is_ok()
+        for k, v in resp.get_value().properties:
+            if k == "weight":
+                assert v == 3
 
 
 if __name__ == "__main__":

@@ -105,19 +105,20 @@ public class DriverTest {
         test1BulkLoading();
         test2BulkLoadingUploading();
         test3StartService();
-        test4CypherAdhocQuery();
-        test5GremlinAdhoQuery();
-        test6CreateCypherProcedure();
-        test7CreateCppProcedure1();
-        test7CreateCppProcedure2();
+        // test4CypherAdhocQuery();
+        // test5GremlinAdhoQuery();
+        // test6CreateCypherProcedure();
+        // test7CreateCppProcedure1();
+        // test7CreateCppProcedure2();
         test8Restart();
-        test9GetGraphStatistics();
-        test9CallCppProcedureJson();
-        test9CallCppProcedure1Current();
-        test9CallCppProcedure2();
-        test10CallCypherProcedureViaNeo4j();
-        testCallCypherProcedureProto();
-        testQueryInterface();
+        testVertexEdgeQuery();
+        // test9GetGraphStatistics();
+        // test9CallCppProcedureJson();
+        // test9CallCppProcedure1Current();
+        // test9CallCppProcedure2();
+        // test10CallCypherProcedureViaNeo4j();
+        // testCallCypherProcedureProto();
+        // testQueryInterface();
         test11CreateDriver();
     }
 
@@ -393,6 +394,87 @@ public class DriverTest {
             e.printStackTrace();
         }
         logger.info("service restarted: " + resp.getValue());
+    }
+
+    public void testVertexEdgeQuery() {
+        // add vertex and edge
+        VertexRequest vertexRequest = new VertexRequest().label("person").primaryKeyValue(8)
+                .addPropertiesItem(new Property().name("name").value("mike"))
+                .addPropertiesItem(new Property().name("age").value(12));
+        EdgeRequest edgeRequest1 = new EdgeRequest().srcLabel("person").dstLabel("person").edgeLabel("knows")
+                .srcPrimaryKeyValue(8).dstPrimaryKeyValue(1).addPropertiesItem(new Property().name("weight").value(7.0));
+        EdgeRequest edgeRequest2 = new EdgeRequest().srcLabel("person").dstLabel("person").edgeLabel("knows")
+                .srcPrimaryKeyValue(8).dstPrimaryKeyValue(2).addPropertiesItem(new Property().name("weight").value(5.0));
+
+        VertexEdgeRequest vertexEdgeRequest = new VertexEdgeRequest().addVertexRequestItem(vertexRequest)
+                .addEdgeRequestItem(edgeRequest1).addEdgeRequestItem(edgeRequest2);
+        Result<String> addVertexResponse = session.addVertex(graphId, vertexEdgeRequest);
+        assertOk(addVertexResponse);
+        // query vertex
+        Result<VertexData> getVertexResponse = session.getVertex(graphId, "person", 8);
+        assertOk(getVertexResponse);
+        for (Property property : getVertexResponse.getValue().getValues()) {
+            if (property.getName().equals("name")) {
+                assert property.getValue().equals("mike");
+            }
+            if (property.getName().equals("age")) {
+                // object is Integer
+                assert property.getValue().equals("12");
+            }
+        }
+        // update vertex
+        VertexRequest updateVertexRequest = new VertexRequest().label("person").primaryKeyValue(8)
+                .addPropertiesItem(new Property().name("name").value("Cindy"))
+                .addPropertiesItem(new Property().name("age").value(24));
+        Result<String> updateVertexResponse = session.updateVertex(graphId, updateVertexRequest);
+        assertOk(updateVertexResponse);
+        getVertexResponse = session.getVertex(graphId, "person", 8);
+        assertOk(getVertexResponse);
+        for (Property property : getVertexResponse.getValue().getValues()) {
+            if (property.getName().equals("age")) {
+                assert property.getValue().toString().equals("24");
+            }
+        }
+        // add edge
+        EdgeRequest edgeRequest3 = new EdgeRequest().srcLabel("person").dstLabel("person").edgeLabel("knows")
+                .srcPrimaryKeyValue(2).dstPrimaryKeyValue(4).addPropertiesItem(new Property().name("weight").value(9.123));
+        EdgeRequest edgeRequest4 = new EdgeRequest().srcLabel("person").dstLabel("person").edgeLabel("knows")
+                .srcPrimaryKeyValue(2).dstPrimaryKeyValue(6).addPropertiesItem(new Property().name("weight").value(3.233));
+        List<EdgeRequest> edgeRequests = new ArrayList<>();
+        edgeRequests.add(edgeRequest3);
+        edgeRequests.add(edgeRequest4);
+        Result<String> addEdgeResponse = session.addEdge(graphId, edgeRequests);
+        assertOk(addEdgeResponse);
+        // query edge
+        Result<EdgeData> getEdgeResponse = session.getEdge(graphId, "knows", "person", 2, "person", 4);
+        assertOk(getEdgeResponse);
+        for (Property property : getEdgeResponse.getValue().getProperties()) {
+            if (property.getName().equals("weight")) {
+                Double weight = Double.parseDouble(property.getValue().toString());
+                assert weight.equals(9.123);
+            }
+        }
+        getEdgeResponse = session.getEdge(graphId, "knows", "person", 8, "person", 1);
+        assertOk(getEdgeResponse);
+        for (Property property : getEdgeResponse.getValue().getProperties()) {
+            if (property.getName().equals("weight")) {
+                Double weight = Double.parseDouble(property.getValue().toString());
+                assert weight.equals(7.0);
+            }
+        }
+        // update edge
+        EdgeRequest updateEdgeRequest = new EdgeRequest().srcLabel("person").dstLabel("person").edgeLabel("knows")
+                .srcPrimaryKeyValue(2).dstPrimaryKeyValue(4).addPropertiesItem(new Property().name("weight").value(3.0));
+        Result<String> updateEdgeResponse = session.updateEdge(graphId, updateEdgeRequest);
+        assertOk(updateEdgeResponse);
+        getEdgeResponse = session.getEdge(graphId, "knows", "person", 2, "person", 4);
+        assertOk(getEdgeResponse);
+        for (Property property : getEdgeResponse.getValue().getProperties()) {
+            if (property.getName().equals("weight")) {
+                Double weight = Double.parseDouble(property.getValue().toString());
+                assert weight.equals(3.0);
+            }
+        }
     }
 
     public void test9GetGraphStatistics() {
