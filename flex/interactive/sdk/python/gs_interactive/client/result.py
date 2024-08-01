@@ -54,6 +54,9 @@ class Result(Generic[T]):
 
     def get_status_message(self):
         return self.status.message
+    
+    def get_status(self):
+        return self.status
 
     @staticmethod
     def ok(value):
