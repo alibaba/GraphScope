@@ -28,6 +28,52 @@ from gs_interactive.models import *
 from gs_interactive.client.status import StatusCode
 
 
+test_graph_def = {
+    "name": "modern_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"var_char": {"max_length" : 16}}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            }
+        ],
+    },
+}
+
 class TestDriver(unittest.TestCase):
     """Test usage of driver"""
 
@@ -62,6 +108,7 @@ class TestDriver(unittest.TestCase):
             print("delete graph: ", rep2)
 
     def test_example(self):
+        self.createGraphFromDict()
         self._graph_id = self.createGraph()
         self.bulkLoading()
         self.bulkLoadingUploading()
@@ -81,6 +128,14 @@ class TestDriver(unittest.TestCase):
         # test stop the service, and submit queries
         self.queryWithServiceStop()
         self.createDriver()
+    
+    def createGraphFromDict(self):
+        create_graph_request = CreateGraphRequest.from_dict(test_graph_def)
+        resp = self._sess.create_graph(create_graph_request)
+        assert resp.is_ok()
+        graph_id = resp.get_value().graph_id
+        print("Graph id: ", graph_id)
+        return graph_id
 
     def createGraph(self):
         create_graph = CreateGraphRequest(name="test_graph", description="test graph")
