@@ -111,8 +111,8 @@ class TestDriver(unittest.TestCase):
         self.createGraphFromDict()
         self._graph_id = self.createGraph()
         self.bulkLoading()
-        self.bulkLoadingUploading()
         self.bulkLoadingFailure()
+        self.bulkLoadingUploading()
         self.list_graph()
         self.get_graph_meta()
         self.runCypherQuery()
@@ -120,7 +120,7 @@ class TestDriver(unittest.TestCase):
         self.createCypherProcedure()
         self.createCppProcedure()
         self.restart()
-        self.testVertexEdgeQuery()
+        self.callVertexEdgeQuery()
         self.restartOnNewGraph()
         self.getStatistics()
         self.callProcedure()
@@ -540,7 +540,7 @@ class TestDriver(unittest.TestCase):
         sess = driver.getDefaultSession()
         print("create driver: ", sess)
 
-    def testVertexEdgeQuery(self):
+    def callVertexEdgeQuery(self):
         # add vertex and edge
         vertex_request = [
             VertexRequest(

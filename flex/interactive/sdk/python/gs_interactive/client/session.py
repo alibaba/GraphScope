@@ -318,6 +318,7 @@ class DefaultSession(Session):
         graph_id: StrictStr,
         vertex_edge_request: VertexEdgeRequest,
     ) -> Result[StrictStr]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             api_response = self._vertex_api.add_vertex_with_http_info(graph_id, vertex_edge_request)
             return Result.from_response(api_response)
@@ -343,6 +344,7 @@ class DefaultSession(Session):
             Any, Field(description="The primary key value of vertex.")
         ],
     ) -> Result[VertexRequest]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             api_response = self._vertex_api.get_vertex_with_http_info(graph_id, label, primary_key_value)
             return Result.from_response(api_response)
@@ -353,6 +355,7 @@ class DefaultSession(Session):
     def update_vertex(
         self, graph_id: StrictStr, vertex_request: VertexRequest
     ) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             api_response = self._vertex_api.update_vertex_with_http_info(graph_id, vertex_request)
             return Result.from_response(api_response)
@@ -361,6 +364,7 @@ class DefaultSession(Session):
 
     ################ Edge Interfaces ##########
     def add_edge(self, graph_id: StrictStr, edge_request: List[EdgeRequest]) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             api_response = self._edge_api.add_edge_with_http_info(graph_id, edge_request)
             return Result.from_response(api_response)
@@ -404,6 +408,7 @@ class DefaultSession(Session):
             Any, Field(description="The primary key value of dst vertex.")
         ],
     ) -> Result[Union[None, EdgeRequest]]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             api_response = self._edge_api.get_edge_with_http_info(
                 graph_id, edge_label, src_label, src_primary_key_value, dst_label, dst_primary_key_value
@@ -415,6 +420,7 @@ class DefaultSession(Session):
     def update_edge(
         self, graph_id: StrictStr, edge_request: EdgeRequest
     ) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
         try:
             api_response = self._edge_api.update_edge_with_http_info(graph_id, edge_request)
             return Result.from_response(api_response)
