@@ -201,19 +201,19 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     // g.V().has("id",2).both("1..5").with("PATH_OPT","ARBITRARY").with("RESULT_OPT","END_V").count()
     public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_endv_count();
-        
+
     // g.V().has("id",2).both("1..5").with("PATH_OPT","SIMPLE").with("RESULT_OPT","END_V").count()
     public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_simple_endv_count();
 
     // g.V().has("id",2).both("1..5").with("PATH_OPT","ARBITRARY").with("RESULT_OPT","ALL_V").count()
     public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allv_count();
-    
+
     // g.V().has("id",2).both("1..5").with("PATH_OPT","SIMPLE").with("RESULT_OPT","ALL_V").count()
     public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_simple_allv_count();
-    
+
     // g.V().has("id",2).both("1..5").with("PATH_OPT","ARBITRARY").with("RESULT_OPT","ALL_V_E").count()
     public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allve_count();
-    
+
     // g.V().has("id",2).both("1..5").with("PATH_OPT","SIMPLE").with("RESULT_OPT","ALL_V_E").count()
     public abstract Traversal<Vertex, Long> get_g_VX2X_both_with_simple_allve_count();
 
@@ -320,8 +320,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     @Test
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
-    public void g_VX2X_both_with_trail_allve_count() {    
-        // Skip this test in distributed settings because edge ids might differ 
+    public void g_VX2X_both_with_trail_allve_count() {
+        // Skip this test in distributed settings because edge ids might differ
         // across partitions in experimental store.
         assumeFalse("true".equals(System.getenv("DISTRIBUTED_ENV")));
         final Traversal<Vertex, Long> traversal = get_g_VX2X_both_with_trail_allve_count();
@@ -1507,72 +1507,72 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_endv_count() {
             return ((IrCustomizedTraversal)
                     g.V().has("id", 2)
-                    .both("1..5")
-                    .with("PATH_OPT", "ARBITRARY")
-                    .with("RESULT_OPT", "END_V")
-                    .count());
+                            .both("1..5")
+                            .with("PATH_OPT", "ARBITRARY")
+                            .with("RESULT_OPT", "END_V")
+                            .count());
         }
-    
+
         @Override
         public Traversal<Vertex, Long> get_g_VX2X_both_with_simple_endv_count() {
             return ((IrCustomizedTraversal)
                     g.V().has("id", 2)
-                    .both("1..5")
-                    .with("PATH_OPT", "SIMPLE")
-                    .with("RESULT_OPT", "END_V")
-                    .count());
+                            .both("1..5")
+                            .with("PATH_OPT", "SIMPLE")
+                            .with("RESULT_OPT", "END_V")
+                            .count());
         }
-    
+
         @Override
         public Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allv_count() {
             return ((IrCustomizedTraversal)
                     g.V().has("id", 2)
-                    .both("1..5")
-                    .with("PATH_OPT", "ARBITRARY")
-                    .with("RESULT_OPT", "ALL_V")
-                    .count());
+                            .both("1..5")
+                            .with("PATH_OPT", "ARBITRARY")
+                            .with("RESULT_OPT", "ALL_V")
+                            .count());
         }
-    
+
         @Override
         public Traversal<Vertex, Long> get_g_VX2X_both_with_simple_allv_count() {
             return ((IrCustomizedTraversal)
                     g.V().has("id", 2)
-                    .both("1..5")
-                    .with("PATH_OPT", "SIMPLE")
-                    .with("RESULT_OPT", "ALL_V")
-                    .count());
+                            .both("1..5")
+                            .with("PATH_OPT", "SIMPLE")
+                            .with("RESULT_OPT", "ALL_V")
+                            .count());
         }
-    
+
         @Override
         public Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allve_count() {
             return ((IrCustomizedTraversal)
                     g.V().has("id", 2)
-                    .both("1..5")
-                    .with("PATH_OPT", "ARBITRARY")
-                    .with("RESULT_OPT", "ALL_V_E")
-                    .count());
+                            .both("1..5")
+                            .with("PATH_OPT", "ARBITRARY")
+                            .with("RESULT_OPT", "ALL_V_E")
+                            .count());
         }
-    
+
         @Override
         public Traversal<Vertex, Long> get_g_VX2X_both_with_simple_allve_count() {
             return ((IrCustomizedTraversal)
                     g.V().has("id", 2)
-                    .both("1..5")
-                    .with("PATH_OPT", "SIMPLE")
-                    .with("RESULT_OPT", "ALL_V_E")
-                    .count());
+                            .both("1..5")
+                            .with("PATH_OPT", "SIMPLE")
+                            .with("RESULT_OPT", "ALL_V_E")
+                            .count());
         }
-    
+
         @Override
         public Traversal<Vertex, Long> get_g_VX2X_both_with_trail_allve_count() {
             return ((IrCustomizedTraversal)
-                            g.V().has("id", 2)
+                    g.V().has("id", 2)
                             .both("1..5")
                             .with("PATH_OPT", "TRAIL")
                             .with("RESULT_OPT", "ALL_V_E")
                             .count());
         }
-        
+
         @Override
         public Traversal<Vertex, Object> get_g_V_path_expand_until_age_gt_30_values_age() {
             return ((IrCustomizedTraversal)
