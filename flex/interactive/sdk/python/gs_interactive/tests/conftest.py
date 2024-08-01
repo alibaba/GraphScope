@@ -422,15 +422,17 @@ def delete_running_graph(sess: Session, graph_id: str):
     resp = sess.delete_graph(graph_id)
     assert resp.is_ok()
 
-def create_procedure(sess: Session, graph_id: str, name: str, query: str):
+def create_procedure(sess: Session, graph_id: str, name: str, query: str, description = "test proc"):
     request = CreateProcedureRequest(
         name=name,
-        description="test proc",
+        description=description,
         type="cypher",
         query=query)
 
     resp = sess.create_procedure(graph_id, request)
-    assert resp.is_ok()
+    if not resp.is_ok():
+        print("Failed to create procedure: ", resp.get_status_message())
+        raise Exception("Failed to create procedure, status: ", resp.get_status_message())
     proc_id = resp.get_value().procedure_id
     return proc_id
 

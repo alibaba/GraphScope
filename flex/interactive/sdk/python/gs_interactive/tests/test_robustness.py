@@ -18,6 +18,8 @@
 
 import os
 import sys
+
+import pytest
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
 from gs_interactive.client.driver import Driver
@@ -96,4 +98,22 @@ def test_service_switching(interactive_session,neo4j_session, create_modern_grap
     start_service_on_graph(interactive_session, create_vertex_only_modern_graph)
     call_procedure(neo4j_session, create_vertex_only_modern_graph, b_proc_id)
 
+
+def test_procedure_creation(interactive_session, neo4j_session, create_modern_graph):
+    print("[Test procedure creation]")
+
+    # create procedure with description contains spaces,',', and special characters '!','@','#','$','%','^','&','*','(',')'
+    a_proc_id = create_procedure(interactive_session, create_modern_graph, "test_proc", "MATCH(n: software) return count(n);", "This is a test procedure, with special characters: !@#$%^&*()")
+    print("Procedure id: ", a_proc_id)
+    start_service_on_graph(interactive_session, create_modern_graph)
+    call_procedure(neo4j_session, create_modern_graph, a_proc_id)
+
+    # create procedure with name containing space, should fail, expect to raise exception
+    with pytest.raises(Exception):
+        create_procedure(interactive_session, create_modern_graph, "test proc", "MATCH(n: software) return count(n);")
+
+
+    # create procedure with invalid cypher query, should fail, expect to raise exception
+    with pytest.raises(Exception):
+        create_procedure(interactive_session, create_modern_graph, "test_proc2", "MATCH(n: IDONTKOWN) return count(n)")
 
