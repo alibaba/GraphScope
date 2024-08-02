@@ -101,7 +101,6 @@ Context EdgeExpand::expand_edge_without_predicate(
       if (!props.empty()) {
         pt = props[0];
       }
-      LOG(INFO) << pt << "\n";
 
       SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
 
@@ -161,7 +160,6 @@ Context EdgeExpand::expand_edge_without_predicate(
     }
   } else {
     LOG(INFO) << "expand edge multiple";
-    LOG(INFO) << static_cast<int>(params.dir) << " " << params.labels.size();
     auto column =
         std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
     auto label_set = column->get_labels_set();
@@ -226,7 +224,6 @@ Context EdgeExpand::expand_edge_without_predicate(
         return ctx;
       }
     } else if (params.dir == Direction::kBoth) {
-      LOG(INFO) << "expand edge both" << labels.size();
       if (labels.size() > 1) {
         BDMLEdgeColumnBuilder builder(label_props);
         auto& input_vertex_list =

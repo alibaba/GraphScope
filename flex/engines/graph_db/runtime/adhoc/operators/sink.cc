@@ -14,28 +14,32 @@
  */
 
 #include "flex/engines/graph_db/runtime/adhoc/operators/operators.h"
+#include "flex/proto_generated_gie/results.pb.h"
 
 namespace gs {
 
 namespace runtime {
 
-void eval_sink(const Context& ctx, Encoder& output) {
+void eval_sink(const Context& ctx, const ReadTransaction& txn,
+               Encoder& output) {
   size_t row_num = ctx.row_num();
-  size_t col_num = ctx.col_num();
-  // LOG(INFO) << "sink: " << row_num;
+  results::CollectiveResults results;
+
   for (size_t i = 0; i < row_num; ++i) {
-    // LOG(INFO) << "row-" << i << ":";
-    for (size_t j = 0; j < col_num; ++j) {
+    auto result = results.add_results();
+    for (size_t j : ctx.tag_ids) {
       auto col = ctx.get(j);
       if (col == nullptr) {
         continue;
       }
+      auto column = result->mutable_record()->add_columns();
       auto val = col->get_elem(i);
-      LOG(INFO) << "\t" << val.to_string();
-      // LOG(INFO) << "\t" << val.to_string();
-      val.sink(output);
+      val.sink(txn, j, column);
     }
   }
+  LOG(INFO) << "sink: " << results.DebugString();
+  auto res = results.SerializeAsString();
+  output.put_bytes(res.data(), res.size());
 }
 
 }  // namespace runtime

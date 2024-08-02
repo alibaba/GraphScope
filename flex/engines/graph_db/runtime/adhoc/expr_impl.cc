@@ -117,7 +117,6 @@ RTAny LogicalExpr::eval_vertex(label_t label, vid_t v, size_t idx) const {
   } else if (logic_ == common::Logical::REGEX) {
     std::string ret(lhs_->eval_vertex(label, v, idx).as_string());
     std::string rhs(rhs_->eval_vertex(label, v, idx).as_string());
-    LOG(INFO) << ret << " " << rhs << "\n";
     return RTAny::from_bool(std::regex_match(ret, std::regex(rhs)));
 
   } else {
@@ -171,8 +170,6 @@ RTAny UnaryLogicalExpr::eval_path(size_t idx) const {
   if (logic_ == common::Logical::NOT) {
     return RTAny::from_bool(!expr_->eval_path(idx).as_bool());
   } else if (logic_ == common::Logical::ISNULL) {
-    LOG(INFO) << "is null "
-              << (expr_->eval_path(idx, 0).type() == RTAnyType::kNull);
     return RTAny::from_bool(expr_->eval_path(idx, 0).type() ==
                             RTAnyType::kNull);
   }
@@ -581,6 +578,9 @@ static std::unique_ptr<ExprBase> build_expr(
       // LOG(FATAL) << "not support" << opr.DebugString();
       // break;
     }
+    case common::ExprOpr::kMap: {
+      LOG(FATAL) << "not support" << opr.DebugString();
+    }
     default:
       LOG(FATAL) << "not support" << opr.DebugString();
       break;
@@ -641,6 +641,11 @@ static std::unique_ptr<ExprBase> parse_expression_impl(
       break;
     }
     case common::ExprOpr::kCase: {
+      opr_stack2.push(*it);
+      break;
+    }
+    case common::ExprOpr::kMap: {
+      LOG(INFO) << "kVarMap";
       opr_stack2.push(*it);
       break;
     }

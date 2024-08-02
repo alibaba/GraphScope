@@ -155,6 +155,19 @@ ISigColumn* MLVertexColumn::generate_signature() const {
   return new SigColumn<std::pair<label_t, vid_t>>(vertices_);
 }
 
+void MLVertexColumn::generate_dedup_offset(std::vector<size_t>& offsets) const {
+  offsets.clear();
+  std::set<std::pair<label_t, vid_t>> vset;
+  size_t n = vertices_.size();
+  for (size_t i = 0; i != n; ++i) {
+    auto cur = vertices_[i];
+    if (vset.find(cur) == vset.end()) {
+      offsets.push_back(i);
+      vset.insert(cur);
+    }
+  }
+}
+
 std::shared_ptr<IContextColumn> MLVertexColumn::dup() const {
   MLVertexColumnBuilder builder(labels_);
   for (auto& pair : vertices_) {

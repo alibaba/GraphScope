@@ -13,31 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef RUNTIME_COMMON_OPERATORS_DEDUP_H_
-#define RUNTIME_COMMON_OPERATORS_DEDUP_H_
-
-#include <set>
-#include <unordered_set>
-
-#include "flex/engines/graph_db/database/read_transaction.h"
-#include "flex/engines/graph_db/runtime/common/context.h"
+#ifndef ENGINES_GRAPH_DB_ADHOC_APP_H_
+#define ENGINES_GRAPH_DB_ADHOC_APP_H_
+#include "flex/engines/graph_db/app/app_base.h"
+#include "flex/engines/graph_db/database/graph_db_session.h"
 
 namespace gs {
-
-namespace runtime {
-
-
-class Dedup {
+class AdhocReadApp : public ReadAppBase {
  public:
-  static void dedup(const ReadTransaction& txn, Context& ctx,
-                    const std::vector<size_t>& cols);
-  static void dedup(const ReadTransaction& txn, Context& ctx,
-                    const std::vector<size_t>& cols,
-                    const std::vector<std::function<RTAny(size_t)>>& vars);
+  AdhocReadApp() = default;
+
+  AppType type() const override { return AppType::kCypherAdhoc; }
+
+  bool Query(const GraphDBSession& graph, Decoder& input,
+             Encoder& output) override;
 };
 
-}  // namespace runtime
+class AdhocReadAppFactory : public AppFactoryBase {
+ public:
+  AdhocReadAppFactory() = default;
+  ~AdhocReadAppFactory() = default;
+
+  AppWrapper CreateApp(const GraphDB& db) override;
+};
 
 }  // namespace gs
-
-#endif  // RUNTIME_COMMON_OPERATORS_DEDUP_H_
+#endif  // ENGINES_GRAPH_DB_ADHOC_APP_H_

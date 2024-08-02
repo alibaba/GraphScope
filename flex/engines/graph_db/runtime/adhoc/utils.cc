@@ -216,6 +216,15 @@ std::shared_ptr<IContextColumn> build_column(
       }
       return builder.finish();
     } break;
+    case common::DataType::DOUBLE: {
+      ValueColumnBuilder<double> builder;
+      builder.reserve(row_num);
+      for (size_t i = 0; i < row_num; ++i) {
+        auto v = expr.eval_path(i).as_double();
+        builder.push_back_opt(v);
+      }
+      return builder.finish();
+    } break;
     default: {
       LOG(FATAL) << "not support: "
                  << common::DataType_Name(data_type.data_type());
@@ -320,6 +329,14 @@ std::shared_ptr<IContextColumn> build_column_beta(const Expr& expr,
       builder.push_back_opt(expr.eval_path(i).as_int32());
     }
 
+    return builder.finish();
+  } break;
+  case RTAnyType::RTAnyTypeImpl::kF64Value: {
+    ValueColumnBuilder<double> builder;
+    builder.reserve(row_num);
+    for (size_t i = 0; i < row_num; ++i) {
+      builder.push_back_opt(expr.eval_path(i).as_double());
+    }
     return builder.finish();
   } break;
   case RTAnyType::RTAnyTypeImpl::kEdge: {

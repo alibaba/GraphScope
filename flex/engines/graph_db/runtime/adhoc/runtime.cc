@@ -190,8 +190,6 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
       auto ctx = runtime_eval_impl(op.left_plan(), std::move(ret), txn, params);
       auto ctx2 =
           runtime_eval_impl(op.right_plan(), std::move(ret_dup), txn, params);
-      LOG(INFO) << ctx.row_num() << " " << ctx2.row_num() << " "
-                << ctx.col_num() << " " << ctx2.col_num();
       ret = eval_join(op, std::move(ctx), std::move(ctx2));
 
     } break;
@@ -216,8 +214,6 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
       LOG(FATAL) << "opr not support..." << get_opr_name(opr);
       break;
     }
-    // ret.desc("opr-" + std::to_string(i) + ": " + get_opr_name(opr) + " - " +
-    //          std::to_string(t));
     if (terminate) {
       break;
     }
@@ -228,13 +224,7 @@ Context runtime_eval_impl(const physical::PhysicalPlan& plan, Context&& ctx,
 Context runtime_eval(const physical::PhysicalPlan& plan,
                      const ReadTransaction& txn,
                      const std::map<std::string, std::string>& params) {
-  Context ret;
-  // LOG(INFO) << "input: ";
-  // for (auto& pair : params) {
-  //   LOG(INFO) << "\t" << pair.first << ": " << pair.second;
-  // }
-
-  return runtime_eval_impl(plan, std::move(ret), txn, params);
+  return runtime_eval_impl(plan, Context(), txn, params);
 }
 
 }  // namespace runtime

@@ -106,7 +106,8 @@ class StoppableHandler : public seastar::httpd::handler_base {
 class graph_db_http_handler {
  public:
   graph_db_http_handler(uint16_t http_port, int32_t shard_num,
-                        bool enable_adhoc_handlers = false);
+                        bool enable_adhoc_handlers = false,
+                        bool enable_codegen = false);
 
   ~graph_db_http_handler();
 
@@ -132,7 +133,7 @@ class graph_db_http_handler {
   seastar::httpd::http_server_control server_;
 
   std::atomic<bool> enable_adhoc_handlers_{false}, running_{false},
-      actors_running_{false};
+      actors_running_{false}, enable_codegen_{false};
 
   // Handles graph queries submitted to /v1/graph/current/query
   std::vector<StoppableHandler*> current_graph_query_handlers_;

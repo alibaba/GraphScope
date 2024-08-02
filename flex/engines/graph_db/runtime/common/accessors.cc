@@ -117,6 +117,8 @@ std::shared_ptr<IAccessor> create_edge_property_path_accessor(
                                                                         tag);
   case RTAnyType::RTAnyTypeImpl::kDate32:
     return std::make_shared<EdgePropertyPathAccessor<Date>>(ctx, tag);
+  case RTAnyType::RTAnyTypeImpl::kF64Value:
+    return std::make_shared<EdgePropertyPathAccessor<double>>(ctx, tag);
   default:
     LOG(FATAL) << "not implemented - " << static_cast<int>(type.type_enum_);
   }

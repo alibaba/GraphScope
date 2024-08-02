@@ -33,23 +33,21 @@ Var::Var(const ReadTransaction& txn, const Context& ctx,
   if (pb.has_node_type()) {
     type_ = parse_from_ir_data_type(pb.node_type());
   }
+  if (pb.has_tag()) {
+    tag = pb.tag().id();
+  }
 
   if (type_ == RTAnyType::kUnknown) {
     if (pb.has_tag()) {
       tag = pb.tag().id();
       CHECK(ctx.get(tag) != nullptr);
-      // ?
       type_ = ctx.get(tag)->elem_type();
     } else {
       LOG(FATAL) << "not support";
     }
   }
-  LOG(INFO) << "type: " << static_cast<int>(type_.type_enum_);
 
   if (pb.has_tag() || var_type == VarType::kPathVar) {
-    tag = pb.tag().id();
-    LOG(INFO) << "tag: " << tag;
-    LOG(INFO) << "column nullptr: " << (ctx.get(tag) == nullptr);
     if (ctx.get(tag)->column_type() == ContextColumnType::kVertex) {
       if (pb.has_property()) {
         auto& pt = pb.property();

@@ -51,11 +51,6 @@ Context eval_path_expand_v(const physical::PathExpand& opr,
   }
   pep.start_tag = start_tag;
   pep.labels = parse_label_triplets(meta);
-  LOG(INFO) << pep.labels.size();
-  for (auto& label : pep.labels) {
-    LOG(INFO) << (int) label.src_label << " " << (int) label.edge_label << " "
-              << (int) label.dst_label;
-  }
   if (opr.base().edge_expand().expand_opt() ==
       physical::EdgeExpand_ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
     if (query_params.has_predicate()) {
@@ -97,11 +92,6 @@ Context eval_path_expand_p(const physical::PathExpand& opr,
   }
   pep.start_tag = start_tag;
   pep.labels = parse_label_triplets(meta);
-  LOG(INFO) << pep.labels.size();
-  for (auto& label : pep.labels) {
-    LOG(INFO) << (int) label.src_label << " " << (int) label.edge_label << " "
-              << (int) label.dst_label;
-  }
 
   if (query_params.has_predicate()) {
     LOG(FATAL) << "not support";

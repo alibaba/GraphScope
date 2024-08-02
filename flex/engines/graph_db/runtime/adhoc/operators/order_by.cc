@@ -68,8 +68,6 @@ Context eval_order_by(const algebra::OrderBy& opr, const ReadTransaction& txn,
 
   GeneralComparer cmp;
   int keys_num = opr.pairs_size();
-  LOG(INFO) << opr.DebugString();
-  LOG(INFO) << keys_num << " keys num\n";
   for (int i = 0; i < keys_num; ++i) {
     const algebra::OrderBy_OrderingPair& pair = opr.pairs(i);
     Var v(txn, ctx, pair.key(), VarType::kPathVar);
@@ -82,12 +80,8 @@ Context eval_order_by(const algebra::OrderBy& opr, const ReadTransaction& txn,
         algebra::OrderBy_OrderingPair_Order::OrderBy_OrderingPair_Order_ASC;
     cmp.add_keys(std::move(v), order);
   }
-  LOG(INFO) << "OrderBy: keys_num = " << keys_num;
 
   OrderBy::order_by_with_limit<GeneralComparer>(txn, ctx, cmp, lower, upper);
-
-  LOG(INFO) << "OrderBy: done";
-
   return ctx;
 }
 

@@ -16,8 +16,10 @@
 #ifndef RUNTIME_COMMON_RT_ANY_H_
 #define RUNTIME_COMMON_RT_ANY_H_
 
+#include "flex/proto_generated_gie/results.pb.h"
 #include "flex/proto_generated_gie/type.pb.h"
 
+#include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/runtime/common/types.h"
 #include "flex/utils/app_utils.h"
 
@@ -137,6 +139,7 @@ class RTAnyType {
     kI64Value,
     kU64Value,
     kI32Value,
+    kF64Value,
     kBoolValue,
     kStringValue,
     kVertexSetValue,
@@ -153,6 +156,7 @@ class RTAnyType {
   static const RTAnyType kI64Value;
   static const RTAnyType kU64Value;
   static const RTAnyType kI32Value;
+  static const RTAnyType kF64Value;
   static const RTAnyType kBoolValue;
   static const RTAnyType kStringValue;
   static const RTAnyType kVertexSetValue;
@@ -188,6 +192,7 @@ union RTAnyValue {
   int64_t i64_val;
   uint64_t u64_val;
   int i32_val;
+  double f64_val;
   const std::vector<vid_t>* vset;
   const std::set<std::string>* str_set;
   std::string_view str_val;
@@ -225,12 +230,14 @@ class RTAny {
   static RTAny from_tuple(std::vector<RTAny>&& tuple);
   static RTAny from_tuple(const Tuple& tuple);
   static RTAny from_list(const List& list);
+  static RTAny from_double(double v);
 
   bool as_bool() const;
   int as_int32() const;
   int64_t as_int64() const;
   uint64_t as_uint64() const;
   int64_t as_date32() const;
+  double as_double() const;
   const std::pair<label_t, vid_t>& as_vertex() const;
   const std::tuple<LabelTriplet, vid_t, vid_t, Any, Direction>& as_edge() const;
   const std::set<std::string>& as_string_set() const;
@@ -248,7 +255,8 @@ class RTAny {
   RTAny operator-(const RTAny& other) const;
   RTAny operator/(const RTAny& other) const;
 
-  void sink(Encoder& encoder) const;
+  void sink(const gs::ReadTransaction& txn, int id,
+            results::Column* column) const;
   void encode_sig(RTAnyType type, Encoder& encoder) const;
 
   std::string to_string() const;
@@ -256,6 +264,7 @@ class RTAny {
   RTAnyType type() const;
 
  private:
+  void sink_impl(common::Value* collection) const;
   RTAnyType type_;
   RTAnyValue value_;
 };
@@ -331,6 +340,13 @@ struct TypedConverter<int64_t> {
   static const std::string name() { return "int64"; }
 };
 
+template <>
+struct TypedConverter<double> {
+  static RTAnyType type() { return RTAnyType::kI64Value; }
+  static double to_typed(const RTAny& val) { return val.as_double(); }
+  static RTAny from_typed(double val) { return RTAny::from_double(val); }
+  static const std::string name() { return "int64"; }
+};
 template <>
 struct TypedConverter<Date> {
   static RTAnyType type() { return RTAnyType::kDate32; }

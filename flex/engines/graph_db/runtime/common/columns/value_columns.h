@@ -116,7 +116,7 @@ class ValueColumn : public IValueColumn<T> {
 };
 
 template <>
-class ValueColumn<std::string_view> : public IContextColumn {
+class ValueColumn<std::string_view> : public IValueColumn<std::string_view> {
  public:
   ValueColumn() = default;
   ~ValueColumn() = default;
@@ -145,7 +145,7 @@ class ValueColumn<std::string_view> : public IContextColumn {
     return RTAny::from_string(data_[idx]);
   }
 
-  std::string_view get_value(size_t idx) const {
+  std::string_view get_value(size_t idx) const override {
     return std::string_view(data_[idx]);
   }
 

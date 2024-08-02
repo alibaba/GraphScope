@@ -27,18 +27,15 @@ Context eval_edge_expand(const physical::EdgeExpand& opr,
                          const ReadTransaction& txn, Context&& ctx,
                          const std::map<std::string, std::string>& params,
                          const physical::PhysicalOpr_MetaData& meta) {
-  CHECK(opr.has_v_tag());
-  int v_tag = opr.v_tag().value();
-  LOG(INFO) << opr.DebugString();
+  int v_tag;
+  if (!opr.has_v_tag()) {
+    v_tag = -1;
+  } else {
+    v_tag = opr.v_tag().value();
+  }
 
   Direction dir = parse_direction(opr.direction());
-  // parse optional
   bool is_optional = opr.is_optional();
-  // if (is_optional) {
-  //   LOG(INFO) << "optional edge expand";
-  // } else {
-  //   LOG(INFO) << "not optional edge expand";
-  // }
   CHECK(!is_optional);
 
   CHECK(opr.has_params());
@@ -59,7 +56,6 @@ Context eval_edge_expand(const physical::EdgeExpand& opr,
       eep.labels = parse_label_triplets(meta);
       eep.dir = dir;
       eep.alias = alias;
-      LOG(INFO) << "expand vertex without predicate";
       return EdgeExpand::expand_vertex_without_predicate(txn, std::move(ctx),
                                                          eep);
     }

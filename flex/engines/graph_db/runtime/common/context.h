@@ -33,6 +33,9 @@ class Context {
 
   void clear();
 
+  void update_tag_ids(const std::vector<size_t>& tag_ids);
+
+  void append_tag_id(size_t tag_id);
   void set(int alias, std::shared_ptr<IContextColumn> col);
 
   void set_with_reshuffle(int alias, std::shared_ptr<IContextColumn> col,
@@ -67,6 +70,7 @@ class Context {
   std::vector<std::shared_ptr<IContextColumn>> columns;
   std::shared_ptr<IContextColumn> head;
   std::vector<std::shared_ptr<ValueColumn<size_t>>> idx_columns;
+  std::vector<size_t> tag_ids;
 };
 
 }  // namespace runtime

@@ -349,13 +349,183 @@ class adhoc_query_handler : public StoppableHandler {
     return executor_refs;
   }
 
+  adhoc_query_handler(uint32_t init_group_id, uint32_t max_group_id,
+                      uint32_t group_inc_step, uint32_t shard_concurrency)
+      : StoppableHandler(init_group_id, max_group_id, group_inc_step,
+                         shard_concurrency),
+        executor_idx_(0) {
+    auto& executor_refs = get_executors();
+    CHECK(executor_refs.size() >= StoppableHandler::shard_id());
+    executor_refs[StoppableHandler::shard_id()].reserve(shard_concurrency_);
+    {
+      hiactor::scope_builder builder;
+      builder.set_shard(StoppableHandler::shard_id())
+          .enter_sub_scope(hiactor::scope<executor_group>(0))
+          .enter_sub_scope(hiactor::scope<hiactor::actor_group>(init_group_id));
+      for (unsigned i = 0; i < shard_concurrency_; ++i) {
+        executor_refs[StoppableHandler::shard_id()].emplace_back(
+            builder.build_ref<executor_ref>(i));
+      }
+    }
+#ifdef HAVE_OPENTELEMETRY_CPP
+    total_counter_ = otel::create_int_counter("hqps_adhoc_query_total");
+    latency_histogram_ =
+        otel::create_double_histogram("hqps_adhoc_query_latency");
+#endif  // HAVE_OPENTELEMETRY_CPP
+  }
+
+  ~adhoc_query_handler() override = default;
+
+  seastar::future<> stop() override {
+    return StoppableHandler::cancel_scope([this] {
+      LOG(INFO) << "Stopping adhoc actors on shard id: "
+                << StoppableHandler::shard_id();
+      get_executors()[StoppableHandler::shard_id()].clear();
+    });
+  }
+
+  bool start() override {
+    if (get_executors()[StoppableHandler::shard_id()].size() > 0) {
+      LOG(ERROR) << "The actors have been already created!";
+      return false;
+    }
+    return StoppableHandler::start_scope(
+        [this](hiactor::scope_builder& builder) {
+          for (unsigned i = 0; i < StoppableHandler::shard_concurrency_; ++i) {
+            get_executors()[StoppableHandler::shard_id()].emplace_back(
+                builder.build_ref<executor_ref>(i));
+          }
+        });
+  }
+
+  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
+      const seastar::sstring& path,
+      std::unique_ptr<seastar::httpd::request> req,
+      std::unique_ptr<seastar::httpd::reply> rep) override {
+    auto dst_executor = executor_idx_;
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+
+    if (path != "/v1/graph/current/adhoc_query" &&
+        req->param.exists("graph_id")) {
+      // TODO(zhanglei): get from graph_db.
+      if (!is_running_graph(req->param["graph_id"])) {
+        rep->set_status(
+            seastar::httpd::reply::status_type::internal_server_error);
+        rep->write_body("bin",
+                        seastar::sstring("The querying query is not running:" +
+                                         req->param["graph_id"]));
+        rep->done();
+        return seastar::make_ready_future<
+            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+      }
+    }
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+    auto tracer = otel::get_tracer("adhoc_query_handler");
+    // Extract context from headers. This copy is necessary to avoid access
+    // after header content been freed
+    std::map<std::string, std::string> headers(req->_headers.begin(),
+                                               req->_headers.end());
+    auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+    auto options = otel::get_parent_ctx(current_ctx, headers);
+    auto outer_span = tracer->StartSpan("adhoc_query_handling", options);
+    auto scope = tracer->WithActiveSpan(outer_span);
+    // create a new span for query execution, not started.
+    auto start_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch())
+                        .count();
+#endif  // HAVE_OPENTELEMETRY_CPP
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+    options.parent = outer_span->GetContext();
+    auto query_span = tracer->StartSpan("adhoc_query_execution", options);
+    auto query_scope = tracer->WithActiveSpan(query_span);
+#endif  // HAVE_OPENTELEMETRY_CPP
+        // TODO(zhanglei): choose read or write based on the request, after the
+        //  read/write info is supported in physical plan
+        // The content contains the path to dynamic library
+    req->content.append(gs::Schema::ADHOC_READ_PLUGIN_ID_STR, 1);
+    req->content.append(gs::GraphDBSession::kCypherProtoAdhocStr, 1);
+    return get_executors()[StoppableHandler::shard_id()][dst_executor]
+        .run_graph_db_query(query_param{std::move(req->content)})
+        .then([
+#ifdef HAVE_OPENTELEMETRY_CPP
+                  query_span = query_span, query_scope = std::move(query_scope)
+#endif  // HAVE_OPENTELEMETRY_CPP
+    ](auto&& output) {
+          return seastar::make_ready_future<query_param>(
+              std::move(output.content));
+        })
+        .then_wrapped([rep = std::move(rep)
+#ifdef HAVE_OPENTELEMETRY_CPP
+                           ,
+                       this, outer_span, start_ts
+#endif  // HAVE_OPENTELEMETRY_CPP
+    ](seastar::future<query_result>&& fut) mutable {
+          if (__builtin_expect(fut.failed(), false)) {
+            rep->set_status(
+                seastar::httpd::reply::status_type::internal_server_error);
+            try {
+              std::rethrow_exception(fut.get_exception());
+            } catch (std::exception& e) {
+              rep->write_body("bin", seastar::sstring(e.what()));
+            }
+#ifdef HAVE_OPENTELEMETRY_CPP
+            outer_span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                                  "Internal Server Error");
+            outer_span->End();
+            std::map<std::string, std::string> labels = {{ "status", "fail" }};
+            total_counter_->Add(1, labels);
+#endif  // HAVE_OPENTELEMETRY_CPP
+            rep->done();
+            return seastar::make_ready_future<
+                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+          }
+          auto result = fut.get0();
+          rep->write_body("bin", std::move(result.content));
+#ifdef HAVE_OPENTELEMETRY_CPP
+          outer_span->End();
+          std::map<std::string, std::string> labels = {{ "status", "success" }};
+          total_counter_->Add(1, labels);
+          auto end_ts = gs::GetCurrentTimeStamp();
+#if OPENTELEMETRY_ABI_VERSION_NO >= 2
+          latency_histogram_->Record(end_ts - start_ts);
+#else
+          latency_histogram_->Record(end_ts - start_ts,
+                                     opentelemetry::context::Context{});
+#endif
+#endif  // HAVE_OPENTELEMETRY_CPP
+          rep->done();
+          return seastar::make_ready_future<
+              std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+        });
+  }
+
+ private:
+  uint32_t executor_idx_;
+
+#ifdef HAVE_OPENTELEMETRY_CPP
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Counter<uint64_t>>
+      total_counter_;
+  opentelemetry::nostd::unique_ptr<opentelemetry::metrics::Histogram<double>>
+      latency_histogram_;
+#endif
+};
+
+class codegen_query_handler : public StoppableHandler {
+ public:
+  static std::vector<std::vector<executor_ref>>& get_executors() {
+    static std::vector<std::vector<executor_ref>> executor_refs;
+    return executor_refs;
+  }
+
   static std::vector<std::vector<codegen_actor_ref>>& get_codegen_actors() {
     static std::vector<std::vector<codegen_actor_ref>> codegen_actor_refs;
     return codegen_actor_refs;
   }
 
-  adhoc_query_handler(uint32_t init_group_id, uint32_t max_group_id,
-                      uint32_t group_inc_step, uint32_t shard_concurrency)
+  codegen_query_handler(uint32_t init_group_id, uint32_t max_group_id,
+                        uint32_t group_inc_step, uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
         executor_idx_(0) {
@@ -389,7 +559,7 @@ class adhoc_query_handler : public StoppableHandler {
 #endif  // HAVE_OPENTELEMETRY_CPP
   }
 
-  ~adhoc_query_handler() override = default;
+  ~codegen_query_handler() override = default;
 
   seastar::future<> stop() override {
     return StoppableHandler::cancel_scope([this] {
@@ -440,7 +610,7 @@ class adhoc_query_handler : public StoppableHandler {
     }
 
 #ifdef HAVE_OPENTELEMETRY_CPP
-    auto tracer = otel::get_tracer("adhoc_query_handler");
+    auto tracer = otel::get_tracer("codegen_query_handler");
     // Extract context from headers. This copy is necessary to avoid access
     // after header content been freed
     std::map<std::string, std::string> headers(req->_headers.begin(),
@@ -584,17 +754,23 @@ class adhoc_query_handler : public StoppableHandler {
 
 graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
                                              int32_t shard_num,
-                                             bool enable_adhoc_handlers)
+                                             bool enable_adhoc_handlers,
+                                             bool enable_codegen)
     : http_port_(http_port),
       enable_adhoc_handlers_(enable_adhoc_handlers),
       running_(false),
-      actors_running_(true) {
+      actors_running_(true),
+      enable_codegen_(enable_codegen) {
   current_graph_query_handlers_.resize(shard_num);
   all_graph_query_handlers_.resize(shard_num);
   if (enable_adhoc_handlers_) {
     adhoc_query_handlers_.resize(shard_num);
-    adhoc_query_handler::get_executors().resize(shard_num);
-    adhoc_query_handler::get_codegen_actors().resize(shard_num);
+    if (enable_codegen_) {
+      codegen_query_handler::get_executors().resize(shard_num);
+      codegen_query_handler::get_codegen_actors().resize(shard_num);
+    } else {
+      adhoc_query_handler::get_executors().resize(shard_num);
+    }
   }
   stored_proc_handler::get_executors().resize(shard_num);
 }
@@ -705,16 +881,31 @@ seastar::future<> graph_db_http_handler::set_routes() {
         .add_str("/query");
     r.add(rule_proc, seastar::httpd::operation_type::POST);
     if (enable_adhoc_handlers_.load()) {
-      auto adhoc_query_handler_ =
-          new adhoc_query_handler(ic_adhoc_group_id, max_group_id,
-                                  group_inc_step, shard_adhoc_concurrency);
-      adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
-      // Add routes
-      auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
-      rule_adhoc->add_str("/v1/graph")
-          .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
-          .add_str("/adhoc_query");
-      r.add(rule_adhoc, seastar::httpd::operation_type::POST);
+      if (enable_codegen_.load()) {
+        auto codegen_query_handler_ =
+            new codegen_query_handler(ic_adhoc_group_id, max_group_id,
+                                      group_inc_step, shard_adhoc_concurrency);
+        adhoc_query_handlers_[hiactor::local_shard_id()] =
+            codegen_query_handler_;
+        // Add routes
+        auto rule_adhoc =
+            new seastar::httpd::match_rule(codegen_query_handler_);
+        rule_adhoc->add_str("/v1/graph")
+            .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+            .add_str("/adhoc_query");
+        r.add(rule_adhoc, seastar::httpd::operation_type::POST);
+      } else {
+        auto adhoc_query_handler_ =
+            new adhoc_query_handler(ic_adhoc_group_id, max_group_id,
+                                    group_inc_step, shard_adhoc_concurrency);
+        adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
+        // Add routes
+        auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
+        rule_adhoc->add_str("/v1/graph")
+            .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+            .add_str("/adhoc_query");
+        r.add(rule_adhoc, seastar::httpd::operation_type::POST);
+      }
     }
 
     return seastar::make_ready_future<>();

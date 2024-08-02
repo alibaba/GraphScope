@@ -142,10 +142,7 @@ class SDSLEdgeColumn : public IEdgeColumn {
     }
   }
 
-  std::vector<LabelTriplet> get_labels() const override {
-    LOG(INFO) << "get_labels: " << label_.to_string() << std::endl;
-    return {label_};
-  }
+  std::vector<LabelTriplet> get_labels() const override { return {label_}; }
 
   EdgeColumnType edge_column_type() const override {
     return EdgeColumnType::kSDSL;

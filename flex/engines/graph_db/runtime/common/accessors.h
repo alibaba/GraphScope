@@ -56,7 +56,7 @@ class IAccessor {
   virtual std::string name() const { return "unknown"; }
 
   virtual std::shared_ptr<IContextColumnBuilder> builder() const {
-    LOG(FATAL) << "not implemented for " << this->name();
+    // LOG(FATAL) << "not implemented for " << this->name();
     return nullptr;
   }
 };

@@ -103,9 +103,11 @@ std::pair<std::vector<std::vector<size_t>>, Context> generate_aggregate_indices(
   std::vector<std::shared_ptr<IContextColumnBuilder>> keys_columns;
   std::vector<RTAny> keys_row(keys_num);
   for (size_t k_i = 0; k_i < keys_num; ++k_i) {
-    auto builder = keys[k_i].key.builder();
-    if (builder == nullptr) {
-      auto type = keys[k_i].key.type();
+    auto type = keys[k_i].key.type();
+    std::shared_ptr<IContextColumnBuilder> builder;
+    if (type == RTAnyType::kList) {
+      builder = keys[k_i].key.builder();
+    } else {
       builder = create_column_builder(type);
     }
     keys_columns.push_back(builder);
@@ -145,6 +147,7 @@ std::pair<std::vector<std::vector<size_t>>, Context> generate_aggregate_indices(
   Context ret_ctx;
   for (size_t k_i = 0; k_i < keys_num; ++k_i) {
     ret_ctx.set(keys[k_i].alias, keys_columns[k_i]->finish());
+    ret_ctx.append_tag_id(keys[k_i].alias);
   }
 
   return std::make_pair(std::move(ret), std::move(ret_ctx));
@@ -430,9 +433,6 @@ Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
 
   int mappings_num = opr.mappings_size();
   // return ctx;
-  LOG(INFO) << "mappings_num: " << mappings_num << "\n";
-  LOG(INFO) << "func_num: " << func_num << "\n";
-  LOG(INFO) << "row_num: " << ctx.row_num() << "\n";
   if (mappings_num == 0) {
     Context ret;
     for (int i = 0; i < func_num; ++i) {
@@ -440,11 +440,11 @@ Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
       for (size_t _i = 0; _i < ctx.row_num(); ++_i) {
         tmp.emplace_back(_i);
       }
-      LOG(INFO) << "tmp size: " << tmp.size() << "\n";
       auto new_col = apply_reduce(functions[i], {tmp});
-      LOG(INFO) << "new_col size: " << new_col->size() << "\n";
       ret.set(functions[i].alias, new_col);
+      ret.append_tag_id(functions[i].alias);
     }
+
     return ret;
   } else {
     for (int i = 0; i < mappings_num; ++i) {
@@ -457,8 +457,8 @@ Context eval_group_by(const physical::GroupBy& opr, const ReadTransaction& txn,
     for (int i = 0; i < func_num; ++i) {
       auto new_col = apply_reduce(functions[i], to_aggregate);
       ret.set(functions[i].alias, new_col);
+      ret.append_tag_id(functions[i].alias);
     }
-    LOG(INFO) << ret.row_num() << "\n";
     return ret;
   }
 }

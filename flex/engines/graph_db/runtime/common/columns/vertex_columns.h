@@ -430,6 +430,8 @@ class MLVertexColumn : public IVertexColumn {
 
   ISigColumn* generate_signature() const override;
 
+  void generate_dedup_offset(std::vector<size_t>& offsets) const override;
+
  private:
   friend class MLVertexColumnBuilder;
   std::vector<std::pair<label_t, vid_t>> vertices_;

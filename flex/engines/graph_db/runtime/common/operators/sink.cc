@@ -29,7 +29,7 @@ void Sink::sink(const Context& ctx, Encoder& output) {
         continue;
       }
       auto val = col->get_elem(row_num - i - 1);
-      val.sink(output);
+      // val.sink(output);
     }
   }
 }

@@ -75,7 +75,7 @@ Context eval_intersect(const ReadTransaction& txn,
 
 Context eval_join(const physical::Join& opr, Context&& ctx, Context&& ctx2);
 
-void eval_sink(const Context& ctx, Encoder& output);
+void eval_sink(const Context& ctx, const ReadTransaction& txn, Encoder& output);
 
 }  // namespace runtime
 

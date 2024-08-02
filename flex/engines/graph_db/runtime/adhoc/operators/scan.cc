@@ -121,7 +121,6 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
   int64_t vertex_id;
   int alias;
   if (is_find_vertex(scan_opr, params, label, vertex_id, alias)) {
-    LOG(INFO) << "parse scan vertex";
     return Scan::find_vertex(txn, label, vertex_id, alias);
   }
 
@@ -150,7 +149,6 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
 
     if (scan_opr.has_idx_predicate() && scan_opr_params.has_predicate()) {
       Context ctx;
-      LOG(INFO) << "parse scan vertex";
       auto expr = parse_expression(
           txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
       int64_t oid{};
@@ -166,7 +164,6 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
       Context ctx;
       auto expr = parse_expression(
           txn, ctx, params, scan_opr_params.predicate(), VarType::kVertexVar);
-      LOG(INFO) << "parse scan vertex";
       return Scan::scan_vertex(
           txn, scan_params, [&expr](label_t label, vid_t vid) {
             return expr->eval_vertex(label, vid, 0).as_bool();
@@ -174,7 +171,6 @@ Context eval_scan(const physical::Scan& scan_opr, const ReadTransaction& txn,
     }
 
     if ((!scan_opr.has_idx_predicate()) && (!scan_opr_params.has_predicate())) {
-      LOG(INFO) << "parse scan vertex";
       return Scan::scan_vertex(txn, scan_params,
                                [](label_t, vid_t) { return true; });
     }

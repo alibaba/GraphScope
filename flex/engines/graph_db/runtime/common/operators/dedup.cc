@@ -95,6 +95,34 @@ void Dedup::dedup(const ReadTransaction& txn, Context& ctx,
   ctx.reshuffle(offsets);
 }
 
+void Dedup::dedup(const ReadTransaction& txn, Context& ctx,
+                  const std::vector<size_t>& cols,
+                  const std::vector<std::function<RTAny(size_t)>>& vars) {
+  std::set<std::string> set;
+  size_t row_num = ctx.row_num();
+  std::vector<size_t> offsets;
+  for (size_t r_i = 0; r_i < row_num; ++r_i) {
+    std::vector<char> bytes;
+    Encoder encoder(bytes);
+    for (size_t c_i = 0; c_i < cols.size(); ++c_i) {
+      auto val = ctx.get(cols[c_i])->get_elem(r_i);
+      val.encode_sig(val.type(), encoder);
+      encoder.put_byte('#');
+    }
+    for (auto& var : vars) {
+      auto val = var(r_i);
+      val.encode_sig(val.type(), encoder);
+      encoder.put_byte('#');
+    }
+    std::string cur(bytes.begin(), bytes.end());
+    if (set.find(cur) == set.end()) {
+      offsets.push_back(r_i);
+      set.insert(cur);
+    }
+  }
+  ctx.reshuffle(offsets);
+}
+
 }  // namespace runtime
 
 }  // namespace gs

@@ -27,6 +27,7 @@ void Context::clear() {
   columns.clear();
   head.reset();
   idx_columns.clear();
+  tag_ids.clear();
 }
 
 Context Context::dup() const {
@@ -49,7 +50,18 @@ Context Context::dup() const {
     new_ctx.idx_columns.emplace_back(
         std::dynamic_pointer_cast<ValueColumn<size_t>>(idx_col->dup()));
   }
+  new_ctx.tag_ids = tag_ids;
   return new_ctx;
+}
+
+void Context::update_tag_ids(const std::vector<size_t>& tag_ids) {
+  this->tag_ids = tag_ids;
+}
+
+void Context::append_tag_id(size_t tag_id) {
+  if (std::find(tag_ids.begin(), tag_ids.end(), tag_id) == tag_ids.end()) {
+    tag_ids.push_back(tag_id);
+  }
 }
 
 void Context::set(int alias, std::shared_ptr<IContextColumn> col) {
@@ -69,7 +81,8 @@ void Context::set_with_reshuffle(int alias, std::shared_ptr<IContextColumn> col,
   head = nullptr;
 
   if (alias >= 0) {
-    if (columns.size() > static_cast<size_t>(alias)) {
+    if (columns.size() > static_cast<size_t>(alias) &&
+        columns[alias] != nullptr) {
       columns[alias].reset();
       columns[alias] = nullptr;
     }
@@ -86,9 +99,11 @@ void Context::set_with_reshuffle_beta(int alias,
   LOG(INFO) << col->size();
   head.reset();
   head = nullptr;
+  // ??
 
   if (alias >= 0) {
-    if (columns.size() > static_cast<size_t>(alias)) {
+    if (columns.size() > static_cast<size_t>(alias) &&
+        columns[alias] != nullptr) {
       columns[alias].reset();
       columns[alias] = nullptr;
     }
