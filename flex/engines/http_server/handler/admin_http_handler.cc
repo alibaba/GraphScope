@@ -29,17 +29,6 @@
 
 namespace server {
 
-std::string trim_slash(const std::string& origin) {
-  std::string res = origin;
-  if (res.front() == '/') {
-    res.erase(res.begin());
-  }
-  if (res.back() == '/') {
-    res.pop_back();
-  }
-  return res;
-}
-
 // Only returns success if all results are success
 // But currently, only one file uploading is supported.
 admin_query_result generate_final_result(

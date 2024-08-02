@@ -18,6 +18,8 @@
 
 #include "flex/engines/http_server/types.h"
 
+#include "flex/storages/metadata/graph_meta_store.h"
+
 #include <hiactor/core/actor-template.hh>
 #include <hiactor/util/data_type.hh>
 
@@ -29,6 +31,22 @@ class ANNOTATION(actor:impl) executor : public hiactor::actor {
   ~executor() override;
 
   seastar::future<query_result> ANNOTATION(actor:method) run_graph_db_query(query_param&& param);
+  
+  seastar::future<admin_query_result> ANNOTATION(actor:method) create_vertex(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) create_edge(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_vertex(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) delete_edge(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) update_vertex(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) update_edge(graph_management_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) get_vertex(graph_management_query_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) get_edge(graph_management_query_param&& param);
 
 
   // DECLARE_RUN_QUERIES;
@@ -37,6 +55,7 @@ class ANNOTATION(actor:impl) executor : public hiactor::actor {
 
  private:
   int32_t your_private_members_ = 0;
+  std::shared_ptr<gs::IGraphMetaStore> metadata_store_;
 };
 
 }  // namespace server

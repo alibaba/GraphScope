@@ -56,6 +56,9 @@ class Status:
 
     def is_error(self) -> bool:
         return self.status != StatusCode.OK
+    
+    def get_code(self):
+        return self.status
 
     @property
     def get_message(self):
@@ -78,7 +81,10 @@ class Status:
         elif isinstance(exception, UnauthorizedException):
             return Status(StatusCode.BAD_REQUEST, str(exception))
         elif isinstance(exception, ServiceException):
-            return Status(StatusCode.SERVER_INTERNAL_ERROR, str(exception))
+            if (exception.status == 503):
+                return Status(StatusCode.SERVICE_UNAVAILABLE, str(exception))
+            else:
+                return Status(StatusCode.SERVER_INTERNAL_ERROR, str(exception))
         return Status(
             StatusCode.UNKNOWN, "Unknown Error from exception " + str(exception)
         )
