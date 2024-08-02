@@ -121,7 +121,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     queryParamsBuilder,
                     Utils.extractColumnsFromRelDataType(source.getRowType(), isColumnId));
         }
-        scanBuilder.setParams(buildQueryParams(source));
+        scanBuilder.setParams(queryParamsBuilder);
         if (source.getAliasId() != AliasInference.DEFAULT_ID) {
             scanBuilder.setAlias(Utils.asAliasId(source.getAliasId()));
         }
