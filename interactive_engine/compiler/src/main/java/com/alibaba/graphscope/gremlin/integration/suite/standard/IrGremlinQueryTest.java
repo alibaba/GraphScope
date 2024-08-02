@@ -303,7 +303,6 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(11, traversal.next().intValue());
     }
 
-
     @Test
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_VX2X_both_with_arbitrary_allv_count() {
@@ -1591,7 +1590,6 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                             .with("RESULT_OPT", "ALL_V")
                             .count());
         }
-
 
         @Override
         public Traversal<Vertex, Long> get_g_VX2X_both_with_arbitrary_allve_count() {
