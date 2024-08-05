@@ -53,6 +53,10 @@ void Encoder::put_int_at(size_t pos, int v) {
 
 void Encoder::put_byte(uint8_t v) { buf_.push_back(static_cast<char>(v)); }
 
+void Encoder::put_bytes(const char* data, size_t size) {
+  buf_.insert(buf_.end(), data, data + size);
+}
+
 size_t Encoder::skip_byte() {
   size_t size = buf_.size();
   buf_.resize(size + 1);
@@ -135,7 +139,11 @@ double Decoder::get_double() {
   data_ += 8;
   return ret;
 }
-
+std::string_view Decoder::get_bytes() {
+  std::string_view ret(data_, end_ - data_);
+  data_ = end_;
+  return ret;
+}
 std::string_view Decoder::get_string() {
   int len = get_int();
   std::string_view ret(data_, len);
