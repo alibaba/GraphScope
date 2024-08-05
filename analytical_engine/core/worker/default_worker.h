@@ -131,7 +131,6 @@ class DefaultWorker {
     MPI_Barrier(comm_spec_.comm());
 
     messages_.Finalize();
-    finishQuery();
   }
 
   std::shared_ptr<context_t> GetContext() { return context_; }
@@ -139,24 +138,6 @@ class DefaultWorker {
   void Output(std::ostream& os) { context_->Output(os); }
 
  private:
-  template <typename T = context_t>
-  typename std::enable_if<
-      std::is_base_of<JavaContextBase<fragment_t>, T>::value>::type
-  finishQuery() {
-    auto java_context =
-        std::dynamic_pointer_cast<JavaContextBase<fragment_t>>(context_);
-    if (java_context) {
-      VLOG(1) << "Write java heap data back to cpp context since it is java "
-                 "context";
-      java_context->WriteBackJVMHeapToCppContext();
-    }
-  }
-
-  template <typename T = context_t>
-  typename std::enable_if<
-      !std::is_base_of<JavaContextBase<fragment_t>, T>::value>::type
-  finishQuery() {}
-
   std::shared_ptr<APP_T> app_;
   std::shared_ptr<context_t> context_;
   message_manager_t messages_;

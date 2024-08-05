@@ -25,10 +25,13 @@ public class OperationBatch implements Iterable<OperationBlob> {
 
     private final long latestSnapshotId;
     private final List<OperationBlob> operationBlobs;
+    private final String traceId;
 
-    private OperationBatch(long latestSnapshotId, List<OperationBlob> operationBlobs) {
+    private OperationBatch(
+            long latestSnapshotId, List<OperationBlob> operationBlobs, String traceId) {
         this.latestSnapshotId = latestSnapshotId;
         this.operationBlobs = operationBlobs;
+        this.traceId = traceId;
     }
 
     public static OperationBatch parseProto(OperationBatchPb proto) {
@@ -38,7 +41,7 @@ public class OperationBatch implements Iterable<OperationBlob> {
         for (OperationPb operationPb : operationPbs) {
             operationBlobs.add(OperationBlob.parseProto(operationPb));
         }
-        return new OperationBatch(latestSnapshotId, operationBlobs);
+        return new OperationBatch(latestSnapshotId, operationBlobs, proto.getTraceId());
     }
 
     public int getOperationCount() {
@@ -54,6 +57,10 @@ public class OperationBatch implements Iterable<OperationBlob> {
         return latestSnapshotId;
     }
 
+    public String getTraceId() {
+        return traceId;
+    }
+
     public OperationBlob getOperationBlob(int i) {
         return operationBlobs.get(i);
     }
@@ -61,6 +68,9 @@ public class OperationBatch implements Iterable<OperationBlob> {
     public OperationBatchPb toProto() {
         OperationBatchPb.Builder builder = OperationBatchPb.newBuilder();
         builder.setLatestSnapshotId(latestSnapshotId);
+        if (this.traceId != null) {
+            builder.setTraceId(traceId);
+        }
         for (OperationBlob operationBlob : operationBlobs) {
             builder.addOperations(operationBlob.toProto());
         }
@@ -89,10 +99,12 @@ public class OperationBatch implements Iterable<OperationBlob> {
 
         private boolean built = false;
         private long latestSnapshotId;
+        private String traceId;
         private List<OperationBlob> operationBlobs;
 
         private Builder() {
             this.latestSnapshotId = 0L;
+            this.traceId = null;
             this.operationBlobs = new ArrayList<>();
         }
 
@@ -120,9 +132,14 @@ public class OperationBatch implements Iterable<OperationBlob> {
             return this;
         }
 
+        public Builder setTraceId(String traceId) {
+            this.traceId = traceId;
+            return this;
+        }
+
         public OperationBatch build() {
             this.built = true;
-            return new OperationBatch(latestSnapshotId, operationBlobs);
+            return new OperationBatch(latestSnapshotId, operationBlobs, traceId);
         }
     }
 }

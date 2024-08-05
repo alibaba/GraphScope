@@ -322,6 +322,18 @@ void CreateAndQuery(std::string params) {
         ArrowProjectedFragment<int64_t, uint64_t, std::string, std::string>;
     ProjectAndQuery<ProjectedFragmentType>(
         comm_spec, fragment, frag_name, new_params, user_lib_path, query_times);
+  } else if (vertex_data_type == "STRING" && edge_data_type == "LONG") {
+    std::string frag_name =
+        "gs::ArrowProjectedFragment<int64_t,uint64_t,std::string,int64_t>";
+    pt.put("frag_name", frag_name);
+    std::stringstream ss;
+    boost::property_tree::json_parser::write_json(ss, pt);
+    std::string new_params = ss.str();
+    using ProjectedFragmentType =
+        ArrowProjectedFragment<int64_t, uint64_t, std::string, int64_t>;
+    ProjectAndQuery<ProjectedFragmentType>(
+        comm_spec, fragment, frag_name, new_params, user_lib_path, query_times);
+
   } else {
     std::string frag_name =
         "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>";

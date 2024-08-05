@@ -160,9 +160,12 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         sed -i 's/interactive_workspace/temp_workspace/g' ./engine_config_test.yaml
+        # set thread_num_per_worker to 4
+        sed -i 's/thread_num_per_worker: 1/thread_num_per_worker: 4/g' ./engine_config_test.yaml
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml java
         bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml python
         sed -i 's/temp_workspace/interactive_workspace/g' ./engine_config_test.yaml
+        sed -i 's/thread_num_per_worker: 4/thread_num_per_worker: 1/g' ./engine_config_test.yaml
 
     - name: Sample Query test
       env:
@@ -291,6 +294,18 @@ jobs:
            ./modern_graph_schema_v0_0.yaml  ./modern_graph_schema_v0_1.yaml
         sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
         sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+      
+    - name: Let compiler use latest interactive java sdk
+      env:
+        HOME: /home/graphscope/
+      run: |
+        . /home/graphscope/.graphscope_env
+        . /home/graphscope/.cargo/env
+        # replace the <interactive.sdk.version>0.4</interactive.sdk.version> with the latest version in flex/interactive/sdk/java/pom.xml
+        sdk_version=$(grep -oPm1 "(?<=<version>)[^<]+" ${GITHUB_WORKSPACE}/flex/interactive/sdk/java/pom.xml)
+        sed -i "s/<interactive.sdk.version>.*<\/interactive.sdk.version>/<interactive.sdk.version>${sdk_version}<\/interactive.sdk.version>/" ${GITHUB_WORKSPACE}/interactive_engine/pom.xml
+        cd ${GITHUB_WORKSPACE}/interactive_engine/
+        mvn clean install -Pexperimental -DskipTests
 
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
@@ -375,14 +390,13 @@ jobs:
         mkdir build && cd build # only test default build
         cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && sudo make -j 4
 
-  # test the different combination of cmake options: -DBUILD_HQPS=ON/OFF -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
+  # test the different combination of cmake options: -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
   test-cmake-options:
     runs-on: ubuntu-20.04
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.23.0
     strategy:
       matrix:
-        BUILD_HQPS: [ON, OFF]
         BUILD_TEST: [ON, OFF]
         BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
     steps:
@@ -393,7 +407,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex
         git submodule update --init
         mkdir build && cd build
-        cmake .. -DBUILD_HQPS=${{ matrix.BUILD_HQPS }} -DBUILD_TEST=${{ matrix.BUILD_TEST }} \
+        cmake .. -DBUILD_TEST=${{ matrix.BUILD_TEST }} \
                  -DBUILD_ODPS_FRAGMENT_LOADER=${{ matrix.BUILD_ODPS_FRAGMENT_LOADER }}
         sudo make -j4
 

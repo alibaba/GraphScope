@@ -17,60 +17,29 @@
 #
 
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 from typing import Annotated, Any, Dict, List, Optional, Union
 
 from pydantic import Field, StrictBytes, StrictStr
 
-from gs_interactive.api.admin_service_graph_management_api import (
-    AdminServiceGraphManagementApi,
-)
-from gs_interactive.api.admin_service_job_management_api import (
-    AdminServiceJobManagementApi,
-)
-from gs_interactive.api.admin_service_procedure_management_api import (
-    AdminServiceProcedureManagementApi,
-)
-from gs_interactive.api.admin_service_service_management_api import (
-    AdminServiceServiceManagementApi,
-)
-from gs_interactive.api.graph_service_edge_management_api import (
-    GraphServiceEdgeManagementApi,
-)
-from gs_interactive.api.graph_service_vertex_management_api import (
-    GraphServiceVertexManagementApi,
-)
-from gs_interactive.api.query_service_api import QueryServiceApi
-from gs_interactive.api.utils_api import UtilsApi
+from pydantic import Field, StrictStr, StrictBytes
+
+from gs_interactive.client.status import Status, StatusCode
+
+from gs_interactive.api import *
+
 from gs_interactive.api_client import ApiClient
 from gs_interactive.client.generated.results_pb2 import CollectiveResults
 from gs_interactive.client.result import Result
 from gs_interactive.client.status import Status, StatusCode
 from gs_interactive.configuration import Configuration
-from gs_interactive.models.create_graph_request import CreateGraphRequest
-from gs_interactive.models.create_graph_response import CreateGraphResponse
-from gs_interactive.models.create_procedure_request import CreateProcedureRequest
-from gs_interactive.models.create_procedure_response import CreateProcedureResponse
-from gs_interactive.models.edge_request import EdgeRequest
-from gs_interactive.models.get_graph_response import GetGraphResponse
-from gs_interactive.models.get_graph_schema_response import GetGraphSchemaResponse
-from gs_interactive.models.get_graph_statistics_response import (
-    GetGraphStatisticsResponse,
-)
-from gs_interactive.models.get_procedure_response import GetProcedureResponse
-from gs_interactive.models.job_response import JobResponse
-from gs_interactive.models.job_status import JobStatus
-from gs_interactive.models.query_request import QueryRequest
-from gs_interactive.models.schema_mapping import SchemaMapping
-from gs_interactive.models.service_status import ServiceStatus
-from gs_interactive.models.start_service_request import StartServiceRequest
-from gs_interactive.models.update_procedure_request import UpdateProcedureRequest
-from gs_interactive.models.upload_file_response import UploadFileResponse
-from gs_interactive.models.vertex_request import VertexRequest
-
+from gs_interactive.models import *
+from gs_interactive.client.utils import append_format_byte, InputFormat
+from gs_interactive.client.generated.results_pb2 import CollectiveResults
 
 class EdgeInterface(metaclass=ABCMeta):
     @abstractmethod
-    def add_edge(self, graph_id: StrictStr, edge_request: EdgeRequest) -> Result[str]:
+    def add_edge(self, graph_id: StrictStr, edge_request: List[EdgeRequest]) -> Result[str]:
         raise NotImplementedError
 
     @abstractmethod
@@ -96,6 +65,9 @@ class EdgeInterface(metaclass=ABCMeta):
     def get_edge(
         self,
         graph_id: StrictStr,
+        edge_label: Annotated[
+            StrictStr, Field(description="The label name of edge.")
+        ],
         src_label: Annotated[
             StrictStr, Field(description="The label name of src vertex.")
         ],
@@ -121,7 +93,9 @@ class EdgeInterface(metaclass=ABCMeta):
 class VertexInterface(metaclass=ABCMeta):
     @abstractmethod
     def add_vertex(
-        self, graph_id: StrictStr, vertex_request: VertexRequest
+        self,
+        graph_id: StrictStr,
+        vertex_edge_request: VertexEdgeRequest,
     ) -> Result[StrictStr]:
         raise NotImplementedError
 
@@ -305,10 +279,6 @@ class Session(
 
 
 class DefaultSession(Session):
-    PROTOCOL_FORMAT = "proto"
-    JSON_FORMAT = "json"
-    ENCODER_FORMAT = "encoder"
-
     def __init__(self, admin_uri: str, stored_proc_uri: str = None):
         self._client = ApiClient(Configuration(host=admin_uri))
 
@@ -316,8 +286,6 @@ class DefaultSession(Session):
         self._job_api = AdminServiceJobManagementApi(self._client)
         self._procedure_api = AdminServiceProcedureManagementApi(self._client)
         self._service_api = AdminServiceServiceManagementApi(self._client)
-        self._edge_api = GraphServiceEdgeManagementApi(self._client)
-        self._vertex_api = GraphServiceVertexManagementApi(self._client)
         self._utils_api = UtilsApi(self._client)
         if stored_proc_uri is None:
             service_status = self.get_service_status()
@@ -333,6 +301,8 @@ class DefaultSession(Session):
             stored_proc_uri = ":".join(splitted)
         self._query_client = ApiClient(Configuration(host=stored_proc_uri))
         self._query_api = QueryServiceApi(self._query_client)
+        self._edge_api = GraphServiceEdgeManagementApi(self._query_client)
+        self._vertex_api = GraphServiceVertexManagementApi(self._query_client)
 
     def __enter__(self):
         self._client.__enter__()
@@ -344,9 +314,17 @@ class DefaultSession(Session):
     # implementations of the methods from the interfaces
     ################ Vertex Interfaces ##########
     def add_vertex(
-        self, graph_id: StrictStr, vertex_request: VertexRequest
+        self,
+        graph_id: StrictStr,
+        vertex_edge_request: VertexEdgeRequest,
     ) -> Result[StrictStr]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._vertex_api.add_vertex_with_http_info(graph_id, vertex_edge_request)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
+        
 
     def delete_vertex(
         self,
@@ -366,16 +344,32 @@ class DefaultSession(Session):
             Any, Field(description="The primary key value of vertex.")
         ],
     ) -> Result[VertexRequest]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._vertex_api.get_vertex_with_http_info(graph_id, label, primary_key_value)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
+
 
     def update_vertex(
         self, graph_id: StrictStr, vertex_request: VertexRequest
     ) -> Result[str]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._vertex_api.update_vertex_with_http_info(graph_id, vertex_request)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     ################ Edge Interfaces ##########
-    def add_edge(self, graph_id: StrictStr, edge_request: EdgeRequest) -> Result[str]:
-        raise NotImplementedError
+    def add_edge(self, graph_id: StrictStr, edge_request: List[EdgeRequest]) -> Result[str]:
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._edge_api.add_edge_with_http_info(graph_id, edge_request)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     def delete_edge(
         self,
@@ -398,6 +392,9 @@ class DefaultSession(Session):
     def get_edge(
         self,
         graph_id: StrictStr,
+        edge_label: Annotated[
+            StrictStr, Field(description="The label name of edge.")
+        ],
         src_label: Annotated[
             StrictStr, Field(description="The label name of src vertex.")
         ],
@@ -411,12 +408,24 @@ class DefaultSession(Session):
             Any, Field(description="The primary key value of dst vertex.")
         ],
     ) -> Result[Union[None, EdgeRequest]]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._edge_api.get_edge_with_http_info(
+                graph_id, edge_label, src_label, src_primary_key_value, dst_label, dst_primary_key_value
+            )
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     def update_edge(
         self, graph_id: StrictStr, edge_request: EdgeRequest
     ) -> Result[str]:
-        raise NotImplementedError
+        graph_id = self.ensure_param_str("graph_id", graph_id)
+        try:
+            api_response = self._edge_api.update_edge_with_http_info(graph_id, edge_request)
+            return Result.from_response(api_response)
+        except Exception as e:
+            return Result.from_exception(e)
 
     ################ Graph Interfaces ##########
     def create_graph(self, graph: CreateGraphRequest) -> Result[CreateGraphResponse]:
@@ -565,10 +574,9 @@ class DefaultSession(Session):
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
-            response = self._query_api.proc_call_with_http_info(
-                graph_id=graph_id,
-                x_interactive_request_format=self.JSON_FORMAT,
-                body=params.to_json(),
+            response = self._query_api.call_proc_with_http_info(
+                graph_id = graph_id, 
+                body=append_format_byte(params.to_json(), InputFormat.CYPHER_JSON)
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -583,8 +591,8 @@ class DefaultSession(Session):
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in json format
-            response = self._query_api.proc_call_current_with_http_info(
-                x_interactive_request_format=self.JSON_FORMAT, body=params.to_json()
+            response = self._query_api.call_proc_current_with_http_info(
+                body = append_format_byte(params.to_json(), InputFormat.CYPHER_JSON)
             )
             result = CollectiveResults()
             if response.status_code == 200:
@@ -600,10 +608,9 @@ class DefaultSession(Session):
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
-            response = self._query_api.proc_call_with_http_info(
-                graph_id=graph_id,
-                x_interactive_request_format=self.ENCODER_FORMAT,
-                body=params,
+            response = self._query_api.call_proc_with_http_info(
+                graph_id = graph_id, 
+                body = append_format_byte(params, InputFormat.CPP_ENCODER)
             )
             return Result.from_response(response)
         except Exception as e:
@@ -613,8 +620,8 @@ class DefaultSession(Session):
         try:
             # gs_interactive currently support four type of inputformat, see flex/engines/graph_db/graph_db_session.h
             # Here we add byte of value 1 to denote the input format is in encoder/decoder format
-            response = self._query_api.proc_call_current_with_http_info(
-                x_interactive_request_format=self.ENCODER_FORMAT, body=params
+            response = self._query_api.call_proc_current_with_http_info(
+                body = append_format_byte(params, InputFormat.CPP_ENCODER)
             )
             return Result.from_response(response)
         except Exception as e:

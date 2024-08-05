@@ -53,11 +53,12 @@ static const char* BATCH_SIZE_KEY = "batch_size";
 // whether or not to use record batch reader. If true, the reader will read
 // data in batches, otherwise, the reader will read data row by row.
 static const char* BATCH_READER = "batch_reader";
+static const char* NULL_VALUES = "null_values";
 
 static const std::unordered_set<std::string> CSV_META_KEY_WORDS = {
     DELIMITER,    HEADER_ROW,     INCLUDE_COLUMNS, COLUMN_TYPES,
     ESCAPING,     ESCAPE_CHAR,    QUOTING,         QUOTE_CHAR,
-    DOUBLE_QUOTE, BATCH_SIZE_KEY, BATCH_READER};
+    DOUBLE_QUOTE, BATCH_SIZE_KEY, BATCH_READER,    NULL_VALUES};
 
 }  // namespace reader_options
 
@@ -131,6 +132,7 @@ class LoadingConfig {
   char GetQuotingChar() const;
   bool GetIsQuoting() const;
   bool GetIsDoubleQuoting() const;
+  const std::vector<std::string>& GetNullValues() const;
   int32_t GetBatchSize() const;
   bool GetIsBatchReader() const;
   std::string GetMetaData(const std::string& key) const;
@@ -178,6 +180,8 @@ class LoadingConfig {
   int32_t parallelism_;    // Number of thread should be used in loading
   bool build_csr_in_mem_;  // Whether to build csr in memory
   bool use_mmap_vector_;   // Whether to use mmap vector
+
+  std::vector<std::string> null_values_;
 
   // meta_data, stores all the meta info about loading
   std::unordered_map<std::string, std::string> metadata_;

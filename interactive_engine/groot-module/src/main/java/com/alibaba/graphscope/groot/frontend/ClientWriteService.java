@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.util.Utils;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.WriteRequest;
@@ -18,6 +19,7 @@ import java.util.List;
 
 public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientWriteService.class);
+    private static Logger metricLogger = LoggerFactory.getLogger("MetricLog");
 
     private final GraphWriter graphWriter;
 
@@ -36,8 +38,11 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     @Override
     public void batchWrite(
             BatchWriteRequest request, StreamObserver<BatchWriteResponse> responseObserver) {
+        long startBatchWrite = System.currentTimeMillis();
         String requestId = UuidUtils.getBase64UUIDString();
         String writeSession = request.getClientId();
+        RequestOptionsPb optionsPb = request.getRequestOptions();
+        String upTraceId = optionsPb == null ? null : optionsPb.getTraceId();
         int count = request.getWriteRequestsCount();
         List<WriteRequest> writeRequests = new ArrayList<>(count);
         logger.debug(
@@ -53,9 +58,22 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
                     requestId,
                     writeSession,
                     writeRequests,
+                    optionsPb,
                     new CompletionCallback<Long>() {
                         @Override
                         public void onCompleted(Long res) {
+                            long current = System.currentTimeMillis();
+                            String metricJson =
+                                    Utils.buildMetricJsonLog(
+                                            true,
+                                            upTraceId,
+                                            count,
+                                            null,
+                                            (current - startBatchWrite),
+                                            current,
+                                            "writeKafka",
+                                            "write");
+                            metricLogger.info(metricJson);
                             responseObserver.onNext(
                                     BatchWriteResponse.newBuilder().setSnapshotId(res).build());
                             responseObserver.onCompleted();
@@ -63,6 +81,18 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
                         @Override
                         public void onError(Throwable t) {
+                            long current = System.currentTimeMillis();
+                            String metricJson =
+                                    Utils.buildMetricJsonLog(
+                                            false,
+                                            upTraceId,
+                                            count,
+                                            null,
+                                            (current - startBatchWrite),
+                                            current,
+                                            "writeKafka",
+                                            "write");
+                            metricLogger.info(metricJson);
                             logger.error(
                                     "batch write error. request {} session {}",
                                     requestId,
@@ -77,7 +107,11 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
         } catch (Exception e) {
             logger.error(
-                    "batchWrite failed. request [{}] session [{}]", requestId, writeSession, e);
+                    "batchWrite failed. traceId[{}] request [{}] session [{}]",
+                    upTraceId,
+                    requestId,
+                    writeSession,
+                    e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }

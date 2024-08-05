@@ -16,6 +16,8 @@
 syntax = "proto3";
 package gs.rpc.groot;
 
+import "request_option.proto";
+
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
@@ -45,6 +47,7 @@ message GetClientIdResponse {
 message BatchWriteRequest {
   string client_id = 1;
   repeated WriteRequestPb write_requests = 2;
+  gs.rpc.groot.RequestOptionsPb request_options = 3;
 }
 
 message BatchWriteResponse {

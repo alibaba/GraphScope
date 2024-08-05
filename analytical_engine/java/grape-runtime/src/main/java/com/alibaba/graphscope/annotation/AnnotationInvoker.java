@@ -1169,6 +1169,25 @@ import com.alibaba.fastffi.FFIGenBatch;
                         @CXXTemplate(
                                 cxx = {
                                     CPP_ARROW_PROJECTED_FRAGMENT
+                                            + "<int64_t,uint64_t,std::string,int64_t>",
+                                    "std::string"
+                                },
+                                java = {
+                                    JAVA_ARROW_PROJECTED_FRAGMENT
+                                            + "<"
+                                            + LONG
+                                            + ","
+                                            + LONG
+                                            + ","
+                                            + STRING
+                                            + ","
+                                            + LONG
+                                            + ">",
+                                    STD_STRING
+                                }),
+                        @CXXTemplate(
+                                cxx = {
+                                    CPP_ARROW_PROJECTED_FRAGMENT
                                             + "<int64_t,uint64_t,std::string,std::string>",
                                     "std::string"
                                 },
