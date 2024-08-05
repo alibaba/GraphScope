@@ -24,6 +24,7 @@ import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.common.util.Utils;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
@@ -220,12 +221,16 @@ public class StoreService {
 
     public boolean batchWrite(StoreDataBatch storeDataBatch)
             throws ExecutionException, InterruptedException {
-        long start = System.currentTimeMillis();
         long snapshotId = storeDataBatch.getSnapshotId();
         List<Map<Integer, OperationBatch>> dataBatch = storeDataBatch.getDataBatch();
         AtomicBoolean hasDdl = new AtomicBoolean(false);
         int maxRetry = 10;
         for (Map<Integer, OperationBatch> partitionToBatch : dataBatch) {
+            int count = 0;
+            for (OperationBatch batch : partitionToBatch.values()) {
+                count += batch.getOperationCount();
+            }
+            logger.info("write store, batch size: {}", count);
             while (!shouldStop && partitionToBatch.size() != 0 && maxRetry > 0) {
                 partitionToBatch = writeStore(snapshotId, partitionToBatch, hasDdl);
                 maxRetry--;
@@ -253,6 +258,7 @@ public class StoreService {
                                 // Ignore Marker
                                 // Only support partition operation for now
                                 GraphPartition partition = this.idToPartition.get(partitionId);
+                                logger.info("write store partition {}, size: {}", partitionId, batch.getOperationCount());
                                 if (partition == null) {
                                     throw new IllegalStateException(
                                             "partition ["
@@ -268,6 +274,8 @@ public class StoreService {
                                 this.writeHistogram.record(
                                         System.currentTimeMillis() - start, attrs.build());
                                 this.writeCounter.add(batch.getOperationCount(), attrs.build());
+                            } else {
+                                logger.info("marker batch ignored");
                             }
                         } catch (Exception ex) {
                             metricLogger.info(buildMetricJsonLog(false, batch, start, partitionId));
@@ -298,8 +306,9 @@ public class StoreService {
         }
         future.get();
         if (batchNeedRetry.size() > 0) {
+            logger.warn("Write batch failed, will retry. failure count: {}", batchNeedRetry.size());
             try {
-                Thread.sleep(1000L);
+                Thread.sleep(100L);
             } catch (InterruptedException e) {
                 // Ignore
             }

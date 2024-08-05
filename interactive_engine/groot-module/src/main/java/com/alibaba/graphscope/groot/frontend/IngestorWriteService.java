@@ -19,8 +19,11 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBase {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaAppender.class);
 
     private final KafkaAppender kafkaAppender;
 
@@ -34,6 +37,7 @@ public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBas
         try {
             String requestId = request.getRequestId();
             OperationBatch operationBatch = OperationBatch.parseProto(request.getOperationBatch());
+            logger.info("IngestorWriteService: writeIngestor size: {}", operationBatch.getOperationCount());
             this.kafkaAppender.ingestBatch(
                     requestId,
                     operationBatch,

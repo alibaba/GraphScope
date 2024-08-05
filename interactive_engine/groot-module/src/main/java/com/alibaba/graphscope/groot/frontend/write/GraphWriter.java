@@ -131,6 +131,7 @@ public class GraphWriter {
         OperationBatch operationBatch = batchBuilder.build();
         long startTime = System.currentTimeMillis();
         AttributesBuilder attrs = Attributes.builder();
+        logger.info("GraphWriter: Write request size: {}, operationBatch size: {}", writeRequests.size(), operationBatch.getOperationCount());
         this.kafkaAppender.ingestBatch(
                 requestId,
                 operationBatch,
