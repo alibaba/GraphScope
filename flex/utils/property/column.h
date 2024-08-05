@@ -238,6 +238,37 @@ using DoubleColumn = TypedColumn<double>;
 using FloatColumn = TypedColumn<float>;
 
 template <>
+class TypedColumn<grape::EmptyType> : public ColumnBase {
+ public:
+  TypedColumn(StorageStrategy strategy) : strategy_(strategy) {}
+  ~TypedColumn() {}
+
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) override {}
+  void open_in_memory(const std::string& name) override {}
+  void open_with_hugepages(const std::string& name, bool force) override {}
+  void touch(const std::string& filename) override {}
+  void dump(const std::string& filename) override {}
+  void copy_to_tmp(const std::string& cur_path,
+                   const std::string& tmp_path) override {}
+  void close() override {}
+  size_t size() const override { return 0; }
+  void resize(size_t size) override {}
+
+  PropertyType type() const override { return PropertyType::kEmpty; }
+
+  void set_any(size_t index, const Any& value) override {}
+
+  Any get(size_t index) const override { return Any(); }
+
+  void ingest(uint32_t index, grape::OutArchive& arc) override {}
+
+  StorageStrategy storage_strategy() const override { return strategy_; }
+
+ private:
+  StorageStrategy strategy_;
+};
+template <>
 class TypedColumn<std::string_view> : public ColumnBase {
  public:
   TypedColumn(StorageStrategy strategy,
