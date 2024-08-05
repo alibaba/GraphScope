@@ -43,7 +43,6 @@ std::shared_ptr<IContextColumn> SDSLEdgeColumn::shuffle(
     }
   } else {
     auto& ret_props = *builder.prop_col_;
-    LOG(INFO) << "shuffle: " << edges_.size() << " " << offsets.size();
     ret_props.resize(new_row_num);
     for (size_t idx = 0; idx < new_row_num; ++idx) {
       size_t off = offsets[idx];
