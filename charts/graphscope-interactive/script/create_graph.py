@@ -19,7 +19,7 @@
 
 import sys
 
-sys.path.append("../../../flex/interactive/sdk/python/")
+#sys.path.append("../../../flex/interactive/sdk/python/")
 import time
 
 from gs_interactive.models.edge_mapping_destination_vertex_mappings_inner import (
@@ -64,6 +64,8 @@ o = ODPS(
     project=PROJECT,
     endpoint='http://service-corp.odps.aliyun-inc.com/api',
 )
+script_directory = os.path.dirname(os.path.abspath(__file__))
+print("script directory", script_directory)
 
 huoyan_graph = {
     "version": "v0.1",
@@ -667,7 +669,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--endpoint", type=str, default="http://localhost:7777")
     parser.add_argument("--proc-name", type=str, default="huoyan")
-    parser.add_argument("--remove-old-graph", type=bool, default=False)
+    parser.add_argument("--remove-old-graph", type=bool, default=True)
     parser.add_argument("--ds", type=str)
 
     # finish
@@ -701,7 +703,7 @@ if __name__ == "__main__":
     wait_job_finish(sess, job_id)
     print("-----------------Finish loading graph-----------------")
 
-    create_procedure(sess, graph_id, "procedure.cc", args.proc_name)
+    create_procedure(sess, graph_id, script_directory + "procedure.cc", args.proc_name)
     print("-----------------Finish creating procedure-----------------")
 
     start_time = time.time()
