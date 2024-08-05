@@ -57,7 +57,6 @@ struct ServiceConfig {
   bool start_compiler;
   bool enable_gremlin;
   bool enable_bolt;
-  bool enable_codegen;
   gs::MetadataStoreType metadata_store_type_;
 
   // Those has not default value

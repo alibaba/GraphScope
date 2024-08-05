@@ -105,7 +105,10 @@ start_engine_service(){
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
     cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
 
-    
+    if [ "${TEST_TYPE}" == "gremlin" ]; then
+      cmd="${cmd} --enable-adhoc-handler=true"
+    fi
+
     info "Start engine service with command: ${cmd}"
     ${cmd} &
     sleep 5
@@ -212,6 +215,7 @@ if [ "${TEST_TYPE}" == "cypher" ]; then
 elif [ "${TEST_TYPE}" == "gremlin" ]; then
   info "run gremlin test"
   run_gremlin_test
+  run_runtime_gremlin_test
 elif [ "${TEST_TYPE}" == "all" ]; then
   run_cypher_test
   run_gremlin_test

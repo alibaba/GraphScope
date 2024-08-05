@@ -342,15 +342,16 @@ class stored_proc_handler : public StoppableHandler {
 #endif
 };
 
-class adhoc_query_handler : public StoppableHandler {
+class adhoc_runtime_query_handler : public StoppableHandler {
  public:
   static std::vector<std::vector<executor_ref>>& get_executors() {
     static std::vector<std::vector<executor_ref>> executor_refs;
     return executor_refs;
   }
 
-  adhoc_query_handler(uint32_t init_group_id, uint32_t max_group_id,
-                      uint32_t group_inc_step, uint32_t shard_concurrency)
+  adhoc_runtime_query_handler(uint32_t init_group_id, uint32_t max_group_id,
+                              uint32_t group_inc_step,
+                              uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
         executor_idx_(0) {
@@ -374,7 +375,7 @@ class adhoc_query_handler : public StoppableHandler {
 #endif  // HAVE_OPENTELEMETRY_CPP
   }
 
-  ~adhoc_query_handler() override = default;
+  ~adhoc_runtime_query_handler() override = default;
 
   seastar::future<> stop() override {
     return StoppableHandler::cancel_scope([this] {
@@ -421,7 +422,7 @@ class adhoc_query_handler : public StoppableHandler {
     }
 
 #ifdef HAVE_OPENTELEMETRY_CPP
-    auto tracer = otel::get_tracer("adhoc_query_handler");
+    auto tracer = otel::get_tracer("adhoc_runtime_query_handler");
     // Extract context from headers. This copy is necessary to avoid access
     // after header content been freed
     std::map<std::string, std::string> headers(req->_headers.begin(),
@@ -512,7 +513,7 @@ class adhoc_query_handler : public StoppableHandler {
 #endif
 };
 
-class codegen_query_handler : public StoppableHandler {
+class adhoc_query_handler : public StoppableHandler {
  public:
   static std::vector<std::vector<executor_ref>>& get_executors() {
     static std::vector<std::vector<executor_ref>> executor_refs;
@@ -524,8 +525,8 @@ class codegen_query_handler : public StoppableHandler {
     return codegen_actor_refs;
   }
 
-  codegen_query_handler(uint32_t init_group_id, uint32_t max_group_id,
-                        uint32_t group_inc_step, uint32_t shard_concurrency)
+  adhoc_query_handler(uint32_t init_group_id, uint32_t max_group_id,
+                      uint32_t group_inc_step, uint32_t shard_concurrency)
       : StoppableHandler(init_group_id, max_group_id, group_inc_step,
                          shard_concurrency),
         executor_idx_(0) {
@@ -559,7 +560,7 @@ class codegen_query_handler : public StoppableHandler {
 #endif  // HAVE_OPENTELEMETRY_CPP
   }
 
-  ~codegen_query_handler() override = default;
+  ~adhoc_query_handler() override = default;
 
   seastar::future<> stop() override {
     return StoppableHandler::cancel_scope([this] {
@@ -610,7 +611,7 @@ class codegen_query_handler : public StoppableHandler {
     }
 
 #ifdef HAVE_OPENTELEMETRY_CPP
-    auto tracer = otel::get_tracer("codegen_query_handler");
+    auto tracer = otel::get_tracer("adhoc_query_handler");
     // Extract context from headers. This copy is necessary to avoid access
     // after header content been freed
     std::map<std::string, std::string> headers(req->_headers.begin(),
@@ -754,23 +755,19 @@ class codegen_query_handler : public StoppableHandler {
 
 graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
                                              int32_t shard_num,
-                                             bool enable_adhoc_handlers,
-                                             bool enable_codegen)
+                                             bool enable_adhoc_handlers)
     : http_port_(http_port),
       enable_adhoc_handlers_(enable_adhoc_handlers),
       running_(false),
-      actors_running_(true),
-      enable_codegen_(enable_codegen) {
+      actors_running_(true) {
   current_graph_query_handlers_.resize(shard_num);
   all_graph_query_handlers_.resize(shard_num);
+  adhoc_query_handlers_.resize(shard_num);
   if (enable_adhoc_handlers_) {
-    adhoc_query_handlers_.resize(shard_num);
-    if (enable_codegen_) {
-      codegen_query_handler::get_executors().resize(shard_num);
-      codegen_query_handler::get_codegen_actors().resize(shard_num);
-    } else {
-      adhoc_query_handler::get_executors().resize(shard_num);
-    }
+    adhoc_query_handler::get_executors().resize(shard_num);
+    adhoc_query_handler::get_codegen_actors().resize(shard_num);
+  } else {
+    adhoc_runtime_query_handler::get_executors().resize(shard_num);
   }
   stored_proc_handler::get_executors().resize(shard_num);
 }
@@ -881,31 +878,29 @@ seastar::future<> graph_db_http_handler::set_routes() {
         .add_str("/query");
     r.add(rule_proc, seastar::httpd::operation_type::POST);
     if (enable_adhoc_handlers_.load()) {
-      if (enable_codegen_.load()) {
-        auto codegen_query_handler_ =
-            new codegen_query_handler(ic_adhoc_group_id, max_group_id,
-                                      group_inc_step, shard_adhoc_concurrency);
-        adhoc_query_handlers_[hiactor::local_shard_id()] =
-            codegen_query_handler_;
-        // Add routes
-        auto rule_adhoc =
-            new seastar::httpd::match_rule(codegen_query_handler_);
-        rule_adhoc->add_str("/v1/graph")
-            .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
-            .add_str("/adhoc_query");
-        r.add(rule_adhoc, seastar::httpd::operation_type::POST);
-      } else {
-        auto adhoc_query_handler_ =
-            new adhoc_query_handler(ic_adhoc_group_id, max_group_id,
-                                    group_inc_step, shard_adhoc_concurrency);
-        adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
-        // Add routes
-        auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
-        rule_adhoc->add_str("/v1/graph")
-            .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
-            .add_str("/adhoc_query");
-        r.add(rule_adhoc, seastar::httpd::operation_type::POST);
-      }
+      auto adhoc_query_handler_ =
+          new adhoc_query_handler(ic_adhoc_group_id, max_group_id,
+                                  group_inc_step, shard_adhoc_concurrency);
+      adhoc_query_handlers_[hiactor::local_shard_id()] = adhoc_query_handler_;
+      // Add routes
+      auto rule_adhoc = new seastar::httpd::match_rule(adhoc_query_handler_);
+      rule_adhoc->add_str("/v1/graph")
+          .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+          .add_str("/adhoc_query");
+      r.add(rule_adhoc, seastar::httpd::operation_type::POST);
+    } else {
+      auto adhoc_runtime_query_handler_ = new adhoc_runtime_query_handler(
+          ic_adhoc_group_id, max_group_id, group_inc_step,
+          shard_adhoc_concurrency);
+      adhoc_query_handlers_[hiactor::local_shard_id()] =
+          adhoc_runtime_query_handler_;
+      // Add routes
+      auto rule_adhoc =
+          new seastar::httpd::match_rule(adhoc_runtime_query_handler_);
+      rule_adhoc->add_str("/v1/graph")
+          .add_matcher(new seastar::httpd::optional_param_matcher("graph_id"))
+          .add_str("/adhoc_query");
+      r.add(rule_adhoc, seastar::httpd::operation_type::POST);
     }
 
     return seastar::make_ready_future<>();
