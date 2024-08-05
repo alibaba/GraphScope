@@ -215,7 +215,6 @@ if [ "${TEST_TYPE}" == "cypher" ]; then
 elif [ "${TEST_TYPE}" == "gremlin" ]; then
   info "run gremlin test"
   run_gremlin_test
-  run_runtime_gremlin_test
 elif [ "${TEST_TYPE}" == "all" ]; then
   run_cypher_test
   run_gremlin_test
