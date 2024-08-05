@@ -194,10 +194,10 @@ public class GraphAlgoQueries {
     public static QueryContext get_graph_algo_test13() {
         String query =
                 "MATCH (t: Topic)<-[:Belong]-(a:Task),\n"
-                    + " (a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Solution),\n"
-                    + " (s)-[:ApplyOn]->(ch:Challenge)\n"
-                    + " RETURN t.topic as topic, ch.challenge as challenge, COUNT(p) as count"
-                    + " ORDER BY count DESC, topic ASC, challenge ASC;";
+                        + " (a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Solution),\n"
+                        + " (s)-[:ApplyOn]->(ch:Challenge)\n"
+                        + " RETURN t.topic as topic, ch.challenge as challenge, COUNT(p) as count"
+                        + " ORDER BY count DESC, topic ASC, challenge ASC;";
         List expected =
                 Arrays.asList(
                         "Record<{topic: \"Pattern Matching\", challenge: \"Communication"
