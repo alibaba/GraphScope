@@ -128,3 +128,8 @@ if __name__ == "__main__":
     print("-----------------Finish getting service status-----------------")
 
     list_graph(sess)
+
+    # after switch to new graph, delete the old graph
+    delete_graph = sess.delete_graph(old_graph)
+    print("delete graph res: ", delete_graph)
+    assert delete_graph.is_ok()
