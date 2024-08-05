@@ -91,8 +91,6 @@ pub enum GraphPath {
     EndV((VertexOrEdge, usize)),
     /// Simple path with only end vertex preserved.
     SimpleEndV((VertexOrEdge, Vec<ID>, usize)),
-    /// Trail with only end vertex, all edges are preserved for checking duplications 
-    TrailEndV((VertexOrEdge, Vec<VertexOrEdge>, usize)),
 }
 
 impl GraphPath {
@@ -107,10 +105,7 @@ impl GraphPath {
                     let id = entry.id();
                     GraphPath::SimpleEndV((entry, vec![id], 1))
                 },
-                pb::path_expand::PathOpt::Trail => {
-                    let entry = entry.into();
-                    GraphPath::TrailEndV((entry.clone(), vec![entry], 1))
-                }
+                pb::path_expand::PathOpt::Trail => GraphPath::TrailAllPath(vec![entry.into()]),
             },
             pb::path_expand::ResultOpt::AllV | pb::path_expand::ResultOpt::AllVE => match path_opt {
                 pb::path_expand::PathOpt::Arbitrary => GraphPath::AllPath(vec![entry.into()]),
@@ -167,55 +162,41 @@ impl GraphPath {
                     true
                 }
             }
-            GraphPath::TrailEndV((ref mut e, ref mut path, ref mut weight)) => {
-                let entry = entry.into();
-                if entry.is_edge() && path.contains(&entry) {
-                    false
-                } else {
-                    *e = entry.clone();
-                    path.push(entry);
-                    // we only increase the weight when the entry is a vertex.
-                    if e.is_vertex() {
-                        *weight += 1;
-                    }
-                    true
-                }
-            },
         }
     }
 
     pub fn get_path_start(&self) -> Option<&VertexOrEdge> {
         match self {
             GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) | GraphPath::TrailAllPath(ref p) => p.first(),
-            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) | GraphPath::TrailEndV(_) => None,
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
         }
     }
 
     pub fn get_path_end(&self) -> &VertexOrEdge {
         match self {
             GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) | GraphPath::TrailAllPath(ref p) => p.last().unwrap(),
-            GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _, _)) | GraphPath::TrailEndV((ref e, _, _)) => e,
+            GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _, _)) => e,
         }
     }
 
     pub fn get_path_end_mut(&mut self) -> &mut VertexOrEdge {
         match self {
             GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) | GraphPath::TrailAllPath(ref mut p) => p.last_mut().unwrap(),
-            GraphPath::EndV((ref mut e, _)) | GraphPath::SimpleEndV((ref mut e, _, _)) | GraphPath::TrailEndV((ref mut e, _, _)) => e,
+            GraphPath::EndV((ref mut e, _)) | GraphPath::SimpleEndV((ref mut e, _, _)) => e,
         }
     }
 
     pub fn get_path(&self) -> Option<&Vec<VertexOrEdge>> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => Some(p),
-            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) | GraphPath::TrailEndV(_) => None,
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
         }
     }
 
     pub fn take_path(self) -> Option<Vec<VertexOrEdge>> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => Some(p),
-            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) | GraphPath::TrailEndV(_) => None,
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
         }
     }
 
@@ -244,7 +225,7 @@ impl GraphPath {
                     false
                 }
             }
-            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) | GraphPath::TrailEndV(_) => false,
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => false,
         }
     }
 
@@ -252,7 +233,7 @@ impl GraphPath {
     pub fn pop(&mut self) -> Option<VertexOrEdge> {
         match self {
             GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) | GraphPath::TrailAllPath(ref mut p) => p.pop(),
-            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) | GraphPath::TrailEndV(_) => None,
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
         }
     }
 
@@ -262,7 +243,7 @@ impl GraphPath {
             GraphPath::AllPath(ref mut p) | GraphPath::SimpleAllPath(ref mut p) | GraphPath::TrailAllPath(ref mut p) => {
                 p.reverse();
             }
-            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) | GraphPath::TrailEndV(_) => {}
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => {}
         }
     }
 
@@ -270,7 +251,7 @@ impl GraphPath {
     pub fn get_elem_ids(&self) -> Vec<ID> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => p.iter().map(|e| e.id()).collect(),
-            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) | GraphPath::TrailEndV((e, _, _)) => vec![e.id()],
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => vec![e.id()],
         }
     }
 
@@ -278,7 +259,7 @@ impl GraphPath {
     pub fn get_elem_labels(&self) -> Vec<Option<LabelId>> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => p.iter().map(|e| e.label()).collect(),
-            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) | GraphPath::TrailEndV((e, _, _)) => vec![e.label()],
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => vec![e.label()],
         }
     }
 }
@@ -358,7 +339,6 @@ impl Element for GraphPath {
             }
             GraphPath::EndV((_, weight)) => *weight - 1,
             GraphPath::SimpleEndV((_, _, weight)) => *weight - 1,
-            GraphPath::TrailEndV((_, _, weight)) => *weight - 1,
         }
     }
 
@@ -394,7 +374,7 @@ impl GraphElement for GraphPath {
                 Some(PropertyValue::Owned(Object::Vector(properties)))
             }
 
-            GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) | GraphPath::TrailEndV((v_or_e, _, _)) => {
+            GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) => {
                 if let Some(prop) = v_or_e.get_property(key) {
                     if let Some(obj) = prop.try_to_owned() {
                         // make the type consistent with the all path.
@@ -413,7 +393,7 @@ impl GraphElement for GraphPath {
                 None
             }
 
-            GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) | GraphPath::TrailEndV((v_or_e, _, _)) => {
+            GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) => {
                 v_or_e.get_all_properties()
             }
         }
@@ -435,13 +415,8 @@ impl PartialEq for GraphPath {
             | (GraphPath::TrailAllPath(p1), GraphPath::TrailAllPath(p2)) => p1.eq(p2),
             (GraphPath::EndV((p1, _)), GraphPath::EndV((p2, _)))
             | (GraphPath::EndV((p1, _)), GraphPath::SimpleEndV((p2, _, _)))
-            | (GraphPath::EndV((p1, _)), GraphPath::TrailEndV((p2, _, _)))
             | (GraphPath::SimpleEndV((p1, _, _)), GraphPath::EndV((p2, _)))
-            | (GraphPath::SimpleEndV((p1, _, _)), GraphPath::SimpleEndV((p2, _, _))) 
-            | (GraphPath::SimpleEndV((p1, _, _)), GraphPath::TrailEndV((p2, _, _))) 
-            | (GraphPath::TrailEndV((p1, _, _)), GraphPath::EndV((p2, _)))
-            | (GraphPath::TrailEndV((p1, _, _)), GraphPath::SimpleEndV((p2, _, _)))
-            | (GraphPath::TrailEndV((p1, _, _)), GraphPath::TrailEndV((p2, _, _))) => p1.eq(p2),
+            | (GraphPath::SimpleEndV((p1, _, _)), GraphPath::SimpleEndV((p2, _, _))) => p1.eq(p2),
             _ => false,
         }
     }
@@ -524,12 +499,6 @@ impl Encode for GraphPath {
                 writer.write_u8(4)?;
                 path.write_to(writer)?;
             }
-            GraphPath::TrailEndV((path_end, path, weight)) => {
-                writer.write_u8(5)?;
-                path_end.write_to(writer)?;
-                path.write_to(writer)?;
-                writer.write_u64(*weight as u64)?;
-            }
         }
         Ok(())
     }
@@ -561,12 +530,6 @@ impl Decode for GraphPath {
             4 => {
                 let path = <Vec<VertexOrEdge>>::read_from(reader)?;
                 Ok(GraphPath::TrailAllPath(path))
-            }
-            5 => {
-                let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
-                let path = <Vec<VertexOrEdge>>::read_from(reader)?;
-                let weight = <u64>::read_from(reader)? as usize;
-                Ok(GraphPath::TrailEndV((vertex_or_edge, path, weight)))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
@@ -608,7 +571,7 @@ impl Hash for GraphPath {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) | GraphPath::TrailAllPath(p) => p.hash(state),
-            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) | GraphPath::TrailEndV((e, _, _)) => e.hash(state),
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => e.hash(state),
         }
     }
 }
