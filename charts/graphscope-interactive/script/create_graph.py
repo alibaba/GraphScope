@@ -624,8 +624,8 @@ def create_procedure(sess: Session, graph_id: str, file_path: str, proc_name):
             name=proc_name, description="huo yan app", query=content, type="cpp"
         ),
     )
+    print("create procedure result: ", resp)
     assert resp.is_ok()
-    print("create procedure successfully: ", resp.get_value())
 
 
 def restart_service(sess: Session, graph_id: str):
@@ -703,7 +703,7 @@ if __name__ == "__main__":
     wait_job_finish(sess, job_id)
     print("-----------------Finish loading graph-----------------")
 
-    create_procedure(sess, graph_id, script_directory + "procedure.cc", args.proc_name)
+    create_procedure(sess, graph_id, script_directory + "/procedure.cc", args.proc_name)
     print("-----------------Finish creating procedure-----------------")
 
     start_time = time.time()
