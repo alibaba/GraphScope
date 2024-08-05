@@ -179,15 +179,15 @@ public class GraphAlgoQueries {
     public static QueryContext get_graph_algo_test12() {
         String query =
                 "MATCH (p:Paper)-[:WorkOn]->(a:Task),(a)-[:Belong]->(t: Topic)\n"
-                        + "RETURN t.category as category, COUNT(p) as count ORDER BY count DESC,"
-                        + " category DESC LIMIT 5;";
+                        + "RETURN t.topic as topic, COUNT(p) as count ORDER BY count DESC,"
+                        + " topic DESC LIMIT 5;";
         List expected =
                 Arrays.asList(
-                        "Record<{category: \"Pattern Matching\", count: 30}>",
-                        "Record<{category: \"Traversal\", count: 29}>",
-                        "Record<{category: \"Centrality\", count: 18}>",
-                        "Record<{category: \"Covering\", count: 14}>",
-                        "Record<{category: \"Community Detection\", count: 13}>");
+                        "Record<{topic: \"Pattern Matching\", count: 30}>",
+                        "Record<{topic: \"Traversal\", count: 29}>",
+                        "Record<{topic: \"Centrality\", count: 18}>",
+                        "Record<{topic: \"Covering\", count: 14}>",
+                        "Record<{topic: \"Community Detection\", count: 13}>");
         return new QueryContext(query, expected);
     }
 
@@ -196,48 +196,48 @@ public class GraphAlgoQueries {
                 "MATCH (t: Topic)<-[:Belong]-(a:Task),\n"
                     + " (a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Solution),\n"
                     + " (s)-[:ApplyOn]->(ch:Challenge)\n"
-                    + " RETURN t.category as category, ch.challenge as challenge, COUNT(p) as count"
-                    + " ORDER BY count DESC, category ASC, challenge ASC;";
+                    + " RETURN t.topic as topic, ch.challenge as challenge, COUNT(p) as count"
+                    + " ORDER BY count DESC, topic ASC, challenge ASC;";
         List expected =
                 Arrays.asList(
-                        "Record<{category: \"Pattern Matching\", challenge: \"Communication"
+                        "Record<{topic: \"Pattern Matching\", challenge: \"Communication"
                                 + " Overhead\", count: 22}>",
-                        "Record<{category: \"Pattern Matching\", challenge: \"Load Balance\","
+                        "Record<{topic: \"Pattern Matching\", challenge: \"Load Balance\","
                                 + " count: 16}>",
-                        "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
+                        "Record<{topic: \"Traversal\", challenge: \"Communication Overhead\","
                                 + " count: 13}>",
-                        "Record<{category: \"Traversal\", challenge: \"Parallelism\", count: 12}>",
-                        "Record<{category: \"Centrality\", challenge: \"Parallelism\", count: 11}>",
-                        "Record<{category: \"Centrality\", challenge: \"Communication Overhead\","
+                        "Record<{topic: \"Traversal\", challenge: \"Parallelism\", count: 12}>",
+                        "Record<{topic: \"Centrality\", challenge: \"Parallelism\", count: 11}>",
+                        "Record<{topic: \"Centrality\", challenge: \"Communication Overhead\","
                                 + " count: 9}>",
-                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Communication"
+                        "Record<{topic: \"Cohesive Subgraph\", challenge: \"Communication"
                                 + " Overhead\", count: 9}>",
-                        "Record<{category: \"Community Detection\", challenge: \"Communication"
+                        "Record<{topic: \"Community Detection\", challenge: \"Communication"
                                 + " Overhead\", count: 9}>",
-                        "Record<{category: \"Covering\", challenge: \"Parallelism\", count: 9}>",
-                        "Record<{category: \"Traversal\", challenge: \"Load Balance\", count: 8}>",
-                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Parallelism\","
+                        "Record<{topic: \"Covering\", challenge: \"Parallelism\", count: 9}>",
+                        "Record<{topic: \"Traversal\", challenge: \"Load Balance\", count: 8}>",
+                        "Record<{topic: \"Cohesive Subgraph\", challenge: \"Parallelism\","
                                 + " count: 7}>",
-                        "Record<{category: \"Similarity\", challenge: \"Communication Overhead\","
+                        "Record<{topic: \"Similarity\", challenge: \"Communication Overhead\","
                                 + " count: 7}>",
-                        "Record<{category: \"Pattern Matching\", challenge: \"Bandwidth\", count:"
+                        "Record<{topic: \"Pattern Matching\", challenge: \"Bandwidth\", count:"
                                 + " 6}>",
-                        "Record<{category: \"Centrality\", challenge: \"Bandwidth\", count: 5}>",
-                        "Record<{category: \"Centrality\", challenge: \"Load Balance\", count: 4}>",
-                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Load Balance\","
+                        "Record<{topic: \"Centrality\", challenge: \"Bandwidth\", count: 5}>",
+                        "Record<{topic: \"Centrality\", challenge: \"Load Balance\", count: 4}>",
+                        "Record<{topic: \"Cohesive Subgraph\", challenge: \"Load Balance\","
                                 + " count: 4}>",
-                        "Record<{category: \"Community Detection\", challenge: \"Load Balance\","
+                        "Record<{topic: \"Community Detection\", challenge: \"Load Balance\","
                                 + " count: 4}>",
-                        "Record<{category: \"Community Detection\", challenge: \"Parallelism\","
+                        "Record<{topic: \"Community Detection\", challenge: \"Parallelism\","
                                 + " count: 4}>",
-                        "Record<{category: \"Covering\", challenge: \"Communication Overhead\","
+                        "Record<{topic: \"Covering\", challenge: \"Communication Overhead\","
                                 + " count: 4}>",
-                        "Record<{category: \"Similarity\", challenge: \"Parallelism\", count: 2}>",
-                        "Record<{category: \"Traversal\", challenge: \"Bandwidth\", count: 2}>",
-                        "Record<{category: \"Covering\", challenge: \"Load Balance\", count: 1}>",
-                        "Record<{category: \"Pattern Matching\", challenge: \"Parallelism\", count:"
+                        "Record<{topic: \"Similarity\", challenge: \"Parallelism\", count: 2}>",
+                        "Record<{topic: \"Traversal\", challenge: \"Bandwidth\", count: 2}>",
+                        "Record<{topic: \"Covering\", challenge: \"Load Balance\", count: 1}>",
+                        "Record<{topic: \"Pattern Matching\", challenge: \"Parallelism\", count:"
                                 + " 1}>",
-                        "Record<{category: \"Similarity\", challenge: \"Load Balance\", count:"
+                        "Record<{topic: \"Similarity\", challenge: \"Load Balance\", count:"
                                 + " 1}>");
         return new QueryContext(query, expected);
     }
